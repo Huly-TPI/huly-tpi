@@ -1,0 +1,30 @@
+package com.huly.backend.infrastructure.repository.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "chat_config")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ChatConfig {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    @Column(name = "risk_detection_enabled")
+    private Boolean riskDetectionEnabled;
+
+    @Column(name = "system_prompt")
+    private String systemPrompt;
+
+}
