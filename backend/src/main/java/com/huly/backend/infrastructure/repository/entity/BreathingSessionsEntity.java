@@ -3,18 +3,19 @@ package com.huly.backend.infrastructure.repository.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "chat_session")
+@Table(name = "breathing_sessions")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatSession {
+public class BreathingSessionsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,16 +23,14 @@ public class ChatSession {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "technique_id")
+    private BreathingTechniquesEntity breathingTechnique;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_app_user")
-    private AppUser appUser;
+    private AppUserEntity appUser;
 
-    @Column(name = "start_at")
-    private OffsetDateTime startAt;
-
-    @Column(name = "end_at")
-    private OffsetDateTime endAt;
-
-    @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChatMessage> chatMessages;
+    @Column(name = "created_at")
+    private Instant createdAt;
 
 }

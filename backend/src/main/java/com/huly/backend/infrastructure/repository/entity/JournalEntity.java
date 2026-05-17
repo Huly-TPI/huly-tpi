@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Journal {
+public class JournalEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +23,7 @@ public class Journal {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_app_user")
-    private AppUser appUser;
+    private AppUserEntity appUser;
 
     @Column(name = "mood")
     private String mood;
@@ -32,6 +32,6 @@ public class Journal {
     private String title;
 
     @OneToMany(mappedBy = "journal", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<JournalEntries> journalEntries;
+    private List<JournalEntriesEntity> journalEntries;
 
 }

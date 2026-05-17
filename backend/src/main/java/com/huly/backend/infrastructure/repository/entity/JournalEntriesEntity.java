@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.enums.Mood;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JournalEntries {
+public class JournalEntriesEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +25,7 @@ public class JournalEntries {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_journal")
-    private Journal journal;
+    private JournalEntity journal;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "mood", length = 50)
@@ -37,6 +38,6 @@ public class JournalEntries {
     private String content;
 
     @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
 }

@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AppUser {
+public class AppUserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,24 +38,24 @@ public class AppUser {
     private UserStatus status;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserDetail> userDetails;
+    private List<UserDetailEntity> userDetails;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RefreshToken> refreshTokens;
+    private List<RefreshTokenEntity> refreshTokens;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserSetting> userSettings;
+    private List<UserSettingEntity> userSettings;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserGoals> userGoals;
+    private List<UserGoalsEntity> userGoals;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BreathingSessions> breathingSessions;
+    private List<BreathingSessionsEntity> breathingSessions;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Journal> journals;
+    private List<JournalEntity> journals;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChatSession> chatSessions;
+    private List<ChatSessionEntity> chatSessions;
 
 }

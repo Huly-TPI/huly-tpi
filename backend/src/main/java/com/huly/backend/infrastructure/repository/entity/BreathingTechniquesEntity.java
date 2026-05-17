@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BreathingTechniques {
+public class BreathingTechniquesEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +43,6 @@ public class BreathingTechniques {
     private Integer rounds;
 
     @OneToMany(mappedBy = "breathingTechnique", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BreathingSessions> breathingSessions;
+    private List<BreathingSessionsEntity> breathingSessions;
 
 }

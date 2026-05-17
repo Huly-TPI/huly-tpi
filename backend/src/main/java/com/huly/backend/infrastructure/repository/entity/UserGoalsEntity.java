@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.enums.GoalStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserGoals {
+public class UserGoalsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +25,7 @@ public class UserGoals {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_app_user")
-    private AppUser appUser;
+    private AppUserEntity appUser;
 
     @Column(name = "title")
     private String title;
@@ -37,6 +38,6 @@ public class UserGoals {
     private GoalStatus status;
 
     @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
 }

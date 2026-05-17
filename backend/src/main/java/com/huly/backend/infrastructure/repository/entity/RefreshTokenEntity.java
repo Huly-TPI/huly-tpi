@@ -1,21 +1,21 @@
 package com.huly.backend.infrastructure.repository.entity;
 
-import com.huly.backend.domain.model.enums.EmotionType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "emotion")
+@Table(name = "refresh_token")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Emotion {
+public class RefreshTokenEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,11 +23,16 @@ public class Emotion {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_chat_message")
-    private ChatMessage chatMessage;
+    @JoinColumn(name = "id_app_user")
+    private AppUserEntity appUser;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "emotion_detected", length = 80)
-    private EmotionType emotionDetected;
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "expired_at")
+    private Instant expiredAt;
+
+    @Column(name = "ip_address")
+    private String ipAddress;
 
 }

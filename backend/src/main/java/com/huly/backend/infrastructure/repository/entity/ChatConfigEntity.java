@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatConfig {
+public class ChatConfigEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

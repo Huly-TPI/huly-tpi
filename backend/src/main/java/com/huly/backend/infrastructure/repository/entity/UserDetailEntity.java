@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.repository.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserDetail {
+public class UserDetailEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +24,7 @@ public class UserDetail {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_app_user")
-    private AppUser appUser;
+    private AppUserEntity appUser;
 
     @Column(name = "name")
     private String name;
@@ -47,9 +48,9 @@ public class UserDetail {
     private String avatarUrl2;
 
     @Column(name = "last_login_date")
-    private OffsetDateTime lastLoginDate;
+    private Instant lastLoginDate;
 
     @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
 }

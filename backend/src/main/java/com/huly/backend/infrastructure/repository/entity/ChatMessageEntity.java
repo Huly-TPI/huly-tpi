@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.repository.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatMessage {
+public class ChatMessageEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +24,7 @@ public class ChatMessage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_chat_session")
-    private ChatSession chatSession;
+    private ChatSessionEntity chatSession;
 
     @Column(name = "message")
     private String message;
@@ -35,9 +36,9 @@ public class ChatMessage {
     private Boolean riskDetected;
 
     @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @OneToMany(mappedBy = "chatMessage", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Emotion> emotions;
+    private List<EmotionEntity> emotions;
 
 }

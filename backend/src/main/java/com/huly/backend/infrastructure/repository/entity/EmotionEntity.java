@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.repository.entity;
 
+import com.huly.backend.domain.model.enums.EmotionType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,13 +9,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "user_setting")
+@Table(name = "emotion")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserSetting {
+public class EmotionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,19 +23,11 @@ public class UserSetting {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_app_user")
-    private AppUser appUser;
+    @JoinColumn(name = "id_chat_message")
+    private ChatMessageEntity chatMessage;
 
-    @Column(name = "music_volume")
-    private Integer musicVolume;
-
-    @Column(name = "effect_volume")
-    private Integer effectVolume;
-
-    @Column(name = "anti_scroll_enabled")
-    private Boolean antiScrollEnabled;
-
-    @Column(name = "darkmode")
-    private Boolean darkmode;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "emotion_detected", length = 80)
+    private EmotionType emotionDetected;
 
 }

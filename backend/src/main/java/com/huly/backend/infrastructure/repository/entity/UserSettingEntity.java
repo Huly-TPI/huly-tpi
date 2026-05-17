@@ -8,13 +8,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "refresh_token")
+@Table(name = "user_setting")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RefreshToken {
+public class UserSettingEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,15 +23,18 @@ public class RefreshToken {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_app_user")
-    private AppUser appUser;
+    private AppUserEntity appUser;
 
-    @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    @Column(name = "music_volume")
+    private Integer musicVolume;
 
-    @Column(name = "expired_at")
-    private OffsetDateTime expiredAt;
+    @Column(name = "effect_volume")
+    private Integer effectVolume;
 
-    @Column(name = "ip_address")
-    private String ipAddress;
+    @Column(name = "anti_scroll_enabled")
+    private Boolean antiScrollEnabled;
+
+    @Column(name = "darkmode")
+    private Boolean darkmode;
 
 }
