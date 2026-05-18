@@ -52,15 +52,15 @@ SCRUM-XXX: Descripcion del cambio
 ## Flujo Git
 
 ```bash
-git checkout develop && git pull
+git checkout dev && git pull
 git checkout -b feature/SCRUM-XXX-nombre
 # ... commits ...
-git rebase origin/develop
+git rebase origin/dev
 git push origin feature/SCRUM-XXX-nombre
 # Abrir PR → develop
 ```
 
-**Ramas base:** `main` (producción) ← `develop` (integración) ← tus ramas
+**Ramas base:** `main` (producción) ← `stg` (staging) ← `dev` (integración) ← tus ramas
 
 ---
 
