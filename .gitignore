@@ -30,6 +30,11 @@ buildNumber.properties
 *.code-workspace
 
 # ========================
+# CLAUDE CODE
+# ========================
+.claude/
+
+# ========================
 # IDE - Spring Tool Suite
 # ========================
 .apt_generated
