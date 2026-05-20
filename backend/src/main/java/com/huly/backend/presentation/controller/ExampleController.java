@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.Example;
 import com.huly.backend.domain.useCase.CreateUseCase;
 import com.huly.backend.presentation.dto.ExampleRequest;
 import com.huly.backend.presentation.dto.ExampleResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,7 @@ public class ExampleController {
 
 
     @PostMapping
-    public ResponseEntity<ExampleResponse> create(@RequestBody ExampleRequest request) {
+    public ResponseEntity<ExampleResponse> create(@Valid @RequestBody ExampleRequest request) {
         Example created = createUseCase.execute(request.name(), request.description());
         return ResponseEntity.ok(toResponse(created));
     }

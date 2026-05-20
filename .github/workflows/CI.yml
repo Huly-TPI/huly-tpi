@@ -12,6 +12,7 @@ on:
     branches: [ main, dev ]
     paths:
       - 'backend/**'
+      - 'frontend/**'
       - '.github/workflows/CI.yml'
 
   pull_request:
@@ -19,6 +20,7 @@ on:
     types: [opened, reopened, synchronize, edited]
     paths:
       - 'backend/**'
+      - 'frontend/**'
       - '.github/workflows/CI.yml'
 
 jobs:
@@ -42,15 +44,47 @@ jobs:
           echo "RUN ATTEMPT: ${{ github.run_attempt }}"
           echo "==============="
 
-      - name: Block PRs to main unless from dev
+      - name: Block PRs to main unless from stg
         run: |
-          if [[ "${{ github.head_ref }}" != "dev" ]]; then
-            echo "❌ Solo se permiten PRs a main desde 'dev'."
+          if [[ "${{ github.head_ref }}" != "stg" ]]; then
+            echo "❌ Solo se permiten PRs a main desde 'stg'."
             echo "HEAD = '${{ github.head_ref }}', BASE = '${{ github.base_ref }}'"
             exit 1
           fi
 
           echo "✔ PR válido hacia main"
+
+
+  # FRONTEND BUILD — DEV + MAIN
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    if: >
+      github.ref_name == 'dev' ||
+      github.ref_name == 'main' ||
+      github.base_ref == 'dev' ||
+      github.base_ref == 'main'
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
 
 
   # BACKEND BUILD — DEV + MAIN
@@ -81,6 +115,7 @@ jobs:
         run: mvn clean install -DskipTests=true
 
 
+
   # TEST COVERAGE — DEV + MAIN
 
   test-coverage:
@@ -94,21 +129,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: huly
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     defaults:
       run:
@@ -125,11 +145,7 @@ jobs:
           java-version: '21'
 
       - name: Run tests with coverage
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/huly
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
-        run: mvn verify -Dspring.profiles.active=coverage-test
+        run: mvn verify -Dspring.profiles.active=h2-test
 
       - name: Coverage summary
         run: |

@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(git -C \"c:\\\\Users\\\\Avril Sandoval\\\\Desktop\\\\tpi\\\\huly-tpi\" status --short)",
-      "PowerShell(git -C \"c:\\\\Users\\\\Avril Sandoval\\\\Desktop\\\\tpi\\\\huly-tpi\" ls-files --others --exclude-standard frontend/)"
-    ]
-  }
-}
