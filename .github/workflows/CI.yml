@@ -81,6 +81,7 @@ jobs:
         run: mvn clean install -DskipTests=true
 
 
+
   # TEST COVERAGE — DEV + MAIN
 
   test-coverage:
@@ -94,21 +95,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: huly
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     defaults:
       run:
@@ -125,11 +111,7 @@ jobs:
           java-version: '21'
 
       - name: Run tests with coverage
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/huly
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
-        run: mvn verify -Dspring.profiles.active=coverage-test
+        run: mvn verify -Dspring.profiles.active=h2-test
 
       - name: Coverage summary
         run: |
