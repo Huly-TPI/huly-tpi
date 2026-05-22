@@ -3,6 +3,7 @@ package com.huly.backend.domain.service.Chatbot;
 import com.huly.backend.presentation.dto.ChatResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,14 +29,13 @@ public class ChatService {
 //        return converter.convert(answer);
 //    }
 
-    public ChatResponse chat(String message) {
+    public ChatResponse chat(String message, String conversationId) {
 
         String instructionsIA = botConfigService.getConfig().getSystemPrompt();
-        System.out.println(botConfigService.getConfig().getId());
-        System.out.println(instructionsIA);
 
         String answer = chatClient.prompt()
                 .system(instructionsIA)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .user(message)
                 .call()
                 .content();

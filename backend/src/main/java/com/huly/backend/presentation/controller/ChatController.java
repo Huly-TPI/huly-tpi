@@ -23,7 +23,7 @@ public class ChatController {
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        return ResponseEntity.ok(chatService.chat(request.message()));
+        return ResponseEntity.ok(chatService.chat(request.message(), request.conversationId()));
     }
 
 }
