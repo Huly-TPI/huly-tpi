@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -26,6 +24,9 @@ public class ChatSessionEntity {
     @JoinColumn(name = "id_app_user")
     private AppUserEntity appUser;
 
+    @Column(name = "conversation_id", unique = true)
+    private String conversationId;
+
     @Column(name = "start_at")
     private Instant startAt;
 
@@ -34,5 +35,4 @@ public class ChatSessionEntity {
 
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatMessageEntity> chatMessages;
-
 }

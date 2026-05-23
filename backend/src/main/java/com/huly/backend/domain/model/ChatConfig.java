@@ -2,15 +2,12 @@ package com.huly.backend.domain.model;
 
 import lombok.*;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
 @Builder
+@AllArgsConstructor
 public class ChatConfig {
 
-    private Long id;
-    private Boolean riskDetectionEnabled;
-    private String systemPrompt;
-
+    private final Long id;
+    private final Boolean riskDetectionEnabled;
+    private final String systemPrompt;
 }

@@ -7,7 +7,8 @@ import java.util.Optional;
 public interface ChatConfigRepository {
 
     Optional<ChatConfig> findById(Long id);
-    ChatConfig save (ChatConfig chatConfig);
-    Optional<ChatConfig> findFirst();
 
+    ChatConfig save(ChatConfig chatConfig);
+
+    Optional<ChatConfig> findFirst();
 }

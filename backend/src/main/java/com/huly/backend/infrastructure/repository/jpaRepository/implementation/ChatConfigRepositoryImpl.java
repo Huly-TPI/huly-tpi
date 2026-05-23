@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.ChatConfig;
 import com.huly.backend.domain.repository.ChatConfigRepository;
 import com.huly.backend.infrastructure.repository.entity.ChatConfigEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatConfigJpaRepository;
+import com.huly.backend.infrastructure.repository.mapper.ChatConfigMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,37 +15,22 @@ import java.util.Optional;
 public class ChatConfigRepositoryImpl implements ChatConfigRepository {
 
     private final IChatConfigJpaRepository jpa;
+    private final ChatConfigMapper mapper;
 
     @Override
     public Optional<ChatConfig> findById(Long id) {
-        return jpa.findById(id).map(this::toDomain);
+        return jpa.findById(id).map(mapper::toDomain);
     }
 
     @Override
     public ChatConfig save(ChatConfig chatConfig) {
-        ChatConfigEntity entity = toEntity(chatConfig);
+        ChatConfigEntity entity = mapper.toEntity(chatConfig);
         ChatConfigEntity saved = jpa.save(entity);
-        return toDomain(saved);
+        return mapper.toDomain(saved);
     }
 
     @Override
     public Optional<ChatConfig> findFirst() {
-        return jpa.findAll().stream().findFirst().map(this::toDomain);
-    }
-
-    private ChatConfigEntity toEntity(ChatConfig chatConfig) {
-        return ChatConfigEntity.builder()
-                .id(chatConfig.getId())
-                .riskDetectionEnabled(chatConfig.getRiskDetectionEnabled())
-                .systemPrompt(chatConfig.getSystemPrompt())
-                .build();
-    }
-
-    private ChatConfig toDomain(ChatConfigEntity entity) {
-        return ChatConfig.builder()
-                .id(entity.getId())
-                .riskDetectionEnabled(entity.getRiskDetectionEnabled())
-                .systemPrompt(entity.getSystemPrompt())
-                .build();
+        return jpa.findAll().stream().findFirst().map(mapper::toDomain);
     }
 }
