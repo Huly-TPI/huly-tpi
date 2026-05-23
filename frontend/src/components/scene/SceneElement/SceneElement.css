@@ -7,6 +7,10 @@
   transform-origin: center;
 }
 
+.scene-element__shadow {
+  filter: drop-shadow(-4px 10px 16px rgba(0, 0, 0, 0.25));
+}
+
 @media (hover: hover) and (pointer: fine) {
   .scene-element:has(.scene-element__hotspot:hover) .scene-element__tooltip,
   .scene-element:has(.scene-element__hotspot:focus-visible) .scene-element__tooltip {

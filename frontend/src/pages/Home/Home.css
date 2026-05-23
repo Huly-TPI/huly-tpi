@@ -23,10 +23,6 @@
   object-position: center 36%;
 }
 
-.garden-scene__shadow {
-  filter: drop-shadow(-4px 10px 16px rgba(0, 0, 0, 0.25));
-}
-
 @media (min-width: 768px) {
   .garden-scene__background {
     object-position: center 42%;
