@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import NotFound from './pages/NotFound'
 import Diary from './pages/Diary'
+import Breathing from './pages/Breathing'
 
 const App = () => {
   return (
@@ -11,6 +12,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/diary" element={<Diary />} />
+        <Route path="/breathing" element={<Breathing />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
