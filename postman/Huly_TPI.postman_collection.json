@@ -1,0 +1,421 @@
+{
+  "info": {
+    "name": "Huly TPI",
+    "_postman_id": "huly-tpi-collection",
+    "description": "Colección general del proyecto Huly TPI.\n\nVariable de entorno:\n- baseUrl: http://localhost:8080 (dev)\n\nSeveridades de riesgo: LOW | MEDIUM | HIGH",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "URL base del backend. Cambiar según entorno (dev/qa/prod)."
+    },
+    {
+      "key": "riskWordId",
+      "value": "1",
+      "type": "string",
+      "description": "ID de palabra de riesgo. Actualizar después de crear una."
+    }
+  ],
+  "item": [
+    {
+      "name": "Examples",
+      "description": "Endpoints de ejemplo para verificar el funcionamiento del servidor y el flujo básico de CRUD.",
+      "item": [
+        {
+          "name": "Crear ejemplo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/examples",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "examples"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mi ejemplo\",\n  \"description\": \"Descripción del ejemplo\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea un registro de ejemplo.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si name está en blanco o supera 100 caracteres"
+          },
+          "response": [
+            {
+              "name": "200 - Creado exitosamente",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/examples" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Mi ejemplo\",\n  \"description\": \"Descripción del ejemplo\"\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Mi ejemplo\",\n  \"description\": \"Descripción del ejemplo\"\n}"
+            },
+            {
+              "name": "400 - Name en blanco",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/examples" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"Descripción\"\n}"
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": \"El nombre es obligatorio\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Test del servidor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/examples/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "examples", "test"]
+            },
+            "description": "Verifica que el servidor esté en funcionamiento. Retorna una página HTML simple.\n\n**Respuesta exitosa:** 200 OK (Content-Type: text/html)"
+          },
+          "response": [
+            {
+              "name": "200 - Servidor activo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/examples/test" }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "text/html" }],
+              "body": "<!DOCTYPE html><html><body><h1>Server is running!</h1></body></html>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Math",
+      "description": "Endpoints de operaciones matemáticas.",
+      "item": [
+        {
+          "name": "Sumar dos números",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/math/sum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "math", "sum"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"a\": 5,\n  \"b\": 3\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Suma dos enteros y retorna el resultado.\nSi no se envía un campo, su valor por defecto es 0.\n\n**Respuesta exitosa:** 200 OK"
+          },
+          "response": [
+            {
+              "name": "200 - Resultado de la suma",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/math/sum" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"a\": 5,\n  \"b\": 3\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"result\": 8\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Risk Words",
+      "description": "Gestión de palabras de riesgo emocional utilizadas como contexto para el análisis de IA.\n\nSeveridades válidas: LOW | MEDIUM | HIGH",
+      "item": [
+        {
+          "name": "Crear palabra de riesgo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/risk-words",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "risk-words"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"word\": \"suicidio\",\n  \"description\": \"Indicador directo de ideación suicida\",\n  \"severity\": \"HIGH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea una nueva palabra de riesgo emocional.\n\n**Respuesta exitosa:** 201 Created\n**Errores posibles:**\n- 400 si falta word o severity, o superan el largo máximo\n- 409 si la palabra ya existe"
+          },
+          "response": [
+            {
+              "name": "201 - Creada exitosamente",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/risk-words" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"suicidio\",\n  \"description\": \"Indicador directo de ideación suicida\",\n  \"severity\": \"HIGH\"\n}"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"word\": \"suicidio\",\n  \"description\": \"Indicador directo de ideación suicida\",\n  \"severity\": \"HIGH\",\n  \"active\": true\n}"
+            },
+            {
+              "name": "400 - Validación fallida",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/risk-words" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"\",\n  \"severity\": \"HIGH\"\n}"
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"word\": \"La palabra es obligatoria\"\n  }\n}"
+            },
+            {
+              "name": "409 - Palabra duplicada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/risk-words" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"suicidio\",\n  \"severity\": \"HIGH\"\n}"
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 409,\n  \"error\": \"Conflict\",\n  \"message\": \"Ya existe una palabra de riesgo con el valor: suicidio\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Actualizar palabra de riesgo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/risk-words/{{riskWordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "risk-words", "{{riskWordId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"word\": \"autolesión\",\n  \"description\": \"Indicador de conducta autolesiva\",\n  \"severity\": \"HIGH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Actualiza todos los campos de una palabra de riesgo existente.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si falta word o severity\n- 404 si el id no existe\n- 409 si el nuevo valor ya pertenece a otro registro"
+          },
+          "response": [
+            {
+              "name": "200 - Actualizada exitosamente",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/risk-words/1" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"autolesión\",\n  \"description\": \"Indicador de conducta autolesiva\",\n  \"severity\": \"HIGH\"\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"word\": \"autolesión\",\n  \"description\": \"Indicador de conducta autolesiva\",\n  \"severity\": \"HIGH\",\n  \"active\": true\n}"
+            },
+            {
+              "name": "404 - No encontrada",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/risk-words/999" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"autolesión\",\n  \"severity\": \"HIGH\"\n}"
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"Palabra de riesgo no encontrada con id: 999\"\n}"
+            },
+            {
+              "name": "409 - Conflicto con otro registro",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/risk-words/1" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"ansiedad\",\n  \"severity\": \"LOW\"\n}"
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 409,\n  \"error\": \"Conflict\",\n  \"message\": \"Ya existe una palabra de riesgo con el valor: ansiedad\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar palabra de riesgo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/risk-words/{{riskWordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "risk-words", "{{riskWordId}}"]
+            },
+            "description": "Elimina físicamente una palabra de riesgo por su id.\n\n**Respuesta exitosa:** 204 No Content\n**Errores posibles:**\n- 404 si el id no existe"
+          },
+          "response": [
+            {
+              "name": "204 - Eliminada exitosamente",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/risk-words/1" }
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [],
+              "body": ""
+            },
+            {
+              "name": "404 - No encontrada",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/risk-words/999" }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"Palabra de riesgo no encontrada con id: 999\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar palabras de riesgo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/risk-words?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "risk-words"],
+              "query": [
+                {
+                  "key": "word",
+                  "value": "",
+                  "description": "Fragmento para filtrar por contenido (búsqueda parcial)",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Filtrar por estado: true (activas) | false (inactivas)",
+                  "disabled": true
+                },
+                {
+                  "key": "severity",
+                  "value": "HIGH",
+                  "description": "Filtrar por severidad: LOW | MEDIUM | HIGH",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Número de página (comienza en 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Cantidad de elementos por página"
+                }
+              ]
+            },
+            "description": "Lista palabras de riesgo con paginación y filtros opcionales.\n\n**Filtros disponibles:**\n- `word`: búsqueda parcial insensible a mayúsculas\n- `active`: `true` o `false`\n- `severity`: `LOW`, `MEDIUM` o `HIGH`\n- `page`: número de página (default 0)\n- `size`: elementos por página (default 20)\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si severity no es un valor válido"
+          },
+          "response": [
+            {
+              "name": "200 - Lista sin filtros",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/risk-words?page=0&size=20" }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"content\": [\n    {\n      \"id\": 1,\n      \"word\": \"suicidio\",\n      \"description\": \"Indicador directo de ideación suicida\",\n      \"severity\": \"HIGH\",\n      \"active\": true\n    },\n    {\n      \"id\": 2,\n      \"word\": \"ansiedad\",\n      \"description\": \"Indicador de malestar emocional\",\n      \"severity\": \"LOW\",\n      \"active\": true\n    }\n  ],\n  \"pageable\": {\n    \"pageNumber\": 0,\n    \"pageSize\": 20,\n    \"sort\": { \"empty\": true, \"sorted\": false, \"unsorted\": true }\n  },\n  \"totalElements\": 2,\n  \"totalPages\": 1,\n  \"last\": true,\n  \"first\": true,\n  \"numberOfElements\": 2,\n  \"empty\": false\n}"
+            },
+            {
+              "name": "200 - Filtrado por severity HIGH y active true",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/risk-words?severity=HIGH&active=true&page=0&size=20" }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"content\": [\n    {\n      \"id\": 1,\n      \"word\": \"suicidio\",\n      \"description\": \"Indicador directo de ideación suicida\",\n      \"severity\": \"HIGH\",\n      \"active\": true\n    }\n  ],\n  \"totalElements\": 1,\n  \"totalPages\": 1,\n  \"last\": true,\n  \"first\": true,\n  \"numberOfElements\": 1,\n  \"empty\": false\n}"
+            },
+            {
+              "name": "400 - Severidad inválida",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/risk-words?severity=INVALIDA" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Severidad inválida. Valores aceptados: LOW, MEDIUM, HIGH\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
