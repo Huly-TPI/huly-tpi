@@ -5,6 +5,9 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    fontFamily: {
+      sans: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+    },
     extend: {
       colors: {
         bosque: '#649959',
