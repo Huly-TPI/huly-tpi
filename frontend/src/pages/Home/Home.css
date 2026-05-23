@@ -1,0 +1,30 @@
+.garden-page {
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  background: #bfe4fb;
+}
+
+.garden-scene {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.garden-scene__background {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 36%;
+}
+
+@media (min-width: 768px) {
+  .garden-scene__background {
+    object-position: center 42%;
+  }
+}

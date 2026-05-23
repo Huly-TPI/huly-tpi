@@ -1,0 +1,36 @@
+.scene-element__tooltip {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.scene-element__image {
+  transform-origin: center;
+}
+
+.scene-element__shadow {
+  filter: drop-shadow(-4px 10px 16px rgba(0, 0, 0, 0.25));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .scene-element:has(.scene-element__hotspot:hover) .scene-element__tooltip,
+  .scene-element:has(.scene-element__hotspot:focus-visible) .scene-element__tooltip {
+    opacity: 1;
+  }
+
+  .scene-element:has(.scene-element__hotspot:hover) .scene-element__image,
+  .scene-element:has(.scene-element__hotspot:focus-visible) .scene-element__image {
+    transform: scale(1.05);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .scene-element:has(.scene-element__hotspot:focus-visible) .scene-element__tooltip,
+  .scene-element:has(.scene-element__hotspot:active) .scene-element__tooltip {
+    opacity: 1;
+  }
+
+  .scene-element:has(.scene-element__hotspot:focus-visible) .scene-element__image,
+  .scene-element:has(.scene-element__hotspot:active) .scene-element__image {
+    transform: scale(1.05);
+  }
+}

@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
         bosque: '#649959',
         menta: '#ABCBA7',
