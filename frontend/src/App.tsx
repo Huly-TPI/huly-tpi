@@ -3,7 +3,7 @@ import AppLayout from './layouts/AppLayout'
 import Home from './pages/Home'
 import NotFound from './pages/NotFound'
 import Diary from './pages/Diary'
-import Breathing from './pages/Breathing'
+import Breathing from './pages/Breathing/Breathing'
 
 const App = () => {
   return (

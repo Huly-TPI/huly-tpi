@@ -5,6 +5,11 @@ import { vi } from 'vitest';
 
 
 describe('BreathingGuide', () => {
+
+      afterEach(() => {
+        vi.useRealTimers()
+      })
+
       it('muestra botón para iniciar ejercicios tras seleccionar técnica', async () => {
         const user = userEvent.setup()
         render(<BreathingGuide />)
@@ -17,17 +22,17 @@ describe('BreathingGuide', () => {
         expect(screen.getByText(/diafragmática/i)).toBeInTheDocument()
         expect(screen.getByText(/cuadrada/i)).toBeInTheDocument()
       })
-      it('muestra la descripción de cada técnica de respiración', () => {
+      it('muestra la descripción de cada técnica de respiración al hacer hover', () => {
         render(<BreathingGuide />)
+        fireEvent.mouseEnter(screen.getByRole('button', { name: /diafragmática/i }))
         expect(screen.getByText(/Inhala profundamente por la nariz/i)).toBeInTheDocument()
-        expect(screen.getByText(/Inhala, mantén la respiración/i)).toBeInTheDocument()
 
       })
       it('al seleccionar una tecnica oculta la selección y muestra el ejercicio', async () => {
           const user = userEvent.setup()
           render(<BreathingGuide />)
           await user.click(screen.getByRole('button', { name: /diafragmática/i }))
-          expect(screen.queryByText(/selecciona una técnica/i)).not.toBeInTheDocument()
+          expect(screen.queryByText(/tómate un momento/i)).not.toBeInTheDocument()
           })
       it('al iniciar el ejercicio muestra la primera fase', async () => {
         const user = userEvent.setup()
@@ -35,13 +40,6 @@ describe('BreathingGuide', () => {
         await user.click(screen.getByRole('button', { name: /diafragmática/i }))
         await user.click(screen.getByRole('button', { name: /iniciar/i }))
         expect(screen.queryByText(/inhala profundamente/i)).not.toBeInTheDocument()
-        expect(screen.getByText(/inhalá/i)).toBeInTheDocument()
-      })
-        it('al iniciar el ejercicio muestra la primera fase', async () => {
-        const user = userEvent.setup()
-        render(<BreathingGuide />)
-        await user.click(screen.getByRole('button', { name: /diafragmática/i }))
-        await user.click(screen.getByRole('button', { name: /iniciar/i }))
         expect(screen.getByText(/inhalá/i)).toBeInTheDocument()
       })
       it('muestra el tiempo restante de la fase actual al iniciar el ejercicio', async () => { 
@@ -65,7 +63,7 @@ describe('BreathingGuide', () => {
         it('al finalizar una fase pasa a la siguiente', () => {
           vi.useFakeTimers()
             render(<BreathingGuide />  )
-            fireEvent.click(screen.getByRole('button', { name: /diafragmática/i }))
+            fireEvent.click(screen.getByRole('button', { name: /cuadrada/i }))
             fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
             expect(screen.getByText(/inhalá/i)).toBeInTheDocument()
             act(() => {    vi.advanceTimersByTime(1000)})
@@ -76,26 +74,28 @@ describe('BreathingGuide', () => {
           vi.useRealTimers()
             })
             
-        it('al terminar el ciclo se inicia el ciclo completo') , () => {
-          vi.useFakeTimers()
-              render(<BreathingGuide/>)
+         
+          it('al finalizar una ronda vuelve a la primera fase y repite el proceso', () => {
+            vi.useFakeTimers()
+              render(<BreathingGuide />  )
               fireEvent.click(screen.getByRole('button', { name: /diafragmática/i }))
               fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
               expect(screen.getByText(/inhalá/i)).toBeInTheDocument()
-              for(let i = 0; i < 12; i++) {
+              for(let i = 0; i < 8; i++) {
                 act(() => {    vi.advanceTimersByTime(1000)}  
-                  )   }
+                  )   } 
               expect(screen.getByText(/inhalá/i)).toBeInTheDocument()
-            vi.useRealTimers()
-      
-          }
+              })
+
+
+
 
           it('al hacer click en volver regresa a la selección de tecnicas', async () => {
             const user = userEvent.setup()
             render(<BreathingGuide />)
             await user.click(screen.getByRole('button', { name: /diafragmática/i }))
             await user.click(screen.getByRole('button', { name: /volver/i }))
-            expect(screen.getByText(/selecciona una técnica/i)).toBeInTheDocument()
+            expect(screen.getByText(/tómate un momento/i)).toBeInTheDocument()
           })
 
          it('al terminar todas las rondas regresa a la selecciónd e técnicas', () => {
@@ -118,7 +118,7 @@ describe('BreathingGuide', () => {
               for(let i = 0; i < 6; i++) {
                 act(() => {    vi.advanceTimersByTime(1000)}  
                   )   } 
-              expect(screen.getByText(/selecciona una técnica/i)).toBeInTheDocument()
+              expect(screen.getByText(/tómate un momento/i)).toBeInTheDocument()
               vi.useRealTimers()
             })
 
@@ -136,5 +136,16 @@ describe('BreathingGuide', () => {
           const circle = screen.getByTestId('breathing-circle')
           expect(circle).toHaveClass('inhale') 
           })
+
+          it('pausa el ejercicio al hacer click en pausar', () => {
+            vi.useFakeTimers()
+            render(<BreathingGuide />)
+            fireEvent.click(screen.getByRole('button', { name: /diafragmática/i }))
+            fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
+             expect(screen.getByText('4')).toBeInTheDocument()
+            fireEvent.click(screen.getByRole('button', { name: /pausar/i }))
+            act(() => vi.advanceTimersByTime(2000))
+            expect(screen.getByText('4')).toBeInTheDocument()
+            })
         });
 
