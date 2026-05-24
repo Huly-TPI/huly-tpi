@@ -12,5 +12,6 @@ public enum EmotionType {
     STRESS,
     CONFUSION,
     LOVE,
-    NEUTRAL
+    NEUTRAL,
+    EXHAUSTION
 }
