@@ -5,6 +5,7 @@ import SceneElement from '../../components/scene/SceneElement/SceneElement'
 
 describe('SceneElement', () => {
   const baseProps = {
+    id: 'house',
     title: 'Perfil',
     imageAlt: 'Casa de perfil',
     image: {
