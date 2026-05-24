@@ -141,13 +141,13 @@ El perfil por defecto es `dev`.
 
 ### Perfil `dev`
 
-El perfil `dev` carga secretos desde `application-dev-secrets.properties`, que **no se versiona** (está en `.gitignore`).
+El perfil `dev` carga secretos desde `application-huly-secrets.properties`, que **no se versiona** (está en `.gitignore`).
 
 1. Copiá el archivo de ejemplo:
 
 ```bash
-cp src/main/resources/application-dev-secrets.properties.example \
-   src/main/resources/application-dev-secrets.properties
+cp src/main/resources/application-huly-secrets.properties.example \
+   src/main/resources/application-huly-secrets.properties
 ```
 
 2. Editá `application-dev-secrets.properties` con tus valores locales.
