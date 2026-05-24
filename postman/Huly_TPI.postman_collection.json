@@ -2,7 +2,7 @@
   "info": {
     "name": "Huly TPI",
     "_postman_id": "huly-tpi-collection",
-    "description": "Colección general del proyecto Huly TPI.\n\nVariable de entorno:\n- baseUrl: http://localhost:8080 (dev)\n\nSeveridades de riesgo: LOW | MEDIUM | HIGH",
+    "description": "Colección general del proyecto Huly TPI.\n\nVariable de entorno:\n- baseUrl: ajustar según el puerto definido en application-huly-secrets.properties (por defecto: http://localhost:8080)\n\nSeveridades de riesgo: LOW | MEDIUM | HIGH",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
