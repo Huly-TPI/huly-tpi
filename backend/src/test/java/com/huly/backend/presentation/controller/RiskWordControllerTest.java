@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -130,6 +131,20 @@ class RiskWordControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.content").isEmpty());
+    }
+
+    @Test
+    void create_shouldSerializeNullSeverity_whenDomainHasNoSeverity() throws Exception {
+        RiskWord saved = RiskWord.builder().id(2L).word("estres").severity(null).active(true).build();
+        when(createRiskWordUseCase.execute(any(), any(), any())).thenReturn(saved);
+
+        RiskWordRequest request = new RiskWordRequest("estres", null, RiskSeverity.LOW);
+
+        mockMvc.perform(post("/api/risk-words")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.severity", nullValue()));
     }
 
     @Test

@@ -202,6 +202,17 @@ class RiskWordServiceTest {
     }
 
     @Test
+    void list_shouldReturnPage_whenSeverityIsValid() {
+        Page<RiskWord> page = new PageImpl<>(List.of());
+        when(riskWordRepository.findAll(null, null, "HIGH", PageRequest.of(0, 20))).thenReturn(page);
+
+        Page<RiskWord> result = riskWordService.list(null, null, "HIGH", PageRequest.of(0, 20));
+
+        assertThat(result).isNotNull();
+        verify(riskWordRepository).findAll(null, null, "HIGH", PageRequest.of(0, 20));
+    }
+
+    @Test
     void list_shouldReturnPage_whenSeverityIsBlank() {
         Page<RiskWord> page = new PageImpl<>(List.of());
         when(riskWordRepository.findAll(null, null, "", PageRequest.of(0, 20))).thenReturn(page);

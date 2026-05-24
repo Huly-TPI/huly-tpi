@@ -20,7 +20,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,6 +79,36 @@ class RiskWordRepositoryImplTest {
         Optional<RiskWord> result = repositoryImpl.findById(99L);
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void deleteById_shouldDelegateToJpa() {
+        repositoryImpl.deleteById(1L);
+        verify(jpa).deleteById(1L);
+    }
+
+    @Test
+    void existsById_shouldReturnTrue_whenEntityExists() {
+        when(jpa.existsById(1L)).thenReturn(true);
+        assertThat(repositoryImpl.existsById(1L)).isTrue();
+    }
+
+    @Test
+    void existsById_shouldReturnFalse_whenEntityDoesNotExist() {
+        when(jpa.existsById(99L)).thenReturn(false);
+        assertThat(repositoryImpl.existsById(99L)).isFalse();
+    }
+
+    @Test
+    void existsByWordIgnoreCase_shouldDelegateToJpa() {
+        when(jpa.existsByWordIgnoreCase("suicidio")).thenReturn(true);
+        assertThat(repositoryImpl.existsByWordIgnoreCase("suicidio")).isTrue();
+    }
+
+    @Test
+    void existsByWordIgnoreCaseAndIdNot_shouldDelegateToJpa() {
+        when(jpa.existsByWordIgnoreCaseAndIdNot("suicidio", 1L)).thenReturn(false);
+        assertThat(repositoryImpl.existsByWordIgnoreCaseAndIdNot("suicidio", 1L)).isFalse();
     }
 
     @Test
