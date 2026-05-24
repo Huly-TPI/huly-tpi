@@ -1,20 +1,11 @@
 import { Link } from 'react-router-dom'
-import type { SceneElementImage } from '../types'
+import type { SceneElementDefinition } from '../types'
 import './SceneElement.css'
 
 export type SceneTheme = 'light' | 'dark'
 
-interface SceneElementProps {
-  title: string
-  imageAlt: string
-  image: SceneElementImage
-  imageClassName: string
-  placementClassName: string
-  hotspotClassName: string
-  clipPath: string
-  tooltipClassName?: string
+type SceneElementProps = SceneElementDefinition & {
   theme?: SceneTheme
-  to?: string
 }
 
 export default function SceneElement({
@@ -25,6 +16,7 @@ export default function SceneElement({
   placementClassName,
   hotspotClassName,
   clipPath,
+  interactive = true,
   tooltipClassName = '',
   theme = 'light',
   to,
@@ -33,7 +25,6 @@ export default function SceneElement({
     'absolute',
     'block',
     'rounded-full',
-    'cursor-pointer',
     'transition duration-200',
     'focus-visible:outline-none',
     'focus-visible:ring-4',
@@ -41,6 +32,9 @@ export default function SceneElement({
     'focus-visible:ring-offset-2',
     'focus-visible:ring-offset-[#7da261]',
   ].join(' ')
+  const hotspotInteractionClassName = interactive
+    ? 'scene-element__hotspot--interactive cursor-pointer'
+    : 'scene-element__hotspot--inactive cursor-default pointer-events-none'
 
   const imageSrc = theme === 'dark' && image.dark ? image.dark : image.light
 
@@ -59,18 +53,19 @@ export default function SceneElement({
         <p className="text-sm font-semibold text-[#5e4030]">{title}</p>
       </div>
 
-      {to ? (
+      {to && interactive ? (
         <Link
           to={to}
           aria-label={title}
-          className={`scene-element__hotspot ${sharedClassName} ${hotspotClassName}`}
+          className={`scene-element__hotspot ${hotspotInteractionClassName} ${sharedClassName} ${hotspotClassName}`}
           style={{ clipPath }}
         />
       ) : (
         <button
           type="button"
           aria-label={title}
-          className={`scene-element__hotspot ${sharedClassName} ${hotspotClassName}`}
+          disabled={!interactive}
+          className={`scene-element__hotspot ${hotspotInteractionClassName} ${sharedClassName} ${hotspotClassName}`}
           style={{ clipPath }}
         />
       )}

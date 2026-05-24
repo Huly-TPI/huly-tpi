@@ -1,21 +1,29 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Home from '../../pages/Home/Home'
+import { ThemeProvider } from '../../context/theme'
 
 describe('Home', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    window.localStorage.setItem('huly:scene-theme', 'light')
+  })
+
   const renderWithRouter = () => {
     return render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
+      <ThemeProvider>
+        <MemoryRouter>
+          <Home />
+        </MemoryRouter>
+      </ThemeProvider>
     )
   }
 
   it('renderiza el fondo del jardin', () => {
     renderWithRouter()
-    expect(screen.getByAltText('Fondo diurno del jardín')).toBeInTheDocument()
+    expect(screen.getByAltText('Fondo del jardin')).toBeInTheDocument()
   })
 
   it('renderiza hotspots navegables principales', () => {
@@ -38,15 +46,46 @@ describe('Home', () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/diary" element={<h1>Vista Diario</h1>} />
-        </Routes>
-      </MemoryRouter>
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/diary" element={<h1>Vista Diario</h1>} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
     )
 
     await user.click(screen.getByLabelText('Diario'))
     expect(screen.getByRole('heading', { name: 'Vista Diario' })).toBeInTheDocument()
+  })
+
+  it('permite alternar entre modo noche y modo dia', async () => {
+    const user = userEvent.setup()
+    renderWithRouter()
+
+    const toggleButton = screen.getByRole('button', { name: 'Cambiar a modo noche' })
+    await user.click(toggleButton)
+
+    expect(screen.getByRole('button', { name: 'Cambiar a modo dia' })).toBeInTheDocument()
+  })
+
+  it('restringe accesos estimulantes en modo noche', async () => {
+    const user = userEvent.setup()
+    renderWithRouter()
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
+
+    const minijuegosButton = screen.getByRole('button', { name: 'Minijuegos' })
+    const retosButton = screen.getByRole('button', { name: 'Retos' })
+    const diarioButton = screen.getByRole('button', { name: 'Diario' })
+
+    expect(minijuegosButton).toBeDisabled()
+    expect(retosButton).toBeDisabled()
+    expect(diarioButton).toBeDisabled()
+
+    expect(screen.queryByRole('link', { name: 'Minijuegos' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Retos' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Diario' })).not.toBeInTheDocument()
   })
 })
