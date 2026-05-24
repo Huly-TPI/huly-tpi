@@ -141,7 +141,24 @@ El perfil por defecto es `dev`.
 
 ### Perfil `dev`
 
-No requiere variables de entorno. Funciona out-of-the-box.
+El perfil `dev` carga secretos desde `application-dev-secrets.properties`, que **no se versiona** (está en `.gitignore`).
+
+1. Copiá el archivo de ejemplo:
+
+```bash
+cp src/main/resources/application-dev-secrets.properties.example \
+   src/main/resources/application-dev-secrets.properties
+```
+
+2. Editá `application-dev-secrets.properties` con tus valores locales.
+
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `PORT` | Puerto del servidor | `8080` |
+| `FRONTEND_URL` | URL del frontend (CORS) | `http://localhost:5173` |
+| `SPRING_DATASOURCE_URL` | URL de conexión a PostgreSQL | `jdbc:postgresql://localhost:5432/huly` |
+| `SPRING_DATASOURCE_USERNAME` | Usuario de la base de datos | `postgres` |
+| `SPRING_DATASOURCE_PASSWORD` | Contraseña de la base de datos | `secret` |
 
 ### Perfiles `qa` y `prod`
 
@@ -253,6 +270,8 @@ backend/
 │   │   └── resources/
 │   │       ├── application.properties
 │   │       ├── application-dev.properties
+│   │       ├── application-dev-secrets.properties         ← ignorado por git (local)
+│   │       ├── application-dev-secrets.properties.example ← plantilla para nuevos devs
 │   │       ├── application-qa.properties
 │   │       ├── application-prod.properties
 │   │       └── db/migration/           ← Scripts Flyway (V1__, V2__, ...)

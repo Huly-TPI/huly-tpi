@@ -87,6 +87,7 @@ log.txt
 .env.local
 .env.*.local
 .env.prod
+application-dev-secrets.properties
 
 # ========================
 # DATABASES & CACHES
