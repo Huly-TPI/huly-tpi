@@ -68,16 +68,16 @@ public class RiskWordRepositoryImpl implements RiskWordRepository {
      * {@inheritDoc}
      */
     @Override
-    public boolean existsByWord(String word) {
-        return jpa.existsByWord(word);
+    public boolean existsByWordIgnoreCase(String word) {
+        return jpa.existsByWordIgnoreCase(word);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean existsByWordAndIdNot(String word, Long id) {
-        return jpa.existsByWordAndIdNot(word, id);
+    public boolean existsByWordIgnoreCaseAndIdNot(String word, Long id) {
+        return jpa.existsByWordIgnoreCaseAndIdNot(word, id);
     }
 
     /**

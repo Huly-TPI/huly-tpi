@@ -30,7 +30,9 @@ public class RiskWordService {
      * @throws ConflictException si ya existe una palabra con el mismo valor
      */
     public RiskWord create(RiskWord riskWord) {
-        assertWordIsUnique(riskWord.getWord());
+        String normalized = riskWord.getWord().trim().toLowerCase();
+        riskWord.setWord(normalized);
+        assertWordIsUnique(normalized);
         return riskWordRepository.save(riskWord);
     }
 
@@ -45,8 +47,9 @@ public class RiskWordService {
      */
     public RiskWord update(Long id, RiskWord riskWord) {
         RiskWord existing = findOrThrow(id);
-        assertWordNotTakenByAnother(riskWord.getWord(), existing.getWord(), id);
-        existing.setWord(riskWord.getWord());
+        String normalized = riskWord.getWord().trim().toLowerCase();
+        assertWordNotTakenByAnother(normalized, existing.getWord(), id);
+        existing.setWord(normalized);
         existing.setDescription(riskWord.getDescription());
         existing.setSeverity(riskWord.getSeverity());
         return riskWordRepository.save(existing);
@@ -109,7 +112,7 @@ public class RiskWordService {
      * @throws ConflictException si ya existe una palabra con ese valor
      */
     private void assertWordIsUnique(String word) {
-        if (riskWordRepository.existsByWord(word)) {
+        if (riskWordRepository.existsByWordIgnoreCase(word)) {
             throw new ConflictException("Ya existe una palabra de riesgo con el valor: " + word);
         }
     }
@@ -124,7 +127,7 @@ public class RiskWordService {
      * @throws ConflictException si otro registro ya usa el nuevo valor
      */
     private void assertWordNotTakenByAnother(String newWord, String currentWord, Long id) {
-        if (!currentWord.equalsIgnoreCase(newWord) && riskWordRepository.existsByWordAndIdNot(newWord, id)) {
+        if (!currentWord.equals(newWord) && riskWordRepository.existsByWordIgnoreCaseAndIdNot(newWord, id)) {
             throw new ConflictException("Ya existe una palabra de riesgo con el valor: " + newWord);
         }
     }
@@ -137,7 +140,7 @@ public class RiskWordService {
      * @throws BadRequestException si el texto no coincide con ningún valor del enum
      */
     private void validateSeverity(String severity) {
-        if (severity == null) return;
+        if (severity == null || severity.isBlank()) return;
         try {
             RiskSeverity.valueOf(severity.toUpperCase());
         } catch (IllegalArgumentException e) {

@@ -46,23 +46,22 @@ public interface RiskWordRepository {
     boolean existsById(Long id);
 
     /**
-     * Verifica si ya existe una palabra de riesgo con el valor exacto indicado.
+     * Verifica si ya existe una palabra de riesgo con el valor indicado, ignorando mayúsculas.
      *
      * @param word valor de la palabra a verificar
      * @return {@code true} si ya existe, {@code false} en caso contrario
      */
-    boolean existsByWord(String word);
+    boolean existsByWordIgnoreCase(String word);
 
     /**
-     * Verifica si existe otra palabra de riesgo con el mismo valor,
-     * excluyendo el registro con el id proporcionado. Usado en actualizaciones
-     * para detectar conflictos sin contar el propio registro.
+     * Verifica si existe otra palabra de riesgo con el mismo valor (ignorando mayúsculas),
+     * excluyendo el registro con el id proporcionado.
      *
      * @param word valor de la palabra a verificar
      * @param id   identificador del registro a excluir de la búsqueda
      * @return {@code true} si existe otro registro con ese valor, {@code false} en caso contrario
      */
-    boolean existsByWordAndIdNot(String word, Long id);
+    boolean existsByWordIgnoreCaseAndIdNot(String word, Long id);
 
     /**
      * Recupera una página de palabras de riesgo aplicando filtros opcionales.

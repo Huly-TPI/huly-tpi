@@ -21,6 +21,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +39,7 @@ class RiskWordServiceTest {
     void create_shouldSaveAndReturn_whenWordIsNew() {
         RiskWord input = RiskWord.builder().word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
         RiskWord saved  = RiskWord.builder().id(1L).word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
-        when(riskWordRepository.existsByWord("suicidio")).thenReturn(false);
+        when(riskWordRepository.existsByWordIgnoreCase("suicidio")).thenReturn(false);
         when(riskWordRepository.save(input)).thenReturn(saved);
 
         RiskWord result = riskWordService.create(input);
@@ -48,9 +49,34 @@ class RiskWordServiceTest {
     }
 
     @Test
+    void create_shouldNormalizeWordToLowercase() {
+        RiskWord input = RiskWord.builder().word("  Suicidio  ").severity(RiskSeverity.HIGH).active(true).build();
+        RiskWord saved = RiskWord.builder().id(1L).word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
+        when(riskWordRepository.existsByWordIgnoreCase("suicidio")).thenReturn(false);
+        when(riskWordRepository.save(any())).thenReturn(saved);
+
+        riskWordService.create(input);
+
+        assertThat(input.getWord()).isEqualTo("suicidio");
+        verify(riskWordRepository).existsByWordIgnoreCase("suicidio");
+    }
+
+    @Test
     void create_shouldThrowConflict_whenWordAlreadyExists() {
         RiskWord input = RiskWord.builder().word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
-        when(riskWordRepository.existsByWord("suicidio")).thenReturn(true);
+        when(riskWordRepository.existsByWordIgnoreCase("suicidio")).thenReturn(true);
+
+        assertThatThrownBy(() -> riskWordService.create(input))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("suicidio");
+
+        verify(riskWordRepository, never()).save(any());
+    }
+
+    @Test
+    void create_shouldThrowConflict_whenWordExistsWithDifferentCase() {
+        RiskWord input = RiskWord.builder().word("SUICIDIO").severity(RiskSeverity.HIGH).active(true).build();
+        when(riskWordRepository.existsByWordIgnoreCase("suicidio")).thenReturn(true);
 
         assertThatThrownBy(() -> riskWordService.create(input))
                 .isInstanceOf(ConflictException.class)
@@ -66,7 +92,7 @@ class RiskWordServiceTest {
         RiskWord existing = RiskWord.builder().id(1L).word("ansiedad").severity(RiskSeverity.LOW).active(true).build();
         RiskWord patch    = RiskWord.builder().word("panico").description("desc").severity(RiskSeverity.MEDIUM).build();
         when(riskWordRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(riskWordRepository.existsByWordAndIdNot("panico", 1L)).thenReturn(false);
+        when(riskWordRepository.existsByWordIgnoreCaseAndIdNot("panico", 1L)).thenReturn(false);
         when(riskWordRepository.save(existing)).thenReturn(existing);
 
         riskWordService.update(1L, patch);
@@ -74,6 +100,18 @@ class RiskWordServiceTest {
         assertThat(existing.getWord()).isEqualTo("panico");
         assertThat(existing.getSeverity()).isEqualTo(RiskSeverity.MEDIUM);
         verify(riskWordRepository).save(existing);
+    }
+
+    @Test
+    void update_shouldNormalizeWordToLowercase() {
+        RiskWord existing = RiskWord.builder().id(1L).word("ansiedad").severity(RiskSeverity.LOW).active(true).build();
+        when(riskWordRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(riskWordRepository.existsByWordIgnoreCaseAndIdNot(eq("panico"), eq(1L))).thenReturn(false);
+        when(riskWordRepository.save(any())).thenReturn(existing);
+
+        riskWordService.update(1L, RiskWord.builder().word("  Panico  ").severity(RiskSeverity.HIGH).build());
+
+        assertThat(existing.getWord()).isEqualTo("panico");
     }
 
     @Test
@@ -89,9 +127,20 @@ class RiskWordServiceTest {
     void update_shouldThrowConflict_whenNewWordBelongsToAnotherRecord() {
         RiskWord existing = RiskWord.builder().id(1L).word("ansiedad").severity(RiskSeverity.LOW).active(true).build();
         when(riskWordRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(riskWordRepository.existsByWordAndIdNot("panico", 1L)).thenReturn(true);
+        when(riskWordRepository.existsByWordIgnoreCaseAndIdNot("panico", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> riskWordService.update(1L, RiskWord.builder().word("panico").build()))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("panico");
+    }
+
+    @Test
+    void update_shouldThrowConflict_whenNewWordMatchesAnotherRecordWithDifferentCase() {
+        RiskWord existing = RiskWord.builder().id(1L).word("ansiedad").severity(RiskSeverity.LOW).active(true).build();
+        when(riskWordRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(riskWordRepository.existsByWordIgnoreCaseAndIdNot("panico", 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> riskWordService.update(1L, RiskWord.builder().word("PANICO").build()))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("panico");
     }
@@ -104,7 +153,18 @@ class RiskWordServiceTest {
 
         riskWordService.update(1L, RiskWord.builder().word("ansiedad").severity(RiskSeverity.HIGH).build());
 
-        verify(riskWordRepository, never()).existsByWordAndIdNot(any(), any());
+        verify(riskWordRepository, never()).existsByWordIgnoreCaseAndIdNot(any(), any());
+    }
+
+    @Test
+    void update_shouldSkipDuplicateCheck_whenWordIsUnchangedDifferentCase() {
+        RiskWord existing = RiskWord.builder().id(1L).word("ansiedad").severity(RiskSeverity.LOW).active(true).build();
+        when(riskWordRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(riskWordRepository.save(any())).thenReturn(existing);
+
+        riskWordService.update(1L, RiskWord.builder().word("ANSIEDAD").severity(RiskSeverity.HIGH).build());
+
+        verify(riskWordRepository, never()).existsByWordIgnoreCaseAndIdNot(any(), any());
     }
 
     // ── delete ──────────────────────────────────────────────────────────────
@@ -139,6 +199,17 @@ class RiskWordServiceTest {
         Page<RiskWord> result = riskWordService.list(null, null, null, PageRequest.of(0, 20));
 
         assertThat(result).isNotNull();
+    }
+
+    @Test
+    void list_shouldReturnPage_whenSeverityIsBlank() {
+        Page<RiskWord> page = new PageImpl<>(List.of());
+        when(riskWordRepository.findAll(null, null, "", PageRequest.of(0, 20))).thenReturn(page);
+
+        Page<RiskWord> result = riskWordService.list(null, null, "", PageRequest.of(0, 20));
+
+        assertThat(result).isNotNull();
+        verify(riskWordRepository).findAll(null, null, "", PageRequest.of(0, 20));
     }
 
     @Test

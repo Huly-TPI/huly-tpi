@@ -131,4 +131,14 @@ class RiskWordControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.content").isEmpty());
     }
+
+    @Test
+    void list_shouldReturn200_whenSeverityIsBlank() throws Exception {
+        Page<RiskWord> page = new PageImpl<>(List.of());
+        when(listRiskWordsUseCase.execute(isNull(), isNull(), eq(""), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/risk-words").param("severity", ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty());
+    }
 }

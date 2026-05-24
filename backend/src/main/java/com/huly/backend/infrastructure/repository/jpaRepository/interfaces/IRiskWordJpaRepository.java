@@ -14,20 +14,20 @@ public interface IRiskWordJpaRepository
         extends JpaRepository<RiskWordEntity, Long>, JpaSpecificationExecutor<RiskWordEntity> {
 
     /**
-     * Verifica si existe una palabra de riesgo con el valor exacto indicado.
+     * Verifica si existe una palabra de riesgo con el valor indicado, ignorando mayúsculas.
      *
      * @param word valor a buscar
      * @return {@code true} si existe al menos un registro con ese valor
      */
-    boolean existsByWord(String word);
+    boolean existsByWordIgnoreCase(String word);
 
     /**
-     * Verifica si existe otra palabra de riesgo con el mismo valor,
+     * Verifica si existe otra palabra de riesgo con el mismo valor (ignorando mayúsculas),
      * excluyendo el registro con el id proporcionado.
      *
      * @param word valor a buscar
      * @param id   id del registro a excluir de la búsqueda
      * @return {@code true} si otro registro distinto tiene ese valor
      */
-    boolean existsByWordAndIdNot(String word, Long id);
+    boolean existsByWordIgnoreCaseAndIdNot(String word, Long id);
 }
