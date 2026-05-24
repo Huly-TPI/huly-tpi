@@ -125,3 +125,16 @@ gradlew.bat
 # DOCUMENTATION
 # ========================
 HELP.md
+
+
+# ========================
+# SKILLS
+# ========================
+/.agents
+skills-lock.json
+
+# ========================
+# CONFIGURATION
+# ========================
+docker-compose.yml
+
