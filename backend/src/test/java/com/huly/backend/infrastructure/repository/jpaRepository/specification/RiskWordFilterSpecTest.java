@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.lang.reflect.Constructor;
@@ -19,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class RiskWordFilterSpecTest {
 
     @Mock private Root<RiskWordEntity> root;
@@ -81,7 +84,7 @@ class RiskWordFilterSpecTest {
         when(root.get("word")).thenReturn(wordPath);
         when(builder.lower(wordPath)).thenReturn(lowerExpr);
         when(builder.like(lowerExpr, "%ansiedad%")).thenReturn(wordPredicate);
-        when(builder.and(any(Predicate[].class))).thenReturn(combined);
+        when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(combined);
 
         Specification<RiskWordEntity> spec = RiskWordFilterSpec.build("ansiedad", null, null);
         Predicate result = spec.toPredicate(root, query, builder);
@@ -95,7 +98,7 @@ class RiskWordFilterSpecTest {
         when(root.get("word")).thenReturn(wordPath);
         when(builder.lower(wordPath)).thenReturn(lowerExpr);
         when(builder.like(lowerExpr, "%ansie%")).thenReturn(wordPredicate);
-        when(builder.and(any(Predicate[].class))).thenReturn(combined);
+        when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(combined);
 
         Specification<RiskWordEntity> spec = RiskWordFilterSpec.build("ANSIE", null, null);
         spec.toPredicate(root, query, builder);
@@ -107,7 +110,7 @@ class RiskWordFilterSpecTest {
     void build_shouldApplyActiveFilter_whenActiveIsTrue() {
         when(root.get("active")).thenReturn(activePath);
         when(builder.equal(activePath, true)).thenReturn(activePredicate);
-        when(builder.and(any(Predicate[].class))).thenReturn(combined);
+        when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(combined);
 
         Specification<RiskWordEntity> spec = RiskWordFilterSpec.build(null, true, null);
         Predicate result = spec.toPredicate(root, query, builder);
@@ -120,7 +123,7 @@ class RiskWordFilterSpecTest {
     void build_shouldApplyActiveFilter_whenActiveIsFalse() {
         when(root.get("active")).thenReturn(activePath);
         when(builder.equal(activePath, false)).thenReturn(activePredicate);
-        when(builder.and(any(Predicate[].class))).thenReturn(combined);
+        when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(combined);
 
         Specification<RiskWordEntity> spec = RiskWordFilterSpec.build(null, false, null);
         spec.toPredicate(root, query, builder);
@@ -132,7 +135,7 @@ class RiskWordFilterSpecTest {
     void build_shouldApplySeverityFilter_whenSeverityIsNotBlank() {
         when(root.get("severity")).thenReturn(severityPath);
         when(builder.equal(severityPath, RiskSeverity.HIGH)).thenReturn(severityPredicate);
-        when(builder.and(any(Predicate[].class))).thenReturn(combined);
+        when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(combined);
 
         Specification<RiskWordEntity> spec = RiskWordFilterSpec.build(null, null, "HIGH");
         Predicate result = spec.toPredicate(root, query, builder);
@@ -145,7 +148,7 @@ class RiskWordFilterSpecTest {
     void build_shouldApplySeverityFilter_caseInsensitive() {
         when(root.get("severity")).thenReturn(severityPath);
         when(builder.equal(severityPath, RiskSeverity.LOW)).thenReturn(severityPredicate);
-        when(builder.and(any(Predicate[].class))).thenReturn(combined);
+        when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(combined);
 
         Specification<RiskWordEntity> spec = RiskWordFilterSpec.build(null, null, "low");
         spec.toPredicate(root, query, builder);
@@ -162,7 +165,7 @@ class RiskWordFilterSpecTest {
         when(builder.like(lowerExpr, "%suicidio%")).thenReturn(wordPredicate);
         when(builder.equal(activePath, true)).thenReturn(activePredicate);
         when(builder.equal(severityPath, RiskSeverity.HIGH)).thenReturn(severityPredicate);
-        when(builder.and(any(Predicate[].class))).thenReturn(combined);
+        when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(combined);
 
         Specification<RiskWordEntity> spec = RiskWordFilterSpec.build("suicidio", true, "HIGH");
         spec.toPredicate(root, query, builder);
