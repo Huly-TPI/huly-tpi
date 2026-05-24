@@ -1,4 +1,4 @@
-﻿import { beforeEach, describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -8,6 +8,7 @@ import { ThemeProvider } from '../../context/theme'
 describe('Home', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    window.localStorage.setItem('huly:scene-theme', 'light')
   })
 
   const renderWithRouter = () => {
@@ -75,8 +76,16 @@ describe('Home', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
 
-    expect(screen.getByRole('button', { name: 'Minijuegos' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Retos' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Diario' })).toBeInTheDocument()
+    const minijuegosButton = screen.getByRole('button', { name: 'Minijuegos' })
+    const retosButton = screen.getByRole('button', { name: 'Retos' })
+    const diarioButton = screen.getByRole('button', { name: 'Diario' })
+
+    expect(minijuegosButton).toBeDisabled()
+    expect(retosButton).toBeDisabled()
+    expect(diarioButton).toBeDisabled()
+
+    expect(screen.queryByRole('link', { name: 'Minijuegos' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Retos' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Diario' })).not.toBeInTheDocument()
   })
 })

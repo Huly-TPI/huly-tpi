@@ -5,7 +5,6 @@ import './SceneElement.css'
 export type SceneTheme = 'light' | 'dark'
 
 type SceneElementProps = SceneElementDefinition & {
-  interactive?: boolean
   theme?: SceneTheme
 }
 

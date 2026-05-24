@@ -1,4 +1,4 @@
-﻿import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
+import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
 import { useEffect } from 'react'
 import cloudImage from '../../assets/garden/light-theme/cloud.webp'
 import houseImage from '../../assets/garden/light-theme/house.webp'
@@ -160,13 +160,14 @@ export default function Home() {
 
         <img
           src={dayBackgroundImage}
-          alt="Fondo del jardin"
+          alt={sceneTheme === 'light' ? 'Fondo del jardin' : ''}
+          aria-hidden={sceneTheme !== 'light'}
           className={`garden-scene__background garden-scene__background--light pointer-events-none select-none ${sceneTheme === 'light' ? 'garden-scene__background--active' : ''}`}
         />
         <img
           src={nightBackgroundImage}
-          alt=""
-          aria-hidden="true"
+          alt={sceneTheme === 'dark' ? 'Fondo del jardin nocturno' : ''}
+          aria-hidden={sceneTheme !== 'dark'}
           className={`garden-scene__background garden-scene__background--dark pointer-events-none select-none ${sceneTheme === 'dark' ? 'garden-scene__background--active' : ''}`}
         />
 
