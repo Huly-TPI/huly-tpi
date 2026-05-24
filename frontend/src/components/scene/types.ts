@@ -12,6 +12,7 @@ export interface SceneElementDefinition {
   placementClassName: string
   hotspotClassName: string
   clipPath: string
+  interactive?: boolean
   tooltipClassName?: string
   to?: string
 }

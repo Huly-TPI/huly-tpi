@@ -50,12 +50,24 @@ describe('SceneElement', () => {
   })
 
   it('usa la imagen dark cuando el theme es dark', () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <SceneElement {...baseProps} theme="dark" />
       </MemoryRouter>
     )
 
-    expect(screen.getByAltText('Casa de perfil')).toHaveAttribute('src', '/dark-house.webp')
+    const darkImage = container.querySelector('img[src="/dark-house.webp"]')
+    expect(darkImage).toBeInTheDocument()
+  })
+
+  it('desactiva navegacion cuando interactive es false', () => {
+    render(
+      <MemoryRouter>
+        <SceneElement {...baseProps} to="/profile" interactive={false} />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('button', { name: 'Perfil' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Perfil' })).not.toBeInTheDocument()
   })
 })
