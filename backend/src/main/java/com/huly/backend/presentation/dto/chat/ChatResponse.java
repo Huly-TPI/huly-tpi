@@ -34,8 +34,8 @@ public record ChatResponse(
         public record GeneratedChallenge(String title, String description) {}
 
         public record Metadata(
-                @JsonProperty("risk_score") double riskScore,
-                @JsonProperty("cbt_tag") String cbtTag
+                @JsonProperty("risk_detected") Boolean riskDetected,
+                @JsonProperty("matched_word") String matchedWord
         ) {}
 }
 

@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.RiskWord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -73,4 +74,11 @@ public interface RiskWordRepository {
      * @return página de palabras de riesgo que coinciden con los filtros
      */
     Page<RiskWord> findAll(String word, Boolean active, String severity, Pageable pageable);
+
+    /**
+     * Recupera todas las palabras de riesgo que se encuentran activas.
+     *
+     * @return lista de palabras de riesgo con estado activo
+     */
+    List<RiskWord> findAllActive();
 }

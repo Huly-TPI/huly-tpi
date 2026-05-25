@@ -35,7 +35,7 @@ public class OllamaChatAdapter implements LLMChatPort {
                 .getOutput()
                 .getText();
 
-        return new ChatReply(content);
+        return ChatReply.of(content);
     }
 
     private List<Message> buildMessages(
