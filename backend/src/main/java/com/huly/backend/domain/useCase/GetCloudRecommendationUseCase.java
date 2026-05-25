@@ -69,7 +69,7 @@ public class GetCloudRecommendationUseCase {
                     redirectUrl
             );
         } catch (Exception e) {
-            log.warn("Error al procesar recomendación, usando fallback. Raw: {}. Error: {}", raw, e.getMessage());
+            log.warn("Error al procesar recomendación, usando fallback.", e);
             return fallback();
         }
     }
