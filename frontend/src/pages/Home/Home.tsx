@@ -15,10 +15,13 @@ import darkTodoBoardImage from '../../assets/garden/dark-theme/to-do-board.webp'
 import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
+import HomeOnboarding from '../../components/onboarding/HomeOnboarding/HomeOnboarding'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
 import SceneElement, { type SceneTheme } from '../../components/scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/scene/types'
 import { useTheme } from '../../context/theme'
+import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
+import { createHomeOnboardingSteps } from './homeOnboardingSteps'
 import './Home.css'
 
 const THEME_BEHAVIOR: Record<SceneTheme, { restrictedElementIds: Set<string> }> = {
@@ -124,9 +127,18 @@ const gardenElements: SceneElementDefinition[] = [
 ]
 
 const sceneElements = [...cloudElements, ...gardenElements]
+const cloudElementIds = cloudElements.map(element => element.id)
+const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds)
 
 export default function Home() {
   const { theme: sceneTheme } = useTheme()
+  const {
+    onboardingMode,
+    onboardingStepIndex,
+    shouldRenderOnboarding,
+    startOnboarding,
+    advanceOnboarding,
+  } = useHomeOnboarding(homeOnboardingSteps.length)
 
   useEffect(() => {
     const sources = new Set<string>([
@@ -151,7 +163,7 @@ export default function Home() {
   const currentThemeBehavior = THEME_BEHAVIOR[sceneTheme]
   const renderedSceneElements = sceneElements.map(element => {
     const isRestrictedForTheme = currentThemeBehavior.restrictedElementIds.has(element.id)
-    if (!isRestrictedForTheme) return element
+    if (!isRestrictedForTheme && !shouldRenderOnboarding) return element
 
     return {
       ...element,
@@ -196,6 +208,18 @@ export default function Home() {
             <SceneElement key={element.id} theme={sceneTheme} {...element} />
           ))}
         </div>
+
+        {onboardingMode !== 'hidden' ? (
+          <HomeOnboarding
+            mode={onboardingMode}
+            theme={sceneTheme}
+            sceneElements={renderedSceneElements}
+            steps={homeOnboardingSteps}
+            currentStepIndex={onboardingStepIndex}
+            onStart={startOnboarding}
+            onAdvance={advanceOnboarding}
+          />
+        ) : null}
       </section>
     </main>
   )
