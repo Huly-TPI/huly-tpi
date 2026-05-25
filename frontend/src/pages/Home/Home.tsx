@@ -69,7 +69,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageClassName: 'w-full',
     hotspotClassName: 'left-[5%] top-[3%] h-[94%] w-[88%]',
     clipPath: 'polygon(8% 23%, 22% 8%, 53% 2%, 84% 10%, 98% 35%, 91% 55%, 79% 59%, 73% 97%, 34% 99%, 26% 64%, 5% 54%)',
-    tooltipClassName: 'bottom-full mb-2 md:top-[10%] min-[1400px]:top-[6%]',
+    tooltipClassName: 'bottom-full mb-2 md:bottom-auto md:mb-0 md:top-[10%] min-[1400px]:top-[6%]',
     to: '/minigames',
   },
   {
@@ -81,7 +81,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageClassName: 'w-full',
     hotspotClassName: 'left-[6%] top-[1%] h-[92%] w-[88%]',
     clipPath: 'polygon(8% 40%, 26% 10%, 52% 1%, 79% 8%, 95% 33%, 93% 79%, 73% 94%, 24% 96%, 6% 80%)',
-    tooltipClassName: 'top-[18%] md:bottom-full md:mb-2',
+    tooltipClassName: 'top-[18%] md:top-auto md:bottom-full md:mb-2',
     to: '/profile',
   },
   {
