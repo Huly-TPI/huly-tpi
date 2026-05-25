@@ -54,7 +54,7 @@ const SEAGULLS = [
   { top: '14%', left: '62%', width: 20},
 ]
 
-const EmotionalCloudsActivity = ({ onThoughtSubmit, maxClouds = 10 }: EmotionalCloudsProps) => {
+const EmotionalCloudsActivity = ({ onFinish, maxClouds = 10 }: EmotionalCloudsProps) => {
   const [clouds, setClouds] = useState<Cloud[]>([])
   const [input, setInput] = useState('')
   const cloudIdRef = useRef(0)
@@ -78,9 +78,8 @@ const EmotionalCloudsActivity = ({ onThoughtSubmit, maxClouds = 10 }: EmotionalC
       return updated.slice(-maxClouds)
     })
 
-    onThoughtSubmit?.(input.trim())
     setInput('')
-  }, [input, onThoughtSubmit, maxClouds])
+  }, [input, maxClouds])
 
   const handleRemoveCloud = useCallback((cloudId: string) => {
     setClouds(prev => prev.filter(c => c.id !== cloudId))
@@ -123,6 +122,7 @@ const EmotionalCloudsActivity = ({ onThoughtSubmit, maxClouds = 10 }: EmotionalC
             key={cloud.id}
             cloud={cloud}
             onRemove={() => handleRemoveCloud(cloud.id)}
+            onSelect={() => onFinish?.([cloud.text])}
           />
         ))}
       </div>
