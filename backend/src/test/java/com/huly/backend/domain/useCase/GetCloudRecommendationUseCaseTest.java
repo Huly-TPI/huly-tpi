@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase;
 
-import com.huly.backend.domain.model.ChatReply;
+import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.CloudRecommendation;
 import com.huly.backend.domain.provider.LLMChatPort;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class GetCloudRecommendationUseCaseTest {
 
     @Test
     void execute_shouldReturnDiaryRecommendation_whenLlmReturnsDiaryJson() {
-        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(new ChatReply(DIARY_JSON));
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of(DIARY_JSON));
 
         CloudRecommendation result = useCase.execute(List.of("me siento muy triste y no sé por qué"));
 
@@ -61,7 +61,7 @@ class GetCloudRecommendationUseCaseTest {
 
     @Test
     void execute_shouldReturnCloudsRecommendation_whenLlmReturnsCloudsJson() {
-        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(new ChatReply(CLOUDS_JSON));
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of(CLOUDS_JSON));
 
         CloudRecommendation result = useCase.execute(List.of("estoy bien"));
 
@@ -73,7 +73,7 @@ class GetCloudRecommendationUseCaseTest {
     @Test
     void execute_shouldExtractJsonFromResponseWithSurroundingText() {
         String responseWithExtraText = "Aquí está mi recomendación:\n" + DIARY_JSON + "\n¡Espero que te ayude!";
-        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(new ChatReply(responseWithExtraText));
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of(responseWithExtraText));
 
         CloudRecommendation result = useCase.execute(List.of("pensamiento de prueba"));
 
@@ -95,7 +95,7 @@ class GetCloudRecommendationUseCaseTest {
 
     @Test
     void execute_shouldReturnFallback_whenLlmReturnsInvalidJson() {
-        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(new ChatReply("esto no es json válido"));
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of("esto no es json válido"));
 
         CloudRecommendation result = useCase.execute(List.of("pensamiento"));
 
@@ -105,7 +105,7 @@ class GetCloudRecommendationUseCaseTest {
 
     @Test
     void execute_shouldUseDefaultValues_whenLlmReturnsEmptyJson() {
-        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(new ChatReply("{}"));
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of("{}"));
 
         CloudRecommendation result = useCase.execute(List.of("pensamiento"));
 
@@ -118,7 +118,7 @@ class GetCloudRecommendationUseCaseTest {
     @Test
     void execute_shouldSendThoughtAsUserMessage() {
         when(llmChatPort.chat(any(), eq("no puedo dejar de pensar en lo que pasó"), anyList()))
-                .thenReturn(new ChatReply(DIARY_JSON));
+                .thenReturn(ChatReply.of(DIARY_JSON));
 
         CloudRecommendation result = useCase.execute(List.of("no puedo dejar de pensar en lo que pasó"));
 
