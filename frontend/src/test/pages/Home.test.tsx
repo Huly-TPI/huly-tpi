@@ -148,7 +148,7 @@ describe('Home', () => {
     await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
 
     expect(window.localStorage.getItem('huly:home-onboarding-completed')).toBe('true')
-    expect(screen.queryByLabelText(/tutorial/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('fuerza onboarding cuando VITE_HOME_ONBOARDING_MODE es always', () => {

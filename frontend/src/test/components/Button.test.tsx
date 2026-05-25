@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Button from '../../components/buttons/Button/Button'
 
@@ -48,6 +48,7 @@ describe('Button', () => {
     expect(button).toBeDisabled()
 
     resolveClick?.()
+    await waitFor(() => expect(button).not.toBeDisabled())
   })
 
   it('delegates async errors through onAsyncError when provided', async () => {

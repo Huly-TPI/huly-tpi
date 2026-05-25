@@ -1,4 +1,5 @@
 import brandLogoImage from '../../../assets/brand/color-logo.webp'
+import { useDialogFocusTrap } from '../../../hooks/useDialogFocusTrap'
 import Button from '../../buttons/Button/Button'
 import './HomeOnboarding.css'
 import type { HomeOnboardingProps } from './types'
@@ -12,14 +13,21 @@ export default function HomeOnboarding({
   onStart,
   onAdvance,
 }: HomeOnboardingProps) {
+  const { dialogRef, handleDialogKeyDown } = useDialogFocusTrap({
+    focusKey: `${mode}:${currentStepIndex}`,
+  })
+
   if (mode === 'intro') {
     return (
       <div
+        ref={dialogRef}
         className="home-onboarding"
         role="dialog"
         aria-modal="true"
         aria-labelledby="home-onboarding-title"
         aria-describedby="home-onboarding-subtitle"
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
       >
         <div className="home-onboarding__overlay" />
         <div className="home-onboarding__intro">
@@ -53,11 +61,14 @@ export default function HomeOnboarding({
 
   return (
     <div
+      ref={dialogRef}
       className="home-onboarding"
       role="dialog"
       aria-modal="true"
       aria-labelledby={`home-onboarding-step-title-${step.id}`}
       aria-describedby={`home-onboarding-step-description-${step.id}`}
+      tabIndex={-1}
+      onKeyDown={handleDialogKeyDown}
     >
       <div className="home-onboarding__overlay" />
 

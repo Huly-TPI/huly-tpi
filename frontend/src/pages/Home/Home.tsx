@@ -20,8 +20,8 @@ import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
 import SceneElement, { type SceneTheme } from '../../components/scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/scene/types'
 import { useTheme } from '../../context/theme'
+import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
-import { useHomeOnboarding } from './useHomeOnboarding'
 import './Home.css'
 
 const THEME_BEHAVIOR: Record<SceneTheme, { restrictedElementIds: Set<string> }> = {
