@@ -1,6 +1,6 @@
-package com.huly.backend.domain.repository;
+package com.huly.backend.domain.repository.chat;
 
-import com.huly.backend.domain.model.ConversationMessage;
+import com.huly.backend.domain.model.chat.ConversationMessage;
 
 import java.util.List;
 

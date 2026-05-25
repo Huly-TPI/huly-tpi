@@ -1,12 +1,12 @@
-package com.huly.backend.domain.useCase;
+package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.ChatReply;
-import com.huly.backend.domain.model.ChatConfig;
-import com.huly.backend.domain.model.ConversationMessage;
+import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.ChatConfig;
+import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.repository.ChatConfigRepository;
+import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

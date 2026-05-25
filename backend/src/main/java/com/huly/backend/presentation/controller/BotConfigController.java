@@ -1,6 +1,6 @@
 package com.huly.backend.presentation.controller;
 
-import com.huly.backend.domain.model.ChatConfig;
+import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.UpdateBotConfigCommand;
 import com.huly.backend.domain.useCase.GetBotConfigUseCase;
 import com.huly.backend.domain.useCase.UpdateBotConfigUseCase;

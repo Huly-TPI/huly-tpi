@@ -1,4 +1,4 @@
-package com.huly.backend.presentation.dto;
+package com.huly.backend.presentation.dto.chat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

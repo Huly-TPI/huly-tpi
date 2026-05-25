@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.ChatConfig;
-import com.huly.backend.domain.repository.ChatConfigRepository;
+import com.huly.backend.domain.model.chat.ChatConfig;
+import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.infrastructure.repository.entity.ChatConfigEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatConfigJpaRepository;
 import com.huly.backend.infrastructure.repository.mapper.ChatConfigMapper;

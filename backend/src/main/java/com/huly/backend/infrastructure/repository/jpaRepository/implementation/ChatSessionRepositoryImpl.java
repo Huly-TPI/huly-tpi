@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.repository.ChatSessionRepository;
+import com.huly.backend.domain.repository.chat.ChatSessionRepository;
 import com.huly.backend.infrastructure.repository.entity.ChatSessionEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatSessionJpaRepository;
 import lombok.RequiredArgsConstructor;

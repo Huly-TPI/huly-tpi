@@ -1,9 +1,9 @@
 package com.huly.backend.presentation.controller;
 
-import com.huly.backend.domain.model.ChatReply;
-import com.huly.backend.domain.useCase.ChatUseCase;
-import com.huly.backend.presentation.dto.ChatRequest;
-import com.huly.backend.presentation.dto.ChatResponse;
+import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.useCase.chat.ChatUseCase;
+import com.huly.backend.presentation.dto.chat.ChatRequest;
+import com.huly.backend.presentation.dto.chat.ChatResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -1,9 +1,9 @@
 package com.huly.backend.infrastructure.adapter.memory;
 
-import com.huly.backend.domain.model.ConversationMessage;
+import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.provider.ChatMemoryPort;
-import com.huly.backend.domain.repository.ChatMessageRepository;
-import com.huly.backend.domain.repository.ChatSessionRepository;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
+import com.huly.backend.domain.repository.chat.ChatSessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

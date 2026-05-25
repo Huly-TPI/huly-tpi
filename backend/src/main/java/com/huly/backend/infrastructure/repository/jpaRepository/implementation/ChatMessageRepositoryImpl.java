@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.ConversationMessage;
-import com.huly.backend.domain.repository.ChatMessageRepository;
+import com.huly.backend.domain.model.chat.ConversationMessage;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.infrastructure.repository.entity.ChatMessageEntity;
 import com.huly.backend.infrastructure.repository.entity.ChatSessionEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatMessageJpaRepository;
