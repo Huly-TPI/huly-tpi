@@ -1,4 +1,4 @@
-package com.huly.backend.presentation.dto;
+package com.huly.backend.presentation.dto.chat;
 
 import jakarta.validation.constraints.NotBlank;
 

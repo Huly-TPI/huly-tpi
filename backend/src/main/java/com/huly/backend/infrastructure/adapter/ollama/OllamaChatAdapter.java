@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.adapter.ollama;
 
-import com.huly.backend.domain.model.ChatReply;
-import com.huly.backend.domain.model.ConversationMessage;
+import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.provider.LLMChatPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -35,7 +35,7 @@ public class OllamaChatAdapter implements LLMChatPort {
                 .getOutput()
                 .getText();
 
-        return new ChatReply(content);
+        return ChatReply.of(content);
     }
 
     private List<Message> buildMessages(

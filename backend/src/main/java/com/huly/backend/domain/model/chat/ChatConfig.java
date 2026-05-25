@@ -1,4 +1,4 @@
-package com.huly.backend.domain.model;
+package com.huly.backend.domain.model.chat;
 
 import lombok.*;
 
