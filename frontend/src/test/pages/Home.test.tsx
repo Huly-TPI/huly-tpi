@@ -22,8 +22,29 @@ describe('Home', () => {
   }
 
   it('renderiza el fondo del jardin', () => {
-    renderWithRouter()
-    expect(screen.getByAltText('Fondo del jardin')).toBeInTheDocument()
+    const { container } = renderWithRouter()
+    const activeLightBackgrounds = container.querySelectorAll(
+      '.garden-scene__background--light.garden-scene__background--active',
+    )
+
+    expect(activeLightBackgrounds.length).toBeGreaterThan(0)
+  })
+
+  it('activa el fondo oscuro al alternar a modo noche', async () => {
+    const user = userEvent.setup()
+    const { container } = renderWithRouter()
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
+
+    const activeDarkBackgrounds = container.querySelectorAll(
+      '.garden-scene__background--dark.garden-scene__background--active',
+    )
+    const activeLightBackgrounds = container.querySelectorAll(
+      '.garden-scene__background--light.garden-scene__background--active',
+    )
+
+    expect(activeDarkBackgrounds.length).toBeGreaterThan(0)
+    expect(activeLightBackgrounds.length).toBe(0)
   })
 
   it('renderiza hotspots navegables principales', () => {
@@ -87,5 +108,12 @@ describe('Home', () => {
     expect(screen.queryByRole('link', { name: 'Minijuegos' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Retos' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Diario' })).not.toBeInTheDocument()
+  })
+
+  it('renderiza el banco con la clase de espejo mobile', () => {
+    renderWithRouter()
+
+    const benchImage = screen.getByAltText('Banco con cuaderno en el jardin')
+    expect(benchImage).toHaveClass('scene-element__image--mirror-mobile')
   })
 })
