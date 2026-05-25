@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.infrastructure.repository.entity.ChatMessageEntity;
 import com.huly.backend.infrastructure.repository.entity.ChatSessionEntity;
+import com.huly.backend.infrastructure.repository.entity.EmotionEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatMessageJpaRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatSessionJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,17 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
                 .chatSession(session)
                 .role(message.role())
                 .content(message.content())
+                .riskDetected(message.riskDetected())
                 .createdAt(Instant.now())
                 .build();
+
+        if (message.detectedEmotion() != null) {
+            EmotionEntity emotion = EmotionEntity.builder()
+                    .emotionDetected(message.detectedEmotion())
+                    .chatMessage(entity)
+                    .build();
+            entity.setEmotions(List.of(emotion));
+        }
 
         jpa.save(entity);
     }
@@ -37,7 +47,7 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
     @Override
     public List<ConversationMessage> findBySessionId(Long sessionId) {
         return jpa.findByChatSessionIdOrderByCreatedAtAsc(sessionId).stream()
-                .map(entity -> new ConversationMessage(entity.getRole(), entity.getContent()))
+                .map(e -> ConversationMessage.of(e.getRole(), e.getContent()))
                 .toList();
     }
 }

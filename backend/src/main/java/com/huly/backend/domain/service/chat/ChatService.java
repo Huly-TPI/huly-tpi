@@ -52,11 +52,13 @@ public class ChatService {
         String systemPrompt = promptBuilderService.buildEnrichedPrompt(basePrompt, riskWords);
 
         List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId);
-        chatMemoryPort.addMessage(conversationId, new ConversationMessage(MessageRole.USER, message));
 
         ChatReply reply = llmChatPort.chat(systemPrompt, message, history);
 
-        chatMemoryPort.addMessage(conversationId, new ConversationMessage(MessageRole.ASSISTANT, reply.content()));
+        chatMemoryPort.addMessage(conversationId, new ConversationMessage(
+                MessageRole.USER, message, reply.detectedEmotion(), reply.riskDetected(), reply.matchedWord()
+        ));
+        chatMemoryPort.addMessage(conversationId, ConversationMessage.of(MessageRole.ASSISTANT, reply.content()));
 
         return reply;
     }
