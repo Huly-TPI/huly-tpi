@@ -1,0 +1,207 @@
+.emotional-clouds-activity {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  font-family: 'Nunito', sans-serif;
+}
+
+.emotional-clouds-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+
+  background: linear-gradient(
+          to bottom,
+          #b8d9f0 0%,
+          #c8e4f4 30%,
+          #d6ecf5 55%,
+          #c8e8d8 75%,
+          #b8dfc8 100%
+  );
+}
+
+.emotional-cloud {
+  position: absolute;
+  width: 280px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2.2rem;
+
+  background-image: url('../../assets/garden/light-theme/cloud.webp');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-style: italic;
+  color: #7a5ba8;
+  text-align: center;
+  word-wrap: break-word;
+  user-select: none;
+  cursor: pointer;
+
+  transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+  opacity: 1;
+
+  animation: cloud-drift var(--drift-duration, 20s) linear var(--drift-delay, 0s) forwards;
+  left: 100%;
+  top: var(--cloud-top, 20%);
+}
+
+.emotional-cloud--leaving {
+  opacity: 0;
+  pointer-events: none;
+  animation-play-state: paused;
+  transform: scale(0.9) translateY(-10px);
+}
+
+.emotional-cloud__text {
+  display: block;
+  line-height: 1.4;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes cloud-drift {
+  0%   { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(calc(-100vw - 290px)) translateY(-1.5rem); }
+}
+
+.emotional-cloud--leaving {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.emotional-clouds-input-section {
+  background: #ffffff;
+  padding: 1.6rem 2rem 1.4rem;
+  box-shadow: 0 -2px 12px rgba(100, 140, 200, 0.10);
+  border-top: 1px solid #e8edf5;
+  flex-shrink: 0;
+  text-align: center;
+  height: 25%;
+  justify-content: center;
+  align-items: center;
+}
+
+.emotional-clouds-label {
+  display: block;
+  font-weight: 600;
+  font-size: 2rem;
+  margin-bottom: 0.9rem;
+  color: #7a5ba8;
+  font-family: 'Nunito', sans-serif;
+}
+
+.emotional-clouds-input-wrapper {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto 0.4rem;
+  margin-top: 2rem;
+}
+
+.emotional-clouds-input {
+  flex: 1;
+  padding: 0.7rem 1.1rem;
+  border: 1.5px solid #c8b8e0;
+  border-radius: 2rem;
+  font-size: 0.95rem;
+  background: #faf8ff;
+  color: #5a4070;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.emotional-clouds-input::placeholder {
+  color: #b0a0cc;
+}
+
+.emotional-clouds-input:focus {
+  outline: none;
+  border-color: #8869ac;
+  box-shadow: 0 0 0 3px rgba(136, 105, 172, 0.12);
+}
+
+.emotional-clouds-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.4rem;
+  background: #8869ac;
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 3px 10px rgba(136, 105, 172, 0.30);
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.emotional-clouds-button::after {
+  content: '☁';
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.emotional-clouds-button:hover:not(:disabled) {
+  background: #7558a0;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(136, 105, 172, 0.38);
+}
+
+.emotional-clouds-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.emotional-clouds-button:disabled {
+  background: #c8bedd;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.emotional-clouds-hint {
+  font-size: 0.82rem;
+  color: #a090b8;
+  margin-top: 0.3rem;
+}
+
+.emotional-clouds-counter {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .emotional-cloud {
+    max-width: 140px;
+    font-size: 0.85rem;
+    padding: 0.85rem 1.1rem;
+  }
+
+  .emotional-clouds-input-section {
+    padding: 1.2rem 1rem 1rem;
+  }
+
+  .emotional-clouds-input-wrapper {
+    flex-direction: column;
+  }
+
+  .emotional-clouds-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+
