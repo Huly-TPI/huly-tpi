@@ -1,6 +1,6 @@
-package com.huly.backend.domain.repository;
+package com.huly.backend.domain.repository.chat;
 
-import com.huly.backend.domain.model.ChatConfig;
+import com.huly.backend.domain.model.chat.ChatConfig;
 
 import java.util.Optional;
 

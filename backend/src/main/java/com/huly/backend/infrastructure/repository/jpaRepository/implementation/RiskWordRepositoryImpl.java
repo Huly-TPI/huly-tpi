@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -94,6 +95,19 @@ public class RiskWordRepositoryImpl implements RiskWordRepository {
     public Page<RiskWord> findAll(String word, Boolean active, String severity, Pageable pageable) {
         return jpa.findAll(RiskWordFilterSpec.build(word, active, severity), pageable)
                 .map(this::toDomain);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @implNote Delega la consulta al repositorio JPA filtrando por {@code active = true}
+     * y transforma cada entidad al modelo de dominio correspondiente.
+     */
+    @Override
+    public List<RiskWord> findAllActive() {
+        return jpa.findByActiveTrue().stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.huly.backend.domain.provider;
 
-import com.huly.backend.domain.model.ChatReply;
-import com.huly.backend.domain.model.ConversationMessage;
+import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.ConversationMessage;
 
 import java.util.List;
 

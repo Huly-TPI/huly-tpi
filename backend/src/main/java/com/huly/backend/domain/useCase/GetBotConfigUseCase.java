@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase;
 
-import com.huly.backend.domain.model.ChatConfig;
+import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.service.BotConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

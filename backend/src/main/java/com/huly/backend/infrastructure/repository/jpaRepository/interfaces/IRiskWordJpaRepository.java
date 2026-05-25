@@ -4,6 +4,8 @@ import com.huly.backend.infrastructure.repository.entity.RiskWordEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
+
 /**
  * Repositorio JPA para la entidad {@link RiskWordEntity}.
  * Extiende {@link JpaRepository} para las operaciones CRUD estándar y
@@ -30,4 +32,6 @@ public interface IRiskWordJpaRepository
      * @return {@code true} si otro registro distinto tiene ese valor
      */
     boolean existsByWordIgnoreCaseAndIdNot(String word, Long id);
+
+    List<RiskWordEntity> findByActiveTrue();
 }

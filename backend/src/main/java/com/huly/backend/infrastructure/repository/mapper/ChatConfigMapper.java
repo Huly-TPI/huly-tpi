@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.mapper;
 
-import com.huly.backend.domain.model.ChatConfig;
+import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.infrastructure.repository.entity.ChatConfigEntity;
 import org.springframework.stereotype.Component;
 
