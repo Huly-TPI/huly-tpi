@@ -24,6 +24,8 @@
   top: 1rem;
   right: 1rem;
   z-index: 140;
+  transform: scale(0.68);
+  transform-origin: top right;
 }
 
 .garden-scene__background {
@@ -32,9 +34,16 @@
   height: 100%;
   width: 100%;
   object-fit: cover;
-  object-position: center 36%;
   opacity: 0;
   transition: opacity 280ms ease;
+}
+
+.garden-scene__background--desktop {
+  display: none;
+}
+
+.garden-scene__background--mobile {
+  display: block;
 }
 
 .garden-scene__background--active {
@@ -45,9 +54,15 @@
   .garden-scene__theme-toggle {
     top: 1.25rem;
     right: 1.5rem;
+    transform: none;
   }
 
-  .garden-scene__background {
+  .garden-scene__background--desktop {
+    display: block;
     object-position: center 42%;
+  }
+
+  .garden-scene__background--mobile {
+    display: none;
   }
 }

@@ -13,6 +13,7 @@ export default function SceneElement({
   imageAlt,
   image,
   imageClassName,
+  imageVariantClassName = '',
   placementClassName,
   hotspotClassName,
   clipPath,
@@ -43,7 +44,7 @@ export default function SceneElement({
       <img
         src={imageSrc}
         alt={imageAlt}
-        className={`scene-element__image scene-element__shadow pointer-events-none select-none transition duration-200 ${imageClassName}`}
+        className={`scene-element__image scene-element__shadow pointer-events-none select-none transition duration-200 ${imageVariantClassName} ${imageClassName}`}
       />
 
       <div
