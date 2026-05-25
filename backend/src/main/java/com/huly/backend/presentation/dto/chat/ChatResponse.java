@@ -2,7 +2,6 @@ package com.huly.backend.presentation.dto.chat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.huly.backend.domain.model.enums.EmotionType;
 
 @JsonPropertyOrder({})
 public record ChatResponse(
@@ -10,7 +9,7 @@ public record ChatResponse(
         String hulyReply,
 
         @JsonProperty("detected_emotion")
-        EmotionType detectedEmotion,
+        String detectedEmotion,
 
         Integer intensity,
 

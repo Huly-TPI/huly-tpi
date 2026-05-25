@@ -28,9 +28,10 @@ public class ChatController {
     }
 
     private ChatResponse toResponse(ChatReply reply) {
+        String emotion = reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
         ChatResponse.Metadata metadata = reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
                 : null;
-        return new ChatResponse(reply.content(), reply.detectedEmotion(), reply.intensity(), null, null, metadata);
+        return new ChatResponse(reply.content(), emotion, reply.intensity(), null, null, metadata);
     }
 }
