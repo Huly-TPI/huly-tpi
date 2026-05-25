@@ -1,0 +1,52 @@
+.scene-element__tooltip {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.scene-element__image {
+  --scene-element-scale-x: 1;
+  transform-origin: center;
+  transform: scaleX(var(--scene-element-scale-x));
+}
+
+.scene-element__shadow {
+  filter: drop-shadow(-4px 10px 16px rgba(0, 0, 0, 0.25));
+}
+
+.scene-element__image--mirror-mobile {
+  --scene-element-scale-x: -1;
+}
+
+@media (min-width: 768px) {
+  .scene-element__image--mirror-mobile {
+    --scene-element-scale-x: 1;
+  }
+}
+
+.scene-element__image--mirror {
+  --scene-element-scale-x: -1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .scene-element:has(.scene-element__hotspot--interactive:hover) .scene-element__tooltip,
+  .scene-element:has(.scene-element__hotspot--interactive:focus-visible) .scene-element__tooltip {
+    opacity: 1;
+  }
+
+  .scene-element:has(.scene-element__hotspot--interactive:hover) .scene-element__image,
+  .scene-element:has(.scene-element__hotspot--interactive:focus-visible) .scene-element__image {
+    transform: scaleX(var(--scene-element-scale-x)) scale(1.05);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .scene-element:has(.scene-element__hotspot--interactive:focus-visible) .scene-element__tooltip,
+  .scene-element:has(.scene-element__hotspot--interactive:active) .scene-element__tooltip {
+    opacity: 1;
+  }
+
+  .scene-element:has(.scene-element__hotspot--interactive:focus-visible) .scene-element__image,
+  .scene-element:has(.scene-element__hotspot--interactive:active) .scene-element__image {
+    transform: scaleX(var(--scene-element-scale-x)) scale(1.05);
+  }
+}
