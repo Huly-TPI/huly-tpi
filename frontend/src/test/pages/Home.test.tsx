@@ -9,6 +9,7 @@ describe('Home', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.localStorage.setItem('huly:scene-theme', 'light')
+    window.localStorage.setItem('huly:home-onboarding-completed', 'true')
   })
 
   const renderWithRouter = () => {
@@ -115,5 +116,33 @@ describe('Home', () => {
 
     const benchImage = screen.getByAltText('Banco con cuaderno en el jardin')
     expect(benchImage).toHaveClass('scene-element__image--mirror-mobile')
+  })
+
+  it('muestra el onboarding de bienvenida en el primer ingreso', () => {
+    window.localStorage.removeItem('huly:home-onboarding-completed')
+
+    renderWithRouter()
+
+    expect(screen.getByLabelText('Tutorial de bienvenida')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Comenzar con el tutorial' })).toBeInTheDocument()
+  })
+
+  it('avanza el onboarding y lo marca como completado al finalizar', async () => {
+    const user = userEvent.setup()
+    window.localStorage.removeItem('huly:home-onboarding-completed')
+
+    renderWithRouter()
+
+    await user.click(screen.getByRole('button', { name: 'Comenzar con el tutorial' }))
+    expect(screen.getByText('Casa')).toBeInTheDocument()
+
+    for (let index = 0; index < 5; index += 1) {
+      await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
+
+    expect(window.localStorage.getItem('huly:home-onboarding-completed')).toBe('true')
+    expect(screen.queryByLabelText(/tutorial/i)).not.toBeInTheDocument()
   })
 })
