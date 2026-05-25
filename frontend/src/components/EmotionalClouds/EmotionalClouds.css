@@ -32,6 +32,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 2.2rem;
+  z-index: 10;
 
   background-image: url('../../assets/garden/light-theme/cloud.webp');
   background-size: 100% 100%;
@@ -181,6 +182,24 @@
 
 .emotional-clouds-counter {
   display: none;
+}
+
+.sky-sun {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.8rem;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  z-index: 3;
+  animation: sun-pulse 4s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 10px rgba(249, 193, 46, 0.45));
+}
+
+.sky-seagull {
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.75;
 }
 
 @media (max-width: 768px) {
