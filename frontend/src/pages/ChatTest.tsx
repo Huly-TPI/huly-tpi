@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { api } from '../api/client'
 import Navbar from '../components/Navbar'
 import dayBackgroundImage from '../assets/garden/light-theme/background/day-background.webp'
@@ -15,6 +15,25 @@ interface ChatApiResponse {
   } | null
 }
 
+interface ChatHistoryPageResponse {
+  content: ChatMessageResponse[]
+  page_number: number
+  page_size: number
+  total_elements: number
+  total_pages: number
+  first: boolean
+  last: boolean
+}
+
+interface ChatMessageResponse {
+  id: number
+  role: 'USER' | 'ASSISTANT'
+  content: string
+  risk_detected: boolean | null
+  detected_emotion: string | null
+  created_at: string
+}
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
@@ -22,6 +41,7 @@ interface Message {
   intensity?: number | null
   riskDetected?: boolean
   matchedWord?: string | null
+  fromHistory?: boolean
 }
 
 const EMOTION_COLORS: Record<string, string> = {
@@ -45,17 +65,52 @@ function randomConversationId() {
   return `test-${Math.random().toString(36).slice(2, 10)}`
 }
 
+function fromHistoryMessage(m: ChatMessageResponse): Message {
+  return {
+    role: m.role === 'USER' ? 'user' : 'assistant',
+    content: m.content,
+    emotion: m.detected_emotion,
+    riskDetected: m.risk_detected ?? false,
+    fromHistory: true,
+  }
+}
+
 export default function ChatTest() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [conversationId, setConversationId] = useState(randomConversationId)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [historyPage, setHistoryPage] = useState(0)
+  const [historyTotalPages, setHistoryTotalPages] = useState(0)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyLoaded, setHistoryLoaded] = useState(false)
+
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  const loadHistory = useCallback(async (convId: string, page: number, prepend: boolean) => {
+    setHistoryLoading(true)
+    try {
+      const res = await api.get<ChatHistoryPageResponse>(
+        `/chat/${encodeURIComponent(convId)}/messages?page=${page}&size=20`
+      )
+      const mapped = res.content.map(fromHistoryMessage)
+      setMessages(prev => prepend ? [...mapped, ...prev] : mapped)
+      setHistoryPage(res.page_number)
+      setHistoryTotalPages(res.total_pages)
+      setHistoryLoaded(true)
+    } catch {
+      // no history for this conversationId yet
+      setHistoryLoaded(true)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [])
 
   async function send() {
     const text = input.trim()
@@ -96,11 +151,21 @@ export default function ChatTest() {
     }
   }
 
+  function handleNewSession() {
+    setConversationId(randomConversationId())
+    setMessages([])
+    setHistoryLoaded(false)
+    setHistoryPage(0)
+    setHistoryTotalPages(0)
+  }
+
+  const hasPrevPages = historyLoaded && historyPage > 0
+  const hasNextPages = historyLoaded && historyPage < historyTotalPages - 1
+
   return (
     <div className="flex h-dvh flex-col" style={{ background: '#bfe4fb' }}>
       <Navbar />
 
-      {/* Background */}
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <img
           src={dayBackgroundImage}
@@ -110,7 +175,6 @@ export default function ChatTest() {
           style={{ objectPosition: 'center 36%' }}
         />
 
-        {/* Chat overlay */}
         <div className="relative z-10 flex h-full flex-col items-center overflow-y-auto px-4 py-8">
 
           {/* Header */}
@@ -122,7 +186,6 @@ export default function ChatTest() {
               <h1 className="text-xl font-bold text-gray-800">Chat — Huly AI</h1>
             </div>
 
-            {/* ConversationId editable */}
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span>conversationId:</span>
               <input
@@ -130,36 +193,55 @@ export default function ChatTest() {
                 value={conversationId}
                 onChange={e => setConversationId(e.target.value)}
               />
-              <button
-                onClick={() => { setConversationId(randomConversationId()); setMessages([]) }}
-                className="text-violeta hover:underline"
-              >
+              <button onClick={handleNewSession} className="text-violeta hover:underline">
                 nueva sesión
+              </button>
+              <button
+                onClick={() => loadHistory(conversationId, 0, false)}
+                disabled={historyLoading}
+                className="text-violeta hover:underline disabled:opacity-40"
+              >
+                {historyLoading ? 'cargando...' : 'cargar historial'}
               </button>
             </div>
           </div>
 
           {/* Messages */}
           <div className="w-full max-w-2xl flex-1 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 p-4 flex flex-col gap-3 min-h-96 max-h-[60vh] overflow-y-auto">
-            {messages.length === 0 && (
+
+            {/* Load previous page */}
+            {hasPrevPages && (
+              <button
+                onClick={() => loadHistory(conversationId, historyPage - 1, true)}
+                disabled={historyLoading}
+                className="self-center text-xs text-violeta hover:underline disabled:opacity-40 mb-1"
+              >
+                ↑ cargar mensajes anteriores
+              </button>
+            )}
+
+            {messages.length === 0 && !historyLoading && (
               <p className="text-center text-gray-400 text-sm mt-auto mb-auto">
-                Escribí un mensaje para empezar
+                Escribí un mensaje o cargá el historial de una sesión existente
+              </p>
+            )}
+
+            {historyLoading && messages.length === 0 && (
+              <p className="text-center text-gray-400 text-sm mt-auto mb-auto animate-pulse">
+                Cargando historial...
               </p>
             )}
 
             {messages.map((msg, i) => (
               <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-
-                {/* Bubble */}
                 <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-violeta text-white rounded-br-sm'
                     : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
-                }`}>
+                } ${msg.fromHistory ? 'opacity-80' : ''}`}>
                   {msg.content}
                 </div>
 
-                {/* Metadata badges (solo assistant) */}
                 {msg.role === 'assistant' && (
                   <div className="flex flex-wrap gap-1.5 mt-1.5 ml-1">
                     {msg.emotion && (
@@ -182,6 +264,17 @@ export default function ChatTest() {
               </div>
             ))}
 
+            {/* Load next page */}
+            {hasNextPages && (
+              <button
+                onClick={() => loadHistory(conversationId, historyPage + 1, false)}
+                disabled={historyLoading}
+                className="self-center text-xs text-violeta hover:underline disabled:opacity-40 mt-1"
+              >
+                ↓ cargar más mensajes
+              </button>
+            )}
+
             {loading && (
               <div className="flex items-start">
                 <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-gray-400 shadow-sm">
@@ -197,8 +290,17 @@ export default function ChatTest() {
             <div ref={bottomRef} />
           </div>
 
+          {/* Info bar */}
+          {historyLoaded && (
+            <div className="w-full max-w-2xl mt-2 text-xs text-gray-500/80 text-right">
+              {historyTotalPages > 0
+                ? `página ${historyPage + 1} de ${historyTotalPages} · ${messages.length} mensajes visibles`
+                : 'sin historial persistido aún'}
+            </div>
+          )}
+
           {/* Input */}
-          <div className="w-full max-w-2xl mt-3 flex gap-2">
+          <div className="w-full max-w-2xl mt-2 flex gap-2">
             <textarea
               className="flex-1 border border-white/60 bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-violeta focus:ring-1 focus:ring-violeta"
               rows={2}
