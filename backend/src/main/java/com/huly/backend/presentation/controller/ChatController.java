@@ -22,7 +22,8 @@ public class ChatController {
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        ChatReply reply = chatUseCase.execute(request.message(), request.conversationId());
+        Long userId = 1L; // TODO: reemplazar por el usuario autenticado
+        ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         return ResponseEntity.ok(toResponse(reply));
     }
 

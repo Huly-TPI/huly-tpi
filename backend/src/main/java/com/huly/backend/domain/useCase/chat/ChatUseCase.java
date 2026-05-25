@@ -12,8 +12,8 @@ public class ChatUseCase {
 
     private final ChatService chatService;
 
-    public ChatReply execute(String message, String conversationId) {
-        return chatService.processMessage(message, conversationId);
+    public ChatReply execute(String message, String conversationId, Long userId) {
+        return chatService.processMessage(message, conversationId, userId);
     }
 }
 

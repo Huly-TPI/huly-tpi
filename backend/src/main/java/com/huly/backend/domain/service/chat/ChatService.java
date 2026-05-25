@@ -43,7 +43,7 @@ public class ChatService {
      * @return {@link ChatReply} con la respuesta del asistente, la emoción detectada,
      *         la intensidad y los metadatos de riesgo si corresponde
      */
-    public ChatReply processMessage(String message, String conversationId) {
+    public ChatReply processMessage(String message, String conversationId, Long userId) {
         String basePrompt = chatConfigRepository.findFirst()
                 .map(ChatConfig::getSystemPrompt)
                 .orElse("");
@@ -57,8 +57,8 @@ public class ChatService {
 
         chatMemoryPort.addMessage(conversationId, new ConversationMessage(
                 MessageRole.USER, message, reply.detectedEmotion(), reply.riskDetected(), reply.matchedWord()
-        ));
-        chatMemoryPort.addMessage(conversationId, ConversationMessage.of(MessageRole.ASSISTANT, reply.content()));
+        ), userId);
+        chatMemoryPort.addMessage(conversationId, ConversationMessage.of(MessageRole.ASSISTANT, reply.content()), userId);
 
         return reply;
     }

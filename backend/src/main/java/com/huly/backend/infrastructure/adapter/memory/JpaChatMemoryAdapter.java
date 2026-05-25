@@ -26,9 +26,9 @@ public class JpaChatMemoryAdapter implements ChatMemoryPort {
     }
 
     @Override
-    public void addMessage(String conversationId, ConversationMessage message) {
+    public void addMessage(String conversationId, ConversationMessage message, Long userId) {
         Long sessionId = chatSessionRepository.findSessionIdByConversationId(conversationId)
-                .orElseGet(() -> chatSessionRepository.saveSession(conversationId));
+                .orElseGet(() -> chatSessionRepository.saveSession(conversationId, userId));
 
         chatMessageRepository.saveMessage(sessionId, message);
     }

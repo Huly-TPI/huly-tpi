@@ -6,7 +6,7 @@ public interface ChatSessionRepository {
 
     Optional<String> findConversationIdBySessionId(Long sessionId);
 
-    Long saveSession(String conversationId);
+    Long saveSession(String conversationId, Long userId);
 
     Optional<Long> findSessionIdByConversationId(String conversationId);
 }
