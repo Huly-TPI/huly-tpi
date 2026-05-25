@@ -21,7 +21,6 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-// Helper: escribe en el input y envía
 const typeAndSubmit = (text: string) => {
   fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: text } })
   fireEvent.click(screen.getByTestId('submit-button'))
