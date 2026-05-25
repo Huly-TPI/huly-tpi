@@ -25,7 +25,9 @@ public class ChatSessionRepositoryImpl implements ChatSessionRepository {
 
     @Override
     public Long saveSession(String conversationId, Long userId) {
-        AppUserEntity user = appUserRepository.getReferenceById(userId);
+        AppUserEntity user = userId != null
+                ? appUserRepository.findById(userId).orElse(null)
+                : null;
         ChatSessionEntity entity = ChatSessionEntity.builder()
                 .conversationId(conversationId)
                 .appUser(user)
