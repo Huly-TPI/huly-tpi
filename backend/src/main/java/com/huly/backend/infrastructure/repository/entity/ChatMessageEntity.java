@@ -1,11 +1,10 @@
 package com.huly.backend.infrastructure.repository.entity;
 
+import com.huly.backend.domain.model.enums.MessageRole;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -27,9 +26,10 @@ public class ChatMessageEntity {
     private ChatSessionEntity chatSession;
 
     @Column(name = "message")
-    private String message;
+    @Enumerated(EnumType.STRING)
+    private MessageRole role;
 
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "risk_detected")
@@ -40,5 +40,4 @@ public class ChatMessageEntity {
 
     @OneToMany(mappedBy = "chatMessage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EmotionEntity> emotions;
-
 }

@@ -1,0 +1,211 @@
+package com.huly.backend.presentation.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.model.chat.ChatMessage;
+import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.enums.EmotionType;
+import com.huly.backend.domain.model.enums.MessageRole;
+import com.huly.backend.domain.useCase.chat.ChatUseCase;
+import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
+import com.huly.backend.presentation.dto.chat.ChatRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.time.Instant;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+class ChatControllerTest {
+
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private ChatUseCase chatUseCase;
+    private ListChatHistoryUseCase listChatHistoryUseCase;
+
+    @BeforeEach
+    void setUp() {
+        chatUseCase = mock(ChatUseCase.class);
+        listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
+        ChatController controller = new ChatController(chatUseCase, listChatHistoryUseCase);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    // ── POST /api/chat ───────────────────────────────────────────────────────
+
+    @Test
+    void chat_shouldReturn200WithReplyContent_whenRequestIsValid() throws Exception {
+        ChatReply reply = new ChatReply("todo bien", EmotionType.JOY, 9, false, null);
+        when(chatUseCase.execute(eq("hola"), eq("conv-1"), eq(1L))).thenReturn(reply);
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.huly_reply").value("todo bien"))
+                .andExpect(jsonPath("$.detected_emotion").value("JOY"))
+                .andExpect(jsonPath("$.intensity").value(9));
+    }
+
+    @Test
+    void chat_shouldReturn200WithNullEmotion_whenReplyHasNoEmotion() throws Exception {
+        ChatReply reply = new ChatReply("respuesta", null, null, null, null);
+        when(chatUseCase.execute(any(), any(), any())).thenReturn(reply);
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("msg", "conv-1"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.detected_emotion").doesNotExist())
+                .andExpect(jsonPath("$.metadata").doesNotExist());
+    }
+
+    @Test
+    void chat_shouldReturn200WithMetadata_whenRiskDetected() throws Exception {
+        ChatReply reply = new ChatReply("cuidado", EmotionType.FEAR, 8, true, "suicidio");
+        when(chatUseCase.execute(any(), any(), any())).thenReturn(reply);
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("estoy mal", "conv-2"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.metadata.risk_detected").value(true))
+                .andExpect(jsonPath("$.metadata.matched_word").value("suicidio"));
+    }
+
+    @Test
+    void chat_shouldReturn200WithNullMetadata_whenRiskDetectedIsNull() throws Exception {
+        ChatReply reply = new ChatReply("respuesta", EmotionType.CALM, 3, null, null);
+        when(chatUseCase.execute(any(), any(), any())).thenReturn(reply);
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("msg", "conv-1"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.metadata").doesNotExist());
+    }
+
+    @Test
+    void chat_shouldReturn400_whenMessageIsBlank() throws Exception {
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("", "conv-1"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void chat_shouldReturn400_whenConversationIdIsBlank() throws Exception {
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("mensaje", ""))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void chat_shouldPassHardcodedUserIdToUseCase() throws Exception {
+        when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
+                .andExpect(status().isOk());
+
+        verify(chatUseCase).execute("hola", "conv-1", 1L);
+    }
+
+    // ── GET /api/chat/{conversationId}/messages ──────────────────────────────
+
+    @Test
+    void getHistory_shouldReturn200WithPagedMessages() throws Exception {
+        ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.JOY, Instant.parse("2024-01-01T00:00:00Z"));
+        Page<ChatMessage> page = new PageImpl<>(List.of(msg));
+        when(listChatHistoryUseCase.execute(eq("conv-1"), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/chat/conv-1/messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].role").value("USER"))
+                .andExpect(jsonPath("$.content[0].content").value("hola"))
+                .andExpect(jsonPath("$.content[0].risk_detected").value(false))
+                .andExpect(jsonPath("$.content[0].detected_emotion").value("JOY"))
+                .andExpect(jsonPath("$.total_elements").value(1))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
+    }
+
+    @Test
+    void getHistory_shouldReturn200WithEmptyPage_whenNoMessages() throws Exception {
+        Page<ChatMessage> emptyPage = Page.empty();
+        when(listChatHistoryUseCase.execute(eq("conv-vacia"), any(Pageable.class))).thenReturn(emptyPage);
+
+        mockMvc.perform(get("/api/chat/conv-vacia/messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.total_elements").value(0));
+    }
+
+    @Test
+    void getHistory_shouldReturn200WithNullRoleAndEmotion_whenMessageHasNulls() throws Exception {
+        ChatMessage msg = new ChatMessage(2L, null, "mensaje", null, null, Instant.now());
+        Page<ChatMessage> page = new PageImpl<>(List.of(msg));
+        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/chat/conv-1/messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].role").doesNotExist())
+                .andExpect(jsonPath("$.content[0].detected_emotion").doesNotExist());
+    }
+
+    @Test
+    void getHistory_shouldUseDefaultPagination_whenNoParamsProvided() throws Exception {
+        Page<ChatMessage> emptyPage = Page.empty();
+        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(emptyPage);
+
+        mockMvc.perform(get("/api/chat/conv-1/messages"))
+                .andExpect(status().isOk());
+
+        verify(listChatHistoryUseCase).execute(eq("conv-1"), any(Pageable.class));
+    }
+
+    @Test
+    void getHistory_shouldForwardCustomPageAndSize_whenParamsProvided() throws Exception {
+        Page<ChatMessage> emptyPage = Page.empty();
+        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(emptyPage);
+
+        mockMvc.perform(get("/api/chat/conv-1/messages")
+                        .param("page", "2")
+                        .param("size", "5"))
+                .andExpect(status().isOk());
+
+        verify(listChatHistoryUseCase).execute(eq("conv-1"), any(Pageable.class));
+    }
+
+    @Test
+    void getHistory_shouldReturnPaginationMetadata() throws Exception {
+        ChatMessage msg = new ChatMessage(1L, MessageRole.ASSISTANT, "resp", false, EmotionType.CALM, Instant.now());
+        Page<ChatMessage> page = new PageImpl<>(List.of(msg));
+        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/chat/conv-1/messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page_number").value(0))
+                .andExpect(jsonPath("$.page_size").value(1))
+                .andExpect(jsonPath("$.total_elements").value(1))
+                .andExpect(jsonPath("$.total_pages").value(1));
+    }
+}

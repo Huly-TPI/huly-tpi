@@ -8,17 +8,17 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className="bg-bosque px-8 py-4 shadow-md">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link to="/" className="text-white text-xl font-bold hover:text-violeta-claro transition-colors">
+    <nav className="h-16 shrink-0 bg-bosque px-4 shadow-md md:px-8">
+      <div className="mx-auto flex h-full max-w-6xl items-center justify-between">
+        <Link to="/" className="text-lg font-bold text-white transition-colors hover:text-violeta-claro md:text-xl">
           Huly
         </Link>
-        <div className="flex gap-6">
+        <div className="flex gap-4 md:gap-6">
           {links.map(link => (
             <Link
               key={link.to}
               to={link.to}
-              className="text-white hover:text-violeta-claro transition-colors font-medium"
+              className="text-sm font-medium text-white transition-colors hover:text-violeta-claro md:text-base"
             >
               {link.label}
             </Link>
