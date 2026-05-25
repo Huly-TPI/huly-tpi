@@ -45,12 +45,28 @@ public class GetCloudRecommendationUseCase {
 
             String json = extractJson(raw);
             JsonNode node = OBJECT_MAPPER.readTree(json);
+
+            String activityType = node.path("activity_type").asText("diary");
+            if (!activityType.equals("diary") && !activityType.equals("clouds")) {
+                activityType = "diary";
+            }
+
+            String actionId = node.path("action_id").asText(activityType);
+            if (!actionId.equals("diary") && !actionId.equals("clouds")) {
+                actionId = activityType;
+            }
+
+            String redirectUrl = switch (activityType) {
+                case "clouds" -> "/clouds";
+                default -> "/diary";
+            };
+
             return new CloudRecommendation(
-                    node.path("activity_type").asText("diary"),
-                    node.path("action_id").asText("diary"),
+                    activityType,
+                    actionId,
                     node.path("title").asText("Escribí en tu diario"),
                     node.path("description").asText("Plasmar lo que sentiste puede ayudarte a procesarlo con más profundidad."),
-                    node.path("redirect_url").asText("/diary")
+                    redirectUrl
             );
         } catch (Exception e) {
             log.warn("Error al procesar recomendación, usando fallback. Raw: {}. Error: {}", raw, e.getMessage());
