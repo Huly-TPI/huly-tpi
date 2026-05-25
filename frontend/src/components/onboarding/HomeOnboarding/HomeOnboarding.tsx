@@ -14,7 +14,13 @@ export default function HomeOnboarding({
 }: HomeOnboardingProps) {
   if (mode === 'intro') {
     return (
-      <div className="home-onboarding" aria-label="Tutorial de bienvenida">
+      <div
+        className="home-onboarding"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="home-onboarding-title"
+        aria-describedby="home-onboarding-subtitle"
+      >
         <div className="home-onboarding__overlay" />
         <div className="home-onboarding__intro">
           <div className="home-onboarding__intro-card">
@@ -24,10 +30,10 @@ export default function HomeOnboarding({
               alt="Huly"
               className="home-onboarding__intro-logo"
             />
-            <h1 className="home-onboarding__intro-title">
+            <h1 id="home-onboarding-title" className="home-onboarding__intro-title">
               Tu espacio para cuidar tus pensamientos
             </h1>
-            <p className="home-onboarding__intro-subtitle">
+            <p id="home-onboarding-subtitle" className="home-onboarding__intro-subtitle">
               Vamos a descubrir el jardin y todo lo que podes hacer en cada rincon.
             </p>
             <div className="home-onboarding__intro-actions">
@@ -46,7 +52,13 @@ export default function HomeOnboarding({
   const isLastStep = currentStepIndex === steps.length - 1
 
   return (
-    <div className="home-onboarding" aria-label={`Paso ${currentStepIndex + 1} del tutorial`}>
+    <div
+      className="home-onboarding"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={`home-onboarding-step-title-${step.id}`}
+      aria-describedby={`home-onboarding-step-description-${step.id}`}
+    >
       <div className="home-onboarding__overlay" />
 
       {highlightedElements.map(element => {
@@ -73,8 +85,15 @@ export default function HomeOnboarding({
             {step.icon}
           </div>
           <div>
-            <h2 className="home-onboarding__step-title">{step.title}</h2>
-            <p className="home-onboarding__step-description">{step.description}</p>
+            <h2 id={`home-onboarding-step-title-${step.id}`} className="home-onboarding__step-title">
+              {step.title}
+            </h2>
+            <p
+              id={`home-onboarding-step-description-${step.id}`}
+              className="home-onboarding__step-description"
+            >
+              {step.description}
+            </p>
           </div>
         </div>
       </div>

@@ -49,4 +49,21 @@ describe('Button', () => {
 
     resolveClick?.()
   })
+
+  it('delegates async errors through onAsyncError when provided', async () => {
+    const user = userEvent.setup()
+    const asyncError = new Error('fallo')
+    const onAsyncError = vi.fn()
+    const onClick = vi.fn(() => Promise.reject(asyncError))
+
+    render(
+      <Button onClick={onClick} onAsyncError={onAsyncError}>
+        Enviar
+      </Button>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(onAsyncError).toHaveBeenCalledWith(asyncError)
+  })
 })

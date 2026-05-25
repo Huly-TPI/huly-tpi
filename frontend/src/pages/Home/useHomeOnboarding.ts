@@ -3,10 +3,6 @@ import { useState } from 'react'
 const HOME_ONBOARDING_COMPLETED_KEY = 'huly:home-onboarding-completed'
 
 type HomeOnboardingEnvMode = 'auto' | 'always' | 'never'
-type HomeOnboardingAccessState = {
-  hasActiveSession: boolean
-  hasCompletedOnboarding: boolean
-}
 
 export type HomeOnboardingMode = 'hidden' | 'intro' | 'steps'
 
@@ -18,27 +14,20 @@ function readHomeOnboardingEnvMode(): HomeOnboardingEnvMode {
   return 'auto'
 }
 
-function readHomeOnboardingAccessState(): HomeOnboardingAccessState {
+function readHomeOnboardingCompletionState() {
   if (typeof window === 'undefined') {
-    return {
-      hasActiveSession: false,
-      hasCompletedOnboarding: true,
-    }
+    return true
   }
 
-  return {
-    hasActiveSession: false,
-    hasCompletedOnboarding:
-      window.localStorage.getItem(HOME_ONBOARDING_COMPLETED_KEY) === 'true',
-  }
+  return window.localStorage.getItem(HOME_ONBOARDING_COMPLETED_KEY) === 'true'
 }
 
-function resolveInitialHomeOnboardingMode(accessState: HomeOnboardingAccessState): HomeOnboardingMode {
+function resolveInitialHomeOnboardingMode(hasCompletedOnboarding: boolean): HomeOnboardingMode {
   const envMode = readHomeOnboardingEnvMode()
 
   if (envMode === 'always') return 'intro'
   if (envMode === 'never') return 'hidden'
-  return accessState.hasCompletedOnboarding ? 'hidden' : 'intro'
+  return hasCompletedOnboarding ? 'hidden' : 'intro'
 }
 
 function persistHomeOnboardingCompletion() {
@@ -48,7 +37,7 @@ function persistHomeOnboardingCompletion() {
 
 export function useHomeOnboarding(totalSteps: number) {
   const [onboardingMode, setOnboardingMode] = useState<HomeOnboardingMode>(() =>
-    resolveInitialHomeOnboardingMode(readHomeOnboardingAccessState()),
+    resolveInitialHomeOnboardingMode(readHomeOnboardingCompletionState()),
   )
   const [onboardingStepIndex, setOnboardingStepIndex] = useState(0)
 

@@ -5,11 +5,13 @@ type ButtonVariant = 'brand' | 'neutral' | 'ghost'
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 type ButtonClickHandler = (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>
+type ButtonAsyncErrorHandler = (error: unknown) => void
 
 interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
   fullWidth?: boolean
   isLoading?: boolean
   loadingLabel?: string
+  onAsyncError?: ButtonAsyncErrorHandler
   size?: ButtonSize
   variant?: ButtonVariant
   onClick?: ButtonClickHandler
@@ -26,6 +28,7 @@ export default function Button({
   fullWidth = false,
   isLoading = false,
   loadingLabel = 'Cargando...',
+  onAsyncError,
   onClick,
   size = 'md',
   type = 'button',
@@ -55,6 +58,12 @@ export default function Button({
     try {
       setIsSubmitting(true)
       await result
+    } catch (error) {
+      if (onAsyncError) {
+        onAsyncError(error)
+      } else {
+        console.error('Button onClick failed', error)
+      }
     } finally {
       setIsSubmitting(false)
     }

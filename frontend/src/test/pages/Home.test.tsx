@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -7,9 +7,14 @@ import { ThemeProvider } from '../../context/theme'
 
 describe('Home', () => {
   beforeEach(() => {
+    vi.unstubAllEnvs()
     window.localStorage.clear()
     window.localStorage.setItem('huly:scene-theme', 'light')
     window.localStorage.setItem('huly:home-onboarding-completed', 'true')
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   const renderWithRouter = () => {
@@ -123,7 +128,7 @@ describe('Home', () => {
 
     renderWithRouter()
 
-    expect(screen.getByLabelText('Tutorial de bienvenida')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Comenzar con el tutorial' })).toBeInTheDocument()
   })
 
@@ -144,5 +149,23 @@ describe('Home', () => {
 
     expect(window.localStorage.getItem('huly:home-onboarding-completed')).toBe('true')
     expect(screen.queryByLabelText(/tutorial/i)).not.toBeInTheDocument()
+  })
+
+  it('fuerza onboarding cuando VITE_HOME_ONBOARDING_MODE es always', () => {
+    vi.stubEnv('VITE_HOME_ONBOARDING_MODE', 'always')
+
+    renderWithRouter()
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Comenzar con el tutorial' })).toBeInTheDocument()
+  })
+
+  it('oculta onboarding cuando VITE_HOME_ONBOARDING_MODE es never', () => {
+    vi.stubEnv('VITE_HOME_ONBOARDING_MODE', 'never')
+    window.localStorage.removeItem('huly:home-onboarding-completed')
+
+    renderWithRouter()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

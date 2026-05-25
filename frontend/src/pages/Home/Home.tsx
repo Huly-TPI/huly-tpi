@@ -1,4 +1,4 @@
-﻿import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
+import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
 import dayMobileBackgroundImage from '../../assets/garden/light-theme/background/mobile/day-background.webp'
 import { useEffect } from 'react'
 import cloudImage from '../../assets/garden/light-theme/cloud.webp'
