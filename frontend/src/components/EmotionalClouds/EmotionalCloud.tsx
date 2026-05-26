@@ -5,9 +5,10 @@ import './EmotionalClouds.css'
 interface CloudProps {
   cloud: Cloud
   onRemove: () => void
+  onSelect?: () => void
 }
 
-const EmotionalCloud = ({ cloud, onRemove }: CloudProps) => {
+const EmotionalCloud = ({ cloud, onRemove, onSelect }: CloudProps) => {
   const [isLeaving, setIsLeaving] = useState(false)
 
   useEffect(() => {
@@ -20,6 +21,7 @@ const EmotionalCloud = ({ cloud, onRemove }: CloudProps) => {
     if (isLeaving) return
     setIsLeaving(true)
     setTimeout(onRemove, 3000)
+    onSelect?.()
   }
 
   return (

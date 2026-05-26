@@ -6,9 +6,14 @@ import EmotionalCloudsActivity from '../../components/EmotionalClouds/EmotionalC
 vi.mock('./EmotionalClouds.css', () => ({}))
 
 vi.mock('../../components/EmotionalClouds/EmotionalCloud', () => ({
-  default: ({ cloud, onRemove }: { cloud: { id: string; text: string }; onRemove: () => void }) => (
-      <div data-testid={`cloud-${cloud.id}`} onClick={onRemove}>
-        {cloud.text}
+  default: ({ cloud, onRemove, onSelect }: {
+    cloud: { id: string; text: string }
+    onRemove: () => void
+    onSelect?: () => void
+  }) => (
+      <div data-testid={`cloud-${cloud.id}`}>
+        <span onClick={onRemove}>{cloud.text}</span>
+        <button onClick={onSelect}>select</button>
       </div>
   ),
 }))
@@ -113,18 +118,18 @@ describe('EmotionalCloudsActivity', () => {
       expect(screen.queryByText('Algo')).not.toBeInTheDocument()
     })
 
-    it('llama a onThoughtSubmit con el texto correcto', () => {
-      const onThoughtSubmit = vi.fn()
-      render(<EmotionalCloudsActivity onThoughtSubmit={onThoughtSubmit} />)
+    it('llama a onFinish con el texto de la nube al seleccionarla', () => {
+      const onFinish = vi.fn()
+      render(<EmotionalCloudsActivity onFinish={onFinish} />)
       typeAndSubmit('Trabajo')
-      expect(onThoughtSubmit).toHaveBeenCalledWith('Trabajo')
+      fireEvent.click(screen.getByRole('button', { name: 'select' }))
+      expect(onFinish).toHaveBeenCalledWith(['Trabajo'])
     })
 
     it('trimea el texto antes de crear la nube', () => {
-      const onThoughtSubmit = vi.fn()
-      render(<EmotionalCloudsActivity onThoughtSubmit={onThoughtSubmit} />)
+      render(<EmotionalCloudsActivity />)
       typeAndSubmit('  Estrés  ')
-      expect(onThoughtSubmit).toHaveBeenCalledWith('Estrés')
+      expect(screen.getByText('Estrés')).toBeInTheDocument()
     })
 
     it('agrega múltiples nubes correctamente', () => {
