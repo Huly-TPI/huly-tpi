@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
 @Component("customCorsFilter")
 @Slf4j
 public class CorsFilter extends OncePerRequestFilter {
@@ -33,7 +34,13 @@ public class CorsFilter extends OncePerRequestFilter {
 
         String origin = httpRequest.getHeader("Origin");
 
-        if (origin == null || !origin.equals(frontendUrl)) {
+        // Sin Origin → no es un request de browser, dejar pasar
+        if (origin == null) {
+            chain.doFilter(httpRequest, httpResponse);
+            return;
+        }
+        // Con Origin pero no coincide → bloquear
+        if (!origin.equals(frontendUrl)) {
             log.warn("CORS bloqueado para origin: {}", origin);
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return;

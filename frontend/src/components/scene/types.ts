@@ -9,9 +9,11 @@ export interface SceneElementDefinition {
   imageAlt: string
   image: SceneElementImage
   imageClassName: string
+  imageVariantClassName?: string
   placementClassName: string
   hotspotClassName: string
   clipPath: string
+  interactive?: boolean
   tooltipClassName?: string
   to?: string
 }

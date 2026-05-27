@@ -87,6 +87,7 @@ log.txt
 .env.local
 .env.*.local
 .env.prod
+src/main/resources/application-huly-secrets.properties
 
 # ========================
 # DATABASES & CACHES
@@ -125,3 +126,16 @@ gradlew.bat
 # DOCUMENTATION
 # ========================
 HELP.md
+
+
+# ========================
+# SKILLS
+# ========================
+/.agents
+skills-lock.json
+
+# ========================
+# CONFIGURATION
+# ========================
+docker-compose.yml
+

@@ -5,6 +5,7 @@ import SceneElement from '../../components/scene/SceneElement/SceneElement'
 
 describe('SceneElement', () => {
   const baseProps = {
+    id: 'house',
     title: 'Perfil',
     imageAlt: 'Casa de perfil',
     image: {
@@ -57,5 +58,30 @@ describe('SceneElement', () => {
     )
 
     expect(screen.getByAltText('Casa de perfil')).toHaveAttribute('src', '/dark-house.webp')
+  })
+
+  it('aplica la variante visual adicional cuando se la pasa', () => {
+    render(
+      <MemoryRouter>
+        <SceneElement
+          {...baseProps}
+          imageAlt="Banco espejado"
+          imageVariantClassName="scene-element__image--mirror-mobile"
+        />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByAltText('Banco espejado')).toHaveClass('scene-element__image--mirror-mobile')
+  })
+
+  it('desactiva navegacion cuando interactive es false', () => {
+    render(
+      <MemoryRouter>
+        <SceneElement {...baseProps} to="/profile" interactive={false} />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('button', { name: 'Perfil' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Perfil' })).not.toBeInTheDocument()
   })
 })
