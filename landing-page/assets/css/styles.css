@@ -46,7 +46,7 @@ p  { font-weight: 400; font-family: var(--font); line-height: 1.75; }
 
 .cloud {
   position: absolute;
-  background-image: url('../../frontend/src/assets/garden/light-theme/cloud.webp');
+  background-image: url('/landing-page/assets/images/garden/cloud.webp');
   background-size: contain; background-repeat: no-repeat;
   aspect-ratio: 3 / 1;
   pointer-events: none;
