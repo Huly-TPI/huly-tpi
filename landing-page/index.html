@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Huly | Tu jardín te está esperando."/>
+  <title>Huly | Te está esperando</title>
+  <link rel="icon" href="../frontend/src/assets/brand/favicon.ico"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/css/styles.css"/>
+</head>
+<body>
+
+  <nav class="nav">
+    <img src="../frontend/src/assets/brand/monochromatic-logo.webp" alt="Huly" class="nav-logo"/>
+    <a href="#" class="nav-btn" id="nav-cta">Ir a mi jardín &nbsp;→</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-sky">
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+      <div class="cloud cloud-4"></div>
+      <div class="cloud cloud-5"></div>
+      <div class="cloud cloud-6"></div>
+      <div class="cloud cloud-7"></div>
+      <h1>Tu jardín<br><em>te está esperando.</em></h1>
+      <p class="hero-sub">
+        Cada rincón tiene algo escondido para vos.<br>
+        Sin niveles, sin presión. Solo vos y tu espacio.
+      </p>
+      <div class="hero-btns">
+        <button class="btn-primary" data-modal="register">Crear mi jardín</button>
+        <button class="btn-ghost"   data-modal="explore">Explorar primero</button>
+      </div>
+    </div>
+
+    <div class="hero-garden">
+      <img src="../frontend/src/assets/garden/light-theme/background/grass-background.webp" alt="" class="hero-garden-bg"/>
+      <div class="hero-garden-content">
+        <div class="garden-card">
+          <div class="garden-card-img">
+            <strong>Imagen</strong>
+            <span class="ph-note">800 × 500px</span>
+          </div>
+          <div class="garden-card-txt">
+            <h2>Tu jardín, tu ritmo,<br><span>tu bienestar.</span></h2>
+            <p>
+              Cada jardín es único y con cada visita se vuelve más tuyo.
+              Huly es ese amigo que ya te conoce, no te juzga y te acompaña
+              en tu propio camino.
+            </p>
+            <button class="btn-forest" data-modal="register">Quiero mi jardín</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-features">
+    <div class="features-inner">
+      <h2 class="reveal from-blur">Todo lo que necesitás,<br>en un solo lugar.</h2>
+      <div class="cards-row">
+
+        <div class="feat-card reveal from-bottom rd1">
+          <div class="feat-card-img">
+            <img src="../frontend/src/assets/garden/light-theme/cloud.webp" alt="Respiraciones"/>
+          </div>
+          <h3>Respiraciones<br>guiadas</h3>
+        </div>
+
+        <div class="feat-card reveal from-bottom rd2">
+          <div class="feat-card-img">
+            <img src="../frontend/src/assets/garden/light-theme/only-notebook.webp" alt="Pendientes y diario"/>
+          </div>
+          <h3>Pendientes<br>y diario</h3>
+        </div>
+
+        <div class="feat-card reveal from-bottom rd3">
+          <div class="feat-card-img">
+            <img src="../frontend/src/assets/garden/light-theme/tree.webp" alt="Pendientes y diario"/>
+          </div>
+          <h3>Minijuegos<br>relajantes</h3>
+        </div>
+
+        <div class="feat-card reveal from-bottom rd4">
+          <div class="feat-card-img">
+            <img src="../frontend/src/assets/brand/huly-character.webp" alt="Tu compañero virtual"/>
+          </div>
+          <h3>Tu compañero<br>virtual</h3>
+        </div>
+
+      </div>
+      <button class="btn-violet reveal from-scale" data-modal="register">Conocer más</button>
+    </div>
+  </section>
+
+  <section class="section-closing">
+    <h2 class="reveal from-blur">Hay algo en Huly<br>que es <em>solo tuyo.</em></h2>
+    <p class="reveal from-bottom rd1">Todavía está esperando que lo descubras.</p>
+    <div class="closing-cta reveal from-scale rd2">
+      <button class="btn-outline-white" data-modal="register">Descubrilo</button>
+    </div>
+  </section>
+
+  <footer>
+    <img src="../frontend/src/assets/brand/monochromatic-logo.webp" alt="Huly" class="f-logo"/>
+    <span class="f-copy">© 2026 Huly — Hecho en Argentina</span>
+    <div class="f-social">
+      <a href="#" aria-label="Instagram">
+        <span class="social-icon">
+          <img src="../frontend/src/assets/brand/instagram.svg" alt="Instagram" width="18" height="18"/>
+        </span>
+      </a>
+      <a href="#" aria-label="Discord">
+        <span class="social-icon">
+          <img src="../frontend/src/assets/brand/discord.svg" alt="Discord" width="18" height="18"/>
+        </span>
+      </a>
+    </div>
+  </footer>
+
+  <div class="modal-overlay" id="modal-register">
+    <div class="modal">
+      <button class="modal-close" data-close="modal-register">&times;</button>
+      <span class="modal-icon">
+        <img src="../frontend/src/assets/garden/light-theme/envelope.png" alt="Envelope" width="56" height="56"/>
+      </span>
+      <h3>Reservá tu jardín</h3>
+      <p class="modal-sub">
+        Dejanos tu nombre de usuario y tu mail para ser de los primeros
+        en entrar cuando abramos las puertas.
+      </p>
+      <div class="modal-field">
+        <label for="reg-username">Nombre de usuario</label>
+        <input type="text" id="reg-username" placeholder="ej: jardinero" autocomplete="username"/>
+      </div>
+      <div class="modal-field">
+        <label for="reg-email">Email</label>
+        <input type="email" id="reg-email" placeholder="tu@mail.com" autocomplete="email"/>
+      </div>
+      <button class="modal-submit" id="submit-register">Quiero mi jardín</button>
+      <p class="modal-microcopy">Sin spam. Te avisamos cuando estés listo para entrar.</p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-explore">
+    <div class="modal">
+      <button class="modal-close" data-close="modal-explore">&times;</button>
+      <span class="modal-icon">
+        <img src="../frontend/src/assets/garden/light-theme/lens.png" alt="Lens" width="56" height="56"/>
+      </span>
+      <h3>Explorá el jardín</h3>
+      <p class="modal-sub">
+        Dejanos tu mail y entrá a conocer a Huly y el jardín que te espera.<br>
+        Sos parte de los primeros en descubrirlo.
+      </p>
+      <div class="modal-field">
+        <label for="exp-email">Tu email</label>
+        <input type="email" id="exp-email" placeholder="tu@mail.com" autocomplete="email"/>
+      </div>
+      <button class="modal-submit" id="submit-explore">Entrar →</button>
+      <p class="modal-microcopy">Sin spam. Solo te escribimos cuando haya novedades.</p>
+    </div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
