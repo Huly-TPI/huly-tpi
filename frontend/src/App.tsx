@@ -14,7 +14,7 @@ const App = () => {
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/diary" element={<Diary />} />
-        <Route path="/breathing" element={<Breathing />} />
+        <Route path="/guided-breathing" element={<Breathing />} />
         <Route path="/clouds" element={<CloudsActivity />} />
         <Route path="*" element={<NotFound />} />
       </Route>

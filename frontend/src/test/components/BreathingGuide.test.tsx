@@ -103,11 +103,11 @@ describe('BreathingGuide', () => {
             id: 3,
             name: 'Corta',
             description: 'Inhala por 1 segundo, sostene por 1 segundo, exhala por 1 segundo.',
-            inhale_seconds: 1,
-            hold_seconds: 1,
-            exhale_seconds: 1,
-            rounds_interval: 1,
-            round: 2,
+            inhaleSeconds: 1,
+            holdSeconds: 1,
+            exhaleSeconds: 1,
+            roundsInterval: 1,
+            rounds: 2,
           }
           vi.useFakeTimers()
               render(<BreathingGuide techniques={[shortTechnique]} />)
@@ -118,7 +118,7 @@ describe('BreathingGuide', () => {
               for(let i = 0; i < 6; i++) {
                 act(() => {    vi.advanceTimersByTime(1000)}  
                   )   } 
-              expect(screen.getByText(/tómate un momento/i)).toBeInTheDocument()
+              expect(screen.getByText(/respiración guiada/i)).toBeInTheDocument()
               vi.useRealTimers()
             })
 

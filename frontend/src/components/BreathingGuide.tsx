@@ -4,11 +4,11 @@ export interface BreathingTechnique {
     id: number
     name: string
     description: string
-    inhale_seconds: number
-    hold_seconds: number
-    exhale_seconds: number
-    rounds_interval: number
-    round: number
+    inhaleSeconds: number
+    holdSeconds: number
+    exhaleSeconds: number
+    roundsInterval: number
+    rounds: number
 }
 
 interface Phase {
@@ -23,12 +23,12 @@ interface BreathingGuideProps {
 
 function getPhases(technique: BreathingTechnique): Phase[] {
     const phases: Phase[] = [
-        { name: 'Inhalá', duration: technique.inhale_seconds },
+        { name: 'Inhalá', duration: technique.inhaleSeconds },
     ]
-    if (technique.hold_seconds > 0) {
-        phases.push({ name: 'Sostenélo', duration: technique.hold_seconds })
+    if (technique.holdSeconds > 0) {
+        phases.push({ name: 'Sostenélo', duration: technique.holdSeconds })
     }
-    phases.push({ name: 'Exhalá', duration: technique.exhale_seconds })
+    phases.push({ name: 'Exhalá', duration: technique.exhaleSeconds })
     return phases
 }
 
@@ -44,21 +44,21 @@ const DEFAULT_BREATHING_TECHNIQUES: BreathingTechnique[] = [
         id: 1,
         name: 'Diafragmática',
         description: 'Inhala profundamente por la nariz, permitiendo que tu abdomen se expanda. Exhala lentamente por la boca, vaciando completamente tus pulmones.',
-        inhale_seconds: 4,
-        hold_seconds: 0,
-        exhale_seconds: 4,
-        rounds_interval: 1,
-        round: 4
+        inhaleSeconds: 4,
+        holdSeconds: 0,
+        exhaleSeconds: 4,
+        roundsInterval: 1,
+        rounds: 4
     },
     {
         id: 2,
         name: 'Cuadrada',
         description: 'Inhala, mantén la respiración, exhala y mantene la exhalación durante el mismo tiempo.',
-        inhale_seconds: 4,
-        hold_seconds: 4,
-        exhale_seconds: 4,
-        rounds_interval: 1,
-        round: 4
+        inhaleSeconds: 4,
+        holdSeconds: 4,
+        exhaleSeconds: 4,
+        roundsInterval: 1,
+        rounds: 4
     }
 ];
 
@@ -84,7 +84,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
             if(currentPhaseIndex < phases.length - 1) {
                 setCurrentPhaseIndex(currentPhaseIndex + 1)
                 setTimeLeft(phases[currentPhaseIndex + 1].duration)}
-                else if(currentRound < selected.round) {
+                else if(currentRound < selected.rounds) {
                     setCurrentRound(currentRound + 1)
                     setCurrentPhaseIndex(0)
                     setTimeLeft(phases[0].duration)
@@ -131,7 +131,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                        </div>
                     <button
                         onClick={() => setIsPaused(!isPaused)}
-                        className="mt-12 px-6 py-2 rounded-full bg-white/80 backdrop-blur-sm text-violeta text-sm font-medium shadow-sm hover:bg-white transition-colors">
+                        className="mt-12 px-6 py-2 rounded-full bg-white/90 backdrop-blur-sm text-violeta text-sm font-medium shadow-sm hover:bg-white transition-colors">
                         {isPaused ? 'Reanudar' : 'Pausar'}
                     </button>                                
         </div>            
@@ -146,14 +146,14 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                 ← Volver
             </button>
 
-            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
+            <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
            <h2 className="text-xl font-bold text-gray-800 mb-1">{selected.name}</h2>
            <p className="text-sm text-gray-500 mb-4">{selected.description}</p>
               <button onClick={() => { 
                 const phases = getPhases(selected!)
                 setTimeLeft(phases[0].duration)
                 setIsRunning(true)
-                      }} className="w-full py-3 rounded-full bg-violeta text-white font-medium hover:opacity-90 transition-opacity">
+                      }} className="w-full py-3 rounded-full bg-violeta text-white font-medium hover:opacity-100 transition-opacity">
                        Iniciar
                      </button>
                 </div>
@@ -164,7 +164,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
     
     return (
        <div className="flex flex-col items-center justify-center w-full">
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
+      <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
         <h2 className="text-xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
         <p className="text-sm text-gray-500 mb-4">Tómate un momento, Elegí un método y deja que el círculo acompañe tu respiración</p>
         <div className="flex flex-col gap-3">
