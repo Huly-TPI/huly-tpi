@@ -61,9 +61,10 @@ public class ChatService {
                 .map(ChatConfig::getSystemPrompt)
                 .orElse("");
 
-        List<VectorMemory> relevantMemories = findRelevantMemories(userId, message);
+//        List<VectorMemory> relevantMemories = findRelevantMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
-        String systemPrompt = promptBuilderService.buildEnrichedPrompt(basePrompt, riskWords, relevantMemories);
+//        String systemPrompt = promptBuilderService.buildEnrichedPrompt(basePrompt, riskWords, relevantMemories);
+        String systemPrompt = promptBuilderService.buildEnrichedPrompt(basePrompt, riskWords);
 
         List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId);
 
