@@ -37,6 +37,31 @@ export interface UpdateBotConfigRequest {
   systemPrompt: string
 }
 
+export type EmotionSeverityLabel = 'ALTA' | 'MEDIA' | 'BAJA'
+
+export interface EmotionalCategoryResponse {
+  name: string
+  flows: number
+  detect: number
+  severity: EmotionSeverityLabel
+}
+
+export interface ActivityResponse {
+  name: string
+  pct: number
+}
+
+export interface WellbeingResponse {
+  points: number[]
+  labels: string[]
+}
+
+export interface TrainingLogResponse {
+  message: string
+  emotion: string
+  confidence: number
+}
+
 export const chatbotApi = {
   listRiskWords: (params?: { page?: number; size?: number; word?: string; active?: boolean; severity?: RiskSeverity }) => {
     const query = new URLSearchParams()
@@ -63,4 +88,16 @@ export const chatbotApi = {
 
   updateBotConfig: (data: UpdateBotConfigRequest) =>
     api.put<BotConfigResponse>('/admin/chat/config', data),
+
+  getEmotionalCategories: () =>
+    api.get<EmotionalCategoryResponse[]>('/admin/chatbot/emotional-categories'),
+
+  getActivities: () =>
+    api.get<ActivityResponse[]>('/admin/chatbot/activities'),
+
+  getWellbeing: () =>
+    api.get<WellbeingResponse>('/admin/chatbot/wellbeing'),
+
+  getTrainingLogs: () =>
+    api.get<TrainingLogResponse[]>('/admin/chatbot/training-logs'),
 }

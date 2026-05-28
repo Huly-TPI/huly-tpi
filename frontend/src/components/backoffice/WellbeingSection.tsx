@@ -1,15 +1,29 @@
+import { useState, useEffect } from 'react'
+import { chatbotApi, WellbeingResponse } from '../../api/chatbot'
 import { SectionCard, CardHeader } from './SectionCard'
 import { WellbeingChart } from './WellbeingChart'
 
-// TODO: replace with real wellbeing historical data endpoint
-const WELLBEING_POINTS = [62, 58, 71, 68, 75, 65, 72]
-const WELLBEING_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-
 export function WellbeingSection() {
+  const [data, setData] = useState<WellbeingResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    chatbotApi.getWellbeing()
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <SectionCard>
       <CardHeader title="Evolución del bienestar general" />
-      <WellbeingChart points={WELLBEING_POINTS} labels={WELLBEING_LABELS} />
+      {loading ? (
+        <div className="flex items-center justify-center py-6">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#8869AC] border-t-transparent" />
+        </div>
+      ) : data ? (
+        <WellbeingChart points={data.points} labels={data.labels} />
+      ) : null}
     </SectionCard>
   )
 }
