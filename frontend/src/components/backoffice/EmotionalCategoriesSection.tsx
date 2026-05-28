@@ -12,8 +12,8 @@ const EMOTIONAL_CATEGORIES: EmotionCategory[] = [
 
 export function EmotionalCategoriesSection() {
   return (
-    <SectionCard bg="bg-[#EDF2ED]" className="shadow-none">
-      <div className="mb-5 flex items-center justify-between gap-2">
+    <SectionCard bg="bg-[#EDF2ED]" padding="p-0" className="shadow-none">
+      <div className="mb-4 flex items-center justify-between gap-2 px-4 pt-4 lg:px-5 lg:pt-5">
         <div className="flex items-center gap-2">
           <span className="text-lg">😊</span>
           <h2 className="text-[15px] font-bold text-[#2D3748]">Panel de categorías emocionales</h2>
