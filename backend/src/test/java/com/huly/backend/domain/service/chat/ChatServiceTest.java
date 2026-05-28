@@ -7,10 +7,14 @@ import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.enums.RiskSeverity;
+import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
+import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
+import com.huly.backend.domain.provider.VectorMemoryService;
 import com.huly.backend.domain.repository.RiskWordRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
+import com.huly.backend.domain.service.vector.VectorMemoryProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +38,8 @@ class ChatServiceTest {
     @Mock private ChatConfigRepository chatConfigRepository;
     @Mock private RiskWordRepository riskWordRepository;
     @Mock private PromptBuilderService promptBuilderService;
+    @Mock private VectorMemoryService vectorMemoryService;
+    @Mock private VectorMemoryProperties vectorMemoryProperties;
 
     @InjectMocks
     private ChatService chatService;
@@ -52,26 +58,28 @@ class ChatServiceTest {
     void processMessage_shouldUseBasePromptFromConfig() {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.of(new ChatConfig(1L, true, "mi prompt")));
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq("mi prompt"), any())).thenReturn("enriquecido");
+        when(promptBuilderService.buildEnrichedPrompt(eq("mi prompt"), any(), any())).thenReturn("enriquecido");
         when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        givenVectorMemoryDefaults();
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any());
+        verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any(), any());
     }
 
     @Test
     void processMessage_shouldUseFallbackEmptyPrompt_whenConfigNotFound() {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq(""), any())).thenReturn("fallback");
+        when(promptBuilderService.buildEnrichedPrompt(eq(""), any(), any())).thenReturn("fallback");
         when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        givenVectorMemoryDefaults();
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(eq(""), any());
+        verify(promptBuilderService).buildEnrichedPrompt(eq(""), any(), any());
     }
 
     @Test
@@ -79,13 +87,14 @@ class ChatServiceTest {
         RiskWord rw = RiskWord.builder().id(1L).word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(riskWordRepository.findAllActive()).thenReturn(List.of(rw));
-        when(promptBuilderService.buildEnrichedPrompt(any(), eq(List.of(rw)))).thenReturn("enriquecido");
+        when(promptBuilderService.buildEnrichedPrompt(any(), eq(List.of(rw)), any())).thenReturn("enriquecido");
         when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        givenVectorMemoryDefaults();
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)));
+        verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)), any());
     }
 
     @Test
@@ -93,9 +102,10 @@ class ChatServiceTest {
         List<ConversationMessage> history = List.of(ConversationMessage.of(MessageRole.USER, "anterior"));
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any())).thenReturn("prompt");
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any())).thenReturn("prompt");
         when(chatMemoryPort.getHistory("conv-abc")).thenReturn(history);
         when(llmChatPort.chat(any(), any(), eq(history))).thenReturn(ChatReply.of("ok"));
+        givenVectorMemoryDefaults();
 
         chatService.processMessage("msg", "conv-abc", 1L);
 
@@ -143,9 +153,10 @@ class ChatServiceTest {
     void processMessage_shouldPassEnrichedPromptToLLM() {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any())).thenReturn("prompt final");
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any())).thenReturn("prompt final");
         when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        givenVectorMemoryDefaults();
 
         chatService.processMessage("msg", "conv-1", 1L);
 
@@ -159,8 +170,15 @@ class ChatServiceTest {
                 basePrompt.isEmpty() ? Optional.empty()
                         : Optional.of(new ChatConfig(1L, true, basePrompt)));
         when(riskWordRepository.findAllActive()).thenReturn(riskWords);
-        when(promptBuilderService.buildEnrichedPrompt(any(), any())).thenReturn(enrichedPrompt);
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any())).thenReturn(enrichedPrompt);
         when(chatMemoryPort.getHistory(any())).thenReturn(history);
         when(llmChatPort.chat(any(), any(), any())).thenReturn(reply);
+        givenVectorMemoryDefaults();
+    }
+
+    private void givenVectorMemoryDefaults() {
+        when(vectorMemoryProperties.getDefaultLimit()).thenReturn(5);
+        when(vectorMemoryProperties.getSimilarityThreshold()).thenReturn(0.65);
+        when(vectorMemoryService.findRelevantMemories(any(SearchVectorMemoryQuery.class))).thenReturn(List.<VectorMemory>of());
     }
 }

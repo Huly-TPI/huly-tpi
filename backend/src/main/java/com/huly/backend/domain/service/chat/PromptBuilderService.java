@@ -2,10 +2,12 @@ package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
 import com.huly.backend.domain.model.enums.EmotionType;
+import com.huly.backend.domain.model.vector.VectorMemory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,10 +34,28 @@ public class PromptBuilderService {
      * @return prompt completo y enriquecido listo para enviarse al modelo de lenguaje
      */
     public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords) {
+        return buildEnrichedPrompt(basePrompt, riskWords, Collections.emptyList());
+    }
+
+    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
         StringBuilder sb = new StringBuilder(basePrompt);
+        appendVectorMemories(sb, memories);
         appendResponseInstructions(sb);
         appendRiskWords(sb, riskWords);
         return sb.toString();
+    }
+
+    private void appendVectorMemories(StringBuilder sb, List<VectorMemory> memories) {
+        if (memories == null || memories.isEmpty()) {
+            return;
+        }
+
+        sb.append("\n\n=== INFORMACION RECORDADA DEL USUARIO ===");
+        sb.append("\nUsa esta informacion solo si ayuda a responder. No la menciones de forma forzada.");
+        memories.stream()
+                .map(VectorMemory::content)
+                .filter(content -> content != null && !content.isBlank())
+                .forEach(content -> sb.append("\n- ").append(content));
     }
 
     /**
