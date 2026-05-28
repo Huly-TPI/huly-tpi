@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -12,11 +13,12 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET =
-            "mySuperSecretKeymySuperSecretKeymySuperSecretKey";
-
-    private final SecretKey key =
-            Keys.hmacShaKeyFor(SECRET.getBytes());
+    @Value("${jwt.secret}")
+    private String secret;  
+    
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
     public String generateAccessToken(String email) {
 
@@ -26,7 +28,7 @@ public class JwtService {
                 .setExpiration(
                         new Date(System.currentTimeMillis() + 1000 * 60 * 60)
                 )
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -38,14 +40,14 @@ public class JwtService {
                 .setExpiration(
                         new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7)
                 )
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String extractEmail(String token) {
 
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

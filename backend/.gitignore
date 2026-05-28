@@ -88,6 +88,7 @@ log.txt
 .env.*.local
 .env.prod
 src/main/resources/application-huly-secrets.properties
+src/main/resources/application-dev.properties
 
 # ========================
 # DATABASES & CACHES
