@@ -47,14 +47,15 @@ public class AuthController {
                             .build()
             );
     }
+
     @PostMapping("/register")
-        public ResponseEntity<String> register(
+        public ResponseEntity<LoginResponse> register(
                 @Valid @RequestBody RegisterRequest request
         ) {
 
-        authService.register(request);
+        LoginResponse response = authService.register(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Usuario registrado correctamente");
+                .body(response);
         }
 }

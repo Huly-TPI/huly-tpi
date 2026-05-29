@@ -6,10 +6,12 @@ import Diary from './pages/Diary'
 import Breathing from './pages/Breathing/Breathing'
 import ChatTest from './pages/ChatTest'
 import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
+import Register from './pages/Register/Register'
 
 const App = () => {
   return (
     <Routes>
+      <Route path="/register" element={<Register />} />
       <Route path="/chat-test" element={<ChatTest />} />
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />

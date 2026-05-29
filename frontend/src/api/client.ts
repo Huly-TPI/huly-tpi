@@ -15,10 +15,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    const errorBody = await response.json().catch(() => null)
+
+    const message =
+      errorBody?.message ||
+      errorBody?.error ||
+      `Error HTTP ${response.status}`
+
+    throw new Error(message)
   }
 
-  return response.json() as Promise<T>
+  const text = await response.text()
+
+  return (text ? JSON.parse(text) : null) as T
 }
 
 export const api = {

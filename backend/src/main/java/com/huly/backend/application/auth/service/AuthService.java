@@ -10,6 +10,8 @@ import com.huly.backend.infrastructure.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
+import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     private final JwtService jwtService;
+
+    private final UserDetailRepository userDetailRepository;
 
     public LoginResponse login(LoginRequest request) {
 
@@ -53,13 +57,13 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .build();
     }
-    public void register(RegisterRequest request) {
+    public LoginResponse register(RegisterRequest request){
 
         boolean userExists = appUserRepository
                 .existsByEmail(request.getEmail());
 
         if (userExists) {
-                throw new ConflictException("Email already in use");
+                throw new ConflictException("El email ya esta registrado");
         }
 
         AppUserEntity user = new AppUserEntity();
@@ -70,6 +74,22 @@ public class AuthService {
                 passwordEncoder.encode(request.getPassword())
         );
 
-        appUserRepository.save(user);
+        AppUserEntity savedUser = appUserRepository.save(user);
+
+        UserDetailEntity userDetail = UserDetailEntity.builder()
+                .appUser(savedUser)
+                .name(request.getName())
+                .lastname(request.getLastname())
+                .birth(request.getBirthDate())
+                .build();
+
+        userDetailRepository.save(userDetail);
+
+        String accessToken =
+                jwtService.generateAccessToken(savedUser.getEmail());
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .build();
     }
 }
