@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import colorLogo from '../assets/brand/color-logo.webp'
+import hojita from '../assets/backoffice/hojita.jpeg'
+import cerrarSesion from '../assets/backoffice/logout.webp'
 
 // ─── Design tokens (from Figma) ──────────────────────────────────────────────
 // Sidebar bg:       #FFFFFF
@@ -97,20 +99,20 @@ export default function BackofficeLayout() {
       {/* Mobile: fixed overlay | Desktop: static left column, full height */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-30 flex h-full w-[304px] flex-col bg-white
+          fixed top-4 bottom-4 left-0 z-30 flex w-[304px] flex-col bg-white rounded-r-[20px]
           transition-transform duration-300 ease-in-out
-          lg:relative lg:translate-x-0 lg:shadow-none
+          lg:relative lg:top-auto lg:bottom-auto lg:translate-x-0 lg:my-4 lg:rounded-[20px] lg:shadow-none
           ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         `}
       >
         {/* Logo area */}
         <div className="flex items-center gap-3 px-4 py-6">
           <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#D1CAEF]">
-            <img src={colorLogo} alt="Huly" className="h-9 w-9 object-contain" />
+            <img src={hojita} alt="" className="h-8 w-8 object-contain mix-blend-multiply" />
           </div>
           <div className="min-w-0">
-            <p className="text-[15px] font-extrabold leading-tight text-[#8869AC]">huly</p>
-            <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#A0AEC0]">
+            <img src={colorLogo} alt="Huly" className="h-9 w-auto object-contain object-left" />
+            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0]">
               Bienestar emocional
             </p>
           </div>
@@ -149,6 +151,14 @@ export default function BackofficeLayout() {
             ))}
           </ul>
         </nav>
+
+        {/* Logout */}
+        <div className="shrink-0 px-4 pb-5 pt-2">
+          <div className="mx-0 mb-3 h-px bg-gray-100" />
+          <button className="w-full transition-opacity hover:opacity-80 active:opacity-60">
+            <img src={cerrarSesion} alt="Cerrar sesión" className="w-full object-contain" />
+          </button>
+        </div>
       </aside>
 
       {/* ── Main column ─────────────────────────────────────────────────── */}
@@ -170,7 +180,7 @@ export default function BackofficeLayout() {
 
             {/* Title */}
             <h1 className="flex-1 text-[28px] font-extrabold leading-tight tracking-tight text-[#8869AC] md:text-[32px]">
-              Huly — Backoffice
+              Huly - Backoffice
             </h1>
 
             {/* Bell with red badge */}

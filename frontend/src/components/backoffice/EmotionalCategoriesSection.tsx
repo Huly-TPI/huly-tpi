@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { chatbotApi, EmotionalCategoryResponse } from '../../api/chatbot'
 import { EmotionCard, EmotionCategory } from './EmotionCard'
 import { SectionCard } from './SectionCard'
+import purpleSmile from '../../assets/backoffice/purpleSmile.webp'
 
 const VISUAL: Record<string, { emoji: string; color: string }> = {
   'Estrés':   { emoji: '💨', color: '#EF4444' },
@@ -20,9 +21,9 @@ function toEmotionCategory(r: EmotionalCategoryResponse): EmotionCategory {
     flows:      r.flows,
     detect:     r.detect,
     severity:   r.severity,
-    iconBg:     `bg-[${v.color}]/20`,
-    barColor:   `bg-[${v.color}]`,
-    badgeColor: `text-[${v.color}]`,
+    iconBg:     v.color + '33',  // hex color at ~20% opacity
+    barColor:   v.color,
+    badgeColor: v.color,
   }
 }
 
@@ -41,8 +42,8 @@ export function EmotionalCategoriesSection() {
     <SectionCard bg="bg-[#EDF2ED]" padding="p-0" className="shadow-none">
       <div className="mb-4 flex items-center justify-between gap-2 px-4 pt-4 lg:px-5 lg:pt-5">
         <div className="flex items-center gap-2">
-          <span className="text-lg">😊</span>
-          <h2 className="text-[15px] font-bold text-[#2D3748]">Panel de categorías emocionales</h2>
+          <img src={purpleSmile} alt="" className="w-6 h-6 object-contain -translate-y-0.0" />
+          <h2 className="text-[20px] font-bold text-[#2D3748]">Panel de categorías emocionales</h2>
         </div>
         <button className="text-sm font-semibold text-[#8869AC] hover:underline">
           Gestionar todas

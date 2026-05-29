@@ -1,3 +1,5 @@
+import { Emoji } from '../icons/Emoji'
+
 export type EmotionSeverity = 'ALTA' | 'MEDIA' | 'BAJA'
 
 export interface EmotionCategory {
@@ -6,11 +8,11 @@ export interface EmotionCategory {
   flows: number
   detect: number
   severity: EmotionSeverity
-  /** Tailwind bg class for the icon circle, e.g. "bg-rose-100" */
+  /** Hex color with alpha for icon background, e.g. "#EF444433" */
   iconBg: string
-  /** Tailwind bg class for the color strip, e.g. "bg-red-400" */
+  /** Hex color for the color strip, e.g. "#EF4444" */
   barColor: string
-  /** Tailwind text class for the severity label, e.g. "text-red-500" */
+  /** Hex color for the severity label, e.g. "#EF4444" */
   badgeColor: string
 }
 
@@ -22,23 +24,22 @@ interface EmotionCardProps {
 export function EmotionCard({ category, onManage }: EmotionCardProps) {
   return (
     <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md cursor-default">
-      {/* Icon circle */}
-      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl text-3xl ${category.iconBg}`}>
-        {category.emoji}
+      <div
+        className="flex h-14 w-14 items-center justify-center rounded-2xl"
+        style={{ backgroundColor: category.iconBg }}
+      >
+        <Emoji emoji={category.emoji} className="w-8 h-8" />
       </div>
 
-      {/* Name + stats */}
       <p className="mt-4 text-[15px] font-bold text-[#2D3748]">{category.name}</p>
       <p className="mt-1 text-xs text-[#A0AEC0]">
         {category.flows} flujos · {category.detect}% detect.
       </p>
 
-      {/* Color strip */}
-      <div className={`mt-4 h-[3px] w-full rounded-full ${category.barColor}`} />
+      <div className="mt-4 h-[3px] w-full rounded-full" style={{ backgroundColor: category.barColor }} />
 
-      {/* Severity + chevron */}
       <div className="mt-3 flex items-center justify-between">
-        <span className={`text-xs font-bold ${category.badgeColor}`}>
+        <span className="text-xs font-bold" style={{ color: category.badgeColor }}>
           {category.severity}
         </span>
         <button

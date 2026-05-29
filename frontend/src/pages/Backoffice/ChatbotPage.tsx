@@ -97,8 +97,8 @@ export default function ChatbotPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-extrabold leading-tight text-[#8869AC]">Chatbot</h1>
-        <p className="text-sm text-[#A0AEC0]">
+        <h1 className="text-[30px] font-extrabold leading-tight text-[#8869AC]">Chatbot</h1>
+        <p className="text-[16px] text-[#A0AEC0]">
           Configuración emocional, automatización terapéutica y monitoreo inteligente
         </p>
       </div>
