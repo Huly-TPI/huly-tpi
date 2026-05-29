@@ -2,6 +2,8 @@ package com.huly.backend.application.auth.service;
 
 import com.huly.backend.application.auth.dto.LoginRequest;
 import com.huly.backend.application.auth.dto.LoginResponse;
+import com.huly.backend.application.auth.dto.RegisterRequest;
+import com.huly.backend.exception.ConflictException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.security.JwtService;
@@ -50,5 +52,24 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+    public void register(RegisterRequest request) {
+
+        boolean userExists = appUserRepository
+                .existsByEmail(request.getEmail());
+
+        if (userExists) {
+                throw new ConflictException("Email already in use");
+        }
+
+        AppUserEntity user = new AppUserEntity();
+
+        user.setEmail(request.getEmail());
+
+        user.setPassword(
+                passwordEncoder.encode(request.getPassword())
+        );
+
+        appUserRepository.save(user);
     }
 }

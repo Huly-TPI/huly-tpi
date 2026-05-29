@@ -1,12 +1,14 @@
 package com.huly.backend.presentation.controller;
 
-
 import com.huly.backend.application.auth.dto.LoginRequest;
 import com.huly.backend.application.auth.dto.LoginResponse;
+import com.huly.backend.application.auth.dto.RegisterRequest;
 import com.huly.backend.application.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +23,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request
     ) {
 
         LoginResponse response = authService.login(request);
@@ -45,4 +47,14 @@ public class AuthController {
                             .build()
             );
     }
+    @PostMapping("/register")
+        public ResponseEntity<String> register(
+                @Valid @RequestBody RegisterRequest request
+        ) {
+
+        authService.register(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Usuario registrado correctamente");
+        }
 }
