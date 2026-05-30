@@ -5,29 +5,33 @@ import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.VectorMemoryService;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
-@ConditionalOnMissingBean(VectorStore.class)
+@ConditionalOnProperty(name = "spring.ai.vectorstore.type", havingValue = "none", matchIfMissing = true)
 public class NoOpVectorMemoryService implements VectorMemoryService {
 
     @Override
     public void saveMemory(SaveVectorMemoryCommand command) {
-        // Fallback para entornos sin pgvector, por ejemplo H2 o tests locales.
+        log.debug("Memoria vectorial desactivada. No se guarda memoria para userId={}",
+                command != null ? command.userId() : null);
     }
 
     @Override
     public List<VectorMemory> findRelevantMemories(SearchVectorMemoryQuery query) {
-        // Fallback para entornos sin pgvector, por ejemplo H2 o tests locales.
+        log.debug("Memoria vectorial desactivada. No se buscan memorias para userId={}",
+                query != null ? query.userId() : null);
         return List.of();
     }
 
     @Override
     public void deleteMemories(DeleteVectorMemoryCommand command) {
-        // Fallback para entornos sin pgvector, por ejemplo H2 o tests locales.
+        log.debug("Memoria vectorial desactivada. No se eliminan memorias para userId={}",
+                command != null ? command.userId() : null);
     }
 }
