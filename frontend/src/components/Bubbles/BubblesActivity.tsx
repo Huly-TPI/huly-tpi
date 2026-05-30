@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import Bubble from './Bubble'
 import type { Bubble as BubbleType, EmotionalBubblesActivityProps } from './types'
 import './BubblesActivity.css'
+import bgImage from '../../assets/bubbles/background/bubbles-minigame-background.webp'
+import fishImage from '../../assets/bubbles/bubble-minigame-fish.webp'
 
 const BUBBLE_COLORS = [
   'rgba(144, 210, 170, 0.55)',
@@ -15,19 +17,20 @@ const BUBBLE_COLORS = [
 ]
 
 
+const isMobile = window.innerWidth < 640
 const generateBubble = (id: string, delay: number): BubbleType => ({
   id,
   color: BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)],
-  size: 70 + Math.floor(Math.random() * 100),       
-  driftX: 20 + Math.floor(Math.random() * 75),      
-  driftY: -50 + Math.floor(Math.random() * 75),   
-  animationDuration: 14 + Math.random() * 12,  
+ size: (isMobile ? 50 : 70) + Math.floor(Math.random() * (isMobile ? 50 : 100)),
+  driftX: 20 + Math.floor(Math.random() * 75),
+  driftY: -50 + Math.floor(Math.random() * 75),
+  animationDuration: 14 + Math.random() * 12,
   animationDelay: delay,
 })
 
 const INITIAL_BUBBLES: BubbleType[] = Array.from(
   { length: 8 },
-  (_, i) => generateBubble(`b-${i}`, i * 2.5)
+  (_, i) => generateBubble(`b-${i}`, i * 4)
 )
 
 const BubblesActivity = ({ onBack }: EmotionalBubblesActivityProps) => {
@@ -58,6 +61,8 @@ const BubblesActivity = ({ onBack }: EmotionalBubblesActivityProps) => {
             
                 <div className="bubbles-activity">
                 <div className="bubbles-scene">
+                    
+                    <img src={bgImage} className="absolute inset-0 w-full h-full object-cover object-bottom" alt="" draggable={false} />
                     <button
                         onClick={onBack}
                         className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors"
@@ -87,6 +92,14 @@ const BubblesActivity = ({ onBack }: EmotionalBubblesActivityProps) => {
     return(
         <div className="bubbles-activity">
             <div className="bubbles-scene" data-testid="bubbles-container">
+                <img src={bgImage} className="absolute inset-0 w-full h-full object-cover object-bottom" alt="" draggable={false} />
+                <img
+                    src={fishImage}
+                    className="absolute fish"
+                    style={{ bottom: '35%', left: '8%', width: '28vw', minWidth: '120px', maxWidth: '400px' }}
+                    alt=""
+                    draggable={false}
+                    />
                  <button
                         onClick={() => setStarted(false)}
                         className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors"

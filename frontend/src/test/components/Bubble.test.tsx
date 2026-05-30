@@ -44,7 +44,9 @@ describe('Bubble', () => {
              it('llama onPopEnd con el id al finalizar la animación', () => {
                     const onPopEnd = vi.fn()
                     render(<Bubble bubble={bubble} onClick={vi.fn()} popping={true} onPopEnd={onPopEnd} />)
-                    fireEvent.animationEnd(screen.getByTestId('bubble-b-1'))
+                    const event = new Event('animationend', { bubbles: true })
+                    Object.defineProperty(event, 'animationName', { value: 'bubble-pop' })
+                    fireEvent(screen.getByTestId('bubble-b-1'), event)
                     expect(onPopEnd).toHaveBeenCalledWith('b-1')
-                })
+                    })
              })

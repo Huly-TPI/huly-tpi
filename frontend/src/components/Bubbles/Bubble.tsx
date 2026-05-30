@@ -36,7 +36,11 @@ const Bubble = ({ bubble, onClick, popping = false, poppingPosition, onPopEnd }:
       data-testid={`bubble-${bubble.id}`}
       style={style}
       onClick={handleClick}
-      onAnimationEnd={() => popping && onPopEnd?.(bubble.id)}
+     onAnimationEnd={(e) => {
+      if (popping && e.animationName === 'bubble-pop') {
+        onPopEnd?.(bubble.id)
+      }
+    }}
     >
       <div className="bubble__shine" />
     </div>
