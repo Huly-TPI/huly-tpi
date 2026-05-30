@@ -1,0 +1,6 @@
+<svg viewBox="0 0 110 109" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Icono de fantasma rosa">
+  <rect width="110" height="109" rx="34" fill="#FDE8F3"/>
+  <path d="M31 77V47C31 34 42 23 55 23C68 23 79 34 79 47V77C79 82 74 85 70 82L64 78L58 83C56 85 53 85 51 83L45 78L39 82C35 85 31 82 31 77Z" fill="#F36CB0"/>
+  <circle cx="47" cy="50" r="4" fill="white"/>
+  <circle cx="63" cy="50" r="4" fill="white"/>
+</svg>
