@@ -25,9 +25,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     throw new Error(message)
   }
 
-  const text = await response.text()
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return undefined as T
+  }
 
-  return (text ? JSON.parse(text) : null) as T
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }
 
 export const api = {
@@ -36,4 +39,10 @@ export const api = {
 
   post: <T>(path: string, body: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'POST', body }),
+
+  put: <T>(path: string, body: unknown, options?: RequestOptions) =>
+    request<T>(path, { ...options, method: 'PUT', body }),
+
+  delete: <T>(path: string, options?: RequestOptions) =>
+    request<T>(path, { ...options, method: 'DELETE' }),
 }
