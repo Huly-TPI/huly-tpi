@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react'
 import { chatbotApi, EmotionalCategoryResponse } from '../../api/chatbot'
 import { EmotionCategory } from '../../components/backoffice/EmotionCard'
+import estresSvg    from '../../assets/backoffice/emotion/estres.svg'
+import ansiedadSvg  from '../../assets/backoffice/emotion/ansiedad.svg'
+import enojoSvg     from '../../assets/backoffice/emotion/enojo.svg'
+import miedoSvg     from '../../assets/backoffice/emotion/miedo.svg'
+import soledadSvg   from '../../assets/backoffice/emotion/soledad.svg'
+import tristezaSvg  from '../../assets/backoffice/emotion/tristeza.svg'
+
+const ICONS: Partial<Record<string, string>> = {
+  'Estrés':   estresSvg,
+  'Ansiedad': ansiedadSvg,
+  'Enojo':    enojoSvg,
+  'Miedo':    miedoSvg,
+  'Soledad':  soledadSvg,
+  'Tristeza': tristezaSvg,
+}
 
 const VISUAL: Record<string, { emoji: string; color: string }> = {
   // Emociones básicas
@@ -46,6 +61,7 @@ function toEmotionCategory(r: EmotionalCategoryResponse): EmotionCategory {
   const v = VISUAL[r.name] ?? { emoji: '❓', color: '#A0AEC0' }
   return {
     emoji:      v.emoji,
+    iconSrc:    ICONS[r.name],
     name:       r.name,
     flows:      r.flows,
     detect:     r.detect,
