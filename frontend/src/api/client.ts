@@ -15,14 +15,22 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    const errorBody = await response.json().catch(() => null)
+
+    const message =
+      errorBody?.message ||
+      errorBody?.error ||
+      `Error HTTP ${response.status}`
+
+    throw new Error(message)
   }
 
   if (response.status === 204 || response.headers.get('content-length') === '0') {
     return undefined as T
   }
 
-  return response.json() as Promise<T>
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }
 
 export const api = {

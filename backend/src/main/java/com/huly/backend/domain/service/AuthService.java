@@ -1,15 +1,22 @@
-package com.huly.backend.application.auth.service;
+package com.huly.backend.domain.service;
 
-import com.huly.backend.application.auth.dto.LoginRequest;
-import com.huly.backend.application.auth.dto.LoginResponse;
-import com.huly.backend.application.auth.dto.RegisterRequest;
+import com.huly.backend.domain.model.enums.UserRole;
+import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.exception.ConflictException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.security.JwtService;
+import com.huly.backend.presentation.dto.auth.LoginRequest;
+import com.huly.backend.presentation.dto.auth.LoginResponse;
+import com.huly.backend.presentation.dto.auth.RegisterRequest;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
+import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -21,17 +28,15 @@ public class AuthService {
 
     private final JwtService jwtService;
 
-    public LoginResponse login(LoginRequest request) {
+    private final UserDetailRepository userDetailRepository;
 
-        System.out.println("EMAIL: " + request.getEmail());
+    public LoginResponse login(LoginRequest request) {
 
         AppUserEntity user = appUserRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new RuntimeException("Invalid credentials")
                 );
-
-        System.out.println("USER: " + user);
 
         boolean matches = passwordEncoder.matches(
                 request.getPassword(),
@@ -53,13 +58,14 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .build();
     }
-    public void register(RegisterRequest request) {
+    @Transactional
+    public LoginResponse register(RegisterRequest request){
 
         boolean userExists = appUserRepository
                 .existsByEmail(request.getEmail());
 
         if (userExists) {
-                throw new ConflictException("Email already in use");
+                throw new ConflictException("El email ya esta registrado");
         }
 
         AppUserEntity user = new AppUserEntity();
@@ -70,6 +76,30 @@ public class AuthService {
                 passwordEncoder.encode(request.getPassword())
         );
 
-        appUserRepository.save(user);
+        user.setRole(UserRole.USER);
+        user.setStatus(UserStatus.ACTIVE);
+
+        AppUserEntity savedUser = appUserRepository.save(user);
+
+        UserDetailEntity userDetail = UserDetailEntity.builder()
+                .appUser(savedUser)
+                .name(request.getName())
+                .lastname(request.getLastname())
+                .birth(request.getBirthDate())
+                .build();
+
+        userDetailRepository.save(userDetail);
+
+        String accessToken =
+                jwtService.generateAccessToken(savedUser.getEmail());
+        
+        String refreshToken =
+                jwtService.generateRefreshToken(savedUser.getEmail());
+
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 }
