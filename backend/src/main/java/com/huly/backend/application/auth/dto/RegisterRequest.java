@@ -4,25 +4,31 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
 public class RegisterRequest {
 
+    @NotNull
     @Email
     @NotBlank
     private String email;
 
+    @NotNull
     @NotBlank
     @Size(min = 6)
     private String password;
 
+    @NotNull
     @NotBlank
     private String name;
 
+    @NotNull
     @NotBlank
     private String lastname;
 
+    @NotNull
     @Past
     private LocalDate birthDate;
 

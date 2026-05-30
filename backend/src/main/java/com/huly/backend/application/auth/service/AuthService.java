@@ -3,6 +3,8 @@ package com.huly.backend.application.auth.service;
 import com.huly.backend.application.auth.dto.LoginRequest;
 import com.huly.backend.application.auth.dto.LoginResponse;
 import com.huly.backend.application.auth.dto.RegisterRequest;
+import com.huly.backend.domain.model.enums.UserRole;
+import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.exception.ConflictException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
@@ -12,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +61,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .build();
     }
+    @Transactional
     public LoginResponse register(RegisterRequest request){
 
         boolean userExists = appUserRepository
@@ -74,6 +79,9 @@ public class AuthService {
                 passwordEncoder.encode(request.getPassword())
         );
 
+        user.setRole(UserRole.USER);
+        user.setStatus(UserStatus.ACTIVE);
+
         AppUserEntity savedUser = appUserRepository.save(user);
 
         UserDetailEntity userDetail = UserDetailEntity.builder()
@@ -87,9 +95,14 @@ public class AuthService {
 
         String accessToken =
                 jwtService.generateAccessToken(savedUser.getEmail());
+        
+        String refreshToken =
+                jwtService.generateRefreshToken(savedUser.getEmail());
+
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }
