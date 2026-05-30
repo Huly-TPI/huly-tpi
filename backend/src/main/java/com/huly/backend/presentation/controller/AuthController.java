@@ -1,60 +1,100 @@
 package com.huly.backend.presentation.controller;
 
-import com.huly.backend.application.auth.dto.LoginRequest;
-import com.huly.backend.application.auth.dto.LoginResponse;
-import com.huly.backend.application.auth.dto.RegisterRequest;
-import com.huly.backend.application.auth.service.AuthService;
+import com.huly.backend.domain.model.AuthTokens;
+import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.useCase.auth.LoginUseCase;
+import com.huly.backend.domain.useCase.auth.LogoutUseCase;
+import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
+import com.huly.backend.domain.useCase.auth.RegisterUseCase;
+import com.huly.backend.exception.UnauthorizedException;
+import com.huly.backend.presentation.dto.auth.LoginRequest;
+import com.huly.backend.presentation.dto.auth.LoginResponse;
+import com.huly.backend.presentation.dto.auth.RegisterRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final LoginUseCase loginUseCase;
+    private final RegisterUseCase registerUseCase;
+    private final RefreshTokenUseCase refreshTokenUseCase;
+    private final LogoutUseCase logoutUseCase;
+    private final TokenProvider tokenProvider;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
+        AuthTokens tokens = loginUseCase.execute(request.getEmail(), request.getPassword());
 
-        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
+                .body(LoginResponse.builder()
+                        .accessToken(tokens.getAccessToken())
+                        .role(tokens.getRole())
+                        .build());
+    }
 
-        ResponseCookie refreshCookie = ResponseCookie.from(
-                "refreshToken",
-                response.getRefreshToken()
-        )
+    @PostMapping("/register")
+    public ResponseEntity<String> register(
+            @Valid @RequestBody RegisterRequest request
+    ) {
+        registerUseCase.execute(request.getEmail(), request.getPassword(), request.getName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Usuario registrado correctamente");
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(
+            @CookieValue(required = false) String refreshToken
+    ) {
+        if (refreshToken == null) {
+            throw new UnauthorizedException("Refresh token null");
+        }
+
+        AuthTokens tokens = refreshTokenUseCase.execute(refreshToken);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
+                .body(LoginResponse.builder()
+                        .accessToken(tokens.getAccessToken())
+                        .build());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @CookieValue(required = false) String refreshToken
+    ) {
+        logoutUseCase.execute(refreshToken);
+
+        ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false) // true en producción con HTTPS
+                .secure(tokenProvider.isCookieSecure())
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60)
+                .maxAge(0)
                 .sameSite("Lax")
                 .build();
 
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-            .body(
-                    LoginResponse.builder()
-                            .accessToken(response.getAccessToken())
-                            .build()
-            );
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                .build();
     }
-    @PostMapping("/register")
-        public ResponseEntity<String> register(
-                @Valid @RequestBody RegisterRequest request
-        ) {
 
-        authService.register(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Usuario registrado correctamente");
-        }
+    private ResponseCookie buildRefreshCookie(String token) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(tokenProvider.isCookieSecure())
+                .path("/")
+                .maxAge(tokenProvider.getRefreshTokenMaxAgeSecs())
+                .sameSite("Lax")
+                .build();
+    }
 }
