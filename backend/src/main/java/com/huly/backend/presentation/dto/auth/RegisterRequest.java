@@ -1,4 +1,4 @@
-package com.huly.backend.application.auth.dto;
+package com.huly.backend.presentation.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
+
+import com.huly.backend.infrastructure.validation.MinimumAge;
 
 public class RegisterRequest {
 
@@ -30,6 +32,7 @@ public class RegisterRequest {
 
     @NotNull
     @Past
+    @MinimumAge(13)
     private LocalDate birthDate;
 
     public String getEmail() {

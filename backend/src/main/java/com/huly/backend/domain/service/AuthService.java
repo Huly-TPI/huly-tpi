@@ -1,14 +1,15 @@
-package com.huly.backend.application.auth.service;
+package com.huly.backend.domain.service;
 
-import com.huly.backend.application.auth.dto.LoginRequest;
-import com.huly.backend.application.auth.dto.LoginResponse;
-import com.huly.backend.application.auth.dto.RegisterRequest;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.exception.ConflictException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.security.JwtService;
+import com.huly.backend.presentation.dto.auth.LoginRequest;
+import com.huly.backend.presentation.dto.auth.LoginResponse;
+import com.huly.backend.presentation.dto.auth.RegisterRequest;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,15 +32,11 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        System.out.println("EMAIL: " + request.getEmail());
-
         AppUserEntity user = appUserRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new RuntimeException("Invalid credentials")
                 );
-
-        System.out.println("USER: " + user);
 
         boolean matches = passwordEncoder.matches(
                 request.getPassword(),

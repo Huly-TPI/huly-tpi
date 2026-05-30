@@ -1,9 +1,11 @@
 package com.huly.backend.presentation.controller;
 
-import com.huly.backend.application.auth.dto.LoginRequest;
-import com.huly.backend.application.auth.dto.LoginResponse;
-import com.huly.backend.application.auth.dto.RegisterRequest;
-import com.huly.backend.application.auth.service.AuthService;
+import com.huly.backend.presentation.dto.auth.RegisterRequest;
+import com.huly.backend.presentation.dto.auth.LoginRequest;
+import com.huly.backend.presentation.dto.auth.LoginResponse;
+import com.huly.backend.domain.useCase.auth.LoginUseCase;
+import com.huly.backend.domain.useCase.auth.RegisterUseCase;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -19,14 +21,16 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final LoginUseCase loginUseCase;
+    private final RegisterUseCase registerUseCase;
+
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
 
-        LoginResponse response = authService.login(request);
+        LoginResponse response = loginUseCase.execute(request);
 
         ResponseCookie refreshCookie = ResponseCookie.from(
                 "refreshToken",
@@ -53,7 +57,7 @@ public class AuthController {
                 @Valid @RequestBody RegisterRequest request
         ) {
 
-        LoginResponse response = authService.register(request);
+        LoginResponse response = registerUseCase.execute(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);
