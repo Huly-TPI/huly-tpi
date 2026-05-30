@@ -14,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.huly.backend.domain.model.enums.SourceAction;
+
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -129,5 +131,28 @@ class UserRepositoryImplTest {
         assertThat(captured.getPassword()).isEqualTo("encoded");
         assertThat(captured.getRole()).isEqualTo(UserRole.USER);
         assertThat(captured.getStatus()).isEqualTo(UserStatus.ACTIVE);
+    }
+
+    @Test
+    void saveLeadDetail_shouldSaveUserDetailWithNicknameAndSourceAction() {
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+
+        userRepository.saveLeadDetail(10L, "hulyuser", SourceAction.LANDING);
+
+        verify(userDetailRepository).save(captor.capture());
+        UserDetailEntity saved = captor.getValue();
+        assertThat(saved.getNickname()).isEqualTo("hulyuser");
+        assertThat(saved.getSourceAction()).isEqualTo(SourceAction.LANDING);
+        assertThat(saved.getAppUser().getId()).isEqualTo(10L);
+    }
+
+    @Test
+    void saveLeadDetail_shouldSetCreatedAt() {
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+
+        userRepository.saveLeadDetail(1L, "hulyuser", SourceAction.GOALS);
+
+        verify(userDetailRepository).save(captor.capture());
+        assertThat(captor.getValue().getCreatedAt()).isNotNull();
     }
 }
