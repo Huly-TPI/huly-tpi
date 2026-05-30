@@ -417,5 +417,250 @@
         }
       ]
     }
+  ,
+  {
+    "name": "User Goals",
+    "description": "Gestión de retos (goals) de usuario. Permite crear, listar (separado en completados y pendientes), editar y eliminar retos.",
+    "item": [
+      {
+        "name": "Crear reto de usuario",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": {
+            "raw": "{{baseUrl}}/api/user-goals",
+            "host": ["{{baseUrl}}"],
+            "path": ["api", "user-goals"]
+          },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"activityId\": 1\n}",
+            "options": { "raw": { "language": "json" } }
+          },
+          "description": "Crea un nuevo reto para el usuario con estado PENDING. `activityId` es opcional.\n\n**Respuesta exitosa:** 201 Created\n**Errores posibles:**\n- 400 si userId o title están ausentes o inválidos"
+        },
+        "response": [
+          {
+            "name": "201 - Creado exitosamente",
+            "originalRequest": {
+              "method": "POST",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "url": { "raw": "{{baseUrl}}/api/user-goals" },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"activityId\": 1\n}"
+              }
+            },
+            "status": "Created",
+            "code": 201,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"status\": \"PENDING\",\n  \"createdAt\": \"2025-01-01T00:00:00Z\",\n  \"activityId\": 1\n}"
+          },
+          {
+            "name": "201 - Creado sin actividad",
+            "originalRequest": {
+              "method": "POST",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "url": { "raw": "{{baseUrl}}/api/user-goals" },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"userId\": 1,\n  \"title\": \"Escribir en el diario\"\n}"
+              }
+            },
+            "status": "Created",
+            "code": 201,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"id\": 2,\n  \"userId\": 1,\n  \"title\": \"Escribir en el diario\",\n  \"description\": null,\n  \"status\": \"PENDING\",\n  \"createdAt\": \"2025-01-01T00:00:00Z\",\n  \"activityId\": null\n}"
+          },
+          {
+            "name": "400 - Validación fallida",
+            "originalRequest": {
+              "method": "POST",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "url": { "raw": "{{baseUrl}}/api/user-goals" },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Sin userId\"\n}"
+              }
+            },
+            "status": "Bad Request",
+            "code": 400,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"userId\": \"El id de usuario es obligatorio\"\n  }\n}"
+          }
+        ]
+      },
+      {
+        "name": "Listar retos por usuario",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "{{baseUrl}}/api/user-goals/user/1?page=0&size=5",
+            "host": ["{{baseUrl}}"],
+            "path": ["api", "user-goals", "user", "1"],
+            "query": [
+              {
+                "key": "page",
+                "value": "0",
+                "description": "Número de página (comienza en 0)"
+              },
+              {
+                "key": "size",
+                "value": "5",
+                "description": "Cantidad de elementos por página (default 5)"
+              }
+            ]
+          },
+          "description": "Retorna los retos del usuario separados en `completados` (COMPLETED) y `pendientes` (PENDING), cada lista paginada y ordenada por `createdAt` descendente.\n\n**Query params:**\n- `page`: número de página (default 0)\n- `size`: elementos por página (default 5)\n\n**Respuesta exitosa:** 200 OK"
+        },
+        "response": [
+          {
+            "name": "200 - Lista paginada con completados y pendientes",
+            "originalRequest": {
+              "method": "GET",
+              "header": [],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/user/1?page=0&size=5" }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"completados\": {\n    \"content\": [\n      {\n        \"id\": 1,\n        \"userId\": 1,\n        \"title\": \"Practicar respiración\",\n        \"description\": \"Realizado\",\n        \"status\": \"COMPLETED\",\n        \"createdAt\": \"2025-01-02T00:00:00Z\",\n        \"activityId\": 1\n      }\n    ],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"first\": true,\n    \"last\": true\n  },\n  \"pendientes\": {\n    \"content\": [\n      {\n        \"id\": 2,\n        \"userId\": 1,\n        \"title\": \"Escribir en el diario\",\n        \"description\": null,\n        \"status\": \"PENDING\",\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"activityId\": null\n      }\n    ],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 7,\n    \"totalPages\": 2,\n    \"first\": true,\n    \"last\": false\n  }\n}"
+          },
+          {
+            "name": "200 - Página 1 con size 3",
+            "originalRequest": {
+              "method": "GET",
+              "header": [],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/user/1?page=1&size=3" }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"completados\": {\n    \"content\": [],\n    \"pageNumber\": 1,\n    \"pageSize\": 3,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"first\": false,\n    \"last\": true\n  },\n  \"pendientes\": {\n    \"content\": [\n      {\n        \"id\": 5,\n        \"userId\": 1,\n        \"title\": \"Tercer reto\",\n        \"description\": null,\n        \"status\": \"PENDING\",\n        \"createdAt\": \"2024-12-28T00:00:00Z\",\n        \"activityId\": null\n      }\n    ],\n    \"pageNumber\": 1,\n    \"pageSize\": 3,\n    \"totalElements\": 4,\n    \"totalPages\": 2,\n    \"first\": false,\n    \"last\": true\n  }\n}"
+          },
+          {
+            "name": "200 - Usuario sin retos",
+            "originalRequest": {
+              "method": "GET",
+              "header": [],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/user/99?page=0&size=5" }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"completados\": {\n    \"content\": [],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"first\": true,\n    \"last\": true\n  },\n  \"pendientes\": {\n    \"content\": [],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"first\": true,\n    \"last\": true\n  }\n}"
+          }
+        ]
+      },
+      {
+        "name": "Editar reto de usuario",
+        "request": {
+          "method": "PUT",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": {
+            "raw": "{{baseUrl}}/api/user-goals/1",
+            "host": ["{{baseUrl}}"],
+            "path": ["api", "user-goals", "1"]
+          },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"activityId\": 2\n}",
+            "options": { "raw": { "language": "json" } }
+          },
+          "description": "Actualiza título, descripción y actividad de un reto existente. `activityId` puede ser null para quitar la actividad.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si title está en blanco\n- 404 si el id no existe"
+        },
+        "response": [
+          {
+            "name": "200 - Editado exitosamente",
+            "originalRequest": {
+              "method": "PUT",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/1" },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"activityId\": 2\n}"
+              }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"status\": \"PENDING\",\n  \"createdAt\": \"2025-01-01T00:00:00Z\",\n  \"activityId\": 2\n}"
+          },
+          {
+            "name": "400 - Título en blanco",
+            "originalRequest": {
+              "method": "PUT",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/1" },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"\"\n}"
+              }
+            },
+            "status": "Bad Request",
+            "code": 400,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"title\": \"El título es obligatorio\"\n  }\n}"
+          },
+          {
+            "name": "404 - No encontrado",
+            "originalRequest": {
+              "method": "PUT",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/999" },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Título\"\n}"
+              }
+            },
+            "status": "Not Found",
+            "code": 404,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"No se encontro un UserGoal con id 999\"\n}"
+          }
+        ]
+      },
+      {
+        "name": "Eliminar reto de usuario",
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": {
+            "raw": "{{baseUrl}}/api/user-goals/1",
+            "host": ["{{baseUrl}}"],
+            "path": ["api", "user-goals", "1"]
+          },
+          "description": "Elimina físicamente un reto por su id.\n\n**Respuesta exitosa:** 204 No Content\n**Errores posibles:**\n- 404 si el id no existe"
+        },
+        "response": [
+          {
+            "name": "204 - Eliminado exitosamente",
+            "originalRequest": {
+              "method": "DELETE",
+              "header": [],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/1" }
+            },
+            "status": "No Content",
+            "code": 204,
+            "header": [],
+            "body": ""
+          },
+          {
+            "name": "404 - No encontrado",
+            "originalRequest": {
+              "method": "DELETE",
+              "header": [],
+              "url": { "raw": "{{baseUrl}}/api/user-goals/999" }
+            },
+            "status": "Not Found",
+            "code": 404,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"No se encontro un UserGoal con id 999\"\n}"
+          }
+        ]
+      }
+    ]
+  }
   ]
 }

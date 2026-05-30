@@ -40,4 +40,8 @@ public class UserGoalsEntity {
     @Column(name = "created_at")
     private Instant createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "activity_id", nullable = true)
+    private ActivityEntity activity;
+
 }
