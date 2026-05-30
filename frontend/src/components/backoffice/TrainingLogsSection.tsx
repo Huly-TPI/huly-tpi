@@ -56,7 +56,7 @@ export function TrainingLogsSection() {
                 <tr key={i}>
                   <td className="py-3 pr-4 text-sm font-medium text-gray-700">{log.message}</td>
                   <td className="py-3 pr-4">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${EMOTION_CLS[log.emotion] ?? 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`inline-block w-24 text-center rounded-full py-0.5 text-xs font-semibold ${EMOTION_CLS[log.emotion] ?? 'bg-gray-100 text-gray-600'}`}>
                       {log.emotion}
                     </span>
                   </td>
