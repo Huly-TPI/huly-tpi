@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BotConfigResponse } from '../../api/chatbot'
 import { SectionCard, CardHeader } from './SectionCard'
 import { Toggle } from './Toggle'
+import { Skeleton } from './Skeleton'
 
 interface BotConfigSectionProps {
   config: BotConfigResponse | null
@@ -38,8 +39,19 @@ export function BotConfigSection({ config, loading, onSave }: BotConfigSectionPr
     <SectionCard>
       <CardHeader title="Configuración del bot" />
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-violeta border-t-transparent" />
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Skeleton className="h-4 w-44" />
+              <Skeleton className="h-3 w-64" />
+            </div>
+            <Skeleton className="h-6 w-11 shrink-0 rounded-full" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-[120px] w-full rounded-xl" />
+          </div>
+          <Skeleton className="h-9 w-32 self-end rounded-xl" />
         </div>
       ) : (
         <div className="flex flex-col gap-4">

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { RiskWordResponse, RiskSeverity } from '../../api/chatbot'
 import { SectionCard, CardHeader } from './SectionCard'
 import { RiskWordItem } from './RiskWordItem'
+import { Skeleton } from './Skeleton'
 
 const ITEM_H = 50
 
@@ -65,9 +66,15 @@ export function RiskDetectionSection({
 
       <div ref={listSlotRef} className="flex-1 min-h-0">
         {loading ? (
-          <div className="flex h-full items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#8869AC] border-t-transparent" />
-          </div>
+          <ul className="flex flex-col gap-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3">
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-5 w-[62px] shrink-0 rounded-full" />
+                <Skeleton className="h-3.5 w-3.5 shrink-0" />
+              </li>
+            ))}
+          </ul>
         ) : (
           <ul className="flex flex-col gap-2">
             {words.map(w => <RiskWordItem key={w.id} word={w} onDelete={onDelete} />)}

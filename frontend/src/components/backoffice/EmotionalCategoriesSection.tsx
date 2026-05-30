@@ -1,42 +1,11 @@
-import { useState, useEffect } from 'react'
-import { chatbotApi, EmotionalCategoryResponse } from '../../api/chatbot'
-import { EmotionCard, EmotionCategory } from './EmotionCard'
+import { useEmotionalCategories } from '../../hooks/backoffice/useEmotionalCategories'
+import { EmotionCard } from './EmotionCard'
 import { SectionCard } from './SectionCard'
+import { Skeleton } from './Skeleton'
 import purpleSmile from '../../assets/backoffice/purpleSmile.webp'
 
-const VISUAL: Record<string, { emoji: string; color: string }> = {
-  'Estrés':   { emoji: '💨', color: '#EF4444' },
-  'Ansiedad': { emoji: '⚡', color: '#F59E0B' },
-  'Tristeza': { emoji: '🌧️', color: '#3B82F6' },
-  'Miedo':    { emoji: '👻', color: '#FF69B4' },
-  'Enojo':    { emoji: '🔥', color: '#EF4444' },
-  'Soledad':  { emoji: '🌙', color: '#BBACA1' },
-}
-
-function toEmotionCategory(r: EmotionalCategoryResponse): EmotionCategory {
-  const v = VISUAL[r.name] ?? { emoji: '❓', color: '#A0AEC0' }
-  return {
-    emoji:      v.emoji,
-    name:       r.name,
-    flows:      r.flows,
-    detect:     r.detect,
-    severity:   r.severity,
-    iconBg:     v.color + '33',  // hex color at ~20% opacity
-    barColor:   v.color,
-    badgeColor: v.color,
-  }
-}
-
 export function EmotionalCategoriesSection() {
-  const [categories, setCategories] = useState<EmotionCategory[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    chatbotApi.getEmotionalCategories()
-      .then(data => setCategories(data.map(toEmotionCategory)))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  const { categories, loading } = useEmotionalCategories()
 
   return (
     <SectionCard bg="bg-[#EDF2ED]" padding="p-0" className="shadow-none">
@@ -51,8 +20,19 @@ export function EmotionalCategoriesSection() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#8869AC] border-t-transparent" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex flex-col rounded-2xl bg-white p-5 shadow-sm">
+              <Skeleton className="h-14 w-14 rounded-2xl" />
+              <Skeleton className="mt-4 h-4 w-3/4" />
+              <Skeleton className="mt-1 h-3 w-full" />
+              <Skeleton className="mt-4 h-[3px] w-full rounded-full" />
+              <div className="mt-3 flex items-center justify-between">
+                <Skeleton className="h-3 w-10" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">

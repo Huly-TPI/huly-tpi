@@ -1,25 +1,20 @@
-import { useState, useEffect } from 'react'
-import { chatbotApi, WellbeingResponse } from '../../api/chatbot'
+import { useWellbeing } from '../../hooks/backoffice/useWellbeing'
 import { SectionCard, CardHeader } from './SectionCard'
 import { WellbeingChart } from './WellbeingChart'
+import { Skeleton } from './Skeleton'
 
 export function WellbeingSection() {
-  const [data, setData] = useState<WellbeingResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    chatbotApi.getWellbeing()
-      .then(setData)
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  const { data, loading } = useWellbeing()
 
   return (
     <SectionCard>
       <CardHeader title="Evolución del bienestar general" />
       {loading ? (
-        <div className="flex items-center justify-center py-6">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#8869AC] border-t-transparent" />
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-2 w-6" />)}
+          </div>
+          <Skeleton className="h-[110px] w-full rounded-xl" />
         </div>
       ) : data ? (
         <WellbeingChart points={data.points} labels={data.labels} />

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { chatbotApi, TrainingLogResponse } from '../../api/chatbot'
+import { useTrainingLogs } from '../../hooks/backoffice/useTrainingLogs'
 import { SectionCard, CardHeader } from './SectionCard'
+import { Skeleton } from './Skeleton'
 
 const EMOTION_CLS: Record<string, string> = {
   'Estrés':   'bg-orange-100 text-orange-700',
@@ -12,22 +12,33 @@ const EMOTION_CLS: Record<string, string> = {
 }
 
 export function TrainingLogsSection() {
-  const [logs, setLogs] = useState<TrainingLogResponse[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    chatbotApi.getTrainingLogs()
-      .then(setLogs)
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  const { logs, loading } = useTrainingLogs()
 
   return (
     <SectionCard>
       <CardHeader title="Entrenamiento del sistema (Logs)" />
       {loading ? (
-        <div className="flex items-center justify-center py-6">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#8869AC] border-t-transparent" />
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px]">
+            <thead>
+              <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                <th className="pb-3 pr-4 w-1/2">Mensaje del usuario</th>
+                <th className="pb-3 pr-4">Emoción IA</th>
+                <th className="pb-3 pr-4">Confianza</th>
+                <th className="pb-3">Acción</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td className="py-3 pr-4"><Skeleton className="h-4 w-full" /></td>
+                  <td className="py-3 pr-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                  <td className="py-3 pr-4"><Skeleton className="h-4 w-12" /></td>
+                  <td className="py-3"><Skeleton className="h-6 w-14 rounded-lg" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="overflow-x-auto">

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import colorLogo from '../assets/brand/color-logo.webp'
-import hojita from '../assets/backoffice/hojita.jpeg'
+import hojita from '../assets/backoffice/hojita.webp'
 import cerrarSesion from '../assets/backoffice/logout.webp'
 
 // ─── Design tokens (from Figma) ──────────────────────────────────────────────
@@ -162,11 +162,11 @@ export default function BackofficeLayout() {
       </aside>
 
       {/* ── Main column ─────────────────────────────────────────────────── */}
-      <div className="flex flex-1 min-w-0 flex-col overflow-hidden bg-[#EDF2ED]">
+      <div className="flex flex-1 min-w-0 flex-col overflow-y-auto bg-[#EDF2ED]">
 
         {/* ── Top bar card (Figma: W:1137 H:128, rounded, shadow, padding 16) */}
-        <header className="mx-4 mt-4 shrink-0 rounded-2xl bg-white shadow-sm">
-          <div className="flex h-[96px] items-center gap-4 px-6">
+        <header className="sticky top-4 lg:top-5 z-10 mx-4 mt-4 lg:mx-5 lg:mt-5 shrink-0 rounded-2xl bg-white shadow-sm">
+          <div className="flex h-[72px] items-center gap-4 px-4 lg:px-5">
             {/* Hamburger — mobile only */}
             <button
               className="rounded-xl p-2 text-[#A0AEC0] hover:bg-gray-100 transition-colors lg:hidden"
@@ -199,7 +199,7 @@ export default function BackofficeLayout() {
         </header>
 
         {/* Scrollable page content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-5">
+        <main className="p-4 lg:p-5">
           <Outlet />
         </main>
 
