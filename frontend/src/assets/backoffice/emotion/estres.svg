@@ -1,0 +1,8 @@
+<svg viewBox="36 27 110 109" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Icono de viento rojo sobre fondo rosa">
+  <rect x="36" y="27" width="110" height="109" rx="34" fill="#FDE0E2"/>
+  <g stroke="#F54242" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M71 74H101C105.4 74 109 70.4 109 66C109 61.6 105.4 58 101 58H97"/>
+    <path d="M71 86H107C110.9 86 114 89.1 114 93C114 96.9 110.9 100 107 100H103"/>
+    <path d="M71 98H86C89.3 98 92 95.3 92 92C92 88.7 89.3 86 86 86"/>
+  </g>
+</svg>
