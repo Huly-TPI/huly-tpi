@@ -1,4 +1,3 @@
-import { Emoji } from '../icons/Emoji'
 import { ProgressBar } from './ProgressBar'
 
 export type EmotionSeverity = 'ALTA' | 'MEDIA' | 'BAJA'
@@ -40,7 +39,7 @@ export function EmotionCard({ category, onManage }: EmotionCardProps) {
             className="flex h-14 w-14 items-center justify-center rounded-2xl"
             style={{ backgroundColor: category.iconBg }}
           >
-            <Emoji emoji={category.emoji} className="w-8 h-8" />
+            <span className="text-3xl leading-none">{category.emoji}</span>
           </div>
         )
       }
