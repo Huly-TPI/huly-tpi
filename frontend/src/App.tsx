@@ -7,11 +7,14 @@ import Diary from './pages/Diary'
 import Breathing from './pages/Breathing/Breathing'
 import ChatTest from './pages/ChatTest'
 import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
+import Register from './pages/Register/Register'
 import ChatbotPage from './pages/Backoffice/ChatbotPage'
+
 
 const App = () => {
   return (
     <Routes>
+      <Route path="/register" element={<Register />} />
       <Route path="/chat-test" element={<ChatTest />} />
       <Route path="/backoffice" element={<BackofficeLayout />}>
         <Route index element={<ChatbotPage />} />

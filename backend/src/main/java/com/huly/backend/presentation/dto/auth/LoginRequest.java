@@ -1,4 +1,4 @@
-package com.huly.backend.application.auth.dto;
+package com.huly.backend.presentation.dto.auth;
 
 import lombok.Getter;
 import lombok.Setter;
