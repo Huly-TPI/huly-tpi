@@ -1,6 +1,6 @@
 import brandLogoImage from '../../../assets/brand/color-logo.webp'
 import { useDialogFocusTrap } from '../../../hooks/useDialogFocusTrap'
-import Button from '../../buttons/Button/Button'
+import Button from '../../Buttons/Button/Button'
 import './HomeOnboarding.css'
 import type { HomeOnboardingProps } from './types'
 

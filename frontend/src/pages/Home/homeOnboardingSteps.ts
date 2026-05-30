@@ -1,4 +1,4 @@
-import type { HomeOnboardingStep } from '../../components/onboarding/HomeOnboarding/types'
+import type { HomeOnboardingStep } from '../../components/Onboarding/HomeOnboarding/types'
 
 export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboardingStep[] {
   return [

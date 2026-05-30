@@ -1,5 +1,5 @@
-import type { SceneElementDefinition } from '../../scene/types'
-import type { SceneTheme } from '../../scene/SceneElement/SceneElement'
+import type { SceneElementDefinition } from '../../Scene/types'
+import type { SceneTheme } from '../../Scene/SceneElement/SceneElement'
 
 export interface HomeOnboardingStep {
   id: string
