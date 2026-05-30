@@ -49,8 +49,9 @@ public class CorsFilter extends OncePerRequestFilter {
         String requestHeader = httpRequest.getHeader("Access-Control-Request-Headers");
 
         httpResponse.setHeader("Access-Control-Allow-Origin", frontendUrl);
+        httpResponse.addHeader("Access-Control-Allow-Credentials", "true");
         httpResponse.addHeader("Access-Control-Allow-Methods", "GET, PUT, POST, OPTIONS, DELETE");
-        httpResponse.addHeader("Access-Control-Allow-Headers", requestHeader);
+        httpResponse.addHeader("Access-Control-Allow-Headers", requestHeader != null ? requestHeader : "Authorization, Content-Type");
         httpResponse.addHeader("Access-Control-Max-Age", "86400");
 
         if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
