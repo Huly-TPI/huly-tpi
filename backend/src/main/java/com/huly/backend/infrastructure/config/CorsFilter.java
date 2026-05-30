@@ -6,12 +6,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Component("customCorsFilter")
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
 public class CorsFilter extends OncePerRequestFilter {
 
@@ -49,8 +52,9 @@ public class CorsFilter extends OncePerRequestFilter {
         String requestHeader = httpRequest.getHeader("Access-Control-Request-Headers");
 
         httpResponse.setHeader("Access-Control-Allow-Origin", frontendUrl);
+        httpResponse.addHeader("Access-Control-Allow-Credentials", "true");
         httpResponse.addHeader("Access-Control-Allow-Methods", "GET, PUT, POST, OPTIONS, DELETE");
-        httpResponse.addHeader("Access-Control-Allow-Headers", requestHeader);
+        httpResponse.addHeader("Access-Control-Allow-Headers", requestHeader != null ? requestHeader : "Authorization, Content-Type");
         httpResponse.addHeader("Access-Control-Max-Age", "86400");
 
         if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
