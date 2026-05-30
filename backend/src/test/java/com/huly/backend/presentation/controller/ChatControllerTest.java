@@ -3,10 +3,12 @@ package com.huly.backend.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
+import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
 import com.huly.backend.presentation.dto.chat.ChatRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,19 +17,26 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ChatControllerTest {
@@ -37,16 +46,20 @@ class ChatControllerTest {
 
     private ChatUseCase chatUseCase;
     private ListChatHistoryUseCase listChatHistoryUseCase;
+    private StreamChatUseCase streamChatUseCase;
 
     @BeforeEach
     void setUp() {
         chatUseCase = mock(ChatUseCase.class);
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
-        ChatController controller = new ChatController(chatUseCase, listChatHistoryUseCase);
+        streamChatUseCase = mock(StreamChatUseCase.class);
+        ChatController controller = new ChatController(
+                chatUseCase,
+                listChatHistoryUseCase,
+                streamChatUseCase
+        );
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
-
-    // ── POST /api/chat ───────────────────────────────────────────────────────
 
     @Test
     void chat_shouldReturn200WithReplyContent_whenRequestIsValid() throws Exception {
@@ -101,6 +114,45 @@ class ChatControllerTest {
     }
 
     @Test
+    void stream_shouldEmitSseEvents() throws Exception {
+        ChatReply reply = new ChatReply("hola mundo", EmotionType.JOY, 6, false, null);
+        when(streamChatUseCase.execute("hola", "conv-1", 1L)).thenReturn(Flux.just(
+                ChatStreamEvent.delta("hola "),
+                ChatStreamEvent.done(reply)
+        ));
+
+        MvcResult result = mockMvc.perform(post("/api/chat/stream")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.TEXT_EVENT_STREAM)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("event:delta")))
+                .andExpect(content().string(containsString("event:done")))
+                .andExpect(content().string(containsString("hola mundo")));
+    }
+
+    @Test
+    void stream_shouldEmitSseError_whenConversationIdIsNull() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/chat/stream")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.TEXT_EVENT_STREAM)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", null))))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("event:error")))
+                .andExpect(content().string(containsString("message y conversationId son obligatorios.")));
+
+        verifyNoInteractions(streamChatUseCase);
+    }
+
+    @Test
     void chat_shouldReturn400_whenMessageIsBlank() throws Exception {
         mockMvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +169,7 @@ class ChatControllerTest {
     }
 
     @Test
-    void chat_shouldPassHardcodedUserIdToUseCase() throws Exception {
+    void chat_shouldUseTemporaryUserId() throws Exception {
         when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         mockMvc.perform(post("/api/chat")
@@ -127,8 +179,6 @@ class ChatControllerTest {
 
         verify(chatUseCase).execute("hola", "conv-1", 1L);
     }
-
-    // ── GET /api/chat/{conversationId}/messages ──────────────────────────────
 
     @Test
     void getHistory_shouldReturn200WithPagedMessages() throws Exception {

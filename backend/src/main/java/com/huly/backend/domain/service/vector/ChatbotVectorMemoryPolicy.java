@@ -15,7 +15,8 @@ public class ChatbotVectorMemoryPolicy implements VectorMemorySourcePolicy {
             "suelo", "normalmente", "cuando estoy", "me siento", "estoy", "estoy estresado",
             "estoy ansioso", "me da ansiedad", "me cuesta dormir", "no puedo dormir",
             "mi amigo", "mi amiga", "mi mejor amigo", "mi mejor amiga", "mi familia",
-            "quiero mejorar", "necesito", "mi objetivo"
+            "quiero mejorar", "necesito", "mi objetivo",
+            "usuario se llama", "usuario tiene", "usuario es estudiante"
     );
 
     @Override

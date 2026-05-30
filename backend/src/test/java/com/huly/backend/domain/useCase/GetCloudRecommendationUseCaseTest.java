@@ -83,7 +83,7 @@ class GetCloudRecommendationUseCaseTest {
 
     @Test
     void execute_shouldReturnFallback_whenLlmThrowsException() {
-        when(llmChatPort.chat(any(), any(), anyList())).thenThrow(new RuntimeException("Ollama no disponible"));
+        when(llmChatPort.chat(any(), any(), anyList())).thenThrow(new RuntimeException("Proveedor IA no disponible"));
 
         CloudRecommendation result = useCase.execute(List.of("pensamiento"));
 

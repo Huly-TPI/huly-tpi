@@ -128,7 +128,8 @@ class SpringAiVectorMemoryServiceTest {
                 .contains("COALESCE(metadata ->> 'deleted', 'false') = 'false'")
                 .contains("embedding <=> ? <= ?")
                 .contains("ORDER BY distance ASC")
-                .contains("LIMIT ?");
+                .contains("LIMIT ?")
+                .doesNotContain("conversationId");
         assertThat(jdbcTemplate.lastQueryArgs).hasSize(6);
         assertThat(result).hasSize(1);
 

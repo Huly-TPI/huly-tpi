@@ -12,6 +12,7 @@ public class VectorMemoryProperties {
     private Integer defaultLimit = 5;
     private Integer maxLimit = 20;
     private Double similarityThreshold = 0.65;
+    private Double recallSimilarityThreshold = 0.35;
 
     public Integer getMinContentLength() {
         return minContentLength;
@@ -51,5 +52,13 @@ public class VectorMemoryProperties {
 
     public void setSimilarityThreshold(Double similarityThreshold) {
         this.similarityThreshold = similarityThreshold;
+    }
+
+    public Double getRecallSimilarityThreshold() {
+        return recallSimilarityThreshold;
+    }
+
+    public void setRecallSimilarityThreshold(Double recallSimilarityThreshold) {
+        this.recallSimilarityThreshold = recallSimilarityThreshold;
     }
 }
