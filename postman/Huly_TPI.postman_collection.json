@@ -13,6 +13,12 @@
       "description": "URL base del backend. Cambiar según entorno (dev/qa/prod)."
     },
     {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT de acceso. Se guarda automáticamente al hacer login."
+    },
+    {
       "key": "riskWordId",
       "value": "1",
       "type": "string",
@@ -20,6 +26,266 @@
     }
   ],
   "item": [
+    {
+      "name": "Auth",
+      "description": "Flujo de autenticación: registro, login, renovación de token y logout.\n\nEl refresh token se maneja como cookie HTTP-only (el navegador/Postman lo gestiona automáticamente).\nEl access token se guarda en la variable `accessToken` al hacer login y se usa como Bearer token en los demás requests.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Registra un nuevo usuario con rol USER y estado ACTIVE.\n\n**Respuesta exitosa:** 201 Created\n**Errores posibles:**\n- 400 si name en blanco, email inválido o password menor a 6 caracteres\n- 409 si el email ya está registrado"
+          },
+          "response": [
+            {
+              "name": "201 - Registrado correctamente",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/register" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "text/plain" }],
+              "body": "Usuario registrado correctamente"
+            },
+            {
+              "name": "400 - Password muy corta",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/register" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"123\"\n}"
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación en los datos enviados\",\n  \"path\": \"/api/auth/register\",\n  \"errors\": {\n    \"password\": \"La contraseña debe tener al menos 6 caracteres\"\n  }\n}"
+            },
+            {
+              "name": "409 - Email ya registrado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/register" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}"
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 409,\n  \"error\": \"Conflict\",\n  \"message\": \"Email already in use\",\n  \"path\": \"/api/auth/register\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "    pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@huly.com\",\n  \"password\": \"admin123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Autentica al usuario. Devuelve el access token en el body y guarda el refresh token en una cookie HTTP-only.\n\nEl script de test guarda el `accessToken` automáticamente en la variable de colección.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 401 si credenciales incorrectas o cuenta inactiva"
+          },
+          "response": [
+            {
+              "name": "200 - Login exitoso (admin)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/login" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@huly.com\",\n  \"password\": \"admin123\"\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" },
+                { "key": "Set-Cookie", "value": "refreshToken=<jwt>; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax" }
+              ],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiJ9...\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            {
+              "name": "401 - Credenciales inválidas",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/login" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@huly.com\",\n  \"password\": \"wrongpass\"\n}"
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Invalid credentials\",\n  \"path\": \"/api/auth/login\"\n}"
+            },
+            {
+              "name": "401 - Cuenta inactiva",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/login" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"bloqueado@huly.com\",\n  \"password\": \"password123\"\n}"
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Account is not active\",\n  \"path\": \"/api/auth/login\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "    pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "Renueva el access token usando el refresh token de la cookie.\nRota el refresh token (emite uno nuevo en cookie, invalida el anterior).\n\nRequiere que Postman tenga habilitado 'Automatically follow redirects' y el manejo de cookies activo.\n\n**Respuesta exitosa:** 200 OK con nuevo accessToken en body y nuevo refreshToken en cookie\n**Errores posibles:**\n- 401 si la cookie no existe, el token expiró o ya fue usado"
+          },
+          "response": [
+            {
+              "name": "200 - Token renovado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/auth/refresh" }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" },
+                { "key": "Set-Cookie", "value": "refreshToken=<new_jwt>; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax" }
+              ],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiJ9...\"\n}"
+            },
+            {
+              "name": "401 - Refresh token inválido o expirado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/auth/refresh" }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Invalid or expired refresh token\",\n  \"path\": \"/api/auth/refresh\"\n}"
+            },
+            {
+              "name": "401 - Cookie no presente",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/auth/refresh" }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Refresh token not found\",\n  \"path\": \"/api/auth/refresh\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Cierra la sesión: invalida el refresh token en la base de datos y limpia la cookie.\n\n**Respuesta exitosa:** 204 No Content\n\nSi no hay cookie presente igual devuelve 204 (idempotente)."
+          },
+          "response": [
+            {
+              "name": "204 - Logout exitoso",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/auth/logout" }
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                { "key": "Set-Cookie", "value": "refreshToken=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax" }
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "Examples",
       "description": "Endpoints de ejemplo para verificar el funcionamiento del servidor y el flujo básico de CRUD.",
@@ -387,19 +653,7 @@
               "status": "OK",
               "code": 200,
               "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"content\": [\n    {\n      \"id\": 1,\n      \"word\": \"suicidio\",\n      \"description\": \"Indicador directo de ideación suicida\",\n      \"severity\": \"HIGH\",\n      \"active\": true\n    },\n    {\n      \"id\": 2,\n      \"word\": \"ansiedad\",\n      \"description\": \"Indicador de malestar emocional\",\n      \"severity\": \"LOW\",\n      \"active\": true\n    }\n  ],\n  \"pageable\": {\n    \"pageNumber\": 0,\n    \"pageSize\": 20,\n    \"sort\": { \"empty\": true, \"sorted\": false, \"unsorted\": true }\n  },\n  \"totalElements\": 2,\n  \"totalPages\": 1,\n  \"last\": true,\n  \"first\": true,\n  \"numberOfElements\": 2,\n  \"empty\": false\n}"
-            },
-            {
-              "name": "200 - Filtrado por severity HIGH y active true",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/risk-words?severity=HIGH&active=true&page=0&size=20" }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"content\": [\n    {\n      \"id\": 1,\n      \"word\": \"suicidio\",\n      \"description\": \"Indicador directo de ideación suicida\",\n      \"severity\": \"HIGH\",\n      \"active\": true\n    }\n  ],\n  \"totalElements\": 1,\n  \"totalPages\": 1,\n  \"last\": true,\n  \"first\": true,\n  \"numberOfElements\": 1,\n  \"empty\": false\n}"
+              "body": "{\n  \"content\": [\n    {\n      \"id\": 1,\n      \"word\": \"suicidio\",\n      \"description\": \"Indicador directo de ideación suicida\",\n      \"severity\": \"HIGH\",\n      \"active\": true\n    }\n  ],\n  \"totalElements\": 1,\n  \"totalPages\": 1,\n  \"last\": true,\n  \"first\": true\n}"
             },
             {
               "name": "400 - Severidad inválida",
@@ -412,6 +666,183 @@
               "code": 400,
               "header": [{ "key": "Content-Type", "value": "application/json" }],
               "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Severidad inválida. Valores aceptados: LOW, MEDIUM, HIGH\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User Goals",
+      "description": "Gestión de retos (goals) de usuario. Permite crear, listar (separado en completados y pendientes), editar y eliminar retos.",
+      "item": [
+        {
+          "name": "Crear reto de usuario",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-goals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-goals"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"activityId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea un nuevo reto para el usuario con estado PENDING. `activityId` es opcional.\n\n**Respuesta exitosa:** 201 Created\n**Errores posibles:**\n- 400 si userId o title están ausentes o inválidos"
+          },
+          "response": [
+            {
+              "name": "201 - Creado exitosamente",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/user-goals" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"activityId\": 1\n}"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"status\": \"PENDING\",\n  \"createdAt\": \"2025-01-01T00:00:00Z\",\n  \"activityId\": 1\n}"
+            },
+            {
+              "name": "400 - Validación fallida",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/user-goals" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Sin userId\"\n}"
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"userId\": \"El id de usuario es obligatorio\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar retos por usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-goals/user/1?page=0&size=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-goals", "user", "1"],
+              "query": [
+                { "key": "page", "value": "0", "description": "Número de página (comienza en 0)" },
+                { "key": "size", "value": "5", "description": "Cantidad de elementos por página (default 5)" }
+              ]
+            },
+            "description": "Retorna los retos del usuario separados en `completados` (COMPLETED) y `pendientes` (PENDING), cada lista paginada y ordenada por `createdAt` descendente.\n\n**Respuesta exitosa:** 200 OK"
+          },
+          "response": [
+            {
+              "name": "200 - Lista paginada",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/user-goals/user/1?page=0&size=5" }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"completados\": {\n    \"content\": [],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"first\": true,\n    \"last\": true\n  },\n  \"pendientes\": {\n    \"content\": [\n      {\n        \"id\": 1,\n        \"userId\": 1,\n        \"title\": \"Practicar respiración\",\n        \"status\": \"PENDING\",\n        \"createdAt\": \"2025-01-01T00:00:00Z\"\n      }\n    ],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"first\": true,\n    \"last\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Editar reto de usuario",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-goals/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-goals", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"activityId\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Actualiza título, descripción y actividad de un reto existente.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si title está en blanco\n- 404 si el id no existe"
+          },
+          "response": [
+            {
+              "name": "200 - Editado exitosamente",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/user-goals/1" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"activityId\": 2\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"status\": \"PENDING\",\n  \"createdAt\": \"2025-01-01T00:00:00Z\",\n  \"activityId\": 2\n}"
+            },
+            {
+              "name": "404 - No encontrado",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/user-goals/999" },
+                "body": { "mode": "raw", "raw": "{\n  \"title\": \"Título\"\n}" }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"No se encontro un UserGoal con id 999\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar reto de usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-goals/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-goals", "1"]
+            },
+            "description": "Elimina físicamente un reto por su id.\n\n**Respuesta exitosa:** 204 No Content\n**Errores posibles:**\n- 404 si el id no existe"
+          },
+          "response": [
+            {
+              "name": "204 - Eliminado exitosamente",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/user-goals/1" }
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [],
+              "body": ""
+            },
+            {
+              "name": "404 - No encontrado",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/user-goals/999" }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"No se encontro un UserGoal con id 999\"\n}"
             }
           ]
         }
