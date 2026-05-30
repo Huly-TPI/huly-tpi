@@ -160,6 +160,9 @@ cp src/main/resources/application-huly-secrets.properties.example \
 | `SPRING_DATASOURCE_USERNAME` | Usuario de la base de datos | `postgres` |
 | `SPRING_DATASOURCE_PASSWORD` | Contraseña de la base de datos | `secret` |
 | `SSL_KEY_STORE_PASSWORD` | Contraseña del keystore SSL (solo si `ssl.enabled=true`) | `secret123` |
+| `JWT_SECRET` | Clave secreta para firmar JWTs — **mínimo 32 caracteres** | `MiClaveSecreta_minimo32chars_ok!` |
+
+> **Importante:** `JWT_SECRET` debe tener al menos 32 caracteres (256 bits). Con menos caracteres JJWT lanza `WeakKeyException` al arrancar el login.
 
 ### Perfiles `qa` y `prod`
 
@@ -171,6 +174,9 @@ cp src/main/resources/application-huly-secrets.properties.example \
 | `SPRING_DATASOURCE_URL` | URL de conexión a PostgreSQL | `jdbc:postgresql://host:5432/db` |
 | `SPRING_DATASOURCE_USERNAME` | Usuario de la base de datos | `postgres` |
 | `SPRING_DATASOURCE_PASSWORD` | Contraseña de la base de datos | `secret` |
+| `JWT_SECRET` | Clave secreta para firmar JWTs — **mínimo 32 caracteres** | _(generar con `openssl rand -base64 48`)_ |
+| `JWT_ACCESS_TOKEN_EXPIRATION_MS` | Duración del access token en ms | `3600000` (1h) |
+| `JWT_REFRESH_TOKEN_EXPIRATION_MS` | Duración del refresh token en ms | `604800000` (7d) |
 
 Ejemplo para ejecutar con perfil `prod`:
 
@@ -181,6 +187,7 @@ export FRONTEND_URL=https://mi-frontend.com
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/huly
 export SPRING_DATASOURCE_USERNAME=postgres
 export SPRING_DATASOURCE_PASSWORD=secret
+export JWT_SECRET=$(openssl rand -base64 48)
 
 ./mvnw spring-boot:run
 ```
@@ -188,6 +195,38 @@ export SPRING_DATASOURCE_PASSWORD=secret
 ---
 
 ## Endpoints disponibles
+
+### Auth
+
+| Método | Ruta | Descripción | Auth requerida |
+|--------|------|-------------|----------------|
+| `POST` | `/api/auth/register` | Registra un nuevo usuario | No |
+| `POST` | `/api/auth/login` | Inicia sesión, devuelve access token + cookie | No |
+| `POST` | `/api/auth/refresh` | Rota el refresh token (requiere cookie) | No |
+| `POST` | `/api/auth/logout` | Invalida el refresh token y limpia la cookie | No |
+
+**Register** — body:
+```json
+{
+  "name": "Juan",
+  "email": "usuario@huly.com",
+  "password": "password123"
+}
+```
+
+**Login** — body:
+```json
+{
+  "email": "usuario@huly.com",
+  "password": "password123"
+}
+```
+Respuesta: `{ "accessToken": "...", "role": "USER" }` + cookie HTTP-only `refreshToken`.
+
+El access token debe enviarse en los endpoints protegidos como:
+```
+Authorization: Bearer <accessToken>
+```
 
 ### Math
 

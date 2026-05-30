@@ -4,7 +4,6 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.RefreshToken;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.provider.PasswordHasher;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.repository.UserRepository;
@@ -17,44 +16,48 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
-public class LoginUseCase {
+public class RefreshTokenUseCase {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenProvider tokenProvider;
-    private final PasswordHasher passwordHasher;
 
     @Transactional
-    public AuthTokens execute(String email, String rawPassword) {
+    public AuthTokens execute(String rawToken) {
 
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
-
-        if (!passwordHasher.matches(rawPassword, user.getPassword())) {
-            throw new UnauthorizedException("Invalid credentials");
+        if (!tokenProvider.isTokenValid(rawToken)) {
+            throw new UnauthorizedException("Invalid or expired refresh token");
         }
+
+        RefreshToken stored = refreshTokenRepository.findByToken(rawToken)
+                .orElseThrow(() -> new UnauthorizedException("Refresh token not found or already used"));
+
+        String email = tokenProvider.extractEmail(rawToken);
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new UnauthorizedException("Account is not active");
         }
 
-        String accessToken = tokenProvider.generateAccessToken(
+        refreshTokenRepository.delete(stored);
+
+        String newAccessToken = tokenProvider.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole(), user.getStatus()
         );
-        String refreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getEmail());
+        String newRefreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getEmail());
 
         Instant now = Instant.now();
         refreshTokenRepository.save(RefreshToken.builder()
                 .userId(user.getId())
-                .token(refreshToken)
+                .token(newRefreshToken)
                 .createdAt(now)
                 .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
                 .build());
 
         return AuthTokens.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .role(user.getRole())
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
                 .build();
     }
 }
