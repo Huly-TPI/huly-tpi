@@ -1,4 +1,3 @@
-import twemoji from '@twemoji/api'
 import { useMemo } from 'react'
 
 interface EmojiProps {
