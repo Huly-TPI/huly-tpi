@@ -24,3 +24,7 @@ export const register = (data: RegisterRequest) => {
 export const login = (data: LoginRequest) => {
   return api.post<AuthResponse>('/auth/login', data)
 }
+
+export const logout = () => {
+  return api.post<void>('/auth/logout', {})
+}
