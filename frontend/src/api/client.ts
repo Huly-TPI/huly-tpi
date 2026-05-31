@@ -4,11 +4,13 @@ type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, headers, ...rest } = options
+  const token = localStorage.getItem('token')
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
-    headers: {
+   headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,

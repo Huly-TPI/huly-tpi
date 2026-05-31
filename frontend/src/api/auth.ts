@@ -2,6 +2,7 @@ import { api } from './client'
 
 export type AuthResponse = {
   accessToken: string
+  profileOnBoardingCompleted?: boolean
 }
 
 export const register = (data: {

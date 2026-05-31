@@ -39,7 +39,14 @@ export default function Register() {
 
             localStorage.setItem('token', res.accessToken)
 
-            window.location.href = '/'
+            if(res.profileOnBoardingCompleted === false) {
+                window.location.href = '/onboarding'
+            } else {
+                window.location.href = '/'
+            }
+
+
+
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error inesperado')
         } finally {
