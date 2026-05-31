@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import Button from '../../components/buttons/Button/Button'
+import Button from '../../components/Buttons/Button/Button'
 
 describe('Button', () => {
   it('aplica variante y tamano configurables', () => {
