@@ -35,4 +35,7 @@ public class RefreshTokenEntity {
     @Column(name = "ip_address")
     private String ipAddress;
 
+    @Column(name = "token", unique = true)
+    private String token;
+
 }
