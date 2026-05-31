@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { register } from '../../api/auth'
+import { login, register } from '../../api/auth'
 import { ApiError } from '../../api/apiError'
 
 import { useAuthForm } from '../../hooks/useAuthForm'
@@ -54,14 +54,22 @@ export default function Register() {
         setApiError(null)
 
         try {
-            const res = await register({
+            await register({
                 name: values.name,
                 birthDate: values.birthDate,
                 email: values.email,
                 password: values.password,
             })
 
-            localStorage.setItem('token', res.accessToken)
+            const res = await login({
+                email: values.email,
+                password: values.password,
+            })
+
+            if (res?.role) {
+                localStorage.setItem('role', String(res.role))
+            }
+
             navigate('/')
         } catch (err) {
             if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {

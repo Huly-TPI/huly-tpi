@@ -48,8 +48,11 @@ export default function Login() {
         password: values.password,
       })
 
-      localStorage.setItem('token', res.accessToken)
-      localStorage.setItem('role', res.role)
+      // Solo guardamos el role, el token va en cookie HttpOnly
+      if (res?.role) {
+        localStorage.setItem('role', String(res.role))
+      }
+
       navigate('/')
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {

@@ -6,14 +6,11 @@ type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, headers, ...rest } = options
 
-  const token = localStorage.getItem('token')
-
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -21,17 +18,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null)
-
     const message =
       errorBody?.message ||
       errorBody?.error ||
       `Error HTTP ${response.status}`
-
     throw new ApiError(message, errorBody?.errors ?? {})
   }
 
   const text = await response.text()
-
   return (text ? JSON.parse(text) : null) as T
 }
 
