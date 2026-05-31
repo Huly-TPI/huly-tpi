@@ -43,21 +43,21 @@ class GenerateOnboardingOptionsUseCaseTest {
         assertThat(result).isNotEmpty();
     }
 
-    @Test
-    void execute_step2_shouldIncludePreviousAnswerInPrompt() {
-        String json = "{\"options\": [\"A\", \"B\", \"C\", \"D\"]}";
-        when(llmChatPort.chat(any(), eq("Mi objetivo es: Desestresarme"), any())).thenReturn(ChatReply.of(json));
+  @Test
+        void execute_step2_shouldIncludePreviousAnswerInPrompt() {
+            String json = "{\"options\": [\"A\", \"B\", \"C\", \"D\"]}";
+            when(llmChatPort.chat(any(), eq("Mi objetivo emocional es: \"Desestresarme\""), any())).thenReturn(ChatReply.of(json));
 
-        List<String> result = generateOnboardingOptionsUseCase.execute(2, "Desestresarme");
-        assertThat(result).containsExactly("A", "B", "C", "D");
-    }
+            List<String> result = generateOnboardingOptionsUseCase.execute(2, "Desestresarme");
+            assertThat(result).containsExactly("A", "B", "C", "D");
+        }
 
     @Test
-    void execute_step3_shouldIncludePreviousAnswerInUserMessage(){ 
-        String json = "{\"options\": [\"A\", \"B\", \"C\", \"D\"]}";
-        when(llmChatPort.chat(any(), eq("Me interesa: Meditar"), any())).thenReturn(ChatReply.of(json));
-        List<String> result = generateOnboardingOptionsUseCase.execute(3, "Meditar");
-        assertThat(result).containsExactly("A", "B", "C", "D");
-    }
+        void execute_step3_shouldIncludePreviousAnswerInUserMessage(){ 
+            String json = "{\"options\": [\"A\", \"B\", \"C\", \"D\"]}";
+            when(llmChatPort.chat(any(), eq("El aspecto que más me llama es: \"Meditar\""), any())).thenReturn(ChatReply.of(json));
+            List<String> result = generateOnboardingOptionsUseCase.execute(3, "Meditar");
+            assertThat(result).containsExactly("A", "B", "C", "D");
+        }
     
 }
