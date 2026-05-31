@@ -3,7 +3,20 @@ import { ApiError } from './apiError'
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function refreshAccessToken(): Promise<string | null> {
+  const response = await fetch(`${BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+
+  if (!response.ok) return null
+
+  const data = await response.json()
+  localStorage.setItem('token', data.accessToken)
+  return data.accessToken
+}
+
+async function request<T>(path: string, options: RequestOptions = {}, retry = true): Promise<T> {
   const { body, headers, ...rest } = options
 
   const token = localStorage.getItem('token')
@@ -18,6 +31,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
+
+  if (response.status === 401 && retry) {
+    const newToken = await refreshAccessToken()
+
+    if (newToken) {
+      return request<T>(path, options, false)
+    }
+
+    localStorage.removeItem('token')
+    localStorage.removeItem('role')
+    window.location.href = '/login'
+    throw new ApiError('Sesión expirada', {})
+  }
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null)

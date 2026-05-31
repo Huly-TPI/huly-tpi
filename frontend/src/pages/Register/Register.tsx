@@ -50,7 +50,7 @@ export default function Register() {
     const handleSubmit = async () => {
         if (!validateAll()) return
         if (!termsAccepted) return
-        
+
         setLoading(true)
         setApiError(null)
 
