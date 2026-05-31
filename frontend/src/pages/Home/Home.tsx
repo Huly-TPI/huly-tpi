@@ -153,6 +153,10 @@ export default function Home() {
         sources.add(element.image.dark)
       }
     }
+    for (const step of homeOnboardingSteps) {
+      if (step.mascot) 
+        sources.add(step.mascot.imageSrc)      
+    }
 
     sources.forEach(src => {
       const image = new Image()
