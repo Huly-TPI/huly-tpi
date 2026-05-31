@@ -11,4 +11,5 @@ import lombok.Getter;
 public class LoginResponse {
     private String accessToken;
     private UserRole role;
+    private Boolean profileOnBoardingCompleted;
 }

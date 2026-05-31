@@ -40,16 +40,24 @@ public class AuthController {
                 .body(LoginResponse.builder()
                         .accessToken(tokens.getAccessToken())
                         .role(tokens.getRole())
+                        .profileOnBoardingCompleted(tokens.getProfileOnBoardingCompleted())
                         .build());
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(
+    public ResponseEntity<LoginResponse> register(
             @Valid @RequestBody RegisterRequest request
     ) {
+
         registerUseCase.execute(request.getEmail(), request.getPassword(), request.getName());
+        AuthTokens tokens = loginUseCase.execute(request.getEmail(), request.getPassword());
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Usuario registrado correctamente");
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
+                .body(LoginResponse.builder()
+                        .accessToken(tokens.getAccessToken())
+                        .profileOnBoardingCompleted(tokens.getProfileOnBoardingCompleted())
+                        .build());
     }
 
     @PostMapping("/refresh")

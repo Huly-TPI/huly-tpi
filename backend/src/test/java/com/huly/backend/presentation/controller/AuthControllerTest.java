@@ -92,12 +92,15 @@ class AuthControllerTest {
 
     @Test
     void register_shouldReturn201_whenRequestIsValid() throws Exception {
+        AuthTokens tokens = AuthTokens.builder()
+                        .accessToken("theAccessToken").refreshToken("theRefreshToken").build();
+                when(loginUseCase.execute("new@huly.com", "password123")).thenReturn(tokens);
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 Map.of("name", "Juan", "email", "new@huly.com", "password", "password123"))))
                 .andExpect(status().isCreated())
-                .andExpect(content().string("Usuario registrado correctamente"));
+                .andExpect(jsonPath("$.accessToken").value("theAccessToken"));
 
         verify(registerUseCase).execute("new@huly.com", "password123", "Juan");
     }
