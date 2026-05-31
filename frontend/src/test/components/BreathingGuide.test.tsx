@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import {BreathingGuide} from '../../components/BreathingGuide';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 
 describe('BreathingGuide', () => {
