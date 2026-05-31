@@ -51,7 +51,7 @@ export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboar
         imageSrc: hulyTodoImage,
         anchorElementId: 'todo-board',
         placementClassName:
-          'right-[53%] top-[23%] z-[225] w-[100%] md:right-[55%] md:top-[25%] md:w-[82%] min-[1400px]:right-[53%] min-[1400px]:top-[23%] min-[1400px]:w-[82%]',
+          'right-[53%] top-[14%] z-[225] w-[100%] md:right-[55%] md:top-[16%] md:w-[82%] min-[1400px]:right-[53%] min-[1400px]:top-[14%] min-[1400px]:w-[82%]',
         imageClassName: 'w-full',
       },
     },
@@ -67,7 +67,7 @@ export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboar
         imageSrc: hulyTreeImage,
         anchorElementId: 'tree',
         placementClassName:
-          'left-[57%] top-[55.5%] z-[225] w-[25%] md:left-[57%] md:top-[59.5%] md:w-[21%] min-[1400px]:left-[56%] min-[1400px]:top-[58.5%] min-[1400px]:w-[21%]',
+          'left-[52%] top-[50.5%] z-[225] w-[25%] md:left-[57%] md:top-[54.5%] md:w-[21%] min-[1400px]:left-[56%] min-[1400px]:top-[53.5%] min-[1400px]:w-[21%]',
         imageClassName: 'w-full',
       },
     },
@@ -99,7 +99,7 @@ export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboar
         imageSrc: hulyWateringCanImage,
         anchorElementId: 'watering-can',
         placementClassName:
-          'left-[88%] top-[-4%] z-[225] w-[92%] md:left-[102%] md:top-[0%] md:w-[76%] min-[1400px]:left-[102%] min-[1400px]:top-[0%] min-[1400px]:w-[76%]',
+          'left-[88%] top-[-14%] z-[225] w-[84%] md:left-[102%] md:top-[2%] md:w-[76%] min-[1400px]:left-[102%] min-[1400px]:top-[2%] min-[1400px]:w-[76%]',
         imageClassName: 'w-full',
       },
     },
