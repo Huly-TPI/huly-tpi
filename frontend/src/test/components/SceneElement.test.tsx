@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import SceneElement from '../../components/scene/SceneElement/SceneElement'
+import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 
 describe('SceneElement', () => {
   const baseProps = {
