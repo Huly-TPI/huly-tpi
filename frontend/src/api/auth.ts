@@ -1,15 +1,16 @@
 import { api } from './client'
 
-export type AuthResponse = {
+export interface AuthResponse {
   accessToken: string
 }
 
-export const register = (data: {
+export interface RegisterRequest {
   email: string
   password: string
   name: string
-  lastname: string
   birthDate: string
-}) => {
+}
+
+export const register = (data: RegisterRequest) => {
   return api.post<AuthResponse>('/auth/register', data)
 }

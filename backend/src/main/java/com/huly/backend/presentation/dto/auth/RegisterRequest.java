@@ -27,10 +27,6 @@ public class RegisterRequest {
     private String name;
 
     @NotNull
-    @NotBlank
-    private String lastname;
-
-    @NotNull
     @Past
     @MinimumAge(13)
     private LocalDate birthDate;
@@ -57,14 +53,6 @@ public class RegisterRequest {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
     }
 
     public LocalDate getBirthDate() {

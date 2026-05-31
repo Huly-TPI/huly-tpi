@@ -1,4 +1,5 @@
-//const BASE_URL = '/api'
+import { ApiError } from './apiError'
+
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
 
@@ -22,15 +23,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       errorBody?.error ||
       `Error HTTP ${response.status}`
 
-    throw new Error(message)
-  }
-
-  if (response.status === 204 || response.headers.get('content-length') === '0') {
-    return undefined as T
+    throw new ApiError(message, errorBody?.errors ?? {})
   }
 
   const text = await response.text()
-  return (text ? JSON.parse(text) : undefined) as T
+
+  return (text ? JSON.parse(text) : null) as T
 }
 
 export const api = {
@@ -39,10 +37,4 @@ export const api = {
 
   post: <T>(path: string, body: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'POST', body }),
-
-  put: <T>(path: string, body: unknown, options?: RequestOptions) =>
-    request<T>(path, { ...options, method: 'PUT', body }),
-
-  delete: <T>(path: string, options?: RequestOptions) =>
-    request<T>(path, { ...options, method: 'DELETE' }),
 }

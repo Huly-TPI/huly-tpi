@@ -84,7 +84,6 @@ public class AuthService {
         UserDetailEntity userDetail = UserDetailEntity.builder()
                 .appUser(savedUser)
                 .name(request.getName())
-                .lastname(request.getLastname())
                 .birth(request.getBirthDate())
                 .build();
 
