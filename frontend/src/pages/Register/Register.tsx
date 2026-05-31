@@ -1,126 +1,130 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { register } from '../../api/auth'
+import { ApiError } from '../../api/apiError'
+
+import { useAuthForm } from '../../hooks/useAuthForm'
+import { required, validEmail, minLength, matchesField, minAge } from '../../utils/validation'
+
+import registerBackground from '../../assets/register/background.webp'
+import registerCharacter from '../../assets/register/huly.webp'
+import cardFrame from '../../assets/register/cardFrame.webp'
+import AuthForm from '../../components/AuthForm/AuthForm'
+import type { AuthFormField } from '../../components/AuthForm/AuthForm'
+
+const REGISTER_FIELDS: AuthFormField[] = [
+    { name: 'name', type: 'text', placeholder: 'Nombre' },
+    { name: 'birthDate', type: 'date', placeholder: 'Fecha de nacimiento' },
+    { name: 'email', type: 'email', placeholder: 'Email' },
+    { name: 'password', type: 'password', placeholder: 'Contraseña' },
+    { name: 'confirmPassword', type: 'password', placeholder: 'Confirmar contraseña' },
+]
+
+const INITIAL_VALUES = {
+    name: '',
+    birthDate: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+}
+
+const VALIDATION_RULES = {
+    name: [required()],
+    birthDate: [required('La fecha de nacimiento es requerida'), minAge(13)],
+    email: [required(), validEmail()],
+    password: [required(), minLength(6)],
+    confirmPassword: [required(), matchesField('password')],
+}
 
 export default function Register() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [name, setName] = useState('')
-    const [lastname, setLastname] = useState('')
-    const [birthDate, setBirthDate] = useState('')
+    const navigate = useNavigate()
+    const { values, errors, handleChange, validateAll, setFieldErrors } = useAuthForm(
+        INITIAL_VALUES,
+        VALIDATION_RULES,
+    )
 
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const [apiError, setApiError] = useState<string | null>(null)
+    const [termsAccepted, setTermsAccepted] = useState(false)
 
-    const today = new Date()
-
-    const maxBirthDate = new Date(
-        today.getFullYear() - 13,
-        today.getMonth(),
-        today.getDate()
-    )
-        .toISOString()
-        .split('T')[0]
-
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSubmit = async () => {
+        if (!validateAll()) return
 
         setLoading(true)
-        setError(null)
+        setApiError(null)
 
         try {
             const res = await register({
-                email,
-                password,
-                name,
-                lastname,
-                birthDate,
+                name: values.name,
+                birthDate: values.birthDate,
+                email: values.email,
+                password: values.password,
             })
 
             localStorage.setItem('token', res.accessToken)
 
-            if(res.profileOnBoardingCompleted === false) {
-                window.location.href = '/onboarding'
-            } else {
-                window.location.href = '/'
-            }
-
-
+                if (res.profileOnBoardingCompleted === false) {
+                    navigate('/onboarding')
+                } else {
+                    navigate('/')
+                }
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error inesperado')
-        } finally {
+            if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
+                setFieldErrors(err.fieldErrors)
+            } else {
+                setApiError(err instanceof Error ? err.message : 'Error inesperado')
+            }
             setLoading(false)
         }
     }
 
     return (
-        <div style={{ maxWidth: 400, margin: '0 auto' }}>
-            <h2>Registro</h2>
+        <div
+            className="relative min-h-screen flex items-center justify-center overflow-hidden"
+            style={{
+                backgroundImage: `url(${registerBackground})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}
+        >
+            <div className="absolute inset-0 backdrop-blur-md" />
 
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="email">Email</label>
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="Email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+            <div className="relative z-10 flex w-full max-w-5xl items-center justify-center gap-12 px-4 md:px-10 pt-0 pb-8">
+                <img
+                    src={registerCharacter}
+                    alt="Mascota de Huly"
+                    className="hidden lg:block h-[360px] object-contain self-end mb-6"
                 />
 
-                <label htmlFor="password">Password</label>
-                <input
-                    id="password"
-                    type="password"
-                    placeholder="Password"
-                    required
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-
-                <label htmlFor="name">Name</label>
-                <input
-                    id="name"
-                    type="text"
-                    placeholder="Name"
-                    required
-                    autoComplete="given-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-
-                <label htmlFor="lastname">Lastname</label>
-                <input
-                    id="lastname"
-                    type="text"
-                    placeholder="Lastname"
-                    required
-                    autoComplete="family-name"
-                    value={lastname}
-                    onChange={(e) => setLastname(e.target.value)}
-                />
-
-                <label htmlFor="birthDate">Birth date</label>
-                <input
-                id="birthDate"
-                type="date"
-                required
-                min="1900-01-01"
-                max={maxBirthDate}
-                autoComplete="bday"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                />
-
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Registrando...' : 'Registrarse'}
-                </button>
-
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-            </form>
+                <div
+                    className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-8 py-12 md:px-[4.5rem] md:py-16"
+                    style={{
+                        backgroundImage: `url(${cardFrame})`,
+                        backgroundSize: '100% 100%',
+                        backgroundRepeat: 'no-repeat',
+                    }}
+                >
+                    <AuthForm
+                        title="¡Crea tu cuenta!"
+                        subtitle="Comenzá tu aventura en el jardín"
+                        fields={REGISTER_FIELDS}
+                        values={values}
+                        errors={errors}
+                        onChange={handleChange}
+                        onSubmit={handleSubmit}
+                        loading={loading}
+                        submitLabel="🌱 Crear cuenta "
+                        loadingLabel="Creando tu cuenta..."
+                        apiError={apiError}
+                        termsAccepted={termsAccepted}
+                        onTermsChange={setTermsAccepted}
+                        switchText="¿Ya tenés cuenta?"
+                        switchLabel="Iniciá sesión"
+                        onSwitchMode={() => navigate('/login')}
+                    />
+                </div>
+            </div>
         </div>
     )
 }

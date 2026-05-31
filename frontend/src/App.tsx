@@ -16,7 +16,6 @@ import Onboarding from './pages/Onboarding/Onboarding'
 const App = () => {
   return (
     <Routes>
-      <Route path="/register" element={<Register />} />
       <Route path="/chat-test" element={<ChatTest />} />
        <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/backoffice" element={<BackofficeLayout />}>
@@ -26,6 +25,7 @@ const App = () => {
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/diary" element={<Diary />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/guided-breathing" element={<Breathing />} />
         <Route path="/clouds" element={<CloudsActivity />} />
         <Route path="/bubbles" element={<BubblesActivity />} /> 
