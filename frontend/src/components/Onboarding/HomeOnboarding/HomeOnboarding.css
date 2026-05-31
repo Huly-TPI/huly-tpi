@@ -75,6 +75,16 @@
     drop-shadow(0 0 24px rgba(255, 249, 213, 0.26));
 }
 
+.home-onboarding__mascot {
+  position: absolute;
+  pointer-events: none;
+  z-index: 225;
+}
+
+.home-onboarding__mascot-image {
+  filter: drop-shadow(0 12px 18px rgba(16, 25, 13, 0.24));
+}
+
 .home-onboarding__step-card {
   position: absolute;
   z-index: 230;
@@ -132,6 +142,12 @@
     padding: 4.75rem 1.25rem 1.5rem;
   }
 
+  .home-onboarding__intro-card {
+    min-height: calc(100dvh - 8.75rem);
+    display: flex;
+    flex-direction: column;
+  }
+
   .home-onboarding__intro-logo {
     width: clamp(11rem, 42vw, 14rem);
   }
@@ -144,8 +160,14 @@
     font-size: 0.92rem;
   }
 
+  .home-onboarding__intro-actions {
+    margin-top: auto;
+    padding-bottom: 1.35rem;
+  }
+
   .home-onboarding__step-card {
-    width: min(19rem, calc(100vw - 1.5rem));
+    width: calc(100vw - 2rem);
+    max-width: none;
     padding: 0.95rem 1rem;
   }
 
