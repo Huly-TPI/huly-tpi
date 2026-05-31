@@ -32,9 +32,9 @@ describe('EmotionalOnboarding', () => {
     })
 
     it('deshabilita los botones cuando isLoading es true', () => {
-        render(<EmotionalOnboarding {...defaultProps} isLoading={true}/>)
-        const buttons= screen.queryAllByRole('button')
-        buttons.forEach(button=> expect(button).toBeDisabled())
+    render(<EmotionalOnboarding {...defaultProps} isLoading={true}/>)
+    expect(screen.queryAllByRole('button')).toHaveLength(0)
+    expect(screen.getByRole('status')).toBeInTheDocument()
     })
 
     it('muestra el titulo correcto segun el paso', () => {
