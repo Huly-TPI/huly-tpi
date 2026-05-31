@@ -60,11 +60,17 @@ class GenerateOnboardingOptionsUseCaseTest {
             assertThat(result).containsExactly("A", "B", "C", "D");
         }
 
-        @Test
+    @Test
         void execute_shouldReturnDefaultOptions_whenLlmReturnsJsonWithBracesInWrongOrder() {
             when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("} texto inválido {"));
             List<String> result = generateOnboardingOptionsUseCase.execute(2, "Desestresarme");
             assertThat(result).hasSize(4);
         }
-    
+
+    @Test
+        void execute_shouldReturnDefaultOptions_whenOptionsNodeIsNotArray() {
+            when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("{\"options\": \"no es un array\"}"));
+            List<String> result = generateOnboardingOptionsUseCase.execute(2, "Desestresarme");
+            assertThat(result).hasSize(4);
+        }
 }
