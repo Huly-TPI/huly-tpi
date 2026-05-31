@@ -15,7 +15,7 @@ export interface GeneratedChallengeDto {
 
 export interface ChatMetadataDto {
   risk_detected: boolean
-  matched_word: string
+  matched_word: string | null
 }
 
 export interface ChatResponseDto {

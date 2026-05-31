@@ -34,6 +34,7 @@ export function useChatbot() {
     return newConversationId
   })
   const bottomRef = useRef<HTMLDivElement>(null)
+  const sendingRef = useRef(false)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -57,6 +58,9 @@ export function useChatbot() {
   }, [conversationId])
 
   const sendChatMessage = async (text: string) => {
+    if (sendingRef.current) return
+    sendingRef.current = true
+
     setMessages(prev => [...prev, { role: 'user', content: text }])
     setIsSending(true)
     setError('')
@@ -83,12 +87,13 @@ export function useChatbot() {
         setError(requestError.message)
       }
     } finally {
+      sendingRef.current = false
       setIsSending(false)
     }
   }
 
   const sendMessage = async () => {
-    if (isSending) return
+    if (sendingRef.current) return
 
     const text = input.trim()
     if (!text) return
@@ -98,7 +103,7 @@ export function useChatbot() {
   }
 
   const decideChallenge = async (index: number, decision: 'accepted' | 'rejected') => {
-    if (isSending) return
+    if (sendingRef.current) return
 
     const selectedMessage = messages[index]
     if (!selectedMessage || selectedMessage.role !== 'assistant' || !selectedMessage.generated_challenge) return
@@ -119,7 +124,7 @@ export function useChatbot() {
   }
 
   const decideSuggestedAction = async (index: number, decision: 'accepted' | 'rejected') => {
-    if (isSending) return
+    if (sendingRef.current) return
 
     const selectedMessage = messages[index]
     if (!selectedMessage || selectedMessage.role !== 'assistant' || !selectedMessage.suggested_action) return
