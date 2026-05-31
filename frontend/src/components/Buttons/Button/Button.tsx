@@ -43,7 +43,7 @@ export default function Button({
     secondary:
       'border-violeta bg-transparent text-violeta hover:shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.08)] focus-visible:outline-[#8869ac59]',
     tertiary:
-      "min-w-0 border-transparent bg-transparent px-2 py-1 text-bosque [font-variation-settings:'wght'_500] hover:[font-variation-settings:'wght'_650] transition-[font-variation-settings] duration-300 focus-visible:outline-[rgba(76,124,100,0.35)]",
+      'min-w-0 border-transparent bg-transparent px-2 py-1 text-bosque font-medium hover:font-semibold transition-[font-weight] duration-300 focus-visible:outline-[rgba(76,124,100,0.35)]',
     alert:
       'border-anaranjado bg-anaranjado text-white hover:shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.12)] focus-visible:outline-[rgba(156,83,18,0.35)]',
   }
