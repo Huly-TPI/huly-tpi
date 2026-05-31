@@ -59,5 +59,12 @@ class GenerateOnboardingOptionsUseCaseTest {
             List<String> result = generateOnboardingOptionsUseCase.execute(3, "Meditar");
             assertThat(result).containsExactly("A", "B", "C", "D");
         }
+
+        @Test
+        void execute_shouldReturnDefaultOptions_whenLlmReturnsJsonWithBracesInWrongOrder() {
+            when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("} texto inválido {"));
+            List<String> result = generateOnboardingOptionsUseCase.execute(2, "Desestresarme");
+            assertThat(result).hasSize(4);
+        }
     
 }
