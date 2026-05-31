@@ -49,7 +49,8 @@ export default function Register() {
 
     const handleSubmit = async () => {
         if (!validateAll()) return
-
+        if (!termsAccepted) return
+        
         setLoading(true)
         setApiError(null)
 
@@ -62,6 +63,7 @@ export default function Register() {
             })
 
             localStorage.setItem('token', res.accessToken)
+            localStorage.setItem('role', res.role)
             navigate('/')
         } catch (err) {
             if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {

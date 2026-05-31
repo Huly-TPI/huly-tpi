@@ -62,7 +62,7 @@ describe('Register', () => {
     })
 
     it('registra exitosamente y redirige al home', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123' })
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
         const { user } = renderWithRouter()
 
         await fillForm(user)

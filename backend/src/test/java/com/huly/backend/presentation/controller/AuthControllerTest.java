@@ -9,7 +9,6 @@ import com.huly.backend.domain.useCase.auth.LogoutUseCase;
 import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
 import com.huly.backend.domain.useCase.auth.RegisterUseCase;
 import com.huly.backend.exception.GlobalExceptionHandler;
-import com.huly.backend.exception.UnauthorizedException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
@@ -91,15 +91,24 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_shouldReturn201_whenRequestIsValid() throws Exception {
+    void register_shouldReturn201WithAccessTokenRoleAndRefreshCookie() throws Exception {
+        AuthTokens tokens = AuthTokens.builder()
+                .accessToken("theAccessToken").refreshToken("theRefreshToken")
+                .role(UserRole.USER).build();
+        when(registerUseCase.execute("new@huly.com", "password123", "Juan", LocalDate.of(2000, 1, 1)))
+                .thenReturn(tokens);
+
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                Map.of("name", "Juan", "email", "new@huly.com", "password", "password123","birthDate", "2000-01-01"))))
+                                Map.of("name", "Juan", "email", "new@huly.com",
+                                        "password", "password123", "birthDate", "2000-01-01"))))
                 .andExpect(status().isCreated())
-                .andExpect(content().string("Usuario registrado correctamente"));
+                .andExpect(jsonPath("$.accessToken").value("theAccessToken"))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=theRefreshToken")));
 
-        verify(registerUseCase).execute("new@huly.com", "password123", "Juan");
+        verify(registerUseCase).execute("new@huly.com", "password123", "Juan", LocalDate.of(2000, 1, 1));
     }
 
     @Test

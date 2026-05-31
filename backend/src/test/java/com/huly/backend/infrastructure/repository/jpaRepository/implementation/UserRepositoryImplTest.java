@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.huly.backend.domain.model.enums.SourceAction;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,6 +87,7 @@ class UserRepositoryImplTest {
     void save_shouldCreateUserDetailEntity_whenNameIsPresent() {
         AppUser domain = AppUser.builder()
                 .name("Juan").email("new@huly.com").password("encoded")
+                .birthDate(LocalDate.of(2000, 1, 1))
                 .role(UserRole.USER).status(UserStatus.ACTIVE).build();
         AppUserEntity savedEntity = AppUserEntity.builder()
                 .id(5L).email("new@huly.com").build();
@@ -97,6 +99,7 @@ class UserRepositoryImplTest {
         ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
         verify(userDetailRepository).save(captor.capture());
         assertThat(captor.getValue().getName()).isEqualTo("Juan");
+        assertThat(captor.getValue().getBirth()).isEqualTo(LocalDate.of(2000, 1, 1));
         assertThat(captor.getValue().getAppUser()).isEqualTo(savedEntity);
     }
 
