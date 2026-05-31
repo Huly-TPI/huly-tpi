@@ -48,24 +48,33 @@ public class AuthService {
         }
 
         String accessToken =
-                jwtService.generateAccessToken(user.getEmail());
+                jwtService.generateAccessToken(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getRole(),
+                        user.getStatus()
+                );
 
         String refreshToken =
-                jwtService.generateRefreshToken(user.getEmail());
+                jwtService.generateRefreshToken(
+                        user.getId(),
+                        user.getEmail()
+                );
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
+
     @Transactional
-    public LoginResponse register(RegisterRequest request){
+    public LoginResponse register(RegisterRequest request) {
 
         boolean userExists = appUserRepository
                 .existsByEmail(request.getEmail());
 
         if (userExists) {
-                throw new ConflictException("El email ya esta registrado");
+            throw new ConflictException("El email ya esta registrado");
         }
 
         AppUserEntity user = new AppUserEntity();
@@ -90,11 +99,18 @@ public class AuthService {
         userDetailRepository.save(userDetail);
 
         String accessToken =
-                jwtService.generateAccessToken(savedUser.getEmail());
-        
-        String refreshToken =
-                jwtService.generateRefreshToken(savedUser.getEmail());
+                jwtService.generateAccessToken(
+                        savedUser.getId(),
+                        savedUser.getEmail(),
+                        savedUser.getRole(),
+                        savedUser.getStatus()
+                );
 
+        String refreshToken =
+                jwtService.generateRefreshToken(
+                        savedUser.getId(),
+                        savedUser.getEmail()
+                );
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
