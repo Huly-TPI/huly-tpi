@@ -119,6 +119,18 @@ describe('client', () => {
         expect(mockFetch).toHaveBeenCalledTimes(3)
     })
 
+    it('no redirige a /login si skipAuthRedirect es true y recibe 401', async () => {
+        mockFetch.mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }))
+
+        const { api } = await import('../../api/client')
+
+        await expect(
+            api.post('/auth/backoffice/login', {}, { skipAuthRedirect: true }),
+        ).rejects.toBeInstanceOf(ApiError)
+
+        expect(mockLocation.href).toBe('')
+    })
+
     it('retorna null cuando la respuesta no tiene body', async () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
