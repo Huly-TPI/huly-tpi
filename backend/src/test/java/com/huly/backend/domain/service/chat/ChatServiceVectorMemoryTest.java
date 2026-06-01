@@ -35,6 +35,7 @@ class ChatServiceVectorMemoryTest {
         RiskWordRepository riskWordRepository = mock(RiskWordRepository.class);
         PromptBuilderService promptBuilderService = mock(PromptBuilderService.class);
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
+        ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -53,7 +54,8 @@ class ChatServiceVectorMemoryTest {
                 chatConfigRepository,
                 riskWordRepository,
                 promptBuilderService,
-                userVectorMemoryService
+                userVectorMemoryService,
+                chatEmotionalRecommendationService
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();
@@ -77,6 +79,7 @@ class ChatServiceVectorMemoryTest {
         RiskWordRepository riskWordRepository = mock(RiskWordRepository.class);
         PromptBuilderService promptBuilderService = mock(PromptBuilderService.class);
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
+        ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -92,7 +95,8 @@ class ChatServiceVectorMemoryTest {
                 chatConfigRepository,
                 riskWordRepository,
                 promptBuilderService,
-                userVectorMemoryService
+                userVectorMemoryService,
+                chatEmotionalRecommendationService
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();
