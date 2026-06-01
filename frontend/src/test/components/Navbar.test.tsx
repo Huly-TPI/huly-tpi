@@ -86,4 +86,25 @@ describe('Navbar', () => {
       expect(screen.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeInTheDocument()
     })
   })
+
+  describe('menú mobile', () => {
+    it('abre el menú al hacer click en el hamburguesa', async () => {
+      const user = userEvent.setup()
+      renderWithRouter()
+
+      await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
+
+      expect(screen.getAllByText('Jardín').length).toBeGreaterThan(1)
+    })
+
+    it('muestra los botones de auth dentro del menú mobile cuando está deslogueado', async () => {
+      const user = userEvent.setup()
+      renderWithRouter()
+
+      await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
+
+      expect(screen.getAllByRole('link', { name: 'Iniciar sesión' }).length).toBe(2)
+      expect(screen.getAllByRole('link', { name: 'Registrarse' }).length).toBe(2)
+    })
+  })
 })

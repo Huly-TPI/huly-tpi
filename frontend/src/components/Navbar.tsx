@@ -57,7 +57,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isAuthenticated && user ? (
             <UserMenu name={user.name} />
           ) : (
@@ -66,7 +66,7 @@ export default function Navbar() {
 
           <button
             type="button"
-            className="ml-1 flex items-center justify-center rounded-lg p-2 text-white transition-colors hover:bg-white/10 md:hidden"
+            className="flex items-center justify-center rounded-lg p-2 text-white transition-colors hover:bg-white/10 md:hidden"
             aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(prev => !prev)}
@@ -91,6 +91,25 @@ export default function Navbar() {
               </li>
             ))}
           </ul>
+
+          {!isAuthenticated && (
+            <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
+              <Link
+                to="/login"
+                onClick={closeMenu}
+                className="rounded-full border border-white/40 px-4 py-2.5 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                Iniciar sesión
+              </Link>
+              <Link
+                to="/register"
+                onClick={closeMenu}
+                className="rounded-full bg-white px-4 py-2.5 text-center text-base font-semibold text-bosque transition-all hover:brightness-95"
+              >
+                Registrarse
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </nav>
@@ -161,7 +180,7 @@ function UserMenu({ name }: { name: string }) {
 
 function AuthButtons() {
   return (
-    <div className="flex items-center gap-2 md:gap-3">
+    <div className="hidden items-center gap-2 md:flex md:gap-3">
       <Link
         to="/login"
         className="rounded-full px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-violeta-claro"
