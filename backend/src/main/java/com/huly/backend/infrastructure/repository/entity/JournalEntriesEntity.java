@@ -5,9 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "journal_entries")
@@ -30,9 +27,6 @@ public class JournalEntriesEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "mood", length = 50)
     private Mood mood;
-
-    @Column(name = "title")
-    private String title;
 
     @Column(name = "content")
     private String content;
