@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { journalApi, type JournalEntryResponse, type Mood } from '../api/journal'
 import cloudImg from '../assets/garden/light-theme/cloud.webp'
+import Button from '../components/Buttons/Button/Button'
 
 const MOODS: { value: Mood; label: string; emoji: string }[] = [
   { value: 'HAPPY',     label: 'Feliz',      emoji: '😊' },
@@ -146,12 +147,9 @@ export default function Diary() {
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-50 hidden lg:block"  style={{ zIndex: 0, width: 340, top: '15%', right: '-5%' }} />
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-40 hidden lg:block"  style={{ zIndex: 0, width: 320, top: '22%', left: '-4%' }} />
       <div className="relative w-full max-w-4xl mb-3" style={{ zIndex: 1 }}>
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-green-900 font-semibold text-sm hover:opacity-75 transition-opacity"
-        >
+        <Button variant="tertiary" onClick={() => navigate(-1)}>
           ← Cerrar cuaderno
-        </button>
+        </Button>
       </div>
 
       <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2" style={{ borderColor: '#8869AC', zIndex: 1 }}>
@@ -181,14 +179,16 @@ export default function Diary() {
               </button>
             </div>
             <span className="text-xl">🎨</span>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleSave}
-              disabled={!isNewEntry || saving || !hasContent}
-              style={{ backgroundColor: '#8869AC' }}
-              className="flex items-center gap-1.5 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={!isNewEntry || !hasContent}
+              isLoading={saving}
+              loadingLabel="Guardando..."
             >
               💾 Guardar
-            </button>
+            </Button>
           </div>
         </div>
 

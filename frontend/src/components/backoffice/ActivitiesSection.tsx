@@ -2,6 +2,7 @@ import { useActivities } from '../../hooks/backoffice/useActivities'
 import { ActivityCard } from './ActivityCard'
 import { SectionCard, CardHeader } from './SectionCard'
 import { Skeleton } from './Skeleton'
+import Button from '../Buttons/Button/Button'
 
 export function ActivitiesSection() {
   const { activities, loading } = useActivities()
@@ -10,7 +11,7 @@ export function ActivitiesSection() {
     <SectionCard>
       <CardHeader
         title="Biblioteca de Actividades"
-        action={<button className="text-xs font-semibold text-violeta hover:underline">Editar todo</button>}
+        action={<Button variant="tertiary" size="sm">Editar todo</Button>}
       />
       {loading ? (
         <div className="grid grid-cols-2 gap-3">
