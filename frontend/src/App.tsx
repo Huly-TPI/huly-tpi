@@ -9,6 +9,7 @@ import ChatTest from './pages/ChatTest'
 import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
 import Register from './pages/Register/Register'
 import ChatbotPage from './pages/Backoffice/ChatbotPage'
+import Challenges from './pages/Challenges/Challenges'
 
 
 const App = () => {
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/diary" element={<Diary />} />
         <Route path="/guided-breathing" element={<Breathing />} />
         <Route path="/clouds" element={<CloudsActivity />} />
+        <Route path="/challenges" element={<Challenges />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
