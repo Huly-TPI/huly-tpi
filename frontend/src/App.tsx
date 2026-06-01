@@ -20,12 +20,14 @@ const App = () => {
       <Routes>
         <Route path="/backoffice" element={<BackofficeLayout />}>
           <Route index element={<ChatbotPage />} />
+          <Route path="login" element={<BackofficeLogin />} />
           <Route path="chatbot" element={<ChatbotPage />} />
         </Route>
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/diary" element={<Diary />} />
+          <Route path="/challenges" element={<Challenges />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/guided-breathing" element={<Breathing />} />

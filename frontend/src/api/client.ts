@@ -3,7 +3,10 @@ import { ApiError } from './apiError'
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 const TOKEN_KEY = 'huly:access-token'
 
-type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
+type RequestOptions = Omit<RequestInit, 'body'> & {
+  body?: unknown
+  skipAuthRedirect?: boolean
+}
 
 export const getToken = (): string | null =>
   window.localStorage.getItem(TOKEN_KEY)
@@ -42,7 +45,7 @@ async function request<T>(
   options: RequestOptions = {},
   retry = true,
 ): Promise<T> {
-  const { body, headers, ...rest } = options
+  const { body, headers, skipAuthRedirect, ...rest } = options
   const token = getToken()
 
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -56,7 +59,12 @@ async function request<T>(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 
-  if (response.status === 401 && retry && path !== '/auth/refresh') {
+  if (
+    response.status === 401 &&
+    retry &&
+    !skipAuthRedirect &&
+    path !== '/auth/refresh'
+  ) {
     const newToken = await refreshAccessToken()
     if (newToken) {
       return request<T>(path, options, false)
@@ -85,6 +93,8 @@ export const api = {
     request<T>(path, { ...options, method: 'POST', body }),
   put: <T>(path: string, body: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'PUT', body }),
+  patch: <T>(path: string, body: unknown, options?: RequestOptions) =>
+    request<T>(path, { ...options, method: 'PATCH', body }),
   delete: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'DELETE' }),
 }
