@@ -1,6 +1,7 @@
 import PasswordInput from './Passwordinput'
 import DateInput from './Dateinput'
 import { getInputClassName } from './authInputStyles'
+import Button from '../Buttons/Button/Button'
 
 export type FieldType = 'text' | 'email' | 'password' | 'date'
 
@@ -157,25 +158,25 @@ export default function AuthForm({
           </label>
         )}
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          fullWidth
           disabled={loading || (onTermsChange !== undefined && !termsAccepted)}
-          className="mt-2 rounded-xl border-b-4 border-[#3d6b44] bg-[#5a8a50] py-3 text-sm font-bold text-white transition-all hover:brightness-105 active:translate-y-[2px] active:border-b-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          isLoading={loading}
+          loadingLabel={loadingLabel}
+          className="mt-2"
         >
-          {loading ? loadingLabel : submitLabel}
-        </button>
+          {submitLabel}
+        </Button>
       </form>
 
       {switchText && switchLabel && onSwitchMode && (
         <p className="mt-4 text-center text-sm text-[#8c7b66]">
           {switchText}{' '}
-          <button
-            type="button"
-            onClick={onSwitchMode}
-            className="font-bold text-[#4C7C64] hover:underline"
-          >
+          <Button type="button" variant="tertiary" onClick={onSwitchMode}>
             {switchLabel}
-          </button>
+          </Button>
         </p>
       )}
     </div>

@@ -3,6 +3,7 @@ import { BotConfigResponse } from '../../api/chatbot'
 import { SectionCard, CardHeader } from './SectionCard'
 import { Toggle } from './Toggle'
 import { Skeleton } from './Skeleton'
+import Button from '../Buttons/Button/Button'
 
 interface BotConfigSectionProps {
   config: BotConfigResponse | null
@@ -71,13 +72,17 @@ export function BotConfigSection({ config, loading, onSave }: BotConfigSectionPr
               className="w-full resize-none rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-violeta focus:bg-white focus:ring-1 focus:ring-violeta/20 transition-all"
             />
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleSave}
             disabled={saving || !prompt.trim()}
-            className="self-end rounded-xl bg-violeta px-5 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-40 hover:bg-violeta/90 transition-colors"
+            isLoading={saving}
+            loadingLabel="Guardando..."
+            className="self-end"
           >
-            {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar cambios'}
-          </button>
+            {saved ? '✓ Guardado' : 'Guardar cambios'}
+          </Button>
         </div>
       )}
     </SectionCard>
