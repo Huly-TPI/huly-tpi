@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { required, minLength, validEmail, matchesField, minAge, validate } from '../../utils/validation'
+import { required, minLength, maxLength, validEmail, matchesField, minAge, noHtml, safeText, validate } from '../../utils/validation'
 
 const emptyValues = { email: '', password: '' }
 
@@ -120,6 +120,87 @@ describe('minAge', () => {
         const minor = new Date(today.getFullYear() - 15, today.getMonth(), today.getDate())
         const dateStr = minor.toISOString().split('T')[0]
         expect(custom(dateStr, emptyValues)).toBe('Tenés que ser mayor de edad')
+    })
+})
+
+describe('maxLength', () => {
+    const rule = maxLength(10)
+
+    it('retorna error si supera el máximo', () => {
+        expect(rule('12345678901', emptyValues)).toBe('Máximo 10 caracteres')
+    })
+
+    it('pasa con largo exacto', () => {
+        expect(rule('1234567890', emptyValues)).toBeUndefined()
+    })
+
+    it('pasa con largo menor', () => {
+        expect(rule('abc', emptyValues)).toBeUndefined()
+    })
+
+    it('acepta mensaje personalizado', () => {
+        const custom = maxLength(5, 'Muy largo')
+        expect(custom('123456', emptyValues)).toBe('Muy largo')
+    })
+})
+
+describe('noHtml', () => {
+    it('retorna error con tag HTML', () => {
+        expect(noHtml('<script>alert(1)</script>', emptyValues)).toBe('El texto no puede contener HTML')
+    })
+
+    it('retorna error con tag de apertura', () => {
+        expect(noHtml('<img src=x>', emptyValues)).toBe('El texto no puede contener HTML')
+    })
+
+    it('retorna error con javascript:', () => {
+        expect(noHtml('javascript:alert(1)', emptyValues)).toBe('El texto no puede contener HTML')
+    })
+
+    it('pasa con texto normal', () => {
+        expect(noHtml('Juan Pérez', emptyValues)).toBeUndefined()
+    })
+
+    it('pasa con caracteres especiales válidos', () => {
+        expect(noHtml("O'Brien", emptyValues)).toBeUndefined()
+    })
+})
+
+describe('safeText', () => {
+    it('detecta XSS con script tag', () => {
+        expect(safeText('<script>alert(1)</script>', emptyValues)).toBe('El texto contiene caracteres no permitidos')
+    })
+
+    it('detecta XSS con event handler', () => {
+        expect(safeText('texto onerror=alert(1)', emptyValues)).toBe('El texto contiene caracteres no permitidos')
+    })
+
+    it("detecta SQL injection con ' OR", () => {
+        expect(safeText("' OR 1=1", emptyValues)).toBe('El texto contiene caracteres no permitidos')
+    })
+
+    it('detecta SQL injection con UNION SELECT', () => {
+        expect(safeText('UNION SELECT * FROM users', emptyValues)).toBe('El texto contiene caracteres no permitidos')
+    })
+
+    it('detecta SQL injection con DROP TABLE', () => {
+        expect(safeText("; DROP TABLE users", emptyValues)).toBe('El texto contiene caracteres no permitidos')
+    })
+
+    it('detecta SQL injection con --', () => {
+        expect(safeText("admin'--", emptyValues)).toBe('El texto contiene caracteres no permitidos')
+    })
+
+    it('pasa con texto normal', () => {
+        expect(safeText('Juan Pérez', emptyValues)).toBeUndefined()
+    })
+
+    it("pasa con apostrofe aislado como en O'Brien", () => {
+        expect(safeText("O'Brien", emptyValues)).toBeUndefined()
+    })
+
+    it('pasa con emojis', () => {
+        expect(safeText('hola 🌱', emptyValues)).toBeUndefined()
     })
 })
 
