@@ -44,12 +44,20 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(
-            @Valid @RequestBody RegisterRequest request
-    ) {
-        registerUseCase.execute(request.getEmail(), request.getPassword(), request.getName());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Usuario registrado correctamente");
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+    AuthTokens tokens = registerUseCase.execute(
+            request.getEmail(),
+            request.getPassword(),
+            request.getName(),
+            request.getBirthDate()
+    );
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
+            .body(LoginResponse.builder()
+                    .accessToken(tokens.getAccessToken())
+                    .role(tokens.getRole())
+                    .build());
     }
 
     @PostMapping("/refresh")

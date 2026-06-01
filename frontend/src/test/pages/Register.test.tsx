@@ -34,8 +34,8 @@ describe('Register', () => {
     }
 
     const fillForm = async (user: ReturnType<typeof userEvent.setup>) => {
-        await user.type(screen.getByPlaceholderText('Nombre'), 'Luka')
-        await user.type(screen.getByPlaceholderText('Email'), 'luka@mail.com')
+        await user.type(screen.getByPlaceholderText('Nombre'), 'mili')
+        await user.type(screen.getByPlaceholderText('Email'), 'mili@mail.com')
 
         const passwordFields = screen.getAllByPlaceholderText(/contraseña/i)
         await user.type(passwordFields[0], '123456')
@@ -62,7 +62,7 @@ describe('Register', () => {
     })
 
     it('registra exitosamente y redirige al home', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123' })
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
         const { user } = renderWithRouter()
 
         await fillForm(user)
@@ -182,6 +182,70 @@ describe('Register', () => {
 
         await waitFor(() => {
             expect(screen.getByText('Edad mínima inválida')).toBeInTheDocument()
+        })
+    })
+
+    it('bloquea nombre con contenido XSS', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), '<script>alert(1)</script>')
+
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+
+        expect(screen.getByText('El texto contiene caracteres no permitidos')).toBeInTheDocument()
+        expect(mockedRegister).not.toHaveBeenCalled()
+    })
+
+    it('bloquea nombre con SQL injection', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), "' OR 1=1 --")
+
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+
+        expect(screen.getByText('El texto contiene caracteres no permitidos')).toBeInTheDocument()
+        expect(mockedRegister).not.toHaveBeenCalled()
+    })
+
+    it('bloquea nombre que supera el máximo de caracteres', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), 'a'.repeat(51))
+
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+
+        expect(screen.getByText('Máximo 50 caracteres')).toBeInTheDocument()
+        expect(mockedRegister).not.toHaveBeenCalled()
+    })
+
+    it('envía los valores con trim al backend', async () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), '  Mili  ')
+        await user.type(screen.getByPlaceholderText('Email'), '  mili@mail.com  ')
+
+        const passwordFields = screen.getAllByPlaceholderText(/contraseña/i)
+        await user.type(passwordFields[0], '123456')
+        await user.type(passwordFields[1], '123456')
+
+        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
+        await user.click(dateInput)
+        await user.type(dateInput, '2000-01-15')
+
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+
+        await waitFor(() => {
+            expect(mockedRegister).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    name: 'Mili',
+                    email: 'mili@mail.com',
+                }),
+            )
         })
     })
 })

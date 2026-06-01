@@ -40,6 +40,7 @@ public class UserRepositoryImpl implements UserRepository {
             userDetailRepository.save(UserDetailEntity.builder()
                     .appUser(saved)
                     .name(user.getName())
+                    .birth(user.getBirthDate())
                     .createdAt(Instant.now())
                     .build());
         }
