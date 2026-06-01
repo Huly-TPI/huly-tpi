@@ -59,10 +59,16 @@
 
   .garden-scene__background--desktop {
     display: block;
-    object-position: center 42%;
+    object-position: center 52%;
   }
 
   .garden-scene__background--mobile {
     display: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .garden-scene__background--desktop {
+    object-position: center 56%;
   }
 }

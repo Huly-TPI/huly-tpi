@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import ChatbotLauncher from '../components/Chatbot/ChatbotLauncher'
 
 export default function AppLayout() {
   return (
@@ -8,6 +9,7 @@ export default function AppLayout() {
       <main className="h-[calc(100dvh-4rem)] min-h-0 flex-1 overflow-auto">
         <Outlet />
       </main>
+      <ChatbotLauncher />
     </div>
   )
 }

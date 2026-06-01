@@ -1,5 +1,7 @@
 package com.huly.backend.domain.model;
 
+import java.time.LocalDate;
+
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import lombok.AllArgsConstructor;
@@ -16,6 +18,7 @@ public class AppUser {
     private String name;
     private String email;
     private String password;
+    private LocalDate birthDate;
     private UserRole role;
     private UserStatus status;
 }

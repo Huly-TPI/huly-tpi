@@ -4,7 +4,7 @@ import { register } from '../../api/auth'
 import { ApiError } from '../../api/apiError'
 
 import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, validEmail, minLength, matchesField, minAge } from '../../utils/validation'
+import { required, validEmail, minLength, maxLength, matchesField, minAge, safeText } from '../../utils/validation'
 
 import registerBackground from '../../assets/register/background.webp'
 import registerCharacter from '../../assets/register/huly.webp'
@@ -29,16 +29,16 @@ const INITIAL_VALUES = {
 }
 
 const VALIDATION_RULES = {
-    name: [required()],
+    name: [required(), maxLength(50), safeText],
     birthDate: [required('La fecha de nacimiento es requerida'), minAge(13)],
-    email: [required(), validEmail()],
-    password: [required(), minLength(6)],
+    email: [required(), validEmail(), maxLength(100)],
+    password: [required(), minLength(6), maxLength(72)],
     confirmPassword: [required(), matchesField('password')],
 }
 
 export default function Register() {
     const navigate = useNavigate()
-    const { values, errors, handleChange, validateAll, setFieldErrors } = useAuthForm(
+    const { values, errors, handleChange, validateAll, setFieldErrors, getSanitizedValues } = useAuthForm(
         INITIAL_VALUES,
         VALIDATION_RULES,
     )
@@ -49,19 +49,23 @@ export default function Register() {
 
     const handleSubmit = async () => {
         if (!validateAll()) return
+        if (!termsAccepted) return
 
         setLoading(true)
         setApiError(null)
 
         try {
+            const sanitized = getSanitizedValues()
+
             const res = await register({
-                name: values.name,
-                birthDate: values.birthDate,
-                email: values.email,
-                password: values.password,
+                name: sanitized.name,
+                birthDate: sanitized.birthDate,
+                email: sanitized.email,
+                password: sanitized.password,
             })
 
             localStorage.setItem('token', res.accessToken)
+            localStorage.setItem('role', res.role)
             navigate('/')
         } catch (err) {
             if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
