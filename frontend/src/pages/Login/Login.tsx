@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login } from '../../api/auth'
 import { ApiError } from '../../api/apiError'
+import { useAuth } from '../../context/auth'
 import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, validEmail} from '../../utils/validation'
+import { required, validEmail } from '../../utils/validation'
 
 import registerBackground from '../../assets/register/background.webp'
 import registerCharacter from '../../assets/register/huly.webp'
@@ -28,6 +28,7 @@ const VALIDATION_RULES = {
 
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const { values, errors, handleChange, validateAll, setFieldErrors } = useAuthForm(
     INITIAL_VALUES,
     VALIDATION_RULES,
@@ -43,13 +44,10 @@ export default function Login() {
     setApiError(null)
 
     try {
-      const res = await login({
+      await login({
         email: values.email,
         password: values.password,
       })
-
-      localStorage.setItem('token', res.accessToken)
-      localStorage.setItem('role', res.role)
       navigate('/')
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
@@ -59,7 +57,7 @@ export default function Login() {
         setApiError(
           message === 'Invalid credentials'
             ? 'Email o contraseña incorrectos'
-            : message
+            : message,
         )
       }
       setLoading(false)
