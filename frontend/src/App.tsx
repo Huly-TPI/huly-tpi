@@ -10,7 +10,9 @@ import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Register from './pages/Register/Register'
 import ChatbotPage from './pages/Backoffice/ChatbotPage'
+import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
 import Login from './pages/Login/Login'
+import Challenges from './pages/Challenges/Challenges'
 
 const App = () => {
   return (
