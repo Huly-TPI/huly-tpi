@@ -141,6 +141,16 @@ class CloudControllerTest {
     }
 
     @Test
+    void saveThought_shouldReturn404_whenUserNotFound() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/clouds/thought")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("thought", "un pensamiento"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void saveThought_shouldReturn400_whenThoughtIsBlank() throws Exception {
         mockMvc.perform(post("/api/clouds/thought")
                         .contentType(MediaType.APPLICATION_JSON)
