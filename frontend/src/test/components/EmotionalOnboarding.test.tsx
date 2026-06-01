@@ -12,7 +12,7 @@ describe('EmotionalOnboarding', () => {
     }
 
     it('renderiza las opciones del paso actual', ()  => {
-        render(<EmotionalOnboarding{...defaultProps} />)
+        render(<EmotionalOnboarding {...defaultProps} />)
         expect(screen.getByRole('button', {name: 'Calmar mi mente'})).toBeInTheDocument()
         expect(screen.getByRole('button', {name: 'Manejar el estrés'})).toBeInTheDocument()
         expect(screen.getByRole('button', {name: 'Explorar mis emociones'})).toBeInTheDocument()

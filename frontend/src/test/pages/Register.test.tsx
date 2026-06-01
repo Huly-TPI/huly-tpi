@@ -27,6 +27,7 @@ describe('Register', () => {
                     <Route path="/register" element={<Register />} />
                     <Route path="/" element={<h1>Home</h1>} />
                     <Route path="/login" element={<h1>Login</h1>} />
+                    <Route path="/onboarding" element={<h1>Onboarding</h1>} />
                 </Routes>
             </MemoryRouter>,
         )
@@ -248,4 +249,24 @@ describe('Register', () => {
             )
         })
     })
+
+    it('redirige al /onboarding cuando profileOnboardingCompleted es false', async () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER', profileOnBoardingCompleted: false })
+        const { user } = renderWithRouter()
+
+        await fillForm(user)
+        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
+        await user.click(dateInput)
+        await user.type(dateInput, '2000-01-15')
+
+        const checkbox = screen.getByRole('checkbox')
+        await user.click(checkbox)
+
+        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('Onboarding')).toBeInTheDocument()
+        })
+    })
+
 })

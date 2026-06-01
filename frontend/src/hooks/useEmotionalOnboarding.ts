@@ -51,11 +51,8 @@ export function useEmotionalOnboarding(onComplete: () => void) {
                 setIsLoading(false)
             }
         } else {
-            try {
-                await completeOnboarding(answers.a1!, answers.a2!, option)
-            } finally {
+                await completeOnboarding(answers.a1!, answers.a2!, option)    
                 onComplete()
-            }
         }
     }
 

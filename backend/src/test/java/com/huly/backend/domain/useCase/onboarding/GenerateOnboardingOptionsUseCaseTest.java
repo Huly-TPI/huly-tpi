@@ -73,4 +73,11 @@ class GenerateOnboardingOptionsUseCaseTest {
             List<String> result = generateOnboardingOptionsUseCase.execute(2, "Desestresarme");
             assertThat(result).hasSize(4);
         }
+
+    @Test
+    void execute_shouldReturnDefaultOptions_whenJsonParsingThrows() {
+        when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("{broken json}"));
+        List<String> result = generateOnboardingOptionsUseCase.execute(2, "Desestresarme");
+        assertThat(result).hasSize(4);
+    }
 }

@@ -12,19 +12,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import static org.mockito.Mockito.doThrow;
 @ExtendWith(MockitoExtension.class)
 class CompleteProfileOnboardingUseCaseTest {
     @Mock
     private UserRepository userRepository;
     @Mock
     private UserDetailDomainRepository userDetailDomainRepository;
+    @Mock
+    private UserVectorMemoryService userVectorMemoryService;
     @InjectMocks
     private CompleteProfileOnboardingUseCase completeProfileOnboardingUseCase;
 
@@ -45,6 +48,7 @@ class CompleteProfileOnboardingUseCaseTest {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(user));
         completeProfileOnboardingUseCase.execute("user@huly.com", "Desestresarme", "Meditar", "Meditar 5 minutos");
         verify(userDetailDomainRepository).completeOnboarding(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
+        verify(userVectorMemoryService).rememberOnboardingGoals(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
     }
 
     @Test
@@ -53,5 +57,15 @@ class CompleteProfileOnboardingUseCaseTest {
         assertThatThrownBy(() -> completeProfileOnboardingUseCase.execute("noexiste@huly.com", "A", "B", "C"))
                 .isInstanceOf(NotFoundException.class);
 
+    }
+
+    @Test
+    void execute_shouldCompleteOnboarding_evenIfVectorMemoryFails() {
+        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(user));
+        doThrow(new RuntimeException("Vector memory error"))
+                .when(userVectorMemoryService).rememberOnboardingGoals(1L, "A", "B", "C");
+        completeProfileOnboardingUseCase.execute("user@huly.com", "A", "B", "C"); 
+        verify(userDetailDomainRepository).completeOnboarding(1L, "A", "B", "C");
+    
     }
 }
