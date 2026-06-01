@@ -126,6 +126,23 @@ describe('EmotionalCloudsActivity', () => {
       expect(onFinish).toHaveBeenCalledWith(['Trabajo'])
     })
 
+    it('llama a onThoughtAdded con el texto al agregar una nube', () => {
+      const onThoughtAdded = vi.fn()
+      render(<EmotionalCloudsActivity onThoughtAdded={onThoughtAdded} />)
+      typeAndSubmit('Estrés laboral')
+      expect(onThoughtAdded).toHaveBeenCalledWith('Estrés laboral')
+    })
+
+    it('llama a onThoughtAdded por cada nube agregada', () => {
+      const onThoughtAdded = vi.fn()
+      render(<EmotionalCloudsActivity onThoughtAdded={onThoughtAdded} />)
+      typeAndSubmit('Primer pensamiento')
+      typeAndSubmit('Segundo pensamiento')
+      expect(onThoughtAdded).toHaveBeenCalledTimes(2)
+      expect(onThoughtAdded).toHaveBeenNthCalledWith(1, 'Primer pensamiento')
+      expect(onThoughtAdded).toHaveBeenNthCalledWith(2, 'Segundo pensamiento')
+    })
+
     it('trimea el texto antes de crear la nube', () => {
       render(<EmotionalCloudsActivity />)
       typeAndSubmit('  Estrés  ')
