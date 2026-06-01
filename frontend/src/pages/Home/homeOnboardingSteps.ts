@@ -88,11 +88,11 @@ export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboar
       },
     },
     {
-      id: 'watering-can',
+      id: 'watering-can-plant',
       title: 'Regar planta',
       description: 'Avanzá con pequeños retos y acompañá el crecimiento de tu planta',
       icon: 'R',
-      elementIds: ['watering-can'],
+      elementIds: ['watering-can-plant'],
       cardClassName:
         'left-[1rem] right-[1rem] top-[1.6rem] md:left-[25%] md:right-auto md:top-[60%] md:bottom-auto min-[1400px]:top-[56%]',
       mascot: {

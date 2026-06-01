@@ -2,9 +2,11 @@ package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
 import com.huly.backend.domain.model.chat.ChatConfig;
+import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
+import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
@@ -35,16 +37,18 @@ public class ChatService {
     private final RiskWordRepository riskWordRepository;
     private final PromptBuilderService promptBuilderService;
     private final UserVectorMemoryService userVectorMemoryService;
+    private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
         ChatContext context = buildBlockingContext(message, conversationId, userId);
 
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
-        saveUserMessage(conversationId, message, reply, userId);
-        saveAssistantMessage(conversationId, reply.content(), userId);
+        ChatReply finalReply = enrichWithEmotionalRecommendation(message, userId, context, reply);
+        saveUserMessage(conversationId, message, finalReply, userId);
+        saveAssistantMessage(conversationId, finalReply.content(), userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
 
-        return reply;
+        return finalReply;
     }
 
     public Flux<ChatStreamEvent> streamMessage(String message, String conversationId, Long userId) {
@@ -136,6 +140,38 @@ public class ChatService {
             log.warn("No se pudo extraer metadata de chat en streaming", e);
             return ChatReply.of("");
         }
+    }
+
+    private ChatReply enrichWithEmotionalRecommendation(
+            String message,
+            Long userId,
+            ChatContext context,
+            ChatReply reply
+    ) {
+        ChatRecommendationOutcome outcome = chatEmotionalRecommendationService.evaluate(
+                message,
+                userId,
+                context.basePrompt(),
+                context.memories(),
+                context.history(),
+                reply
+        );
+
+        ChatReply enriched = applyAnalysisMetadata(reply, outcome.analysis());
+        return outcome.suggestedAction() == null
+                ? enriched
+                : enriched.withSuggestedAction(outcome.suggestedAction());
+    }
+
+    private ChatReply applyAnalysisMetadata(ChatReply reply, EmotionalAnalysisResult analysis) {
+        if (analysis == null || analysis.detectedEmotion() == null || analysis.confidence() <= 0.0) {
+            return reply;
+        }
+        return reply.withEmotionalMetadata(analysis.detectedEmotion(), toChatIntensity(analysis.intensity()));
+    }
+
+    private Integer toChatIntensity(double intensity) {
+        return (int) Math.round(Math.max(0.0, Math.min(1.0, intensity)) * 10.0);
     }
 
     private void saveUserMessage(String conversationId, String message, ChatReply reply, Long userId) {

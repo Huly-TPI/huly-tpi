@@ -6,14 +6,14 @@ import houseImage from '../../assets/garden/light-theme/house.webp'
 import notebookImage from '../../assets/garden/light-theme/notebook.webp'
 import todoBoardImage from '../../assets/garden/light-theme/to-do-board.webp'
 import treeImage from '../../assets/garden/light-theme/tree.webp'
-import wateringCanImage from '../../assets/garden/light-theme/watering-can.webp'
+import wateringCanImage from '../../assets/garden/light-theme/watering-can-plant.webp'
 import nightBackgroundImage from '../../assets/garden/dark-theme/background/night-background.webp'
 import nightMobileBackgroundImage from '../../assets/garden/dark-theme/background/mobile/night-background.webp'
 import darkHouseImage from '../../assets/garden/dark-theme/house.webp'
 import darkNotebookImage from '../../assets/garden/dark-theme/notebook.webp'
 import darkTodoBoardImage from '../../assets/garden/dark-theme/to-do-board.webp'
 import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
-import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can.webp'
+import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-plant.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
@@ -29,7 +29,7 @@ const THEME_BEHAVIOR: Record<SceneTheme, { restrictedElementIds: Set<string> }> 
     restrictedElementIds: new Set<string>(),
   },
   dark: {
-    restrictedElementIds: new Set(['tree', 'watering-can', 'notebook']),
+    restrictedElementIds: new Set(['tree', 'watering-can-plant', 'notebook']),
   },
 }
 
@@ -100,7 +100,7 @@ const gardenElements: SceneElementDefinition[] = [
     to: '/pending',
   },
   {
-    id: 'watering-can',
+    id: 'watering-can-plant',
     title: 'Retos',
     imageAlt: 'Regadera y maceta en el jardin',
     image: { light: wateringCanImage, dark: darkWateringCanImage },

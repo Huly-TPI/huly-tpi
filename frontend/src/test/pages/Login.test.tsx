@@ -5,18 +5,14 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Login from '../../pages/Login/Login'
 import { ApiError } from '../../api/apiError'
 
-vi.mock('../../api/auth', () => ({
-    login: vi.fn(),
+const mockLogin = vi.fn()
+vi.mock('../../context/auth', () => ({
+    useAuth: () => ({ login: mockLogin }),
 }))
-
-import { login } from '../../api/auth'
-
-const mockedLogin = vi.mocked(login)
 
 describe('Login', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        window.localStorage.clear()
     })
 
     const renderWithRouter = () => {
@@ -52,6 +48,7 @@ describe('Login', () => {
         await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
 
         expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
+        expect(mockLogin).not.toHaveBeenCalled()
     })
 
     it('muestra error con email inválido', async () => {
@@ -61,25 +58,26 @@ describe('Login', () => {
         await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
 
         expect(screen.getByText('Email inválido')).toBeInTheDocument()
-        expect(mockedLogin).not.toHaveBeenCalled()
+        expect(mockLogin).not.toHaveBeenCalled()
     })
 
-    it('no valida longitud mínima de contraseña', async () => {
-        mockedLogin.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+    it('llama a login del contexto con las credenciales', async () => {
+        mockLogin.mockResolvedValueOnce(undefined)
         const { user } = renderWithRouter()
 
-        await user.type(screen.getByPlaceholderText('Email'), 'mili@mail.com')
-        await user.type(screen.getByPlaceholderText('Contraseña'), '123')
-
+        await fillForm(user)
         await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
 
         await waitFor(() => {
-            expect(mockedLogin).toHaveBeenCalledOnce()
+            expect(mockLogin).toHaveBeenCalledWith({
+                email: 'mili@mail.com',
+                password: '123456',
+            })
         })
     })
 
     it('inicia sesión exitosamente y redirige al home', async () => {
-        mockedLogin.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLogin.mockResolvedValueOnce(undefined)
         const { user } = renderWithRouter()
 
         await fillForm(user)
@@ -90,21 +88,8 @@ describe('Login', () => {
         })
     })
 
-    it('guarda token y role en localStorage al iniciar sesión', async () => {
-        mockedLogin.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
-
-        await waitFor(() => {
-            expect(localStorage.getItem('token')).toBe('token-123')
-            expect(localStorage.getItem('role')).toBe('USER')
-        })
-    })
-
     it('muestra mensaje amigable para credenciales inválidas', async () => {
-        mockedLogin.mockRejectedValueOnce(new Error('Invalid credentials'))
+        mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'))
         const { user } = renderWithRouter()
 
         await fillForm(user)
@@ -116,7 +101,7 @@ describe('Login', () => {
     })
 
     it('muestra error genérico del backend', async () => {
-        mockedLogin.mockRejectedValueOnce(new Error('Error del servidor'))
+        mockLogin.mockRejectedValueOnce(new Error('Error del servidor'))
         const { user } = renderWithRouter()
 
         await fillForm(user)
@@ -128,7 +113,7 @@ describe('Login', () => {
     })
 
     it('muestra errores por campo del backend', async () => {
-        mockedLogin.mockRejectedValueOnce(
+        mockLogin.mockRejectedValueOnce(
             new ApiError('Error de validación', { email: 'Email no registrado' }),
         )
         const { user } = renderWithRouter()
@@ -150,7 +135,7 @@ describe('Login', () => {
     })
 
     it('deshabilita el botón mientras carga', async () => {
-        mockedLogin.mockImplementation(() => new Promise(() => { }))
+        mockLogin.mockImplementation(() => new Promise(() => {}))
         const { user } = renderWithRouter()
 
         await fillForm(user)
