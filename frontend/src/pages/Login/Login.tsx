@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { login } from '../../api/auth'
 import { ApiError } from '../../api/apiError'
 import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, validEmail, minLength } from '../../utils/validation'
+import { required, validEmail} from '../../utils/validation'
 
 import registerBackground from '../../assets/register/background.webp'
 import registerCharacter from '../../assets/register/huly.webp'
