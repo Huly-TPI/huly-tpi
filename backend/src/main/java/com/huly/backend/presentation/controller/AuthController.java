@@ -42,9 +42,9 @@ public class AuthController {
                 .body(LoginResponse.builder()
                         .accessToken(tokens.getAccessToken())
                         .role(tokens.getRole())
+                        .profileOnBoardingCompleted(tokens.getProfileOnBoardingCompleted())
                         .build());
     }
-
     @PostMapping("/backoffice/login")
     public ResponseEntity<LoginResponse> backofficeLogin(
             @Valid @RequestBody LoginRequest request
@@ -73,7 +73,9 @@ public class AuthController {
             .body(LoginResponse.builder()
                     .accessToken(tokens.getAccessToken())
                     .role(tokens.getRole())
+                    .profileOnBoardingCompleted(tokens.getProfileOnBoardingCompleted())
                     .build());
+
     }
 
     @PostMapping("/refresh")

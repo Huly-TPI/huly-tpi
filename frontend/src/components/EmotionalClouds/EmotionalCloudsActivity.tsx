@@ -55,7 +55,7 @@ const SEAGULLS = [
   { top: '14%', left: '62%', width: 20},
 ]
 
-const EmotionalCloudsActivity = ({ onFinish, maxClouds = 10 }: EmotionalCloudsProps) => {
+const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: EmotionalCloudsProps) => {
   const [clouds, setClouds] = useState<Cloud[]>([])
   const [input, setInput] = useState('')
   const cloudIdRef = useRef(0)
@@ -64,12 +64,15 @@ const EmotionalCloudsActivity = ({ onFinish, maxClouds = 10 }: EmotionalCloudsPr
   const handleAddCloud = useCallback(() => {
     if (input.trim().length === 0) return
 
+    const text = input.trim()
+    onThoughtAdded?.(text)
+
     const idx = cloudCounterRef.current % CLOUD_TOPS.length
     cloudCounterRef.current++
 
     const newCloud: Cloud = {
       id: `cloud-${cloudIdRef.current++}`,
-      text: input.trim(),
+      text,
       top: CLOUD_TOPS[idx],
       duration: '20s',
     }

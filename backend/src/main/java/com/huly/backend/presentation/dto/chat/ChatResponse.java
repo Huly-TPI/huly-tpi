@@ -27,8 +27,19 @@ public record ChatResponse(
                 @JsonProperty("action_id") String actionId,
                 String title,
                 String description,
-                @JsonProperty("action_url") String actionUrl
-        ) {}
+                @JsonProperty("action_url") String actionUrl,
+                @JsonProperty("emotional_event_id") Long emotionalEventId
+        ) {
+                public SuggestedAction(
+                        String type,
+                        String actionId,
+                        String title,
+                        String description,
+                        String actionUrl
+                ) {
+                        this(type, actionId, title, description, actionUrl, null);
+                }
+        }
 
         public record GeneratedChallenge(String title, String description) {}
 
@@ -37,4 +48,3 @@ public record ChatResponse(
                 @JsonProperty("matched_word") String matchedWord
         ) {}
 }
-

@@ -13,10 +13,21 @@ interface CloudRecommendationResponse {
     redirect_url: string
 }
 
+const ACTIVITY_LABELS: Record<string, string> = {
+    diary: 'al diario',
+    clouds: 'a las nubes',
+    breathing: 'a respiración guiada',
+    bubbles: 'a las burbujas',
+}
+
 const CloudsActivity = () => {
     const navigate = useNavigate()
     const [recommendation, setRecommendation] = useState<CloudRecommendationResponse | null>(null)
     const [loading, setLoading] = useState(false)
+
+    const handleThoughtAdded = useCallback((thought: string) => {
+        api.post('/clouds/thought', { thought }).catch(() => {})
+    }, [])
 
     const handleFinish = useCallback(async (thoughts: string[]) => {
         if (thoughts.length === 0) return
@@ -44,6 +55,7 @@ const CloudsActivity = () => {
 
             <main className="w-full flex-1 min-h-0 flex flex-col relative z-10 overflow-hidden">
                 <EmotionalCloudsActivity
+                    onThoughtAdded={handleThoughtAdded}
                     onFinish={handleFinish}
                     maxClouds={8}
                 />
@@ -65,7 +77,7 @@ const CloudsActivity = () => {
                             {recommendation.description}
                         </p>
                         <Button variant="primary" fullWidth onClick={handleNavigate}>
-                            Ir
+                            Ir {ACTIVITY_LABELS[recommendation.activity_type] ?? 'a la actividad'}
                         </Button>
                         <Button
                             variant="secondary"

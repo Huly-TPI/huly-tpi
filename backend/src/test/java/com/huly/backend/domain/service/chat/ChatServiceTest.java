@@ -2,11 +2,15 @@ package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
 import com.huly.backend.domain.model.chat.ChatConfig;
+import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
+import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.enums.RiskSeverity;
+import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
@@ -14,6 +18,7 @@ import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import com.huly.backend.domain.repository.RiskWordRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,9 +47,16 @@ class ChatServiceTest {
     @Mock private RiskWordRepository riskWordRepository;
     @Mock private PromptBuilderService promptBuilderService;
     @Mock private UserVectorMemoryService userVectorMemoryService;
+    @Mock private ChatEmotionalRecommendationService chatEmotionalRecommendationService;
 
     @InjectMocks
     private ChatService chatService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
+    }
 
     @Test
     void processMessage_shouldReturnReplyFromLLM() {
@@ -162,6 +175,39 @@ class ChatServiceTest {
         verify(userVectorMemoryService).findRelevantUserMemories(1L, "msg");
         verify(userVectorMemoryService).rememberChatMessage(1L, "conv-1", "msg");
         verify(llmChatPort).chat(eq("prompt final"), any(), any());
+    }
+
+    @Test
+    void processMessage_shouldAttachSuggestedActionFromEmotionalRecommendation() {
+        ChatReply reply = new ChatReply("te acompaño", EmotionType.SADNESS, 8, false, null);
+        SuggestedChatAction action = new SuggestedChatAction(
+                ActivityType.DIARIO,
+                2L,
+                "Diario emocional",
+                "Un espacio para ordenar pensamientos",
+                "/api/activities",
+                30L
+        );
+        EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
+                true,
+                EmotionType.SADNESS,
+                0.9,
+                -0.8,
+                0.2,
+                -0.7,
+                0.85,
+                "procesar tristeza",
+                "malestar claro"
+        );
+        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
+        when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new ChatRecommendationOutcome(analysis, action));
+
+        ChatReply result = chatService.processMessage("estoy decaido", "conv-1", 1L);
+
+        assertThat(result.suggestedAction()).isEqualTo(action);
+        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
+        assertThat(result.intensity()).isEqualTo(9);
     }
 
     private void givenDefaultSetup(String basePrompt, List<RiskWord> riskWords,

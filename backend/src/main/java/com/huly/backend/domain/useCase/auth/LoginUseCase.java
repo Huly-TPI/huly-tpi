@@ -12,6 +12,7 @@ import com.huly.backend.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.huly.backend.domain.repository.UserDetailDomainRepository;
 
 import java.time.Instant;
 
@@ -23,6 +24,7 @@ public class LoginUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenProvider tokenProvider;
     private final PasswordHasher passwordHasher;
+    private final UserDetailDomainRepository userDetailDomainRepository;
 
     @Transactional
     public AuthTokens execute(String email, String rawPassword) {
@@ -51,10 +53,13 @@ public class LoginUseCase {
                 .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
                 .build());
 
+        Boolean profileOnBoardingCompleted = userDetailDomainRepository.findProfileOnBoardingCompleted(user.getId()).orElse(false);
+
         return AuthTokens.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .role(user.getRole())
+                .profileOnBoardingCompleted(profileOnBoardingCompleted)
                 .build();
     }
 }

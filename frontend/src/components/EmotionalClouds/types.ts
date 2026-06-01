@@ -6,6 +6,7 @@
 }
 
 export interface EmotionalCloudsProps {
+    onThoughtAdded?: (thought: string) => void
     onFinish?: (thoughts: string[]) => void
     maxClouds?: number
 }
