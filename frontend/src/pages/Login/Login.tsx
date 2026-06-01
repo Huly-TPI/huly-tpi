@@ -23,7 +23,7 @@ const INITIAL_VALUES = {
 
 const VALIDATION_RULES = {
   email: [required(), validEmail()],
-  password: [required(), minLength(6)],
+  password: [required()],
 }
 
 export default function Login() {
@@ -55,7 +55,12 @@ export default function Login() {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
         setFieldErrors(err.fieldErrors)
       } else {
-        setApiError(err instanceof Error ? err.message : 'Error inesperado')
+        const message = err instanceof Error ? err.message : 'Error inesperado'
+        setApiError(
+          message === 'Invalid credentials'
+            ? 'Email o contraseña incorrectos'
+            : message
+        )
       }
       setLoading(false)
     }
