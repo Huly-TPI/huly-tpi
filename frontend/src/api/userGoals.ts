@@ -52,5 +52,5 @@ export const userGoalsApi = {
     api.delete<void>(`/user-goals/${id}`),
 
   complete: (id: number) =>
-    api.put<UserGoalResponse>(`/user-goals/${id}/status`, { status: 'COMPLETED' }),
+    api.patch<UserGoalResponse>(`/user-goals/${id}/complete`),
 }

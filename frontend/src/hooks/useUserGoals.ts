@@ -27,6 +27,17 @@ export function useUserGoals(userId: number | null) {
     }
   }, [userId])
 
+  const silentRefetch = useCallback(async () => {
+    if (!userId) return
+    try {
+      const res = await userGoalsApi.getByUser(userId)
+      setPending(res.pendientes)
+      setCompleted(res.completados)
+    } catch {
+      // silent
+    }
+  }, [userId])
+
   useEffect(() => {
     void fetchGoals()
   }, [fetchGoals])
@@ -35,33 +46,43 @@ export function useUserGoals(userId: number | null) {
     async (data: Omit<CreateUserGoalRequest, 'userId'>) => {
       if (!userId) return
       await userGoalsApi.create({ ...data, userId })
-      await fetchGoals()
+      await silentRefetch()
     },
-    [userId, fetchGoals],
+    [userId, silentRefetch],
   )
 
   const updateGoal = useCallback(
     async (id: number, data: UpdateUserGoalRequest) => {
       await userGoalsApi.update(id, data)
-      await fetchGoals()
+      await silentRefetch()
     },
-    [fetchGoals],
+    [silentRefetch],
   )
 
   const deleteGoal = useCallback(
     async (id: number) => {
       await userGoalsApi.delete(id)
-      await fetchGoals()
+      await silentRefetch()
     },
-    [fetchGoals],
+    [silentRefetch],
   )
 
   const completeGoal = useCallback(
     async (id: number) => {
-      await userGoalsApi.complete(id)
-      await fetchGoals()
+      setPending(prev =>
+        prev
+          ? { ...prev, content: prev.content.filter(g => g.id !== id), totalElements: Math.max(0, prev.totalElements - 1) }
+          : null
+      )
+      try {
+        await userGoalsApi.complete(id)
+        await silentRefetch()
+      } catch (err) {
+        await silentRefetch()
+        throw err
+      }
     },
-    [fetchGoals],
+    [silentRefetch],
   )
 
   return {

@@ -1,18 +1,19 @@
 import { useState, useCallback } from 'react'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import { type UserGoalResponse } from '../../api/userGoals'
+import BackButton from '../../components/Buttons/BackButton/BackButton'
 import dayBackground from '../../assets/garden/light-theme/background/day-background.webp'
-import wateringCanImg from '../../assets/garden/light-theme/watering-can.png'
-import flowerpotImg from '../../assets/garden/plant-stages/flowerpot.png'
-import stumpImg from '../../assets/garden/light-theme/stump.png'
-import postitImg from '../../assets/garden/light-theme/postit.png'
-import boardBg from '../../assets/garden/light-theme/board-challenges.png'
-import plant0 from '../../assets/garden/plant-stages/plant-0.png'
-import plant1 from '../../assets/garden/plant-stages/plant-1.png'
-import plant2 from '../../assets/garden/plant-stages/plant-2.png'
-import plant3 from '../../assets/garden/plant-stages/plant-3.png'
-import plant4 from '../../assets/garden/plant-stages/plant-4.png'
-import plant5 from '../../assets/garden/plant-stages/plant-5.png'
+import wateringCanImg from '../../assets/challenges/watering-can.png'
+import flowerpotBaseImg from '../../assets/challenges/plant-stages/flowerpot-base.png'
+import flowerpotTopImg from '../../assets/challenges/plant-stages/flowerpot-top.png'
+import stumpImg from '../../assets/challenges/stump.png'
+import challengeDetailBg from '../../assets/challenges/challenge-detail-bg.png'
+import plant0 from '../../assets/challenges/plant-stages/plant-0.png'
+import plant1 from '../../assets/challenges/plant-stages/plant-1.png'
+import plant2 from '../../assets/challenges/plant-stages/plant-2.png'
+import plant3 from '../../assets/challenges/plant-stages/plant-3.png'
+import plant4 from '../../assets/challenges/plant-stages/plant-4.png'
+import plant5 from '../../assets/challenges/plant-stages/plant-5.png'
 import './Challenges.css'
 
 const PLANT_IMAGES = [plant0, plant1, plant2, plant3, plant4, plant5] as const
@@ -47,7 +48,7 @@ function getPlantStage(cycleProgress: number): 0 | 1 | 2 | 3 | 4 | 5 {
 }
 
 const PLANT_HINTS: Record<0 | 1 | 2 | 3 | 4 | 5, string> = {
-  0: '¡Completá retos para empezar a regar tu planta!',
+  0: '¡Completá retos para regar tu planta!',
   1: 'Tu planta está brotando. ¡Seguí así!',
   2: '¡Ya tiene sus primeras hojas!',
   3: '¡Tu planta está creciendo fuerte!',
@@ -66,6 +67,8 @@ function Plant({ stage, isWatering }: PlantProps) {
       {isWatering && (
         <img src={wateringCanImg} alt="" aria-hidden="true" className="plant__watering-can" />
       )}
+      <img src={flowerpotBaseImg} alt="" aria-hidden="true" className="plant__flowerpot-base" />
+      <img key={stage} src={PLANT_IMAGES[stage]} alt={`Planta etapa ${stage + 1}`} className="plant__image" />
       <div className="plant__drops" aria-hidden="true">
         <div className="plant__drop" />
         <div className="plant__drop" />
@@ -73,8 +76,7 @@ function Plant({ stage, isWatering }: PlantProps) {
         <div className="plant__drop" />
         <div className="plant__drop" />
       </div>
-      <img key={stage} src={PLANT_IMAGES[stage]} alt={`Planta etapa ${stage + 1}`} className="plant__image" />
-      <img src={flowerpotImg} alt="" aria-hidden="true" className="plant__flowerpot" />
+      <img src={flowerpotTopImg} alt="" aria-hidden="true" className="plant__flowerpot-top" />
     </div>
   )
 }
@@ -133,20 +135,49 @@ function BoardItem({ goal, onSelect, onComplete }: BoardItemProps) {
   )
 }
 
-interface GoalDetailModalProps {
-  goal: UserGoalResponse
+type PostitMode = 'create' | 'edit' | 'detail'
+
+interface PostitModalProps {
+  initialMode: PostitMode
+  goal?: UserGoalResponse
   onClose: () => void
-  onEdit: (goal: UserGoalResponse) => void
-  onDelete: (id: number) => Promise<void>
+  onCreate?: (data: { title: string; description: string }) => Promise<void>
+  onUpdate?: (id: number, data: { title: string; description: string }) => Promise<void>
+  onDelete?: (id: number) => Promise<void>
   onComplete?: (id: number) => Promise<void>
 }
 
-function GoalDetailModal({ goal, onClose, onEdit, onDelete, onComplete }: GoalDetailModalProps) {
+function PostitModal({ initialMode, goal, onClose, onCreate, onUpdate, onDelete, onComplete }: PostitModalProps) {
+  const [mode, setMode] = useState<PostitMode>(initialMode)
+  const [title, setTitle] = useState(goal?.title ?? '')
+  const [description, setDescription] = useState(goal?.description ?? '')
+  const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [completing, setCompleting] = useState(false)
-  const isCompleted = goal.status === 'COMPLETED'
+  const [error, setError] = useState<string | null>(null)
+
+  const isCompleted = goal?.status === 'COMPLETED'
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    try {
+      if (mode === 'create' && onCreate) {
+        await onCreate({ title: title.trim(), description: description.trim() })
+      } else if (mode === 'edit' && onUpdate && goal) {
+        await onUpdate(goal.id, { title: title.trim(), description: description.trim() })
+      }
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error inesperado')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleDelete = async () => {
+    if (!onDelete || !goal) return
     setDeleting(true)
     try {
       await onDelete(goal.id)
@@ -157,7 +188,7 @@ function GoalDetailModal({ goal, onClose, onEdit, onDelete, onComplete }: GoalDe
   }
 
   const handleComplete = async () => {
-    if (!onComplete) return
+    if (!onComplete || !goal) return
     setCompleting(true)
     try {
       await onComplete(goal.id)
@@ -167,44 +198,110 @@ function GoalDetailModal({ goal, onClose, onEdit, onDelete, onComplete }: GoalDe
     }
   }
 
+  const enterEditMode = () => {
+    setTitle(goal?.title ?? '')
+    setDescription(goal?.description ?? '')
+    setError(null)
+    setMode('edit')
+  }
+
+  const handleCancel = () => {
+    if (initialMode === 'detail') {
+      setMode('detail')
+    } else {
+      onClose()
+    }
+  }
+
   return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+    <div className="modal-overlay" role="dialog" aria-modal="true">
       <div
         className="postit-modal"
-        onClick={e => e.stopPropagation()}
-        style={{ backgroundImage: `url(${postitImg})` }}
+        style={{ backgroundImage: `url(${challengeDetailBg})` }}
       >
         <button className="postit-modal__close" onClick={onClose} aria-label="Cerrar">✕</button>
-        {isCompleted && <span className="postit-modal__badge">✓ Completado</span>}
-        <h3 className={`postit-modal__title${isCompleted ? ' postit-modal__title--done' : ''}`}>
-          {goal.title}
-        </h3>
-        {goal.description && (
-          <p className="postit-modal__desc">{goal.description}</p>
+
+        {mode === 'detail' && goal && (
+          <>
+            {isCompleted && <span className="postit-modal__badge">✓ Completado</span>}
+            <h3 className={`postit-modal__title${isCompleted ? ' postit-modal__title--done' : ''}`}>
+              {goal.title}
+            </h3>
+            {goal.description && (
+              <p className="postit-modal__desc">{goal.description}</p>
+            )}
+            <div className="postit-modal__actions">
+              {!isCompleted && onComplete && (
+                <button
+                  className="postit-btn postit-btn--complete"
+                  onClick={handleComplete}
+                  disabled={completing}
+                >
+                  {completing ? '…' : '✓ Completar'}
+                </button>
+              )}
+              {!isCompleted && (
+                <button className="postit-btn postit-btn--edit" onClick={enterEditMode}>
+                  ✎ Editar
+                </button>
+              )}
+              <button
+                className="postit-btn postit-btn--delete"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? '…' : '✕ Eliminar'}
+              </button>
+            </div>
+          </>
         )}
-        <div className="postit-modal__actions">
-          {!isCompleted && onComplete && (
-            <button
-              className="postit-btn postit-btn--complete"
-              onClick={handleComplete}
-              disabled={completing}
-            >
-              {completing ? '…' : '✓ Completar'}
-            </button>
-          )}
-          {!isCompleted && (
-            <button className="postit-btn postit-btn--edit" onClick={() => onEdit(goal)}>
-              ✎ Editar
-            </button>
-          )}
-          <button
-            className="postit-btn postit-btn--delete"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? '…' : '✕ Eliminar'}
-          </button>
-        </div>
+
+        {(mode === 'create' || mode === 'edit') && (
+          <form onSubmit={handleSubmit} className="postit-modal__form">
+            <p className="postit-modal__form-heading">
+              {mode === 'create' ? 'Nuevo reto' : 'Editar reto'}
+            </p>
+            <label className="postit-modal__label" htmlFor="postit-title">Título</label>
+            <input
+              id="postit-title"
+              className="postit-modal__input"
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              maxLength={255}
+              required
+              autoFocus
+              placeholder="¿Qué querés lograr?"
+            />
+            <label className="postit-modal__label" htmlFor="postit-desc">Descripción</label>
+            <textarea
+              id="postit-desc"
+              className="postit-modal__textarea"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              maxLength={250}
+              rows={3}
+              placeholder="Describe tu reto (opcional)"
+            />
+            {error && <p className="postit-modal__error">{error}</p>}
+            <div className="postit-modal__actions">
+              <button
+                type="button"
+                className="postit-btn postit-btn--cancel"
+                onClick={handleCancel}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="postit-btn postit-btn--save"
+                disabled={loading || !title.trim()}
+              >
+                {loading ? '…' : 'Guardar'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   )
@@ -216,7 +313,7 @@ interface HarvestModalProps {
   onCreateNew: () => void
 }
 
-function HarvestModal({ plantNumber, onViewGarden, onCreateNew }: HarvestModalProps) {
+function HarvestModal({ plantNumber, onCreateNew }: HarvestModalProps) {
   return (
     <div className="modal-overlay" role="dialog" aria-modal="true">
       <div className="harvest-modal">
@@ -228,9 +325,9 @@ function HarvestModal({ plantNumber, onViewGarden, onCreateNew }: HarvestModalPr
           Tu jardín sigue creciendo. ¡Seguí así!
         </p>
         <div className="harvest-modal__actions">
-          <button className="harvest-btn harvest-btn--garden" onClick={onViewGarden}>
+          {/* <button className="harvest-btn harvest-btn--garden" onClick={onViewGarden}>
             Ver mi huerta
-          </button>
+          </button> */}
           <button className="harvest-btn harvest-btn--new" onClick={onCreateNew}>
             + Crear nuevo reto
           </button>
@@ -240,84 +337,14 @@ function HarvestModal({ plantNumber, onViewGarden, onCreateNew }: HarvestModalPr
   )
 }
 
-interface GoalModalProps {
-  initialData?: { title: string; description: string }
-  onClose: () => void
-  onSubmit: (data: { title: string; description: string }) => Promise<void>
-}
-
-function GoalModal({ initialData, onClose, onSubmit }: GoalModalProps) {
-  const [title, setTitle] = useState(initialData?.title ?? '')
-  const [description, setDescription] = useState(initialData?.description ?? '')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      await onSubmit({ title: title.trim(), description: description.trim() })
-      onClose()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error inesperado')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">✕</button>
-        <h3 className="modal__title">{initialData ? 'Editar reto' : 'Nuevo reto'}</h3>
-        <form onSubmit={handleSubmit} className="modal__form">
-          <label className="modal__label" htmlFor="goal-title">Título *</label>
-          <input
-            id="goal-title"
-            className="modal__input"
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            maxLength={255}
-            required
-            autoFocus
-            placeholder="¿Qué quieres lograr?"
-          />
-          <label className="modal__label" htmlFor="goal-desc">Descripción</label>
-          <textarea
-            id="goal-desc"
-            className="modal__textarea"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            maxLength={1000}
-            rows={3}
-            placeholder="Describe tu reto (opcional)"
-          />
-          {error && <p className="modal__error">{error}</p>}
-          <div className="modal__actions">
-            <button type="button" className="modal__btn modal__btn--cancel" onClick={onClose}>
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="modal__btn modal__btn--submit"
-              disabled={loading || !title.trim()}
-            >
-              {loading ? 'Guardando…' : initialData ? 'Guardar' : 'Crear reto'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
+type ModalState =
+  | null
+  | { mode: 'create' }
+  | { mode: 'detail'; goal: UserGoalResponse }
 
 export default function Challenges() {
   const [userId] = useState<number | null>(() => getUserIdFromToken())
-  const [showModal, setShowModal] = useState(false)
-  const [editingGoal, setEditingGoal] = useState<UserGoalResponse | null>(null)
-  const [selectedGoal, setSelectedGoal] = useState<UserGoalResponse | null>(null)
+  const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
@@ -340,9 +367,8 @@ export default function Challenges() {
     await createGoal({ title: data.title, description: data.description || undefined })
   }
 
-  const handleEdit = async (data: { title: string; description: string }) => {
-    if (!editingGoal) return
-    await updateGoal(editingGoal.id, { title: data.title, description: data.description || undefined })
+  const handleUpdate = async (id: number, data: { title: string; description: string }) => {
+    await updateGoal(id, { title: data.title, description: data.description || undefined })
   }
 
   const handleDelete = async (id: number) => {
@@ -377,110 +403,107 @@ export default function Challenges() {
       className="challenges-page"
       style={{ backgroundImage: `url(${dayBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
     >
+      <BackButton />
+
       <aside className="plant-zone">
-        <h1 className="challenges-title">Mis Retos</h1>
+        <div className="plant-zone__info">
+          <h1 className="challenges-title">Mis Retos</h1>
 
-        <div className="challenges-progress">
-          <p className="challenges-progress__text">
-            <strong>{cycleProgress}</strong> / {CYCLE_SIZE} en este ciclo
-          </p>
-          <div
-            className="challenges-progress__bar"
-            role="progressbar"
-            aria-valuenow={cyclePct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Progreso: ${cyclePct}%`}
-          >
-            <div className="challenges-progress__fill" style={{ width: `${cyclePct}%` }} />
+          <div className="challenges-progress">
+            <p className="challenges-progress__text">
+              <strong>{cycleProgress}</strong> / {CYCLE_SIZE} en este ciclo
+            </p>
+            <div
+              className="challenges-progress__bar"
+              role="progressbar"
+              aria-valuenow={cyclePct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Progreso: ${cyclePct}%`}
+            >
+              <div className="challenges-progress__fill" style={{ width: `${cyclePct}%` }} />
+            </div>
+            <p className="challenges-progress__pct">{cyclePct}%</p>
           </div>
-          <p className="challenges-progress__pct">{cyclePct}%</p>
-        </div>
 
-        <p className="challenges-plant-hint">{PLANT_HINTS[plantStage]}</p>
+          <p className="challenges-plant-hint">{PLANT_HINTS[plantStage]}</p>
+
+          {completedPlants > 0 && (
+            <p className="challenges-total-completed">
+              Plantas cosechadas: <strong>{completedPlants}</strong>
+            </p>
+          )}
+        </div>
 
         <div className="plant-on-stump">
           <Plant stage={plantStage} isWatering={isWatering} />
           <img src={stumpImg} className="stump-img" alt="" aria-hidden="true" />
         </div>
-
-        {completedPlants > 0 && (
-          <p className="challenges-total-completed">
-            Plantas cosechadas: <strong>{completedPlants}</strong>
-          </p>
-        )}
       </aside>
 
       <div className="challenges-right">
-      <section
-        className="board-zone"
-        style={{ backgroundImage: `url(${boardBg})` }}
-        aria-label="Listado de retos"
-      >
-        <div className="board-inner">
-          {actionError && (
-            <div className="challenges-error" role="alert">
-              <span>{actionError}</span>
-              <button onClick={() => setActionError(null)} aria-label="Cerrar">✕</button>
+        <section className="board-zone" aria-label="Listado de retos">
+          <div className="board-inner">
+            {actionError && (
+              <div className="challenges-error" role="alert">
+                <span>{actionError}</span>
+                <button onClick={() => setActionError(null)} aria-label="Cerrar">✕</button>
+              </div>
+            )}
+
+            <div className="board-header">
+              <button className="challenges-add-btn" onClick={() => setModal({ mode: 'create' })}>
+                + Nuevo reto
+              </button>
             </div>
-          )}
 
-          <div className="board-header">
-            <button className="challenges-add-btn" onClick={() => setShowModal(true)}>
-              + Nuevo reto
-            </button>
-          </div>
+            {loading && <p className="board-status">Cargando retos…</p>}
+            {error && !loading && <p className="board-status board-status--error">{error}</p>}
+            {!userId && !loading && <p className="board-status">Inicia sesión para ver tus retos.</p>}
 
-          {loading && <p className="board-status">Cargando retos…</p>}
-          {error && !loading && <p className="board-status board-status--error">{error}</p>}
-          {!userId && !loading && <p className="board-status">Inicia sesión para ver tus retos.</p>}
+            {!loading && !error && userId && (
+              <ul className="board-list">
+                {hasPending ? (
+                  pendientes!.content.map(goal => (
+                    <li key={goal.id}>
+                      <BoardItem
+                        goal={goal}
+                        onSelect={g => setModal({ mode: 'detail', goal: g })}
+                        onComplete={handleComplete}
+                      />
+                    </li>
+                  ))
+                ) : (
+                  <li className="board-empty">Sembrá tus metas. ¡Creá un nuevo reto!</li>
+                )}
 
-          {!loading && !error && userId && (
-            <ul className="board-list">
-              {hasPending ? (
-                pendientes!.content.map(goal => (
+                {hasCompleted && (
+                  <li className="board-divider" role="separator" />
+                )}
+
+                {hasCompleted && completados!.content.map(goal => (
                   <li key={goal.id}>
-                    <BoardItem goal={goal} onSelect={setSelectedGoal} onComplete={handleComplete} />
+                    <BoardItem
+                      goal={goal}
+                      onSelect={g => setModal({ mode: 'detail', goal: g })}
+                    />
                   </li>
-                ))
-              ) : (
-                <li className="board-empty">Sembrá tu primer reto. ¡Crea uno!</li>
-              )}
-
-              {hasPending && hasCompleted && (
-                <li className="board-divider" role="separator" />
-              )}
-
-              {hasCompleted && completados!.content.map(goal => (
-                <li key={goal.id}>
-                  <BoardItem goal={goal} onSelect={setSelectedGoal} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
       </div>
 
-      {selectedGoal && (
-        <GoalDetailModal
-          goal={selectedGoal}
-          onClose={() => setSelectedGoal(null)}
-          onEdit={goal => { setSelectedGoal(null); setEditingGoal(goal) }}
+      {modal && (
+        <PostitModal
+          initialMode={modal.mode}
+          goal={'goal' in modal ? modal.goal : undefined}
+          onClose={() => setModal(null)}
+          onCreate={handleCreate}
+          onUpdate={handleUpdate}
           onDelete={handleDelete}
           onComplete={handleComplete}
-        />
-      )}
-
-      {showModal && (
-        <GoalModal onClose={() => setShowModal(false)} onSubmit={handleCreate} />
-      )}
-
-      {editingGoal && (
-        <GoalModal
-          initialData={{ title: editingGoal.title, description: editingGoal.description ?? '' }}
-          onClose={() => setEditingGoal(null)}
-          onSubmit={handleEdit}
         />
       )}
 
@@ -488,7 +511,7 @@ export default function Challenges() {
         <HarvestModal
           plantNumber={harvestPlant}
           onViewGarden={() => setHarvestPlant(null)}
-          onCreateNew={() => { setHarvestPlant(null); setShowModal(true) }}
+          onCreateNew={() => { setHarvestPlant(null); setModal({ mode: 'create' }) }}
         />
       )}
     </div>
