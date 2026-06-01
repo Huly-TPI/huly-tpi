@@ -59,13 +59,11 @@ const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: E
   const [input, setInput] = useState('')
   const cloudIdRef = useRef(0)
   const cloudCounterRef = useRef(0)
-  const allThoughtsRef = useRef<string[]>([])
 
   const handleAddCloud = useCallback(() => {
     if (input.trim().length === 0) return
 
     const text = input.trim()
-    allThoughtsRef.current = [...allThoughtsRef.current, text]
     onThoughtAdded?.(text)
 
     const idx = cloudCounterRef.current % CLOUD_TOPS.length
