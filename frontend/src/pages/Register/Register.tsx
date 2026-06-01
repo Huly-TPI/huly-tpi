@@ -66,12 +66,18 @@ export default function Register() {
                 password: sanitized.password,
             })
 
+
             if (!res?.accessToken) {
                 throw new Error('No se recibió el token de acceso')
             }
 
             await loginWithToken(res.accessToken)
-            navigate('/')
+              if(res.profileOnBoardingCompleted === false) {
+                navigate('/onboarding')
+            } else {
+                navigate('/')
+            }
+
         } catch (err) {
             if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
                 setFieldErrors(err.fieldErrors)

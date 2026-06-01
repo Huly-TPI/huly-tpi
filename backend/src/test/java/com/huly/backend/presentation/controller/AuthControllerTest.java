@@ -130,6 +130,7 @@ class AuthControllerTest {
         when(registerUseCase.execute("new@huly.com", "password123", "Juan", LocalDate.of(2000, 1, 1)))
                 .thenReturn(tokens);
 
+
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(

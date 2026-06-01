@@ -10,12 +10,14 @@ import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Register from './pages/Register/Register'
 import ChatbotPage from './pages/Backoffice/ChatbotPage'
+import Onboarding from './pages/Onboarding/Onboarding'
 import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
 import Login from './pages/Login/Login'
 import Challenges from './pages/Challenges/Challenges'
 
 const App = () => {
   return (
+
     <AuthProvider>
       <Routes>
         <Route path="/backoffice" element={<BackofficeLayout />}>
@@ -27,6 +29,7 @@ const App = () => {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/diary" element={<Diary />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/challenges" element={<Challenges />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />

@@ -2,6 +2,7 @@ import { api } from './client'
 
 export interface AuthResponse {
   accessToken: string
+  profileOnBoardingCompleted?: boolean
   role: string
 }
 

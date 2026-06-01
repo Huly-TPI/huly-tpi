@@ -17,7 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +33,7 @@ class LoginUseCaseTest {
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private TokenProvider tokenProvider;
     @Mock private PasswordHasher passwordHasher;
+    @Mock private UserDetailDomainRepository userDetailDomainRepository;
 
     @InjectMocks private LoginUseCase loginUseCase;
 
@@ -131,4 +132,33 @@ class LoginUseCaseTest {
         verify(tokenProvider).generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE);
         verify(tokenProvider).generateRefreshToken(1L, "user@huly.com");
     }
+
+    @Test 
+    void execute_shouldReturnProfileOnBoardingCompletedFromUserDetailDomainRepository() {
+        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(refreshTokenRepository.save(any())).thenReturn(null);
+        when(userDetailDomainRepository.findProfileOnBoardingCompleted(1L)).thenReturn(Optional.of(true));
+
+        AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
+        assertThat(result.getProfileOnBoardingCompleted()).isTrue();
+        }
+
+    @Test 
+    void execute_shouldReturnFalse_whenUserDetailNotFound() {
+        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(refreshTokenRepository.save(any())).thenReturn(null);
+        when(userDetailDomainRepository.findProfileOnBoardingCompleted(1L)).thenReturn(Optional.empty());
+        AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
+        assertThat(result.getProfileOnBoardingCompleted()).isFalse();
+    }
+
+
 }
