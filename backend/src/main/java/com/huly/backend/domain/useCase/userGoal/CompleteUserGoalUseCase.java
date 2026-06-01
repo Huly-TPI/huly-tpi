@@ -9,14 +9,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class DeleteUserGoalUseCase {
+public class CompleteUserGoalUseCase {
 
     private final UserGoalRepository userGoalRepository;
 
-    public void execute(Long id) {
+    public UserGoal execute(Long id) {
         UserGoal goal = userGoalRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("UserGoal", "id", id));
-        goal.setStatus(GoalStatus.CANCELLED);
-        userGoalRepository.save(goal);
+        goal.setStatus(GoalStatus.COMPLETED);
+        return userGoalRepository.save(goal);
     }
 }
