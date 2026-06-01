@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Button from './Buttons/Button/Button'
 
 export interface BreathingTechnique {
     id: number
@@ -105,16 +106,17 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
         const currentPhase = phases[currentPhaseIndex]
         return (
                 <div className="flex flex-col items-center justify-center w-full relative">
-                      <button 
+                      <Button
+                            variant="tertiary"
                             onClick={() => {setSelected(null)
                                 setCurrentPhaseIndex(0)
                                 setCurrentRound(1)
                                 setIsRunning(false)
                                 setIsPaused(false)
                             }}
-                           className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors">
+                           className="fixed top-20 left-6">
                             ← Volver
-                        </button>
+                        </Button>
                      <div className="relative flex items-center justify-center">
                        <div className="absolute rounded-full bg-white/30 w-80 h-80" />
                         <div
@@ -129,33 +131,38 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                     <p className="text-6xl font-light text-gray-800">{timeLeft}</p>
                        </div>
                        </div>
-                    <button
+                    <Button
+                        variant="secondary"
                         onClick={() => setIsPaused(!isPaused)}
-                        className="mt-12 px-6 py-2 rounded-full bg-white/90 backdrop-blur-sm text-violeta text-sm font-medium shadow-sm hover:bg-white transition-colors">
+                        className="mt-12">
                         {isPaused ? 'Reanudar' : 'Pausar'}
-                    </button>                                
+                    </Button>                                
         </div>            
         )}
 
     if (selected) {
         return (
                  <div className="flex flex-col items-center justify-center w-full">
-                   <button
+                   <Button
+                variant="tertiary"
                 onClick={() => setSelected(null)}
-                className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors">
+                className="fixed top-20 left-6">
                 ← Volver
-            </button>
+            </Button>
 
             <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
            <h2 className="text-xl font-bold text-gray-800 mb-1">{selected.name}</h2>
            <p className="text-sm text-gray-500 mb-4">{selected.description}</p>
-              <button onClick={() => { 
-                const phases = getPhases(selected!)
-                setTimeLeft(phases[0].duration)
-                setIsRunning(true)
-                      }} className="w-full py-3 rounded-full bg-violeta text-white font-medium hover:opacity-100 transition-opacity">
-                       Iniciar
-                     </button>
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={() => {
+                  const phases = getPhases(selected!)
+                  setTimeLeft(phases[0].duration)
+                  setIsRunning(true)
+                }}>
+                Iniciar
+              </Button>
                 </div>
              </div>
         )
@@ -173,11 +180,12 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
               onMouseEnter={() => setHoveredId(technique.id)}
               onMouseLeave={() => setHoveredId(null)}
               className="relative flex flex-col">
-              <button 
-                    onClick={() => setSelected(technique)}
-                    className="w-full py-3 rounded-full border border-violeta text-violeta hover:bg-violeta-claro transition-colors font-medium">
+              <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={() => setSelected(technique)}>
                     {technique.name}
-                </button>
+                </Button>
                 {hoveredId === technique.id && (
                     <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md">
                     <p className="text-xs text-gray-500 mt-1 px-3 text-center">

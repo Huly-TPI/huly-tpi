@@ -4,6 +4,7 @@ import type { Bubble as BubbleType, EmotionalBubblesActivityProps } from './type
 import './BubblesActivity.css'
 import bgImage from '../../assets/bubbles/background/bubbles-minigame-background.webp'
 import fishImage from '../../assets/bubbles/bubble-minigame-fish.webp'
+import Button from '../Buttons/Button/Button'
 
 const BUBBLE_COLORS = [
   'rgba(144, 210, 170, 0.55)',
@@ -63,25 +64,26 @@ const BubblesActivity = ({ onBack }: EmotionalBubblesActivityProps) => {
                 <div className="bubbles-scene">
                     
                     <img src={bgImage} className="absolute inset-0 w-full h-full object-cover object-bottom" alt="" draggable={false} />
-                    <button
+                    <Button
+                        variant="tertiary"
                         onClick={onBack}
-                        className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors"
-                        type="button"
+                        className="fixed top-20 left-6"
                         >
                         ← Volver
-                        </button>
+                        </Button>
                     <div className="flex items-center justify-center w-full h-full">
                     <div className="bg-white backdrop-blur-sm rounded-2xl p-10 shadow-md w-[480px] max-w-[90vw] text-center">
                         <h2 className="text-3xl font-bold text-gray-800 mb-3">Burbujas de colores</h2>
                         <p className="text-base text-gray-500 mb-8 leading-relaxed">
                             Explorá cómo te sentís. Tocá las burbujas que van apareciendo y hacelas explotar.
                         </p>
-                        <button
+                        <Button
+                            variant="primary"
+                            fullWidth
                             onClick={() => setStarted(true)}
-                            className="w-full py-4 rounded-full bg-violeta text-white font-medium text-lg hover:opacity-90 transition-opacity"
                         >
                             Comenzar
-                        </button>
+                        </Button>
                         </div>
                     </div>
                 </div>
@@ -100,12 +102,12 @@ const BubblesActivity = ({ onBack }: EmotionalBubblesActivityProps) => {
                     alt=""
                     draggable={false}
                     />
-                 <button
+                 <Button
+                        variant="tertiary"
                         onClick={() => setStarted(false)}
-                        className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors"
-                        type="button">
+                        className="fixed top-20 left-6">
                         ← Volver
-                    </button>
+                    </Button>
                 {bubbles.map(bubble => (
                     <Bubble
                         key={bubble.id}

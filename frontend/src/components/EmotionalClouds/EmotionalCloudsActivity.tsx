@@ -2,6 +2,7 @@ import {useState, useCallback, useRef} from 'react'
 import EmotionalCloud from './EmotionalCloud'
 import type { Cloud, EmotionalCloudsProps } from './types'
 import './EmotionalClouds.css'
+import Button from '../Buttons/Button/Button'
 
 const CLOUD_TOPS = ['20%', '28%', '18%', '38%', '25%', '70%','40%', '32%', '55%','60%']
 
@@ -144,15 +145,15 @@ const EmotionalCloudsActivity = ({ onFinish, maxClouds = 10 }: EmotionalCloudsPr
             aria-label="Ingresa un pensamiento o sentimiento"
             data-testid="emotional-input"
           />
-          <button
+          <Button
+            variant="primary"
             onClick={handleAddCloud}
             disabled={input.trim().length === 0}
-            className="emotional-clouds-button"
             type="button"
             data-testid="submit-button"
           >
             Soltar
-          </button>
+          </Button>
         </div>
         <div className="emotional-clouds-counter" data-testid="char-counter">
           {input.length}/100
