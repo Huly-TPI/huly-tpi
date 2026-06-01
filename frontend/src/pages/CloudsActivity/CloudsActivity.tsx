@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EmotionalCloudsActivity } from '../../components/EmotionalClouds'
 import { api } from '../../api/client'
+import Button from '../../components/Buttons/Button/Button'
 
 interface CloudRecommendationResponse {
     activity_type: string
@@ -61,18 +62,17 @@ const CloudsActivity = () => {
                         <p className="text-gray-500 mb-6 leading-relaxed">
                             {recommendation.description}
                         </p>
-                        <button
-                            onClick={handleNavigate}
-                            className="w-full bg-[#8869AC] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#7558a0] transition-colors"
-                        >
+                        <Button variant="primary" fullWidth onClick={handleNavigate}>
                             Ir
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            fullWidth
                             onClick={() => setRecommendation(null)}
-                            className="mt-3 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                            className="mt-3"
                         >
                             Quedarme aquí
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

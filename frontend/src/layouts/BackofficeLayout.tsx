@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
 import colorLogo from '../assets/brand/color-logo.webp'
 import hojita from '../assets/backoffice/hojita.webp'
 import cerrarSesion from '../assets/backoffice/logout.webp'
+import { logout } from '../api/auth'
 
 // ─── Design tokens (from Figma) ──────────────────────────────────────────────
 // Sidebar bg:       #FFFFFF
@@ -83,6 +84,19 @@ const NAV_ITEMS = [
 
 export default function BackofficeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const role = localStorage.getItem('role')
+  if (!role || role !== 'ADMIN') {
+    return <Navigate to="/backoffice/login" replace />
+  }
+
+  const handleLogout = async () => {
+    try { await logout() } catch {}
+    localStorage.removeItem('token')
+    localStorage.removeItem('role')
+    navigate('/backoffice/login')
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#EDF2ED] font-sans">
@@ -155,7 +169,7 @@ export default function BackofficeLayout() {
         {/* Logout */}
         <div className="shrink-0 px-4 pb-5 pt-2">
           <div className="mx-0 mb-3 h-px bg-gray-100" />
-          <button className="w-full transition-opacity hover:opacity-80 active:opacity-60">
+          <button onClick={handleLogout} className="w-full transition-opacity hover:opacity-80 active:opacity-60">
             <img src={cerrarSesion} alt="Cerrar sesión" className="w-full object-contain" />
           </button>
         </div>

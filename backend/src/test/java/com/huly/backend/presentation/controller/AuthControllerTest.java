@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
 import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
 import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
 import com.huly.backend.domain.useCase.auth.RegisterUseCase;
 import com.huly.backend.exception.GlobalExceptionHandler;
-import com.huly.backend.exception.UnauthorizedException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
@@ -31,6 +32,7 @@ class AuthControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private LoginUseCase loginUseCase;
+    private AdminLoginUseCase adminLoginUseCase;
     private RegisterUseCase registerUseCase;
     private RefreshTokenUseCase refreshTokenUseCase;
     private LogoutUseCase logoutUseCase;
@@ -39,13 +41,14 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         loginUseCase = mock(LoginUseCase.class);
+        adminLoginUseCase = mock(AdminLoginUseCase.class);
         registerUseCase = mock(RegisterUseCase.class);
         refreshTokenUseCase = mock(RefreshTokenUseCase.class);
         logoutUseCase = mock(LogoutUseCase.class);
         tokenProvider = mock(TokenProvider.class);
 
         AuthController controller = new AuthController(
-                loginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenProvider);
+                loginUseCase, adminLoginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenProvider);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -91,18 +94,54 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_shouldReturn201_whenRequestIsValid() throws Exception {
+    void backofficeLogin_shouldReturn200WithAccessTokenAndRole_whenAdminCredentialsAreValid() throws Exception {
         AuthTokens tokens = AuthTokens.builder()
-                        .accessToken("theAccessToken").refreshToken("theRefreshToken").build();
-                when(loginUseCase.execute("new@huly.com", "password123")).thenReturn(tokens);
+                .accessToken("adminAccessToken").refreshToken("adminRefreshToken")
+                .role(UserRole.ADMIN).build();
+        when(adminLoginUseCase.execute("admin@huly.com", "password123")).thenReturn(tokens);
+
+        mockMvc.perform(post("/api/auth/backoffice/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "admin@huly.com", "password", "password123"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("adminAccessToken"))
+                .andExpect(jsonPath("$.role").value("ADMIN"))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=adminRefreshToken")));
+    }
+
+    @Test
+    void backofficeLogin_shouldReturn401_whenCredentialsAreInvalid() throws Exception {
+        when(adminLoginUseCase.execute("admin@huly.com", "wrongpassword"))
+                .thenThrow(new com.huly.backend.exception.UnauthorizedException("Invalid credentials"));
+
+        mockMvc.perform(post("/api/auth/backoffice/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "admin@huly.com", "password", "wrongpassword"))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void register_shouldReturn201WithAccessTokenRoleAndRefreshCookie() throws Exception {
+        AuthTokens tokens = AuthTokens.builder()
+                .accessToken("theAccessToken").refreshToken("theRefreshToken")
+                .role(UserRole.USER).build();
+        when(registerUseCase.execute("new@huly.com", "password123", "Juan", LocalDate.of(2000, 1, 1)))
+                .thenReturn(tokens);
+
+
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                Map.of("name", "Juan", "email", "new@huly.com", "password", "password123","birthDate", "2000-01-01"))))
+                                Map.of("name", "Juan", "email", "new@huly.com",
+                                        "password", "password123", "birthDate", "2000-01-01"))))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.accessToken").value("theAccessToken"));
+                .andExpect(jsonPath("$.accessToken").value("theAccessToken"))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=theRefreshToken")));
 
-        verify(registerUseCase).execute("new@huly.com", "password123", "Juan");
+        verify(registerUseCase).execute("new@huly.com", "password123", "Juan", LocalDate.of(2000, 1, 1));
     }
 
     @Test
