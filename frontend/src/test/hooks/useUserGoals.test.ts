@@ -24,7 +24,7 @@ const makeGoal = (overrides = {}) => ({
   userId: 10,
   title: 'Reto de prueba',
   description: null,
-  status: 'PENDING' as const,
+  status: 'PENDING' as 'PENDING' | 'COMPLETED',
   createdAt: '2026-01-01T00:00:00Z',
   activityId: null,
   ...overrides,

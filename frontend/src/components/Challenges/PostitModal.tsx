@@ -113,7 +113,7 @@ export default function PostitModal({
                   ✎ Editar
                 </Button>
               )}
-              {onDelete && (
+              {onDelete && !isCompleted && (
                 <Button
                   variant="alert"
                   size="sm"
