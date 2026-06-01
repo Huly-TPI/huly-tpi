@@ -15,10 +15,10 @@ import darkTodoBoardImage from '../../assets/garden/dark-theme/to-do-board.webp'
 import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-plant.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
-import HomeOnboarding from '../../components/onboarding/HomeOnboarding/HomeOnboarding'
+import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
-import SceneElement, { type SceneTheme } from '../../components/scene/SceneElement/SceneElement'
-import type { SceneElementDefinition } from '../../components/scene/types'
+import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
+import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useTheme } from '../../context/theme'
 import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
@@ -54,12 +54,12 @@ const createCloudElement = (
 })
 
 const cloudElements: SceneElementDefinition[] = [
-  createCloudElement('cloud-top-left', 'left-[7%] top-[5.5%] z-10 w-[12%] md:left-[8%] md:top-[2%] md:w-[11%] min-[1400px]:top-[1.2%]'),
-  createCloudElement('cloud-upper-left', 'left-[28%] top-[3.8%] z-10 w-[28%] md:left-[22%] md:top-[8.5%] md:w-[16.5%] min-[1400px]:top-[7.2%]'),
-  createCloudElement('cloud-center', 'left-[60%] top-[12%] z-10 w-[18%] md:left-[46.8%] md:top-[6.8%] md:w-[25%] min-[1400px]:top-[5.2%]'),
-  createCloudElement('cloud-right', 'left-[82%] top-[4.8%] z-10 w-[12%] md:left-[82.6%] md:top-[9.8%] md:w-[9.5%] min-[1400px]:top-[8.8%]'),
-  createCloudElement('cloud-bottom-left', 'left-[15%] top-[16.5%] z-10 w-[24%] md:hidden md:left-[-3.2%] md:top-[30%] md:z-10 md:w-[8.5%]', 'top-full mt-1'),
-  createCloudElement('cloud-bottom-right', 'left-[82%] top-[23%] z-10 w-[12%] md:hidden md:left-[88.2%] md:top-[39.5%] md:z-10 md:w-[12.5%]', 'top-full mt-1'),
+  createCloudElement('cloud-top-left', 'left-[7%] top-[5.5%] z-10 w-[11%] md:left-[8%] md:top-[2%] md:w-[10%] min-[1400px]:top-[1.2%]'),
+  createCloudElement('cloud-upper-left', 'left-[28%] top-[3.8%] z-10 w-[25%] md:left-[22%] md:top-[8.5%] md:w-[15%] min-[1400px]:top-[7.2%]'),
+  createCloudElement('cloud-center', 'left-[60%] top-[12%] z-10 w-[16%] md:left-[46.8%] md:top-[6.8%] md:w-[22.5%] min-[1400px]:top-[5.2%]'),
+  createCloudElement('cloud-right', 'left-[82%] top-[4.8%] z-10 w-[11%] md:left-[82.6%] md:top-[9.8%] md:w-[8.5%] min-[1400px]:top-[8.8%]'),
+  createCloudElement('cloud-bottom-left', 'left-[15%] top-[16.5%] z-10 w-[22%] md:hidden md:left-[-3.2%] md:top-[30%] md:z-10 md:w-[7.8%]', 'top-full mt-1'),
+  createCloudElement('cloud-bottom-right', 'left-[82%] top-[23%] z-10 w-[11%] md:hidden md:left-[88.2%] md:top-[39.5%] md:z-10 md:w-[11.2%]', 'top-full mt-1'),
 ]
 
 const gardenElements: SceneElementDefinition[] = [
@@ -68,7 +68,7 @@ const gardenElements: SceneElementDefinition[] = [
     title: 'Minijuegos',
     imageAlt: 'Arbol con hamaca en el jardin',
     image: { light: treeImage, dark: darkTreeImage },
-    placementClassName: 'left-[5%] top-[32%] z-20 w-[47%] md:left-[2.5%] md:top-[25%] md:w-[29%] min-[1400px]:top-[18%]',
+    placementClassName: 'left-[5%] top-[32%] z-20 w-[47%] md:left-[2.5%] md:top-[29%] md:w-[29%] min-[1400px]:top-[18%]',
     imageClassName: 'w-full',
     hotspotClassName: 'left-[5%] top-[3%] h-[94%] w-[88%]',
     clipPath: 'polygon(8% 23%, 22% 8%, 53% 2%, 84% 10%, 98% 35%, 91% 55%, 79% 59%, 73% 97%, 34% 99%, 26% 64%, 5% 54%)',
@@ -152,6 +152,10 @@ export default function Home() {
       if (element.image.dark) {
         sources.add(element.image.dark)
       }
+    }
+    for (const step of homeOnboardingSteps) {
+      if (step.mascot) 
+        sources.add(step.mascot.imageSrc)      
     }
 
     sources.forEach(src => {

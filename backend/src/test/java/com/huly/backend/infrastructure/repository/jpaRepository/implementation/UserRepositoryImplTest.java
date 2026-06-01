@@ -14,6 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.huly.backend.domain.model.enums.SourceAction;
+
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -84,6 +87,7 @@ class UserRepositoryImplTest {
     void save_shouldCreateUserDetailEntity_whenNameIsPresent() {
         AppUser domain = AppUser.builder()
                 .name("Juan").email("new@huly.com").password("encoded")
+                .birthDate(LocalDate.of(2000, 1, 1))
                 .role(UserRole.USER).status(UserStatus.ACTIVE).build();
         AppUserEntity savedEntity = AppUserEntity.builder()
                 .id(5L).email("new@huly.com").build();
@@ -95,6 +99,7 @@ class UserRepositoryImplTest {
         ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
         verify(userDetailRepository).save(captor.capture());
         assertThat(captor.getValue().getName()).isEqualTo("Juan");
+        assertThat(captor.getValue().getBirth()).isEqualTo(LocalDate.of(2000, 1, 1));
         assertThat(captor.getValue().getAppUser()).isEqualTo(savedEntity);
     }
 
@@ -129,5 +134,28 @@ class UserRepositoryImplTest {
         assertThat(captured.getPassword()).isEqualTo("encoded");
         assertThat(captured.getRole()).isEqualTo(UserRole.USER);
         assertThat(captured.getStatus()).isEqualTo(UserStatus.ACTIVE);
+    }
+
+    @Test
+    void saveLeadDetail_shouldSaveUserDetailWithNicknameAndSourceAction() {
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+
+        userRepository.saveLeadDetail(10L, "hulyuser", SourceAction.LANDING);
+
+        verify(userDetailRepository).save(captor.capture());
+        UserDetailEntity saved = captor.getValue();
+        assertThat(saved.getNickname()).isEqualTo("hulyuser");
+        assertThat(saved.getSourceAction()).isEqualTo(SourceAction.LANDING);
+        assertThat(saved.getAppUser().getId()).isEqualTo(10L);
+    }
+
+    @Test
+    void saveLeadDetail_shouldSetCreatedAt() {
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+
+        userRepository.saveLeadDetail(1L, "hulyuser", SourceAction.GOALS);
+
+        verify(userDetailRepository).save(captor.capture());
+        assertThat(captor.getValue().getCreatedAt()).isNotNull();
     }
 }

@@ -1,16 +1,19 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
+import java.time.Instant;
+import java.util.Optional;
+
+import org.springframework.stereotype.Component;
+
 import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -37,11 +40,22 @@ public class UserRepositoryImpl implements UserRepository {
             userDetailRepository.save(UserDetailEntity.builder()
                     .appUser(saved)
                     .name(user.getName())
+                    .birth(user.getBirthDate())
                     .createdAt(Instant.now())
                     .build());
         }
 
         return toDomain(saved);
+    }
+
+    @Override
+    public void saveLeadDetail(Long userId, String nickname, SourceAction sourceAction) {
+        userDetailRepository.save(UserDetailEntity.builder()
+                .appUser(AppUserEntity.builder().id(userId).build())
+                .nickname(nickname)
+                .sourceAction(sourceAction)
+                .createdAt(Instant.now())
+                .build());
     }
 
     private AppUser toDomain(AppUserEntity entity) {
