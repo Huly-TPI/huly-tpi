@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
 import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
 import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
@@ -31,6 +32,7 @@ class AuthControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private LoginUseCase loginUseCase;
+    private AdminLoginUseCase adminLoginUseCase;
     private RegisterUseCase registerUseCase;
     private RefreshTokenUseCase refreshTokenUseCase;
     private LogoutUseCase logoutUseCase;
@@ -39,13 +41,14 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         loginUseCase = mock(LoginUseCase.class);
+        adminLoginUseCase = mock(AdminLoginUseCase.class);
         registerUseCase = mock(RegisterUseCase.class);
         refreshTokenUseCase = mock(RefreshTokenUseCase.class);
         logoutUseCase = mock(LogoutUseCase.class);
         tokenProvider = mock(TokenProvider.class);
 
         AuthController controller = new AuthController(
-                loginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenProvider);
+                loginUseCase, adminLoginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenProvider);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -88,6 +91,35 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(
                                 Map.of("email", "user@huly.com", "password", ""))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void backofficeLogin_shouldReturn200WithAccessTokenAndRole_whenAdminCredentialsAreValid() throws Exception {
+        AuthTokens tokens = AuthTokens.builder()
+                .accessToken("adminAccessToken").refreshToken("adminRefreshToken")
+                .role(UserRole.ADMIN).build();
+        when(adminLoginUseCase.execute("admin@huly.com", "password123")).thenReturn(tokens);
+
+        mockMvc.perform(post("/api/auth/backoffice/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "admin@huly.com", "password", "password123"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("adminAccessToken"))
+                .andExpect(jsonPath("$.role").value("ADMIN"))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=adminRefreshToken")));
+    }
+
+    @Test
+    void backofficeLogin_shouldReturn401_whenCredentialsAreInvalid() throws Exception {
+        when(adminLoginUseCase.execute("admin@huly.com", "wrongpassword"))
+                .thenThrow(new com.huly.backend.exception.UnauthorizedException("Invalid credentials"));
+
+        mockMvc.perform(post("/api/auth/backoffice/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "admin@huly.com", "password", "wrongpassword"))))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
