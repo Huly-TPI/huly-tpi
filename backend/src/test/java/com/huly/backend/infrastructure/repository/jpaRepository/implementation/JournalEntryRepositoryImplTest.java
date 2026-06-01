@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +46,8 @@ class JournalEntryRepositoryImplTest {
         return JournalEntriesEntity.builder()
                 .id(id).journal(journal).content(content).mood(mood).createdAt(Instant.now()).build();
     }
+
+    // ── save ──────────────────────────────────────────────────────────────────
 
     @Test
     void save_shouldCreateNewJournal_whenNoneExistsForUser() {
@@ -133,5 +136,72 @@ class JournalEntryRepositoryImplTest {
         JournalEntry result = repositoryImpl.save(1L, "Sin mood", null);
 
         assertThat(result.getMood()).isNull();
+    }
+
+    // ── findAllByUserId ────────────────────────────────────────────────────────
+
+    @Test
+    void findAllByUserId_shouldReturnMappedDomainEntries() {
+        Long userId = 1L;
+        AppUserEntity user = user(userId);
+        JournalEntity journal = journal(2L, user);
+
+        List<JournalEntriesEntity> entities = List.of(
+                entry(10L, journal, "Segunda entrada", Mood.CALM),
+                entry(9L, journal, "Primera entrada", Mood.HAPPY)
+        );
+
+        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
+                .thenReturn(entities);
+
+        List<JournalEntry> result = repositoryImpl.findAllByUserId(userId);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo(10L);
+        assertThat(result.get(0).getContent()).isEqualTo("Segunda entrada");
+        assertThat(result.get(0).getMood()).isEqualTo(Mood.CALM);
+        assertThat(result.get(0).getUserId()).isEqualTo(userId);
+        assertThat(result.get(0).getJournalId()).isEqualTo(2L);
+        assertThat(result.get(1).getId()).isEqualTo(9L);
+    }
+
+    @Test
+    void findAllByUserId_shouldReturnEmptyList_whenUserHasNoEntries() {
+        Long userId = 99L;
+
+        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
+                .thenReturn(List.of());
+
+        List<JournalEntry> result = repositoryImpl.findAllByUserId(userId);
+
+        assertThat(result).isEmpty();
+        verify(journalEntryJpaRepository).findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId);
+    }
+
+    @Test
+    void findAllByUserId_shouldMapNullMoodCorrectly() {
+        Long userId = 1L;
+        AppUserEntity user = user(userId);
+        JournalEntity journal = journal(1L, user);
+
+        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
+                .thenReturn(List.of(entry(5L, journal, "Sin mood", null)));
+
+        List<JournalEntry> result = repositoryImpl.findAllByUserId(userId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getMood()).isNull();
+    }
+
+    @Test
+    void findAllByUserId_shouldDelegateToJpaRepository() {
+        Long userId = 3L;
+
+        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
+                .thenReturn(List.of());
+
+        repositoryImpl.findAllByUserId(userId);
+
+        verify(journalEntryJpaRepository).findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId);
     }
 }

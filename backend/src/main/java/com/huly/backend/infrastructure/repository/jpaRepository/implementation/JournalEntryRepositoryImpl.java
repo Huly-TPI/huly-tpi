@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -40,6 +41,15 @@ public class JournalEntryRepositoryImpl implements JournalEntryRepository {
         JournalEntriesEntity savedEntry = journalEntryJpaRepository.save(entry);
 
         return toDomain(savedEntry, userId, savedJournal.getId());
+    }
+
+    @Override
+    public List<JournalEntry> findAllByUserId(Long userId) {
+        return journalEntryJpaRepository
+                .findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(entity -> toDomain(entity, userId, entity.getJournal().getId()))
+                .toList();
     }
 
     private JournalEntry toDomain(JournalEntriesEntity entity, Long userId, Long journalId) {
