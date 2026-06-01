@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuthGate } from '../context/authGate'
 
 export interface BreathingTechnique {
     id: number
@@ -63,6 +64,7 @@ const DEFAULT_BREATHING_TECHNIQUES: BreathingTechnique[] = [
 ];
 
 export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: BreathingGuideProps) {
+    const { requireAuth } = useAuthGate()
     const [selected, setSelected] = useState<BreathingTechnique | null>(null)
     const [isRunning, setIsRunning] = useState(false)
     const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0)
@@ -174,7 +176,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
               onMouseLeave={() => setHoveredId(null)}
               className="relative flex flex-col">
               <button 
-                    onClick={() => setSelected(technique)}
+                    onClick={() => requireAuth(() => setSelected(technique))}
                     className="w-full py-3 rounded-full border border-violeta text-violeta hover:bg-violeta-claro transition-colors font-medium">
                     {technique.name}
                 </button>
