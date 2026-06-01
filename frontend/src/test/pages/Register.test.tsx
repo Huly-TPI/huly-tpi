@@ -9,6 +9,11 @@ vi.mock('../../api/auth', () => ({
     register: vi.fn(),
 }))
 
+const mockLoginWithToken = vi.fn()
+vi.mock('../../context/auth', () => ({
+    useAuth: () => ({ loginWithToken: mockLoginWithToken }),
+}))
+
 import { register } from '../../api/auth'
 
 const mockedRegister = vi.mocked(register)
@@ -16,7 +21,6 @@ const mockedRegister = vi.mocked(register)
 describe('Register', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        window.localStorage.clear()
     })
 
     const renderWithRouter = () => {
@@ -42,6 +46,15 @@ describe('Register', () => {
         await user.type(passwordFields[1], '123456')
     }
 
+    const fillDate = async (
+        user: ReturnType<typeof userEvent.setup>,
+        date: string,
+    ) => {
+        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
+        await user.click(dateInput)
+        await user.type(dateInput, date)
+    }
+
     it('renderiza el formulario de registro', () => {
         renderWithRouter()
 
@@ -53,9 +66,7 @@ describe('Register', () => {
     it('muestra errores de validación al enviar vacío', async () => {
         const { user } = renderWithRouter()
 
-        const checkbox = screen.getByRole('checkbox')
-        await user.click(checkbox)
-
+        await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
         expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
@@ -63,24 +74,32 @@ describe('Register', () => {
 
     it('registra exitosamente y redirige al home', async () => {
         mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce(undefined)
         const { user } = renderWithRouter()
 
         await fillForm(user)
-
-        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
-        await user.click(dateInput)
-        await user.type(dateInput, '2000-01-15')
-
-        const checkbox = screen.getByRole('checkbox')
-        await user.click(checkbox)
-
+        await fillDate(user, '2000-01-15')
+        await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
         await waitFor(() => {
             expect(screen.getByText('Home')).toBeInTheDocument()
         })
+    })
 
-        expect(localStorage.getItem('token')).toBe('token-123')
+    it('pasa el token de register a loginWithToken', async () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce(undefined)
+        const { user } = renderWithRouter()
+
+        await fillForm(user)
+        await fillDate(user, '2000-01-15')
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+
+        await waitFor(() => {
+            expect(mockLoginWithToken).toHaveBeenCalledWith('token-123')
+        })
     })
 
     it('muestra error del backend cuando falla el registro', async () => {
@@ -88,14 +107,8 @@ describe('Register', () => {
         const { user } = renderWithRouter()
 
         await fillForm(user)
-
-        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
-        await user.click(dateInput)
-        await user.type(dateInput, '2000-01-15')
-
-        const checkbox = screen.getByRole('checkbox')
-        await user.click(checkbox)
-
+        await fillDate(user, '2000-01-15')
+        await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
         await waitFor(() => {
@@ -103,24 +116,19 @@ describe('Register', () => {
         })
     })
 
-    it('no guarda token cuando falla el registro', async () => {
+    it('no llama a loginWithToken cuando falla el registro', async () => {
         mockedRegister.mockRejectedValueOnce(new Error('Error'))
         const { user } = renderWithRouter()
 
         await fillForm(user)
-
-        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
-        await user.click(dateInput)
-        await user.type(dateInput, '2000-01-15')
-
-        const checkbox = screen.getByRole('checkbox')
-        await user.click(checkbox)
-
+        await fillDate(user, '2000-01-15')
+        await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
         await waitFor(() => {
-            expect(localStorage.getItem('token')).toBeNull()
+            expect(screen.getByText('Error')).toBeInTheDocument()
         })
+        expect(mockLoginWithToken).not.toHaveBeenCalled()
     })
 
     it('navega a login al hacer click en Iniciá sesión', async () => {
@@ -149,14 +157,8 @@ describe('Register', () => {
         const { user } = renderWithRouter()
 
         await fillForm(user)
-
-        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
-        await user.click(dateInput)
-        await user.type(dateInput, '2020-01-01')
-
-        const checkbox = screen.getByRole('checkbox')
-        await user.click(checkbox)
-
+        await fillDate(user, '2020-01-01')
+        await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
         expect(screen.getByText('Debés tener al menos 13 años')).toBeInTheDocument()
@@ -170,14 +172,8 @@ describe('Register', () => {
         const { user } = renderWithRouter()
 
         await fillForm(user)
-
-        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
-        await user.click(dateInput)
-        await user.type(dateInput, '2000-01-15')
-
-        const checkbox = screen.getByRole('checkbox')
-        await user.click(checkbox)
-
+        await fillDate(user, '2000-01-15')
+        await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
         await waitFor(() => {
@@ -189,7 +185,6 @@ describe('Register', () => {
         const { user } = renderWithRouter()
 
         await user.type(screen.getByPlaceholderText('Nombre'), '<script>alert(1)</script>')
-
         await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
@@ -201,7 +196,6 @@ describe('Register', () => {
         const { user } = renderWithRouter()
 
         await user.type(screen.getByPlaceholderText('Nombre'), "' OR 1=1 --")
-
         await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
@@ -213,7 +207,6 @@ describe('Register', () => {
         const { user } = renderWithRouter()
 
         await user.type(screen.getByPlaceholderText('Nombre'), 'a'.repeat(51))
-
         await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
@@ -223,6 +216,7 @@ describe('Register', () => {
 
     it('envía los valores con trim al backend', async () => {
         mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce(undefined)
         const { user } = renderWithRouter()
 
         await user.type(screen.getByPlaceholderText('Nombre'), '  Mili  ')
@@ -232,10 +226,7 @@ describe('Register', () => {
         await user.type(passwordFields[0], '123456')
         await user.type(passwordFields[1], '123456')
 
-        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
-        await user.click(dateInput)
-        await user.type(dateInput, '2000-01-15')
-
+        await fillDate(user, '2000-01-15')
         await user.click(screen.getByRole('checkbox'))
         await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
 
