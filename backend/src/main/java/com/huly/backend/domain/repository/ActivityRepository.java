@@ -5,6 +5,7 @@ import java.util.List;
 
 public interface ActivityRepository {
     List<Activity> findAll();
-}
 
+    boolean existsById(Long id);
+}
 

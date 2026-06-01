@@ -21,6 +21,11 @@ public class ActivityRepositoryImpl implements ActivityRepository {
                 .toList();
                 }
 
+    @Override
+    public boolean existsById(Long id) {
+        return activityJpaRepository.existsById(id);
+    }
+
     private Activity mapToDomain(ActivityEntity entity) {
         return Activity.builder()
                 .id(entity.getId())

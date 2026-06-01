@@ -55,4 +55,14 @@ public class ActivityRepositoryImplTest {
         assertThat(result).isEmpty();
         verify(activityJpaRepository).findAll();
     }
+
+    @Test
+    void existsById_shouldDelegateToJpaRepository() {
+        when(activityJpaRepository.existsById(1L)).thenReturn(true);
+
+        boolean result = activityRepository.existsById(1L);
+
+        assertThat(result).isTrue();
+        verify(activityJpaRepository).existsById(1L);
+    }
 }
