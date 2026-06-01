@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { register, login, logout } from '../../api/auth'
+import { register, login, logout, backofficeLogin } from '../../api/auth'
 import type { RegisterRequest, LoginRequest } from '../../api/auth'
 import { api } from '../../api/client'
 import { ApiError } from '../../api/apiError'
@@ -92,6 +92,39 @@ describe('login', () => {
         mockedPost.mockRejectedValueOnce(apiError)
 
         await expect(login(validLoginRequest)).rejects.toThrow(apiError)
+    })
+})
+
+describe('backofficeLogin', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
+
+    it('llama a POST /auth/backoffice/login con los datos correctos y skipAuthRedirect', async () => {
+        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
+
+        await backofficeLogin(validLoginRequest)
+
+        expect(mockedPost).toHaveBeenCalledWith(
+            '/auth/backoffice/login',
+            validLoginRequest,
+            { skipAuthRedirect: true },
+        )
+    })
+
+    it('retorna accessToken y role ADMIN del backend', async () => {
+        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
+
+        const res = await backofficeLogin(validLoginRequest)
+
+        expect(res.accessToken).toBe('token-123')
+        expect(res.role).toBe('ADMIN')
+    })
+
+    it('propaga el error si las credenciales son inválidas', async () => {
+        mockedPost.mockRejectedValueOnce(new Error('Invalid credentials'))
+
+        await expect(backofficeLogin(validLoginRequest)).rejects.toThrow('Invalid credentials')
     })
 })
 

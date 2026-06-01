@@ -3,6 +3,7 @@ package com.huly.backend.presentation.controller;
 import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
+import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
 import com.huly.backend.exception.BadRequestException;
 import com.huly.backend.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
@@ -16,13 +17,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/journal")
 @RequiredArgsConstructor
 public class JournalController {
 
     private final CreateJournalEntryUseCase createJournalEntryUseCase;
+    private final ListJournalEntriesUseCase listJournalEntriesUseCase;
     private final AppUserRepository appUserRepository;
+
+    @GetMapping
+    public ResponseEntity<List<JournalEntryResponse>> list() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AppUserEntity user = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        List<JournalEntryResponse> entries = listJournalEntriesUseCase.execute(user.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(entries);
+    }
 
     @PostMapping
     public ResponseEntity<JournalEntryResponse> create(@Valid @RequestBody JournalEntryRequest request) {

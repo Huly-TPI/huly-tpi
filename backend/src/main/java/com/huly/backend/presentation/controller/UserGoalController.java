@@ -2,6 +2,7 @@ package com.huly.backend.presentation.controller;
 
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
+import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
@@ -28,6 +29,7 @@ public class UserGoalController {
     private final GetUserGoalsByUserUseCase getUserGoalsByUserUseCase;
     private final DeleteUserGoalUseCase deleteUserGoalUseCase;
     private final UpdateUserGoalUseCase updateUserGoalUseCase;
+    private final CompleteUserGoalUseCase completeUserGoalUseCase;
 
     @PostMapping
     public ResponseEntity<UserGoalResponse> add(@Valid @RequestBody UserGoalRequest request) {
@@ -68,6 +70,12 @@ public class UserGoalController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteUserGoalUseCase.execute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/complete")
+    public ResponseEntity<UserGoalResponse> complete(@PathVariable Long id) {
+        UserGoal completed = completeUserGoalUseCase.execute(id);
+        return ResponseEntity.ok(toResponse(completed));
     }
 
     private UserGoalResponse toResponse(UserGoal userGoal) {

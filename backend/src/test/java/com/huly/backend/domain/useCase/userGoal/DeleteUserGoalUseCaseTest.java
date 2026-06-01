@@ -1,13 +1,20 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.repository.UserGoalRepository;
 import com.huly.backend.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -20,22 +27,33 @@ class DeleteUserGoalUseCaseTest {
     @InjectMocks
     private DeleteUserGoalUseCase deleteUserGoalUseCase;
 
+    private UserGoal pendingGoal(Long id) {
+        return UserGoal.builder()
+                .id(id).userId(10L).title("Meta").status(GoalStatus.PENDING)
+                .createdAt(Instant.now()).build();
+    }
+
     @Test
-    void execute_shouldDeleteGoal_whenItExists() {
-        when(userGoalRepository.existsById(1L)).thenReturn(true);
+    void execute_shouldCancelGoal_whenItExists() {
+        UserGoal goal = pendingGoal(1L);
+        when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
 
         deleteUserGoalUseCase.execute(1L);
 
-        verify(userGoalRepository).deleteById(1L);
+        ArgumentCaptor<UserGoal> captor = ArgumentCaptor.forClass(UserGoal.class);
+        verify(userGoalRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(GoalStatus.CANCELLED);
+        verify(userGoalRepository, never()).deleteById(any());
     }
 
     @Test
     void execute_shouldThrowNotFoundException_whenGoalDoesNotExist() {
-        when(userGoalRepository.existsById(99L)).thenReturn(false);
+        when(userGoalRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> deleteUserGoalUseCase.execute(99L))
                 .isInstanceOf(NotFoundException.class);
 
+        verify(userGoalRepository, never()).save(any());
         verify(userGoalRepository, never()).deleteById(any());
     }
 }

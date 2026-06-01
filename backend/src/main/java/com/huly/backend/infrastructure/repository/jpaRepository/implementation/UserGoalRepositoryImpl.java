@@ -59,6 +59,7 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
                 : null;
 
         return UserGoalsEntity.builder()
+                .id(domain.getId())
                 .appUser(appUser)
                 .title(domain.getTitle())
                 .description(domain.getDescription())

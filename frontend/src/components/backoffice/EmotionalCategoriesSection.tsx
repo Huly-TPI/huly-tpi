@@ -3,6 +3,7 @@ import { EmotionCard } from './EmotionCard'
 import { SectionCard } from './SectionCard'
 import { Skeleton } from './Skeleton'
 import purpleSmile from '../../assets/backoffice/purpleSmile.webp'
+import Button from '../Buttons/Button/Button'
 
 export function EmotionalCategoriesSection() {
   const { categories, loading } = useEmotionalCategories()
@@ -14,9 +15,9 @@ export function EmotionalCategoriesSection() {
           <img src={purpleSmile} alt="" className="w-6 h-6 object-contain -translate-y-0.0" />
           <h2 className="text-[20px] font-bold text-[#2D3748]">Panel de categorías emocionales</h2>
         </div>
-        <button className="text-sm font-semibold text-[#8869AC] hover:underline">
+        <Button variant="tertiary" size="sm">
           Gestionar todas
-        </button>
+        </Button>
       </div>
 
       {loading ? (

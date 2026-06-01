@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
+import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
 import com.huly.backend.exception.GlobalExceptionHandler;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
@@ -21,12 +22,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,6 +42,7 @@ class JournalControllerTest {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     private CreateJournalEntryUseCase createJournalEntryUseCase;
+    private ListJournalEntriesUseCase listJournalEntriesUseCase;
     private AppUserRepository appUserRepository;
 
     private static final String USER_EMAIL = "test@huly.com";
@@ -47,6 +51,7 @@ class JournalControllerTest {
     @BeforeEach
     void setUp() {
         createJournalEntryUseCase = mock(CreateJournalEntryUseCase.class);
+        listJournalEntriesUseCase = mock(ListJournalEntriesUseCase.class);
         appUserRepository = mock(AppUserRepository.class);
 
         Authentication authentication = mock(Authentication.class);
@@ -55,7 +60,8 @@ class JournalControllerTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
-        JournalController controller = new JournalController(createJournalEntryUseCase, appUserRepository);
+        JournalController controller = new JournalController(
+                createJournalEntryUseCase, listJournalEntriesUseCase, appUserRepository);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -70,14 +76,10 @@ class JournalControllerTest {
         return AppUserEntity.builder().id(USER_ID).build();
     }
 
-    private JournalEntry mockEntry(Mood mood) {
+    private JournalEntry buildEntry(Long id, String content, Mood mood) {
         return JournalEntry.builder()
-                .id(10L)
-                .userId(USER_ID)
-                .journalId(1L)
-                .content("Hoy me sentí bien")
-                .mood(mood)
-                .createdAt(Instant.now())
+                .id(id).userId(USER_ID).journalId(1L)
+                .content(content).mood(mood).createdAt(Instant.now())
                 .build();
     }
 
@@ -85,13 +87,11 @@ class JournalControllerTest {
     void create_shouldReturn201_whenRequestHasValidContentAndMood() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Hoy me sentí bien"), eq(Mood.HAPPY)))
-                .thenReturn(mockEntry(Mood.HAPPY));
-
-        JournalEntryRequest request = new JournalEntryRequest("Hoy me sentí bien", "HAPPY");
+                .thenReturn(buildEntry(10L, "Hoy me sentí bien", Mood.HAPPY));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy me sentí bien", "HAPPY"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10L))
                 .andExpect(jsonPath("$.content").value("Hoy me sentí bien"))
@@ -102,13 +102,11 @@ class JournalControllerTest {
     void create_shouldReturn201_whenMoodIsNull() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Solo escribir"), eq(null)))
-                .thenReturn(mockEntry(null));
-
-        JournalEntryRequest request = new JournalEntryRequest("Solo escribir", null);
+                .thenReturn(buildEntry(10L, "Solo escribir", null));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Solo escribir", null))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.mood").doesNotExist());
     }
@@ -117,23 +115,19 @@ class JournalControllerTest {
     void create_shouldReturn201_whenMoodIsLowercase() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), any(), eq(Mood.SAD)))
-                .thenReturn(mockEntry(Mood.SAD));
-
-        JournalEntryRequest request = new JournalEntryRequest("Hoy fue difícil", "sad");
+                .thenReturn(buildEntry(10L, "Hoy fue difícil", Mood.SAD));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy fue difícil", "sad"))))
                 .andExpect(status().isCreated());
     }
 
     @Test
     void create_shouldReturn400_whenContentIsBlank() throws Exception {
-        JournalEntryRequest request = new JournalEntryRequest("", "HAPPY");
-
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("", "HAPPY"))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -149,11 +143,9 @@ class JournalControllerTest {
     void create_shouldReturn400_whenMoodIsInvalid() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
 
-        JournalEntryRequest request = new JournalEntryRequest("Hoy fue raro", "INVALIDO");
-
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy fue raro", "INVALIDO"))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -161,11 +153,56 @@ class JournalControllerTest {
     void create_shouldReturn404_whenUserNotFound() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
 
-        JournalEntryRequest request = new JournalEntryRequest("Contenido válido", null);
-
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Contenido válido", null))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void list_shouldReturn200WithEntries_whenUserHasEntries() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
+        when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of(
+                buildEntry(2L, "Segunda entrada", Mood.CALM),
+                buildEntry(1L, "Primera entrada", Mood.HAPPY)
+        ));
+
+        mockMvc.perform(get("/api/journal"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(2L))
+                .andExpect(jsonPath("$[0].content").value("Segunda entrada"))
+                .andExpect(jsonPath("$[0].mood").value("CALM"))
+                .andExpect(jsonPath("$[1].id").value(1L));
+    }
+
+    @Test
+    void list_shouldReturn200WithEmptyList_whenUserHasNoEntries() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
+        when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/journal"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void list_shouldReturn200WithNullMood_whenEntryHasNoMood() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
+        when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of(
+                buildEntry(1L, "Sin mood", null)
+        ));
+
+        mockMvc.perform(get("/api/journal"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].mood").doesNotExist());
+    }
+
+    @Test
+    void list_shouldReturn404_whenUserNotFound() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/journal"))
                 .andExpect(status().isNotFound());
     }
 }
