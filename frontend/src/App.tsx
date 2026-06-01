@@ -10,6 +10,7 @@ import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Register from './pages/Register/Register'
 import ChatbotPage from './pages/Backoffice/ChatbotPage'
 import Login from './pages/Login/Login'
+import Challenges from './pages/Challenges/Challenges'
 
 
 const App = () => {
@@ -26,7 +27,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/guided-breathing" element={<Breathing />} />
         <Route path="/clouds" element={<CloudsActivity />} />
-        <Route path="/bubbles" element={<BubblesActivity />} /> 
+        <Route path="/bubbles" element={<BubblesActivity />} />
+        <Route path="/challenges" element={<Challenges />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
