@@ -97,7 +97,7 @@ export default function PostitModal({
               <p className="text-[0.82rem] text-[#5c4028] m-0 mb-[0.9rem] leading-[1.5] break-words">{goal.description}</p>
             )}
             <div className="flex flex-col gap-[0.45rem] mt-[0.8rem]">
-              {/* {!isCompleted && onComplete && (
+              {!isCompleted && onComplete && (
                 <Button
                   variant="primary"
                   size="sm"
@@ -107,7 +107,7 @@ export default function PostitModal({
                 >
                   ✓ Completar
                 </Button>
-              )} */}
+              )}
               {!isCompleted && (
                 <Button variant="secondary" size="sm" fullWidth onClick={enterEditMode}>
                   ✎ Editar
