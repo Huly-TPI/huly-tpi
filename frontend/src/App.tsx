@@ -9,12 +9,14 @@ import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Register from './pages/Register/Register'
 import ChatbotPage from './pages/Backoffice/ChatbotPage'
+import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
 import Login from './pages/Login/Login'
 
 
 const App = () => {
   return (
     <Routes>
+      <Route path="/backoffice/login" element={<BackofficeLogin />} />
       <Route path="/backoffice" element={<BackofficeLayout />}>
         <Route index element={<ChatbotPage />} />
         <Route path="chatbot" element={<ChatbotPage />} />

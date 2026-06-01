@@ -25,6 +25,10 @@ export const login = (data: LoginRequest) => {
   return api.post<AuthResponse>('/auth/login', data)
 }
 
+export const backofficeLogin = (data: LoginRequest) => {
+  return api.post<AuthResponse>('/auth/backoffice/login', data, { skipAuthRedirect: true })
+}
+
 export const logout = () => {
   return api.post<void>('/auth/logout', {})
 }

@@ -1,7 +1,7 @@
 import { ApiError } from './apiError'
 
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
-type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
+type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown; skipAuthRedirect?: boolean }
 
 async function refreshAccessToken(): Promise<string | null> {
   const response = await fetch(`${BASE_URL}/auth/refresh`, {
@@ -17,7 +17,7 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}, retry = true): Promise<T> {
-  const { body, headers, ...rest } = options
+  const { body, headers, skipAuthRedirect, ...rest } = options
 
   const token = localStorage.getItem('token')
 
@@ -32,7 +32,7 @@ async function request<T>(path: string, options: RequestOptions = {}, retry = tr
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 
-  if (response.status === 401 && retry) {
+  if (response.status === 401 && retry && !skipAuthRedirect) {
     const newToken = await refreshAccessToken()
 
     if (newToken) {
