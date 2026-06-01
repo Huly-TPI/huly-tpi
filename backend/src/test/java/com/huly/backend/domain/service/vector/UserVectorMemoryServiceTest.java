@@ -37,7 +37,8 @@ class UserVectorMemoryServiceTest {
         assertThat(vectorMemoryService.lastMultiSourceQuery.sourceTypes()).containsExactly(
                 VectorMemorySource.CHATBOT,
                 VectorMemorySource.GUIDED_CLOUDS,
-                VectorMemorySource.EMOTIONAL_JOURNAL
+                VectorMemorySource.EMOTIONAL_JOURNAL,
+                VectorMemorySource.ONBOARDING
         );
         assertThat(vectorMemoryService.lastMultiSourceQuery.limit()).isEqualTo(properties.getDefaultLimit());
         assertThat(vectorMemoryService.lastMultiSourceQuery.similarityThreshold())

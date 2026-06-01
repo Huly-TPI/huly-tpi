@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.huly.backend.domain.model.enums.SourceAction;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -157,5 +158,71 @@ class UserRepositoryImplTest {
 
         verify(userDetailRepository).save(captor.capture());
         assertThat(captor.getValue().getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void findByEmail_shouldHydrateName_whenUserDetailHasName() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(1L).email("user@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .userDetails(List.of(
+                        UserDetailEntity.builder().name("Mili").build()
+                ))
+                .build();
+        when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
+
+        Optional<AppUser> result = userRepository.findByEmail("user@huly.com");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isEqualTo("Mili");
+    }
+
+    @Test
+    void findByEmail_shouldReturnNullName_whenUserDetailsIsNull() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(1L).email("user@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .userDetails(null)
+                .build();
+        when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
+
+        Optional<AppUser> result = userRepository.findByEmail("user@huly.com");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isNull();
+    }
+
+    @Test
+    void findByEmail_shouldReturnNullName_whenUserDetailsIsEmpty() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(1L).email("user@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .userDetails(List.of())
+                .build();
+        when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
+
+        Optional<AppUser> result = userRepository.findByEmail("user@huly.com");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isNull();
+    }
+
+    @Test
+    void findByEmail_shouldTakeFirstNonNullName_whenMultipleDetailsExist() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(1L).email("user@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .userDetails(List.of(
+                        UserDetailEntity.builder().name(null).build(),
+                        UserDetailEntity.builder().name("Mili").build(),
+                        UserDetailEntity.builder().name("Otro").build()
+                ))
+                .build();
+        when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
+
+        Optional<AppUser> result = userRepository.findByEmail("user@huly.com");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isEqualTo("Mili");
     }
 }

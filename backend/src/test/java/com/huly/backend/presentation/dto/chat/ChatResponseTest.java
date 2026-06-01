@@ -47,6 +47,7 @@ class ChatResponseTest {
         assertThat(action.title()).isEqualTo("Meditación");
         assertThat(action.description()).isEqualTo("Práctica de mindfulness");
         assertThat(action.actionUrl()).isEqualTo("/meditacion");
+        assertThat(action.emotionalEventId()).isNull();
     }
 
     @Test

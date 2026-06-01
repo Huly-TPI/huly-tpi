@@ -46,6 +46,13 @@ public class PromptBuilderService {
         return sb.toString();
     }
 
+    public String buildEmotionalAnalysisPrompt(String basePrompt, List<VectorMemory> memories) {
+        StringBuilder sb = basePromptBuilder(basePrompt);
+        appendVectorMemories(sb, memories);
+        appendEmotionalAnalysisInstructions(sb);
+        return sb.toString();
+    }
+
     private StringBuilder basePromptBuilder(String basePrompt) {
         return new StringBuilder(basePrompt == null ? "" : basePrompt);
     }
@@ -90,6 +97,31 @@ public class PromptBuilderService {
         sb.append("\n  \"intensity\": <número del 1 al 10>,");
         sb.append("\n  \"risk_detected\": <true|false>,");
         sb.append("\n  \"matched_word\": \"<frase de riesgo detectada, o null>\"");
+        sb.append("\n}");
+    }
+
+    private void appendEmotionalAnalysisInstructions(StringBuilder sb) {
+        sb.append("\n\n=== ANALISIS EMOCIONAL ESTRUCTURADO ===");
+        sb.append("\nAnaliza el mensaje actual usando tambien la informacion recordada del usuario y el historial conversacional disponible.");
+        sb.append("\nTu tarea NO es responder al usuario. Tu tarea es producir un analisis emocional estructurado para decidir si conviene recomendar una actividad de bienestar.");
+        sb.append("\nNo todos los mensajes requieren recomendacion. Mensajes casuales, saludos, agradecimientos o informacion neutra no deben recomendar actividad.");
+        sb.append("\nRecomenda actividad solo si hay senales claras de malestar, ansiedad, tristeza, estres, sobrepensamiento, duelo, bloqueo emocional, baja motivacion o necesidad de regulacion.");
+        sb.append("\nUsa los recuerdos del usuario solo si son relevantes. Si el usuario venia bien y ahora expresa una recaida, reflejalo en intensidad y VAD.");
+        sb.append("\nEl VAD representa el estado emocional actual: valence negativo = malestar/tristeza, positivo = bienestar; arousal bajo = apagado/cansado, alto = activado/ansioso; dominance bajo = sin control/abrumado, alto = con control.");
+        sb.append("\nUsa detectedEmotion con uno de estos valores reales del enum: ").append(buildEmotionList()).append(".");
+        sb.append("\nSi pensarias en TRISTEZA, usa SADNESS; si pensarias en ANSIEDAD, usa ANXIETY; si pensarias en DUELO, usa GRIEF.");
+        sb.append("\nconfidence e intensity deben estar entre 0.0 y 1.0. valence, arousal y dominance deben estar entre -1.0 y 1.0.");
+        sb.append("\nResponde unicamente JSON valido, sin markdown ni texto fuera del JSON:");
+        sb.append("\n{");
+        sb.append("\n  \"shouldRecommend\": true,");
+        sb.append("\n  \"detectedEmotion\": \"SADNESS\",");
+        sb.append("\n  \"confidence\": 0.92,");
+        sb.append("\n  \"valence\": -0.85,");
+        sb.append("\n  \"arousal\": 0.35,");
+        sb.append("\n  \"dominance\": -0.75,");
+        sb.append("\n  \"intensity\": 0.88,");
+        sb.append("\n  \"userGoal\": \"sentirse acompanado y aliviar tristeza\",");
+        sb.append("\n  \"shortReason\": \"El usuario expresa una perdida significativa y bajo estado de animo.\"");
         sb.append("\n}");
     }
 
