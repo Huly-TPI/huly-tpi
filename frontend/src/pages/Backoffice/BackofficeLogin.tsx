@@ -1,31 +1,42 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { backofficeLogin } from '../../api/auth'
+import { useAuthForm } from '../../hooks/useAuthForm'
+import { required, validEmail } from '../../utils/validation'
+import Button from '../../components/Buttons/Button/Button'
 import colorLogo from '../../assets/brand/color-logo.webp'
 import hojita from '../../assets/backoffice/hojita.webp'
 
+const INITIAL_VALUES = { email: '', password: '' }
+
+const VALIDATION_RULES = {
+  email: [required(), validEmail()],
+  password: [required()],
+}
+
 export default function BackofficeLogin() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const { values, errors, handleChange, validateAll } = useAuthForm(INITIAL_VALUES, VALIDATION_RULES)
+  const [apiError, setApiError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
+    if (!validateAll()) return
+
+    setApiError(null)
     setLoading(true)
 
     try {
-      const res = await backofficeLogin({ email, password })
+      const res = await backofficeLogin({ email: values.email, password: values.password })
       localStorage.setItem('token', res.accessToken)
       localStorage.setItem('role', res.role)
       navigate('/backoffice')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error inesperado'
-      setError(
+      setApiError(
         message === 'Invalid credentials'
-          ? 'Email o contraseña incorrectos'
+          ? 'Credenciales incorrectas'
           : message,
       )
     } finally {
@@ -51,40 +62,46 @@ export default function BackofficeLogin() {
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-[#4A5568]">Email</label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
+              type="text"
+              value={values.email}
+              onChange={e => handleChange('email', e.target.value)}
               placeholder="Correo electrónico"
               className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#8869AC] focus:ring-2 focus:ring-[#8869AC]/20 transition"
             />
+            {errors.email && (
+              <p className="text-xs text-red-500">{errors.email}</p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-[#4A5568]">Contraseña</label>
             <input
               type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
+              value={values.password}
+              onChange={e => handleChange('password', e.target.value)}
               placeholder="••••••••"
               className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#8869AC] focus:ring-2 focus:ring-[#8869AC]/20 transition"
             />
+            {errors.password && (
+              <p className="text-xs text-red-500">{errors.password}</p>
+            )}
           </div>
 
-          {error && (
+          {apiError && (
             <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">
-              {error}
+              {apiError}
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            className="mt-2 rounded-xl bg-[#8869AC] py-2.5 text-sm font-bold text-white transition hover:bg-[#7559a0] disabled:opacity-60"
+            fullWidth
+            isLoading={loading}
+            loadingLabel="Ingresando..."
+            className="mt-2"
           >
-            {loading ? 'Ingresando...' : 'Iniciar sesión'}
-          </button>
+            Iniciar sesión
+          </Button>
         </form>
       </div>
     </div>

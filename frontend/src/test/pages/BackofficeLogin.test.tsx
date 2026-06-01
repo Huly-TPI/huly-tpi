@@ -48,6 +48,35 @@ describe('BackofficeLogin', () => {
         expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
     })
 
+    it('muestra error de validación si el email está vacío', async () => {
+        const { user } = renderWithRouter()
+
+        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
+
+        expect(screen.getAllByText('Campo requerido').length).toBeGreaterThan(0)
+        expect(mockedBackofficeLogin).not.toHaveBeenCalled()
+    })
+
+    it('muestra error de validación si la contraseña está vacía', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Correo electrónico'), 'admin@huly.com')
+        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
+
+        expect(screen.getByText('Campo requerido')).toBeInTheDocument()
+        expect(mockedBackofficeLogin).not.toHaveBeenCalled()
+    })
+
+    it('muestra error de validación si el email tiene formato inválido', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Correo electrónico'), 'noesmail')
+        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
+
+        expect(screen.getByText('Email inválido')).toBeInTheDocument()
+        expect(mockedBackofficeLogin).not.toHaveBeenCalled()
+    })
+
     it('inicia sesión exitosamente y redirige al backoffice', async () => {
         mockedBackofficeLogin.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
         const { user } = renderWithRouter()
@@ -81,7 +110,7 @@ describe('BackofficeLogin', () => {
         await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
         await waitFor(() => {
-            expect(screen.getByText('Email o contraseña incorrectos')).toBeInTheDocument()
+            expect(screen.getByText('Credenciales incorrectas')).toBeInTheDocument()
         })
     })
 
