@@ -31,6 +31,23 @@ const minAge = (min: number, message?: string): ValidationRule =>
     return age >= min ? undefined : (message ?? `Debés tener al menos ${min} años`)
   }
 
+const maxLength = (max: number, message?: string): ValidationRule =>
+  (value) =>
+    value.length <= max ? undefined : (message ?? `Máximo ${max} caracteres`)
+
+const noHtml: ValidationRule =
+  (value) =>
+    /<\/?[a-z][\s\S]*>/i.test(value) || /javascript:/i.test(value)
+      ? 'El texto no puede contener HTML'
+      : undefined
+
+const safeText: ValidationRule =
+  (value) => {
+    const xss = /<[a-z][\s\S]*>/i.test(value) || /javascript:/i.test(value) || /on\w+\s*=/i.test(value)
+    const sql = /('\s*(or|and)\s*('|[0-9]))|(--)|(;\s*drop\s+table)|(union\s+select)/i.test(value)
+    return xss || sql ? 'El texto contiene caracteres no permitidos' : undefined
+  }
+
 function validate(
   value: string,
   rules: ValidationRule[],
@@ -43,5 +60,5 @@ function validate(
   return undefined
 }
 
-export { required, minLength, validEmail, matchesField, minAge, validate }
+export { required, minLength, maxLength, validEmail, matchesField, minAge, noHtml, safeText, validate }
 export type { ValidationRule }

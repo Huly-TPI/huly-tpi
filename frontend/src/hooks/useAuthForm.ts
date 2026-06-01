@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { ValidationRule } from '../utils/validation'
 import { validate } from '../utils/validation'
+import { sanitizeInput, sanitizeForSubmit } from '../utils/sanitize'
 
 type FieldRules = Record<string, ValidationRule[]>
 type FieldErrors = Record<string, string | undefined>
@@ -13,7 +14,7 @@ export function useAuthForm<T extends Record<string, string>>(
   const [errors, setErrors] = useState<FieldErrors>({})
 
   const handleChange = useCallback((field: string, value: string) => {
-    setValues((prev) => ({ ...prev, [field]: value }))
+    setValues((prev) => ({ ...prev, [field]: sanitizeInput(value) }))
     setErrors((prev) => {
       if (!prev[field]) return prev
       return { ...prev, [field]: undefined }
@@ -36,6 +37,12 @@ export function useAuthForm<T extends Record<string, string>>(
     return isValid
   }, [values, rules])
 
+  const getSanitizedValues = useCallback((): T => {
+    return Object.fromEntries(
+      Object.entries(values).map(([key, val]) => [key, sanitizeForSubmit(val)])
+    ) as T
+  }, [values])
+
   const reset = useCallback(() => {
     setValues(initialValues)
     setErrors({})
@@ -45,5 +52,5 @@ export function useAuthForm<T extends Record<string, string>>(
     setErrors((prev) => ({ ...prev, ...fieldErrors }))
   }, [])
 
-  return { values, errors, handleChange, validateAll, setFieldErrors, reset }
+  return { values, errors, handleChange, validateAll, getSanitizedValues, setFieldErrors, reset }
 }
