@@ -3,6 +3,7 @@ package com.huly.backend.domain.useCase.journal;
 import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.repository.JournalEntryRepository;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -13,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,8 +25,14 @@ class CreateJournalEntryUseCaseTest {
     @Mock
     private JournalEntryRepository journalEntryRepository;
 
+    @Mock
+    private UserVectorMemoryService userVectorMemoryService;
+
     @InjectMocks
     private CreateJournalEntryUseCase createJournalEntryUseCase;
+
+    private static final String JSON_CONTENT =
+            "{\"adentro\":\"Lo de adentro\",\"pensamiento\":\"Mi pensamiento\",\"bien\":\"Algo bien\",\"manana\":\"Para mañana\"}";
 
     private JournalEntry buildEntry(Long id, String content, Mood mood) {
         return JournalEntry.builder()
@@ -35,6 +44,7 @@ class CreateJournalEntryUseCaseTest {
                 .createdAt(Instant.now())
                 .build();
     }
+
 
     @Test
     void execute_shouldDelegateToRepository() {
@@ -83,5 +93,69 @@ class CreateJournalEntryUseCaseTest {
 
         assertThat(result.getMood()).isNull();
         verify(journalEntryRepository).save(1L, "Sin mood", null);
+    }
+
+
+    @Test
+    void execute_shouldCallRememberJournalEntry_afterSaving() {
+        when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
+                .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
+
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY);
+
+        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), anyString());
+    }
+
+    @Test
+    void execute_shouldIncludeMoodInVectorContent() {
+        when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
+                .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
+
+        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY);
+
+        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
+        assertThat(vectorCaptor.getValue()).contains("HAPPY");
+    }
+
+    @Test
+    void execute_shouldIncludeAllJournalFieldsInVectorContent() {
+        when(journalEntryRepository.save(1L, JSON_CONTENT, null))
+                .thenReturn(buildEntry(10L, JSON_CONTENT, null));
+
+        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null);
+
+        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
+        String vectorContent = vectorCaptor.getValue();
+        assertThat(vectorContent).contains("Lo de adentro");
+        assertThat(vectorContent).contains("Mi pensamiento");
+        assertThat(vectorContent).contains("Algo bien");
+        assertThat(vectorContent).contains("Para mañana");
+    }
+
+    @Test
+    void execute_shouldUsePlainTextFallback_whenContentIsNotJson() {
+        String plainContent = "Texto plano sin formato JSON";
+        when(journalEntryRepository.save(1L, plainContent, null))
+                .thenReturn(buildEntry(10L, plainContent, null));
+
+        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
+        createJournalEntryUseCase.execute(1L, plainContent, null);
+
+        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
+        assertThat(vectorCaptor.getValue()).contains("Texto plano sin formato JSON");
+    }
+
+    @Test
+    void execute_shouldOmitMoodFromVectorContent_whenMoodIsNull() {
+        when(journalEntryRepository.save(1L, JSON_CONTENT, null))
+                .thenReturn(buildEntry(10L, JSON_CONTENT, null));
+
+        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null);
+
+        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
+        assertThat(vectorCaptor.getValue()).doesNotContain("Estado de ánimo");
     }
 }
