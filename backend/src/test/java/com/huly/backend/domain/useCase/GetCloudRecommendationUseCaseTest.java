@@ -12,9 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +44,26 @@ class GetCloudRecommendationUseCaseTest {
             }
             """;
 
+    private static final String BREATHING_JSON = """
+            {
+              "activity_type": "breathing",
+              "action_id": "breathing",
+              "title": "Respirá profundo",
+              "description": "Una respiración guiada puede ayudarte a calmarte.",
+              "redirect_url": "/guided-breathing"
+            }
+            """;
+
+    private static final String BUBBLES_JSON = """
+            {
+              "activity_type": "bubbles",
+              "action_id": "bubbles",
+              "title": "Explotá burbujas",
+              "description": "Liberar tensión con burbujas puede ser muy útil.",
+              "redirect_url": "/bubbles"
+            }
+            """;
+
     @Test
     void execute_shouldReturnDiaryRecommendation_whenLlmReturnsDiaryJson() {
         when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of(DIARY_JSON));
@@ -68,6 +86,49 @@ class GetCloudRecommendationUseCaseTest {
         assertThat(result.activityType()).isEqualTo("clouds");
         assertThat(result.actionId()).isEqualTo("clouds");
         assertThat(result.redirectUrl()).isEqualTo("/clouds");
+    }
+
+    @Test
+    void execute_shouldReturnBreathingRecommendation_whenLlmReturnsBreathingJson() {
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of(BREATHING_JSON));
+
+        CloudRecommendation result = useCase.execute(List.of("me siento muy ansioso"));
+
+        assertThat(result.activityType()).isEqualTo("breathing");
+        assertThat(result.actionId()).isEqualTo("breathing");
+        assertThat(result.title()).isEqualTo("Respirá profundo");
+        assertThat(result.redirectUrl()).isEqualTo("/guided-breathing");
+    }
+
+    @Test
+    void execute_shouldReturnBubblesRecommendation_whenLlmReturnsBubblesJson() {
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of(BUBBLES_JSON));
+
+        CloudRecommendation result = useCase.execute(List.of("tengo mucha tensión acumulada"));
+
+        assertThat(result.activityType()).isEqualTo("bubbles");
+        assertThat(result.actionId()).isEqualTo("bubbles");
+        assertThat(result.title()).isEqualTo("Explotá burbujas");
+        assertThat(result.redirectUrl()).isEqualTo("/bubbles");
+    }
+
+    @Test
+    void execute_shouldFallbackToDiary_whenActivityTypeIsUnknown() {
+        String unknownJson = """
+                {
+                  "activity_type": "unknown",
+                  "action_id": "unknown",
+                  "title": "Actividad desconocida",
+                  "description": "Descripción.",
+                  "redirect_url": "/unknown"
+                }
+                """;
+        when(llmChatPort.chat(any(), any(), anyList())).thenReturn(ChatReply.of(unknownJson));
+
+        CloudRecommendation result = useCase.execute(List.of("pensamiento"));
+
+        assertThat(result.activityType()).isEqualTo("diary");
+        assertThat(result.redirectUrl()).isEqualTo("/diary");
     }
 
     @Test

@@ -1,24 +1,42 @@
 package com.huly.backend.presentation.controller;
 
 import com.huly.backend.domain.model.CloudRecommendation;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.GetCloudRecommendationUseCase;
+import com.huly.backend.exception.NotFoundException;
+import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
+import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.presentation.dto.CloudRecommendationRequest;
 import com.huly.backend.presentation.dto.CloudRecommendationResponse;
+import com.huly.backend.presentation.dto.CloudThoughtRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/clouds")
+@RequiredArgsConstructor
 public class CloudController {
 
     private final GetCloudRecommendationUseCase getCloudRecommendationUseCase;
+    private final UserVectorMemoryService userVectorMemoryService;
+    private final AppUserRepository appUserRepository;
 
-    public CloudController(GetCloudRecommendationUseCase getCloudRecommendationUseCase) {
-        this.getCloudRecommendationUseCase = getCloudRecommendationUseCase;
+    @PostMapping("/thought")
+    public ResponseEntity<Void> saveThought(@RequestBody @Valid CloudThoughtRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AppUserEntity user = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        userVectorMemoryService.rememberGuidedCloudInput(user.getId(), UUID.randomUUID().toString(), request.thought());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/recommendation")
