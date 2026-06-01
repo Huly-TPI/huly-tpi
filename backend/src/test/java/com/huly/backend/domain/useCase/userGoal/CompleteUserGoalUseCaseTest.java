@@ -19,13 +19,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class DeleteUserGoalUseCaseTest {
+class CompleteUserGoalUseCaseTest {
 
     @Mock
     private UserGoalRepository userGoalRepository;
 
     @InjectMocks
-    private DeleteUserGoalUseCase deleteUserGoalUseCase;
+    private CompleteUserGoalUseCase completeUserGoalUseCase;
 
     private UserGoal pendingGoal(Long id) {
         return UserGoal.builder()
@@ -34,26 +34,39 @@ class DeleteUserGoalUseCaseTest {
     }
 
     @Test
-    void execute_shouldCancelGoal_whenItExists() {
+    void execute_shouldSetStatusToCompleted_whenGoalExists() {
         UserGoal goal = pendingGoal(1L);
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
+        when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        deleteUserGoalUseCase.execute(1L);
+        UserGoal result = completeUserGoalUseCase.execute(1L);
 
         ArgumentCaptor<UserGoal> captor = ArgumentCaptor.forClass(UserGoal.class);
         verify(userGoalRepository).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(GoalStatus.CANCELLED);
-        verify(userGoalRepository, never()).deleteById(any());
+        assertThat(captor.getValue().getStatus()).isEqualTo(GoalStatus.COMPLETED);
+        assertThat(result.getStatus()).isEqualTo(GoalStatus.COMPLETED);
+    }
+
+    @Test
+    void execute_shouldNotModifyOtherFields_whenCompleting() {
+        UserGoal goal = pendingGoal(1L);
+        when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
+        when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        UserGoal result = completeUserGoalUseCase.execute(1L);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getUserId()).isEqualTo(10L);
+        assertThat(result.getTitle()).isEqualTo("Meta");
     }
 
     @Test
     void execute_shouldThrowNotFoundException_whenGoalDoesNotExist() {
         when(userGoalRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> deleteUserGoalUseCase.execute(99L))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(99L))
                 .isInstanceOf(NotFoundException.class);
 
         verify(userGoalRepository, never()).save(any());
-        verify(userGoalRepository, never()).deleteById(any());
     }
 }

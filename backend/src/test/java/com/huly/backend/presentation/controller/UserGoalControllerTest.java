@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
+import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
@@ -40,6 +41,7 @@ class UserGoalControllerTest {
     private GetUserGoalsByUserUseCase getUserGoalsByUserUseCase;
     private DeleteUserGoalUseCase deleteUserGoalUseCase;
     private UpdateUserGoalUseCase updateUserGoalUseCase;
+    private CompleteUserGoalUseCase completeUserGoalUseCase;
 
     @BeforeEach
     void setUp() {
@@ -47,10 +49,11 @@ class UserGoalControllerTest {
         getUserGoalsByUserUseCase = mock(GetUserGoalsByUserUseCase.class);
         deleteUserGoalUseCase = mock(DeleteUserGoalUseCase.class);
         updateUserGoalUseCase = mock(UpdateUserGoalUseCase.class);
+        completeUserGoalUseCase = mock(CompleteUserGoalUseCase.class);
 
         UserGoalController controller = new UserGoalController(
                 addUserGoalUseCase, getUserGoalsByUserUseCase,
-                deleteUserGoalUseCase, updateUserGoalUseCase);
+                deleteUserGoalUseCase, updateUserGoalUseCase, completeUserGoalUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -175,5 +178,27 @@ class UserGoalControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(deleteUserGoalUseCase).execute(1L);
+    }
+
+    @Test
+    void complete_shouldReturn200WithCompletedStatus_whenGoalExists() throws Exception {
+        when(completeUserGoalUseCase.execute(1L))
+                .thenReturn(goal(1L, "Meta", GoalStatus.COMPLETED));
+
+        mockMvc.perform(patch("/api/user-goals/1/complete"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+    }
+
+    @Test
+    void complete_shouldDelegateToUseCase_withCorrectId() throws Exception {
+        when(completeUserGoalUseCase.execute(42L))
+                .thenReturn(goal(42L, "Meta", GoalStatus.COMPLETED));
+
+        mockMvc.perform(patch("/api/user-goals/42/complete"))
+                .andExpect(status().isOk());
+
+        verify(completeUserGoalUseCase).execute(42L);
     }
 }
