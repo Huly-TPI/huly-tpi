@@ -38,6 +38,12 @@ export interface UpdateUserGoalRequest {
   activityId?: number
 }
 
+export interface AcceptChallengeRequest {
+  title: string
+  description?: string
+  activityId?: number
+}
+
 export const userGoalsApi = {
   getByUser: (userId: number, page = 0, size = 50) =>
     api.get<UserGoalListResponse>(`/user-goals/user/${userId}?page=${page}&size=${size}`),
@@ -53,4 +59,7 @@ export const userGoalsApi = {
 
   complete: (id: number) =>
     api.patch<UserGoalResponse>(`/user-goals/${id}/complete`),
+
+  acceptChallenge: (data: AcceptChallengeRequest) =>
+    api.post<UserGoalResponse>('/user-goals/accept', data),
 }

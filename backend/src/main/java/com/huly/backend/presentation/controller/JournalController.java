@@ -57,10 +57,13 @@ public class JournalController {
             }
         }
 
+        boolean useTextForAI = request.useTextForAI() == null || request.useTextForAI();
+
         JournalEntry entry = createJournalEntryUseCase.execute(
                 user.getId(),
                 request.content(),
-                mood
+                mood,
+                useTextForAI
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(entry));

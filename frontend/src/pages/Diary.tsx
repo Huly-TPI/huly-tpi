@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { journalApi, type JournalEntryResponse, type Mood } from '../api/journal'
+import { useAuth } from '../context/auth'
 import cloudImg from '../assets/garden/light-theme/cloud.webp'
 import Button from '../components/Buttons/Button/Button'
+import DiaryConsentModal from '../components/DiaryConsentModal'
+
+function getDiaryConsentKey(userId: number): string {
+  return `diaryTextConsent_${userId}`
+}
 
 const MOODS: { value: Mood; label: string; emoji: string }[] = [
   { value: 'HAPPY',     label: 'Feliz',      emoji: '😊' },
@@ -43,6 +49,7 @@ const LINE_BG = {
 
 export default function Diary() {
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const [entries, setEntries] = useState<JournalEntryResponse[]>([])
   const [loadingEntries, setLoadingEntries] = useState(true)
@@ -56,6 +63,13 @@ export default function Diary() {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showConsentModal, setShowConsentModal] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      setShowConsentModal(localStorage.getItem(getDiaryConsentKey(user.id)) === null)
+    }
+  }, [user])
 
   useEffect(() => {
     journalApi
@@ -99,6 +113,16 @@ export default function Diary() {
 
   const hasContent = adentro.trim() || pensamiento.trim() || bien.trim() || manana.trim()
 
+  const handleConsentAccept = () => {
+    if (user) localStorage.setItem(getDiaryConsentKey(user.id), 'true')
+    setShowConsentModal(false)
+  }
+
+  const handleConsentReject = () => {
+    if (user) localStorage.setItem(getDiaryConsentKey(user.id), 'false')
+    setShowConsentModal(false)
+  }
+
   const handleSave = async () => {
     if (!hasContent) return
     setSaving(true)
@@ -110,7 +134,8 @@ export default function Diary() {
         bien: bien.trim(),
         manana: manana.trim(),
       })
-      const newEntry = await journalApi.create({ content: contentJson, mood: selectedMood })
+      const useTextForAI = user ? localStorage.getItem(getDiaryConsentKey(user.id)) === 'true' : false
+      const newEntry = await journalApi.create({ content: contentJson, mood: selectedMood, useTextForAI })
       setEntries((prev) => [newEntry, ...prev])
       setAdentro('')
       setPensamiento('')
@@ -136,6 +161,10 @@ export default function Diary() {
   const visibleDots = Math.min(totalPages, MAX_DOTS)
 
   return (
+    <>
+    {showConsentModal && (
+      <DiaryConsentModal onAccept={handleConsentAccept} onReject={handleConsentReject} />
+    )}
     <div
       className="min-h-screen flex flex-col items-center px-4 py-6 relative overflow-hidden"
       style={{
@@ -319,5 +348,6 @@ export default function Diary() {
         </div>
       )}
     </div>
+    </>
   )
 }

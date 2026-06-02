@@ -62,12 +62,26 @@ public class AnthropicChatAdapter implements LLMChatPort, StreamingLLMChatPort {
             Boolean riskDetected = extractBooleanOrNull(node, "risk_detected");
             String matchedWord = node.path("matched_word").isNull()
                     ? null : node.path("matched_word").asText(null);
+            ChatReply.GeneratedChallenge generatedChallenge = parseGeneratedChallenge(node);
 
-            return new ChatReply(reply, emotion, intensity, riskDetected, matchedWord);
+            return new ChatReply(reply, emotion, intensity, riskDetected, matchedWord, null, generatedChallenge);
         } catch (Exception e) {
             log.warn("No se pudo parsear la respuesta estructurada, usando texto plano");
             return ChatReply.of(raw);
         }
+    }
+
+    private ChatReply.GeneratedChallenge parseGeneratedChallenge(JsonNode node) {
+        JsonNode challengeNode = node.path("generated_challenge");
+        if (challengeNode.isNull() || challengeNode.isMissingNode() || !challengeNode.isObject()) {
+            return null;
+        }
+        String title = challengeNode.path("title").asText(null);
+        String description = challengeNode.path("description").asText(null);
+        if (title == null || title.isBlank()) {
+            return null;
+        }
+        return new ChatReply.GeneratedChallenge(title, description);
     }
 
     private String extractText(ChatResponse response) {
