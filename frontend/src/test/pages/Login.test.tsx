@@ -45,7 +45,7 @@ describe('Login', () => {
         expect(screen.getByPlaceholderText('Contraseña')).toBeInTheDocument()
     })
 
-    it('muestra errores de validaciÃ³n al enviar vacÃ­o', async () => {
+    it('muestra errores de validación al enviar vacío', async () => {
         const { user } = renderWithRouter()
 
         await user.click(getSubmitButton())
@@ -103,7 +103,7 @@ describe('Login', () => {
         })
     })
 
-    it('muestra mensaje amigable para credenciales invÃ¡lidas', async () => {
+    it('muestra mensaje amigable para credenciales inválidas', async () => {
         mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'))
         const { user } = renderWithRouter()
 
@@ -115,7 +115,7 @@ describe('Login', () => {
         })
     })
 
-    it('muestra error genÃ©rico del backend', async () => {
+    it('muestra error genérico del backend', async () => {
         mockLogin.mockRejectedValueOnce(new Error('Error del servidor'))
         const { user } = renderWithRouter()
 
@@ -129,7 +129,7 @@ describe('Login', () => {
 
     it('muestra errores por campo del backend', async () => {
         mockLogin.mockRejectedValueOnce(
-            new ApiError('Error de validaciÃ³n', { email: 'Email no registrado' }),
+            new ApiError('Error de validación', { email: 'Email no registrado' }),
         )
         const { user } = renderWithRouter()
 
@@ -149,7 +149,7 @@ describe('Login', () => {
         expect(screen.getByText('Register')).toBeInTheDocument()
     })
 
-    it('deshabilita el botÃ³n mientras carga', async () => {
+    it('deshabilita el botón mientras carga', async () => {
         mockLogin.mockImplementation(() => new Promise(() => {}))
         const { user } = renderWithRouter()
 

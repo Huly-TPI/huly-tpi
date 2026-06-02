@@ -32,7 +32,7 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
     @Transactional
     public void completeOnboarding(Long userId, String answer1, String answer2, String answer3) {
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
-                .orElseThrow(() -> new NotFoundException("UserDetail not found for userId: " + userId));
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
         userDetail.setOnboardingAnswer1(answer1);
         userDetail.setOnboardingAnswer2(answer2);
         userDetail.setOnboardingAnswer3(answer3);
@@ -44,7 +44,7 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
     @Transactional
     public void completeTutorial(Long userId) {
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
-                .orElseThrow(() -> new NotFoundException("UserDetail not found for userId: " + userId));
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
         userDetail.setOnboardingTutorialCompleted(true);
         userDetailRepository.save(userDetail);
     }
