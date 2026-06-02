@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { journalApi, type JournalEntryResponse, type Mood } from '../api/journal'
 import { useAuth } from '../context/auth'
 import cloudImg from '../assets/garden/light-theme/cloud.webp'
 import Button from '../components/Buttons/Button/Button'
+import BackButton from '../components/Buttons/BackButton/BackButton'
 import DiaryConsentModal from '../components/DiaryConsentModal'
 
 function getDiaryConsentKey(userId: number): string {
@@ -48,7 +48,6 @@ const LINE_BG = {
 }
 
 export default function Diary() {
-  const navigate = useNavigate()
   const { user } = useAuth()
 
   const [entries, setEntries] = useState<JournalEntryResponse[]>([])
@@ -64,6 +63,12 @@ export default function Diary() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showConsentModal, setShowConsentModal] = useState(false)
+
+  useEffect(() => {
+    const main = document.querySelector('main') as HTMLElement | null
+    if (main) main.style.overflow = 'hidden'
+    return () => { if (main) main.style.overflow = '' }
+  }, [])
 
   useEffect(() => {
     if (user) {
@@ -166,7 +171,7 @@ export default function Diary() {
       <DiaryConsentModal onAccept={handleConsentAccept} onReject={handleConsentReject} />
     )}
     <div
-      className="min-h-screen flex flex-col items-center px-4 py-6 relative overflow-hidden"
+      className="h-screen flex flex-col items-center px-4 pt-16 pb-6 relative overflow-hidden"
       style={{
         background: 'linear-gradient(to bottom, #bde0f7 0%, #d4efc4 100%)',
       }}
@@ -175,11 +180,7 @@ export default function Diary() {
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-60 hidden lg:block"  style={{ zIndex: 0, width: 300, top: '0%',  right: '3%' }} />
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-50 hidden lg:block"  style={{ zIndex: 0, width: 340, top: '15%', right: '-5%' }} />
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-40 hidden lg:block"  style={{ zIndex: 0, width: 320, top: '22%', left: '-4%' }} />
-      <div className="relative w-full max-w-4xl mb-3" style={{ zIndex: 1 }}>
-        <Button variant="tertiary" onClick={() => navigate(-1)}>
-          ← Cerrar cuaderno
-        </Button>
-      </div>
+      <BackButton />
 
       <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2" style={{ borderColor: '#8869AC', zIndex: 1 }}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-white">
