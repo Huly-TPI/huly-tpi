@@ -4,6 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
 vi.mock('../../assets/garden/light-theme/cloud.webp', () => ({ default: 'cloud.webp' }))
+vi.mock('../../assets/brand/color-logo.webp', () => ({ default: 'color-logo.webp' }))
+
+vi.mock('../../context/auth', () => ({
+  useAuth: () => ({ user: { id: 1, name: 'Test', email: 'test@huly.com', role: 'USER' } }),
+}))
+
+const CONSENT_KEY = 'diaryTextConsent_1'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -36,10 +43,12 @@ const makeEntry = (overrides: Partial<JournalEntryResponse> = {}): JournalEntryR
 describe('Diary', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
     mockedList.mockResolvedValue([])
   })
 
-  const renderDiary = () => {
+  const renderDiary = (consent: 'true' | 'false' | null = 'true') => {
+    if (consent !== null) localStorage.setItem(CONSENT_KEY, consent)
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -49,6 +58,49 @@ describe('Diary', () => {
     return { user }
   }
 
+
+  describe('modal de consentimiento', () => {
+    it('muestra el modal la primera vez que se abre el diario', () => {
+      renderDiary(null)
+      expect(screen.getByText('Una pregunta antes de empezar')).toBeInTheDocument()
+    })
+
+    it('no muestra el modal si el usuario ya aceptó', () => {
+      localStorage.setItem('diaryTextConsent', 'true')
+      renderDiary()
+      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+    })
+
+    it('no muestra el modal si el usuario ya rechazó', () => {
+      localStorage.setItem('diaryTextConsent', 'false')
+      renderDiary()
+      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+    })
+
+    it('guarda true en localStorage al aceptar', async () => {
+      const { user } = renderDiary(null)
+      await user.click(screen.getByRole('button', { name: 'Sí, pueden usarlo' }))
+      expect(localStorage.getItem(CONSENT_KEY)).toBe('true')
+    })
+
+    it('guarda false en localStorage al rechazar', async () => {
+      const { user } = renderDiary(null)
+      await user.click(screen.getByRole('button', { name: 'Prefiero mantenerlo privado' }))
+      expect(localStorage.getItem(CONSENT_KEY)).toBe('false')
+    })
+
+    it('oculta el modal después de aceptar', async () => {
+      const { user } = renderDiary(null)
+      await user.click(screen.getByRole('button', { name: 'Sí, pueden usarlo' }))
+      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+    })
+
+    it('oculta el modal después de rechazar', async () => {
+      const { user } = renderDiary(null)
+      await user.click(screen.getByRole('button', { name: 'Prefiero mantenerlo privado' }))
+      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+    })
+  })
 
   it('renderiza el formulario de nueva entrada con los 4 campos', () => {
     renderDiary()
@@ -205,6 +257,32 @@ describe('Diary', () => {
 
     expect(screen.getByDisplayValue('Texto adentro')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Texto pensamiento')).toBeInTheDocument()
+  })
+
+  it('manda useTextForAI true al guardar cuando el usuario aceptó el consentimiento', async () => {
+    mockedCreate.mockResolvedValueOnce(makeEntry())
+    const { user } = renderDiary('true')
+
+    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
+    await user.click(screen.getByRole('button', { name: /Guardar/ }))
+
+    await waitFor(() => {
+      const [data] = mockedCreate.mock.calls[0]
+      expect(data.useTextForAI).toBe(true)
+    })
+  })
+
+  it('manda useTextForAI false al guardar cuando el usuario rechazó el consentimiento', async () => {
+    mockedCreate.mockResolvedValueOnce(makeEntry())
+    const { user } = renderDiary('false')
+
+    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
+    await user.click(screen.getByRole('button', { name: /Guardar/ }))
+
+    await waitFor(() => {
+      const [data] = mockedCreate.mock.calls[0]
+      expect(data.useTextForAI).toBe(false)
+    })
   })
 
   it('usa texto plano como fallback para entradas sin formato JSON', async () => {

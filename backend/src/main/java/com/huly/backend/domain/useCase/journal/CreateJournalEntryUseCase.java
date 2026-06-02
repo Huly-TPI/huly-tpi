@@ -18,16 +18,19 @@ public class CreateJournalEntryUseCase {
     private final JournalEntryRepository journalEntryRepository;
     private final UserVectorMemoryService userVectorMemoryService;
 
-    public JournalEntry execute(Long userId, String content, Mood mood) {
+    public JournalEntry execute(Long userId, String content, Mood mood, boolean useTextForAI) {
         JournalEntry entry = journalEntryRepository.save(userId, content, mood);
-        userVectorMemoryService.rememberJournalEntry(userId, entry.getId(), buildVectorContent(content, mood));
+        userVectorMemoryService.rememberJournalEntry(userId, entry.getId(), buildVectorContent(content, mood, useTextForAI));
         return entry;
     }
 
-    private String buildVectorContent(String content, Mood mood) {
+    private String buildVectorContent(String content, Mood mood, boolean useTextForAI) {
         StringBuilder sb = new StringBuilder("Entrada de diario emocional.");
         if (mood != null) {
             sb.append(" Estado de ánimo: ").append(mood.name()).append(".");
+        }
+        if (!useTextForAI) {
+            return sb.toString();
         }
         try {
             JsonNode node = MAPPER.readTree(content);

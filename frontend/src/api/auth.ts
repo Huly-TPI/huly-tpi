@@ -2,6 +2,7 @@ import { api } from './client'
 
 export interface AuthResponse {
   accessToken: string
+  profileOnBoardingCompleted?: boolean
   role: string
 }
 
@@ -15,6 +16,16 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string
   password: string
+}
+export interface UserProfile {
+  id: number
+  name: string
+  email: string
+  role: string
+}
+
+export const getMe = () => {
+  return api.get<UserProfile>('/users/me')
 }
 
 export const register = (data: RegisterRequest) => {

@@ -51,7 +51,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, "Hoy me sentí bien", Mood.HAPPY))
                 .thenReturn(buildEntry(10L, "Hoy me sentí bien", Mood.HAPPY));
 
-        createJournalEntryUseCase.execute(1L, "Hoy me sentí bien", Mood.HAPPY);
+        createJournalEntryUseCase.execute(1L, "Hoy me sentí bien", Mood.HAPPY, true);
 
         verify(journalEntryRepository).save(1L, "Hoy me sentí bien", Mood.HAPPY);
     }
@@ -61,7 +61,7 @@ class CreateJournalEntryUseCaseTest {
         JournalEntry expected = buildEntry(10L, "Hoy me sentí bien", Mood.CALM);
         when(journalEntryRepository.save(1L, "Hoy me sentí bien", Mood.CALM)).thenReturn(expected);
 
-        JournalEntry result = createJournalEntryUseCase.execute(1L, "Hoy me sentí bien", Mood.CALM);
+        JournalEntry result = createJournalEntryUseCase.execute(1L, "Hoy me sentí bien", Mood.CALM, true);
 
         assertThat(result).isSameAs(expected);
     }
@@ -71,7 +71,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(2L, "Entrada de prueba", Mood.ANXIOUS))
                 .thenReturn(buildEntry(5L, "Entrada de prueba", Mood.ANXIOUS));
 
-        createJournalEntryUseCase.execute(2L, "Entrada de prueba", Mood.ANXIOUS);
+        createJournalEntryUseCase.execute(2L, "Entrada de prueba", Mood.ANXIOUS, true);
 
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
@@ -89,7 +89,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, "Sin mood", null))
                 .thenReturn(buildEntry(1L, "Sin mood", null));
 
-        JournalEntry result = createJournalEntryUseCase.execute(1L, "Sin mood", null);
+        JournalEntry result = createJournalEntryUseCase.execute(1L, "Sin mood", null, true);
 
         assertThat(result.getMood()).isNull();
         verify(journalEntryRepository).save(1L, "Sin mood", null);
@@ -101,7 +101,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
 
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, true);
 
         verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), anyString());
     }
@@ -112,7 +112,7 @@ class CreateJournalEntryUseCaseTest {
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
 
         ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, true);
 
         verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
         assertThat(vectorCaptor.getValue()).contains("HAPPY");
@@ -124,7 +124,7 @@ class CreateJournalEntryUseCaseTest {
                 .thenReturn(buildEntry(10L, JSON_CONTENT, null));
 
         ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null, true);
 
         verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
         String vectorContent = vectorCaptor.getValue();
@@ -141,10 +141,38 @@ class CreateJournalEntryUseCaseTest {
                 .thenReturn(buildEntry(10L, plainContent, null));
 
         ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
-        createJournalEntryUseCase.execute(1L, plainContent, null);
+        createJournalEntryUseCase.execute(1L, plainContent, null, true);
 
         verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
         assertThat(vectorCaptor.getValue()).contains("Texto plano sin formato JSON");
+    }
+
+    @Test
+    void execute_shouldOmitTextFromVectorContent_whenUseTextForAIIsFalse() {
+        when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
+                .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
+
+        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, false);
+
+        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
+        String vectorContent = vectorCaptor.getValue();
+        assertThat(vectorContent).doesNotContain("Lo de adentro");
+        assertThat(vectorContent).doesNotContain("Mi pensamiento");
+        assertThat(vectorContent).doesNotContain("Algo bien");
+        assertThat(vectorContent).doesNotContain("Para mañana");
+    }
+
+    @Test
+    void execute_shouldIncludeMoodInVectorContent_whenUseTextForAIIsFalse() {
+        when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.CALM))
+                .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.CALM));
+
+        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.CALM, false);
+
+        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
+        assertThat(vectorCaptor.getValue()).contains("CALM");
     }
 
     @Test
@@ -153,7 +181,7 @@ class CreateJournalEntryUseCaseTest {
                 .thenReturn(buildEntry(10L, JSON_CONTENT, null));
 
         ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null);
+        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null, true);
 
         verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
         assertThat(vectorCaptor.getValue()).doesNotContain("Estado de ánimo");

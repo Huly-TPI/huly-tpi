@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -86,12 +87,12 @@ class JournalControllerTest {
     @Test
     void create_shouldReturn201_whenRequestHasValidContentAndMood() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
-        when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Hoy me sentí bien"), eq(Mood.HAPPY)))
+        when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Hoy me sentí bien"), eq(Mood.HAPPY), anyBoolean()))
                 .thenReturn(buildEntry(10L, "Hoy me sentí bien", Mood.HAPPY));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy me sentí bien", "HAPPY"))))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy me sentí bien", "HAPPY", true))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10L))
                 .andExpect(jsonPath("$.content").value("Hoy me sentí bien"))
@@ -101,12 +102,12 @@ class JournalControllerTest {
     @Test
     void create_shouldReturn201_whenMoodIsNull() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
-        when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Solo escribir"), eq(null)))
+        when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Solo escribir"), eq(null), anyBoolean()))
                 .thenReturn(buildEntry(10L, "Solo escribir", null));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Solo escribir", null))))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Solo escribir", null, null))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.mood").doesNotExist());
     }
@@ -114,12 +115,12 @@ class JournalControllerTest {
     @Test
     void create_shouldReturn201_whenMoodIsLowercase() throws Exception {
         when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
-        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), eq(Mood.SAD)))
+        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), eq(Mood.SAD), anyBoolean()))
                 .thenReturn(buildEntry(10L, "Hoy fue difícil", Mood.SAD));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy fue difícil", "sad"))))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy fue difícil", "sad", true))))
                 .andExpect(status().isCreated());
     }
 
@@ -127,7 +128,7 @@ class JournalControllerTest {
     void create_shouldReturn400_whenContentIsBlank() throws Exception {
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("", "HAPPY"))))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("", "HAPPY", null))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -145,7 +146,7 @@ class JournalControllerTest {
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy fue raro", "INVALIDO"))))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy fue raro", "INVALIDO", null))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -155,8 +156,44 @@ class JournalControllerTest {
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Contenido válido", null))))
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Contenido válido", null, null))))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void create_shouldPassUseTextForAITrueToUseCase_whenFieldIsTrue() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
+        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(true)))
+                .thenReturn(buildEntry(10L, "Contenido", Mood.HAPPY));
+
+        mockMvc.perform(post("/api/journal")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Contenido", "HAPPY", true))))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void create_shouldPassUseTextForAIFalseToUseCase_whenFieldIsFalse() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
+        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(false)))
+                .thenReturn(buildEntry(10L, "Contenido", Mood.HAPPY));
+
+        mockMvc.perform(post("/api/journal")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Contenido", "HAPPY", false))))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void create_shouldDefaultToTrueForUseTextForAI_whenFieldIsNull() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
+        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(true)))
+                .thenReturn(buildEntry(10L, "Contenido", null));
+
+        mockMvc.perform(post("/api/journal")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Contenido", null, null))))
+                .andExpect(status().isCreated());
     }
 
     @Test

@@ -3,6 +3,7 @@ import {
   chatApi,
   type ChatHistoryMessageDto,
 } from '../api/chat'
+import { userGoalsApi } from '../api/userGoals'
 import { type ChatbotMessage } from '../components/Chatbot/chatbotTypes'
 
 const CHAT_CONVERSATION_STORAGE_KEY = 'hulyChatConversationId'
@@ -114,6 +115,15 @@ export function useChatbot() {
         return { ...message, challengeDecision: decision }
       }),
     )
+
+    if (decision === 'accepted') {
+      const { title, description } = selectedMessage.generated_challenge
+      try {
+        await userGoalsApi.acceptChallenge({ title, description: description ?? undefined })
+      } catch {
+        // no bloquea el flujo si falla el guardado
+      }
+    }
 
     const challengeResponseText =
       decision === 'accepted'

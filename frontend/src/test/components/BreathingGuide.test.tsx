@@ -3,6 +3,11 @@ import {BreathingGuide} from '../../components/BreathingGuide';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({
+    requireAuth: (action: () => void) => action(),
+  }),
+}))
 
 describe('BreathingGuide', () => {
 

@@ -3,6 +3,7 @@ package com.huly.backend.presentation.controller;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatStreamEvent;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
@@ -85,6 +86,9 @@ public class ChatController {
         ChatResponse.Metadata metadata = reply != null && reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
                 : null;
+        ChatResponse.GeneratedChallenge challenge = reply != null && reply.generatedChallenge() != null
+                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
+                : null;
 
         return new ChatStreamEventResponse(
                 event.type().name().toLowerCase(Locale.ROOT),
@@ -93,6 +97,7 @@ public class ChatController {
                 emotion,
                 reply != null ? reply.intensity() : null,
                 metadata,
+                challenge,
                 event.error()
         );
     }
@@ -102,7 +107,24 @@ public class ChatController {
         ChatResponse.Metadata metadata = reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
                 : null;
-        return new ChatResponse(reply.content(), emotion, reply.intensity(), null, null, metadata);
+        ChatResponse.GeneratedChallenge challenge = reply.generatedChallenge() != null
+                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
+                : null;
+        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), challenge, metadata);
+    }
+
+    private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {
+        if (action == null) {
+            return null;
+        }
+        return new ChatResponse.SuggestedAction(
+                action.type() != null ? action.type().name() : null,
+                action.activityId() != null ? action.activityId().toString() : null,
+                action.title(),
+                action.description(),
+                action.actionUrl(),
+                action.emotionalEventId()
+        );
     }
 
     private ChatHistoryPageResponse toPageResponse(Page<ChatMessage> page) {
