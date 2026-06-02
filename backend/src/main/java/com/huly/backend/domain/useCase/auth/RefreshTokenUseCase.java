@@ -14,6 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+/**
+ * Caso de uso: renovar el accessToken usando el refreshToken.
+ * Implementa "token rotation": al renovar, el refreshToken viejo se invalida en BD
+ * y se emite uno nuevo, reduciendo el riesgo de reutilización de tokens robados.
+ *
+ * Valida el token en dos etapas:
+ *  1. Verificación criptográfica (firma y expiración via JWT)
+ *  2. Verificación en BD (asegura que no fue usado ya o revocado en logout)
+ */
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenUseCase {
@@ -24,11 +33,12 @@ public class RefreshTokenUseCase {
 
     @Transactional
     public AuthTokens execute(String rawToken) {
-
+        // Primera validación: firma y expiración del JWT
         if (!tokenProvider.isTokenValid(rawToken)) {
             throw new UnauthorizedException("Invalid or expired refresh token");
         }
 
+        // Segunda validación: el token debe existir en BD (no fue usado ni revocado)
         RefreshToken stored = refreshTokenRepository.findByToken(rawToken)
                 .orElseThrow(() -> new UnauthorizedException("Refresh token not found or already used"));
 
@@ -40,6 +50,7 @@ public class RefreshTokenUseCase {
             throw new UnauthorizedException("Account is not active");
         }
 
+        // Revoca el refreshToken viejo (token rotation: un token solo sirve una vez)
         refreshTokenRepository.delete(stored);
 
         String newAccessToken = tokenProvider.generateAccessToken(
@@ -47,6 +58,7 @@ public class RefreshTokenUseCase {
         );
         String newRefreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getEmail());
 
+        // Persiste el nuevo refreshToken para futuras renovaciones
         Instant now = Instant.now();
         refreshTokenRepository.save(RefreshToken.builder()
                 .userId(user.getId())

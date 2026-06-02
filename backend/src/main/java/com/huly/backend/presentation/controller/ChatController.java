@@ -32,6 +32,16 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Controlador del chatbot de bienestar emocional Huly.
+ * Expone tres operaciones principales:
+ *  - POST /api/chat → respuesta bloqueante (request/response normal)
+ *  - POST /api/chat/stream → respuesta en streaming via Server-Sent Events (SSE)
+ *  - GET /api/chat/{conversationId}/messages → historial paginado de mensajes
+ *
+ * El streaming usa Reactor (Flux) para enviar cada fragmento de respuesta
+ * conforme lo genera la IA, lo que da sensación de respuesta en tiempo real.
+ */
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
@@ -41,24 +51,40 @@ public class ChatController {
     private final ListChatHistoryUseCase listChatHistoryUseCase;
     private final StreamChatUseCase streamChatUseCase;
 
+    /**
+     * Envía un mensaje al chatbot y espera la respuesta completa.
+     * Incluye análisis emocional, detección de riesgo y posible reto generado.
+     * NOTA: userId está hardcodeado a 1L — pendiente integrar con autenticación real.
+     */
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        Long userId = 1L;
+        Long userId = 1L; // TODO: extraer userId del token JWT autenticado
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         return ResponseEntity.ok(toResponse(reply));
     }
 
+    /**
+     * Envía un mensaje y devuelve la respuesta en tiempo real via SSE.
+     * El cliente recibe eventos del tipo "delta" (fragmentos de texto) y al final
+     * un evento "metadata" con el análisis emocional y "done" para señalizar el fin.
+     * Produce: text/event-stream (protocolo Server-Sent Events).
+     */
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<ChatStreamEventResponse>> stream(@RequestBody ChatRequest request) {
         if (request == null || isBlank(request.message()) || isBlank(request.conversationId())) {
+            // Valida manualmente porque @Valid no funciona bien con Flux reactivo
             return Flux.just(toServerSentEvent(ChatStreamEvent.error("message y conversationId son obligatorios.")));
         }
 
-        Long userId = 1L;
+        Long userId = 1L; // TODO: extraer userId del token JWT autenticado
         return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
                 .map(this::toServerSentEvent);
     }
 
+    /**
+     * Devuelve el historial de mensajes de una conversación, paginado.
+     * Los mensajes se ordenan por fecha ascendente (más antiguos primero).
+     */
     @GetMapping("/{conversationId}/messages")
     public ResponseEntity<ChatHistoryPageResponse> getHistory(
             @PathVariable String conversationId,
@@ -73,6 +99,7 @@ public class ChatController {
         return value == null || value.isBlank();
     }
 
+    /** Envuelve un ChatStreamEvent en el contenedor SSE con el nombre del tipo de evento. */
     private ServerSentEvent<ChatStreamEventResponse> toServerSentEvent(ChatStreamEvent event) {
         String eventName = event.type().name().toLowerCase(Locale.ROOT);
         return ServerSentEvent.<ChatStreamEventResponse>builder(toStreamResponse(event))
@@ -80,6 +107,7 @@ public class ChatController {
                 .build();
     }
 
+    /** Convierte un evento de stream de dominio al DTO de respuesta SSE. */
     private ChatStreamEventResponse toStreamResponse(ChatStreamEvent event) {
         ChatReply reply = event.reply();
         String emotion = reply != null && reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
@@ -102,6 +130,7 @@ public class ChatController {
         );
     }
 
+    /** Convierte la respuesta de dominio del chatbot al DTO de respuesta HTTP. */
     private ChatResponse toResponse(ChatReply reply) {
         String emotion = reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
         ChatResponse.Metadata metadata = reply.riskDetected() != null
@@ -113,6 +142,7 @@ public class ChatController {
         return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), challenge, metadata);
     }
 
+    /** Mapea la acción sugerida por el chatbot al DTO correspondiente. Retorna null si no hay acción. */
     private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {
         if (action == null) {
             return null;
@@ -127,6 +157,7 @@ public class ChatController {
         );
     }
 
+    /** Convierte una página de mensajes de dominio al DTO paginado de respuesta. */
     private ChatHistoryPageResponse toPageResponse(Page<ChatMessage> page) {
         List<ChatMessageResponse> content = page.getContent().stream()
                 .map(this::toMessageResponse)

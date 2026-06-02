@@ -11,6 +11,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Seeder del usuario administrador para el entorno de desarrollo.
+ * Solo se ejecuta con el perfil "dev" (@Profile("dev")), nunca en producción.
+ * CommandLineRunner se ejecuta automáticamente al iniciar la aplicación.
+ *
+ * ADVERTENCIA: las credenciales admin123 son solo para desarrollo local.
+ * En producción, los usuarios admin se crean por otro mecanismo seguro.
+ */
 @Configuration
 @RequiredArgsConstructor
 @Profile("dev")
@@ -24,6 +32,7 @@ public class AdminUserSeederConfig {
         return args -> {
             String adminEmail = "admin@huly.com";
 
+            // Idempotente: no crea el admin si ya existe (evita duplicados en reinicios)
             boolean exists = appUserRepository.existsByEmail(adminEmail);
 
             if (exists) {
@@ -33,7 +42,7 @@ public class AdminUserSeederConfig {
 
             AppUserEntity admin = AppUserEntity.builder()
                     .email(adminEmail)
-                    .password(passwordEncoder.encode("admin123"))
+                    .password(passwordEncoder.encode("admin123")) // Solo dev, nunca hardcodear en producción
                     .role(UserRole.ADMIN)
                     .status(UserStatus.ACTIVE)
                     .build();

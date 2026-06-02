@@ -16,6 +16,11 @@ import com.huly.backend.domain.repository.UserDetailDomainRepository;
 
 import java.time.Instant;
 
+/**
+ * Caso de uso: autenticar un usuario con email y contraseña.
+ * Si las credenciales son válidas y la cuenta está activa, genera un par de tokens
+ * (accessToken + refreshToken) y persiste el refreshToken en BD para poder invalidarlo en logout.
+ */
 @Service
 @RequiredArgsConstructor
 public class LoginUseCase {
@@ -28,7 +33,7 @@ public class LoginUseCase {
 
     @Transactional
     public AuthTokens execute(String email, String rawPassword) {
-
+        // El mensaje de error es genérico a propósito: no revela si el email existe o no (evita user enumeration)
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
@@ -45,6 +50,7 @@ public class LoginUseCase {
         );
         String refreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getEmail());
 
+        // Persiste el refreshToken para poder validarlo y revocarlo en logout/refresh
         Instant now = Instant.now();
         refreshTokenRepository.save(RefreshToken.builder()
                 .userId(user.getId())
@@ -53,6 +59,7 @@ public class LoginUseCase {
                 .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
                 .build());
 
+        // Informa al frontend si el usuario ya completó el onboarding de perfil
         Boolean profileOnBoardingCompleted = userDetailDomainRepository.findProfileOnBoardingCompleted(user.getId()).orElse(false);
 
         return AuthTokens.builder()

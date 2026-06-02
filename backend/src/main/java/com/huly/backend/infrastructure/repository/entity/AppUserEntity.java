@@ -9,6 +9,22 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+/**
+ * Entidad JPA que representa la tabla "app_user" en la base de datos.
+ * Contiene solo los datos de autenticación/autorización del usuario.
+ * Los datos de perfil (nombre, fecha de nacimiento) están en UserDetailEntity.
+ *
+ * Relaciones:
+ *  - userDetails: datos de perfil extendidos (1:N por flexibilidad histórica, en práctica es 1:1)
+ *  - refreshTokens: tokens JWT activos del usuario (múltiples sesiones simultáneas posibles)
+ *  - userSettings: preferencias y configuraciones del usuario
+ *  - userGoals: objetivos/metas del usuario
+ *  - breathingSessions: historial de sesiones de respiración
+ *  - journals: diarios emocionales
+ *  - chatSessions: sesiones de conversación con el chatbot
+ *
+ * cascade=ALL + orphanRemoval=true: al eliminar un usuario, se eliminan en cascada todos sus datos.
+ */
 @Entity
 @Table(name = "app_user")
 @Getter
@@ -24,12 +40,12 @@ public class AppUserEntity {
     private Long id;
 
     @Column(name = "password")
-    private String password;
+    private String password; // Siempre almacenado como hash BCrypt, nunca en plano
 
     @Column(name = "email")
     private String email;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // Guarda el nombre del enum como string en BD (no el ordinal)
     @Column(name = "role", length = 50)
     private UserRole role;
 
@@ -57,5 +73,4 @@ public class AppUserEntity {
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatSessionEntity> chatSessions;
-
 }

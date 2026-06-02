@@ -23,6 +23,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+/**
+ * Controlador de metas/objetivos del usuario (UserGoals).
+ * Las metas pueden crearse manualmente o desde un reto sugerido por el chatbot.
+ *
+ * Ciclo de vida de una meta:
+ *  1. Se crea con estado PENDING (POST /accept desde chatbot o POST / manualmente)
+ *  2. El usuario puede editarla (PUT /{id}) o eliminarla (DELETE /{id})
+ *  3. Al completarla, cambia a estado COMPLETED (PATCH /{id}/complete)
+ *
+ * El listado separa pendientes y completadas en dos páginas independientes.
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/user-goals")
@@ -36,11 +47,16 @@ public class UserGoalController {
     private final UpdateUserGoalUseCase updateUserGoalUseCase;
     private final CompleteUserGoalUseCase completeUserGoalUseCase;
 
+    /**
+     * Acepta un reto sugerido por el chatbot y lo convierte en una meta del usuario.
+     * El usuario autenticado se resuelve desde el JWT (no se recibe userId en el body).
+     * Registra un log de auditoría al completarse exitosamente.
+     */
     @PostMapping("/accept")
     public ResponseEntity<UserGoalResponse> acceptChallenge(@Valid @RequestBody AcceptChallengeRequest request) {
-
+        // El email del usuario autenticado proviene del JWT via SecurityContextHolder
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        
+
         UserGoal created = acceptChallengeUseCase.execute(
                 email,
                 request.title(),
@@ -53,6 +69,7 @@ public class UserGoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
+    /** Crea una meta manualmente (sin pasar por el chatbot). Requiere userId en el body. */
     @PostMapping
     public ResponseEntity<UserGoalResponse> add(@Valid @RequestBody UserGoalRequest request) {
         UserGoal created = addUserGoalUseCase.execute(
@@ -64,6 +81,10 @@ public class UserGoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
+    /**
+     * Lista las metas de un usuario separadas en pendientes y completadas, ambas paginadas.
+     * El orden es descendente por fecha de creación (más recientes primero).
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<UserGoalListResponse> listByUser(
             @PathVariable Long userId,
@@ -75,6 +96,7 @@ public class UserGoalController {
         return ResponseEntity.ok(new UserGoalListResponse(toPageResponse(completados), toPageResponse(pendientes)));
     }
 
+    /** Actualiza el título, descripción o actividad asociada de una meta existente. */
     @PutMapping("/{id}")
     public ResponseEntity<UserGoalResponse> update(
             @PathVariable Long id,
@@ -88,12 +110,14 @@ public class UserGoalController {
         return ResponseEntity.ok(toResponse(updated));
     }
 
+    /** Elimina permanentemente una meta del usuario. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteUserGoalUseCase.execute(id);
         return ResponseEntity.noContent().build();
     }
 
+    /** Marca una meta como COMPLETED (cambio de estado irreversible). */
     @PatchMapping("/{id}/complete")
     public ResponseEntity<UserGoalResponse> complete(@PathVariable Long id) {
         UserGoal completed = completeUserGoalUseCase.execute(id);

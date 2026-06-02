@@ -18,24 +18,35 @@ import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserD
 import org.springframework.transaction.annotation.Transactional;
 
 
+/**
+ * Servicio de autenticación LEGACY. Esta clase fue reemplazada por los use cases
+ * LoginUseCase y RegisterUseCase que siguen arquitectura limpia.
+ *
+ * PROBLEMAS de esta implementación (se mantiene por compatibilidad):
+ *  - Opera sobre entidades JPA directamente en lugar de modelos de dominio
+ *  - Lanza RuntimeException genérica en lugar de UnauthorizedException (401)
+ *  - El login devuelve LoginResponse en lugar de AuthTokens (acoplado a la capa de presentación)
+ *  - No persiste el refreshToken en BD (no soporta revocación ni token rotation)
+ *  - No verifica el estado del usuario (ACTIVE) antes de hacer login
+ *
+ * Ver LoginUseCase y RegisterUseCase para la implementación correcta.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final AppUserRepository appUserRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final JwtService jwtService;
-
     private final UserDetailRepository userDetailRepository;
 
+    /** @deprecated Usar LoginUseCase en su lugar. */
     public LoginResponse login(LoginRequest request) {
 
         AppUserEntity user = appUserRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new RuntimeException("Invalid credentials")
+                        new RuntimeException("Invalid credentials") // Debería ser UnauthorizedException
                 );
 
         boolean matches = passwordEncoder.matches(
@@ -44,7 +55,7 @@ public class AuthService {
         );
 
         if (!matches) {
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException("Invalid credentials"); // Debería ser UnauthorizedException
         }
 
         String accessToken =
@@ -63,10 +74,11 @@ public class AuthService {
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshToken) // No persiste en BD: no soporta revocación
                 .build();
     }
 
+    /** @deprecated Usar RegisterUseCase en su lugar. */
     @Transactional
     public LoginResponse register(RegisterRequest request) {
 
@@ -78,13 +90,8 @@ public class AuthService {
         }
 
         AppUserEntity user = new AppUserEntity();
-
         user.setEmail(request.getEmail());
-
-        user.setPassword(
-                passwordEncoder.encode(request.getPassword())
-        );
-
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
 
@@ -114,7 +121,7 @@ public class AuthService {
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshToken) // No persiste en BD: no soporta revocación
                 .build();
     }
 }

@@ -24,17 +24,40 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Servicio que evalúa si un mensaje del chat amerita recomendar una actividad de bienestar.
+ *
+ * Proceso de evaluación en tres capas (de más a menos estructurado):
+ *  1. Análisis estructurado: llama a la IA con un prompt especializado que devuelve JSON
+ *     con shouldRecommend, emoción detectada, y métricas VAD (Valence, Arousal, Dominance).
+ *  2. Override por análisis: aunque shouldRecommend=false, si la emoción es de alto malestar
+ *     y la intensidad/valence/dominance superan los umbrales, fuerza la recomendación.
+ *  3. Override por metadata conversacional: si el análisis no sugiere recomendar pero la
+ *     respuesta conversacional de la IA detectó una emoción de alto malestar con intensidad >= 7,
+ *     construye un análisis de fallback basado en la emoción del chat.
+ *
+ * Si se determina que hay que recomendar:
+ *  - Consulta las actividades disponibles para la emoción detectada
+ *  - Persiste un EmotionalEvent en BD (trazabilidad del estado emocional del usuario)
+ *  - Devuelve la SuggestedChatAction para que el chatbot la incluya en su respuesta
+ *
+ * Los umbrales están calibrados para evitar falsos positivos (no recomendar ante emociones neutras).
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatEmotionalRecommendationService {
 
     private static final String ACTIVITIES_URL = "/api/activities";
+    // Umbral de intensidad (escala 1-10) en metadata del chat para forzar recomendación
     private static final int CHAT_INTENSITY_THRESHOLD = 7;
+    // Umbral de intensidad (escala 0.0-1.0) del análisis estructurado para forzar recomendación
     private static final double ANALYSIS_INTENSITY_THRESHOLD = 0.65;
+    // Umbrales VAD para detectar alto malestar: valence y dominance negativos significativos
     private static final double LOW_VALENCE_THRESHOLD = -0.45;
     private static final double LOW_DOMINANCE_THRESHOLD = -0.45;
     private static final double FALLBACK_CONFIDENCE = 0.80;
+    // Emociones que por sí solas pueden justificar una recomendación si la intensidad es alta
     private static final Set<EmotionType> HIGH_DISTRESS_EMOTIONS = EnumSet.of(
             EmotionType.GRIEF,
             EmotionType.SADNESS,

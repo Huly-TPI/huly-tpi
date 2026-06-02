@@ -16,11 +16,29 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Servicio de alto nivel para gestionar la memoria vectorial del usuario.
+ * La memoria vectorial permite al chatbot recordar información contextual del usuario
+ * indexada semánticamente (no solo por texto exacto, sino por similitud de significado).
+ *
+ * Fuentes de memoria:
+ *  - CHATBOT: mensajes enviados en conversaciones de chat
+ *  - GUIDED_CLOUDS: pensamientos escritos en el ejercicio de nubes
+ *  - EMOTIONAL_JOURNAL: entradas del diario emocional
+ *  - ONBOARDING: objetivos declarados al registrarse
+ *
+ * Al recibir un mensaje, este servicio busca las memorias más relevantes semánticamente
+ * para incluirlas en el prompt del chatbot como contexto adicional.
+ *
+ * Adicionalmente, cuando el usuario menciona datos personales en el chat (nombre, edad, etc.),
+ * UserProfileFactExtractor los extrae y los indexa como "profile facts" para recuperación futura.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserVectorMemoryService {
 
+    // Todas las fuentes se consultan juntas al buscar memorias relevantes para el chat
     private static final List<VectorMemorySource> ALL_USER_MEMORY_SOURCES = List.of(
             VectorMemorySource.CHATBOT,
             VectorMemorySource.GUIDED_CLOUDS,
@@ -38,6 +56,7 @@ public class UserVectorMemoryService {
     private final VectorMemoryProperties vectorMemoryProperties;
     private final UserProfileFactExtractor userProfileFactExtractor;
 
+    /** Busca memorias relevantes en TODAS las fuentes disponibles del usuario. */
     public List<VectorMemory> findRelevantUserMemories(Long userId, String query) {
         return findRelevantUserMemoriesBySources(userId, ALL_USER_MEMORY_SOURCES, query);
     }
@@ -202,19 +221,27 @@ public class UserVectorMemoryService {
         return vectorMemoryProperties.getRecallSimilarityThreshold();
     }
 
+    /**
+     * Deduplica, rankea por score de similitud y limita la cantidad de memorias resultantes.
+     * Si la misma memoria aparece en múltiples queries de recall, se conserva la de mayor score.
+     * LinkedHashMap mantiene el orden de inserción para el posterior sort.
+     */
     private List<VectorMemory> uniqueRankedAndLimited(List<VectorMemory> memories) {
         Map<String, VectorMemory> unique = new LinkedHashMap<>();
         for (VectorMemory memory : memories) {
             if (memory == null) {
                 continue;
             }
+            // Clave de deduplicación: ID si existe, o tipo+contenido como fallback
             String key = memory.id() != null ? memory.id() : memory.sourceType() + ":" + memory.content();
             VectorMemory previous = unique.get(key);
+            // Si ya existe esta memoria, conserva la de mayor score de similitud
             if (previous == null || score(memory) > score(previous)) {
                 unique.put(key, memory);
             }
         }
 
+        // Ordena por relevancia (mayor score primero) y limita al máximo configurado
         return unique.values().stream()
                 .sorted(Comparator.comparing(this::score).reversed())
                 .limit(vectorMemoryProperties.getDefaultLimit())
@@ -225,6 +252,10 @@ public class UserVectorMemoryService {
         return memory.score() != null ? memory.score() : 0.0d;
     }
 
+    /**
+     * Guarda una memoria con manejo de errores no-crítico.
+     * Un fallo al guardar memoria no debe interrumpir el flujo principal del chatbot.
+     */
     private void saveMemory(SaveVectorMemoryCommand command) {
         try {
             vectorMemoryService.saveMemory(command);

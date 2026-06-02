@@ -10,11 +10,20 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Caso de uso: analizar los pensamientos sueltos del usuario y recomendar una actividad de bienestar.
+ * Usa la IA (LLMChatPort) para clasificar el estado emocional basándose en los pensamientos
+ * y devuelve una actividad recomendada (diario, nubes, respiración o burbujas).
+ *
+ * La IA responde siempre en formato JSON estructurado. Si el parseo falla,
+ * se aplica un fallback que recomienda escribir en el diario (actividad más segura y genérica).
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GetCloudRecommendationUseCase {
 
+    // ObjectMapper compartido (thread-safe) para parsear el JSON que devuelve la IA
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String SYSTEM_PROMPT = """
@@ -40,14 +49,18 @@ public class GetCloudRecommendationUseCase {
     private final LLMChatPort llmChatPort;
 
     public CloudRecommendation execute(List<String> thoughts) {
+        // Une los pensamientos con saltos de línea para enviarlos como un solo mensaje a la IA
         String userMessage = String.join("\n", thoughts);
         String raw = null;
         try {
+            // Envía los pensamientos a la IA sin historial previo (conversación nueva cada vez)
             raw = llmChatPort.chat(SYSTEM_PROMPT, userMessage, List.of()).content();
 
+            // Extrae el bloque JSON de la respuesta (la IA puede agregar texto extra antes o después)
             String json = extractJson(raw);
             JsonNode node = OBJECT_MAPPER.readTree(json);
 
+            // Valida que el tipo de actividad sea uno de los permitidos; si no, usa "diary" por defecto
             String activityType = node.path("activity_type").asText("diary");
             if (!isValidActivity(activityType)) {
                 activityType = "diary";
@@ -58,6 +71,7 @@ public class GetCloudRecommendationUseCase {
                 actionId = activityType;
             }
 
+            // La URL de redirección se determina por el tipo de actividad (no se confía en la IA para esto)
             String redirectUrl = switch (activityType) {
                 case "clouds" -> "/clouds";
                 case "breathing" -> "/guided-breathing";
@@ -75,6 +89,7 @@ public class GetCloudRecommendationUseCase {
 
             return recommendation;
         } catch (Exception e) {
+            // Si la IA falla o devuelve JSON inválido, se usa el fallback de diario
             log.warn("Error al procesar recomendación, usando fallback.", e);
             return fallback();
         }
@@ -85,6 +100,7 @@ public class GetCloudRecommendationUseCase {
                 || value.equals("breathing") || value.equals("bubbles");
     }
 
+    /** Extrae el primer bloque JSON válido de un texto (la IA a veces agrega texto antes del JSON). */
     private String extractJson(String text) {
         int start = text.indexOf('{');
         int end = text.lastIndexOf('}');
@@ -94,6 +110,7 @@ public class GetCloudRecommendationUseCase {
         return text;
     }
 
+    /** Recomendación por defecto cuando la IA falla: diario emocional (actividad segura y genérica). */
     private CloudRecommendation fallback() {
         return new CloudRecommendation(
                 "diary",

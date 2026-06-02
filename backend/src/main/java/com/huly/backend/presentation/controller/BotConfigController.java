@@ -10,6 +10,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controlador de configuración del chatbot (backoffice/admin).
+ * Permite a los administradores ver y modificar:
+ *  - systemPrompt: el prompt de sistema que define la personalidad y comportamiento de Huly.
+ *  - riskDetectionEnabled: activa/desactiva la detección de palabras de riesgo en las conversaciones.
+ *
+ * Solo existe una configuración global activa (singleton). Ruta: /api/admin/chat/config
+ */
 @RestController
 @RequestMapping("/api/admin/chat/config")
 public class BotConfigController {
@@ -23,12 +31,17 @@ public class BotConfigController {
         this.updateBotConfigUseCase = updateBotConfigUseCase;
     }
 
+    /** Obtiene la configuración actual del chatbot (único registro en BD). */
     @GetMapping
     public ResponseEntity<BotConfigResponse> getConfig() {
         ChatConfig config = getBotConfigUseCase.execute();
         return ResponseEntity.ok(toResponse(config));
     }
 
+    /**
+     * Actualiza la configuración global del chatbot.
+     * El nuevo systemPrompt entra en vigor inmediatamente en la próxima conversación.
+     */
     @PutMapping
     public ResponseEntity<BotConfigResponse> updateConfig(@RequestBody @Valid UpdateBotConfigRequest request) {
         UpdateBotConfigCommand command = new UpdateBotConfigCommand(

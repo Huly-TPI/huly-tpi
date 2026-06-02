@@ -14,6 +14,12 @@ import java.time.LocalDate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Caso de uso: registrar un nuevo usuario en el sistema.
+ * Verifica unicidad de email, hashea la contraseña y persiste el usuario con rol USER.
+ * Al finalizar, llama a LoginUseCase para hacer login automático y devolver los tokens,
+ * evitando que el usuario tenga que autenticarse por separado después del registro.
+ */
 @Service
 @RequiredArgsConstructor
 public class RegisterUseCase {
@@ -24,20 +30,22 @@ public class RegisterUseCase {
 
     @Transactional
     public AuthTokens execute(String email, String rawPassword, String name, LocalDate birthDate) {
-
+        // Verifica que el email no esté ya registrado (unicidad)
         if (userRepository.existsByEmail(email)) {
             throw new ConflictException("Email already in use");
         }
 
+        // Crea el usuario con la contraseña hasheada (nunca se guarda en plano)
         userRepository.save(AppUser.builder()
                 .name(name)
                 .email(email)
                 .password(passwordHasher.encode(rawPassword))
                 .birthDate(birthDate)
-                .role(UserRole.USER)
-                .status(UserStatus.ACTIVE)
+                .role(UserRole.USER)       // Todo usuario nuevo es USER por defecto
+                .status(UserStatus.ACTIVE) // Activo desde el primer momento (sin verificación de email)
                 .build());
 
-            return loginUseCase.execute(email, rawPassword);
+        // Login automático: reutiliza LoginUseCase para no duplicar la lógica de generación de tokens
+        return loginUseCase.execute(email, rawPassword);
     }
 }
