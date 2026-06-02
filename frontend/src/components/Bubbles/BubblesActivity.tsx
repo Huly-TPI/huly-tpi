@@ -26,7 +26,7 @@ const generateBubble = (id: string, delay: number): BubbleType => ({
   size: (isMobile ? 50 : 70) + Math.floor(Math.random() * (isMobile ? 50 : 100)),
   driftX: 20 + Math.floor(Math.random() * 75),
   driftY: -50 + Math.floor(Math.random() * 75),
-  animationDuration: 14 + Math.random() * 12,
+  animationDuration: 20 + Math.random() * 15,
   animationDelay: delay,
 })
 

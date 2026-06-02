@@ -2,6 +2,7 @@ import { api } from './client'
 
 export interface AuthResponse {
   accessToken: string
+  onBoardingCompleted?: boolean
   role: string
 }
 
@@ -21,6 +22,8 @@ export interface UserProfile {
   name: string
   email: string
   role: string
+  onBoardingCompleted?: boolean
+  onboardingTutorialCompleted?: boolean
 }
 
 export const getMe = () => {

@@ -48,7 +48,7 @@
 
 @keyframes bubble-float {
   0%   { transform: translate(0, 0) rotate(0deg);                                         opacity: 0; }
-  8%   { opacity: 1; }
+  20%   { opacity: 1; }
   50%  { transform: translate(calc(var(--drift-x, 40vw) * 0.5), calc(var(--drift-y, -30vh) * 0.5)) rotate(3deg); opacity: 1; }
   100% { transform: translate(var(--drift-x, 40vw), var(--drift-y, -30vh)) rotate(-2deg); opacity: 1; }
 }
@@ -60,7 +60,7 @@
 }
 
 .bubble--popping {
-  animation: bubble-pop 0.6s ease-out forwards !important;
+  animation: bubble-pop 1s ease-out forwards !important;
   pointer-events: none;
   cursor: default;
 }

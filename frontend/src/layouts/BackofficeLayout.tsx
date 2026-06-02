@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import colorLogo from '../assets/brand/color-logo.webp'
 import hojita from '../assets/backoffice/hojita.webp'
 import cerrarSesion from '../assets/backoffice/logout.webp'
@@ -85,9 +85,13 @@ const NAV_ITEMS = [
 export default function BackofficeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const role = localStorage.getItem('role')
   if (!role || role !== 'ADMIN') {
+    if (location.pathname === '/backoffice/login') {
+      return <Outlet />
+    }
     return <Navigate to="/backoffice/login" replace />
   }
 
