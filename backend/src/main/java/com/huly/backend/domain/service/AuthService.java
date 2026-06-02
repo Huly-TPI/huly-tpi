@@ -94,6 +94,7 @@ public class AuthService {
                 .appUser(savedUser)
                 .name(request.getName())
                 .birth(request.getBirthDate())
+                .onboardingTutorialCompleted(false)
                 .build();
 
         userDetailRepository.save(userDetail);

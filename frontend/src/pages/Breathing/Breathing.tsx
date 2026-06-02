@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { BreathingGuide } from '../../components/BreathingGuide'
-import { BreathingTechnique } from '../../components/BreathingGuide'
+import { BreathingGuide, type BreathingTechnique } from '../../components/BreathingGuide'
 import { getBreathingTechniques } from '../../api/breathing'
-import BackButton from '../../components/Buttons/BackButton/BackButton'
 import './Breathing.css'
 import dayBackground from '../../assets/garden/light-theme/background/day-background.webp'
+
 
 export default function Breathing() {
   const [techniques, setTechniques] = useState<BreathingTechnique[]>([])
@@ -13,12 +12,14 @@ export default function Breathing() {
     getBreathingTechniques()
       .then(setTechniques)
       .catch(console.error)
-  }, []);
+  }, [])
 
   return (
-     <div className="flex items-center justify-center h-full"
-     style={{ backgroundImage: `url(${dayBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-      <BackButton />
+    <div
+      className="flex items-center justify-center h-full"
+      style={{ backgroundImage: `url(${dayBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+    >
+  
       <BreathingGuide techniques={techniques} />
     </div>
   )

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { backofficeLogin } from '../../api/auth'
+import { setToken } from '../../api/client'
 import { useAuthForm } from '../../hooks/useAuthForm'
 import { required, validEmail } from '../../utils/validation'
 import Button from '../../components/Buttons/Button/Button'
@@ -29,7 +30,7 @@ export default function BackofficeLogin() {
 
     try {
       const res = await backofficeLogin({ email: values.email, password: values.password })
-      localStorage.setItem('token', res.accessToken)
+      setToken(res.accessToken)
       localStorage.setItem('role', res.role)
       navigate('/backoffice')
     } catch (err) {

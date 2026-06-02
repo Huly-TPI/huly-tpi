@@ -12,5 +12,5 @@ public class LoginResponse {
     private String accessToken;
     private String refreshToken;
     private UserRole role;
-    private Boolean profileOnBoardingCompleted;
+    private Boolean onBoardingCompleted;
 }

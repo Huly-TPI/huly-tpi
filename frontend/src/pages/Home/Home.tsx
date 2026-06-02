@@ -141,6 +141,21 @@ export default function Home() {
   } = useHomeOnboarding(homeOnboardingSteps.length)
 
   useEffect(() => {
+    if (shouldRenderOnboarding) {
+      document.body.setAttribute('data-home-onboarding-active', 'true')
+      window.dispatchEvent(new CustomEvent('home-onboarding-visibility-change'))
+      return () => {
+        document.body.removeAttribute('data-home-onboarding-active')
+        window.dispatchEvent(new CustomEvent('home-onboarding-visibility-change'))
+      }
+    }
+
+    document.body.removeAttribute('data-home-onboarding-active')
+    window.dispatchEvent(new CustomEvent('home-onboarding-visibility-change'))
+    return undefined
+  }, [shouldRenderOnboarding])
+
+  useEffect(() => {
     const sources = new Set<string>([
       dayBackgroundImage,
       dayMobileBackgroundImage,

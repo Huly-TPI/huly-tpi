@@ -20,8 +20,9 @@ interface AuthContextValue {
   user: UserProfile | null
   loading: boolean
   isAuthenticated: boolean
-  login: (credentials: LoginRequest) => Promise<void>
-  loginWithToken: (accessToken: string) => Promise<void>
+  login: (credentials: LoginRequest) => Promise<UserProfile>
+  loginWithToken: (accessToken: string) => Promise<UserProfile>
+  refreshUser: () => Promise<UserProfile>
   logout: () => Promise<void>
 }
 
@@ -35,11 +36,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const loginWithToken = useCallback(async (accessToken: string) => {
-    setToken(accessToken)
+  const refreshUser = useCallback(async () => {
     const profile = await getMe()
     setUser(profile)
+    return profile
   }, [])
+
+  const loginWithToken = useCallback(async (accessToken: string) => {
+    setToken(accessToken)
+    return refreshUser()
+  }, [refreshUser])
 
   const login = useCallback(
     async (credentials: LoginRequest) => {
@@ -47,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!res?.accessToken) {
         throw new Error('No se recibió el token de acceso')
       }
-      await loginWithToken(res.accessToken)
+      return loginWithToken(res.accessToken)
     },
     [loginWithToken],
   )
@@ -68,8 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return
       }
       try {
-        const profile = await getMe()
-        setUser(profile)
+        await refreshUser()
       } catch {
         clearToken()
         setUser(null)
@@ -78,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     }
     void rehydrate()
-  }, [])
+  }, [refreshUser])
 
   useEffect(() => {
     const handleExpired = () => setUser(null)
@@ -93,9 +98,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isAuthenticated: user !== null,
       login,
       loginWithToken,
+      refreshUser,
       logout,
     }),
-    [user, loading, login, loginWithToken, logout],
+    [user, loading, login, loginWithToken, refreshUser, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

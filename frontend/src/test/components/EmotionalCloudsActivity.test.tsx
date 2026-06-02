@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import EmotionalCloudsActivity from '../../components/EmotionalClouds/EmotionalCloudsActivity'
-
+import type { EmotionalCloudsProps } from '../../components/EmotionalClouds/types'
 
 vi.mock('./EmotionalClouds.css', () => ({}))
 
@@ -26,6 +27,13 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+const renderActivity = (props: EmotionalCloudsProps = {}) =>
+  render(
+    <MemoryRouter>
+      <EmotionalCloudsActivity {...props} />
+    </MemoryRouter>,
+  )
+
 const typeAndSubmit = (text: string) => {
   fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: text } })
   fireEvent.click(screen.getByTestId('submit-button'))
@@ -35,48 +43,48 @@ describe('EmotionalCloudsActivity', () => {
 
   describe('renderizado inicial', () => {
     it('muestra el título y subtítulo', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       expect(screen.getByText('Nubes que pasan')).toBeInTheDocument()
       expect(screen.getByText(/deja ir tus pensamientos/i)).toBeInTheDocument()
     })
 
     it('muestra el input y el botón', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       expect(screen.getByTestId('emotional-input')).toBeInTheDocument()
       expect(screen.getByTestId('submit-button')).toBeInTheDocument()
     })
 
     it('el botón empieza deshabilitado', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       expect(screen.getByTestId('submit-button')).toBeDisabled()
     })
 
     it('no hay nubes al montar', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       expect(screen.queryByTestId(/^cloud-cloud-/)).not.toBeInTheDocument()
     })
   })
 
   describe('input', () => {
     it('habilita el botón al escribir texto', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: 'Trabajo' } })
       expect(screen.getByTestId('submit-button')).toBeEnabled()
     })
 
     it('no habilita el botón con solo espacios', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: '   ' } })
       expect(screen.getByTestId('submit-button')).toBeDisabled()
     })
 
     it('respeta el maxLength de 100 caracteres', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       expect(screen.getByTestId('emotional-input')).toHaveAttribute('maxLength', '100')
     })
 
     it('muestra el contador de caracteres', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: 'Hola' } })
       expect(screen.getByTestId('char-counter')).toHaveTextContent('4/100')
     })
@@ -84,25 +92,25 @@ describe('EmotionalCloudsActivity', () => {
 
   describe('agregar nubes', () => {
     it('agrega una nube al hacer click en Soltar', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       typeAndSubmit('Mis miedos')
       expect(screen.getByText('Mis miedos')).toBeInTheDocument()
     })
 
     it('limpia el input después de agregar la nube', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       typeAndSubmit('Estrés')
       expect(screen.getByTestId('emotional-input')).toHaveValue('')
     })
 
     it('el botón vuelve a deshabilitarse después de enviar', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       typeAndSubmit('Trabajo')
       expect(screen.getByTestId('submit-button')).toBeDisabled()
     })
 
     it('agrega la nube al presionar Enter', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       const input = screen.getByTestId('emotional-input')
       fireEvent.change(input, { target: { value: 'Pendientes' } })
       fireEvent.keyDown(input, { key: 'Enter' })
@@ -110,7 +118,7 @@ describe('EmotionalCloudsActivity', () => {
     })
 
     it('no agrega nube al presionar Shift+Enter', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       const input = screen.getByTestId('emotional-input')
       fireEvent.change(input, { target: { value: 'Algo' } })
       fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })
@@ -120,7 +128,7 @@ describe('EmotionalCloudsActivity', () => {
 
     it('llama a onFinish con el texto de la nube al seleccionarla', () => {
       const onFinish = vi.fn()
-      render(<EmotionalCloudsActivity onFinish={onFinish} />)
+      renderActivity({ onFinish })
       typeAndSubmit('Trabajo')
       fireEvent.click(screen.getByRole('button', { name: 'select' }))
       expect(onFinish).toHaveBeenCalledWith(['Trabajo'])
@@ -128,14 +136,14 @@ describe('EmotionalCloudsActivity', () => {
 
     it('llama a onThoughtAdded con el texto al agregar una nube', () => {
       const onThoughtAdded = vi.fn()
-      render(<EmotionalCloudsActivity onThoughtAdded={onThoughtAdded} />)
+      renderActivity({ onThoughtAdded })
       typeAndSubmit('Estrés laboral')
       expect(onThoughtAdded).toHaveBeenCalledWith('Estrés laboral')
     })
 
     it('llama a onThoughtAdded por cada nube agregada', () => {
       const onThoughtAdded = vi.fn()
-      render(<EmotionalCloudsActivity onThoughtAdded={onThoughtAdded} />)
+      renderActivity({ onThoughtAdded })
       typeAndSubmit('Primer pensamiento')
       typeAndSubmit('Segundo pensamiento')
       expect(onThoughtAdded).toHaveBeenCalledTimes(2)
@@ -144,13 +152,13 @@ describe('EmotionalCloudsActivity', () => {
     })
 
     it('trimea el texto antes de crear la nube', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       typeAndSubmit('  Estrés  ')
       expect(screen.getByText('Estrés')).toBeInTheDocument()
     })
 
     it('agrega múltiples nubes correctamente', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       typeAndSubmit('Miedo')
       typeAndSubmit('Trabajo')
       typeAndSubmit('Estrés')
@@ -160,7 +168,7 @@ describe('EmotionalCloudsActivity', () => {
     })
 
     it('no agrega nube si el input está vacío', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       fireEvent.click(screen.getByTestId('submit-button'))
       expect(screen.queryByTestId(/^cloud-cloud-/)).not.toBeInTheDocument()
     })
@@ -168,7 +176,7 @@ describe('EmotionalCloudsActivity', () => {
 
   describe('límite de nubes (maxClouds)', () => {
     it('no supera el máximo de nubes configurado', () => {
-      render(<EmotionalCloudsActivity maxClouds={2} />)
+      renderActivity({ maxClouds: 2 })
       typeAndSubmit('Nube1')
       typeAndSubmit('Nube2')
       typeAndSubmit('Nube3')
@@ -180,14 +188,14 @@ describe('EmotionalCloudsActivity', () => {
 
   describe('eliminar nubes', () => {
     it('elimina una nube al llamar onRemove', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       typeAndSubmit('Trabajo')
       fireEvent.click(screen.getByText('Trabajo'))
       expect(screen.queryByText('Trabajo')).not.toBeInTheDocument()
     })
 
     it('elimina solo la nube correcta cuando hay varias', () => {
-      render(<EmotionalCloudsActivity />)
+      renderActivity()
       typeAndSubmit('Miedo')
       typeAndSubmit('Trabajo')
       fireEvent.click(screen.getByText('Miedo'))
@@ -196,5 +204,3 @@ describe('EmotionalCloudsActivity', () => {
     })
   })
 })
-
-

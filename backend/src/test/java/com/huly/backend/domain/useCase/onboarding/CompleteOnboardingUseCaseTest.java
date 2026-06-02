@@ -21,7 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 @ExtendWith(MockitoExtension.class)
-class CompleteProfileOnboardingUseCaseTest {
+class CompleteOnboardingUseCaseTest {
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -29,7 +29,7 @@ class CompleteProfileOnboardingUseCaseTest {
     @Mock
     private UserVectorMemoryService userVectorMemoryService;
     @InjectMocks
-    private CompleteProfileOnboardingUseCase completeProfileOnboardingUseCase;
+    private CompleteOnboardingUseCase completeOnboardingUseCase;
 
     private AppUser user;
 
@@ -46,7 +46,7 @@ class CompleteProfileOnboardingUseCaseTest {
     @Test
     void execute_shouldCallCompleteOnboarding_whenUserExists() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(user));
-        completeProfileOnboardingUseCase.execute("user@huly.com", "Desestresarme", "Meditar", "Meditar 5 minutos");
+        completeOnboardingUseCase.execute("user@huly.com", "Desestresarme", "Meditar", "Meditar 5 minutos");
         verify(userDetailDomainRepository).completeOnboarding(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
         verify(userVectorMemoryService).rememberOnboardingGoals(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
     }
@@ -54,7 +54,7 @@ class CompleteProfileOnboardingUseCaseTest {
     @Test
     void execute_shouldThrowNotFoundException_whenUserDoesNotExist() {
         when(userRepository.findByEmail("noexiste@huly.com")).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> completeProfileOnboardingUseCase.execute("noexiste@huly.com", "A", "B", "C"))
+        assertThatThrownBy(() -> completeOnboardingUseCase.execute("noexiste@huly.com", "A", "B", "C"))
                 .isInstanceOf(NotFoundException.class);
 
     }
@@ -64,7 +64,7 @@ class CompleteProfileOnboardingUseCaseTest {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(user));
         doThrow(new RuntimeException("Vector memory error"))
                 .when(userVectorMemoryService).rememberOnboardingGoals(1L, "A", "B", "C");
-        completeProfileOnboardingUseCase.execute("user@huly.com", "A", "B", "C"); 
+        completeOnboardingUseCase.execute("user@huly.com", "A", "B", "C"); 
         verify(userDetailDomainRepository).completeOnboarding(1L, "A", "B", "C");
     
     }
