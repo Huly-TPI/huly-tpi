@@ -78,8 +78,15 @@ public class PromptBuilderService {
         sb.append("\n  \"detected_emotion\": \"<").append(buildEmotionList()).append(">\",");
         sb.append("\n  \"intensity\": <número del 1 al 10>,");
         sb.append("\n  \"risk_detected\": <true|false>,");
-        sb.append("\n  \"matched_word\": \"<frase de riesgo detectada, o null>\"");
+        sb.append("\n  \"matched_word\": \"<frase de riesgo detectada, o null>\",");
+        sb.append("\n  \"generated_challenge\": <objeto con title y description, o null>");
         sb.append("\n}");
+        sb.append("\n");
+        sb.append("\nReglas para generated_challenge:");
+        sb.append("\n- Incluilo SOLO cuando el contexto de la conversación lo justifique genuinamente: el usuario enfrenta una dificultad concreta, expresó una emoción negativa de intensidad media-alta (>= 5), o mencionó una situación que se beneficiaría de un reto personal.");
+        sb.append("\n- El reto debe ser específico, alcanzable y relacionado con lo que el usuario está viviendo.");
+        sb.append("\n- Si no corresponde un reto, devolvé null.");
+        sb.append("\n- Formato cuando corresponde: { \"title\": \"<título corto>\", \"description\": \"<descripción accionable en 1-2 oraciones>\" }");
     }
 
     private void appendStreamingInstructions(StringBuilder sb) {
@@ -96,8 +103,14 @@ public class PromptBuilderService {
         sb.append("\n  \"detected_emotion\": \"<").append(buildEmotionList()).append(">\",");
         sb.append("\n  \"intensity\": <número del 1 al 10>,");
         sb.append("\n  \"risk_detected\": <true|false>,");
-        sb.append("\n  \"matched_word\": \"<frase de riesgo detectada, o null>\"");
+        sb.append("\n  \"matched_word\": \"<frase de riesgo detectada, o null>\",");
+        sb.append("\n  \"generated_challenge\": <objeto con title y description, o null>");
         sb.append("\n}");
+        sb.append("\n");
+        sb.append("\nReglas para generated_challenge:");
+        sb.append("\n- Incluilo SOLO cuando el contexto lo justifique: emoción negativa de intensidad >= 5 o situación concreta que se beneficiaría de un reto personal.");
+        sb.append("\n- Si no corresponde, devolvé null.");
+        sb.append("\n- Formato cuando corresponde: { \"title\": \"<título corto>\", \"description\": \"<descripción accionable en 1-2 oraciones>\" }");
     }
 
     private void appendEmotionalAnalysisInstructions(StringBuilder sb) {
