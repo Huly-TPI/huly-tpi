@@ -23,6 +23,8 @@ describe('Register', () => {
         vi.clearAllMocks()
     })
 
+    const getSubmitButton = () => screen.getByRole('button', { name: 'Crear cuenta' })
+
     const renderWithRouter = () => {
         const user = userEvent.setup()
         render(
@@ -59,7 +61,7 @@ describe('Register', () => {
     it('renderiza el formulario de registro', () => {
         renderWithRouter()
 
-        expect(screen.getByText('¡Crea tu cuenta!')).toBeInTheDocument()
+        expect(screen.getByText('¡Creá tu cuenta!')).toBeInTheDocument()
         expect(screen.getByPlaceholderText('Nombre')).toBeInTheDocument()
         expect(screen.getByPlaceholderText('Email')).toBeInTheDocument()
     })
@@ -68,7 +70,7 @@ describe('Register', () => {
         const { user } = renderWithRouter()
 
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
     })
@@ -81,7 +83,7 @@ describe('Register', () => {
         await fillForm(user)
         await fillDate(user, '2000-01-15')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Home')).toBeInTheDocument()
@@ -96,7 +98,7 @@ describe('Register', () => {
         await fillForm(user)
         await fillDate(user, '2000-01-15')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(mockLoginWithToken).toHaveBeenCalledWith('token-123')
@@ -110,7 +112,7 @@ describe('Register', () => {
         await fillForm(user)
         await fillDate(user, '2000-01-15')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('El email ya está registrado')).toBeInTheDocument()
@@ -124,7 +126,7 @@ describe('Register', () => {
         await fillForm(user)
         await fillDate(user, '2000-01-15')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Error')).toBeInTheDocument()
@@ -143,7 +145,7 @@ describe('Register', () => {
     it('deshabilita el botón si no acepta términos', () => {
         renderWithRouter()
 
-        expect(screen.getByRole('button', { name: '🌱 Crear cuenta' })).toBeDisabled()
+        expect(getSubmitButton()).toBeDisabled()
     })
 
     it('habilita el botón al aceptar términos', async () => {
@@ -151,7 +153,7 @@ describe('Register', () => {
 
         await user.click(screen.getByRole('checkbox'))
 
-        expect(screen.getByRole('button', { name: '🌱 Crear cuenta' })).toBeEnabled()
+        expect(getSubmitButton()).toBeEnabled()
     })
 
     it('muestra error de edad mínima con fecha reciente', async () => {
@@ -160,7 +162,7 @@ describe('Register', () => {
         await fillForm(user)
         await fillDate(user, '2020-01-01')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getByText('Debés tener al menos 13 años')).toBeInTheDocument()
         expect(mockedRegister).not.toHaveBeenCalled()
@@ -175,7 +177,7 @@ describe('Register', () => {
         await fillForm(user)
         await fillDate(user, '2000-01-15')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Edad mínima inválida')).toBeInTheDocument()
@@ -187,7 +189,7 @@ describe('Register', () => {
 
         await user.type(screen.getByPlaceholderText('Nombre'), '<script>alert(1)</script>')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getByText('El texto contiene caracteres no permitidos')).toBeInTheDocument()
         expect(mockedRegister).not.toHaveBeenCalled()
@@ -198,7 +200,7 @@ describe('Register', () => {
 
         await user.type(screen.getByPlaceholderText('Nombre'), "' OR 1=1 --")
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getByText('El texto contiene caracteres no permitidos')).toBeInTheDocument()
         expect(mockedRegister).not.toHaveBeenCalled()
@@ -209,7 +211,7 @@ describe('Register', () => {
 
         await user.type(screen.getByPlaceholderText('Nombre'), 'a'.repeat(51))
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getByText('Máximo 50 caracteres')).toBeInTheDocument()
         expect(mockedRegister).not.toHaveBeenCalled()
@@ -229,7 +231,7 @@ describe('Register', () => {
 
         await fillDate(user, '2000-01-15')
         await user.click(screen.getByRole('checkbox'))
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(mockedRegister).toHaveBeenCalledWith(
@@ -254,7 +256,7 @@ describe('Register', () => {
         const checkbox = screen.getByRole('checkbox')
         await user.click(checkbox)
 
-        await user.click(screen.getByRole('button', { name: '🌱 Crear cuenta' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Onboarding')).toBeInTheDocument()

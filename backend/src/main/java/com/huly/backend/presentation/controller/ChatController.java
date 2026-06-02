@@ -86,6 +86,9 @@ public class ChatController {
         ChatResponse.Metadata metadata = reply != null && reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
                 : null;
+        ChatResponse.GeneratedChallenge challenge = reply != null && reply.generatedChallenge() != null
+                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
+                : null;
 
         return new ChatStreamEventResponse(
                 event.type().name().toLowerCase(Locale.ROOT),
@@ -94,6 +97,7 @@ public class ChatController {
                 emotion,
                 reply != null ? reply.intensity() : null,
                 metadata,
+                challenge,
                 event.error()
         );
     }
@@ -103,7 +107,10 @@ public class ChatController {
         ChatResponse.Metadata metadata = reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
                 : null;
-        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), null, metadata);
+        ChatResponse.GeneratedChallenge challenge = reply.generatedChallenge() != null
+                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
+                : null;
+        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), challenge, metadata);
     }
 
     private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {

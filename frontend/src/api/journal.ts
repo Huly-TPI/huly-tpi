@@ -22,6 +22,7 @@ export interface JournalEntryResponse {
 export interface CreateJournalEntryRequest {
   content: string
   mood?: Mood | null
+  useTextForAI?: boolean
 }
 
 export const journalApi = {
