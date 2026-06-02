@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { journalApi, type JournalEntryResponse, type Mood } from '../api/journal'
 import { useAuth } from '../context/auth'
 import cloudImg from '../assets/garden/light-theme/cloud.webp'
+import dayBackground from '../assets/garden/light-theme/background/day-background.webp'
 import Button from '../components/Buttons/Button/Button'
 import BackButton from '../components/Buttons/BackButton/BackButton'
 import DiaryConsentModal from '../components/DiaryConsentModal'
@@ -173,7 +174,9 @@ export default function Diary() {
     <div
       className="h-screen flex flex-col items-center px-4 pt-16 pb-6 relative overflow-hidden"
       style={{
-        background: 'linear-gradient(to bottom, #bde0f7 0%, #d4efc4 100%)',
+        backgroundImage: `url(${dayBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       }}
     >
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-80 hidden lg:block"  style={{ zIndex: 0, width: 380, top: '1%',  left: '-6%' }} />
