@@ -84,6 +84,22 @@ describe('AuthContext', () => {
     expect(result.current.isAuthenticated).toBe(true)
   })
 
+  it('refreshUser vuelve a pedir /me y actualiza el usuario', async () => {
+    mockGetToken.mockReturnValue('valid-token')
+    mockGetMe
+      .mockResolvedValueOnce(sampleUser)
+      .mockResolvedValueOnce({ ...sampleUser, name: 'Milagros' })
+    const { result } = renderHook(() => useAuth(), { wrapper })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => {
+      await result.current.refreshUser()
+    })
+
+    expect(result.current.user).toEqual({ ...sampleUser, name: 'Milagros' })
+  })
+
   it('login tira error si no llega accessToken', async () => {
     mockGetToken.mockReturnValue(null)
     mockLogin.mockResolvedValue({ role: 'USER' })

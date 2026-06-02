@@ -75,7 +75,7 @@ describe('Register', () => {
 
     it('registra exitosamente y redirige al home', async () => {
         mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        mockLoginWithToken.mockResolvedValueOnce(undefined)
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
         const { user } = renderWithRouter()
 
         await fillForm(user)
@@ -90,7 +90,7 @@ describe('Register', () => {
 
     it('pasa el token de register a loginWithToken', async () => {
         mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        mockLoginWithToken.mockResolvedValueOnce(undefined)
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
         const { user } = renderWithRouter()
 
         await fillForm(user)
@@ -217,7 +217,7 @@ describe('Register', () => {
 
     it('envía los valores con trim al backend', async () => {
         mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        mockLoginWithToken.mockResolvedValueOnce(undefined)
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
         const { user } = renderWithRouter()
 
         await user.type(screen.getByPlaceholderText('Nombre'), '  Mili  ')
@@ -241,9 +241,9 @@ describe('Register', () => {
         })
     })
 
-    it('redirige al /onboarding cuando profileOnboardingCompleted es false', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER', profileOnBoardingCompleted: false })
-         mockLoginWithToken.mockResolvedValueOnce(undefined)
+    it('redirige al /onboarding cuando onBoardingCompleted es false', async () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER', onBoardingCompleted: false })
+         mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: false })
         const { user } = renderWithRouter()
 
         await fillForm(user)

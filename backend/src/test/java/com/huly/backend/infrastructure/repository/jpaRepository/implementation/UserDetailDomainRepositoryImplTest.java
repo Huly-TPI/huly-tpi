@@ -26,24 +26,24 @@ class UserDetailDomainRepositoryImplTest {
     private UserDetailDomainRepositoryImpl userDetailDomainRepository;
 
     @Test
-    void findProfileOnBoardingCompleted_shouldReturnValue_whenUserDetailExists() {
+    void findOnBoardingCompleted_shouldReturnValue_whenUserDetailExists() {
         UserDetailEntity entity = UserDetailEntity.builder()
-                .id(1L).profileOnBoardingCompleted(true).build();
+                .id(1L).onBoardingCompleted(true).build();
         when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(1L))
                 .thenReturn(Optional.of(entity));
 
-        Optional<Boolean> result = userDetailDomainRepository.findProfileOnBoardingCompleted(1L);
+        Optional<Boolean> result = userDetailDomainRepository.findOnBoardingCompleted(1L);
 
         assertThat(result).isPresent();
         assertThat(result.get()).isTrue();
     }
 
     @Test
-    void findProfileOnBoardingCompleted_shouldReturnEmpty_whenUserDetailNotFound() {
+    void findOnBoardingCompleted_shouldReturnEmpty_whenUserDetailNotFound() {
         when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(99L))
                 .thenReturn(Optional.empty());
 
-        Optional<Boolean> result = userDetailDomainRepository.findProfileOnBoardingCompleted(99L);
+        Optional<Boolean> result = userDetailDomainRepository.findOnBoardingCompleted(99L);
 
         assertThat(result).isEmpty();
     }
@@ -63,7 +63,8 @@ class UserDetailDomainRepositoryImplTest {
         assertThat(saved.getOnboardingAnswer1()).isEqualTo("Calmar mi mente");
         assertThat(saved.getOnboardingAnswer2()).isEqualTo("Soltar el control");
         assertThat(saved.getOnboardingAnswer3()).isEqualTo("Respirar antes de reaccionar");
-        assertThat(saved.getProfileOnBoardingCompleted()).isTrue();
+        assertThat(saved.getOnBoardingCompleted()).isTrue();
+        assertThat(saved.getProfileOnBoardingCompleted()).isNull();
     }
 
     @Test

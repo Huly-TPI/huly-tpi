@@ -71,8 +71,8 @@ export default function Register() {
                 throw new Error('No se recibió el token de acceso')
             }
 
-            await loginWithToken(res.accessToken)
-              if(res.profileOnBoardingCompleted === false) {
+            const profile = await loginWithToken(res.accessToken)
+              if(profile.onBoardingCompleted === false) {
                 navigate('/onboarding')
             } else {
                 navigate('/')

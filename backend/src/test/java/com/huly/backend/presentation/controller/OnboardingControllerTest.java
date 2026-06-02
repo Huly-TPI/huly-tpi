@@ -1,6 +1,7 @@
 package com.huly.backend.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.useCase.onboarding.CompleteProfileOnboardingUseCase;
+import com.huly.backend.domain.useCase.onboarding.CompleteOnboardingUseCase;
+import com.huly.backend.domain.useCase.onboarding.CompleteTutorialUseCase;
 import com.huly.backend.domain.useCase.onboarding.GenerateOnboardingOptionsUseCase;
 import com.huly.backend.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,13 +27,19 @@ class OnboardingControllerTest {
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private GenerateOnboardingOptionsUseCase generateOnboardingOptionsUseCase;
-    private CompleteProfileOnboardingUseCase completeProfileOnboardingUseCase;
+    private CompleteOnboardingUseCase completeOnboardingUseCase;
+    private CompleteTutorialUseCase completeTutorialUseCase;
 
     @BeforeEach
     void setUp() {
         generateOnboardingOptionsUseCase = mock(GenerateOnboardingOptionsUseCase.class);
-        completeProfileOnboardingUseCase = mock(CompleteProfileOnboardingUseCase.class);
-        OnboardingController controller = new OnboardingController(generateOnboardingOptionsUseCase, completeProfileOnboardingUseCase);
+        completeOnboardingUseCase = mock(CompleteOnboardingUseCase.class);
+        completeTutorialUseCase = mock(CompleteTutorialUseCase.class);
+        OnboardingController controller = new OnboardingController(
+                generateOnboardingOptionsUseCase,
+                completeOnboardingUseCase,
+                completeTutorialUseCase
+        );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
         .setControllerAdvice(new GlobalExceptionHandler())
         .setCustomArgumentResolvers(new org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver())
@@ -76,7 +83,7 @@ class OnboardingControllerTest {
          "answer3", "Meditar 5 minutos"))))
          .andExpect(status().isNoContent());
 
-         verify(completeProfileOnboardingUseCase).execute("user@huly.com", "Desestresarme", "Meditar", 
+         verify(completeOnboardingUseCase).execute("user@huly.com", "Desestresarme", "Meditar", 
          "Meditar 5 minutos");
           }
 

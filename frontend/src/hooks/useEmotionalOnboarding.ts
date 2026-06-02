@@ -16,7 +16,7 @@ const DEFAULT_OPTIONS = [
     'Seguir como estás',
 ]
 
-export function useEmotionalOnboarding(onComplete: () => void) {
+export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
     const [step, setStep] = useState<1 | 2 | 3>(1)
     const [options, setOptions] = useState<string[]>(STEP1_OPTIONS)
     const [isLoading, setIsLoading] = useState(false)
@@ -51,8 +51,8 @@ export function useEmotionalOnboarding(onComplete: () => void) {
                 setIsLoading(false)
             }
         } else {
-                await completeOnboarding(answers.a1!, answers.a2!, option)    
-                onComplete()
+                await completeOnboarding(answers.a1!, answers.a2!, option)
+                await onComplete()
         }
     }
 

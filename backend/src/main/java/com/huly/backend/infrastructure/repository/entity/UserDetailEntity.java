@@ -43,6 +43,9 @@ public class UserDetailEntity {
     @Column(name = "profile_on_boarding_completed")
     private Boolean profileOnBoardingCompleted;
 
+    @Column(name = "onboarding_tutorial_completed", nullable = false)
+    private Boolean onboardingTutorialCompleted;
+
     @Column(name = "avatar_url_2")
     private String avatarUrl2;
 
