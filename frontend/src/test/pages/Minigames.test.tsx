@@ -13,6 +13,10 @@ describe('Minigames', () => {
     )
   }
 
+  it('renderiza el titulo de la vista', () => {
+    renderWithRouter()
+    expect(screen.getByRole('heading', { name: 'Minijuegos' })).toBeInTheDocument()
+  })
 
   it('renderiza los fondos de escena desktop y mobile', () => {
     renderWithRouter()
