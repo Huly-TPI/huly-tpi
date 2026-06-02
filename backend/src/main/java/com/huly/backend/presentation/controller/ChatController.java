@@ -7,6 +7,9 @@ import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
+import com.huly.backend.exception.NotFoundException;
+import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
+import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.presentation.dto.chat.ChatMessageResponse;
 import com.huly.backend.presentation.dto.chat.ChatRequest;
@@ -20,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,10 +44,16 @@ public class ChatController {
     private final ChatUseCase chatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
     private final StreamChatUseCase streamChatUseCase;
+    private final AppUserRepository appUserRepository;
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        Long userId = 1L;
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AppUserEntity user = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        Long userId = user.getId();
+
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         return ResponseEntity.ok(toResponse(reply));
     }
@@ -54,7 +64,12 @@ public class ChatController {
             return Flux.just(toServerSentEvent(ChatStreamEvent.error("message y conversationId son obligatorios.")));
         }
 
-        Long userId = 1L;
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AppUserEntity user = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        Long userId = user.getId();
+
         return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
                 .map(this::toServerSentEvent);
     }
@@ -86,6 +101,9 @@ public class ChatController {
         ChatResponse.Metadata metadata = reply != null && reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
                 : null;
+        ChatResponse.GeneratedChallenge challenge = reply != null && reply.generatedChallenge() != null
+                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
+                : null;
 
         return new ChatStreamEventResponse(
                 event.type().name().toLowerCase(Locale.ROOT),
@@ -94,6 +112,7 @@ public class ChatController {
                 emotion,
                 reply != null ? reply.intensity() : null,
                 metadata,
+                challenge,
                 event.error()
         );
     }
@@ -103,7 +122,10 @@ public class ChatController {
         ChatResponse.Metadata metadata = reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
                 : null;
-        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), null, metadata);
+        ChatResponse.GeneratedChallenge challenge = reply.generatedChallenge() != null
+                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
+                : null;
+        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), challenge, metadata);
     }
 
     private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {

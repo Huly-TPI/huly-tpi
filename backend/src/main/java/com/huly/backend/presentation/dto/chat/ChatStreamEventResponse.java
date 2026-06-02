@@ -14,6 +14,10 @@ public record ChatStreamEventResponse(
 
         Integer intensity,
         ChatResponse.Metadata metadata,
+
+        @JsonProperty("generated_challenge")
+        ChatResponse.GeneratedChallenge generatedChallenge,
+
         String error
 ) {
 }

@@ -24,7 +24,8 @@ public class UserVectorMemoryService {
     private static final List<VectorMemorySource> ALL_USER_MEMORY_SOURCES = List.of(
             VectorMemorySource.CHATBOT,
             VectorMemorySource.GUIDED_CLOUDS,
-            VectorMemorySource.EMOTIONAL_JOURNAL
+            VectorMemorySource.EMOTIONAL_JOURNAL,
+            VectorMemorySource.ONBOARDING
     );
 
     private static final String CREATED_FROM_USER_MESSAGE = "USER_MESSAGE";
@@ -151,6 +152,21 @@ public class UserVectorMemoryService {
                 null,
                 sourceId,
                 metadata("EMOTIONAL_JOURNAL")
+        ));
+    }
+
+    public void rememberOnboardingGoals(Long userId, String answer1, String answer2, String answer3) {
+        String content = String.format("Goal 1: %s\nGoal 2: %s\nGoal 3: %s", answer1, answer2, answer3);
+        saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                VectorMemorySource.ONBOARDING,
+                userMemorySourceId(userId),
+                "ONBOARDING_GOALS",
+                "ONBOARDING_GOALS",
+                content,
+                null,
+                null,
+                metadata("ONBOARDING")
         ));
     }
 

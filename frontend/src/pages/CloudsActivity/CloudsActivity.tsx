@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { EmotionalCloudsActivity } from '../../components/EmotionalClouds'
 import { api } from '../../api/client'
 import Button from '../../components/Buttons/Button/Button'
+import BackButton from '../../components/Buttons/BackButton/BackButton'
 
 interface CloudRecommendationResponse {
     activity_type: string
@@ -50,6 +51,7 @@ const CloudsActivity = () => {
 
     return (
         <div className="h-full max-h-full w-full overflow-hidden flex flex-col select-none relative">
+            <BackButton />
 
             <main className="w-full flex-1 min-h-0 flex flex-col relative z-10 overflow-hidden">
                 <EmotionalCloudsActivity

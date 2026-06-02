@@ -50,6 +50,7 @@ async function request<T>(
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
+
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',

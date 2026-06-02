@@ -43,6 +43,7 @@ public class UserRepositoryImpl implements UserRepository {
                     .name(user.getName())
                     .birth(user.getBirthDate())
                     .createdAt(Instant.now())
+                    .onboardingTutorialCompleted(false)
                     .build());
         }
 
@@ -56,6 +57,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .nickname(nickname)
                 .sourceAction(sourceAction)
                 .createdAt(Instant.now())
+                .onboardingTutorialCompleted(false)
                 .build());
     }
 

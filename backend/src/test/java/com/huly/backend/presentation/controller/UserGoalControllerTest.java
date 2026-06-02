@@ -5,11 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
-import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
-import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
-import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
-import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
-import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
+import com.huly.backend.domain.useCase.userGoal.*;
 import com.huly.backend.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.presentation.dto.userGoal.UserGoalUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +38,7 @@ class UserGoalControllerTest {
     private DeleteUserGoalUseCase deleteUserGoalUseCase;
     private UpdateUserGoalUseCase updateUserGoalUseCase;
     private CompleteUserGoalUseCase completeUserGoalUseCase;
+    private  AcceptChallengeUseCase acceptChallengeUseCase;
 
     @BeforeEach
     void setUp() {
@@ -50,8 +47,9 @@ class UserGoalControllerTest {
         deleteUserGoalUseCase = mock(DeleteUserGoalUseCase.class);
         updateUserGoalUseCase = mock(UpdateUserGoalUseCase.class);
         completeUserGoalUseCase = mock(CompleteUserGoalUseCase.class);
+        acceptChallengeUseCase= mock(AcceptChallengeUseCase.class);
 
-        UserGoalController controller = new UserGoalController(
+        UserGoalController controller = new UserGoalController(acceptChallengeUseCase,
                 addUserGoalUseCase, getUserGoalsByUserUseCase,
                 deleteUserGoalUseCase, updateUserGoalUseCase, completeUserGoalUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();

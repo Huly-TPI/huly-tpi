@@ -14,4 +14,5 @@ public class AuthTokens {
     private String accessToken;
     private String refreshToken;
     private UserRole role;
+    private Boolean onBoardingCompleted;
 }
