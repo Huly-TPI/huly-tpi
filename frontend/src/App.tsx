@@ -13,6 +13,7 @@ import ChatbotPage from './pages/Backoffice/ChatbotPage'
 import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
 import Login from './pages/Login/Login'
 import Challenges from './pages/Challenges/Challenges'
+import Minigames from './pages/Minigames/Minigames'
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/minigames" element={<Minigames />} />
           <Route path="/diary" element={<Diary />} />
           <Route path="/challenges" element={<Challenges />} />
           <Route path="/register" element={<Register />} />
