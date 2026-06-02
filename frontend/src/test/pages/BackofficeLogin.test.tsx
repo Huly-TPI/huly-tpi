@@ -97,7 +97,7 @@ describe('BackofficeLogin', () => {
         await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
         await waitFor(() => {
-            expect(localStorage.getItem('token')).toBe('token-123')
+            expect(localStorage.getItem('huly:access-token')).toBe('token-123')
             expect(localStorage.getItem('role')).toBe('ADMIN')
         })
     })
