@@ -11,6 +11,7 @@ import cloudImage from '../../assets/garden/light-theme/cloud.webp'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import './Minigames.css'
+import BackButton from '../../components/Buttons/BackButton/BackButton'
 
 const FULL_WIDTH = 'w-full'
 const DEFAULT_HOTSPOT = 'left-[2%] top-[4%] h-[92%] w-[96%]'
@@ -109,7 +110,7 @@ export default function Minigames() {
     return (
         <main className="minigames-page">
             <section className="minigames-scene">
-                <h1 className="minigames-scene__title">Minijuegos</h1>
+                <BackButton />
 
                 <img
                     src={backgroundImage}
