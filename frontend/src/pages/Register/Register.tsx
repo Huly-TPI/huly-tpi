@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { register } from '../../api/auth'
+import { useAuth } from '../../context/auth'
 import { ApiError } from '../../api/apiError'
 import { useAuthForm } from '../../hooks/useAuthForm'
 import { required, validEmail, minLength, maxLength, matchesField, minAge, safeText } from '../../utils/validation'
@@ -35,6 +36,7 @@ const VALIDATION_RULES = {
 
 export default function Register() {
   const navigate = useNavigate()
+  const { loginWithToken } = useAuth()
   const { values, errors, handleChange, validateAll, setFieldErrors, getSanitizedValues } = useAuthForm(
     INITIAL_VALUES,
     VALIDATION_RULES,
@@ -61,8 +63,7 @@ export default function Register() {
         password: sanitized.password,
       })
 
-      localStorage.setItem('token', res.accessToken)
-      localStorage.setItem('role', res.role)
+      await loginWithToken(res.accessToken)
       navigate('/')
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
