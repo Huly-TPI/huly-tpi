@@ -9,6 +9,7 @@ export interface AuthFormField {
   name: string
   type: FieldType
   placeholder: string
+  showPasswordChecklist?: boolean
 }
 
 interface AuthFormProps {
@@ -73,6 +74,7 @@ export default function AuthForm({
           <PasswordInput
             {...commonProps}
             onChange={(value) => onChange(field.name, value)}
+            showChecklist={field.showPasswordChecklist}
           />
         )
       case 'date':
@@ -101,7 +103,7 @@ export default function AuthForm({
 
   return (
     <div className="w-full font-nunito">
-      <h2 className="mb-2 text-center text-2xl md:text-3xl font-bold text-[#4C7C64]">
+      <h2 className="mt-8 mb-2 text-center text-2xl md:text-3xl font-bold text-[#4C7C64]">
         {title}
       </h2>
 
@@ -172,11 +174,15 @@ export default function AuthForm({
       </form>
 
       {switchText && switchLabel && onSwitchMode && (
-        <p className="mt-4 text-center text-sm text-[#8c7b66]">
+        <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66]">
           {switchText}{' '}
-          <Button type="button" variant="tertiary" onClick={onSwitchMode}>
+          <button
+            type="button"
+            onClick={onSwitchMode}
+            className="font-semibold text-[#4C7C64] hover:underline focus-visible:outline-none focus-visible:underline"
+          >
             {switchLabel}
-          </Button>
+          </button>
         </p>
       )}
     </div>

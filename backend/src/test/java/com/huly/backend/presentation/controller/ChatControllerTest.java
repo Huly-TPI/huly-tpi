@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatStreamEvent;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
@@ -99,6 +101,29 @@ class ChatControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.metadata.risk_detected").value(true))
                 .andExpect(jsonPath("$.metadata.matched_word").value("suicidio"));
+    }
+
+    @Test
+    void chat_shouldReturnSuggestedAction_whenRecommendationExists() throws Exception {
+        SuggestedChatAction action = new SuggestedChatAction(
+                ActivityType.DIARIO,
+                2L,
+                "Diario emocional",
+                "Un espacio para ordenar pensamientos",
+                "/api/activities",
+                15L
+        );
+        ChatReply reply = new ChatReply("te acompaño", EmotionType.SADNESS, 9, false, null, action);
+        when(chatUseCase.execute(any(), any(), any())).thenReturn(reply);
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("estoy triste", "conv-2"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.suggested_action.type").value("DIARIO"))
+                .andExpect(jsonPath("$.suggested_action.action_id").value("2"))
+                .andExpect(jsonPath("$.suggested_action.title").value("Diario emocional"))
+                .andExpect(jsonPath("$.suggested_action.emotional_event_id").value(15));
     }
 
     @Test

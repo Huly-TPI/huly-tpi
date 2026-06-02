@@ -1,28 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import chatbotImage from '../../assets/chatbot/huly-chatbot.webp'
 import ChatbotModal from './ChatbotModal'
 import Button from '../Buttons/Button/Button'
+import { useAuth } from '../../context/auth'
 
 export default function ChatbotLauncher() {
+  const { isAuthenticated } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
-  const [hasSession, setHasSession] = useState(false)
 
-  useEffect(() => {
-    const syncSession = () => {
-      setHasSession(Boolean(localStorage.getItem('token')))
-    }
-
-    syncSession()
-    window.addEventListener('storage', syncSession)
-    window.addEventListener('focus', syncSession)
-
-    return () => {
-      window.removeEventListener('storage', syncSession)
-      window.removeEventListener('focus', syncSession)
-    }
-  }, [])
-
-  if (!hasSession) return null
+  if (!isAuthenticated) return null
 
   return (
     <>

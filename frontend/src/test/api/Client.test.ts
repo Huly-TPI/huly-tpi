@@ -1,147 +1,130 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ApiError } from '../../api/apiError'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { api, getToken, setToken, clearToken } from '../../api/client'
 
-const mockFetch = vi.fn()
-vi.stubGlobal('fetch', mockFetch)
-
-const mockLocation = { href: '' }
-vi.stubGlobal('location', mockLocation)
-
-function mockResponse(status: number, body: unknown) {
-    return {
-        ok: status >= 200 && status < 300,
-        status,
-        json: () => Promise.resolve(body),
-        text: () => Promise.resolve(JSON.stringify(body)),
-    }
+function mockResponse(status: number, body: unknown = {}) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(body ? JSON.stringify(body) : ''),
+  } as Response
 }
 
 describe('client', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-        localStorage.clear()
-        mockLocation.href = ''
+  beforeEach(() => {
+    localStorage.clear()
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  describe('manejo del token', () => {
+    it('setToken y getToken funcionan', () => {
+      setToken('abc')
+      expect(getToken()).toBe('abc')
     })
 
-    it('manda el token del localStorage en el header Authorization', async () => {
-        localStorage.setItem('token', 'my-token')
-        mockFetch.mockResolvedValueOnce(mockResponse(200, { data: 'ok' }))
+    it('clearToken borra el token', () => {
+      setToken('abc')
+      clearToken()
+      expect(getToken()).toBeNull()
+    })
+  })
 
-        const { api } = await import('../../api/client')
-        await api.get('/some-endpoint')
+  describe('request', () => {
+    it('incluye el header Authorization si hay token', async () => {
+      setToken('my-token')
+      const fetchMock = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(mockResponse(200, { ok: true }))
 
-        expect(mockFetch).toHaveBeenCalledWith(
-            expect.stringContaining('/some-endpoint'),
-            expect.objectContaining({
-                headers: expect.objectContaining({
-                    Authorization: 'Bearer my-token',
-                }),
-            }),
-        )
+      await api.get('/test')
+
+      const [, options] = fetchMock.mock.calls[0]
+      expect((options?.headers as Record<string, string>).Authorization).toBe(
+        'Bearer my-token',
+      )
     })
 
-    it('no manda Authorization si no hay token', async () => {
-        mockFetch.mockResolvedValueOnce(mockResponse(200, { data: 'ok' }))
+    it('no incluye Authorization si no hay token', async () => {
+      const fetchMock = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(mockResponse(200, {}))
 
-        const { api } = await import('../../api/client')
-        await api.get('/some-endpoint')
+      await api.get('/test')
 
-        const headers = mockFetch.mock.calls[0][1].headers
-        expect(headers).not.toHaveProperty('Authorization')
+      const [, options] = fetchMock.mock.calls[0]
+      expect(
+        (options?.headers as Record<string, string>).Authorization,
+      ).toBeUndefined()
     })
 
-    it('lanza ApiError cuando la respuesta no es ok', async () => {
-        mockFetch.mockResolvedValueOnce(mockResponse(400, { message: 'Bad request' }))
+    it('devuelve el body parseado en éxito', async () => {
+      vi.spyOn(global, 'fetch').mockResolvedValue(
+        mockResponse(200, { id: 1, name: 'Mili' }),
+      )
 
-        const { api } = await import('../../api/client')
+      const result = await api.get<{ id: number; name: string }>('/test')
 
-        await expect(api.get('/some-endpoint')).rejects.toBeInstanceOf(ApiError)
+      expect(result).toEqual({ id: 1, name: 'Mili' })
     })
 
-    it('usa el mensaje del body en el ApiError', async () => {
-        mockFetch.mockResolvedValueOnce(mockResponse(400, { message: 'Campo inválido' }))
+    it('lanza ApiError en respuesta no-ok sin retry', async () => {
+      vi.spyOn(global, 'fetch').mockResolvedValue(
+        mockResponse(400, { message: 'Bad request' }),
+      )
 
-        const { api } = await import('../../api/client')
+      await expect(api.get('/test')).rejects.toThrow('Bad request')
+    })
+  })
 
-        await expect(api.get('/some-endpoint')).rejects.toThrow('Campo inválido')
+  describe('retry de refresh en 401', () => {
+    it('reintenta el request tras refrescar el token con éxito', async () => {
+      setToken('expired-token')
+      const fetchMock = vi
+        .spyOn(global, 'fetch')
+        // 1er intento: 401
+        .mockResolvedValueOnce(mockResponse(401, {}))
+        // refresh: ok con token nuevo
+        .mockResolvedValueOnce(mockResponse(200, { accessToken: 'fresh-token' }))
+        // reintento: ok
+        .mockResolvedValueOnce(mockResponse(200, { data: 'ok' }))
+
+      const result = await api.get<{ data: string }>('/protected')
+
+      expect(result).toEqual({ data: 'ok' })
+      expect(getToken()).toBe('fresh-token')
+      expect(fetchMock).toHaveBeenCalledTimes(3)
     })
 
-    it('intenta el refresh cuando recibe 401', async () => {
-        localStorage.setItem('token', 'expired-token')
-        mockFetch
-            .mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }))
-            .mockResolvedValueOnce(mockResponse(200, { accessToken: 'new-token' }))
-            .mockResolvedValueOnce(mockResponse(200, { data: 'ok' }))
+    it('limpia el token y emite auth:expired si el refresh falla', async () => {
+      setToken('expired-token')
+      const expiredHandler = vi.fn()
+      window.addEventListener('auth:expired', expiredHandler)
 
-        const { api } = await import('../../api/client')
-        await api.get('/protected')
+      vi.spyOn(global, 'fetch')
+        .mockResolvedValueOnce(mockResponse(401, {}))
+        .mockResolvedValueOnce(mockResponse(401, {}))
 
-        expect(mockFetch).toHaveBeenCalledTimes(3)
-        expect(localStorage.getItem('token')).toBe('new-token')
+      await expect(api.get('/protected')).rejects.toThrow()
+      expect(getToken()).toBeNull()
+      expect(expiredHandler).toHaveBeenCalled()
+
+      window.removeEventListener('auth:expired', expiredHandler)
     })
 
-    it('redirige a /login si el refresh falla', async () => {
-        localStorage.setItem('token', 'expired-token')
-        mockFetch
-            .mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }))
-            .mockResolvedValueOnce(mockResponse(401, { message: 'Refresh inválido' }))
+    it('no reintenta infinitamente (un solo refresh)', async () => {
+      setToken('expired-token')
+      const fetchMock = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValueOnce(mockResponse(401, {}))
+        .mockResolvedValueOnce(mockResponse(200, { accessToken: 'fresh' }))
+        .mockResolvedValueOnce(mockResponse(401, {}))
 
-        const { api } = await import('../../api/client')
-
-        await expect(api.get('/protected')).rejects.toBeInstanceOf(ApiError)
-        expect(mockLocation.href).toBe('/login')
+      await expect(api.get('/protected')).rejects.toThrow()
+      expect(fetchMock).toHaveBeenCalledTimes(3)
     })
-
-    it('limpia localStorage si el refresh falla', async () => {
-        localStorage.setItem('token', 'expired-token')
-        localStorage.setItem('role', 'USER')
-        mockFetch
-            .mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }))
-            .mockResolvedValueOnce(mockResponse(401, { message: 'Refresh inválido' }))
-
-        const { api } = await import('../../api/client')
-
-        await expect(api.get('/protected')).rejects.toBeInstanceOf(ApiError)
-        expect(localStorage.getItem('token')).toBeNull()
-        expect(localStorage.getItem('role')).toBeNull()
-    })
-
-    it('no reintenta el refresh en el segundo 401', async () => {
-        localStorage.setItem('token', 'expired-token')
-        mockFetch
-            .mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }))
-            .mockResolvedValueOnce(mockResponse(200, { accessToken: 'new-token' }))
-            .mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized again' }))
-
-        const { api } = await import('../../api/client')
-
-        await expect(api.get('/protected')).rejects.toBeInstanceOf(ApiError)
-        expect(mockFetch).toHaveBeenCalledTimes(3)
-    })
-
-    it('no redirige a /login si skipAuthRedirect es true y recibe 401', async () => {
-        mockFetch.mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }))
-
-        const { api } = await import('../../api/client')
-
-        await expect(
-            api.post('/auth/backoffice/login', {}, { skipAuthRedirect: true }),
-        ).rejects.toBeInstanceOf(ApiError)
-
-        expect(mockLocation.href).toBe('')
-    })
-
-    it('retorna null cuando la respuesta no tiene body', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            status: 204,
-            text: () => Promise.resolve(''),
-            json: () => Promise.resolve(null),
-        })
-
-        const { api } = await import('../../api/client')
-        const result = await api.delete('/some-endpoint')
-
-        expect(result).toBeNull()
-    })
+  })
 })

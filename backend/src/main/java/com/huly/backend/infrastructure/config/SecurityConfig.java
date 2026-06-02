@@ -35,7 +35,8 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml",
                                 "/api/auth/**",
                                 "/api/user-goals/**",
-                                "/api/leads"
+                                "/api/leads",
+                                "/api/breathing/techniques"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
