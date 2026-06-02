@@ -1,11 +1,13 @@
 package com.huly.backend.presentation.controller;
 
 import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
+import com.huly.backend.presentation.dto.userGoal.AcceptChallengeRequest;
 import com.huly.backend.presentation.dto.userGoal.UserGoalListResponse;
 import com.huly.backend.presentation.dto.userGoal.UserGoalPageResponse;
 import com.huly.backend.presentation.dto.userGoal.UserGoalRequest;
@@ -13,23 +15,43 @@ import com.huly.backend.presentation.dto.userGoal.UserGoalResponse;
 import com.huly.backend.presentation.dto.userGoal.UserGoalUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/user-goals")
 @RequiredArgsConstructor
 public class UserGoalController {
 
+    private final AcceptChallengeUseCase acceptChallengeUseCase;
     private final AddUserGoalUseCase addUserGoalUseCase;
     private final GetUserGoalsByUserUseCase getUserGoalsByUserUseCase;
     private final DeleteUserGoalUseCase deleteUserGoalUseCase;
     private final UpdateUserGoalUseCase updateUserGoalUseCase;
     private final CompleteUserGoalUseCase completeUserGoalUseCase;
+
+    @PostMapping("/accept")
+    public ResponseEntity<UserGoalResponse> acceptChallenge(@Valid @RequestBody AcceptChallengeRequest request) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        UserGoal created = acceptChallengeUseCase.execute(
+                email,
+                request.title(),
+                request.description(),
+                request.activityId()
+        );
+
+        log.info("Challenge aceptado exitosamente. userGoalId='{}', email='{}'", created.getId(), email);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
+    }
 
     @PostMapping
     public ResponseEntity<UserGoalResponse> add(@Valid @RequestBody UserGoalRequest request) {
