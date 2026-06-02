@@ -1,6 +1,7 @@
 package com.huly.backend.presentation.controller;
 
 import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.exception.UnauthorizedException;
 import com.huly.backend.presentation.dto.UserProfileResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final UserDetailDomainRepository userDetailDomainRepository;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -28,12 +30,16 @@ public class UserController {
         }
 
         AppUser user = getCurrentUserUseCase.execute(principal.getUsername());
+        Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
+        Boolean onboardingTutorialCompleted = userDetailDomainRepository.findOnboardingTutorialCompleted(user.getId()).orElse(false);
 
         return ResponseEntity.ok(UserProfileResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .onBoardingCompleted(onBoardingCompleted)
+                .onboardingTutorialCompleted(onboardingTutorialCompleted)
                 .build());
     }
 }

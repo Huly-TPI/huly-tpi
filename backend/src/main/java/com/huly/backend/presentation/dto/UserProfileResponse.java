@@ -10,5 +10,7 @@ public class UserProfileResponse {
     private String name;
     private String email;
     private UserRole role;
+    private Boolean onBoardingCompleted;
+    private Boolean onboardingTutorialCompleted;
 }
 

@@ -63,8 +63,8 @@ export default function Register() {
         password: sanitized.password,
       })
 
-      await loginWithToken(res.accessToken)
-      navigate('/')
+      const profile = await loginWithToken(res.accessToken)
+      navigate(profile.onBoardingCompleted === false ? '/onboarding' : '/')
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
         setFieldErrors(err.fieldErrors)

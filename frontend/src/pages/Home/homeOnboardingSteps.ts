@@ -67,7 +67,7 @@ export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboar
         imageSrc: hulyTreeImage,
         anchorElementId: 'tree',
         placementClassName:
-          'left-[52%] top-[50.5%] z-[225] w-[25%] md:left-[57%] md:top-[54.5%] md:w-[21%] min-[1400px]:left-[56%] min-[1400px]:top-[53.5%] min-[1400px]:w-[21%]',
+          'left-[49%] top-[50.5%] z-[225] w-[28%] md:left-[54%] md:top-[53.5%] md:w-[24%] min-[1400px]:left-[53%] min-[1400px]:top-[52.5%] min-[1400px]:w-[24%]',
         imageClassName: 'w-full',
       },
     },
@@ -83,7 +83,7 @@ export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboar
         imageSrc: hulyNotebookImage,
         anchorElementId: 'notebook',
         placementClassName:
-          'right-[38%] top-[18%] z-[225] w-[96%] md:right-[64%] md:top-[14%] md:w-[84%] min-[1400px]:right-[64%] min-[1400px]:top-[-8%] min-[1400px]:w-[92%]',
+          'right-[42%] top-[-4%] z-[225] w-[82%] md:right-[61%] md:top-[-6%] md:w-[72%] min-[1400px]:right-[61%] min-[1400px]:top-[-20%] min-[1400px]:w-[78%]',
         imageClassName: 'w-full',
       },
     },
@@ -97,9 +97,9 @@ export function createHomeOnboardingSteps(cloudElementIds: string[]): HomeOnboar
         'left-[1rem] right-[1rem] top-[1.6rem] md:left-[25%] md:right-auto md:top-[60%] md:bottom-auto min-[1400px]:top-[56%]',
       mascot: {
         imageSrc: hulyWateringCanImage,
-        anchorElementId: 'watering-can',
+        anchorElementId: 'watering-can-plant',
         placementClassName:
-          'left-[88%] top-[-14%] z-[225] w-[84%] md:left-[102%] md:top-[2%] md:w-[76%] min-[1400px]:left-[102%] min-[1400px]:top-[2%] min-[1400px]:w-[76%]',
+          'left-[76%] top-[-14%] z-[225] w-[84%] md:left-[90%] md:top-[2%] md:w-[76%] min-[1400px]:left-[90%] min-[1400px]:top-[2%] min-[1400px]:w-[76%]',
         imageClassName: 'w-full',
       },
     },

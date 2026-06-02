@@ -15,6 +15,8 @@ describe('Login', () => {
         vi.clearAllMocks()
     })
 
+    const getSubmitButton = () => screen.getByRole('button', { name: 'Iniciar sesión' })
+
     const renderWithRouter = () => {
         const user = userEvent.setup()
         render(
@@ -22,6 +24,7 @@ describe('Login', () => {
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/" element={<h1>Home</h1>} />
+                    <Route path="/onboarding" element={<h1>Onboarding</h1>} />
                     <Route path="/register" element={<h1>Register</h1>} />
                 </Routes>
             </MemoryRouter>,
@@ -45,7 +48,7 @@ describe('Login', () => {
     it('muestra errores de validación al enviar vacío', async () => {
         const { user } = renderWithRouter()
 
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
         expect(mockLogin).not.toHaveBeenCalled()
@@ -55,18 +58,18 @@ describe('Login', () => {
         const { user } = renderWithRouter()
 
         await user.type(screen.getByPlaceholderText('Email'), 'noesmail')
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getByText('Email inválido')).toBeInTheDocument()
         expect(mockLogin).not.toHaveBeenCalled()
     })
 
     it('llama a login del contexto con las credenciales', async () => {
-        mockLogin.mockResolvedValueOnce(undefined)
+        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: true })
         const { user } = renderWithRouter()
 
         await fillForm(user)
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(mockLogin).toHaveBeenCalledWith({
@@ -77,14 +80,26 @@ describe('Login', () => {
     })
 
     it('inicia sesión exitosamente y redirige al home', async () => {
-        mockLogin.mockResolvedValueOnce(undefined)
+        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: true })
         const { user } = renderWithRouter()
 
         await fillForm(user)
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Home')).toBeInTheDocument()
+        })
+    })
+
+    it('redirige a onboarding cuando el perfil emocional no está completo', async () => {
+        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: false })
+        const { user } = renderWithRouter()
+
+        await fillForm(user)
+        await user.click(getSubmitButton())
+
+        await waitFor(() => {
+            expect(screen.getByText('Onboarding')).toBeInTheDocument()
         })
     })
 
@@ -93,7 +108,7 @@ describe('Login', () => {
         const { user } = renderWithRouter()
 
         await fillForm(user)
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Email o contraseña incorrectos')).toBeInTheDocument()
@@ -105,7 +120,7 @@ describe('Login', () => {
         const { user } = renderWithRouter()
 
         await fillForm(user)
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Error del servidor')).toBeInTheDocument()
@@ -119,7 +134,7 @@ describe('Login', () => {
         const { user } = renderWithRouter()
 
         await fillForm(user)
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         await waitFor(() => {
             expect(screen.getByText('Email no registrado')).toBeInTheDocument()
@@ -139,7 +154,7 @@ describe('Login', () => {
         const { user } = renderWithRouter()
 
         await fillForm(user)
-        await user.click(screen.getByRole('button', { name: '🌿 Iniciar sesión' }))
+        await user.click(getSubmitButton())
 
         expect(screen.getByRole('button', { name: 'Ingresando...' })).toBeDisabled()
     })

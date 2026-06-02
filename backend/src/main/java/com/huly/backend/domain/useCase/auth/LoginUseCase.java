@@ -53,13 +53,13 @@ public class LoginUseCase {
                 .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
                 .build());
 
-        Boolean profileOnBoardingCompleted = userDetailDomainRepository.findProfileOnBoardingCompleted(user.getId()).orElse(false);
+        Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
 
         return AuthTokens.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .role(user.getRole())
-                .profileOnBoardingCompleted(profileOnBoardingCompleted)
+                .onBoardingCompleted(onBoardingCompleted)
                 .build();
     }
 }

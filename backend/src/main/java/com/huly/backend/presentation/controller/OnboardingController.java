@@ -1,5 +1,6 @@
 package com.huly.backend.presentation.controller;
-import com.huly.backend.domain.useCase.onboarding.CompleteProfileOnboardingUseCase;
+import com.huly.backend.domain.useCase.onboarding.CompleteOnboardingUseCase;
+import com.huly.backend.domain.useCase.onboarding.CompleteTutorialUseCase;
 import com.huly.backend.domain.useCase.onboarding.GenerateOnboardingOptionsUseCase;
 import com.huly.backend.presentation.dto.onboarding.CompleteOnboardingRequest;
 import com.huly.backend.presentation.dto.onboarding.GenerateOptionsRequest;
@@ -21,7 +22,8 @@ import java.util.List;
 public class OnboardingController {
 
     private final GenerateOnboardingOptionsUseCase generateOnboardingOptionsUseCase;
-    private final CompleteProfileOnboardingUseCase completeProfileOnboardingUseCase;
+    private final CompleteOnboardingUseCase completeOnboardingUseCase;
+    private final CompleteTutorialUseCase completeTutorialUseCase;
 
     @PostMapping("/generate-options")
     public ResponseEntity<GenerateOptionsResponse> generateOptions(
@@ -37,8 +39,16 @@ public class OnboardingController {
             @Valid @RequestBody CompleteOnboardingRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        completeProfileOnboardingUseCase.execute(userDetails.getUsername(), request.answer1(), request.answer2(), request.answer3());
+        completeOnboardingUseCase.execute(userDetails.getUsername(), request.answer1(), request.answer2(), request.answer3());
         return ResponseEntity.noContent().build();
-    
-}
+
+    }
+
+    @PostMapping("/tutorial/complete")
+    public ResponseEntity<Void> completeTutorial(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        completeTutorialUseCase.execute(userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
 }

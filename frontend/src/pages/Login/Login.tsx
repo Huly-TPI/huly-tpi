@@ -41,11 +41,11 @@ export default function Login() {
     setApiError(null)
 
     try {
-      await login({
+      const profile = await login({
         email: values.email,
         password: values.password,
       })
-      navigate('/')
+      navigate(profile.onBoardingCompleted === true ? '/' : '/onboarding')
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
         setFieldErrors(err.fieldErrors)
