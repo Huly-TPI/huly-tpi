@@ -49,6 +49,29 @@ class UserDetailDomainRepositoryImplTest {
     }
 
     @Test
+    void findOnboardingTutorialCompleted_shouldReturnValue_whenUserDetailExists() {
+        UserDetailEntity entity = UserDetailEntity.builder()
+                .id(2L).onboardingTutorialCompleted(true).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(2L))
+                .thenReturn(Optional.of(entity));
+
+        Optional<Boolean> result = userDetailDomainRepository.findOnboardingTutorialCompleted(2L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get()).isTrue();
+    }
+
+    @Test
+    void findOnboardingTutorialCompleted_shouldReturnEmpty_whenUserDetailNotFound() {
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(100L))
+                .thenReturn(Optional.empty());
+
+        Optional<Boolean> result = userDetailDomainRepository.findOnboardingTutorialCompleted(100L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void completeOnboarding_shouldSetAnswersAndMarkCompleted() {
         UserDetailEntity entity = UserDetailEntity.builder().id(1L).build();
         when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(1L))
@@ -73,6 +96,28 @@ class UserDetailDomainRepositoryImplTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userDetailDomainRepository.completeOnboarding(99L, "A", "B", "C"))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void completeTutorial_shouldMarkTutorialCompleted() {
+        UserDetailEntity entity = UserDetailEntity.builder().id(3L).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(3L))
+                .thenReturn(Optional.of(entity));
+
+        userDetailDomainRepository.completeTutorial(3L);
+
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+        verify(userDetailRepository).save(captor.capture());
+        assertThat(captor.getValue().getOnboardingTutorialCompleted()).isTrue();
+    }
+
+    @Test
+    void completeTutorial_shouldThrowNotFoundException_whenUserDetailNotFound() {
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(101L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userDetailDomainRepository.completeTutorial(101L))
                 .isInstanceOf(NotFoundException.class);
     }
 

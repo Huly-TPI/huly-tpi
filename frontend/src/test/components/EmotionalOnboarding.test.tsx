@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import EmotionalOnboarding from '../../components/onboarding/EmotionalOnboarding/EmotionalOnboarding'           
+import EmotionalOnboarding from '../../components/Onboarding/EmotionalOnboarding/EmotionalOnboarding'
 
 describe('EmotionalOnboarding', () => {
     const defaultProps = { 

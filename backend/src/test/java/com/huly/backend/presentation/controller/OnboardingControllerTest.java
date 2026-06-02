@@ -97,6 +97,14 @@ class OnboardingControllerTest {
         )
     ))).andExpect(status().isBadRequest());
     } 
+
+    @Test
+    void completeTutorial_shouldReturn204() throws Exception {
+        mockMvc.perform(post("/api/onboarding/tutorial/complete"))
+                .andExpect(status().isNoContent());
+
+        verify(completeTutorialUseCase).execute("user@huly.com");
+    }
      }           
 
 
