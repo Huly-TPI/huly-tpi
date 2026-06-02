@@ -4,7 +4,7 @@ import { getBreathingTechniques } from '../../api/breathing'
 import BackButton from '../../components/Buttons/BackButton/BackButton'
 import './Breathing.css'
 import dayBackground from '../../assets/garden/light-theme/background/day-background.webp'
-import BackButton from '../../components/Buttons/BackButton/BackButton'
+
 
 export default function Breathing() {
   const [techniques, setTechniques] = useState<BreathingTechnique[]>([])
