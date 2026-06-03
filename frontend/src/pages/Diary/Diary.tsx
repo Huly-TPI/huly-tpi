@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { journalApi, type JournalEntryResponse, type Mood } from '../api/journal'
-import { useAuth } from '../context/auth'
-import cloudImg from '../assets/garden/light-theme/cloud.webp'
-import dayBackground from '../assets/garden/light-theme/background/day-background.webp'
-import Button from '../components/Buttons/Button/Button'
-import BackButton from '../components/Buttons/BackButton/BackButton'
-import DiaryConsentModal from '../components/DiaryConsentModal'
+import './Diary.css'
+import { journalApi, type JournalEntryResponse, type Mood } from '../../api/journal.ts'
+import { useAuth } from '../../context/auth.tsx'
+import cloudImg from '../../assets/garden/light-theme/cloud.webp'
+import dayBackground from '../../assets/garden/light-theme/background/day-background.webp'
+import Button from '../../components/Buttons/Button/Button.tsx'
+import BackButton from '../../components/Buttons/BackButton/BackButton.tsx'
+import DiaryConsentModal from '../../components/DiaryConsentModal.tsx'
 
 function getDiaryConsentKey(userId: number): string {
   return `diaryTextConsent_${userId}`
@@ -31,6 +32,14 @@ function formatDateLong(date: Date): string {
   })
 }
 
+function formatDateMobile(date: Date): string {
+  return date.toLocaleDateString('es-AR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
 function formatDateShort(isoString: string): string {
   const date = new Date(isoString)
   return date.toLocaleDateString('es-AR', {
@@ -38,6 +47,15 @@ function formatDateShort(isoString: string): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+  })
+}
+
+function formatDateShortMobile(isoString: string): string {
+  const date = new Date(isoString)
+  return date.toLocaleDateString('es-AR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
   })
 }
 
@@ -66,9 +84,12 @@ export default function Diary() {
   const [showConsentModal, setShowConsentModal] = useState(false)
 
   useEffect(() => {
+    if (window.innerWidth < 768) return
     const main = document.querySelector('main') as HTMLElement | null
-    if (main) main.style.overflow = 'hidden'
-    return () => { if (main) main.style.overflow = '' }
+    if (main) {
+      main.style.overflow = 'hidden'
+      return () => { main.style.overflow = '' }
+    }
   }, [])
 
   useEffect(() => {
@@ -116,6 +137,9 @@ export default function Diary() {
   const displayDate = isNewEntry
     ? formatDateLong(new Date())
     : formatDateShort(currentEntry!.createdAt)
+  const displayDateMobile = isNewEntry
+    ? formatDateMobile(new Date())
+    : formatDateShortMobile(currentEntry!.createdAt)
 
   const hasContent = adentro.trim() || pensamiento.trim() || bien.trim() || manana.trim()
 
@@ -172,7 +196,7 @@ export default function Diary() {
       <DiaryConsentModal onAccept={handleConsentAccept} onReject={handleConsentReject} />
     )}
     <div
-      className="h-screen flex flex-col items-center px-4 pt-16 pb-6 relative overflow-hidden"
+      className="flex flex-col items-center px-2 sm:px-4 pt-12 sm:pt-16 pb-4 relative md:h-full md:overflow-hidden"
       style={{
         backgroundImage: `url(${dayBackground})`,
         backgroundSize: 'cover',
@@ -185,13 +209,14 @@ export default function Diary() {
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-40 hidden lg:block"  style={{ zIndex: 0, width: 320, top: '22%', left: '-4%' }} />
       <BackButton to="/"/>
 
-      <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2" style={{ borderColor: '#8869AC', zIndex: 1 }}>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-green-800 text-lg tracking-tight">huly</span>
-            <span className="text-sm capitalize" style={{ color: '#D1CAEF' }}>{displayDate}</span>
+      <div className="diary-card relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2" style={{ borderColor: '#8869AC', zIndex: 1 }}>
+        <div className="flex items-center justify-between px-3 sm:px-5 py-3 border-b border-gray-200 bg-white gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-bold text-green-800 text-lg tracking-tight flex-shrink-0">huly</span>
+            <span className="sm:hidden text-xs capitalize" style={{ color: '#D1CAEF' }}>{displayDateMobile}</span>
+            <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: '#D1CAEF' }}>{displayDate}</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <div className="flex items-center gap-1">
               <button
                 onClick={goToPrev}
@@ -200,7 +225,7 @@ export default function Diary() {
               >
                 ‹
               </button>
-              <span className="text-sm text-gray-500 min-w-[40px] text-center">
+              <span className="text-xs sm:text-sm text-gray-500 min-w-[28px] sm:min-w-[40px] text-center">
                 {pageIndex + 1} / {totalPages}
               </span>
               <button
@@ -218,15 +243,16 @@ export default function Diary() {
               onClick={handleSave}
               disabled={!isNewEntry || !hasContent}
               isLoading={saving}
-              loadingLabel="Guardando..."
+              loadingLabel="..."
+              className="!w-auto !min-w-0"
             >
-              💾 Guardar
+              <span className="hidden sm:inline">💾 </span>Guardar
             </Button>
           </div>
         </div>
 
-        <div className="flex" style={{ minHeight: '520px', ...LINE_BG }}>
-          <div className="flex-1 px-6 py-5 flex flex-col">
+        <div className="diary-content flex flex-col md:flex-row" style={{ minHeight: '520px', ...LINE_BG }}>
+          <div className="diary-left flex-1 px-4 md:px-6 py-5 flex flex-col">
             <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: '#649959' }}>
               Hoy
             </p>
@@ -234,7 +260,7 @@ export default function Diary() {
             <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#649959' }}>
               ¿Cómo me sentí hoy?
             </p>
-            <div className="grid grid-cols-4 gap-x-3 gap-y-3 mb-5">
+            <div className="diary-mood-grid grid grid-cols-4 gap-x-2 gap-y-3 mb-5">
               {MOODS.map((mood) => {
                 const isSelected = displayMood === mood.value
                 return (
@@ -248,7 +274,7 @@ export default function Diary() {
                     className="flex flex-col items-center gap-1 group"
                   >
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${
+                      className={`diary-mood-circle w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl transition-all ${
                         isSelected
                           ? 'bg-green-400 ring-2 ring-green-600 ring-offset-1'
                           : 'bg-green-200 group-hover:bg-green-300'
@@ -285,9 +311,10 @@ export default function Diary() {
             </p>
           </div>
 
-          <div className="w-1 my-4" style={{ backgroundColor: '#8869AC' }} />
+          <div className="hidden md:block w-1 my-4" style={{ backgroundColor: '#8869AC' }} />
+          <div className="block md:hidden h-px mx-4" style={{ backgroundColor: '#8869AC' }} />
 
-          <div className="flex-1 px-6 py-5 flex flex-col gap-5">
+          <div className="diary-right flex-1 px-4 md:px-6 py-5 flex flex-col gap-5">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#8869AC' }}>
                 ☁️ Un pensamiento que quiero soltar
@@ -297,7 +324,7 @@ export default function Diary() {
                 onChange={(e) => isNewEntry && setPensamiento(e.target.value)}
                 readOnly={!isNewEntry}
                 placeholder="Lo que ya no quiero cargar..."
-                rows={5}
+                rows={4}
                 className="w-full resize-none border-none outline-none text-sm text-gray-700 leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
                 style={{ backgroundColor: 'rgba(209, 202, 239, 0.3)' }}
               />
