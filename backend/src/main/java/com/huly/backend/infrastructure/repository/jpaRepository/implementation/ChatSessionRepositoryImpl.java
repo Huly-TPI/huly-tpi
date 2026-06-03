@@ -37,7 +37,12 @@ public class ChatSessionRepositoryImpl implements ChatSessionRepository {
     }
 
     @Override
-    public Optional<Long> findSessionIdByConversationId(String conversationId) {
-        return jpa.findByConversationId(conversationId).map(ChatSessionEntity::getId);
+    public Optional<Long> findSessionIdByConversationIdAndUserId(String conversationId, Long userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+
+        return jpa.findByConversationIdAndAppUserId(conversationId, userId)
+                .map(ChatSessionEntity::getId);
     }
 }

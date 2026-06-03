@@ -7,6 +7,8 @@ export interface AssistantMessage {
   intensity?: number | null
   suggested_action?: SuggestedActionDto | null
   suggestedActionDecision?: 'accepted' | 'rejected'
+  suggestedActionDecisionLoading?: boolean
+  suggestedActionDecisionError?: string
   generated_challenge?: GeneratedChallengeDto | null
   challengeDecision?: 'accepted' | 'rejected'
 }

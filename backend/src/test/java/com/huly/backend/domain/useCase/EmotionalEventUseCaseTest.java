@@ -8,6 +8,7 @@ import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.exception.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ class EmotionalEventUseCaseTest {
 
     private EmotionalEventRepository emotionalEventRepository;
     private ActivityRepository activityRepository;
+    private UserVectorMemoryService userVectorMemoryService;
     private CreateEmotionalEventUseCase createUseCase;
     private UpdateEmotionalEventDecisionUseCase decisionUseCase;
     private UpdateEmotionalEventFeedbackUseCase feedbackUseCase;
@@ -34,8 +36,12 @@ class EmotionalEventUseCaseTest {
     void setUp() {
         emotionalEventRepository = mock(EmotionalEventRepository.class);
         activityRepository = mock(ActivityRepository.class);
+        userVectorMemoryService = mock(UserVectorMemoryService.class);
         createUseCase = new CreateEmotionalEventUseCase(emotionalEventRepository, activityRepository);
-        decisionUseCase = new UpdateEmotionalEventDecisionUseCase(emotionalEventRepository, activityRepository);
+        decisionUseCase = new UpdateEmotionalEventDecisionUseCase(
+                emotionalEventRepository,
+                activityRepository,
+                userVectorMemoryService);
         feedbackUseCase = new UpdateEmotionalEventFeedbackUseCase(emotionalEventRepository);
     }
 

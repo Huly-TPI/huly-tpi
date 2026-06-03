@@ -1,11 +1,12 @@
 import { api } from './client'
 
 export interface SuggestedActionDto {
-  type: string
+  type: 'RESPIRACION' | 'DIARIO' | 'NUBE' | 'BURBUJA' | string
   action_id: string
   title: string
   description: string
   action_url: string
+  emotional_event_id?: number | null
 }
 
 export interface GeneratedChallengeDto {
@@ -32,6 +33,13 @@ export interface ChatRequestDto {
   conversationId: string
 }
 
+export interface ChatChallengeDecisionRequestDto {
+  conversationId: string
+  title: string
+  description?: string | null
+  decision: 'ACCEPTED' | 'REJECTED'
+}
+
 export interface ChatHistoryMessageDto {
   id: number
   role?: 'USER' | 'ASSISTANT' | null
@@ -54,6 +62,8 @@ export interface ChatHistoryPageResponseDto {
 export const chatApi = {
   sendMessage: (data: ChatRequestDto) =>
     api.post<ChatResponseDto>('/chat', data),
+  saveChallengeDecision: (data: ChatChallengeDecisionRequestDto) =>
+    api.post<void>('/chat/challenge-decision', data),
   getHistory: (conversationId: string, page = 0, size = 20) =>
     api.get<ChatHistoryPageResponseDto>(`/chat/${encodeURIComponent(conversationId)}/messages?page=${page}&size=${size}`),
 }

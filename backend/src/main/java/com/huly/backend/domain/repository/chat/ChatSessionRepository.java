@@ -8,5 +8,5 @@ public interface ChatSessionRepository {
 
     Long saveSession(String conversationId, Long userId);
 
-    Optional<Long> findSessionIdByConversationId(String conversationId);
+    Optional<Long> findSessionIdByConversationIdAndUserId(String conversationId, Long userId);
 }

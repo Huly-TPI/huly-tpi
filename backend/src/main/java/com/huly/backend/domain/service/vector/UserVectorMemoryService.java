@@ -1,5 +1,9 @@
 package com.huly.backend.domain.service.vector;
 
+import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoriesQuery;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
@@ -12,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +38,10 @@ public class UserVectorMemoryService {
     private static final String GUIDED_CLOUD_INPUT = "GUIDED_CLOUD_INPUT";
     private static final String EMOTIONAL_JOURNAL_ENTRY = "EMOTIONAL_JOURNAL_ENTRY";
     private static final String USER_PROFILE_FACTS = "USER_PROFILE_FACTS";
+    private static final String RECOMMENDED_ACTIVITY = "RECOMMENDED_ACTIVITY";
+    private static final String ACTIVITY_RECOMMENDATION_DECISION = "ACTIVITY_RECOMMENDATION_DECISION";
+    private static final String GENERATED_CHALLENGE = "GENERATED_CHALLENGE";
+    private static final String CHALLENGE_DECISION = "CHALLENGE_DECISION";
 
     private final VectorMemoryService vectorMemoryService;
     private final VectorMemoryProperties vectorMemoryProperties;
@@ -122,8 +131,135 @@ public class UserVectorMemoryService {
                         profileFacts,
                         conversationId,
                         null,
-                        metadata("CHATBOT_PROFILE")
+                metadata("CHATBOT_PROFILE")
                 )));
+    }
+
+    public void rememberRecommendedActivity(
+            Long userId,
+            String conversationId,
+            Long emotionalEventId,
+            SuggestedChatAction action
+    ) {
+        if (action == null) {
+            return;
+        }
+
+        String content = "Huly recomendo la actividad: %s. Tipo: %s. Descripcion: %s."
+                .formatted(
+                        valueOrDefault(action.title(), "Actividad"),
+                        action.type() != null ? action.type().name() : "UNKNOWN",
+                        valueOrDefault(action.description(), "")
+                );
+        Map<String, Object> metadata = metadata("CHATBOT_ACTIVITY_RECOMMENDATION",
+                Map.of(
+                        "activityId", valueOrDefault(action.activityId(), ""),
+                        "activityType", action.type() != null ? action.type().name() : "",
+                        "emotionalEventId", valueOrDefault(emotionalEventId, "")
+                ));
+
+        saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                VectorMemorySource.CHATBOT,
+                emotionalEventId != null ? emotionalEventId.toString() : userMemorySourceId(userId),
+                RECOMMENDED_ACTIVITY,
+                "RECOMMENDED_ACTIVITY",
+                content,
+                conversationId,
+                emotionalEventId != null ? emotionalEventId.toString() : null,
+                metadata
+        ));
+    }
+
+    public void rememberActivityRecommendationDecision(EmotionalEvent event) {
+        if (event == null || event.getUserId() == null || event.getRecommendationDecision() == null) {
+            return;
+        }
+
+        RecommendationDecision decision = event.getRecommendationDecision();
+        String content = "El usuario %s la recomendacion de actividad. Actividad recomendada id: %s. Actividad elegida id: %s. Recomendacion: %s."
+                .formatted(
+                        activityDecisionText(decision),
+                        valueOrDefault(event.getRecommendedActivityId(), ""),
+                        valueOrDefault(event.getChosenActivityId(), ""),
+                        valueOrDefault(event.getGeneratedRecommendation(), "")
+                );
+
+        saveMemory(new SaveVectorMemoryCommand(
+                event.getUserId(),
+                VectorMemorySource.CHATBOT,
+                event.getId() != null ? event.getId().toString() : userMemorySourceId(event.getUserId()),
+                ACTIVITY_RECOMMENDATION_DECISION,
+                "ACTIVITY_RECOMMENDATION_DECISION",
+                content,
+                null,
+                event.getId() != null ? event.getId().toString() : null,
+                metadata("CHATBOT_ACTIVITY_DECISION",
+                        Map.of(
+                                "decision", decision.name(),
+                                "recommendedActivityId", valueOrDefault(event.getRecommendedActivityId(), ""),
+                                "chosenActivityId", valueOrDefault(event.getChosenActivityId(), ""),
+                                "emotionalEventId", valueOrDefault(event.getId(), "")
+                        ))
+        ));
+    }
+
+    public void rememberGeneratedChallenge(Long userId, String conversationId, ChatReply.GeneratedChallenge challenge) {
+        if (challenge == null || isBlank(challenge.title())) {
+            return;
+        }
+
+        String content = "Huly sugirio el reto: %s. Descripcion: %s."
+                .formatted(challenge.title(), valueOrDefault(challenge.description(), ""));
+
+        saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                VectorMemorySource.CHATBOT,
+                sourceId("generated-challenge", conversationId, challenge.title()),
+                GENERATED_CHALLENGE,
+                "GENERATED_CHALLENGE",
+                content,
+                conversationId,
+                null,
+                metadata("CHATBOT_CHALLENGE",
+                        Map.of(
+                                "challengeTitle", challenge.title(),
+                                "challengeDescription", valueOrDefault(challenge.description(), "")
+                        ))
+        ));
+    }
+
+    public void rememberChallengeDecision(
+            Long userId,
+            String conversationId,
+            String title,
+            String description,
+            String decision
+    ) {
+        if (userId == null || isBlank(title) || isBlank(decision)) {
+            return;
+        }
+
+        String normalizedDecision = decision.toUpperCase();
+        String content = "El usuario %s el reto: %s. Descripcion: %s."
+                .formatted(challengeDecisionText(normalizedDecision), title, valueOrDefault(description, ""));
+
+        saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                VectorMemorySource.CHATBOT,
+                sourceId("challenge-decision", conversationId, title, normalizedDecision),
+                CHALLENGE_DECISION,
+                "CHALLENGE_DECISION",
+                content,
+                conversationId,
+                null,
+                metadata("CHATBOT_CHALLENGE_DECISION",
+                        Map.of(
+                                "decision", normalizedDecision,
+                                "challengeTitle", title,
+                                "challengeDescription", valueOrDefault(description, "")
+                        ))
+        ));
     }
 
     public void rememberGuidedCloudInput(Long userId, String cloudSessionId, String content) {
@@ -245,5 +381,43 @@ public class UserVectorMemoryService {
                 "createdFrom", CREATED_FROM_USER_MESSAGE,
                 "feature", feature
         );
+    }
+
+    private Map<String, Object> metadata(String feature, Map<String, Object> extra) {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("createdFrom", CREATED_FROM_USER_MESSAGE);
+        metadata.put("feature", feature);
+        if (extra != null) {
+            metadata.putAll(extra);
+        }
+        return metadata;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String valueOrDefault(Object value, String defaultValue) {
+        return value == null ? defaultValue : value.toString();
+    }
+
+    private String activityDecisionText(RecommendationDecision decision) {
+        if (decision == RecommendationDecision.ACCEPTED) {
+            return "acepto";
+        }
+        if (decision == RecommendationDecision.IGNORED) {
+            return "rechazo";
+        }
+        return "eligio otra actividad para";
+    }
+
+    private String challengeDecisionText(String decision) {
+        return "ACCEPTED".equals(decision) ? "acepto" : "rechazo";
+    }
+
+    private String sourceId(String... parts) {
+        return String.join(":", java.util.Arrays.stream(parts)
+                .map(part -> part == null || part.isBlank() ? "unknown" : part.strip())
+                .toList());
     }
 }
