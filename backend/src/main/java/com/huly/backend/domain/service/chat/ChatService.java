@@ -1,10 +1,15 @@
 package com.huly.backend.domain.service.chat;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.huly.backend.domain.model.RiskWord;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatStreamEvent;
+import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.MessageRole;
@@ -15,13 +20,11 @@ import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import com.huly.backend.domain.repository.RiskWordRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -38,17 +41,50 @@ public class ChatService {
     private final PromptBuilderService promptBuilderService;
     private final UserVectorMemoryService userVectorMemoryService;
     private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
+    private final ChatIntentDetectionService chatIntentDetectionService;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
         ChatContext context = buildBlockingContext(message, conversationId, userId);
+        ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
+        ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
+                message,
+                userId,
+                context,
+                userIntent);
+        var suggestedAction = recommendationOutcome != null ? recommendationOutcome.suggestedAction() : null;
+        context = context.withSystemPrompt(promptBuilderService.buildEnrichedPrompt(
+                context.basePrompt(),
+                context.riskWords(),
+                context.memories(),
+                suggestedAction,
+                userIntent));
 
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
-        ChatReply finalReply = enrichWithEmotionalRecommendation(message, userId, context, reply);
+        reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
+        ChatReply finalReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
         saveUserMessage(conversationId, message, finalReply, userId);
         saveAssistantMessage(conversationId, finalReply.content(), userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
 
         return finalReply;
+    }
+
+    private ChatRecommendationOutcome evaluateRecommendation(
+            String message,
+            Long userId,
+            ChatContext context,
+            ChatUserIntent userIntent) {
+        if (userIntent == ChatUserIntent.CHALLENGE_REQUEST) {
+            return ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral());
+        }
+        return chatEmotionalRecommendationService.evaluate(
+                message,
+                userId,
+                context.basePrompt(),
+                context.memories(),
+                context.history(),
+                null,
+                userIntent == ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
     }
 
     public Flux<ChatStreamEvent> streamMessage(String message, String conversationId, Long userId) {
@@ -65,16 +101,14 @@ public class ChatService {
                         return ChatStreamEvent.delta(delta);
                     })
                     .concatWith(Mono.fromCallable(() -> completeStream(
-                                    message,
-                                    conversationId,
-                                    userId,
-                                    context,
-                                    assistantContent.toString()
-                            ))
+                            message,
+                            conversationId,
+                            userId,
+                            context,
+                            assistantContent.toString()))
                             .flatMapMany(reply -> Flux.just(
                                     ChatStreamEvent.metadata(reply),
-                                    ChatStreamEvent.done(reply)
-                            )))
+                                    ChatStreamEvent.done(reply))))
                     .doOnCancel(() -> log.info("Stream de chat cancelado userId={} conversationId={}",
                             userId, conversationId));
         }).onErrorResume(e -> {
@@ -87,9 +121,8 @@ public class ChatService {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
-        String systemPrompt = promptBuilderService.buildEnrichedPrompt(basePrompt, riskWords, memories);
-        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId);
-        return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history);
+        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
+        return new ChatContext(basePrompt, null, riskWords, memories, history);
     }
 
     private ChatContext buildStreamingContext(String message, String conversationId, Long userId) {
@@ -97,7 +130,7 @@ public class ChatService {
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
         String systemPrompt = promptBuilderService.buildStreamingPrompt(basePrompt, riskWords, memories);
-        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId);
+        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
         return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history);
     }
 
@@ -112,16 +145,14 @@ public class ChatService {
             String conversationId,
             Long userId,
             ChatContext context,
-            String assistantContent
-    ) {
+            String assistantContent) {
         ChatReply metadata = extractMetadata(message, context);
         ChatReply finalReply = new ChatReply(
                 assistantContent,
                 metadata.detectedEmotion(),
                 metadata.intensity(),
                 metadata.riskDetected(),
-                metadata.matchedWord()
-        );
+                metadata.matchedWord());
 
         saveAssistantMessage(conversationId, assistantContent, userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
@@ -133,8 +164,7 @@ public class ChatService {
             String metadataPrompt = promptBuilderService.buildMetadataPrompt(
                     context.basePrompt(),
                     context.riskWords(),
-                    context.memories()
-            );
+                    context.memories());
             return llmChatPort.chat(metadataPrompt, message, context.history());
         } catch (Exception e) {
             log.warn("No se pudo extraer metadata de chat en streaming", e);
@@ -142,25 +172,58 @@ public class ChatService {
         }
     }
 
-    private ChatReply enrichWithEmotionalRecommendation(
-            String message,
+    private ChatReply applyRecommendationOutcome(
+            String conversationId,
             Long userId,
-            ChatContext context,
-            ChatReply reply
-    ) {
-        ChatRecommendationOutcome outcome = chatEmotionalRecommendationService.evaluate(
-                message,
-                userId,
-                context.basePrompt(),
-                context.memories(),
-                context.history(),
-                reply
-        );
+            ChatReply reply,
+            ChatRecommendationOutcome outcome) {
+        ChatReply enriched = applyAnalysisMetadata(reply, outcome != null ? outcome.analysis() : null);
 
-        ChatReply enriched = applyAnalysisMetadata(reply, outcome.analysis());
-        return outcome.suggestedAction() == null
-                ? enriched
-                : enriched.withSuggestedAction(outcome.suggestedAction());
+        if (outcome == null || outcome.suggestedAction() == null) {
+            userVectorMemoryService.rememberGeneratedChallenge(userId, conversationId, enriched.generatedChallenge());
+            return enriched;
+        }
+
+        userVectorMemoryService.rememberRecommendedActivity(
+                userId,
+                conversationId,
+                outcome.suggestedAction().emotionalEventId(),
+                outcome.suggestedAction());
+        return new ChatReply(
+                enriched.content(),
+                enriched.detectedEmotion(),
+                enriched.intensity(),
+                enriched.riskDetected(),
+                enriched.matchedWord(),
+                outcome.suggestedAction(),
+                null);
+    }
+
+    private ChatReply ensureRequestedChallenge(
+            ChatReply reply,
+            ChatUserIntent userIntent,
+            Object suggestedAction) {
+        if (userIntent != ChatUserIntent.CHALLENGE_REQUEST
+                || suggestedAction != null
+                || reply.generatedChallenge() != null) {
+            return reply;
+        }
+
+        ChatReply.GeneratedChallenge challenge = new ChatReply.GeneratedChallenge(
+                "Reto de accion pequena",
+                "Elegí una acción simple que puedas hacer en los próximos 10 minutos y realizala sin buscar que salga perfecta."
+        );
+        String content = reply.content() == null || reply.content().isBlank()
+                ? "Te propongo un reto simple para empezar: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta."
+                : reply.content() + " Te propongo este reto: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta.";
+        return new ChatReply(
+                content,
+                reply.detectedEmotion(),
+                reply.intensity(),
+                reply.riskDetected(),
+                reply.matchedWord(),
+                reply.suggestedAction(),
+                challenge);
     }
 
     private ChatReply applyAnalysisMetadata(ChatReply reply, EmotionalAnalysisResult analysis) {
@@ -181,8 +244,7 @@ public class ChatService {
                     message,
                     reply.detectedEmotion(),
                     reply.riskDetected(),
-                    reply.matchedWord()
-            ), userId);
+                    reply.matchedWord()), userId);
         } catch (Exception e) {
             log.warn("No se pudo guardar mensaje de usuario userId={} conversationId={}", userId, conversationId, e);
         }
@@ -201,7 +263,9 @@ public class ChatService {
             String systemPrompt,
             List<RiskWord> riskWords,
             List<VectorMemory> memories,
-            List<ConversationMessage> history
-    ) {
+            List<ConversationMessage> history) {
+        private ChatContext withSystemPrompt(String nextSystemPrompt) {
+            return new ChatContext(basePrompt, nextSystemPrompt, riskWords, memories, history);
+        }
     }
 }

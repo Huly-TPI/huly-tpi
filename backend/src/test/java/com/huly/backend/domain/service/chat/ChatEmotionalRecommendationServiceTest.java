@@ -228,6 +228,58 @@ class ChatEmotionalRecommendationServiceTest {
         verify(createEmotionalEventUseCase, never()).execute(any());
     }
 
+    @Test
+    void evaluate_shouldRecommend_whenUserExplicitlyRequestsActivityEvenIfAnalysisSaysNo() {
+        EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
+                false,
+                EmotionType.NEUTRAL,
+                0.4,
+                0.0,
+                0.0,
+                0.0,
+                0.1,
+                null,
+                "pedido neutro"
+        );
+        EmotionalRecommendationItem item = new EmotionalRecommendationItem(
+                4L,
+                ActivityType.RESPIRACION,
+                "Respiracion guiada",
+                "Una practica breve para regularte",
+                0.88,
+                "Puede ayudar a empezar"
+        );
+        EmotionalEvent saved = EmotionalEvent.builder()
+                .id(70L)
+                .userId(1L)
+                .source(EmotionalEventSource.CHATBOT)
+                .detectedEmotion("NEUTRAL")
+                .recommendedActivityId(4L)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+        when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
+        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
+        when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
+                .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
+        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
+
+        ChatRecommendationOutcome outcome = service.evaluate(
+                "dame una recomendacion de actividad",
+                1L,
+                "base",
+                List.of(),
+                List.of(),
+                null,
+                true
+        );
+
+        assertThat(outcome.suggestedAction()).isNotNull();
+        assertThat(outcome.suggestedAction().activityId()).isEqualTo(4L);
+        assertThat(outcome.analysis().shouldRecommend()).isTrue();
+        assertThat(outcome.analysis().userGoal()).isEqualTo("recibir una actividad de bienestar");
+    }
+
     private VectorMemory memory(String content) {
         return new VectorMemory("id", 1L, null, null, content, null, 0.8);
     }

@@ -4,7 +4,7 @@ import BackButton from '../../components/Buttons/BackButton/BackButton'
 const BubblesActivity = () => {
   return( 
       <div className="h-full w-full overflow-hidden">
-      <BackButton />
+      <BackButton to="/minigames" />
       <BubblesActivityComponent />
     </div>
   )

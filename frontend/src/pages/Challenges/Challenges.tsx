@@ -103,7 +103,7 @@ export default function Challenges() {
       className="challenges-page h-full flex flex-row items-stretch overflow-hidden"
       style={{ backgroundImage: `url(${dayBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
     >
-      <BackButton />
+      <BackButton to="/" />
 
       <aside className="plant-zone flex-shrink-0 w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-hidden">
         <div className="plant-zone__info flex flex-col items-center gap-[0.6rem] w-full">

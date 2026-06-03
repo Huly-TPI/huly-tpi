@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
@@ -11,6 +12,7 @@ import com.huly.backend.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.presentation.dto.chat.ChatHistoryPageResponse;
+import com.huly.backend.presentation.dto.chat.ChatChallengeDecisionRequest;
 import com.huly.backend.presentation.dto.chat.ChatMessageResponse;
 import com.huly.backend.presentation.dto.chat.ChatRequest;
 import com.huly.backend.presentation.dto.chat.ChatResponse;
@@ -45,15 +47,11 @@ public class ChatController {
     private final ListChatHistoryUseCase listChatHistoryUseCase;
     private final StreamChatUseCase streamChatUseCase;
     private final AppUserRepository appUserRepository;
+    private final UserVectorMemoryService userVectorMemoryService;
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUserEntity user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-
-        Long userId = user.getId();
-
+        Long userId = currentUserId();
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         return ResponseEntity.ok(toResponse(reply));
     }
@@ -64,14 +62,21 @@ public class ChatController {
             return Flux.just(toServerSentEvent(ChatStreamEvent.error("message y conversationId son obligatorios.")));
         }
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUserEntity user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-
-        Long userId = user.getId();
-
+        Long userId = currentUserId();
         return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
                 .map(this::toServerSentEvent);
+    }
+
+    @PostMapping("/challenge-decision")
+    public ResponseEntity<Void> challengeDecision(@RequestBody @Valid ChatChallengeDecisionRequest request) {
+        Long userId = currentUserId();
+        userVectorMemoryService.rememberChallengeDecision(
+                userId,
+                request.conversationId(),
+                request.title(),
+                request.description(),
+                request.decision());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{conversationId}/messages")
@@ -79,9 +84,18 @@ public class ChatController {
             @PathVariable String conversationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
+        Long userId = currentUserId();
         Page<ChatMessage> result = listChatHistoryUseCase.execute(
-                conversationId, PageRequest.of(page, size, Sort.by("createdAt").ascending()));
+                conversationId, userId, PageRequest.of(page, size, Sort.by("createdAt").ascending()));
         return ResponseEntity.ok(toPageResponse(result));
+    }
+
+    private Long currentUserId() {
+        // TODO: Temporalmente hasta arreglarlo bien
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AppUserEntity user = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        return user.getId();
     }
 
     private Boolean isBlank(String value) {

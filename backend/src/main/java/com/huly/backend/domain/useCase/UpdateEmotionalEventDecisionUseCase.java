@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.exception.BadRequestException;
 import com.huly.backend.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class UpdateEmotionalEventDecisionUseCase {
 
     private final EmotionalEventRepository emotionalEventRepository;
     private final ActivityRepository activityRepository;
+    private final UserVectorMemoryService userVectorMemoryService;
 
     public EmotionalEvent execute(Long eventId, UpdateRecommendationDecisionCommand command) {
         if (command.decision() == null) {
@@ -37,7 +39,9 @@ public class UpdateEmotionalEventDecisionUseCase {
                 .chosenActivityId(chosenActivityId)
                 .updatedAt(Instant.now())
                 .build();
-        return emotionalEventRepository.save(updated);
+        EmotionalEvent saved = emotionalEventRepository.save(updated);
+        userVectorMemoryService.rememberActivityRecommendationDecision(saved);
+        return saved;
     }
 
     private Long resolveChosenActivityId(EmotionalEvent event, UpdateRecommendationDecisionCommand command) {

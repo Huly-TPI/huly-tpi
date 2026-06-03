@@ -108,16 +108,16 @@ class ChatMessageRepositoryImplTest {
     // ── findByConversationId ─────────────────────────────────────────────────
 
     @Test
-    void findByConversationId_shouldReturnPageWithEmotion_whenEmotionsPresent() {
+    void findByConversationIdAndUserId_shouldReturnPageWithEmotion_whenEmotionsPresent() {
         EmotionEntity emotion = EmotionEntity.builder().emotionDetected(EmotionType.SADNESS).build();
         ChatMessageEntity entity = ChatMessageEntity.builder()
                 .id(1L).role(MessageRole.USER).content("msg").riskDetected(true)
                 .createdAt(Instant.now()).emotions(List.of(emotion)).build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(jpa.findByChatSessionConversationId("conv-1", pageable))
+        when(jpa.findByChatSessionConversationIdAndChatSessionAppUserId("conv-1", 10L, pageable))
                 .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-        Page<ChatMessage> result = repository.findByConversationId("conv-1", pageable);
+        Page<ChatMessage> result = repository.findByConversationIdAndUserId("conv-1", 10L, pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).detectedEmotion()).isEqualTo(EmotionType.SADNESS);
@@ -125,29 +125,29 @@ class ChatMessageRepositoryImplTest {
     }
 
     @Test
-    void findByConversationId_shouldReturnNullEmotion_whenEmotionListIsEmpty() {
+    void findByConversationIdAndUserId_shouldReturnNullEmotion_whenEmotionListIsEmpty() {
         ChatMessageEntity entity = ChatMessageEntity.builder()
                 .id(2L).role(MessageRole.ASSISTANT).content("resp")
                 .createdAt(Instant.now()).emotions(List.of()).build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(jpa.findByChatSessionConversationId("conv-1", pageable))
+        when(jpa.findByChatSessionConversationIdAndChatSessionAppUserId("conv-1", 10L, pageable))
                 .thenReturn(new PageImpl<>(List.of(entity)));
 
-        Page<ChatMessage> result = repository.findByConversationId("conv-1", pageable);
+        Page<ChatMessage> result = repository.findByConversationIdAndUserId("conv-1", 10L, pageable);
 
         assertThat(result.getContent().get(0).detectedEmotion()).isNull();
     }
 
     @Test
-    void findByConversationId_shouldReturnNullEmotion_whenEmotionListIsNull() {
+    void findByConversationIdAndUserId_shouldReturnNullEmotion_whenEmotionListIsNull() {
         ChatMessageEntity entity = ChatMessageEntity.builder()
                 .id(3L).role(MessageRole.USER).content("msg")
                 .createdAt(Instant.now()).emotions(null).build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(jpa.findByChatSessionConversationId("conv-1", pageable))
+        when(jpa.findByChatSessionConversationIdAndChatSessionAppUserId("conv-1", 10L, pageable))
                 .thenReturn(new PageImpl<>(List.of(entity)));
 
-        Page<ChatMessage> result = repository.findByConversationId("conv-1", pageable);
+        Page<ChatMessage> result = repository.findByConversationIdAndUserId("conv-1", 10L, pageable);
 
         assertThat(result.getContent().get(0).detectedEmotion()).isNull();
     }

@@ -51,7 +51,7 @@ const CloudsActivity = () => {
 
     return (
         <div className="h-full max-h-full w-full overflow-hidden flex flex-col select-none relative">
-            <BackButton />
+            <BackButton to="/minigames" />
 
             <main className="w-full flex-1 min-h-0 flex flex-col relative z-10 overflow-hidden">
                 <EmotionalCloudsActivity
@@ -69,7 +69,7 @@ const CloudsActivity = () => {
 
             {recommendation && !loading && (
                 <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-20">
-                    <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm mx-4 text-center">
+                    <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-sm w-full mx-4 text-center">
                         <h2 className="text-2xl font-bold text-[#8869AC] mb-3">
                             {recommendation.title}
                         </h2>

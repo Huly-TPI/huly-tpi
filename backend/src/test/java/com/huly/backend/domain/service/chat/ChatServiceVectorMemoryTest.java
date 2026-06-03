@@ -36,6 +36,7 @@ class ChatServiceVectorMemoryTest {
         PromptBuilderService promptBuilderService = mock(PromptBuilderService.class);
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
         ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
+        ChatIntentDetectionService chatIntentDetectionService = mock(ChatIntentDetectionService.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -55,7 +56,8 @@ class ChatServiceVectorMemoryTest {
                 riskWordRepository,
                 promptBuilderService,
                 userVectorMemoryService,
-                chatEmotionalRecommendationService
+                chatEmotionalRecommendationService,
+                chatIntentDetectionService
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();
@@ -80,6 +82,7 @@ class ChatServiceVectorMemoryTest {
         PromptBuilderService promptBuilderService = mock(PromptBuilderService.class);
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
         ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
+        ChatIntentDetectionService chatIntentDetectionService = mock(ChatIntentDetectionService.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -96,7 +99,8 @@ class ChatServiceVectorMemoryTest {
                 riskWordRepository,
                 promptBuilderService,
                 userVectorMemoryService,
-                chatEmotionalRecommendationService
+                chatEmotionalRecommendationService,
+                chatIntentDetectionService
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();
@@ -111,7 +115,7 @@ class ChatServiceVectorMemoryTest {
         private final List<ConversationMessage> addedMessages = new ArrayList<>();
 
         @Override
-        public List<ConversationMessage> getHistory(String conversationId) {
+        public List<ConversationMessage> getHistory(String conversationId, Long userId) {
             return List.of();
         }
 
