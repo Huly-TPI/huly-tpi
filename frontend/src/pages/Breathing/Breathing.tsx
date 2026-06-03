@@ -19,7 +19,6 @@ export default function Breathing() {
       className="flex items-center justify-center h-full"
       style={{ backgroundImage: `url(${dayBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
     >
-  
       <BreathingGuide techniques={techniques} />
     </div>
   )

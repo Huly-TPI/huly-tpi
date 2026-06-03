@@ -100,7 +100,7 @@ const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: E
   return (
     <div className="emotional-clouds-activity">
       <div className="emotional-clouds-container">
-        <BackButton />
+        <BackButton to="/minigames" />
         <Sun />
 
         {SEAGULLS.map((s, i) => (

@@ -183,7 +183,7 @@ export default function Diary() {
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-60 hidden lg:block"  style={{ zIndex: 0, width: 300, top: '0%',  right: '3%' }} />
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-50 hidden lg:block"  style={{ zIndex: 0, width: 340, top: '15%', right: '-5%' }} />
       <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-40 hidden lg:block"  style={{ zIndex: 0, width: 320, top: '22%', left: '-4%' }} />
-      <BackButton />
+      <BackButton to="/"/>
 
       <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2" style={{ borderColor: '#8869AC', zIndex: 1 }}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-white">

@@ -51,7 +51,7 @@ const CloudsActivity = () => {
 
     return (
         <div className="h-full max-h-full w-full overflow-hidden flex flex-col select-none relative">
-            <BackButton />
+            <BackButton to="/minigames" />
 
             <main className="w-full flex-1 min-h-0 flex flex-col relative z-10 overflow-hidden">
                 <EmotionalCloudsActivity

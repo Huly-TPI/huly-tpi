@@ -9,6 +9,10 @@ vi.mock('../../context/authGate', () => ({
   }),
 }))
 
+vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
+  default: () => null,
+}))
+
 describe('BreathingGuide', () => {
 
       afterEach(() => {

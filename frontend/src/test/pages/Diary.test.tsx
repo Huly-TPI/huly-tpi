@@ -217,10 +217,10 @@ describe('Diary', () => {
   })
 
 
-  it('navega atrás al hacer click en Cerrar cuaderno', async () => {
+  it('navega a home al hacer click en Volver', async () => {
     const { user } = renderDiary()
     await user.click(screen.getByText(/Volver/))
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
+    expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 
   it('muestra la paginación correcta al cargar entradas', async () => {
