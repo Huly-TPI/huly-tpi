@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import chatbotImage from '../../assets/chatbot/huly-chatbot.webp'
 import ChatbotModal from './ChatbotModal'
 import Button from '../Buttons/Button/Button'
@@ -6,9 +7,25 @@ import { useAuth } from '../../context/auth'
 
 export default function ChatbotLauncher() {
   const { isAuthenticated } = useAuth()
+  const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
+  const [isHomeOnboardingActive, setIsHomeOnboardingActive] = useState(
+    document.body.getAttribute('data-home-onboarding-active') === 'true',
+  )
+  const isEmotionalOnboardingRoute = location.pathname === '/onboarding'
 
-  if (!isAuthenticated) return null
+  useEffect(() => {
+    const syncHomeOnboardingState = () => {
+      setIsHomeOnboardingActive(document.body.getAttribute('data-home-onboarding-active') === 'true')
+    }
+
+    window.addEventListener('home-onboarding-visibility-change', syncHomeOnboardingState)
+    return () => {
+      window.removeEventListener('home-onboarding-visibility-change', syncHomeOnboardingState)
+    }
+  }, [])
+
+  if (!isAuthenticated || isEmotionalOnboardingRoute || isHomeOnboardingActive) return null
 
   return (
     <>

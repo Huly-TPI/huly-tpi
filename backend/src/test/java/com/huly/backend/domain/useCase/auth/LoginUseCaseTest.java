@@ -134,17 +134,17 @@ class LoginUseCaseTest {
     }
 
     @Test 
-    void execute_shouldReturnProfileOnBoardingCompletedFromUserDetailDomainRepository() {
+    void execute_shouldReturnOnBoardingCompletedFromUserDetailDomainRepository() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
         when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
         when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
         when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
         when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
         when(refreshTokenRepository.save(any())).thenReturn(null);
-        when(userDetailDomainRepository.findProfileOnBoardingCompleted(1L)).thenReturn(Optional.of(true));
+        when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.of(true));
 
         AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
-        assertThat(result.getProfileOnBoardingCompleted()).isTrue();
+        assertThat(result.getOnBoardingCompleted()).isTrue();
         }
 
     @Test 
@@ -155,9 +155,9 @@ class LoginUseCaseTest {
         when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
         when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
         when(refreshTokenRepository.save(any())).thenReturn(null);
-        when(userDetailDomainRepository.findProfileOnBoardingCompleted(1L)).thenReturn(Optional.empty());
+        when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.empty());
         AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
-        assertThat(result.getProfileOnBoardingCompleted()).isFalse();
+        assertThat(result.getOnBoardingCompleted()).isFalse();
     }
 
 

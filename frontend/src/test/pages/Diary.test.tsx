@@ -219,7 +219,7 @@ describe('Diary', () => {
 
   it('navega atrás al hacer click en Cerrar cuaderno', async () => {
     const { user } = renderDiary()
-    await user.click(screen.getByText(/Cerrar cuaderno/))
+    await user.click(screen.getByText(/Volver/))
     expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 

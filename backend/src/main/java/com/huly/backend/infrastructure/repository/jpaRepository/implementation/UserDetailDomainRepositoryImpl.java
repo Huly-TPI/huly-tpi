@@ -17,20 +17,35 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
     private final UserDetailRepository userDetailRepository;
 
     @Override
-    public Optional<Boolean> findProfileOnBoardingCompleted(Long userId) {
+    public Optional<Boolean> findOnBoardingCompleted(Long userId) {
         return userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
-                .map(UserDetailEntity::getProfileOnBoardingCompleted);
+                .map(UserDetailEntity::getOnBoardingCompleted);
+    }
+
+    @Override
+    public Optional<Boolean> findOnboardingTutorialCompleted(Long userId) {
+        return userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .map(UserDetailEntity::getOnboardingTutorialCompleted);
     }
 
     @Override
     @Transactional
     public void completeOnboarding(Long userId, String answer1, String answer2, String answer3) {
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
-                .orElseThrow(() -> new NotFoundException("UserDetail not found for userId: " + userId));
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
         userDetail.setOnboardingAnswer1(answer1);
         userDetail.setOnboardingAnswer2(answer2);
         userDetail.setOnboardingAnswer3(answer3);
-        userDetail.setProfileOnBoardingCompleted(true);
+        userDetail.setOnBoardingCompleted(true);
+        userDetailRepository.save(userDetail);
+    }
+
+    @Override
+    @Transactional
+    public void completeTutorial(Long userId) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        userDetail.setOnboardingTutorialCompleted(true);
         userDetailRepository.save(userDetail);
     }
     

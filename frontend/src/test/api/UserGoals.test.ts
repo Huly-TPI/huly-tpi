@@ -23,29 +23,28 @@ describe('userGoalsApi', () => {
     vi.clearAllMocks()
   })
 
-  it('getByUser llama a GET con el userId y paginación por defecto', async () => {
+  it('getForCurrentUser llama a GET /user-goals/me con paginación por defecto', async () => {
     mockedGet.mockResolvedValueOnce({ completados: { content: [] }, pendientes: { content: [] } } as never)
-    await userGoalsApi.getByUser(42)
-    expect(mockedGet).toHaveBeenCalledWith('/user-goals/user/42?page=0&size=50')
+    await userGoalsApi.getForCurrentUser()
+    expect(mockedGet).toHaveBeenCalledWith('/user-goals/me?page=0&size=50')
   })
 
-  it('getByUser reenvía paginación personalizada', async () => {
+  it('getForCurrentUser reenvía paginación personalizada', async () => {
     mockedGet.mockResolvedValueOnce({ completados: { content: [] }, pendientes: { content: [] } } as never)
-    await userGoalsApi.getByUser(1, 2, 10)
-    expect(mockedGet).toHaveBeenCalledWith('/user-goals/user/1?page=2&size=10')
+    await userGoalsApi.getForCurrentUser(2, 10)
+    expect(mockedGet).toHaveBeenCalledWith('/user-goals/me?page=2&size=10')
   })
 
   it('create llama a POST /user-goals con los datos', async () => {
     mockedPost.mockResolvedValueOnce({ id: 1 } as never)
-    await userGoalsApi.create({ userId: 1, title: 'Reto 1' })
-    expect(mockedPost).toHaveBeenCalledWith('/user-goals', { userId: 1, title: 'Reto 1' })
+    await userGoalsApi.create({ title: 'Reto 1' })
+    expect(mockedPost).toHaveBeenCalledWith('/user-goals', { title: 'Reto 1' })
   })
 
   it('create incluye descripción opcional si se provee', async () => {
     mockedPost.mockResolvedValueOnce({ id: 2 } as never)
-    await userGoalsApi.create({ userId: 1, title: 'Reto', description: 'Descripción', activityId: 5 })
+    await userGoalsApi.create({ title: 'Reto', description: 'Descripción', activityId: 5 })
     expect(mockedPost).toHaveBeenCalledWith('/user-goals', {
-      userId: 1,
       title: 'Reto',
       description: 'Descripción',
       activityId: 5,

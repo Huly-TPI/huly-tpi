@@ -3,6 +3,7 @@ import EmotionalCloud from './EmotionalCloud'
 import type { Cloud, EmotionalCloudsProps } from './types'
 import './EmotionalClouds.css'
 import Button from '../Buttons/Button/Button'
+import BackButton from '../Buttons/BackButton/BackButton'
 
 const CLOUD_TOPS = ['20%', '28%', '18%', '38%', '25%', '70%','40%', '32%', '55%','60%']
 
@@ -99,6 +100,7 @@ const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: E
   return (
     <div className="emotional-clouds-activity">
       <div className="emotional-clouds-container">
+        <BackButton />
         <Sun />
 
         {SEAGULLS.map((s, i) => (
