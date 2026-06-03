@@ -31,6 +31,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -73,13 +75,13 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.of(new ChatConfig(1L, true, "mi prompt")));
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq("mi prompt"), any(), any())).thenReturn("enriquecido");
-        when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
+        when(promptBuilderService.buildEnrichedPrompt(eq("mi prompt"), any(), any(), any())).thenReturn("enriquecido");
+        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any(), any());
+        verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any(), any(), any());
     }
 
     @Test
@@ -87,13 +89,13 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq(""), any(), any())).thenReturn("fallback");
-        when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
+        when(promptBuilderService.buildEnrichedPrompt(eq(""), any(), any(), any())).thenReturn("fallback");
+        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(eq(""), any(), any());
+        verify(promptBuilderService).buildEnrichedPrompt(eq(""), any(), any(), any());
     }
 
     @Test
@@ -102,13 +104,13 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of(rw));
-        when(promptBuilderService.buildEnrichedPrompt(any(), eq(List.of(rw)), any())).thenReturn("enriquecido");
-        when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
+        when(promptBuilderService.buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any())).thenReturn("enriquecido");
+        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)), any());
+        verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any());
     }
 
     @Test
@@ -117,13 +119,13 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any())).thenReturn("prompt");
-        when(chatMemoryPort.getHistory("conv-abc")).thenReturn(history);
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any())).thenReturn("prompt");
+        when(chatMemoryPort.getHistory("conv-abc", 1L)).thenReturn(history);
         when(llmChatPort.chat(any(), any(), eq(history))).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-abc", 1L);
 
-        verify(chatMemoryPort).getHistory("conv-abc");
+        verify(chatMemoryPort).getHistory("conv-abc", 1L);
         verify(llmChatPort).chat(any(), eq("msg"), eq(history));
     }
 
@@ -166,8 +168,8 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of(memory));
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), eq(List.of(memory)))).thenReturn("prompt final");
-        when(chatMemoryPort.getHistory(any())).thenReturn(List.of());
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), eq(List.of(memory)), any())).thenReturn("prompt final");
+        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-1", 1L);
@@ -218,8 +220,8 @@ class ChatServiceTest {
                         : Optional.of(new ChatConfig(1L, true, basePrompt)));
         when(userVectorMemoryService.findRelevantUserMemories(any(), any())).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(riskWords);
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any())).thenReturn(enrichedPrompt);
-        when(chatMemoryPort.getHistory(any())).thenReturn(history);
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any())).thenReturn(enrichedPrompt);
+        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(history);
         when(llmChatPort.chat(any(), any(), any())).thenReturn(reply);
     }
 }

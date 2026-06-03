@@ -111,7 +111,7 @@ class ChatServiceVectorMemoryTest {
         private final List<ConversationMessage> addedMessages = new ArrayList<>();
 
         @Override
-        public List<ConversationMessage> getHistory(String conversationId) {
+        public List<ConversationMessage> getHistory(String conversationId, Long userId) {
             return List.of();
         }
 

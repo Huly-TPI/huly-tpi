@@ -13,5 +13,5 @@ public interface ChatMessageRepository {
 
     List<ConversationMessage> findBySessionId(Long sessionId);
 
-    Page<ChatMessage> findByConversationId(String conversationId, Pageable pageable);
+    Page<ChatMessage> findByConversationIdAndUserId(String conversationId, Long userId, Pageable pageable);
 }

@@ -42,11 +42,23 @@ public class ChatService {
     private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
-        // TODO: Buscar conversacion por UserId
         ChatContext context = buildBlockingContext(message, conversationId, userId);
+        ChatRecommendationOutcome recommendationOutcome = chatEmotionalRecommendationService.evaluate(
+                message,
+                userId,
+                context.basePrompt(),
+                context.memories(),
+                context.history(),
+                null);
+        var suggestedAction = recommendationOutcome != null ? recommendationOutcome.suggestedAction() : null;
+        context = context.withSystemPrompt(promptBuilderService.buildEnrichedPrompt(
+                context.basePrompt(),
+                context.riskWords(),
+                context.memories(),
+                suggestedAction));
 
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
-        ChatReply finalReply = enrichWithEmotionalRecommendation(message, userId, context, reply);
+        ChatReply finalReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
         saveUserMessage(conversationId, message, finalReply, userId);
         saveAssistantMessage(conversationId, finalReply.content(), userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
@@ -88,9 +100,8 @@ public class ChatService {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
-        String systemPrompt = promptBuilderService.buildEnrichedPrompt(basePrompt, riskWords, memories);
-        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId);
-        return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history);
+        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
+        return new ChatContext(basePrompt, null, riskWords, memories, history);
     }
 
     private ChatContext buildStreamingContext(String message, String conversationId, Long userId) {
@@ -98,7 +109,7 @@ public class ChatService {
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
         String systemPrompt = promptBuilderService.buildStreamingPrompt(basePrompt, riskWords, memories);
-        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId);
+        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
         return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history);
     }
 
@@ -140,25 +151,23 @@ public class ChatService {
         }
     }
 
-    private ChatReply enrichWithEmotionalRecommendation(
-            String message,
+    private ChatReply applyRecommendationOutcome(
+            String conversationId,
             Long userId,
-            ChatContext context,
-            ChatReply reply) {
-        ChatRecommendationOutcome outcome = chatEmotionalRecommendationService.evaluate(
-                message,
-                userId,
-                context.basePrompt(),
-                context.memories(),
-                context.history(),
-                reply);
+            ChatReply reply,
+            ChatRecommendationOutcome outcome) {
+        ChatReply enriched = applyAnalysisMetadata(reply, outcome != null ? outcome.analysis() : null);
 
-        ChatReply enriched = applyAnalysisMetadata(reply, outcome.analysis());
-
-        if (outcome.suggestedAction() == null) {
+        if (outcome == null || outcome.suggestedAction() == null) {
+            userVectorMemoryService.rememberGeneratedChallenge(userId, conversationId, enriched.generatedChallenge());
             return enriched;
         }
 
+        userVectorMemoryService.rememberRecommendedActivity(
+                userId,
+                conversationId,
+                outcome.suggestedAction().emotionalEventId(),
+                outcome.suggestedAction());
         return new ChatReply(
                 enriched.content(),
                 enriched.detectedEmotion(),
@@ -167,7 +176,6 @@ public class ChatService {
                 enriched.matchedWord(),
                 outcome.suggestedAction(),
                 null);
-
     }
 
     private ChatReply applyAnalysisMetadata(ChatReply reply, EmotionalAnalysisResult analysis) {
@@ -208,5 +216,8 @@ public class ChatService {
             List<RiskWord> riskWords,
             List<VectorMemory> memories,
             List<ConversationMessage> history) {
+        private ChatContext withSystemPrompt(String nextSystemPrompt) {
+            return new ChatContext(basePrompt, nextSystemPrompt, riskWords, memories, history);
+        }
     }
 }
