@@ -98,7 +98,7 @@ const BubblesActivity = () => {
           alt=""
           draggable={false}
         />
-        <BackButton />
+        <BackButton to="/minigames"/>
         {bubbles.map(bubble => (
           <Bubble
             key={bubble.id}

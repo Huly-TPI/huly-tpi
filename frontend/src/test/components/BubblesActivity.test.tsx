@@ -34,11 +34,11 @@ describe('BubblesActivity component', () => {
     expect(screen.getByRole('button', { name: /volver/i })).toBeInTheDocument()
   })
 
-  it('vuelve a la vista anterior al hacer click en volver', async () => {
+  it('navega a minijuegos al hacer click en volver', async () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={['/minigames', '/bubbles']}>
+      <MemoryRouter initialEntries={['/bubbles']}>
         <Routes>
           <Route path="/minigames" element={<h1>Vista Minijuegos</h1>} />
           <Route path="/bubbles" element={<BubblesActivity />} />
