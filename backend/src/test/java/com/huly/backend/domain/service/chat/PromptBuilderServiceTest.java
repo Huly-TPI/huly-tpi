@@ -1,6 +1,7 @@
 package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.model.vector.VectorMemory;
@@ -110,5 +111,21 @@ class PromptBuilderServiceTest {
                 .contains("dominance")
                 .contains("userGoal")
                 .contains("SADNESS");
+    }
+
+    @Test
+    void buildEnrichedPrompt_shouldIncludeChallengeRequestInstructions_whenUserAskedForChallenge() {
+        String result = service.buildEnrichedPrompt(
+                "base",
+                List.of(),
+                List.of(),
+                null,
+                ChatUserIntent.CHALLENGE_REQUEST
+        );
+
+        assertThat(result)
+                .contains("RETO SOLICITADO POR EL USUARIO")
+                .contains("Debes devolver generated_challenge")
+                .contains("Tambien debes presentar ese reto");
     }
 }

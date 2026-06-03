@@ -1,6 +1,8 @@
 package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.chat.ChatUserIntent;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +13,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Servicio encargado de construir prompts enriquecidos para el modelo de lenguaje.
- */
 @Service
 @RequiredArgsConstructor
 public class PromptBuilderService {
@@ -23,8 +22,29 @@ public class PromptBuilderService {
     }
 
     public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
+        return buildEnrichedPrompt(basePrompt, riskWords, memories, null);
+    }
+
+    public String buildEnrichedPrompt(
+            String basePrompt,
+            List<RiskWord> riskWords,
+            List<VectorMemory> memories,
+            SuggestedChatAction suggestedAction
+    ) {
+        return buildEnrichedPrompt(basePrompt, riskWords, memories, suggestedAction, ChatUserIntent.NONE);
+    }
+
+    public String buildEnrichedPrompt(
+            String basePrompt,
+            List<RiskWord> riskWords,
+            List<VectorMemory> memories,
+            SuggestedChatAction suggestedAction,
+            ChatUserIntent userIntent
+    ) {
         StringBuilder sb = basePromptBuilder(basePrompt);
         appendVectorMemories(sb, memories);
+        appendSuggestedActionContext(sb, suggestedAction);
+        appendUserIntentContext(sb, userIntent);
         appendResponseInstructions(sb);
         appendRiskWords(sb, riskWords);
         return sb.toString();
@@ -86,7 +106,39 @@ public class PromptBuilderService {
         sb.append("\n- Incluilo SOLO cuando el contexto de la conversación lo justifique genuinamente: el usuario enfrenta una dificultad concreta, expresó una emoción negativa de intensidad media-alta (>= 5), o mencionó una situación que se beneficiaría de un reto personal.");
         sb.append("\n- El reto debe ser específico, alcanzable y relacionado con lo que el usuario está viviendo.");
         sb.append("\n- Si no corresponde un reto, devolvé null.");
+        sb.append("\n- Si generás un reto, también presentalo de forma breve y natural dentro de huly_reply.");
+        sb.append("\n- Si hay una ACTIVIDAD RECOMENDADA POR EL SISTEMA, no generes reto: devolvé generated_challenge null.");
         sb.append("\n- Formato cuando corresponde: { \"title\": \"<título corto>\", \"description\": \"<descripción accionable en 1-2 oraciones>\" }");
+    }
+
+    private void appendSuggestedActionContext(StringBuilder sb, SuggestedChatAction action) {
+        if (action == null) {
+            return;
+        }
+
+        sb.append("\n\n=== ACTIVIDAD RECOMENDADA POR EL SISTEMA ===");
+        sb.append("\nEl sistema ya decidió recomendar esta actividad. Integrala en huly_reply con naturalidad, empatía y brevedad.");
+        sb.append("\nNo digas que es una solución garantizada ni prometas resultados.");
+        sb.append("\nNo inventes otra actividad ni generes un reto adicional.");
+        sb.append("\nActividad: ").append(nullToEmpty(action.title()));
+        sb.append("\nTipo: ").append(action.type() != null ? action.type().name() : "");
+        sb.append("\nDescripción: ").append(nullToEmpty(action.description()));
+    }
+
+    private void appendUserIntentContext(StringBuilder sb, ChatUserIntent userIntent) {
+        if (userIntent != ChatUserIntent.CHALLENGE_REQUEST) {
+            return;
+        }
+
+        sb.append("\n\n=== RETO SOLICITADO POR EL USUARIO ===");
+        sb.append("\nEl usuario pidio explicitamente un reto o desafio.");
+        sb.append("\nDebes devolver generated_challenge con title y description, salvo que exista una actividad recomendada por el sistema.");
+        sb.append("\nEl reto debe ser concreto, pequeno, realizable hoy y coherente con el contexto del usuario.");
+        sb.append("\nTambien debes presentar ese reto de forma breve y natural dentro de huly_reply.");
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void appendStreamingInstructions(StringBuilder sb) {

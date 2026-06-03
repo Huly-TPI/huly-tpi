@@ -56,8 +56,8 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
     }
 
     @Override
-    public Page<ChatMessage> findByConversationId(String conversationId, Pageable pageable) {
-        return jpa.findByChatSessionConversationId(conversationId, pageable)
+    public Page<ChatMessage> findByConversationIdAndUserId(String conversationId, Long userId, Pageable pageable) {
+        return jpa.findByChatSessionConversationIdAndChatSessionAppUserId(conversationId, userId, pageable)
                 .map(this::toChatMessage);
     }
 

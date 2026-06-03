@@ -13,7 +13,7 @@ public class ListChatHistoryUseCase {
 
     private final ChatMessageRepository chatMessageRepository;
 
-    public Page<ChatMessage> execute(String conversationId, Pageable pageable) {
-        return chatMessageRepository.findByConversationId(conversationId, pageable);
+    public Page<ChatMessage> execute(String conversationId, Long userId, Pageable pageable) {
+        return chatMessageRepository.findByConversationIdAndUserId(conversationId, userId, pageable);
     }
 }

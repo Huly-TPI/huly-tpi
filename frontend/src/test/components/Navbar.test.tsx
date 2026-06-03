@@ -46,7 +46,7 @@ describe('Navbar', () => {
     expect(screen.getByText('Pendientes').closest('a')).toHaveAttribute('href', '/pending')
     expect(screen.getByText('Minijuegos').closest('a')).toHaveAttribute('href', '/minigames')
     expect(screen.getByText('Diario').closest('a')).toHaveAttribute('href', '/diary')
-    expect(screen.getByText('Regar planta').closest('a')).toHaveAttribute('href', '/water-plant')
+    expect(screen.getByText('Regar planta').closest('a')).toHaveAttribute('href', '/challenges')
   })
 
   describe('usuario deslogueado', () => {

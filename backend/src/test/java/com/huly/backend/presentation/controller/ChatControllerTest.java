@@ -8,6 +8,7 @@ import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
@@ -58,6 +59,7 @@ class ChatControllerTest {
     private ListChatHistoryUseCase listChatHistoryUseCase;
     private StreamChatUseCase streamChatUseCase;
     private AppUserRepository appUserRepository;
+    private UserVectorMemoryService userVectorMemoryService;
 
     private static final String USER_EMAIL = "test@huly.com";
     private static final Long USER_ID = 1L;
@@ -68,6 +70,7 @@ class ChatControllerTest {
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
         streamChatUseCase = mock(StreamChatUseCase.class);
         appUserRepository = mock(AppUserRepository.class);
+        userVectorMemoryService = mock(UserVectorMemoryService.class);
 
         Authentication authentication = mock(Authentication.class);
         SecurityContext securityContext = mock(SecurityContext.class);
@@ -80,7 +83,8 @@ class ChatControllerTest {
                 chatUseCase,
                 listChatHistoryUseCase,
                 streamChatUseCase,
-                appUserRepository
+                appUserRepository,
+                userVectorMemoryService
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -252,7 +256,7 @@ class ChatControllerTest {
     void getHistory_shouldReturn200WithPagedMessages() throws Exception {
         ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.JOY, Instant.parse("2024-01-01T00:00:00Z"));
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
-        when(listChatHistoryUseCase.execute(eq("conv-1"), any(Pageable.class))).thenReturn(page);
+        when(listChatHistoryUseCase.execute(eq("conv-1"), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk())
@@ -269,7 +273,7 @@ class ChatControllerTest {
     @Test
     void getHistory_shouldReturn200WithEmptyPage_whenNoMessages() throws Exception {
         Page<ChatMessage> emptyPage = Page.empty();
-        when(listChatHistoryUseCase.execute(eq("conv-vacia"), any(Pageable.class))).thenReturn(emptyPage);
+        when(listChatHistoryUseCase.execute(eq("conv-vacia"), eq(USER_ID), any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/chat/conv-vacia/messages"))
                 .andExpect(status().isOk())
@@ -281,7 +285,7 @@ class ChatControllerTest {
     void getHistory_shouldReturn200WithNullRoleAndEmotion_whenMessageHasNulls() throws Exception {
         ChatMessage msg = new ChatMessage(2L, null, "mensaje", null, null, Instant.now());
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(page);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk())
@@ -292,32 +296,32 @@ class ChatControllerTest {
     @Test
     void getHistory_shouldUseDefaultPagination_whenNoParamsProvided() throws Exception {
         Page<ChatMessage> emptyPage = Page.empty();
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(emptyPage);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk());
 
-        verify(listChatHistoryUseCase).execute(eq("conv-1"), any(Pageable.class));
+        verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
     }
 
     @Test
     void getHistory_shouldForwardCustomPageAndSize_whenParamsProvided() throws Exception {
         Page<ChatMessage> emptyPage = Page.empty();
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(emptyPage);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/chat/conv-1/messages")
                         .param("page", "2")
                         .param("size", "5"))
                 .andExpect(status().isOk());
 
-        verify(listChatHistoryUseCase).execute(eq("conv-1"), any(Pageable.class));
+        verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
     }
 
     @Test
     void getHistory_shouldReturnPaginationMetadata() throws Exception {
         ChatMessage msg = new ChatMessage(1L, MessageRole.ASSISTANT, "resp", false, EmotionType.CALM, Instant.now());
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(page);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk())

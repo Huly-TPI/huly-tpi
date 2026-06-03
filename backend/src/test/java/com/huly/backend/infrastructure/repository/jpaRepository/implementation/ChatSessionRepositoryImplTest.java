@@ -95,24 +95,32 @@ class ChatSessionRepositoryImplTest {
         assertThat(captor.getValue().getAppUser()).isNull();
     }
 
-    // ── findSessionIdByConversationId ────────────────────────────────────────
+    // ── findSessionIdByConversationIdAndUserId ───────────────────────────────
 
     @Test
-    void findSessionIdByConversationId_shouldReturnSessionId_whenSessionExists() {
+    void findSessionIdByConversationIdAndUserId_shouldReturnSessionId_whenSessionExists() {
         ChatSessionEntity session = ChatSessionEntity.builder().id(3L).conversationId("conv-1").build();
-        when(jpa.findByConversationId("conv-1")).thenReturn(Optional.of(session));
+        when(jpa.findByConversationIdAndAppUserId("conv-1", 10L)).thenReturn(Optional.of(session));
 
-        Optional<Long> result = repository.findSessionIdByConversationId("conv-1");
+        Optional<Long> result = repository.findSessionIdByConversationIdAndUserId("conv-1", 10L);
 
         assertThat(result).contains(3L);
     }
 
     @Test
-    void findSessionIdByConversationId_shouldReturnEmpty_whenSessionNotExists() {
-        when(jpa.findByConversationId("conv-x")).thenReturn(Optional.empty());
+    void findSessionIdByConversationIdAndUserId_shouldReturnEmpty_whenSessionNotExists() {
+        when(jpa.findByConversationIdAndAppUserId("conv-x", 10L)).thenReturn(Optional.empty());
 
-        Optional<Long> result = repository.findSessionIdByConversationId("conv-x");
+        Optional<Long> result = repository.findSessionIdByConversationIdAndUserId("conv-x", 10L);
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findSessionIdByConversationIdAndUserId_shouldReturnEmpty_whenUserIdIsNull() {
+        Optional<Long> result = repository.findSessionIdByConversationIdAndUserId("conv-x", null);
+
+        assertThat(result).isEmpty();
+        verify(jpa, never()).findByConversationIdAndAppUserId(any(), any());
     }
 }

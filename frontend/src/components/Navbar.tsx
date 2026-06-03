@@ -8,7 +8,7 @@ const NAV_LINKS = [
   { to: '/pending', label: 'Pendientes' },
   { to: '/minigames', label: 'Minijuegos' },
   { to: '/diary', label: 'Diario' },
-  { to: '/water-plant', label: 'Regar planta' },
+  { to: '/challenges', label: 'Regar planta' },
 ] as const
 
 export default function Navbar() {

@@ -23,27 +23,47 @@ describe('ChatbotSuggestedActionCard', () => {
           description="Descripción"
           actionUrl="/activities"
           onClose={vi.fn()}
+          onAccept={vi.fn()}
           onReject={vi.fn()}
         />
       </MemoryRouter>,
     )
 
     expect(screen.getByText('Actividad sugerida')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Ir a la actividad' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'No ir por ahora' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Aceptar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rechazar' })).toBeInTheDocument()
   })
 
   it('navigates on go-to-activity', async () => {
     const user = userEvent.setup()
+    const onAccept = vi.fn()
     const onClose = vi.fn()
 
-    render(
+    const { rerender } = render(
       <MemoryRouter>
         <ChatbotSuggestedActionCard
           title="Respiración 4-7-8"
           description="Descripción"
           actionUrl="/activities"
           onClose={onClose}
+          onAccept={onAccept}
+          onReject={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Aceptar' }))
+    expect(onAccept).toHaveBeenCalledTimes(1)
+
+    rerender(
+      <MemoryRouter>
+        <ChatbotSuggestedActionCard
+          title="Respiración 4-7-8"
+          description="Descripción"
+          actionUrl="/activities"
+          decision="accepted"
+          onClose={onClose}
+          onAccept={onAccept}
           onReject={vi.fn()}
         />
       </MemoryRouter>,
@@ -66,12 +86,13 @@ describe('ChatbotSuggestedActionCard', () => {
           description="Descripción"
           actionUrl="/activities"
           onClose={vi.fn()}
+          onAccept={vi.fn()}
           onReject={onReject}
         />
       </MemoryRouter>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'No ir por ahora' }))
+    await user.click(screen.getByRole('button', { name: 'Rechazar' }))
     expect(onReject).toHaveBeenCalledTimes(1)
 
     rerender(
@@ -80,14 +101,15 @@ describe('ChatbotSuggestedActionCard', () => {
           title="Respiración 4-7-8"
           description="Descripción"
           actionUrl="/activities"
-          onClose={vi.fn()}
           decision="rejected"
+          onClose={vi.fn()}
+          onAccept={vi.fn()}
           onReject={onReject}
         />
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Seguimos por chat.')).toBeInTheDocument()
+    expect(screen.getByText('Actividad rechazada. Seguimos por chat.')).toBeInTheDocument()
   })
 })
 

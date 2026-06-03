@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuthGate } from '../context/authGate'
+import BackButton from './Buttons/BackButton/BackButton'
 
 export interface BreathingTechnique {
     id: number
@@ -174,6 +175,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
 
     return (
         <div className="flex flex-col items-center justify-center w-full">
+            <BackButton to="/" />
             <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
                 <h2 className="text-xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
                 <p className="text-sm text-gray-500 mb-4">

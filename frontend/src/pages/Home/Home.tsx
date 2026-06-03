@@ -29,7 +29,7 @@ const THEME_BEHAVIOR: Record<SceneTheme, { restrictedElementIds: Set<string> }> 
     restrictedElementIds: new Set<string>(),
   },
   dark: {
-    restrictedElementIds: new Set(['tree', 'watering-can-plant', 'notebook']),
+    restrictedElementIds: new Set<string>(),
   },
 }
 

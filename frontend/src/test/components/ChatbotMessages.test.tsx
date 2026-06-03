@@ -90,7 +90,7 @@ describe('ChatbotMessages', () => {
       </MemoryRouter>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'No ir por ahora' }))
+    await user.click(screen.getByRole('button', { name: 'Rechazar' }))
 
     expect(onSuggestedActionDecision).toHaveBeenCalledWith(0, 'rejected')
   })

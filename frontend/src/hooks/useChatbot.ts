@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   chatApi,
   type ChatHistoryMessageDto,
+  type SuggestedActionDto,
 } from '../api/chat'
+import { emotionalEventsApi } from '../api/emotionalEvents'
 import { userGoalsApi } from '../api/userGoals'
 import { type ChatbotMessage } from '../components/Chatbot/chatbotTypes'
+import { useAuth } from '../context/auth'
 
 const CHAT_CONVERSATION_STORAGE_KEY = 'hulyChatConversationId'
 
@@ -20,22 +23,48 @@ function mapHistoryMessage(message: ChatHistoryMessageDto): ChatbotMessage {
   return { role: 'assistant', content: message.content }
 }
 
+function getSuggestedActionActivityId(action: SuggestedActionDto) {
+  const activityId = Number(action.action_id)
+  return Number.isInteger(activityId) && activityId > 0 ? activityId : null
+}
+
+function getConversationStorageKey(userId?: number) {
+  return userId
+    ? `${CHAT_CONVERSATION_STORAGE_KEY}:${userId}`
+    : CHAT_CONVERSATION_STORAGE_KEY
+}
+
+function getOrCreateConversationId(storageKey: string) {
+  const storedConversationId = localStorage.getItem(storageKey)
+  if (storedConversationId) return storedConversationId
+
+  const newConversationId = randomConversationId()
+  localStorage.setItem(storageKey, newConversationId)
+  return newConversationId
+}
+
 export function useChatbot() {
   const [messages, setMessages] = useState<ChatbotMessage[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [error, setError] = useState('')
-  const [conversationId] = useState(() => {
-    const storedConversationId = localStorage.getItem(CHAT_CONVERSATION_STORAGE_KEY)
-    if (storedConversationId) return storedConversationId
-
-    const newConversationId = randomConversationId()
-    localStorage.setItem(CHAT_CONVERSATION_STORAGE_KEY, newConversationId)
-    return newConversationId
-  })
+  const { user } = useAuth()
+  const conversationStorageKey = useMemo(
+    () => getConversationStorageKey(user?.id),
+    [user?.id],
+  )
+  const [conversationId, setConversationId] = useState(() =>
+    getOrCreateConversationId(conversationStorageKey),
+  )
   const bottomRef = useRef<HTMLDivElement>(null)
   const sendingRef = useRef(false)
+
+  useEffect(() => {
+    setConversationId(getOrCreateConversationId(conversationStorageKey))
+    setMessages([])
+    setError('')
+  }, [conversationStorageKey])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -116,13 +145,25 @@ export function useChatbot() {
       }),
     )
 
+    const { title, description } = selectedMessage.generated_challenge
+
     if (decision === 'accepted') {
-      const { title, description } = selectedMessage.generated_challenge
       try {
         await userGoalsApi.acceptChallenge({ title, description: description ?? undefined })
       } catch {
         // no bloquea el flujo si falla el guardado
       }
+    }
+
+    try {
+      await chatApi.saveChallengeDecision({
+        conversationId,
+        title,
+        description,
+        decision: decision === 'accepted' ? 'ACCEPTED' : 'REJECTED',
+      })
+    } catch {
+      // no bloquea el flujo si falla la memoria vectorial
     }
 
     const challengeResponseText =
@@ -134,21 +175,71 @@ export function useChatbot() {
   }
 
   const decideSuggestedAction = async (index: number, decision: 'accepted' | 'rejected') => {
-    if (sendingRef.current) return
-
     const selectedMessage = messages[index]
     if (!selectedMessage || selectedMessage.role !== 'assistant' || !selectedMessage.suggested_action) return
+    if (selectedMessage.suggestedActionDecisionLoading) return
+
+    const emotionalEventId = selectedMessage.suggested_action.emotional_event_id
+
+    if (!emotionalEventId) {
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return {
+            ...message,
+            suggestedActionDecisionError: 'No se recibió emotional_event_id para guardar la decisión.',
+          }
+        }),
+      )
+      return
+    }
 
     setMessages(prev =>
       prev.map((message, currentIndex) => {
         if (currentIndex !== index || message.role !== 'assistant') return message
-        return { ...message, suggestedActionDecision: decision }
+        return {
+          ...message,
+          suggestedActionDecisionLoading: true,
+          suggestedActionDecisionError: undefined,
+        }
       }),
     )
 
-    if (decision === 'accepted') return
+    try {
+      await emotionalEventsApi.updateDecision(emotionalEventId, {
+        decision: decision === 'accepted' ? 'ACCEPTED' : 'IGNORED',
+        chosenActivityId:
+          decision === 'accepted'
+            ? getSuggestedActionActivityId(selectedMessage.suggested_action)
+            : null,
+      })
 
-    await sendChatMessage('No voy a ir por ahora, prefiero seguir conversando')
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return {
+            ...message,
+            suggestedActionDecision: decision,
+            suggestedActionDecisionLoading: false,
+            suggestedActionDecisionError: undefined,
+          }
+        }),
+      )
+    } catch (requestError) {
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return {
+            ...message,
+            suggestedActionDecisionLoading: false,
+            suggestedActionDecisionError:
+              requestError instanceof Error
+                ? requestError.message
+                : 'No se pudo guardar la decisión.',
+          }
+        }),
+      )
+    }
   }
 
   return {

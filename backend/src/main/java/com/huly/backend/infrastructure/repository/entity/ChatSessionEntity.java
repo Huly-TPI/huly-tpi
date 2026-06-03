@@ -24,7 +24,7 @@ public class ChatSessionEntity {
     @JoinColumn(name = "id_app_user")
     private AppUserEntity appUser;
 
-    @Column(name = "conversation_id", unique = true)
+    @Column(name = "conversation_id")
     private String conversationId;
 
     @Column(name = "start_at")

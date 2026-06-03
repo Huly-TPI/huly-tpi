@@ -13,11 +13,6 @@ describe('Minigames', () => {
     )
   }
 
-  it('renderiza el titulo de la vista', () => {
-    renderWithRouter()
-    expect(screen.getByRole('heading', { name: 'Minijuegos' })).toBeInTheDocument()
-  })
-
   it('renderiza los fondos de escena desktop y mobile', () => {
     renderWithRouter()
     expect(screen.getByAltText('Fondo del jardin de minijuegos')).toBeInTheDocument()
@@ -37,6 +32,22 @@ describe('Minigames', () => {
     const cloudLinks = screen.getAllByLabelText('Nubes que pasan')
     expect(cloudLinks.length).toBe(3)
     expect(cloudLinks[0].closest('a')).toHaveAttribute('href', '/clouds')
+  })
+
+  it('el botón volver navega a /', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={['/minigames']}>
+        <Routes>
+          <Route path="/" element={<h1>Vista Garden</h1>} />
+          <Route path="/minigames" element={<Minigames />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /volver/i }))
+    expect(screen.getByRole('heading', { name: 'Vista Garden' })).toBeInTheDocument()
   })
 
   it('redirige a burbujas al hacer click en el hotspot del pez', async () => {
