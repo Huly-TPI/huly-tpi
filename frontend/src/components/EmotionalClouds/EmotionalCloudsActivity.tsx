@@ -115,11 +115,11 @@ const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: E
             />
         ))}
 
-        <header className="w-full text-center flex-shrink-0 animate-fade-in pt-5 px-4">
-          <h1 className="font-sans text-3xl md:text-4xl font-bold text-[#8869AC] tracking-wide mb-1 drop-shadow-sm">
+        <header className="w-full text-center flex-shrink-0 animate-fade-in pt-14 md:pt-5 px-16 md:px-4">
+          <h1 className="font-sans text-2xl md:text-4xl font-bold text-[#8869AC] tracking-wide mb-1 drop-shadow-sm">
             Nubes que pasan
           </h1>
-          <p className="text-[#8869AC] text-2xl mx-auto leading-relaxed opacity-70">
+          <p className="text-[#8869AC] text-base md:text-2xl mx-auto leading-relaxed opacity-70">
             Deja ir tus pensamientos como nubes
           </p>
         </header>
@@ -156,6 +156,7 @@ const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: E
             disabled={input.trim().length === 0}
             type="button"
             data-testid="submit-button"
+            className="!w-auto !min-w-0"
           >
             Soltar
           </Button>

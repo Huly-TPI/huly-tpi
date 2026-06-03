@@ -25,7 +25,7 @@ vi.mock('../../api/journal', () => ({
   },
 }))
 
-import Diary from '../../pages/Diary'
+import Diary from '../../pages/Diary/Diary.tsx'
 import { journalApi } from '../../api/journal'
 import type { JournalEntryResponse } from '../../api/journal'
 

@@ -109,7 +109,7 @@
   justify-content: center;
   max-width: 600px;
   margin: 0 auto 0.4rem;
-  margin-top: 2rem;
+  margin-top: 0.6rem;
 }
 
 .emotional-clouds-input {
@@ -204,22 +204,37 @@
 
 @media (max-width: 768px) {
   .emotional-cloud {
-    max-width: 140px;
-    font-size: 0.85rem;
-    padding: 0.85rem 1.1rem;
+    width: 180px;
+    height: 80px;
+    font-size: 0.8rem;
+    padding: 0 1.2rem;
   }
 
   .emotional-clouds-input-section {
-    padding: 1.2rem 1rem 1rem;
+    padding: 0.8rem 1rem;
+    height: auto;
+    min-height: 0;
+  }
+
+  .emotional-clouds-label {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
   }
 
   .emotional-clouds-input-wrapper {
-    flex-direction: column;
+    flex-direction: row;
+    margin-top: 0.5rem;
   }
 
   .emotional-clouds-button {
-    width: 100%;
-    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .sky-sun {
+    width: 50px;
+    height: 50px;
+    top: 0.6rem;
+    right: 0.8rem;
   }
 }
 
