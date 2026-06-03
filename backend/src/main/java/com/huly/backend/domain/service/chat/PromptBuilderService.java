@@ -11,9 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Servicio encargado de construir prompts enriquecidos para el modelo de lenguaje.
- */
 @Service
 @RequiredArgsConstructor
 public class PromptBuilderService {

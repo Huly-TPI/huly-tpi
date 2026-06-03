@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import {
   chatApi,
   type ChatHistoryMessageDto,
+  type SuggestedActionDto,
 } from '../api/chat'
+import { emotionalEventsApi } from '../api/emotionalEvents'
 import { userGoalsApi } from '../api/userGoals'
 import { type ChatbotMessage } from '../components/Chatbot/chatbotTypes'
 
@@ -18,6 +20,11 @@ function mapHistoryMessage(message: ChatHistoryMessageDto): ChatbotMessage {
   }
 
   return { role: 'assistant', content: message.content }
+}
+
+function getSuggestedActionActivityId(action: SuggestedActionDto) {
+  const activityId = Number(action.action_id);
+  return Number.isInteger(activityId) && activityId > 0 ? activityId : null;
 }
 
 export function useChatbot() {
@@ -134,21 +141,71 @@ export function useChatbot() {
   }
 
   const decideSuggestedAction = async (index: number, decision: 'accepted' | 'rejected') => {
-    if (sendingRef.current) return
-
     const selectedMessage = messages[index]
     if (!selectedMessage || selectedMessage.role !== 'assistant' || !selectedMessage.suggested_action) return
+    if (selectedMessage.suggestedActionDecisionLoading) return
+
+    const emotionalEventId = selectedMessage.suggested_action.emotional_event_id
+
+    if (!emotionalEventId) {
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return {
+            ...message,
+            suggestedActionDecisionError: 'No se recibió emotional_event_id para guardar la decisión.',
+          }
+        }),
+      )
+      return
+    }
 
     setMessages(prev =>
       prev.map((message, currentIndex) => {
         if (currentIndex !== index || message.role !== 'assistant') return message
-        return { ...message, suggestedActionDecision: decision }
+        return {
+          ...message,
+          suggestedActionDecisionLoading: true,
+          suggestedActionDecisionError: undefined,
+        }
       }),
     )
 
-    if (decision === 'accepted') return
+    try {
+      await emotionalEventsApi.updateDecision(emotionalEventId, {
+        decision: decision === 'accepted' ? 'ACCEPTED' : 'IGNORED',
+        chosenActivityId:
+          decision === 'accepted'
+            ? getSuggestedActionActivityId(selectedMessage.suggested_action)
+            : null,
+      })
 
-    await sendChatMessage('No voy a ir por ahora, prefiero seguir conversando')
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return {
+            ...message,
+            suggestedActionDecision: decision,
+            suggestedActionDecisionLoading: false,
+            suggestedActionDecisionError: undefined,
+          }
+        }),
+      )
+    } catch (requestError) {
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return {
+            ...message,
+            suggestedActionDecisionLoading: false,
+            suggestedActionDecisionError:
+              requestError instanceof Error
+                ? requestError.message
+                : 'No se pudo guardar la decisión.',
+          }
+        }),
+      )
+    }
   }
 
   return {

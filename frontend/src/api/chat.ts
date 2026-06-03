@@ -1,11 +1,12 @@
 import { api } from './client'
 
 export interface SuggestedActionDto {
-  type: string
+  type: 'RESPIRACION' | 'DIARIO' | 'NUBE' | 'BURBUJA' | string
   action_id: string
   title: string
   description: string
   action_url: string
+  emotional_event_id?: number | null
 }
 
 export interface GeneratedChallengeDto {

@@ -1,7 +1,7 @@
 import { type RefObject } from 'react'
-import { type ChatbotMessage } from './chatbotTypes'
-import ChatbotSuggestedActionCard from './ChatbotSuggestedActionCard'
 import ChatbotChallengeCard from './ChatbotChallengeCard'
+import ChatbotSuggestedActionCard from './ChatbotSuggestedActionCard'
+import { type ChatbotMessage } from './chatbotTypes'
 import ChatMessageBubble from './ChatMessageBubble'
 
 interface ChatbotMessagesProps {
@@ -13,6 +13,21 @@ interface ChatbotMessagesProps {
   onChallengeDecision: (index: number, decision: 'accepted' | 'rejected') => void | Promise<void>
   onSuggestedActionDecision: (index: number, decision: 'accepted' | 'rejected') => void | Promise<void>
   bottomRef: RefObject<HTMLDivElement>
+}
+
+function getSuggestedActionRoute(type: string, actionUrl: string) {
+  switch (type) {
+    case 'RESPIRACION':
+      return '/guided-breathing'
+    case 'DIARIO':
+      return '/diary'
+    case 'NUBE':
+      return '/clouds'
+    case 'BURBUJA':
+      return '/bubbles'
+    default:
+      return actionUrl.startsWith('/api/') ? '/' : actionUrl
+  }
 }
 
 export default function ChatbotMessages({
@@ -53,9 +68,15 @@ export default function ChatbotMessages({
                 <ChatbotSuggestedActionCard
                   title={message.suggested_action.title}
                   description={message.suggested_action.description}
-                  actionUrl={message.suggested_action.action_url}
+                  actionUrl={getSuggestedActionRoute(
+                    message.suggested_action.type,
+                    message.suggested_action.action_url,
+                  )}
                   onClose={onClose}
                   decision={message.suggestedActionDecision}
+                  isLoading={message.suggestedActionDecisionLoading}
+                  error={message.suggestedActionDecisionError}
+                  onAccept={() => onSuggestedActionDecision(index, 'accepted')}
                   onReject={() => onSuggestedActionDecision(index, 'rejected')}
                 />
               )}

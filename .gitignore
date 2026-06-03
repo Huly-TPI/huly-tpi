@@ -13,6 +13,7 @@ buildNumber.properties
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+./node_modules/
 
 # ========================
 # IDE - IntelliJ IDEA
@@ -130,3 +131,4 @@ gradlew.bat
 # DOCUMENTATION
 # ========================
 HELP.md
+./docs/
