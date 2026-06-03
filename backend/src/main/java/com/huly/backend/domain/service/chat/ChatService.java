@@ -9,6 +9,7 @@ import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatStreamEvent;
+import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.MessageRole;
@@ -40,30 +41,50 @@ public class ChatService {
     private final PromptBuilderService promptBuilderService;
     private final UserVectorMemoryService userVectorMemoryService;
     private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
+    private final ChatIntentDetectionService chatIntentDetectionService;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
         ChatContext context = buildBlockingContext(message, conversationId, userId);
-        ChatRecommendationOutcome recommendationOutcome = chatEmotionalRecommendationService.evaluate(
+        ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
+        ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
                 message,
                 userId,
-                context.basePrompt(),
-                context.memories(),
-                context.history(),
-                null);
+                context,
+                userIntent);
         var suggestedAction = recommendationOutcome != null ? recommendationOutcome.suggestedAction() : null;
         context = context.withSystemPrompt(promptBuilderService.buildEnrichedPrompt(
                 context.basePrompt(),
                 context.riskWords(),
                 context.memories(),
-                suggestedAction));
+                suggestedAction,
+                userIntent));
 
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
+        reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
         ChatReply finalReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
         saveUserMessage(conversationId, message, finalReply, userId);
         saveAssistantMessage(conversationId, finalReply.content(), userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
 
         return finalReply;
+    }
+
+    private ChatRecommendationOutcome evaluateRecommendation(
+            String message,
+            Long userId,
+            ChatContext context,
+            ChatUserIntent userIntent) {
+        if (userIntent == ChatUserIntent.CHALLENGE_REQUEST) {
+            return ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral());
+        }
+        return chatEmotionalRecommendationService.evaluate(
+                message,
+                userId,
+                context.basePrompt(),
+                context.memories(),
+                context.history(),
+                null,
+                userIntent == ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
     }
 
     public Flux<ChatStreamEvent> streamMessage(String message, String conversationId, Long userId) {
@@ -176,6 +197,33 @@ public class ChatService {
                 enriched.matchedWord(),
                 outcome.suggestedAction(),
                 null);
+    }
+
+    private ChatReply ensureRequestedChallenge(
+            ChatReply reply,
+            ChatUserIntent userIntent,
+            Object suggestedAction) {
+        if (userIntent != ChatUserIntent.CHALLENGE_REQUEST
+                || suggestedAction != null
+                || reply.generatedChallenge() != null) {
+            return reply;
+        }
+
+        ChatReply.GeneratedChallenge challenge = new ChatReply.GeneratedChallenge(
+                "Reto de accion pequena",
+                "Elegí una acción simple que puedas hacer en los próximos 10 minutos y realizala sin buscar que salga perfecta."
+        );
+        String content = reply.content() == null || reply.content().isBlank()
+                ? "Te propongo un reto simple para empezar: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta."
+                : reply.content() + " Te propongo este reto: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta.";
+        return new ChatReply(
+                content,
+                reply.detectedEmotion(),
+                reply.intensity(),
+                reply.riskDetected(),
+                reply.matchedWord(),
+                reply.suggestedAction(),
+                challenge);
     }
 
     private ChatReply applyAnalysisMetadata(ChatReply reply, EmotionalAnalysisResult analysis) {

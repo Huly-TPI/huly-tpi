@@ -72,6 +72,18 @@ public class ChatEmotionalRecommendationService {
             List<ConversationMessage> history,
             ChatReply conversationalReply
     ) {
+        return evaluate(message, userId, basePrompt, memories, history, conversationalReply, false);
+    }
+
+    public ChatRecommendationOutcome evaluate(
+            String message,
+            Long userId,
+            String basePrompt,
+            List<VectorMemory> memories,
+            List<ConversationMessage> history,
+            ChatReply conversationalReply,
+            boolean forceRecommendation
+    ) {
         EmotionalAnalysisResult analysis = analyze(message, basePrompt, memories, history);
         logAnalysisResult(userId, analysis);
 
@@ -80,6 +92,10 @@ public class ChatEmotionalRecommendationService {
                 analysis,
                 conversationalReply
         );
+        if (forceRecommendation && !recommendationAnalysis.shouldRecommend()) {
+            log.info("emotional_recommendation_override userId={} reason=explicit_activity_request", userId);
+            recommendationAnalysis = forceRecommendationFromExplicitRequest(recommendationAnalysis);
+        }
         if (!recommendationAnalysis.shouldRecommend()) {
             return ChatRecommendationOutcome.none(recommendationAnalysis);
         }
@@ -202,6 +218,21 @@ public class ChatEmotionalRecommendationService {
                 Math.max(analysis.intensity(), ANALYSIS_INTENSITY_THRESHOLD),
                 valueOrDefault(analysis.userGoal(), defaultUserGoal(analysis.detectedEmotion())),
                 valueOrDefault(analysis.shortReason(), "Malestar emocional significativo detectado.")
+        );
+    }
+
+    private EmotionalAnalysisResult forceRecommendationFromExplicitRequest(EmotionalAnalysisResult analysis) {
+        EmotionalAnalysisResult safeAnalysis = analysis != null ? analysis : EmotionalAnalysisResult.neutral();
+        return new EmotionalAnalysisResult(
+                true,
+                safeAnalysis.detectedEmotion() != null ? safeAnalysis.detectedEmotion() : EmotionType.NEUTRAL,
+                Math.max(safeAnalysis.confidence(), 0.70),
+                safeAnalysis.valence(),
+                safeAnalysis.arousal(),
+                safeAnalysis.dominance(),
+                Math.max(safeAnalysis.intensity(), 0.35),
+                valueOrDefault(safeAnalysis.userGoal(), "recibir una actividad de bienestar"),
+                "El usuario pidio explicitamente una recomendacion de actividad."
         );
     }
 

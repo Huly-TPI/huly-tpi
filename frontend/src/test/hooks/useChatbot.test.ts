@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useChatbot } from '../../hooks/useChatbot'
 import { chatApi } from '../../api/chat'
+import { emotionalEventsApi } from '../../api/emotionalEvents'
 
 vi.mock('../../api/chat', () => ({
   chatApi: {
@@ -10,8 +11,21 @@ vi.mock('../../api/chat', () => ({
   },
 }))
 
+vi.mock('../../context/auth', () => ({
+  useAuth: () => ({
+    user: { id: 1, name: 'Mili', email: 'mili@huly.com', role: 'USER' },
+  }),
+}))
+
+vi.mock('../../api/emotionalEvents', () => ({
+  emotionalEventsApi: {
+    updateDecision: vi.fn(),
+  },
+}))
+
 const mockedSendMessage = vi.mocked(chatApi.sendMessage)
 const mockedGetHistory = vi.mocked(chatApi.getHistory)
+const mockedUpdateDecision = vi.mocked(emotionalEventsApi.updateDecision)
 
 describe('useChatbot', () => {
   beforeEach(() => {
@@ -20,7 +34,7 @@ describe('useChatbot', () => {
   })
 
   it('loads history on mount using persisted conversationId', async () => {
-    localStorage.setItem('hulyChatConversationId', 'conv-history')
+    localStorage.setItem('hulyChatConversationId:1', 'conv-history')
     mockedGetHistory.mockResolvedValueOnce({
       content: [
         {
@@ -148,7 +162,7 @@ describe('useChatbot', () => {
     })
   })
 
-  it('decideSuggestedAction rejected sends follow-up message', async () => {
+  it('decideSuggestedAction rejected saves the decision', async () => {
     mockedGetHistory.mockResolvedValueOnce({
       content: [],
       page_number: 0,
@@ -167,14 +181,11 @@ describe('useChatbot', () => {
           title: 'Resp',
           description: 'Desc',
           action_url: '/activities',
+          emotional_event_id: 15,
         },
         generated_challenge: null,
       } as never)
-      .mockResolvedValueOnce({
-        huly_reply: 'sigamos charlando',
-        suggested_action: null,
-        generated_challenge: null,
-      } as never)
+    mockedUpdateDecision.mockResolvedValueOnce({} as never)
 
     const { result } = renderHook(() => useChatbot())
     await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
@@ -190,9 +201,10 @@ describe('useChatbot', () => {
       await result.current.decideSuggestedAction(1, 'rejected')
     })
 
-    expect(mockedSendMessage).toHaveBeenNthCalledWith(2, {
-      message: 'No voy a ir por ahora, prefiero seguir conversando',
-      conversationId: expect.any(String),
+    expect(mockedSendMessage).toHaveBeenCalledTimes(1)
+    expect(mockedUpdateDecision).toHaveBeenCalledWith(15, {
+      decision: 'IGNORED',
+      chosenActivityId: null,
     })
     expect(result.current.messages[1]).toMatchObject({
       role: 'assistant',
@@ -200,4 +212,3 @@ describe('useChatbot', () => {
     })
   })
 })
-

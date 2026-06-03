@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.RiskWord;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
@@ -31,6 +32,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -50,6 +52,7 @@ class ChatServiceTest {
     @Mock private PromptBuilderService promptBuilderService;
     @Mock private UserVectorMemoryService userVectorMemoryService;
     @Mock private ChatEmotionalRecommendationService chatEmotionalRecommendationService;
+    @Mock private ChatIntentDetectionService chatIntentDetectionService;
 
     @InjectMocks
     private ChatService chatService;
@@ -58,6 +61,9 @@ class ChatServiceTest {
     void setUp() {
         lenient().when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
+        lenient().when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any(), anyBoolean()))
+                .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
+        lenient().when(chatIntentDetectionService.detect(any())).thenReturn(ChatUserIntent.NONE);
     }
 
     @Test
@@ -75,13 +81,13 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.of(new ChatConfig(1L, true, "mi prompt")));
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq("mi prompt"), any(), any(), any())).thenReturn("enriquecido");
+        when(promptBuilderService.buildEnrichedPrompt(eq("mi prompt"), any(), any(), any(), any())).thenReturn("enriquecido");
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any(), any(), any());
+        verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any(), any(), any(), any());
     }
 
     @Test
@@ -89,13 +95,13 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq(""), any(), any(), any())).thenReturn("fallback");
+        when(promptBuilderService.buildEnrichedPrompt(eq(""), any(), any(), any(), any())).thenReturn("fallback");
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(eq(""), any(), any(), any());
+        verify(promptBuilderService).buildEnrichedPrompt(eq(""), any(), any(), any(), any());
     }
 
     @Test
@@ -104,13 +110,13 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of(rw));
-        when(promptBuilderService.buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any())).thenReturn("enriquecido");
+        when(promptBuilderService.buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any(), any())).thenReturn("enriquecido");
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         chatService.processMessage("msg", "conv-1", 1L);
 
-        verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any());
+        verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any(), any());
     }
 
     @Test
@@ -119,7 +125,7 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any())).thenReturn("prompt");
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any(), any())).thenReturn("prompt");
         when(chatMemoryPort.getHistory("conv-abc", 1L)).thenReturn(history);
         when(llmChatPort.chat(any(), any(), eq(history))).thenReturn(ChatReply.of("ok"));
 
@@ -168,7 +174,7 @@ class ChatServiceTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of(memory));
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), eq(List.of(memory)), any())).thenReturn("prompt final");
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), eq(List.of(memory)), any(), any())).thenReturn("prompt final");
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
@@ -202,7 +208,7 @@ class ChatServiceTest {
                 "malestar claro"
         );
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-        when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any()))
+        when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any(), eq(false)))
                 .thenReturn(new ChatRecommendationOutcome(analysis, action));
 
         ChatReply result = chatService.processMessage("estoy decaido", "conv-1", 1L);
@@ -210,6 +216,43 @@ class ChatServiceTest {
         assertThat(result.suggestedAction()).isEqualTo(action);
         assertThat(result.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
         assertThat(result.intensity()).isEqualTo(9);
+    }
+
+    @Test
+    void processMessage_shouldForceActivityRecommendation_whenUserExplicitlyRequestsActivity() {
+        ChatReply reply = new ChatReply("te recomiendo escribir", EmotionType.CALM, 4, false, null);
+        SuggestedChatAction action = new SuggestedChatAction(
+                ActivityType.DIARIO,
+                2L,
+                "Diario emocional",
+                "Un espacio para ordenar pensamientos",
+                "/api/activities",
+                30L
+        );
+        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
+        when(chatIntentDetectionService.detect("dame una recomendacion de actividad"))
+                .thenReturn(ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
+        when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any(), eq(true)))
+                .thenReturn(new ChatRecommendationOutcome(EmotionalAnalysisResult.neutral(), action));
+
+        ChatReply result = chatService.processMessage("dame una recomendacion de actividad", "conv-1", 1L);
+
+        assertThat(result.suggestedAction()).isEqualTo(action);
+        verify(chatEmotionalRecommendationService).evaluate(any(), any(), any(), any(), any(), any(), eq(true));
+        verify(promptBuilderService).buildEnrichedPrompt(any(), any(), any(), eq(action), eq(ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST));
+    }
+
+    @Test
+    void processMessage_shouldForceChallengePrompt_whenUserExplicitlyRequestsChallenge() {
+        ChatReply reply = new ChatReply("claro", EmotionType.MOTIVATION, 5, false, null);
+        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
+        when(chatIntentDetectionService.detect("quiero un reto")).thenReturn(ChatUserIntent.CHALLENGE_REQUEST);
+
+        ChatReply result = chatService.processMessage("quiero un reto", "conv-1", 1L);
+
+        assertThat(result.generatedChallenge()).isNotNull();
+        assertThat(result.generatedChallenge().title()).isEqualTo("Reto de accion pequena");
+        verify(promptBuilderService).buildEnrichedPrompt(any(), any(), any(), eq(null), eq(ChatUserIntent.CHALLENGE_REQUEST));
     }
 
     private void givenDefaultSetup(String basePrompt, List<RiskWord> riskWords,
@@ -220,7 +263,7 @@ class ChatServiceTest {
                         : Optional.of(new ChatConfig(1L, true, basePrompt)));
         when(userVectorMemoryService.findRelevantUserMemories(any(), any())).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(riskWords);
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any())).thenReturn(enrichedPrompt);
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any(), any())).thenReturn(enrichedPrompt);
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(history);
         when(llmChatPort.chat(any(), any(), any())).thenReturn(reply);
     }
