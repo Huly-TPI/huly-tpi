@@ -119,23 +119,15 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: 'Cambiar a modo dia' })).toBeInTheDocument()
   })
 
-  it('restringe accesos estimulantes en modo noche', async () => {
+  it('mantiene accesos habilitados en modo noche por defecto', async () => {
     const user = userEvent.setup()
     renderWithRouter()
 
     await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
 
-    const minijuegosButton = screen.getByRole('button', { name: 'Minijuegos' })
-    const retosButton = screen.getByRole('button', { name: 'Retos' })
-    const diarioButton = screen.getByRole('button', { name: 'Diario' })
-
-    expect(minijuegosButton).toBeDisabled()
-    expect(retosButton).toBeDisabled()
-    expect(diarioButton).toBeDisabled()
-
-    expect(screen.queryByRole('link', { name: 'Minijuegos' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Retos' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Diario' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Minijuegos' })).toHaveAttribute('href', '/minigames')
+    expect(screen.getByRole('link', { name: 'Retos' })).toHaveAttribute('href', '/challenges')
+    expect(screen.getByRole('link', { name: 'Diario' })).toHaveAttribute('href', '/diary')
   })
 
   it('renderiza el banco con la clase de espejo mobile', () => {
