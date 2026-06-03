@@ -8,6 +8,7 @@ import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.useCase.userGoal.*;
 import com.huly.backend.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.presentation.dto.userGoal.UserGoalUpdateRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -28,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class UserGoalControllerTest {
 
+    private static final String TEST_EMAIL = "test@test.com";
+
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -38,7 +43,7 @@ class UserGoalControllerTest {
     private DeleteUserGoalUseCase deleteUserGoalUseCase;
     private UpdateUserGoalUseCase updateUserGoalUseCase;
     private CompleteUserGoalUseCase completeUserGoalUseCase;
-    private  AcceptChallengeUseCase acceptChallengeUseCase;
+    private AcceptChallengeUseCase acceptChallengeUseCase;
 
     @BeforeEach
     void setUp() {
@@ -47,12 +52,20 @@ class UserGoalControllerTest {
         deleteUserGoalUseCase = mock(DeleteUserGoalUseCase.class);
         updateUserGoalUseCase = mock(UpdateUserGoalUseCase.class);
         completeUserGoalUseCase = mock(CompleteUserGoalUseCase.class);
-        acceptChallengeUseCase= mock(AcceptChallengeUseCase.class);
+        acceptChallengeUseCase = mock(AcceptChallengeUseCase.class);
 
         UserGoalController controller = new UserGoalController(acceptChallengeUseCase,
                 addUserGoalUseCase, getUserGoalsByUserUseCase,
                 deleteUserGoalUseCase, updateUserGoalUseCase, completeUserGoalUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken(TEST_EMAIL, null));
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     private UserGoal goal(Long id, String title, GoalStatus status) {
@@ -63,12 +76,12 @@ class UserGoalControllerTest {
 
     @Test
     void add_shouldReturn201_whenRequestIsValid() throws Exception {
-        when(addUserGoalUseCase.execute(eq(10L), eq("Respirar"), eq("Desc"), eq(2L)))
+        when(addUserGoalUseCase.execute(eq(TEST_EMAIL), eq("Respirar"), eq("Desc"), eq(2L)))
                 .thenReturn(goal(1L, "Respirar", GoalStatus.PENDING));
 
         mockMvc.perform(post("/api/user-goals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest(10L, "Respirar", "Desc", 2L))))
+                        .content(objectMapper.writeValueAsString(new UserGoalRequest("Respirar", "Desc", 2L))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.title").value("Respirar"))
@@ -77,28 +90,20 @@ class UserGoalControllerTest {
 
     @Test
     void add_shouldReturn201_withNullActivityId() throws Exception {
-        when(addUserGoalUseCase.execute(eq(10L), eq("Respirar"), isNull(), isNull()))
+        when(addUserGoalUseCase.execute(eq(TEST_EMAIL), eq("Respirar"), isNull(), isNull()))
                 .thenReturn(goal(1L, "Respirar", GoalStatus.PENDING));
 
         mockMvc.perform(post("/api/user-goals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest(10L, "Respirar", null, null))))
+                        .content(objectMapper.writeValueAsString(new UserGoalRequest("Respirar", null, null))))
                 .andExpect(status().isCreated());
-    }
-
-    @Test
-    void add_shouldReturn400_whenUserIdIsNull() throws Exception {
-        mockMvc.perform(post("/api/user-goals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest(null, "Respirar", null, null))))
-                .andExpect(status().isBadRequest());
     }
 
     @Test
     void add_shouldReturn400_whenTitleIsBlank() throws Exception {
         mockMvc.perform(post("/api/user-goals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest(10L, "", null, null))))
+                        .content(objectMapper.writeValueAsString(new UserGoalRequest("", null, null))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -111,10 +116,10 @@ class UserGoalControllerTest {
                 List.of(goal(2L, "Pendiente", GoalStatus.PENDING)),
                 PageRequest.of(0, 5), 1);
 
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(10L), any(Pageable.class))).thenReturn(completadosPage);
-        when(getUserGoalsByUserUseCase.executePending(eq(10L), any(Pageable.class))).thenReturn(pendientesPage);
+        when(getUserGoalsByUserUseCase.executeCompleted(eq(TEST_EMAIL), any(Pageable.class))).thenReturn(completadosPage);
+        when(getUserGoalsByUserUseCase.executePending(eq(TEST_EMAIL), any(Pageable.class))).thenReturn(pendientesPage);
 
-        mockMvc.perform(get("/api/user-goals/user/10"))
+        mockMvc.perform(get("/api/user-goals/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completados.content[0].title").value("Completado"))
                 .andExpect(jsonPath("$.completados.totalElements").value(1))
@@ -125,12 +130,12 @@ class UserGoalControllerTest {
 
     @Test
     void listByUser_shouldUseSizeAndPageParams() throws Exception {
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(10L), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executeCompleted(eq(TEST_EMAIL), any(Pageable.class)))
                 .thenReturn(Page.empty(PageRequest.of(1, 3)));
-        when(getUserGoalsByUserUseCase.executePending(eq(10L), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executePending(eq(TEST_EMAIL), any(Pageable.class)))
                 .thenReturn(Page.empty(PageRequest.of(1, 3)));
 
-        mockMvc.perform(get("/api/user-goals/user/10").param("page", "1").param("size", "3"))
+        mockMvc.perform(get("/api/user-goals/me").param("page", "1").param("size", "3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completados.pageNumber").value(1))
                 .andExpect(jsonPath("$.completados.pageSize").value(3));
@@ -138,12 +143,12 @@ class UserGoalControllerTest {
 
     @Test
     void listByUser_shouldReturn200WithEmptyPages_whenNoGoals() throws Exception {
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(10L), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executeCompleted(eq(TEST_EMAIL), any(Pageable.class)))
                 .thenReturn(Page.empty());
-        when(getUserGoalsByUserUseCase.executePending(eq(10L), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executePending(eq(TEST_EMAIL), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
-        mockMvc.perform(get("/api/user-goals/user/10"))
+        mockMvc.perform(get("/api/user-goals/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completados.content").isEmpty())
                 .andExpect(jsonPath("$.pendientes.content").isEmpty());

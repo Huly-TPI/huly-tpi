@@ -5,7 +5,7 @@ import { userGoalsApi } from '../../api/userGoals'
 
 vi.mock('../../api/userGoals', () => ({
   userGoalsApi: {
-    getByUser: vi.fn(),
+    getForCurrentUser: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock('../../api/userGoals', () => ({
   },
 }))
 
-const mockedGetByUser = vi.mocked(userGoalsApi.getByUser)
+const mockedGetForCurrentUser = vi.mocked(userGoalsApi.getForCurrentUser)
 const mockedCreate = vi.mocked(userGoalsApi.create)
 const mockedUpdate = vi.mocked(userGoalsApi.update)
 const mockedDelete = vi.mocked(userGoalsApi.delete)
@@ -53,29 +53,24 @@ describe('useUserGoals', () => {
     vi.clearAllMocks()
   })
 
-  it('carga los goals al montar con el userId proporcionado', async () => {
+  it('carga los goals al montar', async () => {
     const goal = makeGoal()
-    mockedGetByUser.mockResolvedValueOnce(makeListResponse([goal], []) as never)
+    mockedGetForCurrentUser.mockResolvedValueOnce(makeListResponse([goal], []) as never)
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(mockedGetByUser).toHaveBeenCalledWith(10)
+    expect(mockedGetForCurrentUser).toHaveBeenCalledWith()
     expect(result.current.pendientes?.content).toEqual([goal])
     expect(result.current.completados?.content).toEqual([])
   })
 
-  it('no hace fetch si userId es null', () => {
-    renderHook(() => useUserGoals(null))
-    expect(mockedGetByUser).not.toHaveBeenCalled()
-  })
-
   it('setea loading en true durante el fetch inicial', async () => {
     let resolvePromise: (v: unknown) => void
-    mockedGetByUser.mockReturnValueOnce(new Promise(r => { resolvePromise = r }) as never)
+    mockedGetForCurrentUser.mockReturnValueOnce(new Promise(r => { resolvePromise = r }) as never)
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
     expect(result.current.loading).toBe(true)
 
     act(() => resolvePromise(makeListResponse()))
@@ -83,36 +78,36 @@ describe('useUserGoals', () => {
   })
 
   it('setea error si el fetch falla', async () => {
-    mockedGetByUser.mockRejectedValueOnce(new Error('Error de red'))
+    mockedGetForCurrentUser.mockRejectedValueOnce(new Error('Error de red'))
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBe('Error de red')
   })
 
-  it('createGoal llama a la API con userId incluido y refresca los datos', async () => {
-    mockedGetByUser
+  it('createGoal llama a la API y refresca los datos', async () => {
+    mockedGetForCurrentUser
       .mockResolvedValueOnce(makeListResponse([], []) as never)
       .mockResolvedValueOnce(makeListResponse([makeGoal()], []) as never)
     mockedCreate.mockResolvedValueOnce(makeGoal() as never)
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await act(async () => {
       await result.current.createGoal({ title: 'Nuevo reto' })
     })
 
-    expect(mockedCreate).toHaveBeenCalledWith({ userId: 10, title: 'Nuevo reto' })
-    expect(mockedGetByUser).toHaveBeenCalledTimes(2)
+    expect(mockedCreate).toHaveBeenCalledWith({ title: 'Nuevo reto' })
+    expect(mockedGetForCurrentUser).toHaveBeenCalledTimes(2)
   })
 
   it('updateGoal llama a la API con el id y datos correctos', async () => {
-    mockedGetByUser.mockResolvedValue(makeListResponse([makeGoal()], []) as never)
+    mockedGetForCurrentUser.mockResolvedValue(makeListResponse([makeGoal()], []) as never)
     mockedUpdate.mockResolvedValueOnce(makeGoal() as never)
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await act(async () => {
@@ -123,12 +118,12 @@ describe('useUserGoals', () => {
   })
 
   it('deleteGoal llama a la API y refresca los datos', async () => {
-    mockedGetByUser
+    mockedGetForCurrentUser
       .mockResolvedValueOnce(makeListResponse([makeGoal()], []) as never)
       .mockResolvedValueOnce(makeListResponse([], []) as never)
     mockedDelete.mockResolvedValueOnce(undefined as never)
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await act(async () => {
@@ -136,16 +131,16 @@ describe('useUserGoals', () => {
     })
 
     expect(mockedDelete).toHaveBeenCalledWith(1)
-    expect(mockedGetByUser).toHaveBeenCalledTimes(2)
+    expect(mockedGetForCurrentUser).toHaveBeenCalledTimes(2)
   })
 
   it('completeGoal elimina el goal de pendientes de forma optimista', async () => {
     const goal = makeGoal({ id: 5 })
-    mockedGetByUser.mockResolvedValueOnce(makeListResponse([goal], []) as never)
+    mockedGetForCurrentUser.mockResolvedValueOnce(makeListResponse([goal], []) as never)
     mockedComplete.mockResolvedValueOnce({ ...goal, status: 'COMPLETED' } as never)
-    mockedGetByUser.mockResolvedValueOnce(makeListResponse([], [{ ...goal, status: 'COMPLETED' as const }]) as never)
+    mockedGetForCurrentUser.mockResolvedValueOnce(makeListResponse([], [{ ...goal, status: 'COMPLETED' as const }]) as never)
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     expect(result.current.pendientes?.content).toHaveLength(1)
@@ -160,10 +155,10 @@ describe('useUserGoals', () => {
 
   it('completeGoal refresca silenciosamente tras el error y relanza la excepción', async () => {
     const goal = makeGoal({ id: 5 })
-    mockedGetByUser.mockResolvedValue(makeListResponse([goal], []) as never)
+    mockedGetForCurrentUser.mockResolvedValue(makeListResponse([goal], []) as never)
     mockedComplete.mockRejectedValueOnce(new Error('Fallo al completar'))
 
-    const { result } = renderHook(() => useUserGoals(10))
+    const { result } = renderHook(() => useUserGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await expect(

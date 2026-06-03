@@ -6,18 +6,17 @@ import {
   type UpdateUserGoalRequest,
 } from '../api/userGoals'
 
-export function useUserGoals(userId: number | null) {
+export function useUserGoals() {
   const [pendientes, setPending] = useState<UserGoalPageResponse | null>(null)
   const [completados, setCompleted] = useState<UserGoalPageResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchGoals = useCallback(async () => {
-    if (!userId) return
     setLoading(true)
     setError(null)
     try {
-      const res = await userGoalsApi.getByUser(userId)
+      const res = await userGoalsApi.getForCurrentUser()
       setPending(res.pendientes)
       setCompleted(res.completados)
     } catch (err) {
@@ -25,30 +24,28 @@ export function useUserGoals(userId: number | null) {
     } finally {
       setLoading(false)
     }
-  }, [userId])
+  }, [])
 
   const silentRefetch = useCallback(async () => {
-    if (!userId) return
     try {
-      const res = await userGoalsApi.getByUser(userId)
+      const res = await userGoalsApi.getForCurrentUser()
       setPending(res.pendientes)
       setCompleted(res.completados)
     } catch {
       // silent
     }
-  }, [userId])
+  }, [])
 
   useEffect(() => {
     void fetchGoals()
   }, [fetchGoals])
 
   const createGoal = useCallback(
-    async (data: Omit<CreateUserGoalRequest, 'userId'>) => {
-      if (!userId) return
-      await userGoalsApi.create({ ...data, userId })
+    async (data: CreateUserGoalRequest) => {
+      await userGoalsApi.create(data)
       await silentRefetch()
     },
-    [userId, silentRefetch],
+    [silentRefetch],
   )
 
   const updateGoal = useCallback(
