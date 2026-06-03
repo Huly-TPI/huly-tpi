@@ -55,8 +55,9 @@ public class UserGoalController {
 
     @PostMapping
     public ResponseEntity<UserGoalResponse> add(@Valid @RequestBody UserGoalRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserGoal created = addUserGoalUseCase.execute(
-                request.userId(),
+                email,
                 request.title(),
                 request.description(),
                 request.activityId()
@@ -64,14 +65,14 @@ public class UserGoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/me")
     public ResponseEntity<UserGoalListResponse> listByUser(
-            @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(userId, pageable);
-        Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(userId, pageable);
+        Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(email, pageable);
+        Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(email, pageable);
         return ResponseEntity.ok(new UserGoalListResponse(toPageResponse(completados), toPageResponse(pendientes)));
     }
 

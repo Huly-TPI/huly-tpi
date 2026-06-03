@@ -26,7 +26,6 @@ export interface UserGoalListResponse {
 }
 
 export interface CreateUserGoalRequest {
-  userId: number
   title: string
   description?: string
   activityId?: number
@@ -45,8 +44,8 @@ export interface AcceptChallengeRequest {
 }
 
 export const userGoalsApi = {
-  getByUser: (userId: number, page = 0, size = 50) =>
-    api.get<UserGoalListResponse>(`/user-goals/user/${userId}?page=${page}&size=${size}`),
+  getForCurrentUser: (page = 0, size = 50) =>
+    api.get<UserGoalListResponse>(`/user-goals/me?page=${page}&size=${size}`),
 
   create: (data: CreateUserGoalRequest) =>
     api.post<UserGoalResponse>('/user-goals', data),

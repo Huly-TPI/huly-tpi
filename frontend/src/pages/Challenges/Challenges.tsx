@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import { type UserGoalResponse } from '../../api/userGoals'
-import { getUserIdFromToken } from '../../utils/auth'
 import Plant from '../../components/Challenges/Plant'
 import BoardItem from '../../components/Challenges/BoardItem'
 import PostitModal from '../../components/Challenges/PostitModal'
@@ -45,14 +44,13 @@ type ModalState =
   | { mode: 'detail'; goal: UserGoalResponse }
 
 export default function Challenges() {
-  const [userId] = useState<number | null>(() => getUserIdFromToken())
   const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
 
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
-    useUserGoals(userId)
+    useUserGoals()
 
   const completedCount = completados?.totalElements ?? 0
   const { completedPlants, cycleProgress } = getCycleData(completedCount)
@@ -183,9 +181,8 @@ export default function Challenges() {
 
             {loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
             {error && !loading && <p className="text-[0.82rem] text-[#9b2c2c] m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">{error}</p>}
-            {!userId && !loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Inicia sesión para ver tus retos.</p>}
 
-            {!loading && !error && userId && (
+            {!loading && !error && (
               <ul className="board-list list-none p-0 m-0 flex flex-col gap-[0.35rem] flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
                 {hasPending ? (
                   pendientes!.content.map(goal => (

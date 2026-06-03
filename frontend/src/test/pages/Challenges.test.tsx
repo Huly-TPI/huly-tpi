@@ -16,10 +16,6 @@ vi.mock('../../assets/challenges/plant-stages/plant-3.png', () => ({ default: 'p
 vi.mock('../../assets/challenges/plant-stages/plant-4.png', () => ({ default: 'plant-4.png' }))
 vi.mock('../../assets/challenges/plant-stages/plant-5.png', () => ({ default: 'plant-5.png' }))
 
-vi.mock('../../utils/auth', () => ({
-  getUserIdFromToken: vi.fn().mockReturnValue(10),
-}))
-
 vi.mock('../../hooks/useUserGoals', () => ({
   useUserGoals: vi.fn(),
 }))
