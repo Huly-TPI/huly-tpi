@@ -1,4 +1,4 @@
-package com.huly.backend.domain.useCase;
+package com.huly.backend.domain.useCase.cloudsRecommendation;
 
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.CloudRecommendation;

@@ -1,10 +1,9 @@
-package com.huly.backend.domain.useCase;
+package com.huly.backend.domain.useCase.activities;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

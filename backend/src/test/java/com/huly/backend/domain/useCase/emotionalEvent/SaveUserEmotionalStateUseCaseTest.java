@@ -1,8 +1,7 @@
-package com.huly.backend.domain.useCase;
+package com.huly.backend.domain.useCase.emotionalEvent;
 
 import com.huly.backend.domain.model.UserEmotionalState;
 import com.huly.backend.domain.repository.UserEmotionalStateRepository;
-import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

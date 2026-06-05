@@ -1,4 +1,4 @@
-package com.huly.backend.domain.useCase;
+package com.huly.backend.domain.useCase.chatConfig;
 
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.service.BotConfigService;
