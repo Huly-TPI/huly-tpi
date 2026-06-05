@@ -6,9 +6,9 @@ import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendatio
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
-import com.huly.backend.infrastructure.presentation.dto.CloudRecommendationRequest;
-import com.huly.backend.infrastructure.presentation.dto.CloudRecommendationResponse;
-import com.huly.backend.infrastructure.presentation.dto.CloudThoughtRequest;
+import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationRequest;
+import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationResponse;
+import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudThoughtRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

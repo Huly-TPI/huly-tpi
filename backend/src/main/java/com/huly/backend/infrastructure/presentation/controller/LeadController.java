@@ -1,8 +1,8 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.useCase.lead.RegisterLeadUseCase;
-import com.huly.backend.infrastructure.presentation.dto.LeadRequestDto;
-import com.huly.backend.infrastructure.presentation.dto.LeadResponseDto;
+import com.huly.backend.infrastructure.presentation.dto.lead.LeadRequestDto;
+import com.huly.backend.infrastructure.presentation.dto.lead.LeadResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

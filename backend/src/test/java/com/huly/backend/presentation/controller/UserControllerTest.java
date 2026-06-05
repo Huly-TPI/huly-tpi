@@ -7,7 +7,7 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.infrastructure.presentation.controller.UserController;
-import com.huly.backend.infrastructure.presentation.dto.UserProfileResponse;
+import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

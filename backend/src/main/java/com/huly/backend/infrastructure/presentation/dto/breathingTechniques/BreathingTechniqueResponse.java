@@ -1,4 +1,4 @@
-package com.huly.backend.infrastructure.presentation.dto;
+package com.huly.backend.infrastructure.presentation.dto.breathingTechniques;
 
 public record BreathingTechniqueResponse(
         Long id,

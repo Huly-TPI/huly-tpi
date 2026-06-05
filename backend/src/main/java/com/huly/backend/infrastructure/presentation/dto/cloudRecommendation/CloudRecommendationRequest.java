@@ -1,4 +1,4 @@
-package com.huly.backend.infrastructure.presentation.dto;
+package com.huly.backend.infrastructure.presentation.dto.cloudRecommendation;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.UserEmotionalState;
 import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
-import com.huly.backend.infrastructure.presentation.dto.UserEmotionalStateRequest;
+import com.huly.backend.infrastructure.presentation.dto.emotionalState.UserEmotionalStateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

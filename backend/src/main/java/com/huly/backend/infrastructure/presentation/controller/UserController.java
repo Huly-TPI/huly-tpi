@@ -4,7 +4,7 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
-import com.huly.backend.infrastructure.presentation.dto.UserProfileResponse;
+import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

@@ -1,4 +1,4 @@
-package com.huly.backend.infrastructure.presentation.dto;
+package com.huly.backend.infrastructure.presentation.dto.user;
 import com.huly.backend.domain.model.enums.UserRole;
 import lombok.Builder;
 import lombok.Getter;

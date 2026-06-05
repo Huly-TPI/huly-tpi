@@ -1,4 +1,4 @@
-package com.huly.backend.infrastructure.presentation.dto;
+package com.huly.backend.infrastructure.presentation.dto.lead;
 
 import com.huly.backend.domain.model.enums.SourceAction;
 

@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.BreathingTechnique;
 import com.huly.backend.domain.useCase.BreathingSession.GetBreathingTechniquesUseCase;
-import com.huly.backend.infrastructure.presentation.dto.BreathingTechniqueResponse;
+import com.huly.backend.infrastructure.presentation.dto.breathingTechniques.BreathingTechniqueResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
