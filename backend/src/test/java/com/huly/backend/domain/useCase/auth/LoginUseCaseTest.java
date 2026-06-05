@@ -9,7 +9,7 @@ import com.huly.backend.domain.provider.PasswordHasher;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.UnauthorizedException;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

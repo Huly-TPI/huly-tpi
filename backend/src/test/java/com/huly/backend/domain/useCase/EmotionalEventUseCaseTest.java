@@ -9,7 +9,10 @@ import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
-import com.huly.backend.exception.BadRequestException;
+import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
+import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventDecisionUseCase;
+import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventFeedbackUseCase;
+import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

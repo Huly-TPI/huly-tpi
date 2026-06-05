@@ -2,9 +2,10 @@ package com.huly.backend.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.chat.ChatConfig;
-import com.huly.backend.domain.useCase.GetBotConfigUseCase;
-import com.huly.backend.domain.useCase.UpdateBotConfigUseCase;
-import com.huly.backend.presentation.dto.UpdateBotConfigRequest;
+import com.huly.backend.domain.useCase.chatBotConfig.GetBotConfigUseCase;
+import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
+import com.huly.backend.infrastructure.presentation.controller.BotConfigController;
+import com.huly.backend.infrastructure.presentation.dto.UpdateBotConfigRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;

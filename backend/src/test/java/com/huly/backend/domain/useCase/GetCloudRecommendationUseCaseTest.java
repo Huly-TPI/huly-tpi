@@ -3,6 +3,7 @@ package com.huly.backend.domain.useCase;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.CloudRecommendation;
 import com.huly.backend.domain.provider.LLMChatPort;
+import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

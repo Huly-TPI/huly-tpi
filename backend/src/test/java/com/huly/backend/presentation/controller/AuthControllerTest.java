@@ -9,7 +9,9 @@ import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
 import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
 import com.huly.backend.domain.useCase.auth.RegisterUseCase;
-import com.huly.backend.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.controller.AuthController;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,7 +115,7 @@ class AuthControllerTest {
     @Test
     void backofficeLogin_shouldReturn401_whenCredentialsAreInvalid() throws Exception {
         when(adminLoginUseCase.execute("admin@huly.com", "wrongpassword"))
-                .thenThrow(new com.huly.backend.exception.UnauthorizedException("Invalid credentials"));
+                .thenThrow(new UnauthorizedException("Invalid credentials"));
 
         mockMvc.perform(post("/api/auth/backoffice/login")
                         .contentType(MediaType.APPLICATION_JSON)

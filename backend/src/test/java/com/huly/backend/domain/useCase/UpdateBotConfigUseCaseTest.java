@@ -3,6 +3,7 @@ package com.huly.backend.domain.useCase;
 import com.huly.backend.domain.model.UpdateBotConfigCommand;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.service.BotConfigService;
+import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
