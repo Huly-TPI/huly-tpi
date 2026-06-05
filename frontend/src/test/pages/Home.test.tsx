@@ -4,17 +4,39 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Home from '../../pages/Home/Home'
 import { ThemeProvider } from '../../context/theme'
+import { completeTutorial } from '../../api/onboarding'
+
+const mockUseAuth = vi.fn()
+const mockRefreshUser = vi.fn()
+vi.mock('../../context/auth', () => ({
+  useAuth: () => mockUseAuth(),
+}))
+
+vi.mock('../../api/onboarding', () => ({
+  completeTutorial: vi.fn(),
+}))
 
 describe('Home', () => {
   beforeEach(() => {
-    vi.unstubAllEnvs()
     window.localStorage.clear()
     window.localStorage.setItem('huly:scene-theme', 'light')
-    window.localStorage.setItem('huly:home-onboarding-completed', 'true')
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 1,
+        name: 'Jimena',
+        email: 'jimena@mail.com',
+        role: 'USER',
+        onBoardingCompleted: true,
+        onboardingTutorialCompleted: true,
+      },
+      refreshUser: mockRefreshUser,
+    })
+    vi.mocked(completeTutorial).mockResolvedValue(undefined)
+    mockRefreshUser.mockResolvedValue(undefined)
   })
 
   afterEach(() => {
-    vi.unstubAllEnvs()
+    vi.clearAllMocks()
   })
 
   const renderWithRouter = () => {
@@ -97,23 +119,15 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: 'Cambiar a modo dia' })).toBeInTheDocument()
   })
 
-  it('restringe accesos estimulantes en modo noche', async () => {
+  it('mantiene accesos habilitados en modo noche por defecto', async () => {
     const user = userEvent.setup()
     renderWithRouter()
 
     await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
 
-    const minijuegosButton = screen.getByRole('button', { name: 'Minijuegos' })
-    const retosButton = screen.getByRole('button', { name: 'Retos' })
-    const diarioButton = screen.getByRole('button', { name: 'Diario' })
-
-    expect(minijuegosButton).toBeDisabled()
-    expect(retosButton).toBeDisabled()
-    expect(diarioButton).toBeDisabled()
-
-    expect(screen.queryByRole('link', { name: 'Minijuegos' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Retos' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Diario' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Minijuegos' })).toHaveAttribute('href', '/minigames')
+    expect(screen.getByRole('link', { name: 'Retos' })).toHaveAttribute('href', '/challenges')
+    expect(screen.getByRole('link', { name: 'Diario' })).toHaveAttribute('href', '/diary')
   })
 
   it('renderiza el banco con la clase de espejo mobile', () => {
@@ -123,22 +137,59 @@ describe('Home', () => {
     expect(benchImage).toHaveClass('scene-element__image--mirror-mobile')
   })
 
-  it('muestra el onboarding de bienvenida en el primer ingreso', () => {
-    window.localStorage.removeItem('huly:home-onboarding-completed')
+  it('muestra el onboarding de bienvenida en el primer ingreso', async () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 1,
+        name: 'Jimena',
+        email: 'jimena@mail.com',
+        role: 'USER',
+        onBoardingCompleted: true,
+        onboardingTutorialCompleted: false,
+      },
+      refreshUser: mockRefreshUser,
+    })
 
     renderWithRouter()
 
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Comenzar con el tutorial' })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Comenzar con el tutorial' })).toBeInTheDocument()
+  })
+
+  it('no muestra tutorial de home si onboarding emocional no esta completo', async () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 1,
+        name: 'Jimena',
+        email: 'jimena@mail.com',
+        role: 'USER',
+        onBoardingCompleted: false,
+      },
+      refreshUser: mockRefreshUser,
+    })
+
+    renderWithRouter()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('avanza el onboarding y lo marca como completado al finalizar', async () => {
     const user = userEvent.setup()
-    window.localStorage.removeItem('huly:home-onboarding-completed')
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 1,
+        name: 'Jimena',
+        email: 'jimena@mail.com',
+        role: 'USER',
+        onBoardingCompleted: true,
+        onboardingTutorialCompleted: false,
+      },
+      refreshUser: mockRefreshUser,
+    })
 
     renderWithRouter()
 
-    await user.click(screen.getByRole('button', { name: 'Comenzar con el tutorial' }))
+    await user.click(await screen.findByRole('button', { name: 'Comenzar con el tutorial' }))
     expect(screen.getByText('Casa')).toBeInTheDocument()
 
     for (let index = 0; index < 5; index += 1) {
@@ -147,25 +198,8 @@ describe('Home', () => {
 
     await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
 
-    expect(window.localStorage.getItem('huly:home-onboarding-completed')).toBe('true')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
-
-  it('fuerza onboarding cuando VITE_HOME_ONBOARDING_MODE es always', () => {
-    vi.stubEnv('VITE_HOME_ONBOARDING_MODE', 'always')
-
-    renderWithRouter()
-
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Comenzar con el tutorial' })).toBeInTheDocument()
-  })
-
-  it('oculta onboarding cuando VITE_HOME_ONBOARDING_MODE es never', () => {
-    vi.stubEnv('VITE_HOME_ONBOARDING_MODE', 'never')
-    window.localStorage.removeItem('huly:home-onboarding-completed')
-
-    renderWithRouter()
-
+    expect(completeTutorial).toHaveBeenCalledTimes(1)
+    expect(mockRefreshUser).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

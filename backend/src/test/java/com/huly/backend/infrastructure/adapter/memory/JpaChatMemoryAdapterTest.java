@@ -35,10 +35,10 @@ class JpaChatMemoryAdapterTest {
     @Test
     void getHistory_shouldReturnMessages_whenSessionExists() {
         List<ConversationMessage> messages = List.of(ConversationMessage.of(MessageRole.USER, "hola"));
-        when(chatSessionRepository.findSessionIdByConversationId("conv-1")).thenReturn(Optional.of(10L));
+        when(chatSessionRepository.findSessionIdByConversationIdAndUserId("conv-1", 1L)).thenReturn(Optional.of(10L));
         when(chatMessageRepository.findBySessionId(10L)).thenReturn(messages);
 
-        List<ConversationMessage> result = adapter.getHistory("conv-1");
+        List<ConversationMessage> result = adapter.getHistory("conv-1", 1L);
 
         assertThat(result).isEqualTo(messages);
         verify(chatMessageRepository).findBySessionId(10L);
@@ -46,9 +46,9 @@ class JpaChatMemoryAdapterTest {
 
     @Test
     void getHistory_shouldReturnEmptyList_whenSessionNotFound() {
-        when(chatSessionRepository.findSessionIdByConversationId("conv-x")).thenReturn(Optional.empty());
+        when(chatSessionRepository.findSessionIdByConversationIdAndUserId("conv-x", 1L)).thenReturn(Optional.empty());
 
-        List<ConversationMessage> result = adapter.getHistory("conv-x");
+        List<ConversationMessage> result = adapter.getHistory("conv-x", 1L);
 
         assertThat(result).isEmpty();
         verify(chatMessageRepository, never()).findBySessionId(anyLong());
@@ -58,7 +58,7 @@ class JpaChatMemoryAdapterTest {
 
     @Test
     void addMessage_shouldUseExistingSession_whenSessionAlreadyExists() {
-        when(chatSessionRepository.findSessionIdByConversationId("conv-1")).thenReturn(Optional.of(5L));
+        when(chatSessionRepository.findSessionIdByConversationIdAndUserId("conv-1", 1L)).thenReturn(Optional.of(5L));
         ConversationMessage msg = ConversationMessage.of(MessageRole.USER, "hola");
 
         adapter.addMessage("conv-1", msg, 1L);
@@ -69,7 +69,7 @@ class JpaChatMemoryAdapterTest {
 
     @Test
     void addMessage_shouldCreateNewSession_whenSessionNotExists() {
-        when(chatSessionRepository.findSessionIdByConversationId("conv-nueva")).thenReturn(Optional.empty());
+        when(chatSessionRepository.findSessionIdByConversationIdAndUserId("conv-nueva", 1L)).thenReturn(Optional.empty());
         when(chatSessionRepository.saveSession("conv-nueva", 1L)).thenReturn(7L);
         ConversationMessage msg = ConversationMessage.of(MessageRole.ASSISTANT, "resp");
 

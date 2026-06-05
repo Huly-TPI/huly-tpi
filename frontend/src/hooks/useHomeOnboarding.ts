@@ -1,54 +1,32 @@
-import { useState } from 'react'
-
-const HOME_ONBOARDING_COMPLETED_KEY = 'huly:home-onboarding-completed'
-
-type HomeOnboardingEnvMode = 'auto' | 'always' | 'never'
+import { useEffect, useState } from 'react'
+import { useAuth } from '../context/auth'
+import { completeTutorial } from '../api/onboarding'
 
 export type HomeOnboardingMode = 'hidden' | 'intro' | 'steps'
 
-function readHomeOnboardingEnvMode(): HomeOnboardingEnvMode {
-  const rawValue = import.meta.env.VITE_HOME_ONBOARDING_MODE?.trim().toLowerCase()
-
-  if (rawValue === 'always' || rawValue === 'true') return 'always'
-  if (rawValue === 'never' || rawValue === 'false') return 'never'
-  return 'auto'
-}
-
-function readHomeOnboardingCompletionState() {
-  if (typeof window === 'undefined') {
-    return true
-  }
-
-  return window.localStorage.getItem(HOME_ONBOARDING_COMPLETED_KEY) === 'true'
-}
-
-function resolveInitialHomeOnboardingMode(hasCompletedOnboarding: boolean): HomeOnboardingMode {
-  const envMode = readHomeOnboardingEnvMode()
-
-  if (envMode === 'always') return 'intro'
-  if (envMode === 'never') return 'hidden'
-  return hasCompletedOnboarding ? 'hidden' : 'intro'
-}
-
-function persistHomeOnboardingCompletion() {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(HOME_ONBOARDING_COMPLETED_KEY, 'true')
-}
-
 export function useHomeOnboarding(totalSteps: number) {
-  const [onboardingMode, setOnboardingMode] = useState<HomeOnboardingMode>(() =>
-    resolveInitialHomeOnboardingMode(readHomeOnboardingCompletionState()),
-  )
+  const { user, refreshUser } = useAuth()
+  const [onboardingMode, setOnboardingMode] = useState<HomeOnboardingMode>('hidden')
   const [onboardingStepIndex, setOnboardingStepIndex] = useState(0)
+
+  useEffect(() => {
+    if (!user || user.onBoardingCompleted !== true) {
+      setOnboardingMode('hidden')
+      return
+    }
+
+    setOnboardingMode(user.onboardingTutorialCompleted === true ? 'hidden' : 'intro')
+  }, [user])
 
   const startOnboarding = () => {
     setOnboardingStepIndex(0)
     setOnboardingMode('steps')
   }
 
-  const advanceOnboarding = () => {
+  const advanceOnboarding = async () => {
     if (onboardingStepIndex >= totalSteps - 1) {
-      persistHomeOnboardingCompletion()
+      await completeTutorial()
+      await refreshUser()
       setOnboardingStepIndex(0)
       setOnboardingMode('hidden')
       return

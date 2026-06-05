@@ -1,0 +1,75 @@
+.minigames-page {
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #bfe4fb;
+}
+
+.minigames-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 853 / 1844;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.minigames-scene__title {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 140;
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.75rem;
+  color: #7c5cc4;
+}
+
+.minigames-scene__background {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.minigames-scene__background--desktop {
+  display: none;
+}
+
+.minigames-scene__background--mobile {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .minigames-page {
+    overflow: hidden;
+  }
+
+  .minigames-scene {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .minigames-scene__title {
+    top: 1.5rem;
+    left: 2rem;
+    font-size: 2.25rem;
+  }
+
+  .minigames-scene__background--desktop {
+    display: block;
+    object-position: center 52%;
+  }
+
+  .minigames-scene__background--mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .minigames-scene__background--desktop {
+    object-position: center 56%;
+  }
+}

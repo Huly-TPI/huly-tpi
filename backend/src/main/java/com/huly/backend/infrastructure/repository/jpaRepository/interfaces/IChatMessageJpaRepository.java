@@ -13,5 +13,9 @@ public interface IChatMessageJpaRepository extends JpaRepository<ChatMessageEnti
     List<ChatMessageEntity> findByChatSessionIdOrderByCreatedAtAsc(Long sessionId);
 
     @EntityGraph(attributePaths = {"emotions"})
-    Page<ChatMessageEntity> findByChatSessionConversationId(String conversationId, Pageable pageable);
+    Page<ChatMessageEntity> findByChatSessionConversationIdAndChatSessionAppUserId(
+            String conversationId,
+            Long userId,
+            Pageable pageable
+    );
 }

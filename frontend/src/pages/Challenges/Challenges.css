@@ -1,0 +1,217 @@
+/* ===== PLANT ANIMATIONS ===== */
+
+.plant__image {
+  animation: plant-appear 0.5s ease both;
+}
+
+@keyframes plant-appear {
+  from { opacity: 0; transform: scale(0.88) translateY(6%); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.plant__drop {
+  position: absolute;
+  top: -14px;
+  width: 5px;
+  height: 10px;
+  background: linear-gradient(180deg, rgba(120, 195, 255, 0.95) 0%, rgba(33, 150, 243, 0.75) 100%);
+  border-radius: 50% 50% 50% 50% / 35% 35% 65% 65%;
+  opacity: 0;
+}
+
+.plant--watering .plant__drop {
+  animation: water-fall 1.5s ease-in infinite;
+}
+
+.plant__drop:nth-child(1) { left: 48%; animation-delay: 0s; }
+.plant__drop:nth-child(2) { left: 54%; animation-delay: 0.22s; }
+.plant__drop:nth-child(3) { left: 42%; animation-delay: 0.44s; }
+.plant__drop:nth-child(4) { left: 58%; animation-delay: 0.12s; }
+.plant__drop:nth-child(5) { left: 50%; animation-delay: 0.34s; }
+
+@keyframes water-fall {
+  0%   { top: 5%;  opacity: 0.95; transform: scaleY(1.1); }
+  70%  { opacity: 0.6; }
+  100% { top: 80%; opacity: 0;    transform: scaleY(0.7); }
+}
+
+.plant__watering-can {
+  animation: can-rock 1s ease-in-out infinite alternate;
+}
+
+@keyframes can-rock {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
+}
+
+/* ===== BOARD ITEM ANIMATIONS ===== */
+
+.board-item--completing {
+  animation: board-complete-flash 1.4s ease forwards;
+}
+
+@keyframes board-complete-flash {
+  0%   { background: rgba(255, 248, 230, 0.68); }
+  30%  { background: rgba(168, 216, 168, 0.55); }
+  100% { background: rgba(255, 248, 230, 0.68); }
+}
+
+/* strikethrough pseudo-element — cannot be expressed in Tailwind */
+.board-item__title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 2px;
+  background: #649959;
+  width: 0;
+  border-radius: 1px;
+  transition: width 0.55s ease;
+}
+
+.board-item--completed .board-item__title::after {
+  width: 100%;
+}
+
+.board-item__can--pouring {
+  animation: can-pour 0.55s ease-in-out infinite alternate;
+}
+
+@keyframes can-pour {
+  from { transform: rotate(-8deg); }
+  to   { transform: rotate(-30deg) translateY(-3px); }
+}
+
+/* ===== SCROLLBAR ===== */
+
+.board-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(92, 61, 30, 0.3) transparent;
+}
+
+.board-list > li { width: 100%; min-width: 0; }
+
+.board-list::-webkit-scrollbar { width: 4px; }
+.board-list::-webkit-scrollbar-thumb {
+  background: rgba(92, 61, 30, 0.3);
+  border-radius: 999px;
+}
+
+/* ===== MODAL ANIMATIONS ===== */
+
+.postit-modal {
+  transform: rotate(-1.5deg);
+  animation: postit-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes postit-enter {
+  from { opacity: 0; transform: rotate(-1.5deg) scale(0.88) translateY(12px); }
+  to   { opacity: 1; transform: rotate(-1.5deg) scale(1)    translateY(0); }
+}
+
+.harvest-modal {
+  animation: harvest-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes harvest-enter {
+  from { opacity: 0; transform: scale(0.72) translateY(32px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.harvest-modal__plant {
+  animation: harvest-plant-bounce 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
+}
+
+@keyframes harvest-plant-bounce {
+  from { transform: scale(0.65) translateY(20px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+/* ===== FORM INPUT PSEUDO-SELECTORS ===== */
+
+.postit-modal__input:focus,
+.postit-modal__textarea:focus {
+  border-bottom-color: rgba(92, 61, 30, 0.6);
+}
+
+.postit-modal__input::placeholder,
+.postit-modal__textarea::placeholder {
+  color: rgba(92, 61, 30, 0.3);
+  font-weight: 400;
+}
+
+/* ===== RESPONSIVE (mobile ≤ 767px) ===== */
+
+@media (max-width: 767px) {
+  .challenges-page {
+    flex-direction: column;
+    height: 100dvh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .plant-zone {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+    gap: 0;
+    overflow: visible;
+    z-index: 0;
+  }
+
+  .plant-zone__info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 1rem 1rem 0;
+    gap: 0.35rem;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.6) 70%, transparent);
+    border-radius: 0 0 1rem 1rem;
+  }
+
+  .challenges-plant-hint {
+    padding-top: 0;
+  }
+
+  .plant-on-stump {
+    margin-top: 240px;
+    transform: none;
+    margin-right: 0;
+    position: relative;
+    z-index: 0;
+  }
+
+  .challenges-right {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40vh;
+    padding: 0 1rem 1rem;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .board-zone {
+    width: 100%;
+    max-width: 360px;
+    height: 100%;
+    background-image: url('../../assets/challenges/mobile/board-challenges.png');
+  }
+
+  .board-inner {
+    padding: 2rem 2rem 3rem;
+  }
+
+  .challenges-title {
+    margin-top: 30px;
+  }
+}

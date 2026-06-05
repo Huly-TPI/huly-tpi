@@ -19,15 +19,15 @@ public class JpaChatMemoryAdapter implements ChatMemoryPort {
     private final ChatMessageRepository chatMessageRepository;
 
     @Override
-    public List<ConversationMessage> getHistory(String conversationId) {
-        return chatSessionRepository.findSessionIdByConversationId(conversationId)
+    public List<ConversationMessage> getHistory(String conversationId, Long userId) {
+        return chatSessionRepository.findSessionIdByConversationIdAndUserId(conversationId, userId)
                 .map(chatMessageRepository::findBySessionId)
                 .orElse(List.of());
     }
 
     @Override
     public void addMessage(String conversationId, ConversationMessage message, Long userId) {
-        Long sessionId = chatSessionRepository.findSessionIdByConversationId(conversationId)
+        Long sessionId = chatSessionRepository.findSessionIdByConversationIdAndUserId(conversationId, userId)
                 .orElseGet(() -> chatSessionRepository.saveSession(conversationId, userId));
 
         chatMessageRepository.saveMessage(sessionId, message);

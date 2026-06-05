@@ -3,31 +3,51 @@ package com.huly.backend.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.ChatStreamEvent;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
+import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
+import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
+import com.huly.backend.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
+import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.presentation.dto.chat.ChatRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ChatControllerTest {
@@ -37,21 +57,53 @@ class ChatControllerTest {
 
     private ChatUseCase chatUseCase;
     private ListChatHistoryUseCase listChatHistoryUseCase;
+    private StreamChatUseCase streamChatUseCase;
+    private AppUserRepository appUserRepository;
+    private UserVectorMemoryService userVectorMemoryService;
+
+    private static final String USER_EMAIL = "test@huly.com";
+    private static final Long USER_ID = 1L;
 
     @BeforeEach
     void setUp() {
         chatUseCase = mock(ChatUseCase.class);
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
-        ChatController controller = new ChatController(chatUseCase, listChatHistoryUseCase);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        streamChatUseCase = mock(StreamChatUseCase.class);
+        appUserRepository = mock(AppUserRepository.class);
+        userVectorMemoryService = mock(UserVectorMemoryService.class);
+
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(authentication.getName()).thenReturn(USER_EMAIL);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
+
+        ChatController controller = new ChatController(
+                chatUseCase,
+                listChatHistoryUseCase,
+                streamChatUseCase,
+                appUserRepository,
+                userVectorMemoryService
+        );
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
-    // ── POST /api/chat ───────────────────────────────────────────────────────
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private AppUserEntity mockUser() {
+        return AppUserEntity.builder().id(USER_ID).build();
+    }
 
     @Test
     void chat_shouldReturn200WithReplyContent_whenRequestIsValid() throws Exception {
         ChatReply reply = new ChatReply("todo bien", EmotionType.JOY, 9, false, null);
-        when(chatUseCase.execute(eq("hola"), eq("conv-1"), eq(1L))).thenReturn(reply);
+        when(chatUseCase.execute(eq("hola"), eq("conv-1"), eq(USER_ID))).thenReturn(reply);
 
         mockMvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -89,6 +141,29 @@ class ChatControllerTest {
     }
 
     @Test
+    void chat_shouldReturnSuggestedAction_whenRecommendationExists() throws Exception {
+        SuggestedChatAction action = new SuggestedChatAction(
+                ActivityType.DIARIO,
+                2L,
+                "Diario emocional",
+                "Un espacio para ordenar pensamientos",
+                "/api/activities",
+                15L
+        );
+        ChatReply reply = new ChatReply("te acompaño", EmotionType.SADNESS, 9, false, null, action);
+        when(chatUseCase.execute(any(), any(), any())).thenReturn(reply);
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("estoy triste", "conv-2"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.suggested_action.type").value("DIARIO"))
+                .andExpect(jsonPath("$.suggested_action.action_id").value("2"))
+                .andExpect(jsonPath("$.suggested_action.title").value("Diario emocional"))
+                .andExpect(jsonPath("$.suggested_action.emotional_event_id").value(15));
+    }
+
+    @Test
     void chat_shouldReturn200WithNullMetadata_whenRiskDetectedIsNull() throws Exception {
         ChatReply reply = new ChatReply("respuesta", EmotionType.CALM, 3, null, null);
         when(chatUseCase.execute(any(), any(), any())).thenReturn(reply);
@@ -98,6 +173,45 @@ class ChatControllerTest {
                         .content(objectMapper.writeValueAsString(new ChatRequest("msg", "conv-1"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.metadata").doesNotExist());
+    }
+
+    @Test
+    void stream_shouldEmitSseEvents() throws Exception {
+        ChatReply reply = new ChatReply("hola mundo", EmotionType.JOY, 6, false, null);
+        when(streamChatUseCase.execute("hola", "conv-1", USER_ID)).thenReturn(Flux.just(
+                ChatStreamEvent.delta("hola "),
+                ChatStreamEvent.done(reply)
+        ));
+
+        MvcResult result = mockMvc.perform(post("/api/chat/stream")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.TEXT_EVENT_STREAM)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("event:delta")))
+                .andExpect(content().string(containsString("event:done")))
+                .andExpect(content().string(containsString("hola mundo")));
+    }
+
+    @Test
+    void stream_shouldEmitSseError_whenConversationIdIsNull() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/chat/stream")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.TEXT_EVENT_STREAM)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", null))))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("event:error")))
+                .andExpect(content().string(containsString("message y conversationId son obligatorios.")));
+
+        verifyNoInteractions(streamChatUseCase);
     }
 
     @Test
@@ -117,7 +231,7 @@ class ChatControllerTest {
     }
 
     @Test
-    void chat_shouldPassHardcodedUserIdToUseCase() throws Exception {
+    void chat_shouldUseAuthenticatedUserId() throws Exception {
         when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
         mockMvc.perform(post("/api/chat")
@@ -125,16 +239,24 @@ class ChatControllerTest {
                         .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
                 .andExpect(status().isOk());
 
-        verify(chatUseCase).execute("hola", "conv-1", 1L);
+        verify(chatUseCase).execute("hola", "conv-1", USER_ID);
     }
 
-    // ── GET /api/chat/{conversationId}/messages ──────────────────────────────
+    @Test
+    void chat_shouldReturn404_whenUserNotFound() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
+                .andExpect(status().isNotFound());
+    }
 
     @Test
     void getHistory_shouldReturn200WithPagedMessages() throws Exception {
         ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.JOY, Instant.parse("2024-01-01T00:00:00Z"));
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
-        when(listChatHistoryUseCase.execute(eq("conv-1"), any(Pageable.class))).thenReturn(page);
+        when(listChatHistoryUseCase.execute(eq("conv-1"), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk())
@@ -151,7 +273,7 @@ class ChatControllerTest {
     @Test
     void getHistory_shouldReturn200WithEmptyPage_whenNoMessages() throws Exception {
         Page<ChatMessage> emptyPage = Page.empty();
-        when(listChatHistoryUseCase.execute(eq("conv-vacia"), any(Pageable.class))).thenReturn(emptyPage);
+        when(listChatHistoryUseCase.execute(eq("conv-vacia"), eq(USER_ID), any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/chat/conv-vacia/messages"))
                 .andExpect(status().isOk())
@@ -163,7 +285,7 @@ class ChatControllerTest {
     void getHistory_shouldReturn200WithNullRoleAndEmotion_whenMessageHasNulls() throws Exception {
         ChatMessage msg = new ChatMessage(2L, null, "mensaje", null, null, Instant.now());
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(page);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk())
@@ -174,32 +296,32 @@ class ChatControllerTest {
     @Test
     void getHistory_shouldUseDefaultPagination_whenNoParamsProvided() throws Exception {
         Page<ChatMessage> emptyPage = Page.empty();
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(emptyPage);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk());
 
-        verify(listChatHistoryUseCase).execute(eq("conv-1"), any(Pageable.class));
+        verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
     }
 
     @Test
     void getHistory_shouldForwardCustomPageAndSize_whenParamsProvided() throws Exception {
         Page<ChatMessage> emptyPage = Page.empty();
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(emptyPage);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/chat/conv-1/messages")
                         .param("page", "2")
                         .param("size", "5"))
                 .andExpect(status().isOk());
 
-        verify(listChatHistoryUseCase).execute(eq("conv-1"), any(Pageable.class));
+        verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
     }
 
     @Test
     void getHistory_shouldReturnPaginationMetadata() throws Exception {
         ChatMessage msg = new ChatMessage(1L, MessageRole.ASSISTANT, "resp", false, EmotionType.CALM, Instant.now());
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
-        when(listChatHistoryUseCase.execute(any(), any(Pageable.class))).thenReturn(page);
+        when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk())

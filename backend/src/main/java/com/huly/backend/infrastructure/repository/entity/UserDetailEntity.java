@@ -1,12 +1,11 @@
 package com.huly.backend.infrastructure.repository.entity;
 
+import com.huly.backend.domain.model.enums.SourceAction;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "user_detail")
@@ -44,6 +43,9 @@ public class UserDetailEntity {
     @Column(name = "profile_on_boarding_completed")
     private Boolean profileOnBoardingCompleted;
 
+    @Column(name = "onboarding_tutorial_completed", nullable = false)
+    private Boolean onboardingTutorialCompleted;
+
     @Column(name = "avatar_url_2")
     private String avatarUrl2;
 
@@ -52,5 +54,21 @@ public class UserDetailEntity {
 
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @Column(name = "nickname", length = 50)
+    private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_action", length = 50)
+    private SourceAction sourceAction;
+
+    @Column(name = "onboarding_answer_1")
+    private String onboardingAnswer1;
+
+    @Column(name = "onboarding_answer_2")
+    private String onboardingAnswer2;
+
+    @Column(name = "onboarding_answer_3")
+    private String onboardingAnswer3;
 
 }
