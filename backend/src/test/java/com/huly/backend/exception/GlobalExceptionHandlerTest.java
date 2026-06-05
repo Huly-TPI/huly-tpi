@@ -1,5 +1,6 @@
 package com.huly.backend.exception;
 
+import com.huly.backend.domain.exception.*;
 import com.huly.backend.infrastructure.presentation.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -149,5 +150,117 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertEquals("Ya existe en Producto con codigo ABC123", response.getBody().getMessage());
+    }
+
+    // --- Domain exception handlers ---
+
+    @Test
+    void testHandleResourceNotFoundException() {
+        ResourceNotFoundException exception = new ResourceNotFoundException("Usuario no encontrado");
+
+        ResponseEntity<ErrorResponse> response = handler.handleResourceNotFoundException(exception, request);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(404, response.getBody().getStatus());
+        assertEquals("Not Found", response.getBody().getError());
+        assertEquals("Usuario no encontrado", response.getBody().getMessage());
+        assertEquals("/api/test", response.getBody().getPath());
+        assertNotNull(response.getBody().getTraceId());
+    }
+
+    @Test
+    void testHandleResourceNotFoundExceptionWithFormattedMessage() {
+        ResourceNotFoundException exception = new ResourceNotFoundException("Usuario", "id", 99);
+
+        ResponseEntity<ErrorResponse> response = handler.handleResourceNotFoundException(exception, request);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("No se encontró un Usuario con id 99", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleInvalidCredentialsException() {
+        InvalidCredentialsException exception = new InvalidCredentialsException("Credenciales inválidas");
+
+        ResponseEntity<ErrorResponse> response = handler.handleInvalidCredentialsException(exception, request);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(401, response.getBody().getStatus());
+        assertEquals("Unauthorized", response.getBody().getError());
+        assertEquals("Credenciales inválidas", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleDuplicateResourceException() {
+        DuplicateResourceException exception = new DuplicateResourceException("El email ya existe");
+
+        ResponseEntity<ErrorResponse> response = handler.handleDuplicateResourceException(exception, request);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(409, response.getBody().getStatus());
+        assertEquals("Conflict", response.getBody().getError());
+        assertEquals("El email ya existe", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleDuplicateResourceExceptionWithFormattedMessage() {
+        DuplicateResourceException exception = new DuplicateResourceException("Usuario", "email", "test@example.com");
+
+        ResponseEntity<ErrorResponse> response = handler.handleDuplicateResourceException(exception, request);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("Ya existe un Usuario con email test@example.com", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleBusinessRuleException() {
+        BusinessRuleException exception = new BusinessRuleException("source es obligatorio");
+
+        ResponseEntity<ErrorResponse> response = handler.handleBusinessRuleException(exception, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(400, response.getBody().getStatus());
+        assertEquals("Bad Request", response.getBody().getError());
+        assertEquals("source es obligatorio", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleInsufficientPermissionsException() {
+        InsufficientPermissionsException exception = new InsufficientPermissionsException("Acceso denegado");
+
+        ResponseEntity<ErrorResponse> response = handler.handleInsufficientPermissionsException(exception, request);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(403, response.getBody().getStatus());
+        assertEquals("Forbidden", response.getBody().getError());
+        assertEquals("Acceso denegado", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleInfrastructureException() {
+        InfrastructureException exception = new InfrastructureException("Error de base de datos");
+
+        ResponseEntity<ErrorResponse> response = handler.handleInfrastructureException(exception, request);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(500, response.getBody().getStatus());
+        assertEquals("Ocurrió un error interno en el servidor", response.getBody().getMessage());
+    }
+
+    @Test
+    void testDomainExceptionTraceIdIsUnique() {
+        ResourceNotFoundException ex1 = new ResourceNotFoundException("test 1");
+        ResourceNotFoundException ex2 = new ResourceNotFoundException("test 2");
+
+        ResponseEntity<ErrorResponse> r1 = handler.handleResourceNotFoundException(ex1, request);
+        ResponseEntity<ErrorResponse> r2 = handler.handleResourceNotFoundException(ex2, request);
+
+        assertNotEquals(r1.getBody().getTraceId(), r2.getBody().getTraceId());
     }
 }
