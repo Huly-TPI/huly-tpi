@@ -5,7 +5,7 @@ import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.repository.UserGoalRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.NotFoundException;
+import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

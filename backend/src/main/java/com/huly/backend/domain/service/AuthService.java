@@ -2,13 +2,13 @@ package com.huly.backend.domain.service;
 
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.exception.ConflictException;
+import com.huly.backend.infrastructure.presentation.exception.ConflictException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.security.JwtService;
-import com.huly.backend.presentation.dto.auth.LoginRequest;
-import com.huly.backend.presentation.dto.auth.LoginResponse;
-import com.huly.backend.presentation.dto.auth.RegisterRequest;
+import com.huly.backend.infrastructure.presentation.dto.auth.LoginRequest;
+import com.huly.backend.infrastructure.presentation.dto.auth.LoginResponse;
+import com.huly.backend.infrastructure.presentation.dto.auth.RegisterRequest;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
