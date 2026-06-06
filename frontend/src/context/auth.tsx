@@ -14,7 +14,7 @@ import {
   type LoginRequest,
   type UserProfile,
 } from '../api/auth'
-import { clearToken, getToken, setToken } from '../api/client'
+import { clearToken, setToken, tryRehydrateSession } from '../api/client'
 
 interface AuthContextValue {
   user: UserProfile | null
@@ -42,10 +42,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return profile
   }, [])
 
-  const loginWithToken = useCallback(async (accessToken: string) => {
-    setToken(accessToken)
-    return refreshUser()
-  }, [refreshUser])
+  const loginWithToken = useCallback(
+    async (accessToken: string) => {
+      setToken(accessToken)
+      return refreshUser()
+    },
+    [refreshUser],
+  )
 
   const login = useCallback(
     async (credentials: LoginRequest) => {
@@ -69,15 +72,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const rehydrate = async () => {
-      if (!getToken()) {
-        setLoading(false)
-        return
-      }
+      let token: string | null = null
+
       try {
-        await refreshUser()
+        token = await tryRehydrateSession()
       } catch {
         clearToken()
         setUser(null)
+        setLoading(false)
+        return
+      }
+
+      if (!token) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        await refreshUser()
+      } catch {
+        // El access token sigue siendo válido, no limpiamos la sesión.
+        // La próxima request que necesite el user volverá a intentar getMe.
       } finally {
         setLoading(false)
       }

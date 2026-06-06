@@ -102,6 +102,22 @@ class JwtServiceTest {
         assertThat(secureInstance.isCookieSecure()).isTrue();
     }
 
+    @Test
+    void generateAccessToken_shouldProduceUniqueTokens_whenCalledInSuccession() {
+        String first = jwtService.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
+        String second = jwtService.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
+
+        assertThat(first).isNotEqualTo(second);
+    }
+
+    @Test
+    void generateRefreshToken_shouldProduceUniqueTokens_whenCalledInSuccession() {
+        String first = jwtService.generateRefreshToken(1L, "user@test.com");
+        String second = jwtService.generateRefreshToken(1L, "user@test.com");
+
+        assertThat(first).isNotEqualTo(second);
+    }
+
     private JwtService buildJwtService(String secret, long accessMs, long refreshMs, boolean secure) {
         JwtService instance = new JwtService();
         ReflectionTestUtils.setField(instance, "secret", secret);

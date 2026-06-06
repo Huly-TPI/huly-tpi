@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class JwtService implements TokenProvider {
@@ -44,6 +45,7 @@ public class JwtService implements TokenProvider {
     public String generateAccessToken(Long userId, String email, UserRole role, UserStatus status) {
         return Jwts.builder()
                 .setSubject(email)
+                .setId(UUID.randomUUID().toString())
                 .claim(CLAIM_USER_ID, userId)
                 .claim(CLAIM_ROLE, role != null ? role.name() : null)
                 .claim(CLAIM_STATUS, status != null ? status.name() : null)
@@ -58,6 +60,7 @@ public class JwtService implements TokenProvider {
     public String generateRefreshToken(Long userId, String email) {
         return Jwts.builder()
                 .setSubject(email)
+                .setId(UUID.randomUUID().toString())
                 .claim(CLAIM_USER_ID, userId)
                 .claim(CLAIM_TYPE, TYPE_REFRESH)
                 .setIssuedAt(new Date())
