@@ -26,6 +26,17 @@ interface AuthContextValue {
   logout: () => Promise<void>
 }
 
+const SESSION_FLAG_KEY = 'huly:has-session'
+
+const hasSessionFlag = (): boolean =>
+  window.localStorage.getItem(SESSION_FLAG_KEY) === '1'
+
+const setSessionFlag = (): void =>
+  window.localStorage.setItem(SESSION_FLAG_KEY, '1')
+
+const clearSessionFlag = (): void =>
+  window.localStorage.removeItem(SESSION_FLAG_KEY)
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 interface AuthProviderProps {
@@ -34,7 +45,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(hasSessionFlag())
 
   const refreshUser = useCallback(async () => {
     const profile = await getMe()
@@ -45,6 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loginWithToken = useCallback(
     async (accessToken: string) => {
       setToken(accessToken)
+      setSessionFlag()
       return refreshUser()
     },
     [refreshUser],
@@ -66,11 +78,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await logoutRequest()
     } finally {
       clearToken()
+      clearSessionFlag()
       setUser(null)
     }
   }, [])
 
   useEffect(() => {
+    if (!hasSessionFlag()) {
+      return
+    }
+
     const rehydrate = async () => {
       let token: string | null = null
 
@@ -78,12 +95,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         token = await tryRehydrateSession()
       } catch {
         clearToken()
+        clearSessionFlag()
         setUser(null)
         setLoading(false)
         return
       }
 
       if (!token) {
+        clearSessionFlag()
         setLoading(false)
         return
       }
@@ -91,6 +110,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         await refreshUser()
       } catch {
+        // El access token sigue válido. La próxima request volverá a intentar.
       } finally {
         setLoading(false)
       }
@@ -99,7 +119,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [refreshUser])
 
   useEffect(() => {
-    const handleExpired = () => setUser(null)
+    const handleExpired = () => {
+      clearSessionFlag()
+      setUser(null)
+    }
     window.addEventListener('auth:expired', handleExpired)
     return () => window.removeEventListener('auth:expired', handleExpired)
   }, [])

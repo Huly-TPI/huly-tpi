@@ -12,7 +12,7 @@ const NAV_LINKS = [
 ] as const
 
 export default function Navbar() {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, loading } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const navRef = useRef<HTMLElement>(null)
@@ -33,9 +33,7 @@ export default function Navbar() {
       ref={navRef}
       className="relative z-50 shrink-0 bg-bosque shadow-md"
     >
-      {/* Barra principal */}
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
-        {/* Logo desde assets */}
         <Link to="/" onClick={closeMenu} className="flex items-center">
           <img
             src={logo}
@@ -44,7 +42,6 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Links — visible solo en desktop */}
         <div className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map(link => (
             <Link
@@ -58,7 +55,9 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          {isAuthenticated && user ? (
+          {loading ? (
+            <AuthSlotPlaceholder />
+          ) : isAuthenticated && user ? (
             <UserMenu name={user.name} />
           ) : (
             <AuthButtons />
@@ -92,7 +91,7 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {!isAuthenticated && (
+          {!loading && !isAuthenticated && (
             <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               <Link
                 to="/login"
@@ -113,6 +112,15 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+  )
+}
+
+function AuthSlotPlaceholder() {
+  return (
+    <div
+      className="hidden h-9 w-36 animate-pulse rounded-full bg-white/10 md:block"
+      aria-hidden="true"
+    />
   )
 }
 
