@@ -1,4 +1,5 @@
 import { SectionCard, CardHeader } from './SectionCard'
+import Button from '../Buttons/Button/Button'
 
 const FLOW_NODE_STYLES: Record<string, { bg: string; border: string; labelColor: string }> = {
   amber:  { bg: 'bg-amber-50',  border: 'border-amber-200',  labelColor: 'text-amber-500' },
@@ -33,9 +34,9 @@ export function FlowBuilderSection() {
       <CardHeader
         title="Constructor de flujos terapéuticos"
         action={
-          <button className="flex items-center gap-1 rounded-xl border border-violeta-claro bg-violeta-claro/40 px-3 py-1.5 text-xs font-semibold text-violeta hover:bg-violeta hover:text-white transition-colors">
+          <Button variant="secondary" size="sm">
             + Nuevo nodo
-          </button>
+          </Button>
         }
       />
       <div className="overflow-x-auto rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4">
@@ -52,9 +53,9 @@ export function FlowBuilderSection() {
               {v}
             </span>
           ))}
-          <button className="rounded-full border border-dashed border-violeta-claro px-2.5 py-1 text-[10px] font-semibold text-violeta hover:bg-violeta-claro/40 transition-colors">
+          <Button variant="tertiary" size="sm">
             + Añadir variable
-          </button>
+          </Button>
         </div>
       </div>
     </SectionCard>

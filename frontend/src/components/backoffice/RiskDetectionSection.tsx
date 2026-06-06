@@ -3,6 +3,7 @@ import { RiskWordResponse, RiskSeverity } from '../../api/chatbot'
 import { SectionCard, CardHeader } from './SectionCard'
 import { RiskWordItem } from './RiskWordItem'
 import { Skeleton } from './Skeleton'
+import Button from '../Buttons/Button/Button'
 
 const ITEM_H = 50
 
@@ -132,30 +133,37 @@ export function RiskDetectionSection({
             <option value="LOW">INFO (Bajo)</option>
           </select>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleAdd}
               disabled={saving || !newWord.trim()}
-              className="flex-1 rounded-xl bg-[#8869AC] py-2 text-xs font-semibold text-white disabled:opacity-40 hover:bg-[#8869AC]/90 transition-colors"
+              isLoading={saving}
+              loadingLabel="Guardando..."
+              className="flex-1"
             >
-              {saving ? 'Guardando...' : 'Guardar'}
-            </button>
-            <button
+              Guardar
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => { setShowForm(false); setNewWord('') }}
-              className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-semibold text-[#4A5568] hover:bg-gray-50"
             >
               Cancelar
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {!showForm && (
-        <button
+        <Button
+          variant="secondary"
+          fullWidth
           onClick={() => setShowForm(true)}
-          className="mt-3 flex w-full items-center justify-center gap-1 rounded-full border border-[#EDF2ED] bg-white py-3 text-sm font-semibold text-[#4A5568] shadow-sm hover:border-[#8869AC] hover:text-[#8869AC] transition-colors"
+          className="mt-3"
         >
           + Nueva frase clave
-        </button>
+        </Button>
       )}
     </SectionCard>
   )

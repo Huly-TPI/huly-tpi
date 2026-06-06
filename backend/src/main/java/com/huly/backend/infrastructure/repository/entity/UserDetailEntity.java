@@ -1,26 +1,11 @@
 package com.huly.backend.infrastructure.repository.entity;
 
+import com.huly.backend.domain.model.enums.SourceAction;
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.Instant;
 import java.time.LocalDate;
-
-import com.huly.backend.domain.model.enums.SourceAction;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "user_detail")
@@ -58,6 +43,9 @@ public class UserDetailEntity {
     @Column(name = "profile_on_boarding_completed")
     private Boolean profileOnBoardingCompleted;
 
+    @Column(name = "onboarding_tutorial_completed", nullable = false)
+    private Boolean onboardingTutorialCompleted;
+
     @Column(name = "avatar_url_2")
     private String avatarUrl2;
 
@@ -73,5 +61,14 @@ public class UserDetailEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "source_action", length = 50)
     private SourceAction sourceAction;
+
+    @Column(name = "onboarding_answer_1")
+    private String onboardingAnswer1;
+
+    @Column(name = "onboarding_answer_2")
+    private String onboardingAnswer2;
+
+    @Column(name = "onboarding_answer_3")
+    private String onboardingAnswer3;
 
 }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { SceneTheme } from '../components/scene/SceneElement/SceneElement'
+import type { SceneTheme } from '../components/Scene/SceneElement/SceneElement'
 
 const THEME_STORAGE_KEY = 'huly:scene-theme'
 

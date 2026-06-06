@@ -2,6 +2,7 @@ package com.huly.backend.presentation.controller;
 
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
 import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
 import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
@@ -16,7 +17,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final LoginUseCase loginUseCase;
+    private final AdminLoginUseCase adminLoginUseCase;
     private final RegisterUseCase registerUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
@@ -40,16 +46,40 @@ public class AuthController {
                 .body(LoginResponse.builder()
                         .accessToken(tokens.getAccessToken())
                         .role(tokens.getRole())
+                        .onBoardingCompleted(tokens.getOnBoardingCompleted())
+                        .build());
+    }
+    @PostMapping("/backoffice/login")
+    public ResponseEntity<LoginResponse> backofficeLogin(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        AuthTokens tokens = adminLoginUseCase.execute(request.getEmail(), request.getPassword());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
+                .body(LoginResponse.builder()
+                        .accessToken(tokens.getAccessToken())
+                        .role(tokens.getRole())
                         .build());
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(
-            @Valid @RequestBody RegisterRequest request
-    ) {
-        registerUseCase.execute(request.getEmail(), request.getPassword(), request.getName());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Usuario registrado correctamente");
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+    AuthTokens tokens = registerUseCase.execute(
+            request.getEmail(),
+            request.getPassword(),
+            request.getName(),
+            request.getBirthDate()
+    );
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
+            .body(LoginResponse.builder()
+                    .accessToken(tokens.getAccessToken())
+                    .role(tokens.getRole())
+                    .onBoardingCompleted(tokens.getOnBoardingCompleted())
+                    .build());
+
     }
 
     @PostMapping("/refresh")

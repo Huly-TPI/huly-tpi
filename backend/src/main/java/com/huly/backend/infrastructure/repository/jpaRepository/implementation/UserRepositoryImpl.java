@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
@@ -40,7 +41,9 @@ public class UserRepositoryImpl implements UserRepository {
             userDetailRepository.save(UserDetailEntity.builder()
                     .appUser(saved)
                     .name(user.getName())
+                    .birth(user.getBirthDate())
                     .createdAt(Instant.now())
+                    .onboardingTutorialCompleted(false)
                     .build());
         }
 
@@ -54,17 +57,28 @@ public class UserRepositoryImpl implements UserRepository {
                 .nickname(nickname)
                 .sourceAction(sourceAction)
                 .createdAt(Instant.now())
+                .onboardingTutorialCompleted(false)
                 .build());
     }
 
     private AppUser toDomain(AppUserEntity entity) {
+        String name = entity.getUserDetails() != null
+                ? entity.getUserDetails().stream()
+                        .map(UserDetailEntity::getName)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null)
+                : null;
+
         return AppUser.builder()
                 .id(entity.getId())
+                .name(name)
                 .email(entity.getEmail())
                 .password(entity.getPassword())
                 .role(entity.getRole())
                 .status(entity.getStatus())
                 .build();
+
     }
 
     private AppUserEntity toEntity(AppUser domain) {

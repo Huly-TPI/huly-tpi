@@ -1,119 +1,100 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { register } from '../../api/auth'
+import { useAuth } from '../../context/auth'
+import { ApiError } from '../../api/apiError'
+import { useAuthForm } from '../../hooks/useAuthForm'
+import { required, validEmail, minLength, maxLength, matchesField, minAge, safeText } from '../../utils/validation'
+import AuthPageLayout from '../../layouts/AuthPageLayout/AuthPageLayout'
+import hulyGreeting from '../../assets/register/huly-greeting.webp'
+import AuthForm from '../../components/AuthForm/AuthForm'
+import type { AuthFormField } from '../../components/AuthForm/AuthForm'
+
+const REGISTER_FIELDS: AuthFormField[] = [
+  { name: 'name', type: 'text', placeholder: 'Nombre' },
+  { name: 'birthDate', type: 'date', placeholder: 'Fecha de nacimiento' },
+  { name: 'email', type: 'email', placeholder: 'Email' },
+  { name: 'password', type: 'password', placeholder: 'Contraseña', showPasswordChecklist: true },
+  { name: 'confirmPassword', type: 'password', placeholder: 'Confirmar contraseña' },
+]
+
+const INITIAL_VALUES = {
+  name: '',
+  birthDate: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+}
+
+const VALIDATION_RULES = {
+  name: [required(), maxLength(50), safeText],
+  birthDate: [required('La fecha de nacimiento es requerida'), minAge(13)],
+  email: [required(), validEmail(), maxLength(100)],
+  password: [required(), minLength(6), maxLength(72)],
+  confirmPassword: [required(), matchesField('password')],
+}
 
 export default function Register() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [name, setName] = useState('')
-    const [lastname, setLastname] = useState('')
-    const [birthDate, setBirthDate] = useState('')
+  const navigate = useNavigate()
+  const { loginWithToken } = useAuth()
+  const { values, errors, handleChange, validateAll, setFieldErrors, getSanitizedValues } = useAuthForm(
+    INITIAL_VALUES,
+    VALIDATION_RULES,
+  )
 
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
-    const today = new Date()
+  const handleSubmit = async () => {
+    if (!validateAll()) return
+    if (!termsAccepted) return
 
-    const maxBirthDate = new Date(
-        today.getFullYear() - 13,
-        today.getMonth(),
-        today.getDate()
-    )
-        .toISOString()
-        .split('T')[0]
+    setLoading(true)
+    setApiError(null)
 
+    try {
+      const sanitized = getSanitizedValues()
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+      const res = await register({
+        name: sanitized.name,
+        birthDate: sanitized.birthDate,
+        email: sanitized.email,
+        password: sanitized.password,
+      })
 
-        setLoading(true)
-        setError(null)
-
-        try {
-            const res = await register({
-                email,
-                password,
-                name,
-                lastname,
-                birthDate,
-            })
-
-            localStorage.setItem('token', res.accessToken)
-
-            window.location.href = '/'
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error inesperado')
-        } finally {
-            setLoading(false)
-        }
+      const profile = await loginWithToken(res.accessToken)
+      navigate(profile.onBoardingCompleted === false ? '/onboarding' : '/')
+    } catch (err) {
+      if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
+        setFieldErrors(err.fieldErrors)
+      } else {
+        setApiError(err instanceof Error ? err.message : 'Error inesperado')
+      }
+      setLoading(false)
     }
+  }
 
-    return (
-        <div style={{ maxWidth: 400, margin: '0 auto' }}>
-            <h2>Registro</h2>
-
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="email">Email</label>
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="Email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-
-                <label htmlFor="password">Password</label>
-                <input
-                    id="password"
-                    type="password"
-                    placeholder="Password"
-                    required
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-
-                <label htmlFor="name">Name</label>
-                <input
-                    id="name"
-                    type="text"
-                    placeholder="Name"
-                    required
-                    autoComplete="given-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-
-                <label htmlFor="lastname">Lastname</label>
-                <input
-                    id="lastname"
-                    type="text"
-                    placeholder="Lastname"
-                    required
-                    autoComplete="family-name"
-                    value={lastname}
-                    onChange={(e) => setLastname(e.target.value)}
-                />
-
-                <label htmlFor="birthDate">Birth date</label>
-                <input
-                id="birthDate"
-                type="date"
-                required
-                min="1900-01-01"
-                max={maxBirthDate}
-                autoComplete="bday"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                />
-
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Registrando...' : 'Registrarse'}
-                </button>
-
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-            </form>
-        </div>
-    )
+  return (
+    <AuthPageLayout reversed characterImage={hulyGreeting}>
+      <AuthForm
+        title="¡Creá tu cuenta!"
+        subtitle="Comenzá tu aventura en el jardín"
+        fields={REGISTER_FIELDS}
+        values={values}
+        errors={errors}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+        loading={loading}
+        submitLabel="Crear cuenta "
+        loadingLabel="Creando tu cuenta..."
+        apiError={apiError}
+        termsAccepted={termsAccepted}
+        onTermsChange={setTermsAccepted}
+        switchText="¿Ya tenés cuenta?"
+        switchLabel="Iniciá sesión"
+        onSwitchMode={() => navigate('/login')}
+      />
+    </AuthPageLayout>
+  )
 }

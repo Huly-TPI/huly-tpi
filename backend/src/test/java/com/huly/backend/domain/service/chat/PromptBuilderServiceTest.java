@@ -1,8 +1,10 @@
 package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.RiskSeverity;
+import com.huly.backend.domain.model.vector.VectorMemory;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -91,5 +93,39 @@ class PromptBuilderServiceTest {
         assertThat(result)
                 .contains("\"suicidio\"").contains("[HIGH]")
                 .contains("\"autolesion\"").contains("[MEDIUM]").contains("daño físico");
+    }
+
+    @Test
+    void buildEmotionalAnalysisPrompt_shouldIncludeStructuredJsonInstructionsAndMemories() {
+        VectorMemory memory = new VectorMemory("mem-1", 1L, null, null, "perdio a su perro", null, 0.9);
+
+        String result = service.buildEmotionalAnalysisPrompt("base", List.of(memory));
+
+        assertThat(result)
+                .contains("ANALISIS EMOCIONAL ESTRUCTURADO")
+                .contains("perdio a su perro")
+                .contains("shouldRecommend")
+                .contains("detectedEmotion")
+                .contains("valence")
+                .contains("arousal")
+                .contains("dominance")
+                .contains("userGoal")
+                .contains("SADNESS");
+    }
+
+    @Test
+    void buildEnrichedPrompt_shouldIncludeChallengeRequestInstructions_whenUserAskedForChallenge() {
+        String result = service.buildEnrichedPrompt(
+                "base",
+                List.of(),
+                List.of(),
+                null,
+                ChatUserIntent.CHALLENGE_REQUEST
+        );
+
+        assertThat(result)
+                .contains("RETO SOLICITADO POR EL USUARIO")
+                .contains("Debes devolver generated_challenge")
+                .contains("Tambien debes presentar ese reto");
     }
 }

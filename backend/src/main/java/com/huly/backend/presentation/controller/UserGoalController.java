@@ -1,10 +1,13 @@
 package com.huly.backend.presentation.controller;
 
 import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
+import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
+import com.huly.backend.presentation.dto.userGoal.AcceptChallengeRequest;
 import com.huly.backend.presentation.dto.userGoal.UserGoalListResponse;
 import com.huly.backend.presentation.dto.userGoal.UserGoalPageResponse;
 import com.huly.backend.presentation.dto.userGoal.UserGoalRequest;
@@ -12,27 +15,49 @@ import com.huly.backend.presentation.dto.userGoal.UserGoalResponse;
 import com.huly.backend.presentation.dto.userGoal.UserGoalUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/user-goals")
 @RequiredArgsConstructor
 public class UserGoalController {
 
+    private final AcceptChallengeUseCase acceptChallengeUseCase;
     private final AddUserGoalUseCase addUserGoalUseCase;
     private final GetUserGoalsByUserUseCase getUserGoalsByUserUseCase;
     private final DeleteUserGoalUseCase deleteUserGoalUseCase;
     private final UpdateUserGoalUseCase updateUserGoalUseCase;
+    private final CompleteUserGoalUseCase completeUserGoalUseCase;
+
+    @PostMapping("/accept")
+    public ResponseEntity<UserGoalResponse> acceptChallenge(@Valid @RequestBody AcceptChallengeRequest request) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        UserGoal created = acceptChallengeUseCase.execute(
+                email,
+                request.title(),
+                request.description(),
+                request.activityId()
+        );
+
+        log.info("Challenge aceptado exitosamente. userGoalId='{}', email='{}'", created.getId(), email);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
+    }
 
     @PostMapping
     public ResponseEntity<UserGoalResponse> add(@Valid @RequestBody UserGoalRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserGoal created = addUserGoalUseCase.execute(
-                request.userId(),
+                email,
                 request.title(),
                 request.description(),
                 request.activityId()
@@ -40,14 +65,14 @@ public class UserGoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/me")
     public ResponseEntity<UserGoalListResponse> listByUser(
-            @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(userId, pageable);
-        Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(userId, pageable);
+        Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(email, pageable);
+        Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(email, pageable);
         return ResponseEntity.ok(new UserGoalListResponse(toPageResponse(completados), toPageResponse(pendientes)));
     }
 
@@ -68,6 +93,12 @@ public class UserGoalController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteUserGoalUseCase.execute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/complete")
+    public ResponseEntity<UserGoalResponse> complete(@PathVariable Long id) {
+        UserGoal completed = completeUserGoalUseCase.execute(id);
+        return ResponseEntity.ok(toResponse(completed));
     }
 
     private UserGoalResponse toResponse(UserGoal userGoal) {

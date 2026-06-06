@@ -1,8 +1,17 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import {BreathingGuide} from '../../components/BreathingGuide';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({
+    requireAuth: (action: () => void) => action(),
+  }),
+}))
+
+vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
+  default: () => null,
+}))
 
 describe('BreathingGuide', () => {
 
