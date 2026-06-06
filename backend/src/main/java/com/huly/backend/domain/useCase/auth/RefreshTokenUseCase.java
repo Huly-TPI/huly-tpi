@@ -25,15 +25,19 @@ public class RefreshTokenUseCase {
     @Transactional
     public AuthTokens execute(String rawToken) {
 
-        if (!tokenProvider.isTokenValid(rawToken)) {
+        if (!tokenProvider.isTokenValid(rawToken) || !tokenProvider.isRefreshToken(rawToken)) {
             throw new UnauthorizedException("Invalid or expired refresh token");
         }
 
         RefreshToken stored = refreshTokenRepository.findByToken(rawToken)
                 .orElseThrow(() -> new UnauthorizedException("Refresh token not found or already used"));
 
-        String email = tokenProvider.extractEmail(rawToken);
-        AppUser user = userRepository.findByEmail(email)
+        if (isExpired(stored)) {
+            refreshTokenRepository.delete(stored);
+            throw new UnauthorizedException("Refresh token expired");
+        }
+
+        AppUser user = userRepository.findByEmail(tokenProvider.extractEmail(rawToken))
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
@@ -47,17 +51,25 @@ public class RefreshTokenUseCase {
         );
         String newRefreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getEmail());
 
-        Instant now = Instant.now();
-        refreshTokenRepository.save(RefreshToken.builder()
-                .userId(user.getId())
-                .token(newRefreshToken)
-                .createdAt(now)
-                .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
-                .build());
+        persistRefreshToken(user.getId(), newRefreshToken);
 
         return AuthTokens.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();
+    }
+
+    private boolean isExpired(RefreshToken token) {
+        return token.getExpiredAt() == null || token.getExpiredAt().isBefore(Instant.now());
+    }
+
+    private void persistRefreshToken(Long userId, String token) {
+        Instant now = Instant.now();
+        refreshTokenRepository.save(RefreshToken.builder()
+                .userId(userId)
+                .token(token)
+                .createdAt(now)
+                .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
+                .build());
     }
 }
