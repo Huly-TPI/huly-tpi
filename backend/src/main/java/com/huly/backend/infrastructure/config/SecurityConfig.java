@@ -36,7 +36,7 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/leads",
                                 "/api/breathing/techniques",
-                                "/api/payment/webhook"
+                                "/api/webhook/mercadopago"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
