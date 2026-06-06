@@ -3,7 +3,7 @@ package com.huly.backend.domain.useCase.onboarding;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.NotFoundException;
+import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

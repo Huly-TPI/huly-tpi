@@ -1,5 +1,7 @@
 package com.huly.backend.exception.customExceptions;
 
+import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
+import com.huly.backend.infrastructure.presentation.exception.customExceptions.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -27,7 +29,7 @@ class UserNotFoundExceptionTest {
     @Test
     void testUserNotFoundExceptionIsNotFoundException() {
         UserNotFoundException exception = new UserNotFoundException("test@example.com");
-        assertInstanceOf(com.huly.backend.exception.NotFoundException.class, exception);
+        assertInstanceOf(NotFoundException.class, exception);
     }
 
     @Test

@@ -1,7 +1,8 @@
 package com.huly.backend.presentation.controller;
 import com.huly.backend.domain.model.Activity;
 import com.huly.backend.domain.model.enums.ActivityType;
-import com.huly.backend.domain.useCase.ListActivitiesUseCase;
+import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
+import com.huly.backend.infrastructure.presentation.controller.ActivityController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;

@@ -1,5 +1,6 @@
 package com.huly.backend.presentation.dto.chat;
 
+import com.huly.backend.infrastructure.presentation.dto.chat.ChatResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

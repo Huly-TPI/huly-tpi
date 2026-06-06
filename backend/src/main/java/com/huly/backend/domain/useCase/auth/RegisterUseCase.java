@@ -6,7 +6,7 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.provider.PasswordHasher;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.ConflictException;
+import com.huly.backend.infrastructure.presentation.exception.ConflictException;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
