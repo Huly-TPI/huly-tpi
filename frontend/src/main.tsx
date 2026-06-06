@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App'
 import { ThemeProvider } from './context/theme'
+import { preloadImages } from './utils/preloadImages'
+
+preloadImages()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
