@@ -20,6 +20,9 @@ interface Phase {
 
 interface BreathingGuideProps {
     techniques?: BreathingTechnique[]
+    hulyNormal?: string
+    hulyInhalando?: string
+    hulyExhalando?: string
 }
 
 function getPhases(technique: BreathingTechnique): Phase[] {
@@ -63,14 +66,13 @@ const DEFAULT_BREATHING_TECHNIQUES: BreathingTechnique[] = [
     },
 ]
 
-export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: BreathingGuideProps) {
+export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, hulyNormal, hulyInhalando, hulyExhalando }: BreathingGuideProps) {
     const { requireAuth } = useAuthGate()
     const [selected, setSelected] = useState<BreathingTechnique | null>(null)
     const [isRunning, setIsRunning] = useState(false)
     const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0)
     const [timeLeft, setTimeLeft] = useState(0)
     const [currentRound, setCurrentRound] = useState(1)
-    const [hoveredId, setHoveredId] = useState<number | null>(null)
     const [isPaused, setIsPaused] = useState(false)
 
     useEffect(() => {
@@ -101,11 +103,29 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
         }
     }, [timeLeft, isRunning, selected, currentPhaseIndex, currentRound, isPaused])
 
+
+  const hulyImage = (() => {
+            if (!isRunning || !selected) return hulyNormal
+            const phases = getPhases(selected)
+            const phaseName = phases[currentPhaseIndex]?.name ?? ''
+            if (/inhalá/i.test(phaseName)) return hulyInhalando ?? hulyNormal
+            if (/exhalá/i.test(phaseName)) return hulyExhalando ?? hulyNormal
+            return hulyNormal
+        })()
+
+        const hulyEl = hulyNormal ? (
+            <div key={`${currentPhaseIndex}-${isRunning}`} className="fixed bottom-8 right-8 w-48 z-20 huly-wind">
+                <img src={hulyImage} className="w-full" alt="Huly" />
+            </div>
+        ) : null
+
     if (selected && isRunning) {
         const phases = getPhases(selected)
         const currentPhase = phases[currentPhaseIndex]
+    
         return (
             <div className="flex flex-col items-center justify-center w-full relative">
+                {hulyEl}  
                 <button
                     onClick={() => {
                         setSelected(null)
@@ -141,6 +161,8 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                 >
                     {isPaused ? 'Reanudar' : 'Pausar'}
                 </button>
+
+            
             </div>
         )
     }
@@ -148,6 +170,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
     if (selected) {
         return (
             <div className="flex flex-col items-center justify-center w-full">
+                  {hulyEl}
                 <button
                     onClick={() => setSelected(null)}
                     className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors"
@@ -175,6 +198,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
 
     return (
         <div className="flex flex-col items-center justify-center w-full">
+            {hulyEl} 
             <BackButton to="/" />
             <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
                 <h2 className="text-xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
@@ -185,8 +209,6 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                     {techniques.map(technique => (
                         <div
                             key={technique.id}
-                            onMouseEnter={() => setHoveredId(technique.id)}
-                            onMouseLeave={() => setHoveredId(null)}
                             className="relative flex flex-col"
                         >
                             <button
@@ -195,13 +217,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                             >
                                 {technique.name}
                             </button>
-                            {hoveredId === technique.id && (
-                                <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md">
-                                    <p className="text-xs text-gray-500 mt-1 px-3 text-center">
-                                        {technique.description}
-                                    </p>
-                                </div>
-                            )}
+                        
                         </div>
                     ))}
                 </div>
