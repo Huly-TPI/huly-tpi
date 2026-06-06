@@ -91,8 +91,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         await refreshUser()
       } catch {
-        // El access token sigue siendo válido, no limpiamos la sesión.
-        // La próxima request que necesite el user volverá a intentar getMe.
       } finally {
         setLoading(false)
       }
