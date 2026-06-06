@@ -56,8 +56,8 @@ class RefreshTokenUseCaseTest {
     void execute_shouldRotateTokenAndReturnNewPair_whenTokenIsValid() {
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("user@huly.com");
-        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(activeUser));
         when(tokenProvider.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("newAccess");
         when(tokenProvider.generateRefreshToken(1L, "user@huly.com")).thenReturn("newRefresh");
         when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
@@ -118,11 +118,22 @@ class RefreshTokenUseCaseTest {
     }
 
     @Test
+    void execute_shouldThrowUnauthorized_whenUserIdMissingFromToken() {
+        mockValidRefreshToken("noUserIdToken");
+        when(refreshTokenRepository.findByToken("noUserIdToken")).thenReturn(Optional.of(storedToken));
+        when(tokenProvider.extractUserId("noUserIdToken")).thenReturn(null);
+
+        assertThatThrownBy(() -> refreshTokenUseCase.execute("noUserIdToken"))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Invalid refresh token");
+    }
+
+    @Test
     void execute_shouldThrowUnauthorized_whenUserNotFound() {
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("ghost@huly.com");
-        when(userRepository.findByEmail("ghost@huly.com")).thenReturn(Optional.empty());
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(999L);
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
                 .isInstanceOf(UnauthorizedException.class)
@@ -138,8 +149,8 @@ class RefreshTokenUseCaseTest {
 
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("user@huly.com");
-        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(inactiveUser));
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(inactiveUser));
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
                 .isInstanceOf(UnauthorizedException.class)
@@ -150,8 +161,8 @@ class RefreshTokenUseCaseTest {
     void execute_shouldSaveNewRefreshTokenWithCorrectData() {
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("user@huly.com");
-        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(activeUser));
         when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("newAccess");
         when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("newRefresh");
         when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);

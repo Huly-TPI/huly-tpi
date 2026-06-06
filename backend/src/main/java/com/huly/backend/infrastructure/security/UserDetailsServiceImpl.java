@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +13,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsWithIdService {
 
     private final AppUserRepository appUserRepository;
 
@@ -22,7 +21,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         AppUserEntity user = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        return toUserDetails(user);
+    }
 
+    public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
+        AppUserEntity user = appUserRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + id));
+        return toUserDetails(user);
+    }
+
+    private UserDetails toUserDetails(AppUserEntity user) {
         String authority = user.getRole() != null
                 ? "ROLE_" + user.getRole().name()
                 : "ROLE_USER";

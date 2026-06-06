@@ -14,7 +14,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
 
@@ -25,7 +24,7 @@ import static org.mockito.Mockito.*;
 class JwtAuthFilterTest {
 
     @Mock private JwtService jwtService;
-    @Mock private UserDetailsService userDetailsService;
+    @Mock private UserDetailsWithIdService userDetailsService;
 
     @InjectMocks private JwtAuthFilter jwtAuthFilter;
 
@@ -98,8 +97,8 @@ class JwtAuthFilterTest {
         request.addHeader("Authorization", "Bearer validToken");
         when(jwtService.isTokenValid("validToken")).thenReturn(true);
         when(jwtService.isAccessToken("validToken")).thenReturn(true);
-        when(jwtService.extractEmail("validToken")).thenReturn("user@huly.com");
-        when(userDetailsService.loadUserByUsername("user@huly.com")).thenReturn(userDetails);
+        when(jwtService.extractUserId("validToken")).thenReturn(1L);
+        when(userDetailsService.loadUserById(1L)).thenReturn(userDetails);
 
         jwtAuthFilter.doFilter(request, response, filterChain);
 
@@ -118,7 +117,6 @@ class JwtAuthFilterTest {
         request.addHeader("Authorization", "Bearer validToken");
         when(jwtService.isTokenValid("validToken")).thenReturn(true);
         when(jwtService.isAccessToken("validToken")).thenReturn(true);
-        when(jwtService.extractEmail("validToken")).thenReturn("user@huly.com");
 
         jwtAuthFilter.doFilter(request, response, filterChain);
 

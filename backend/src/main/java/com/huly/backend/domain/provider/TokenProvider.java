@@ -10,6 +10,7 @@ public interface TokenProvider {
     boolean isAccessToken(String token);
     boolean isRefreshToken(String token);
     String extractEmail(String token);
+    Long extractUserId(String token);
     long getRefreshTokenMaxAgeSecs();
     boolean isCookieSecure();
 }

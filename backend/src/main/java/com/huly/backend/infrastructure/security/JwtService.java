@@ -106,6 +106,7 @@ public class JwtService implements TokenProvider {
         return cookieSecure;
     }
 
+    @Override
     public Long extractUserId(String token) {
         return extractClaims(token).get(CLAIM_USER_ID, Long.class);
     }

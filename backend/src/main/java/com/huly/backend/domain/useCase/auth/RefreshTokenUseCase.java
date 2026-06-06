@@ -37,7 +37,12 @@ public class RefreshTokenUseCase {
             throw new UnauthorizedException("Refresh token expired");
         }
 
-        AppUser user = userRepository.findByEmail(tokenProvider.extractEmail(rawToken))
+        Long userId = tokenProvider.extractUserId(rawToken);
+        if (userId == null) {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
+
+        AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
