@@ -14,8 +14,8 @@ public class GetCurrentUserUseCase {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public AppUser execute(String email) {
-        return userRepository.findByEmail(email)
+    public AppUser execute(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
     }
 }

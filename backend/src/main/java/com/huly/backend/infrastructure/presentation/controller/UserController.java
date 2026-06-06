@@ -29,7 +29,8 @@ public class UserController {
             throw new UnauthorizedException("Not authenticated");
         }
 
-        AppUser user = getCurrentUserUseCase.execute(principal.getUsername());
+        Long userId = Long.parseLong(principal.getUsername());
+        AppUser user = getCurrentUserUseCase.execute(userId);
         Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
         Boolean onboardingTutorialCompleted = userDetailDomainRepository.findOnboardingTutorialCompleted(user.getId()).orElse(false);
 

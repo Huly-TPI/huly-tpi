@@ -24,6 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsWithIdService {
         return toUserDetails(user);
     }
 
+    @Override
     public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
         AppUserEntity user = appUserRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + id));
@@ -36,7 +37,7 @@ public class UserDetailsServiceImpl implements UserDetailsWithIdService {
                 : "ROLE_USER";
 
         return new User(
-                user.getEmail(),
+                String.valueOf(user.getId()),
                 user.getPassword(),
                 List.of(new SimpleGrantedAuthority(authority))
         );
