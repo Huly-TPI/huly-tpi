@@ -2,37 +2,24 @@ import { useEffect, useState } from 'react'
 import { BreathingGuide, type BreathingTechnique } from '../../components/BreathingGuide'
 import { getBreathingTechniques } from '../../api/breathing'
 import './Breathing.css'
-import breathingBackground from '../../assets/breathing/breathing-background.webp'
-import cloudV1 from '../../assets/breathing/cloud-v1.webp'
-import cloudV2 from '../../assets/breathing/cloud-v2.webp'
-import cloudHuly from '../../assets/breathing/cloud-huly.webp'
-import cloudHulyInhalando from '../../assets/breathing/cloud-huly-inhalando.webp'
-import cloudHulyExhalando from '../../assets/breathing/cloud-huly-exhalando.webp'
+import dayBackground from '../../assets/garden/light-theme/background/day-background.webp'
 
 
 export default function Breathing() {
   const [techniques, setTechniques] = useState<BreathingTechnique[]>([])
-  
+
   useEffect(() => {
-    getBreathingTechniques().then(setTechniques).catch(console.error)
+    getBreathingTechniques()
+      .then(setTechniques)
+      .catch(console.error)
   }, [])
 
-  return ( 
-    <div className="relative flex items-center justify-center h-full overflow-hidden"
-       style={{ backgroundImage: `url(${breathingBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }} >
-        <img src={cloudV1} alt="" className="cloud cloud-1" />
-        <img src={cloudV2} alt="" className="cloud cloud-2" />
-        <img src={cloudV1} alt="" className="cloud cloud-3" />
-        <img src={cloudV2} alt="" className="cloud cloud-4" />
-        
-        <div className="relative z-10">
-         <BreathingGuide
-          techniques={techniques}
-          hulyNormal={cloudHuly}
-          hulyInhalando={cloudHulyInhalando}
-          hulyExhalando={cloudHulyExhalando}
-        />
-      </div>
+  return (
+    <div
+      className="flex items-center justify-center h-full"
+      style={{ backgroundImage: `url(${dayBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+    >
+      <BreathingGuide techniques={techniques} />
     </div>
   )
 }
