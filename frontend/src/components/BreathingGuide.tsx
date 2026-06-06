@@ -114,7 +114,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
         })()
 
         const hulyEl = hulyNormal ? (
-            <div key={`${currentPhaseIndex}-${isRunning}`} className="fixed bottom-8 right-8 w-48 z-20 huly-wind">
+            <div key={`${currentPhaseIndex}-${isRunning}`} className="fixed top-20 right-3 w-20 sm:top-auto sm:bottom-8 sm:right-8 sm:w-48 z-20 huly-wind">
                 <img src={hulyImage} className="w-full" alt="Huly" />
             </div>
         ) : null
@@ -139,11 +139,11 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
                     ← Volver
                 </button>
                 <div className="relative flex items-center justify-center">
-                    <div className="absolute rounded-full bg-white/30 w-80 h-80" />
+                    <div className="absolute rounded-full bg-white/30 w-64 h-64 sm:w-80 sm:h-80" />
                     <div
                         key={`${currentPhaseIndex}-${currentRound}`}
                         data-testid="breathing-circle"
-                        className={`flex flex-col items-center justify-center rounded-full bg-white shadow-xl w-64 h-64 ${getPhaseClass(currentPhase.name)}`}
+                        className={`flex flex-col items-center justify-center rounded-full bg-white shadow-xl w-52 h-52 sm:w-64 sm:h-64 ${getPhaseClass(currentPhase.name)}`}
                         style={{
                             '--phase-duration': `${currentPhase.duration}s`,
                             animationPlayState: isPaused ? 'paused' : 'running',
@@ -152,7 +152,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
                         <p className="text-sm font-semibold tracking-widest text-gray-500 uppercase">
                             {currentPhase.name}
                         </p>
-                        <p className="text-6xl font-light text-gray-800">{timeLeft}</p>
+                        <p className="text-5xl sm:text-6xl font-light text-gray-800">{timeLeft}</p>
                     </div>
                 </div>
                 <button
@@ -178,7 +178,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
                     ← Volver
                 </button>
 
-                <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
+                <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96">
                     <h2 className="text-xl font-bold text-gray-800 mb-1">{selected.name}</h2>
                     <p className="text-sm text-gray-500 mb-4">{selected.description}</p>
                     <button
@@ -200,9 +200,9 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
         <div className="flex flex-col items-center justify-center w-full">
             {hulyEl} 
             <BackButton to="/" />
-            <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
-                <h2 className="text-xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
-                <p className="text-sm text-gray-500 mb-4">
+            <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96">
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
+                <p className="text-sm lg:text-base text-gray-500 mb-4">
                     Tómate un momento, Elegí un método y deja que el círculo acompañe tu respiración
                 </p>
                 <div className="flex flex-col gap-3">
@@ -213,7 +213,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
                         >
                             <button
                                 onClick={() => requireAuth(() => setSelected(technique))}
-                                className="w-full py-3 rounded-full border border-violeta text-violeta hover:bg-violeta-claro transition-colors font-medium"
+                                className="w-full py-3 lg:py-4 rounded-full border border-violeta text-violeta hover:bg-violeta-claro transition-colors font-medium"
                             >
                                 {technique.name}
                             </button>
