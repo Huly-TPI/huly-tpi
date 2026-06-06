@@ -1,6 +1,7 @@
 package com.huly.backend.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.infrastructure.presentation.exception.ErrorResponse;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

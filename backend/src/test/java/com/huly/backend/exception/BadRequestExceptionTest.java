@@ -1,5 +1,6 @@
 package com.huly.backend.exception;
 
+import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

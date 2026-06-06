@@ -1,6 +1,7 @@
 package com.huly.backend.presentation.controller;
 import com.huly.backend.domain.model.BreathingTechnique;
 import com.huly.backend.domain.useCase.BreathingSession.GetBreathingTechniquesUseCase;
+import com.huly.backend.infrastructure.presentation.controller.BreathingController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;

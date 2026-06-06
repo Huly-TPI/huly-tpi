@@ -5,7 +5,7 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.NotFoundException;
+import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

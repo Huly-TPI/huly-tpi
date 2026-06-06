@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.exception.NotFoundException;
+import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
 import org.junit.jupiter.api.Test;
