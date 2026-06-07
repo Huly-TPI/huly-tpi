@@ -23,6 +23,8 @@ vi.mock('../../api/client', () => ({
   tryRehydrateSession: () => mockTryRehydrateSession(),
 }))
 
+const SESSION_FLAG = 'huly:has-session'
+
 const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>
 )
@@ -37,6 +39,7 @@ const sampleUser = {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
   })
 
   it('arranca sin usuario y termina loading si no hay cookie de refresh', async () => {
@@ -50,6 +53,7 @@ describe('AuthContext', () => {
   })
 
   it('rehidrata el usuario si la cookie de refresh es válida', async () => {
+    localStorage.setItem(SESSION_FLAG, '1')
     mockTryRehydrateSession.mockResolvedValue('rehydrated-token')
     mockGetMe.mockResolvedValue(sampleUser)
     const { result } = renderHook(() => useAuth(), { wrapper })
@@ -60,6 +64,7 @@ describe('AuthContext', () => {
   })
 
   it('mantiene el token si tryRehydrateSession funciona pero /me falla transitoriamente', async () => {
+    localStorage.setItem(SESSION_FLAG, '1')
     mockTryRehydrateSession.mockResolvedValue('rehydrated-token')
     mockGetMe.mockRejectedValue(new Error('503'))
     const { result } = renderHook(() => useAuth(), { wrapper })
@@ -70,6 +75,7 @@ describe('AuthContext', () => {
   })
 
   it('limpia la sesión si tryRehydrateSession lanza una excepción', async () => {
+    localStorage.setItem(SESSION_FLAG, '1')
     mockTryRehydrateSession.mockRejectedValue(new Error('network down'))
     const { result } = renderHook(() => useAuth(), { wrapper })
 
@@ -96,6 +102,7 @@ describe('AuthContext', () => {
   })
 
   it('refreshUser vuelve a pedir /me y actualiza el usuario', async () => {
+    localStorage.setItem(SESSION_FLAG, '1')
     mockTryRehydrateSession.mockResolvedValue('rehydrated-token')
     mockGetMe
       .mockResolvedValueOnce(sampleUser)
@@ -141,6 +148,7 @@ describe('AuthContext', () => {
   })
 
   it('logout limpia el token y el usuario', async () => {
+    localStorage.setItem(SESSION_FLAG, '1')
     mockTryRehydrateSession.mockResolvedValue('rehydrated-token')
     mockGetMe.mockResolvedValue(sampleUser)
     mockLogout.mockResolvedValue(undefined)
@@ -158,6 +166,7 @@ describe('AuthContext', () => {
   })
 
   it('el evento auth:expired limpia el usuario', async () => {
+    localStorage.setItem(SESSION_FLAG, '1')
     mockTryRehydrateSession.mockResolvedValue('rehydrated-token')
     mockGetMe.mockResolvedValue(sampleUser)
     const { result } = renderHook(() => useAuth(), { wrapper })
