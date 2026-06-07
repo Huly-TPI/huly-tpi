@@ -19,6 +19,16 @@
       "name": "jwt.cookie.secure",
       "type": "java.lang.Boolean",
       "description": "Whether the refresh token cookie should be flagged as Secure (HTTPS only). Set true in production."
+    },
+    {
+      "name": "frontend.url",
+      "type": "java.lang.String",
+      "description": "Frontend origin URL allowed by CORS."
+    },
+    {
+      "name": "landing.url",
+      "type": "java.lang.String",
+      "description": "Landing page origin URL allowed by CORS."
     }
   ]
 }

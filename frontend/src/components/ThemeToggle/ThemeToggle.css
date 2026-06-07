@@ -14,6 +14,12 @@
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
+.theme-toggle--compact {
+  width: 4.25rem;
+  height: 2.5rem;
+  padding: 0.18rem;
+}
+
 .theme-toggle:hover {
   transform: translateY(-1px);
 }
@@ -28,6 +34,10 @@
   inset: 0.3rem;
   overflow: hidden;
   border-radius: 999px;
+}
+
+.theme-toggle--compact .theme-toggle__track {
+  inset: 0.18rem;
 }
 
 .theme-toggle__clouds {
@@ -125,6 +135,11 @@
   transition: transform 320ms ease, background-color 220ms ease;
 }
 
+.theme-toggle--compact .theme-toggle__thumb {
+  width: 2.06rem;
+  height: 2.06rem;
+}
+
 .theme-toggle__crater {
   position: absolute;
   border-radius: 999px;
@@ -135,6 +150,10 @@
 .theme-toggle__crater--one { top: 0.58rem; left: 0.72rem; width: 1.1rem; height: 1.1rem; }
 .theme-toggle__crater--two { top: 1.64rem; left: 2.1rem; width: 0.62rem; height: 0.62rem; }
 .theme-toggle__crater--three { top: 0.38rem; left: 2.18rem; width: 0.5rem; height: 0.5rem; }
+
+.theme-toggle--compact .theme-toggle__crater--one { top: 0.34rem; left: 0.42rem; width: 0.62rem; height: 0.62rem; }
+.theme-toggle--compact .theme-toggle__crater--two { top: 0.97rem; left: 1.24rem; width: 0.34rem; height: 0.34rem; }
+.theme-toggle--compact .theme-toggle__crater--three { top: 0.22rem; left: 1.3rem; width: 0.27rem; height: 0.27rem; }
 
 .theme-toggle--light {
   background: linear-gradient(180deg, #6eaee3 0%, #4e9bd7 100%);
@@ -183,6 +202,10 @@
 .theme-toggle--dark .theme-toggle__thumb {
   background: #bcc2ce;
   transform: translateX(2.9rem);
+}
+
+.theme-toggle--compact.theme-toggle--dark .theme-toggle__thumb {
+  transform: translateX(1.55rem);
 }
 
 .theme-toggle--dark .theme-toggle__crater {

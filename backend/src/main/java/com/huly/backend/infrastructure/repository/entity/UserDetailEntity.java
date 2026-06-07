@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.repository.entity;
 
 import com.huly.backend.domain.model.enums.SourceAction;
+import com.huly.backend.domain.model.enums.ThemePreference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -70,5 +71,9 @@ public class UserDetailEntity {
 
     @Column(name = "onboarding_answer_3")
     private String onboardingAnswer3;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "theme_preference", nullable = false, length = 20)
+    private ThemePreference themePreference;
 
 }

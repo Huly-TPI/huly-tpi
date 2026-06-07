@@ -9,7 +9,7 @@ interface ChatbotComposerProps {
 
 export default function ChatbotComposer({ input, isSending, onInputChange, onSend }: ChatbotComposerProps) {
   return (
-    <footer className="border-t border-gray-100 px-5 py-5">
+    <footer className="border-t border-[var(--border-soft)] px-5 py-5">
       <div className="flex items-end gap-2">
         <textarea
           rows={2}
@@ -23,7 +23,7 @@ export default function ChatbotComposer({ input, isSending, onInputChange, onSen
             }
           }}
           disabled={isSending}
-          className="min-h-[44px] w-full flex-1 resize-none rounded-xl border border-gray-200 px-3 py-3 text-sm outline-none focus:border-violeta md:min-h-[52px]"
+          className="min-h-[44px] w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta md:min-h-[52px]"
         />
         <Button
           type="button"

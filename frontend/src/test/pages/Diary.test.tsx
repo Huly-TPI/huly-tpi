@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { ThemeProvider } from '../../context/theme'
 
 vi.mock('../../assets/garden/light-theme/cloud.webp', () => ({ default: 'cloud.webp' }))
 vi.mock('../../assets/brand/color-logo.webp', () => ({ default: 'color-logo.webp' }))
@@ -51,9 +52,11 @@ describe('Diary', () => {
     if (consent !== null) localStorage.setItem(CONSENT_KEY, consent)
     const user = userEvent.setup()
     render(
-      <MemoryRouter>
-        <Diary />
-      </MemoryRouter>
+      <ThemeProvider>
+        <MemoryRouter>
+          <Diary />
+        </MemoryRouter>
+      </ThemeProvider>
     )
     return { user }
   }
