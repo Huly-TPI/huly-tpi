@@ -24,6 +24,7 @@ export interface UserProfile {
   role: string
   onBoardingCompleted?: boolean
   onboardingTutorialCompleted?: boolean
+  themePreference: 'LIGHT' | 'DARK'
 }
 
 export const getMe = () => {
@@ -44,4 +45,8 @@ export const backofficeLogin = (data: LoginRequest) => {
 
 export const logout = () => {
   return api.post<void>('/auth/logout', {})
+}
+
+export const updateThemePreference = (themePreference: UserProfile['themePreference']) => {
+  return api.put<void>('/users/me/theme', { themePreference })
 }

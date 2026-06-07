@@ -10,8 +10,49 @@ body,
   height: 100%;
 }
 
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+:root {
+  --app-bg: #e9f1ea;
+  --app-fg: #1f2937;
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-tertiary: rgba(255, 255, 255, 0.82);
+  --surface-accent: rgba(209, 202, 239, 0.3);
+  --border-soft: #e5e7eb;
+  --border-strong: rgba(136, 105, 172, 0.36);
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --overlay-strong: rgba(15, 23, 42, 0.58);
+}
+
+html.dark {
+  --app-bg: #09111f;
+  --app-fg: #e5eef7;
+  --surface-primary: #172033;
+  --surface-secondary: #111827;
+  --surface-tertiary: rgba(23, 32, 51, 0.84);
+  --surface-accent: rgba(136, 105, 172, 0.2);
+  --border-soft: #334155;
+  --border-strong: rgba(172, 204, 164, 0.34);
+  --text-primary: #e5eef7;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --overlay-strong: rgba(2, 6, 23, 0.72);
+}
+
 body {
   margin: 0;
   font-family: 'Nunito', sans-serif;
+  background: var(--app-bg);
+  color: var(--app-fg);
+  transition: background-color 180ms ease, color 180ms ease;
 }
 

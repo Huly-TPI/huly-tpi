@@ -20,9 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 public class CorsFilter extends OncePerRequestFilter {
 
     private final String frontendUrl;
+    private final String landingUrl;
 
-    public CorsFilter(@Value("${frontend.url}") String frontendUrl) {
+    public CorsFilter(
+            @Value("${frontend.url}") String frontendUrl,
+            @Value("${landing.url}") String landingUrl) {
         this.frontendUrl = frontendUrl;
+        this.landingUrl = landingUrl;
     }
 
     @Override
@@ -44,7 +48,7 @@ public class CorsFilter extends OncePerRequestFilter {
             return;
         }
         // Con Origin pero no coincide → bloquear
-        if (!origin.equals(frontendUrl)) {
+        if (!origin.equals(frontendUrl) && !origin.equals(landingUrl)) {
             log.warn("CORS bloqueado para origin: {}", origin);
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return;
@@ -52,7 +56,7 @@ public class CorsFilter extends OncePerRequestFilter {
 
         String requestHeader = httpRequest.getHeader("Access-Control-Request-Headers");
 
-        httpResponse.setHeader("Access-Control-Allow-Origin", frontendUrl);
+        httpResponse.setHeader("Access-Control-Allow-Origin", origin);
         httpResponse.addHeader("Access-Control-Allow-Credentials", "true");
         httpResponse.addHeader("Access-Control-Allow-Methods", "GET, PUT, POST, PATCH, OPTIONS, DELETE");
         httpResponse.addHeader("Access-Control-Allow-Headers", requestHeader != null ? requestHeader : "Authorization, Content-Type");

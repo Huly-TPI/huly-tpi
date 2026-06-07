@@ -9,6 +9,12 @@ vi.mock('../../context/authGate', () => ({
   }),
 }))
 
+vi.mock('../../context/theme', () => ({
+  useTheme: () => ({
+    theme: 'light',
+  }),
+}))
+
 vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
   default: () => null,
 }))
