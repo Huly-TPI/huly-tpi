@@ -6,7 +6,7 @@ import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
-import com.huly.backend.domain.useCase.emotionalEvent.GetEmotionalRecommendationsUseCase;
+import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import com.huly.backend.infrastructure.presentation.controller.EmotionalRecommendationController;
 import com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation.EmotionalRecommendationRequest;
 import org.junit.jupiter.api.BeforeEach;
