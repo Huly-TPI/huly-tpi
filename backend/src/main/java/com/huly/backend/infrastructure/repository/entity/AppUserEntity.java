@@ -34,6 +34,9 @@ public class AppUserEntity {
     @Column(name = "status", length = 50)
     private UserStatus status;
 
+    @Column(name = "coins", nullable = false)
+    private Integer coins = 0;
+
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDetailEntity> userDetails;
 
