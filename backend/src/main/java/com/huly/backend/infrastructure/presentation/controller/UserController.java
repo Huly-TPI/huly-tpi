@@ -1,10 +1,9 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final GetCurrentUserUseCase getCurrentUserUseCase;
-    private final UserDetailDomainRepository userDetailDomainRepository;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -30,17 +28,15 @@ public class UserController {
         }
 
         Long userId = Long.parseLong(principal.getUsername());
-        AppUser user = getCurrentUserUseCase.execute(userId);
-        Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
-        Boolean onboardingTutorialCompleted = userDetailDomainRepository.findOnboardingTutorialCompleted(user.getId()).orElse(false);
+        UserProfile profile = getCurrentUserUseCase.execute(userId);
 
         return ResponseEntity.ok(UserProfileResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .onBoardingCompleted(onBoardingCompleted)
-                .onboardingTutorialCompleted(onboardingTutorialCompleted)
+                .id(profile.user().getId())
+                .name(profile.user().getName())
+                .email(profile.user().getEmail())
+                .role(profile.user().getRole())
+                .onBoardingCompleted(profile.onBoardingCompleted())
+                .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
                 .build());
     }
 }
