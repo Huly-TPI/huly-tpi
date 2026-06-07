@@ -16,10 +16,10 @@ export default function ChatbotChallengeCard({
   onReject,
 }: ChatbotChallengeCardProps) {
   return (
-    <div className="rounded-xl border border-menta bg-fondo p-3">
+    <div className="rounded-xl border border-menta/60 bg-[var(--surface-accent)] p-3">
       <p className="text-xs font-bold uppercase tracking-wide text-bosque">Reto propuesto</p>
-      <p className="mt-1 text-sm font-semibold text-gray-800">{title}</p>
-      <p className="mt-1 text-xs text-gray-600">{description}</p>
+      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{title}</p>
+      <p className="mt-1 text-xs text-[var(--text-secondary)]">{description}</p>
 
       {!decision && (
         <div className="mt-2 flex gap-2">
@@ -33,7 +33,7 @@ export default function ChatbotChallengeCard({
       )}
 
       {decision && (
-        <p className="mt-2 text-xs font-semibold text-bosque">
+        <p className="mt-2 text-xs font-semibold text-bosque dark:text-menta">
           {decision === 'accepted' ? 'Reto aceptado.' : 'Reto rechazado.'}
         </p>
       )}

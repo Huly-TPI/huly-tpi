@@ -16,7 +16,6 @@ import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-plant.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
-import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useTheme } from '../../context/theme'
@@ -54,12 +53,12 @@ const createCloudElement = (
 })
 
 const cloudElements: SceneElementDefinition[] = [
-  createCloudElement('cloud-top-left', 'left-[7%] top-[5.5%] z-10 w-[11%] md:left-[8%] md:top-[2%] md:w-[10%] min-[1400px]:top-[1.2%]'),
-  createCloudElement('cloud-upper-left', 'left-[28%] top-[3.8%] z-10 w-[25%] md:left-[22%] md:top-[8.5%] md:w-[15%] min-[1400px]:top-[7.2%]'),
-  createCloudElement('cloud-center', 'left-[60%] top-[12%] z-10 w-[16%] md:left-[46.8%] md:top-[6.8%] md:w-[22.5%] min-[1400px]:top-[5.2%]'),
-  createCloudElement('cloud-right', 'left-[82%] top-[4.8%] z-10 w-[11%] md:left-[82.6%] md:top-[9.8%] md:w-[8.5%] min-[1400px]:top-[8.8%]'),
-  createCloudElement('cloud-bottom-left', 'left-[15%] top-[16.5%] z-10 w-[22%] md:hidden md:left-[-3.2%] md:top-[30%] md:z-10 md:w-[7.8%]', 'top-full mt-1'),
-  createCloudElement('cloud-bottom-right', 'left-[82%] top-[23%] z-10 w-[11%] md:hidden md:left-[88.2%] md:top-[39.5%] md:z-10 md:w-[11.2%]', 'top-full mt-1'),
+  createCloudElement('cloud-top-left', 'left-[7%] top-[5.5%] z-10 w-[10%] md:left-[8%] md:top-[2%] md:w-[8.8%] min-[1400px]:top-[1.2%]'),
+  createCloudElement('cloud-upper-left', 'left-[28%] top-[3.8%] z-10 w-[22%] md:left-[22%] md:top-[8.5%] md:w-[13.2%] min-[1400px]:top-[7.2%]'),
+  createCloudElement('cloud-center', 'left-[60%] top-[12%] z-10 w-[14.5%] md:left-[46.8%] md:top-[6.8%] md:w-[19.8%] min-[1400px]:top-[5.2%]'),
+  createCloudElement('cloud-right', 'left-[82%] top-[4.8%] z-10 w-[10%] md:left-[82.6%] md:top-[9.8%] md:w-[7.5%] min-[1400px]:top-[8.8%]'),
+  createCloudElement('cloud-bottom-left', 'left-[15%] top-[16.5%] z-10 w-[20%] md:hidden md:left-[-3.2%] md:top-[30%] md:z-10 md:w-[7%]', 'top-full mt-1'),
+  createCloudElement('cloud-bottom-right', 'left-[82%] top-[23%] z-10 w-[10%] md:hidden md:left-[88.2%] md:top-[39.5%] md:z-10 md:w-[10%]', 'top-full mt-1'),
 ]
 
 const gardenElements: SceneElementDefinition[] = [
@@ -193,10 +192,6 @@ export default function Home() {
   return (
     <main className={`garden-page ${sceneTheme === 'dark' ? 'garden-page--dark' : ''}`}>
       <section className="garden-scene">
-        <div className="garden-scene__theme-toggle">
-          <ThemeToggle />
-        </div>
-
         <img
           src={dayBackgroundImage}
           alt={sceneTheme === 'light' ? 'Fondo del jardin' : ''}

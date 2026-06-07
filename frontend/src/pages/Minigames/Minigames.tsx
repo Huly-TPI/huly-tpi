@@ -1,17 +1,26 @@
 import { useEffect } from 'react'
 import backgroundImage from '../../assets/minigames/light-theme/background/Background-minigames.webp'
 import mobileBackgroundImage from '../../assets/minigames/light-theme/background/mobile/background-minigames-mobile.webp'
+import darkBackgroundImage from '../../assets/minigames/dark-theme/background/Background-minigames.webp'
+import darkMobileBackgroundImage from '../../assets/minigames/dark-theme/background/mobile/background-minigames-mobile.webp'
 
 import fishImage from '../../assets/minigames/light-theme/fish.webp'
 import easelImage from '../../assets/minigames/light-theme/paddle.webp'
 import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
 import sandImage from '../../assets/minigames/light-theme/sand.webp'
+import darkFishImage from '../../assets/minigames/dark-theme/fish.webp'
+import darkEaselImage from '../../assets/minigames/dark-theme/paddle.webp'
+import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
+import darkSandImage from '../../assets/minigames/dark-theme/sand.webp'
 import cloudImage from '../../assets/garden/light-theme/cloud.webp'
+import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
+import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import './Minigames.css'
 import BackButton from '../../components/Buttons/BackButton/BackButton'
+import { useTheme } from '../../context/theme'
 
 const FULL_WIDTH = 'w-full'
 const DEFAULT_HOTSPOT = 'left-[2%] top-[4%] h-[92%] w-[96%]'
@@ -27,7 +36,7 @@ const createCloudElement = (
     id,
     title: 'Nubes que pasan',
     imageAlt: 'Nubes que pasan',
-    image: { light: cloudImage },
+    image: { light: cloudImage, dark: darkCloudImage },
     placementClassName,
     imageClassName: FULL_WIDTH,
     hotspotClassName: CLOUD_HOTSPOT,
@@ -47,7 +56,7 @@ const minigameElements: SceneElementDefinition[] = [
         id: 'bubbles',
         title: 'Burbujas',
         imageAlt: 'Pez en el lago minijuego de burbujas',
-        image: { light: fishImage },
+        image: { light: fishImage, dark: darkFishImage },
         placementClassName: 'left-[1%] top-[61%] z-20 w-[36%] md:left-[19%] md:top-[64%] md:w-[19%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
@@ -59,7 +68,7 @@ const minigameElements: SceneElementDefinition[] = [
         id: 'stones',
         title: 'Piedras del lago',
         imageAlt: 'Piedras a la orilla del lago',
-        image: { light: stonesImage },
+        image: { light: stonesImage, dark: darkStonesImage },
         placementClassName: 'left-[38%] top-[74%] z-30 w-[28%] md:left-[58%] md:top-[80%] md:w-[9%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
@@ -71,7 +80,7 @@ const minigameElements: SceneElementDefinition[] = [
         id: 'mandalas',
         title: 'Colorear mandalas',
         imageAlt: 'Atril para pintar mandalas',
-        image: { light: easelImage },
+        image: { light: easelImage, dark: darkEaselImage },
         placementClassName: 'left-[43%] top-[47%] z-20 w-[34%] md:left-[53%] md:top-[38%] md:w-[11%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
@@ -83,7 +92,7 @@ const minigameElements: SceneElementDefinition[] = [
         id: 'free-draw',
         title: 'Arena zen',
         imageAlt: 'Tablero de arena para dibujar libremente',
-        image: { light: sandImage },
+        image: { light: sandImage, dark: darkSandImage },
         placementClassName: 'left-[68%] top-[67%] z-30 w-[34%] md:left-[70%] md:top-[62%] md:w-[15%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
@@ -96,10 +105,13 @@ const minigameElements: SceneElementDefinition[] = [
 const sceneElements = [...cloudElements, ...minigameElements]
 
 export default function Minigames() {
+    const { theme } = useTheme()
+
     useEffect(() => {
-        const sources = new Set<string>([backgroundImage, mobileBackgroundImage])
+        const sources = new Set<string>([backgroundImage, mobileBackgroundImage, darkBackgroundImage, darkMobileBackgroundImage])
         for (const element of sceneElements) {
             sources.add(element.image.light)
+            if (element.image.dark) sources.add(element.image.dark)
         }
         sources.forEach(src => {
             const img = new Image()
@@ -108,23 +120,21 @@ export default function Minigames() {
     }, [])
 
     return (
-        <main className="minigames-page">
+        <main className={`minigames-page ${theme === 'dark' ? 'minigames-page--dark' : ''}`}>
             <section className="minigames-scene">
                 <BackButton to="/" />
-                <img
-                    src={backgroundImage}
-                    alt="Fondo del jardin de minijuegos"
-                    className="minigames-scene__background minigames-scene__background--desktop pointer-events-none select-none"
-                />
-                <img
-                    src={mobileBackgroundImage}
-                    alt="Fondo del jardin de minijuegos para celular"
-                    className="minigames-scene__background minigames-scene__background--mobile pointer-events-none select-none"
+                <ThemeBackground
+                    lightSrc={backgroundImage}
+                    lightMobileSrc={mobileBackgroundImage}
+                    darkSrc={darkBackgroundImage}
+                    darkMobileSrc={darkMobileBackgroundImage}
+                    lightAlt="Fondo de minijuegos"
+                    darkAlt="Fondo nocturno de minijuegos"
                 />
 
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 z-10">
                     {sceneElements.map(element => (
-                        <SceneElement key={element.id} theme="light" {...element} />
+                        <SceneElement key={element.id} theme={theme} {...element} />
                     ))}
                 </div>
             </section>

@@ -41,10 +41,10 @@ export default function ChatbotMessages({
   bottomRef,
 }: ChatbotMessagesProps) {
   return (
-    <section className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-gray-50 px-6 py-5">
+    <section className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-[var(--surface-secondary)] px-6 py-5">
       {isLoadingHistory && (
         <div className="flex items-start">
-          <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-4 py-2.5 text-sm text-gray-500 shadow-sm">
+          <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-[var(--surface-primary)] px-4 py-2.5 text-sm text-[var(--text-secondary)] shadow-sm">
             Cargando conversación...
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function ChatbotMessages({
 
       {messages.length === 0 && !isLoadingHistory && (
         <div className="flex items-start">
-          <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-4 py-2.5 text-sm text-gray-500 shadow-sm">
+          <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-[var(--surface-primary)] px-4 py-2.5 text-sm text-[var(--text-secondary)] shadow-sm">
             Contame cómo te sentís hoy
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function ChatbotMessages({
 
       {isSending && (
         <div className="flex items-start">
-          <div className="rounded-2xl rounded-bl-sm bg-white px-4 py-2.5 text-sm text-gray-400 shadow-sm">
+          <div className="rounded-2xl rounded-bl-sm bg-[var(--surface-primary)] px-4 py-2.5 text-sm text-[var(--text-muted)] shadow-sm">
             Huly está escribiendo...
           </div>
         </div>
