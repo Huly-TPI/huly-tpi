@@ -7,8 +7,9 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
+import com.huly.backend.domain.exception.AccountNotActiveException;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,7 +75,7 @@ class RefreshTokenUseCaseTest {
         when(tokenProvider.isTokenValid("badToken")).thenReturn(false);
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("badToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("Invalid or expired refresh token");
     }
 
@@ -84,7 +85,7 @@ class RefreshTokenUseCaseTest {
         when(tokenProvider.isRefreshToken("accessToken")).thenReturn(false);
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("accessToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("Invalid or expired refresh token");
     }
 
@@ -94,7 +95,7 @@ class RefreshTokenUseCaseTest {
         when(refreshTokenRepository.findByToken("orphanToken")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("orphanToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("not found or already used");
     }
 
@@ -110,7 +111,7 @@ class RefreshTokenUseCaseTest {
         when(refreshTokenRepository.findByToken("expiredToken")).thenReturn(Optional.of(expired));
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("expiredToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("expired");
 
         verify(refreshTokenRepository).delete(expired);
@@ -124,7 +125,7 @@ class RefreshTokenUseCaseTest {
         when(tokenProvider.extractUserId("noUserIdToken")).thenReturn(null);
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("noUserIdToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("Invalid refresh token");
     }
 
@@ -136,7 +137,7 @@ class RefreshTokenUseCaseTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(AccountNotActiveException.class)
                 .hasMessageContaining("User not found");
     }
 
@@ -153,7 +154,7 @@ class RefreshTokenUseCaseTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(inactiveUser));
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(AccountNotActiveException.class)
                 .hasMessageContaining("not active");
     }
 

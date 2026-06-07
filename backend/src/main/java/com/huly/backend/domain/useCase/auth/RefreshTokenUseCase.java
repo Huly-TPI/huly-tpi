@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.auth;
 
+import com.huly.backend.domain.exception.AccountNotActiveException;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.RefreshToken;
@@ -7,7 +9,6 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,27 +27,27 @@ public class RefreshTokenUseCase {
     public AuthTokens execute(String rawToken) {
 
         if (!tokenProvider.isTokenValid(rawToken) || !tokenProvider.isRefreshToken(rawToken)) {
-            throw new UnauthorizedException("Invalid or expired refresh token");
+            throw new InvalidCredentialsException("Invalid or expired refresh token");
         }
 
         RefreshToken stored = refreshTokenRepository.findByToken(rawToken)
-                .orElseThrow(() -> new UnauthorizedException("Refresh token not found or already used"));
+                .orElseThrow(() -> new InvalidCredentialsException("Refresh token not found or already used"));
 
         if (isExpired(stored)) {
             refreshTokenRepository.delete(stored);
-            throw new UnauthorizedException("Refresh token expired");
+            throw new InvalidCredentialsException("Refresh token expired");
         }
 
         Long userId = tokenProvider.extractUserId(rawToken);
         if (userId == null) {
-            throw new UnauthorizedException("Invalid refresh token");
+            throw new InvalidCredentialsException("Invalid refresh token");
         }
 
         AppUser user = userRepository.findById(userId)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
+                .orElseThrow(() -> new AccountNotActiveException("User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new UnauthorizedException("Account is not active");
+            throw new AccountNotActiveException("Account is not active");
         }
 
         refreshTokenRepository.delete(stored);

@@ -5,8 +5,8 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,7 +57,7 @@ class CompleteOnboardingUseCaseTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> completeOnboardingUseCase.execute(999L, "A", "B", "C"))
-                .isInstanceOf(NotFoundException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

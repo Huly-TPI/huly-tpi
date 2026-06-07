@@ -1,10 +1,10 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
+import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.model.CreateEmotionalEventCommand;
 import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
-import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,10 +42,10 @@ public class CreateEmotionalEventUseCase {
 
     private void validate(CreateEmotionalEventCommand command) {
         if (command.source() == null) {
-            throw new BadRequestException("source es obligatorio");
+            throw new BusinessRuleException("source es obligatorio");
         }
         if (command.detectedEmotion() == null || command.detectedEmotion().isBlank()) {
-            throw new BadRequestException("detectedEmotion es obligatorio");
+            throw new BusinessRuleException("detectedEmotion es obligatorio");
         }
         validateNullableRange("confidence", command.confidence(), 0.0, 1.0);
         validateNullableRange("valence", command.valence(), -1.0, 1.0);
@@ -58,13 +58,13 @@ public class CreateEmotionalEventUseCase {
 
     private void validateNullableRange(String field, Double value, double min, double max) {
         if (value != null && (value < min || value > max)) {
-            throw new BadRequestException(field + " debe estar entre " + min + " y " + max);
+            throw new BusinessRuleException(field + " debe estar entre " + min + " y " + max);
         }
     }
 
     private void validateActivityExists(Long activityId, String field) {
         if (activityId != null && !activityRepository.existsById(activityId)) {
-            throw new BadRequestException(field + " no existe");
+            throw new BusinessRuleException(field + " no existe");
         }
     }
 }

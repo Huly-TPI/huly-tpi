@@ -1,11 +1,11 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
+import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.model.Activity;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.service.EmotionalRecommendationService;
-import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +33,7 @@ public class GetEmotionalRecommendationsUseCase {
 
     private void validateRange(String field, double value, double min, double max) {
         if (value < min || value > max) {
-            throw new BadRequestException(field + " debe estar entre " + min + " y " + max);
+            throw new BusinessRuleException(field + " debe estar entre " + min + " y " + max);
         }
     }
 }
