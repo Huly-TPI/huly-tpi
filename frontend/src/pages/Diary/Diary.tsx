@@ -3,10 +3,14 @@ import './Diary.css'
 import { journalApi, type JournalEntryResponse, type Mood } from '../../api/journal.ts'
 import { useAuth } from '../../context/auth.tsx'
 import cloudImg from '../../assets/garden/light-theme/cloud.webp'
-import dayBackground from '../../assets/garden/light-theme/background/day-background.webp'
+import dayBackground from '../../assets/shared/day-background.webp'
+import darkCloudImg from '../../assets/garden/dark-theme/cloud.webp'
+import nightBackground from '../../assets/shared/dark-background.webp'
 import Button from '../../components/Buttons/Button/Button.tsx'
 import BackButton from '../../components/Buttons/BackButton/BackButton.tsx'
 import DiaryConsentModal from '../../components/DiaryConsentModal.tsx'
+import ThemeBackground from '../../components/ThemeBackground/ThemeBackground.tsx'
+import { useTheme } from '../../context/theme.tsx'
 
 function getDiaryConsentKey(userId: number): string {
   return `diaryTextConsent_${userId}`
@@ -59,15 +63,54 @@ function formatDateShortMobile(isoString: string): string {
   })
 }
 
-const LINE_BG = {
-  backgroundImage:
-    'repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, #e5e7eb 31px, #e5e7eb 32px)',
-  backgroundSize: '100% 32px',
-  backgroundPositionY: '16px',
-}
-
 export default function Diary() {
   const { user } = useAuth()
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+
+  const diaryPalette = isDark
+    ? {
+        cardBackground: '#22324d',
+        cardText: '#dbe7f5',
+        border: 'rgba(136, 105, 172, 0.55)',
+        lineColor: 'rgba(148, 163, 184, 0.32)',
+        accentSurface: 'rgba(92, 120, 172, 0.22)',
+        successSurface: 'rgba(109, 138, 152, 0.22)',
+        warningSurface: 'rgba(132, 124, 110, 0.22)',
+        moodIdle: '#4f7a67',
+        moodHover: '#5b8b76',
+        moodSelected: '#649959',
+        moodRing: '#a7f3d0',
+      }
+    : {
+        cardBackground: 'rgba(255, 255, 255, 0.94)',
+        cardText: '#1f2937',
+        border: '#8869AC',
+        lineColor: 'rgba(0, 0, 0, 0.22)',
+        accentSurface: 'rgba(209, 202, 239, 0.3)',
+        successSurface: 'rgba(171, 203, 167, 0.3)',
+        warningSurface: 'rgba(244, 211, 138, 0.3)',
+      }
+
+  const lineBackground = {
+    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, ${diaryPalette.lineColor} 31px, ${diaryPalette.lineColor} 32px)`,
+    backgroundSize: '100% 32px',
+    backgroundPositionY: '16px',
+  }
+
+  const pagerButtonStyle = isDark
+    ? {
+        color: '#cbd5e1',
+        backgroundColor: 'rgba(15, 23, 42, 0.18)',
+      }
+    : {
+        color: '#6b7280',
+        backgroundColor: 'transparent',
+      }
+
+  const saveButtonClassName = isDark
+    ? '!w-auto !min-w-0 !border-[#5c4a86] !bg-[#5f4a8a] hover:!shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.18)]'
+    : '!w-auto !min-w-0'
 
   const [entries, setEntries] = useState<JournalEntryResponse[]>([])
   const [loadingEntries, setLoadingEntries] = useState(true)
@@ -197,22 +240,37 @@ export default function Diary() {
     )}
     <div
       className="flex flex-col items-center px-2 sm:px-4 pt-12 sm:pt-16 pb-4 relative md:h-full md:overflow-hidden"
-      style={{
-        backgroundImage: `url(${dayBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
     >
-      <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-80 hidden lg:block"  style={{ zIndex: 0, width: 380, top: '1%',  left: '-6%' }} />
-      <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-60 hidden lg:block"  style={{ zIndex: 0, width: 300, top: '0%',  right: '3%' }} />
-      <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-50 hidden lg:block"  style={{ zIndex: 0, width: 340, top: '15%', right: '-5%' }} />
-      <img src={cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-40 hidden lg:block"  style={{ zIndex: 0, width: 320, top: '22%', left: '-4%' }} />
+      <ThemeBackground
+        lightSrc={dayBackground}
+        darkSrc={nightBackground}
+        lightAlt="Fondo del diario"
+        darkAlt="Fondo nocturno del diario"
+      />
+      <img src={theme === 'dark' ? darkCloudImg : cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-80 hidden lg:block"  style={{ zIndex: 0, width: 380, top: '1%',  left: '-6%' }} />
+      <img src={theme === 'dark' ? darkCloudImg : cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-60 hidden lg:block"  style={{ zIndex: 0, width: 300, top: '0%',  right: '3%' }} />
+      <img src={theme === 'dark' ? darkCloudImg : cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-50 hidden lg:block"  style={{ zIndex: 0, width: 340, top: '15%', right: '-5%' }} />
+      <img src={theme === 'dark' ? darkCloudImg : cloudImg} alt="" aria-hidden className="absolute pointer-events-none select-none opacity-40 hidden lg:block"  style={{ zIndex: 0, width: 320, top: '22%', left: '-4%' }} />
       <BackButton to="/"/>
 
-      <div className="diary-card relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2" style={{ borderColor: '#8869AC', zIndex: 1 }}>
-        <div className="flex items-center justify-between px-3 sm:px-5 py-3 border-b border-gray-200 bg-white gap-2">
+      <div
+        className="diary-card relative w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border-2"
+        style={{
+          backgroundColor: diaryPalette.cardBackground,
+          color: diaryPalette.cardText,
+          borderColor: diaryPalette.border,
+          zIndex: 1,
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-3 sm:px-5 py-3 border-b gap-2"
+          style={{
+            backgroundColor: diaryPalette.cardBackground,
+            borderColor: diaryPalette.lineColor,
+          }}
+        >
           <div className="flex items-center gap-2 min-w-0">
-            <span className="font-bold text-green-800 text-lg tracking-tight flex-shrink-0">huly</span>
+            <span className="font-bold text-green-800 text-lg tracking-tight flex-shrink-0 dark:text-menta">huly</span>
             <span className="sm:hidden text-xs capitalize" style={{ color: '#D1CAEF' }}>{displayDateMobile}</span>
             <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: '#D1CAEF' }}>{displayDate}</span>
           </div>
@@ -221,17 +279,19 @@ export default function Diary() {
               <button
                 onClick={goToPrev}
                 disabled={pageIndex === 0}
-                className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 disabled:opacity-25 transition-colors"
+                className="w-6 h-6 flex items-center justify-center rounded disabled:opacity-25 transition-colors"
+                style={pagerButtonStyle}
               >
                 ‹
               </button>
-              <span className="text-xs sm:text-sm text-gray-500 min-w-[28px] sm:min-w-[40px] text-center">
+              <span className="text-xs sm:text-sm min-w-[28px] sm:min-w-[40px] text-center" style={{ color: isDark ? '#e2e8f0' : '#4b5563' }}>
                 {pageIndex + 1} / {totalPages}
               </span>
               <button
                 onClick={goToNext}
                 disabled={pageIndex >= totalPages - 1}
-                className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 disabled:opacity-25 transition-colors"
+                className="w-6 h-6 flex items-center justify-center rounded disabled:opacity-25 transition-colors"
+                style={pagerButtonStyle}
               >
                 ›
               </button>
@@ -244,14 +304,14 @@ export default function Diary() {
               disabled={!isNewEntry || !hasContent}
               isLoading={saving}
               loadingLabel="..."
-              className="!w-auto !min-w-0"
+              className={saveButtonClassName}
             >
               <span className="hidden sm:inline">💾 </span>Guardar
             </Button>
           </div>
         </div>
 
-        <div className="diary-content flex flex-col md:flex-row" style={{ minHeight: '520px', ...LINE_BG }}>
+        <div className="diary-content flex flex-col md:flex-row" style={{ minHeight: '520px', ...lineBackground }}>
           <div className="diary-left flex-1 px-4 md:px-6 py-5 flex flex-col">
             <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: '#649959' }}>
               Hoy
@@ -275,15 +335,26 @@ export default function Diary() {
                   >
                     <div
                       className={`diary-mood-circle w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl transition-all ${
-                        isSelected
-                          ? 'bg-green-400 ring-2 ring-green-600 ring-offset-1'
-                          : 'bg-green-200 group-hover:bg-green-300'
+                        isDark
+                          ? isSelected
+                            ? 'ring-2 ring-offset-1 ring-[#a7f3d0]'
+                            : 'group-hover:brightness-110'
+                          : isSelected
+                            ? 'bg-green-400 ring-2 ring-green-600 ring-offset-1'
+                            : 'bg-green-200 group-hover:bg-green-300'
                       } ${!isNewEntry ? 'cursor-default' : 'cursor-pointer'}`}
+                      style={
+                        isDark
+                          ? {
+                              backgroundColor: isSelected ? diaryPalette.moodSelected : diaryPalette.moodIdle,
+                            }
+                          : undefined
+                      }
                     >
                       {mood.emoji}
                     </div>
                     <span
-                      className={`text-[11px] ${isSelected ? 'text-green-700 font-semibold' : 'text-gray-500'}`}
+                      className={`text-[11px] ${isSelected ? 'text-green-700 font-semibold dark:text-menta' : 'text-[var(--text-secondary)]'}`}
                     >
                       {mood.label}
                     </span>
@@ -300,8 +371,8 @@ export default function Diary() {
               onChange={(e) => isNewEntry && setAdentro(e.target.value)}
               readOnly={!isNewEntry}
               placeholder="Hoy me pasó..."
-              className="flex-1 w-full resize-none border-none outline-none text-sm text-gray-700 leading-8 min-h-[180px] rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
-              style={{ backgroundColor: 'rgba(209, 202, 239, 0.3)' }}
+              className="flex-1 w-full resize-none border-none outline-none text-sm leading-8 min-h-[180px] rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
+              style={{ backgroundColor: diaryPalette.accentSurface, color: diaryPalette.cardText }}
             />
 
             {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
@@ -325,8 +396,8 @@ export default function Diary() {
                 readOnly={!isNewEntry}
                 placeholder="Lo que ya no quiero cargar..."
                 rows={4}
-                className="w-full resize-none border-none outline-none text-sm text-gray-700 leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
-                style={{ backgroundColor: 'rgba(209, 202, 239, 0.3)' }}
+                className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
+                style={{ backgroundColor: diaryPalette.accentSurface, color: diaryPalette.cardText }}
               />
             </div>
 
@@ -340,8 +411,8 @@ export default function Diary() {
                 readOnly={!isNewEntry}
                 placeholder="Hoy logré..."
                 rows={4}
-                className="w-full resize-none border-none outline-none text-sm text-gray-700 leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(100,153,89,0.7)]"
-                style={{ backgroundColor: 'rgba(171, 203, 167, 0.3)' }}
+                className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(100,153,89,0.7)]"
+                style={{ backgroundColor: diaryPalette.successSurface, color: diaryPalette.cardText }}
               />
             </div>
 
@@ -355,8 +426,8 @@ export default function Diary() {
                 readOnly={!isNewEntry}
                 placeholder="Mañana quiero..."
                 rows={4}
-                className="w-full resize-none border-none outline-none text-sm text-gray-700 leading-8 rounded-xl px-3 py-2 placeholder:text-[#F2C57C]"
-                style={{ backgroundColor: 'rgba(244, 211, 138, 0.3)' }}
+                className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[#F2C57C]"
+                style={{ backgroundColor: diaryPalette.warningSurface, color: diaryPalette.cardText }}
               />
             </div>
           </div>
@@ -372,7 +443,7 @@ export default function Diary() {
               className={`rounded-full transition-all ${
                 pageIndex === i
                   ? 'w-3 h-3 bg-purple-600'
-                  : 'w-2.5 h-2.5 bg-gray-400 hover:bg-gray-500'
+                  : 'w-2.5 h-2.5 bg-[var(--text-muted)] hover:brightness-110'
               }`}
             />
           ))}

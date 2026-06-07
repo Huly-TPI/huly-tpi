@@ -27,10 +27,10 @@ export default function ChatbotSuggestedActionCard({
   const navigate = useNavigate()
 
   return (
-    <div className="rounded-xl border border-violeta/20 bg-violeta-claro/30 p-3">
+    <div className="rounded-xl border border-violeta/30 bg-[var(--surface-accent)] p-3">
       <p className="text-xs font-bold uppercase tracking-wide text-violeta">Actividad sugerida</p>
-      <p className="mt-1 text-sm font-semibold text-gray-800">{title}</p>
-      <p className="mt-1 text-xs text-gray-600">{description}</p>
+      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{title}</p>
+      <p className="mt-1 text-xs text-[var(--text-secondary)]">{description}</p>
 
       {!decision && (
         <div className="mt-2 flex gap-2">
@@ -59,7 +59,7 @@ export default function ChatbotSuggestedActionCard({
 
       {decision === 'accepted' && (
         <div className="mt-2 flex flex-col gap-2">
-          <p className="text-xs font-semibold text-bosque">Actividad aceptada.</p>
+          <p className="text-xs font-semibold text-bosque dark:text-menta">Actividad aceptada.</p>
           <Button
             type="button"
             onClick={() => {
@@ -75,7 +75,7 @@ export default function ChatbotSuggestedActionCard({
       )}
 
       {decision === 'rejected' && (
-        <p className="mt-2 text-xs font-semibold text-bosque">Actividad rechazada. Seguimos por chat.</p>
+        <p className="mt-2 text-xs font-semibold text-bosque dark:text-menta">Actividad rechazada. Seguimos por chat.</p>
       )}
 
       {!!error && <p className="mt-2 text-xs font-semibold text-red-500">{error}</p>}

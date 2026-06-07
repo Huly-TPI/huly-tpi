@@ -2,6 +2,7 @@ package com.huly.backend.domain.service;
 
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
+import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.infrastructure.presentation.exception.ConflictException;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
@@ -95,6 +96,7 @@ public class AuthService {
                 .name(request.getName())
                 .birth(request.getBirthDate())
                 .onboardingTutorialCompleted(false)
+                .themePreference(ThemePreference.LIGHT)
                 .build();
 
         userDetailRepository.save(userDetail);

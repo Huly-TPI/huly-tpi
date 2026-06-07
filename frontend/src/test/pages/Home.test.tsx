@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Home from '../../pages/Home/Home'
@@ -28,6 +28,7 @@ describe('Home', () => {
         role: 'USER',
         onBoardingCompleted: true,
         onboardingTutorialCompleted: true,
+        themePreference: 'LIGHT',
       },
       refreshUser: mockRefreshUser,
     })
@@ -59,10 +60,21 @@ describe('Home', () => {
   })
 
   it('activa el fondo oscuro al alternar a modo noche', async () => {
-    const user = userEvent.setup()
     const { container } = renderWithRouter()
 
-    await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
+    act(() => {
+      window.dispatchEvent(new CustomEvent('auth:user-loaded', {
+        detail: {
+          id: 1,
+          name: 'Jimena',
+          email: 'jimena@mail.com',
+          role: 'USER',
+          onBoardingCompleted: true,
+          onboardingTutorialCompleted: true,
+          themePreference: 'DARK',
+        },
+      }))
+    })
 
     const activeDarkBackgrounds = container.querySelectorAll(
       '.garden-scene__background--dark.garden-scene__background--active',
@@ -109,21 +121,42 @@ describe('Home', () => {
     expect(screen.getByRole('heading', { name: 'Vista Diario' })).toBeInTheDocument()
   })
 
-  it('permite alternar entre modo noche y modo dia', async () => {
-    const user = userEvent.setup()
+  it('aplica el modo noche recibido desde el perfil', () => {
     renderWithRouter()
 
-    const toggleButton = screen.getByRole('button', { name: 'Cambiar a modo noche' })
-    await user.click(toggleButton)
+    act(() => {
+      window.dispatchEvent(new CustomEvent('auth:user-loaded', {
+        detail: {
+          id: 1,
+          name: 'Jimena',
+          email: 'jimena@mail.com',
+          role: 'USER',
+          onBoardingCompleted: true,
+          onboardingTutorialCompleted: true,
+          themePreference: 'DARK',
+        },
+      }))
+    })
 
-    expect(screen.getByRole('button', { name: 'Cambiar a modo dia' })).toBeInTheDocument()
+    expect(document.documentElement.dataset.theme).toBe('dark')
   })
 
   it('mantiene accesos habilitados en modo noche por defecto', async () => {
-    const user = userEvent.setup()
     renderWithRouter()
 
-    await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
+    act(() => {
+      window.dispatchEvent(new CustomEvent('auth:user-loaded', {
+        detail: {
+          id: 1,
+          name: 'Jimena',
+          email: 'jimena@mail.com',
+          role: 'USER',
+          onBoardingCompleted: true,
+          onboardingTutorialCompleted: true,
+          themePreference: 'DARK',
+        },
+      }))
+    })
 
     expect(screen.getByRole('link', { name: 'Minijuegos' })).toHaveAttribute('href', '/minigames')
     expect(screen.getByRole('link', { name: 'Retos' })).toHaveAttribute('href', '/challenges')
@@ -146,6 +179,7 @@ describe('Home', () => {
         role: 'USER',
         onBoardingCompleted: true,
         onboardingTutorialCompleted: false,
+        themePreference: 'LIGHT',
       },
       refreshUser: mockRefreshUser,
     })
@@ -164,6 +198,7 @@ describe('Home', () => {
         email: 'jimena@mail.com',
         role: 'USER',
         onBoardingCompleted: false,
+        themePreference: 'LIGHT',
       },
       refreshUser: mockRefreshUser,
     })
@@ -183,6 +218,7 @@ describe('Home', () => {
         role: 'USER',
         onBoardingCompleted: true,
         onboardingTutorialCompleted: false,
+        themePreference: 'LIGHT',
       },
       refreshUser: mockRefreshUser,
     })

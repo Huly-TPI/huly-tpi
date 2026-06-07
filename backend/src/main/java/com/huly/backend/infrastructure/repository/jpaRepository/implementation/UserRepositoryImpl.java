@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
+import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
@@ -44,6 +45,7 @@ public class UserRepositoryImpl implements UserRepository {
                     .birth(user.getBirthDate())
                     .createdAt(Instant.now())
                     .onboardingTutorialCompleted(false)
+                    .themePreference(ThemePreference.LIGHT)
                     .build());
         }
 
@@ -58,6 +60,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .sourceAction(sourceAction)
                 .createdAt(Instant.now())
                 .onboardingTutorialCompleted(false)
+                .themePreference(ThemePreference.LIGHT)
                 .build());
     }
 
