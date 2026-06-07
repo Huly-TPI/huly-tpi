@@ -12,6 +12,7 @@ import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.Clou
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +44,7 @@ public class CloudController {
     public ResponseEntity<CloudRecommendationResponse> getRecommendation(
             @RequestBody @Valid CloudRecommendationRequest request
     ) {
-        CloudRecommendation recommendation = getCloudRecommendationUseCase.execute(request.thoughts());
+        CloudRecommendation recommendation = getCloudRecommendationUseCase.execute(request.thoughts(), currentUserIdOrNull());
         return ResponseEntity.ok(new CloudRecommendationResponse(
                 recommendation.activityType(),
                 recommendation.actionId(),
@@ -51,5 +52,15 @@ public class CloudController {
                 recommendation.description(),
                 recommendation.redirectUrl()
         ));
+    }
+
+    private Long currentUserIdOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            return null;
+        }
+        return appUserRepository.findByEmail(authentication.getName())
+                .map(AppUserEntity::getId)
+                .orElse(null);
     }
 }

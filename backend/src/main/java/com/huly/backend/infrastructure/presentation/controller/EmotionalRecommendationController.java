@@ -31,6 +31,7 @@ public class EmotionalRecommendationController {
 
     private EmotionalRecommendationQuery toQuery(EmotionalRecommendationRequest request) {
         return new EmotionalRecommendationQuery(
+                request.userId(),
                 new Vad(request.valence(), request.arousal(), request.dominance()),
                 request.intensity(),
                 request.userGoal()

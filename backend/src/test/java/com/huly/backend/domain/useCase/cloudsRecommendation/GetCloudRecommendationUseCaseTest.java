@@ -68,6 +68,17 @@ class GetCloudRecommendationUseCaseTest {
     }
 
     @Test
+    void execute_shouldPassUserIdToCommonRecommendationUseCase_whenUserIdIsAvailable() {
+        emotionalAnalysisPort.result =
+                analysis(true, EmotionType.SADNESS, -0.7, 0.2, -0.5, 0.8, "soltar pensamientos");
+        recommendationsUseCase.result = result(item(ActivityType.NUBE, "Nubes emocionales"));
+
+        useCase.execute(List.of("quiero soltar esto"), 9L);
+
+        assertThat(recommendationsUseCase.query.userId()).isEqualTo(9L);
+    }
+
+    @Test
     void execute_shouldForceRecommendationWithChatPolicy_whenAnalysisDoesNotRecommend() {
         EmotionalAnalysisResult neutral = analysis(
                 false,
@@ -204,7 +215,7 @@ class GetCloudRecommendationUseCaseTest {
         private EmotionalRecommendationResult result = new EmotionalRecommendationResult(List.of(), false);
 
         private CapturingRecommendationsUseCase() {
-            super(null, null);
+            super(null, null, null);
         }
 
         @Override

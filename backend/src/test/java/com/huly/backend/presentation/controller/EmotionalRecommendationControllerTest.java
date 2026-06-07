@@ -11,14 +11,17 @@ import com.huly.backend.infrastructure.presentation.controller.EmotionalRecommen
 import com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation.EmotionalRecommendationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -72,6 +75,11 @@ class EmotionalRecommendationControllerTest {
                 .andExpect(jsonPath("$.fallbackUsed").value(false))
                 .andExpect(jsonPath("$.recommendations[0].activityId").value(1L))
                 .andExpect(jsonPath("$.recommendations[0].type").value("RESPIRACION"));
+
+        ArgumentCaptor<EmotionalRecommendationQuery> queryCaptor =
+                ArgumentCaptor.forClass(EmotionalRecommendationQuery.class);
+        verify(useCase).execute(queryCaptor.capture());
+        assertThat(queryCaptor.getValue().userId()).isEqualTo(1L);
     }
 
     @Test
