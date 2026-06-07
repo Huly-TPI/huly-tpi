@@ -25,14 +25,14 @@ class GetCurrentUserUseCaseTest {
     @InjectMocks private GetCurrentUserUseCase getCurrentUserUseCase;
 
     @Test
-    void execute_shouldReturnUser_whenEmailExists() {
+    void execute_shouldReturnUser_whenUserIdExists() {
         AppUser user = AppUser.builder()
                 .id(1L).name("Mili").email("user@huly.com")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .build();
-        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(user));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        AppUser result = getCurrentUserUseCase.execute("user@huly.com");
+        AppUser result = getCurrentUserUseCase.execute(1L);
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("Mili");
@@ -42,9 +42,9 @@ class GetCurrentUserUseCaseTest {
 
     @Test
     void execute_shouldThrowUnauthorized_whenUserNotFound() {
-        when(userRepository.findByEmail("ghost@huly.com")).thenReturn(Optional.empty());
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> getCurrentUserUseCase.execute("ghost@huly.com"))
+        assertThatThrownBy(() -> getCurrentUserUseCase.execute(999L))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("User not found");
     }

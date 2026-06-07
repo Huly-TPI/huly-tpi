@@ -12,11 +12,9 @@ import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
-import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import com.huly.backend.infrastructure.presentation.controller.ChatController;
-import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatRequest;
+import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +32,6 @@ import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,9 +40,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -59,10 +56,8 @@ class ChatControllerTest {
     private ChatUseCase chatUseCase;
     private ListChatHistoryUseCase listChatHistoryUseCase;
     private StreamChatUseCase streamChatUseCase;
-    private AppUserRepository appUserRepository;
     private UserVectorMemoryService userVectorMemoryService;
 
-    private static final String USER_EMAIL = "test@huly.com";
     private static final Long USER_ID = 1L;
 
     @BeforeEach
@@ -70,21 +65,18 @@ class ChatControllerTest {
         chatUseCase = mock(ChatUseCase.class);
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
         streamChatUseCase = mock(StreamChatUseCase.class);
-        appUserRepository = mock(AppUserRepository.class);
         userVectorMemoryService = mock(UserVectorMemoryService.class);
 
         Authentication authentication = mock(Authentication.class);
         SecurityContext securityContext = mock(SecurityContext.class);
-        when(authentication.getName()).thenReturn(USER_EMAIL);
+        when(authentication.getName()).thenReturn(String.valueOf(USER_ID));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
 
         ChatController controller = new ChatController(
                 chatUseCase,
                 listChatHistoryUseCase,
                 streamChatUseCase,
-                appUserRepository,
                 userVectorMemoryService
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -95,10 +87,6 @@ class ChatControllerTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
-    }
-
-    private AppUserEntity mockUser() {
-        return AppUserEntity.builder().id(USER_ID).build();
     }
 
     @Test
@@ -241,16 +229,6 @@ class ChatControllerTest {
                 .andExpect(status().isOk());
 
         verify(chatUseCase).execute("hola", "conv-1", USER_ID);
-    }
-
-    @Test
-    void chat_shouldReturn404_whenUserNotFound() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
-
-        mockMvc.perform(post("/api/chat")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
-                .andExpect(status().isNotFound());
     }
 
     @Test

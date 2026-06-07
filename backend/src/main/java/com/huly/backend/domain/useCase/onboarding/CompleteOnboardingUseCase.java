@@ -18,9 +18,9 @@ public class CompleteOnboardingUseCase {
     private final UserDetailDomainRepository userDetailDomainRepository;
     private final UserVectorMemoryService userVectorMemoryService;
     @Transactional
-    public void execute(String email, String answer1, String answer2, String answer3) { 
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado: " + email));
+    public void execute(Long userId, String answer1, String answer2, String answer3) {
+        AppUser user = userRepository.findById(userId)
+        .orElseThrow(() -> new NotFoundException("Usuario no encontrado: " + userId));
 
         userDetailDomainRepository.completeOnboarding(user.getId(), answer1, answer2, answer3);
         try { 

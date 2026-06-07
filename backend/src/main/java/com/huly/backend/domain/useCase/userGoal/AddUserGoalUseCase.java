@@ -1,11 +1,9 @@
 package com.huly.backend.domain.useCase.userGoal;
 
-import com.huly.backend.domain.model.AppUser;
+
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.repository.UserGoalRepository;
-import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +14,11 @@ import java.time.Instant;
 public class AddUserGoalUseCase {
 
     private final UserGoalRepository userGoalRepository;
-    private final UserRepository userRepository;
 
-    public UserGoal execute(String email, String title, String description, Long activityId) {
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+    public UserGoal execute(Long userId, String title, String description, Long activityId) {
 
         UserGoal userGoal = UserGoal.builder()
-                .userId(user.getId())
+                .userId(userId)
                 .title(title)
                 .description(description)
                 .activityId(activityId)

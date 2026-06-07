@@ -8,9 +8,6 @@ import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
-import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatMessageResponse;
@@ -46,7 +43,6 @@ public class ChatController {
     private final ChatUseCase chatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
     private final StreamChatUseCase streamChatUseCase;
-    private final AppUserRepository appUserRepository;
     private final UserVectorMemoryService userVectorMemoryService;
 
     @PostMapping
@@ -91,11 +87,7 @@ public class ChatController {
     }
 
     private Long currentUserId() {
-        // TODO: Temporalmente hasta arreglarlo bien
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUserEntity user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-        return user.getId();
+    return Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
     private Boolean isBlank(String value) {

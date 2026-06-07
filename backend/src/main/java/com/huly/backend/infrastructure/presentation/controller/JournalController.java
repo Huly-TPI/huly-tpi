@@ -5,11 +5,8 @@ import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
 import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryRequest;
 import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryResponse;
-import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,15 +23,11 @@ public class JournalController {
 
     private final CreateJournalEntryUseCase createJournalEntryUseCase;
     private final ListJournalEntriesUseCase listJournalEntriesUseCase;
-    private final AppUserRepository appUserRepository;
 
     @GetMapping
     public ResponseEntity<List<JournalEntryResponse>> list() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUserEntity user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-
-        List<JournalEntryResponse> entries = listJournalEntriesUseCase.execute(user.getId())
+        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
+        List<JournalEntryResponse> entries = listJournalEntriesUseCase.execute(userId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -44,9 +37,7 @@ public class JournalController {
 
     @PostMapping
     public ResponseEntity<JournalEntryResponse> create(@Valid @RequestBody JournalEntryRequest request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUserEntity user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
 
         Mood mood = null;
         if (request.mood() != null && !request.mood().isBlank()) {
@@ -60,7 +51,7 @@ public class JournalController {
         boolean useTextForAI = request.useTextForAI() == null || request.useTextForAI();
 
         JournalEntry entry = createJournalEntryUseCase.execute(
-                user.getId(),
+                userId,
                 request.content(),
                 mood,
                 useTextForAI
