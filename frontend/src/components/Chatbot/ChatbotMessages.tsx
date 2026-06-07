@@ -63,7 +63,7 @@ export default function ChatbotMessages({
           <ChatMessageBubble role={message.role} content={message.content} />
 
           {message.role === 'assistant' && (
-            <div className="ml-1 mt-2 flex max-w-[85%] flex-col gap-2">
+            <div className="ml-1 mt-2 flex w-full max-w-[85%] min-w-0 flex-col gap-2 sm:w-auto">
               {message.suggested_action && (
                 <ChatbotSuggestedActionCard
                   title={message.suggested_action.title}
