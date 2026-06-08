@@ -207,4 +207,3 @@ describe('BreathingGuide', () => {
             vi.useRealTimers()
             })
         });
-

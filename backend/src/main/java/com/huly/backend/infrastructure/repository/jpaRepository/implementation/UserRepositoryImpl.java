@@ -35,6 +35,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<AppUser> findById(Long id) {
+        return jpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
     public AppUser save(AppUser user) {
         AppUserEntity saved = jpaRepository.save(toEntity(user));
 

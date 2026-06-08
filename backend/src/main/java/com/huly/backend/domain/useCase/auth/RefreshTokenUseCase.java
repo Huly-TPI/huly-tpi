@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.auth;
 
+import com.huly.backend.domain.exception.AccountNotActiveException;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.RefreshToken;
@@ -7,7 +9,6 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,19 +26,28 @@ public class RefreshTokenUseCase {
     @Transactional
     public AuthTokens execute(String rawToken) {
 
-        if (!tokenProvider.isTokenValid(rawToken)) {
-            throw new UnauthorizedException("Invalid or expired refresh token");
+        if (!tokenProvider.isTokenValid(rawToken) || !tokenProvider.isRefreshToken(rawToken)) {
+            throw new InvalidCredentialsException("Invalid or expired refresh token");
         }
 
         RefreshToken stored = refreshTokenRepository.findByToken(rawToken)
-                .orElseThrow(() -> new UnauthorizedException("Refresh token not found or already used"));
+                .orElseThrow(() -> new InvalidCredentialsException("Refresh token not found or already used"));
 
-        String email = tokenProvider.extractEmail(rawToken);
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
+        if (isExpired(stored)) {
+            refreshTokenRepository.delete(stored);
+            throw new InvalidCredentialsException("Refresh token expired");
+        }
+
+        Long userId = tokenProvider.extractUserId(rawToken);
+        if (userId == null) {
+            throw new InvalidCredentialsException("Invalid refresh token");
+        }
+
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new AccountNotActiveException("User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new UnauthorizedException("Account is not active");
+            throw new AccountNotActiveException("Account is not active");
         }
 
         refreshTokenRepository.delete(stored);
@@ -47,17 +57,25 @@ public class RefreshTokenUseCase {
         );
         String newRefreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getEmail());
 
-        Instant now = Instant.now();
-        refreshTokenRepository.save(RefreshToken.builder()
-                .userId(user.getId())
-                .token(newRefreshToken)
-                .createdAt(now)
-                .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
-                .build());
+        persistRefreshToken(user.getId(), newRefreshToken);
 
         return AuthTokens.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();
+    }
+
+    private boolean isExpired(RefreshToken token) {
+        return token.getExpiredAt() == null || token.getExpiredAt().isBefore(Instant.now());
+    }
+
+    private void persistRefreshToken(Long userId, String token) {
+        Instant now = Instant.now();
+        refreshTokenRepository.save(RefreshToken.builder()
+                .userId(userId)
+                .token(token)
+                .createdAt(now)
+                .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
+                .build());
     }
 }

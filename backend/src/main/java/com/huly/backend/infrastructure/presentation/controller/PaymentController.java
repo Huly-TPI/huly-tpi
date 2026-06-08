@@ -5,7 +5,6 @@ import com.huly.backend.domain.useCase.payment.CreatePaymentPreferenceUseCase;
 import com.huly.backend.domain.useCase.payment.ListProductsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.payment.CreatePreferenceResponse;
 import com.huly.backend.infrastructure.presentation.dto.payment.ProductResponse;
-import com.huly.backend.infrastructure.presentation.dto.payment.WebhookNotificationDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

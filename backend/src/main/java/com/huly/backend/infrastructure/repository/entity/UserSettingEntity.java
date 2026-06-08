@@ -3,10 +3,6 @@ package com.huly.backend.infrastructure.repository.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
-
 @Entity
 @Table(name = "user_setting")
 @Getter
