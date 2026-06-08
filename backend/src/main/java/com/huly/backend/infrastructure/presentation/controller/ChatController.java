@@ -22,7 +22,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,26 +47,32 @@ public class ChatController {
     private final UserVectorMemoryService userVectorMemoryService;
 
     @PostMapping
-    public ResponseEntity<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        Long userId = currentUserId();
+    public ResponseEntity<ChatResponse> chat(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid ChatRequest request) {
+        Long userId = Long.parseLong(principal.getUsername());
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         return ResponseEntity.ok(toResponse(reply));
     }
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<ChatStreamEventResponse>> stream(@RequestBody ChatRequest request) {
+    public Flux<ServerSentEvent<ChatStreamEventResponse>> stream(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody ChatRequest request) {
         if (request == null || isBlank(request.message()) || isBlank(request.conversationId())) {
             return Flux.just(toServerSentEvent(ChatStreamEvent.error("message y conversationId son obligatorios.")));
         }
 
-        Long userId = currentUserId();
+        Long userId = Long.parseLong(principal.getUsername());
         return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
                 .map(this::toServerSentEvent);
     }
 
     @PostMapping("/challenge-decision")
-    public ResponseEntity<Void> challengeDecision(@RequestBody @Valid ChatChallengeDecisionRequest request) {
-        Long userId = currentUserId();
+    public ResponseEntity<Void> challengeDecision(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid ChatChallengeDecisionRequest request) {
+        Long userId = Long.parseLong(principal.getUsername());
         userVectorMemoryService.rememberChallengeDecision(
                 userId,
                 request.conversationId(),
@@ -77,17 +84,14 @@ public class ChatController {
 
     @GetMapping("/{conversationId}/messages")
     public ResponseEntity<ChatHistoryPageResponse> getHistory(
+            @AuthenticationPrincipal UserDetails principal,
             @PathVariable String conversationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Long userId = currentUserId();
+        Long userId = Long.parseLong(principal.getUsername());
         Page<ChatMessage> result = listChatHistoryUseCase.execute(
                 conversationId, userId, PageRequest.of(page, size, Sort.by("createdAt").ascending()));
         return ResponseEntity.ok(toPageResponse(result));
-    }
-
-    private Long currentUserId() {
-    return Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
     private Boolean isBlank(String value) {

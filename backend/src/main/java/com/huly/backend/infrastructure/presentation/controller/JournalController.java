@@ -11,7 +11,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +26,8 @@ public class JournalController {
     private final ListJournalEntriesUseCase listJournalEntriesUseCase;
 
     @GetMapping
-    public ResponseEntity<List<JournalEntryResponse>> list() {
-        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
+    public ResponseEntity<List<JournalEntryResponse>> list(@AuthenticationPrincipal UserDetails principal) {
+        Long userId = Long.parseLong(principal.getUsername());
         List<JournalEntryResponse> entries = listJournalEntriesUseCase.execute(userId)
                 .stream()
                 .map(this::toResponse)
@@ -36,8 +37,10 @@ public class JournalController {
     }
 
     @PostMapping
-    public ResponseEntity<JournalEntryResponse> create(@Valid @RequestBody JournalEntryRequest request) {
-        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
+    public ResponseEntity<JournalEntryResponse> create(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody JournalEntryRequest request) {
+        Long userId = Long.parseLong(principal.getUsername());
 
         Mood mood = null;
         if (request.mood() != null && !request.mood().isBlank()) {

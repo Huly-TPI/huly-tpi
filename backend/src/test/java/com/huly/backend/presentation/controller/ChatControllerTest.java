@@ -22,15 +22,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import reactor.core.publisher.Flux;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -67,11 +70,9 @@ class ChatControllerTest {
         streamChatUseCase = mock(StreamChatUseCase.class);
         userVectorMemoryService = mock(UserVectorMemoryService.class);
 
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(authentication.getName()).thenReturn(String.valueOf(USER_ID));
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken(userDetails, null));
 
         ChatController controller = new ChatController(
                 chatUseCase,
@@ -80,6 +81,7 @@ class ChatControllerTest {
                 userVectorMemoryService
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }

@@ -9,7 +9,8 @@ import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.Clou
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +27,10 @@ public class CloudController {
     private final UserVectorMemoryService userVectorMemoryService;
 
     @PostMapping("/thought")
-    public ResponseEntity<Void> saveThought(@RequestBody @Valid CloudThoughtRequest request) {
-        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
+    public ResponseEntity<Void> saveThought(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid CloudThoughtRequest request) {
+        Long userId = Long.parseLong(principal.getUsername());
         userVectorMemoryService.rememberGuidedCloudInput(userId, UUID.randomUUID().toString(), request.thought());
         return ResponseEntity.noContent().build();
     }

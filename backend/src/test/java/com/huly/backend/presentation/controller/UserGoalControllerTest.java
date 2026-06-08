@@ -19,10 +19,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -58,10 +62,13 @@ class UserGoalControllerTest {
         UserGoalController controller = new UserGoalController(acceptChallengeUseCase,
                 addUserGoalUseCase, getUserGoalsByUserUseCase,
                 deleteUserGoalUseCase, updateUserGoalUseCase, completeUserGoalUseCase);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .build();
 
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
-                new TestingAuthenticationToken(String.valueOf(USER_ID), null));
+                new TestingAuthenticationToken(userDetails, null));
     }
 
     @AfterEach

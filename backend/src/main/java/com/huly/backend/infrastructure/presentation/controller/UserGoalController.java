@@ -21,7 +21,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -38,8 +39,10 @@ public class UserGoalController {
     private final CompleteUserGoalUseCase completeUserGoalUseCase;
 
     @PostMapping("/accept")
-    public ResponseEntity<UserGoalResponse> acceptChallenge(@Valid @RequestBody AcceptChallengeRequest request) {
-        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
+    public ResponseEntity<UserGoalResponse> acceptChallenge(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody AcceptChallengeRequest request) {
+        Long userId = Long.parseLong(principal.getUsername());
 
         UserGoal created = acceptChallengeUseCase.execute(
                 userId,
@@ -54,8 +57,10 @@ public class UserGoalController {
     }
 
     @PostMapping
-    public ResponseEntity<UserGoalResponse> add(@Valid @RequestBody UserGoalRequest request) {
-        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
+    public ResponseEntity<UserGoalResponse> add(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody UserGoalRequest request) {
+        Long userId = Long.parseLong(principal.getUsername());
         UserGoal created = addUserGoalUseCase.execute(
                 userId,
                 request.title(),
@@ -67,9 +72,10 @@ public class UserGoalController {
 
     @GetMapping("/me")
     public ResponseEntity<UserGoalListResponse> listByUser(
+            @AuthenticationPrincipal UserDetails principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
+        Long userId = Long.parseLong(principal.getUsername());
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(userId, pageable);
         Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(userId, pageable);
