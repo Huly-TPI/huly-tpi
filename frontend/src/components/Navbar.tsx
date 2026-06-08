@@ -128,14 +128,14 @@ export default function Navbar() {
   )
 }
 
-function AuthSlotPlaceholder() {
-  return (
-    <div
-      className="hidden h-9 w-36 animate-pulse rounded-full bg-white/10 md:block"
-      aria-hidden="true"
-    />
-  )
-}
+// function AuthSlotPlaceholder() {
+//   return (
+//     <div
+//       className="hidden h-9 w-36 animate-pulse rounded-full bg-white/10 md:block"
+//       aria-hidden="true"
+//     />
+//   )
+// }
 
 function UserMenu({ name }: { name: string }) {
   const [open, setOpen] = useState(false)
