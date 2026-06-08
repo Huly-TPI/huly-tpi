@@ -24,36 +24,69 @@ public class MercadoPagoWebhookController {
             @RequestHeader(value = "x-request-id", required = false) String xRequestId,
             @RequestBody WebhookNotificationDto notification) {
 
-        String dataId = notification.data() != null ? notification.data().id() : null;
-        if (!signatureValidator.isValid(xSignature, xRequestId, dataId)) {
-            log.warn("Invalid or missing MP webhook signature, requestId={}", xRequestId);
+        if (!validateSignature(xSignature, xRequestId, notification)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        log.info("MP Webhook received: type={} action={} paymentId={}",
-                notification.type(),
-                notification.action(),
-                dataId);
+        logWebhookReceived(notification);
 
-        if (!"payment".equals(notification.type()) || notification.data() == null || notification.data().id() == null) {
+        if (!isPaymentNotification(notification)) {
             return ResponseEntity.ok().build();
         }
 
-        Long mpPaymentId;
-        try {
-            mpPaymentId = Long.parseLong(notification.data().id());
-        } catch (NumberFormatException e) {
-            log.warn("Invalid payment id in webhook: {}", notification.data().id());
+        return processPaymentNotification(notification.data().id());
+    }
+
+    // --- Private methods ---
+
+    private ResponseEntity<Void> processPaymentNotification(String rawId) {
+        Long mpPaymentId = parsePaymentId(rawId);
+        if (mpPaymentId == null) {
             return ResponseEntity.badRequest().build();
         }
 
         try {
             handleWebhookUseCase.execute(mpPaymentId);
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Error processing webhook for paymentId={}", mpPaymentId, e);
             return ResponseEntity.internalServerError().build();
         }
+    }
 
-        return ResponseEntity.ok().build();
+    private boolean validateSignature(String xSignature, String xRequestId, WebhookNotificationDto notification) {
+        String dataId = extractDataId(notification);
+        boolean valid = signatureValidator.isValid(xSignature, xRequestId, dataId);
+        if (!valid) {
+            log.warn("Invalid or missing MP webhook signature, requestId={}", xRequestId);
+        }
+        return valid;
+    }
+
+    private void logWebhookReceived(WebhookNotificationDto notification) {
+        log.info("MP Webhook received: type={} action={} paymentId={}",
+                notification.type(),
+                notification.action(),
+                extractDataId(notification));
+    }
+
+    private boolean isPaymentNotification(WebhookNotificationDto notification) {
+        return "payment".equals(notification.type())
+                && notification.data() != null
+                && notification.data().id() != null;
+    }
+
+
+    private Long parsePaymentId(String rawId) {
+        try {
+            return Long.parseLong(rawId);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid payment id in webhook: {}", rawId);
+            return null;
+        }
+    }
+
+    private String extractDataId(WebhookNotificationDto notification) {
+        return notification.data() != null ? notification.data().id() : null;
     }
 }
