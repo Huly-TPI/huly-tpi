@@ -5,6 +5,7 @@ export interface Product {
   name: string
   description: string
   price: number
+  coinsAmount: number
 }
 
 export interface CreatePreferenceResponse {
@@ -16,3 +17,6 @@ export const getProducts = () => api.get<Product[]>('/payment/products')
 
 export const createPreference = (productId: string) =>
   api.post<CreatePreferenceResponse>(`/payment/preference/${productId}`, {})
+
+export const getMyCoins = () =>
+  api.get<{ coins: number }>('/payment/me/coins')

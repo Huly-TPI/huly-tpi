@@ -10,4 +10,6 @@ public interface UserRepository {
     boolean existsByEmail(String email);
     AppUser save(AppUser user);
     void saveLeadDetail(Long userId, String nickname, SourceAction sourceAction);
+    void addCoins(Long userId, int amount);
+    int getCoins(Long userId);
 }

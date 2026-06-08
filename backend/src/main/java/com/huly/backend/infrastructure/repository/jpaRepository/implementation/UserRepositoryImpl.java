@@ -51,6 +51,17 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void addCoins(Long userId, int amount) {
+        jpaRepository.addCoins(userId, amount);
+    }
+
+    @Override
+    public int getCoins(Long userId) {
+        return jpaRepository.findCoinsById(userId).orElse(0);
+    }
+
+    @Override
     public void saveLeadDetail(Long userId, String nickname, SourceAction sourceAction) {
         userDetailRepository.save(UserDetailEntity.builder()
                 .appUser(AppUserEntity.builder().id(userId).build())
