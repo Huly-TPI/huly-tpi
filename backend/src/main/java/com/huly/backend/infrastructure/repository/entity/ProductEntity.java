@@ -26,4 +26,7 @@ public class ProductEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "coins_amount", nullable = false)
+    private Integer coinsAmount;
 }
