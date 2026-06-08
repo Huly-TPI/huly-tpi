@@ -5,7 +5,7 @@ import com.huly.backend.domain.dto.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.PaymentEventRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.service.payment.CoinService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class HandleWebhookUseCase {
 
     private final PaymentEventRepository paymentEventRepository;
     private final MercadoPagoPort mercadoPagoPort;
-    private final UserRepository userRepository;
+    private final CoinService coinService;
 
     @Transactional
     public void execute(Long mpPaymentId) {
@@ -33,8 +33,7 @@ public class HandleWebhookUseCase {
 
         MercadoPagoPaymentResult payment = mercadoPagoPort.getPayment(mpPaymentId);
 
-        // externalReference = UUID que guardamos como mpPreferenceId en PaymentEvent
-        PaymentEvent event = paymentEventRepository.findByMpPreferenceId(payment.getExternalReference())
+        PaymentEvent event = paymentEventRepository.findByExternalReference(payment.getExternalReference())
                 .orElseGet(() -> byPaymentId.orElse(null));
 
         if (event == null) {
@@ -43,9 +42,13 @@ public class HandleWebhookUseCase {
         }
 
         if ("approved".equals(payment.getStatus())) {
-            paymentEventRepository.updateStatus(event.getId(), PaymentStatus.APPROVED, mpPaymentId, null);
-            userRepository.addCoins(event.getUserId(), event.getCoinsAmount());
-            log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());
+            boolean credited = paymentEventRepository.approveIfPending(event.getId(), mpPaymentId);
+            if (credited) {
+                coinService.credit(event.getUserId(), event.getCoinsAmount());
+                log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());
+            } else {
+                log.info("Payment {} already APPROVED by concurrent webhook, skipping coin credit", mpPaymentId);
+            }
         } else {
             String detail = payment.getStatus() + ": " + payment.getStatusDetail();
             paymentEventRepository.updateStatus(event.getId(), PaymentStatus.FAILED, mpPaymentId, detail);

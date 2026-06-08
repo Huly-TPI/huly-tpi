@@ -28,8 +28,8 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
     }
 
     @Override
-    public Optional<PaymentEvent> findByMpPreferenceId(String mpPreferenceId) {
-        return jpaRepository.findByMpPreferenceId(mpPreferenceId).map(this::toDomain);
+    public Optional<PaymentEvent> findByExternalReference(String externalReference) {
+        return jpaRepository.findByExternalReference(externalReference).map(this::toDomain);
     }
 
     @Override
@@ -43,11 +43,18 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
         });
     }
 
+    @Override
+    public boolean approveIfPending(Long id, Long mpPaymentId) {
+        int updated = jpaRepository.approveIfNotApproved(id, mpPaymentId, Instant.now(), PaymentStatus.APPROVED);
+        return updated > 0;
+    }
+
     private PaymentEvent toDomain(PaymentEventEntity e) {
         return PaymentEvent.builder()
                 .id(e.getId())
                 .userId(e.getUserId())
                 .productId(e.getProductId())
+                .externalReference(e.getExternalReference())
                 .mpPreferenceId(e.getMpPreferenceId())
                 .mpPaymentId(e.getMpPaymentId())
                 .status(e.getStatus())
@@ -63,6 +70,7 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
                 .id(e.getId())
                 .userId(e.getUserId())
                 .productId(e.getProductId())
+                .externalReference(e.getExternalReference())
                 .mpPreferenceId(e.getMpPreferenceId())
                 .mpPaymentId(e.getMpPaymentId())
                 .status(e.getStatus())
