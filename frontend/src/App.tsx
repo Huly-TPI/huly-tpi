@@ -15,6 +15,7 @@ import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
 import Login from './pages/Login/Login'
 import Challenges from './pages/Challenges/Challenges'
 import Minigames from './pages/Minigames/Minigames'
+import Shop from './pages/Shop/Shop'
 
 const App = () => {
   return (
@@ -38,6 +39,7 @@ const App = () => {
           <Route path="/guided-breathing" element={<Breathing />} />
           <Route path="/clouds" element={<CloudsActivity />} />
           <Route path="/bubbles" element={<BubblesActivity />} />
+          <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

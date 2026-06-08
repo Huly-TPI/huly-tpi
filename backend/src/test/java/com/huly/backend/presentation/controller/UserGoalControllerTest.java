@@ -19,10 +19,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -32,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class UserGoalControllerTest {
 
-    private static final String TEST_EMAIL = "test@test.com";
+    private static final Long USER_ID = 10L;
 
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -58,10 +62,13 @@ class UserGoalControllerTest {
         UserGoalController controller = new UserGoalController(acceptChallengeUseCase,
                 addUserGoalUseCase, getUserGoalsByUserUseCase,
                 deleteUserGoalUseCase, updateUserGoalUseCase, completeUserGoalUseCase);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .build();
 
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
-                new TestingAuthenticationToken(TEST_EMAIL, null));
+                new TestingAuthenticationToken(userDetails, null));
     }
 
     @AfterEach
@@ -71,13 +78,13 @@ class UserGoalControllerTest {
 
     private UserGoal goal(Long id, String title, GoalStatus status) {
         return UserGoal.builder()
-                .id(id).userId(10L).title(title).description("D")
+                .id(id).userId(USER_ID).title(title).description("D")
                 .status(status).activityId(1L).createdAt(Instant.now()).build();
     }
 
     @Test
     void add_shouldReturn201_whenRequestIsValid() throws Exception {
-        when(addUserGoalUseCase.execute(eq(TEST_EMAIL), eq("Respirar"), eq("Desc"), eq(2L)))
+        when(addUserGoalUseCase.execute(eq(USER_ID), eq("Respirar"), eq("Desc"), eq(2L)))
                 .thenReturn(goal(1L, "Respirar", GoalStatus.PENDING));
 
         mockMvc.perform(post("/api/user-goals")
@@ -91,7 +98,7 @@ class UserGoalControllerTest {
 
     @Test
     void add_shouldReturn201_withNullActivityId() throws Exception {
-        when(addUserGoalUseCase.execute(eq(TEST_EMAIL), eq("Respirar"), isNull(), isNull()))
+        when(addUserGoalUseCase.execute(eq(USER_ID), eq("Respirar"), isNull(), isNull()))
                 .thenReturn(goal(1L, "Respirar", GoalStatus.PENDING));
 
         mockMvc.perform(post("/api/user-goals")
@@ -117,8 +124,8 @@ class UserGoalControllerTest {
                 List.of(goal(2L, "Pendiente", GoalStatus.PENDING)),
                 PageRequest.of(0, 5), 1);
 
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(TEST_EMAIL), any(Pageable.class))).thenReturn(completadosPage);
-        when(getUserGoalsByUserUseCase.executePending(eq(TEST_EMAIL), any(Pageable.class))).thenReturn(pendientesPage);
+        when(getUserGoalsByUserUseCase.executeCompleted(eq(USER_ID), any(Pageable.class))).thenReturn(completadosPage);
+        when(getUserGoalsByUserUseCase.executePending(eq(USER_ID), any(Pageable.class))).thenReturn(pendientesPage);
 
         mockMvc.perform(get("/api/user-goals/me"))
                 .andExpect(status().isOk())
@@ -131,9 +138,9 @@ class UserGoalControllerTest {
 
     @Test
     void listByUser_shouldUseSizeAndPageParams() throws Exception {
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(TEST_EMAIL), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executeCompleted(eq(USER_ID), any(Pageable.class)))
                 .thenReturn(Page.empty(PageRequest.of(1, 3)));
-        when(getUserGoalsByUserUseCase.executePending(eq(TEST_EMAIL), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executePending(eq(USER_ID), any(Pageable.class)))
                 .thenReturn(Page.empty(PageRequest.of(1, 3)));
 
         mockMvc.perform(get("/api/user-goals/me").param("page", "1").param("size", "3"))
@@ -144,9 +151,9 @@ class UserGoalControllerTest {
 
     @Test
     void listByUser_shouldReturn200WithEmptyPages_whenNoGoals() throws Exception {
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(TEST_EMAIL), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executeCompleted(eq(USER_ID), any(Pageable.class)))
                 .thenReturn(Page.empty());
-        when(getUserGoalsByUserUseCase.executePending(eq(TEST_EMAIL), any(Pageable.class)))
+        when(getUserGoalsByUserUseCase.executePending(eq(USER_ID), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         mockMvc.perform(get("/api/user-goals/me"))

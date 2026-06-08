@@ -33,7 +33,7 @@ class UserDetailsServiceImplTest {
 
         UserDetails result = userDetailsService.loadUserByUsername("admin@huly.com");
 
-        assertThat(result.getUsername()).isEqualTo("admin@huly.com");
+        assertThat(result.getUsername()).isEqualTo("1");
         assertThat(result.getAuthorities()).extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_ADMIN");
     }
@@ -46,6 +46,7 @@ class UserDetailsServiceImplTest {
 
         UserDetails result = userDetailsService.loadUserByUsername("user@huly.com");
 
+        assertThat(result.getUsername()).isEqualTo("2");
         assertThat(result.getAuthorities()).extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_USER");
     }
@@ -69,5 +70,51 @@ class UserDetailsServiceImplTest {
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("missing@huly.com"))
                 .isInstanceOf(UsernameNotFoundException.class)
                 .hasMessageContaining("missing@huly.com");
+    }
+
+    @Test
+    void loadUserById_shouldReturnUserDetailsWithIdAsUsername() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(7L).email("user@huly.com").password("encoded").role(UserRole.USER).build();
+        when(appUserRepository.findById(7L)).thenReturn(Optional.of(entity));
+
+        UserDetails result = userDetailsService.loadUserById(7L);
+
+        assertThat(result.getUsername()).isEqualTo("7");
+        assertThat(result.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+                .containsExactly("ROLE_USER");
+    }
+
+    @Test
+    void loadUserById_shouldReturnAdminAuthority_whenRoleIsAdmin() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(8L).email("admin@huly.com").password("encoded").role(UserRole.ADMIN).build();
+        when(appUserRepository.findById(8L)).thenReturn(Optional.of(entity));
+
+        UserDetails result = userDetailsService.loadUserById(8L);
+
+        assertThat(result.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+                .containsExactly("ROLE_ADMIN");
+    }
+
+    @Test
+    void loadUserById_shouldDefaultToRoleUser_whenRoleIsNull() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(9L).email("noRole@huly.com").password("encoded").role(null).build();
+        when(appUserRepository.findById(9L)).thenReturn(Optional.of(entity));
+
+        UserDetails result = userDetailsService.loadUserById(9L);
+
+        assertThat(result.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+                .containsExactly("ROLE_USER");
+    }
+
+    @Test
+    void loadUserById_shouldThrowUsernameNotFoundException_whenUserNotFound() {
+        when(appUserRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userDetailsService.loadUserById(999L))
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessageContaining("999");
     }
 }
