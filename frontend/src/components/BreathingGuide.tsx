@@ -21,6 +21,9 @@ interface Phase {
 
 interface BreathingGuideProps {
     techniques?: BreathingTechnique[]
+    hulyNormal?: string
+    hulyInhalando?: string
+    hulyExhalando?: string
 }
 
 function getPhases(technique: BreathingTechnique): Phase[] {
@@ -64,7 +67,7 @@ const DEFAULT_BREATHING_TECHNIQUES: BreathingTechnique[] = [
     },
 ]
 
-export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: BreathingGuideProps) {
+export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, hulyNormal, hulyInhalando, hulyExhalando }: BreathingGuideProps) {
     const { requireAuth } = useAuthGate()
     const { theme } = useTheme()
     const isDark = theme === 'dark'
@@ -73,7 +76,6 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
     const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0)
     const [timeLeft, setTimeLeft] = useState(0)
     const [currentRound, setCurrentRound] = useState(1)
-    const [hoveredId, setHoveredId] = useState<number | null>(null)
     const [isPaused, setIsPaused] = useState(false)
 
     useEffect(() => {
@@ -104,11 +106,29 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
         }
     }, [timeLeft, isRunning, selected, currentPhaseIndex, currentRound, isPaused])
 
+
+  const hulyImage = (() => {
+            if (!isRunning || !selected) return hulyNormal
+            const phases = getPhases(selected)
+            const phaseName = phases[currentPhaseIndex]?.name ?? ''
+            if (/inhalá/i.test(phaseName)) return hulyInhalando ?? hulyNormal
+            if (/exhalá/i.test(phaseName)) return hulyExhalando ?? hulyNormal
+            return hulyNormal
+        })()
+
+        const hulyEl = hulyNormal ? (
+            <div key={`${currentPhaseIndex}-${isRunning}`} className="fixed top-20 right-3 w-20 sm:top-auto sm:bottom-8 sm:right-8 sm:w-48 z-20 huly-wind">
+                <img src={hulyImage} className="w-full" alt="Huly" />
+            </div>
+        ) : null
+
     if (selected && isRunning) {
         const phases = getPhases(selected)
         const currentPhase = phases[currentPhaseIndex]
+    
         return (
             <div className="flex flex-col items-center justify-center w-full relative">
+                {hulyEl}  
                 <button
                     onClick={() => {
                         setSelected(null)
@@ -122,7 +142,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                     ← Volver
                 </button>
                 <div className="relative flex items-center justify-center">
-                    <div className="absolute rounded-full bg-white/30 w-80 h-80" />
+                    <div className="absolute rounded-full bg-white/30 w-64 h-64 sm:w-80 sm:h-80" />
                     <div
                         key={`${currentPhaseIndex}-${currentRound}`}
                         data-testid="breathing-circle"
@@ -140,7 +160,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                         <p className="text-sm font-semibold tracking-widest text-[var(--text-secondary)] uppercase">
                             {currentPhase.name}
                         </p>
-                        <p className="text-5xl sm:text-6xl font-light text-gray-800">{timeLeft}</p>
+                        <p className={`text-5xl sm:text-6xl font-light ${isDark ? 'text-[var(--text-primary)]' : 'text-gray-800'}`}>{timeLeft}</p>
                     </div>
                 </div>
                 <button
@@ -149,6 +169,8 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                 >
                     {isPaused ? 'Reanudar' : 'Pausar'}
                 </button>
+
+            
             </div>
         )
     }
@@ -156,6 +178,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
     if (selected) {
         return (
             <div className="flex flex-col items-center justify-center w-full">
+                  {hulyEl}
                 <button
                     onClick={() => setSelected(null)}
                     className="fixed top-20 left-6 rounded-full bg-[var(--surface-tertiary)] px-4 py-2 text-sm text-violeta shadow-sm backdrop-blur-sm transition-colors hover:brightness-110 flex items-center gap-2"
@@ -163,9 +186,15 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                     ← Volver
                 </button>
 
-                <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96">
-                    <h2 className="text-xl font-bold text-gray-800 mb-1">{selected.name}</h2>
-                    <p className="text-sm text-gray-500 mb-4">{selected.description}</p>
+                <div
+                    className="backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96"
+                    style={{
+                        backgroundColor: isDark ? 'rgba(28, 40, 63, 0.94)' : '#ffffff',
+                        color: isDark ? '#e5eef7' : '#1f2937',
+                    }}
+                >
+                    <h2 className={`text-xl font-bold mb-1 ${isDark ? 'text-[var(--text-primary)]' : 'text-gray-800'}`}>{selected.name}</h2>
+                    <p className={`text-sm mb-4 ${isDark ? 'text-[var(--text-secondary)]' : 'text-gray-500'}`}>{selected.description}</p>
                     <button
                         onClick={() => {
                             const phases = getPhases(selected)
@@ -183,33 +212,36 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
 
     return (
         <div className="flex flex-col items-center justify-center w-full">
+            {hulyEl} 
             <BackButton to="/" />
-            <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96">
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
-                <p className="text-sm lg:text-base text-gray-500 mb-4">
+            <div
+                className="backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96"
+                style={{
+                    backgroundColor: isDark ? 'rgba(28, 40, 63, 0.94)' : '#ffffff',
+                    color: isDark ? '#e5eef7' : '#1f2937',
+                }}
+            >
+                <h2 className={`text-xl lg:text-2xl font-bold mb-1 ${isDark ? 'text-[var(--text-primary)]' : 'text-gray-800'}`}>Respiración guiada</h2>
+                <p className={`text-sm lg:text-base mb-4 ${isDark ? 'text-[var(--text-secondary)]' : 'text-gray-500'}`}>
                     Tómate un momento, Elegí un método y deja que el círculo acompañe tu respiración
                 </p>
                 <div className="flex flex-col gap-3">
                     {techniques.map(technique => (
                         <div
                             key={technique.id}
-                            onMouseEnter={() => setHoveredId(technique.id)}
-                            onMouseLeave={() => setHoveredId(null)}
                             className="relative flex flex-col"
                         >
                             <button
                                 onClick={() => requireAuth(() => setSelected(technique))}
-                                className="w-full py-3 lg:py-4 rounded-full border border-violeta text-violeta hover:bg-violeta-claro transition-colors font-medium"
+                                className={`w-full py-3 lg:py-4 rounded-full border transition-colors font-medium ${
+                                    isDark
+                                        ? 'border-[#8d78bd] bg-[rgba(95,74,138,0.18)] text-[#d8c9f5] hover:bg-[rgba(95,74,138,0.3)]'
+                                        : 'border-violeta text-violeta hover:bg-violeta-claro'
+                                }`}
                             >
                                 {technique.name}
                             </button>
-                            {hoveredId === technique.id && (
-                                <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md">
-                                    <p className="text-xs text-gray-500 mt-1 px-3 text-center">
-                                        {technique.description}
-                                    </p>
-                                </div>
-                            )}
+                        
                         </div>
                     ))}
                 </div>

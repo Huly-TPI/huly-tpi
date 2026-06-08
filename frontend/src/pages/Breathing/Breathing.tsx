@@ -14,16 +14,19 @@ import cloudHulyExhalando from '../../assets/breathing/cloud-huly-exhalando.webp
 
 export default function Breathing() {
   const [techniques, setTechniques] = useState<BreathingTechnique[]>([])
-
+  
   useEffect(() => {
-    getBreathingTechniques()
-      .then(setTechniques)
-      .catch(console.error)
+    getBreathingTechniques().then(setTechniques).catch(console.error)
   }, [])
 
   return ( 
-    <div className="relative flex items-center justify-center h-full overflow-hidden"
-       style={{ backgroundImage: `url(${breathingBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }} >
+    <div className="relative flex items-center justify-center h-full overflow-hidden">
+        <ThemeBackground
+          lightSrc={lightBreathingBackground}
+          darkSrc={darkBreathingBackground}
+          lightAlt="Fondo de respiración guiada"
+          darkAlt="Fondo nocturno de respiración guiada"
+        />
         <img src={cloudV1} alt="" className="cloud cloud-1" />
         <img src={cloudV2} alt="" className="cloud cloud-2" />
         <img src={cloudV1} alt="" className="cloud cloud-3" />

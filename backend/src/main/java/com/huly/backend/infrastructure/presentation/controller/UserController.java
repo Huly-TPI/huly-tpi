@@ -1,12 +1,13 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.enums.ThemePreference;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
-import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
+import com.huly.backend.domain.model.enums.ThemePreference;
+import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final UserDetailDomainRepository userDetailDomainRepository;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -32,17 +34,18 @@ public class UserController {
             throw new UnauthorizedException("Not authenticated");
         }
 
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = currentUserId(principal);
         UserProfile profile = getCurrentUserUseCase.execute(userId);
-        ThemePreference themePreference = userDetailDomainRepository.findThemePreference(user.getId());
+        ThemePreference themePreference = userDetailDomainRepository.findThemePreference(userId);
 
         return ResponseEntity.ok(UserProfileResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .onBoardingCompleted(onBoardingCompleted)
-                .onboardingTutorialCompleted(onboardingTutorialCompleted)
+                .id(profile.user().getId())
+                .name(profile.user().getName())
+                .email(profile.user().getEmail())
+                .role(profile.user().getRole())
+                .onBoardingCompleted(profile.onBoardingCompleted())
+                .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
+                .themePreference(themePreference)
                 .build());
     }
 
@@ -51,12 +54,15 @@ public class UserController {
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody UpdateThemePreferenceRequest request
     ) {
+        Long userId = currentUserId(principal);
+        userDetailDomainRepository.updateThemePreference(userId, request.themePreference());
+        return ResponseEntity.noContent().build();
+    }
+
+    private Long currentUserId(UserDetails principal) {
         if (principal == null) {
             throw new UnauthorizedException("Not authenticated");
         }
-
-        AppUser user = getCurrentUserUseCase.execute(principal.getUsername());
-        userDetailDomainRepository.updateThemePreference(user.getId(), request.themePreference());
-        return ResponseEntity.noContent().build();
+        return Long.parseLong(principal.getUsername());
     }
 }

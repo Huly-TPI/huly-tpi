@@ -123,9 +123,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const handleExpired = () => {
       clearSessionFlag()
-      {
       setUser(null)
-    }
       window.dispatchEvent(new CustomEvent('auth:user-cleared'))
     }
     window.addEventListener('auth:expired', handleExpired)

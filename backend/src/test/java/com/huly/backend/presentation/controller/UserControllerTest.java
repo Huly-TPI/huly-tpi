@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.enums.ThemePreference;
+import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.infrastructure.presentation.controller.UserController;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.verify;
 class UserControllerTest {
 
     @Mock private GetCurrentUserUseCase getCurrentUserUseCase;
+    @Mock private UserDetailDomainRepository userDetailDomainRepository;
 
     @InjectMocks private UserController userController;
 
@@ -65,14 +67,8 @@ class UserControllerTest {
 
     @Test
     void updateTheme_shouldPersistThemePreference_whenPrincipalIsValid() {
-        AppUser user = AppUser.builder()
-                .id(1L).name("Mili").email("user@huly.com")
-                .role(UserRole.USER).status(UserStatus.ACTIVE)
-                .build();
-        when(getCurrentUserUseCase.execute("user@huly.com")).thenReturn(user);
-
         ResponseEntity<Void> response = userController.updateTheme(
-                principalWithEmail("user@huly.com"),
+                principalWithId(1L),
                 new UpdateThemePreferenceRequest(ThemePreference.DARK)
         );
 
