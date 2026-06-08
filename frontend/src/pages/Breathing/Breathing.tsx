@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { BreathingGuide, type BreathingTechnique } from '../../components/BreathingGuide'
 import { getBreathingTechniques } from '../../api/breathing'
 import './Breathing.css'
-import breathingBackground from '../../assets/breathing/breathing-background.webp'
+import lightBreathingBackground from '../../assets/breathing/light-theme/background/breathing-background.webp'
+import darkBreathingBackground from '../../assets/breathing/dark-theme/background/breathing-background.webp'
+import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import cloudV1 from '../../assets/breathing/cloud-v1.webp'
 import cloudV2 from '../../assets/breathing/cloud-v2.webp'
 import cloudHuly from '../../assets/breathing/cloud-huly.webp'
@@ -18,8 +20,13 @@ export default function Breathing() {
   }, [])
 
   return ( 
-    <div className="relative flex items-center justify-center h-full overflow-hidden"
-       style={{ backgroundImage: `url(${breathingBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }} >
+    <div className="relative flex items-center justify-center h-full overflow-hidden">
+        <ThemeBackground
+          lightSrc={lightBreathingBackground}
+          darkSrc={darkBreathingBackground}
+          lightAlt="Fondo de respiración guiada"
+          darkAlt="Fondo nocturno de respiración guiada"
+        />
         <img src={cloudV1} alt="" className="cloud cloud-1" />
         <img src={cloudV2} alt="" className="cloud cloud-2" />
         <img src={cloudV1} alt="" className="cloud cloud-3" />

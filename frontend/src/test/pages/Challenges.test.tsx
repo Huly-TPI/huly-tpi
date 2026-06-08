@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { ThemeProvider } from '../../context/theme'
 
-vi.mock('../../assets/garden/light-theme/background/day-background.webp', () => ({ default: 'day-bg.webp' }))
+vi.mock('../../assets/shared/day-background.webp', () => ({ default: 'day-bg.webp' }))
+vi.mock('../../assets/shared/dark-background.webp', () => ({ default: 'dark-bg.webp' }))
 vi.mock('../../assets/challenges/stump.png', () => ({ default: 'stump.png' }))
 vi.mock('../../assets/challenges/watering-can.png', () => ({ default: 'watering-can.png' }))
 vi.mock('../../assets/challenges/challenge-detail-bg.png', () => ({ default: 'challenge-detail-bg.png' }))
@@ -72,9 +74,11 @@ describe('Challenges', () => {
   const renderChallenges = () => {
     const user = userEvent.setup()
     render(
-      <MemoryRouter>
-        <Challenges />
-      </MemoryRouter>
+      <ThemeProvider>
+        <MemoryRouter>
+          <Challenges />
+        </MemoryRouter>
+      </ThemeProvider>
     )
     return { user }
   }

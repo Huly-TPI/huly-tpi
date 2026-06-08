@@ -175,6 +175,10 @@
     border-radius: 0 0 1rem 1rem;
   }
 
+  html.dark .plant-zone__info {
+    background: linear-gradient(to bottom, rgba(8, 18, 34, 0.78) 68%, transparent);
+  }
+
   .challenges-plant-hint {
     padding-top: 0;
   }

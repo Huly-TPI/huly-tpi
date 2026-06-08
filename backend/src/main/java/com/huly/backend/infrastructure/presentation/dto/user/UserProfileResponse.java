@@ -1,4 +1,5 @@
 package com.huly.backend.infrastructure.presentation.dto.user;
+import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.model.enums.UserRole;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,5 +13,5 @@ public class UserProfileResponse {
     private UserRole role;
     private Boolean onBoardingCompleted;
     private Boolean onboardingTutorialCompleted;
+    private ThemePreference themePreference;
 }
-

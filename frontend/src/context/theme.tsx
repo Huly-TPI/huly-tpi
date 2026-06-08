@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { SceneTheme } from '../components/Scene/SceneElement/SceneElement'
-
-const THEME_STORAGE_KEY = 'huly:scene-theme'
+import { updateThemePreference, type UserProfile } from '../api/auth'
 
 interface ThemeContextValue {
   theme: SceneTheme
@@ -11,33 +10,84 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-const getInitialTheme = (): SceneTheme => {
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-  if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme
-
-  const prefersDark = typeof window.matchMedia === 'function'
-    ? window.matchMedia('(prefers-color-scheme: dark)').matches
-    : false
-  return prefersDark ? 'dark' : 'light'
+const getSystemTheme = (): SceneTheme => {
+  if (typeof window.matchMedia !== 'function') return 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
+
+const toSceneTheme = (themePreference: UserProfile['themePreference']): SceneTheme =>
+  themePreference === 'DARK' ? 'dark' : 'light'
+
+const toThemePreference = (theme: SceneTheme): UserProfile['themePreference'] =>
+  theme === 'dark' ? 'DARK' : 'LIGHT'
 
 interface ThemeProviderProps {
   children: ReactNode
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<SceneTheme>(getInitialTheme)
+  const [theme, setThemeState] = useState<SceneTheme>(getSystemTheme)
+  const [hasUserTheme, setHasUserTheme] = useState(false)
 
   useEffect(() => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
     document.documentElement.dataset.theme = theme
+    document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
+
+  useEffect(() => {
+    const handleUserLoaded = (event: Event) => {
+      const profile = (event as CustomEvent<UserProfile>).detail
+      setHasUserTheme(true)
+      setThemeState(toSceneTheme(profile.themePreference))
+    }
+
+    const handleUserCleared = () => {
+      setHasUserTheme(false)
+      setThemeState(getSystemTheme())
+    }
+
+    window.addEventListener('auth:user-loaded', handleUserLoaded)
+    window.addEventListener('auth:user-cleared', handleUserCleared)
+    return () => {
+      window.removeEventListener('auth:user-loaded', handleUserLoaded)
+      window.removeEventListener('auth:user-cleared', handleUserCleared)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (hasUserTheme) return
+    if (typeof window.matchMedia !== 'function') return
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = () => setThemeState(getSystemTheme())
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [hasUserTheme])
+
+  const persistTheme = useCallback((nextTheme: SceneTheme) => {
+    if (!hasUserTheme) return
+    void updateThemePreference(toThemePreference(nextTheme))
+  }, [hasUserTheme])
+
+  const setTheme = useCallback((nextTheme: SceneTheme) => {
+    setThemeState(nextTheme)
+    persistTheme(nextTheme)
+  }, [persistTheme])
+
+  const toggleTheme = useCallback(() => {
+    setThemeState(currentTheme => {
+      const nextTheme = currentTheme === 'light' ? 'dark' : 'light'
+      persistTheme(nextTheme)
+      return nextTheme
+    })
+  }, [persistTheme])
 
   const value = useMemo<ThemeContextValue>(() => ({
     theme,
     setTheme,
-    toggleTheme: () => setTheme(current => (current === 'light' ? 'dark' : 'light')),
-  }), [theme])
+    toggleTheme,
+  }), [theme, setTheme, toggleTheme])
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
