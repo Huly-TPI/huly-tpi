@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuthGate } from '../context/authGate'
+import { useTheme } from '../context/theme'
 import BackButton from './Buttons/BackButton/BackButton'
 
 export interface BreathingTechnique {
@@ -65,6 +66,8 @@ const DEFAULT_BREATHING_TECHNIQUES: BreathingTechnique[] = [
 
 export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: BreathingGuideProps) {
     const { requireAuth } = useAuthGate()
+    const { theme } = useTheme()
+    const isDark = theme === 'dark'
     const [selected, setSelected] = useState<BreathingTechnique | null>(null)
     const [isRunning, setIsRunning] = useState(false)
     const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0)
@@ -114,7 +117,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                         setIsRunning(false)
                         setIsPaused(false)
                     }}
-                    className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors"
+                    className="fixed top-20 left-6 rounded-full bg-[var(--surface-tertiary)] px-4 py-2 text-sm text-violeta shadow-sm backdrop-blur-sm transition-colors hover:brightness-110 flex items-center gap-2"
                 >
                     ← Volver
                 </button>
@@ -123,21 +126,26 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                     <div
                         key={`${currentPhaseIndex}-${currentRound}`}
                         data-testid="breathing-circle"
-                        className={`flex flex-col items-center justify-center rounded-full bg-white shadow-xl w-64 h-64 ${getPhaseClass(currentPhase.name)}`}
+                        className={`flex flex-col items-center justify-center rounded-full shadow-xl w-52 h-52 sm:w-64 sm:h-64 ${getPhaseClass(currentPhase.name)}`}
                         style={{
                             '--phase-duration': `${currentPhase.duration}s`,
                             animationPlayState: isPaused ? 'paused' : 'running',
+                            backgroundColor: isDark ? 'rgba(20, 31, 53, 0.98)' : '#ffffff',
+                            color: isDark ? '#e5eef7' : '#1f2937',
+                            boxShadow: isDark
+                                ? '0 18px 48px rgba(2, 6, 23, 0.55), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -10px 24px rgba(0,0,0,0.18)'
+                                : '0 18px 48px rgba(15, 23, 42, 0.16)',
                         } as React.CSSProperties}
                     >
-                        <p className="text-sm font-semibold tracking-widest text-gray-500 uppercase">
+                        <p className="text-sm font-semibold tracking-widest text-[var(--text-secondary)] uppercase">
                             {currentPhase.name}
                         </p>
-                        <p className="text-6xl font-light text-gray-800">{timeLeft}</p>
+                        <p className="text-5xl sm:text-6xl font-light text-gray-800">{timeLeft}</p>
                     </div>
                 </div>
                 <button
                     onClick={() => setIsPaused(!isPaused)}
-                    className="mt-12 px-6 py-2 rounded-full bg-white/90 backdrop-blur-sm text-violeta text-sm font-medium shadow-sm hover:bg-white transition-colors"
+                    className="mt-12 rounded-full bg-[var(--surface-tertiary)] px-6 py-2 text-sm font-medium text-violeta shadow-sm backdrop-blur-sm transition-colors hover:brightness-110"
                 >
                     {isPaused ? 'Reanudar' : 'Pausar'}
                 </button>
@@ -150,12 +158,12 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
             <div className="flex flex-col items-center justify-center w-full">
                 <button
                     onClick={() => setSelected(null)}
-                    className="fixed top-20 left-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 text-violeta text-sm flex items-center gap-2 shadow-sm hover:bg-white transition-colors"
+                    className="fixed top-20 left-6 rounded-full bg-[var(--surface-tertiary)] px-4 py-2 text-sm text-violeta shadow-sm backdrop-blur-sm transition-colors hover:brightness-110 flex items-center gap-2"
                 >
                     ← Volver
                 </button>
 
-                <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
+                <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96">
                     <h2 className="text-xl font-bold text-gray-800 mb-1">{selected.name}</h2>
                     <p className="text-sm text-gray-500 mb-4">{selected.description}</p>
                     <button
@@ -176,9 +184,9 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
     return (
         <div className="flex flex-col items-center justify-center w-full">
             <BackButton to="/" />
-            <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-80">
-                <h2 className="text-xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
-                <p className="text-sm text-gray-500 mb-4">
+            <div className="bg-white backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96">
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-800 mb-1">Respiración guiada</h2>
+                <p className="text-sm lg:text-base text-gray-500 mb-4">
                     Tómate un momento, Elegí un método y deja que el círculo acompañe tu respiración
                 </p>
                 <div className="flex flex-col gap-3">
@@ -191,7 +199,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES }: Br
                         >
                             <button
                                 onClick={() => requireAuth(() => setSelected(technique))}
-                                className="w-full py-3 rounded-full border border-violeta text-violeta hover:bg-violeta-claro transition-colors font-medium"
+                                className="w-full py-3 lg:py-4 rounded-full border border-violeta text-violeta hover:bg-violeta-claro transition-colors font-medium"
                             >
                                 {technique.name}
                             </button>

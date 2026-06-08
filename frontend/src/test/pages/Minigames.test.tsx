@@ -3,20 +3,23 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Minigames from '../../pages/Minigames/Minigames'
+import { ThemeProvider } from '../../context/theme'
 
 describe('Minigames', () => {
   const renderWithRouter = () => {
     return render(
-      <MemoryRouter>
-        <Minigames />
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter>
+          <Minigames />
+        </MemoryRouter>
+      </ThemeProvider>,
     )
   }
 
   it('renderiza los fondos de escena desktop y mobile', () => {
     renderWithRouter()
-    expect(screen.getByAltText('Fondo del jardin de minijuegos')).toBeInTheDocument()
-    expect(screen.getByAltText('Fondo del jardin de minijuegos para celular')).toBeInTheDocument()
+    expect(screen.getByAltText('Fondo de minijuegos')).toBeInTheDocument()
+    expect(screen.getByAltText('Fondo de minijuegos para celular')).toBeInTheDocument()
   })
 
   it('renderiza los hotspots de cada minijuego con su ruta', () => {
@@ -38,12 +41,14 @@ describe('Minigames', () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={['/minigames']}>
-        <Routes>
-          <Route path="/" element={<h1>Vista Garden</h1>} />
-          <Route path="/minigames" element={<Minigames />} />
-        </Routes>
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/minigames']}>
+          <Routes>
+            <Route path="/" element={<h1>Vista Garden</h1>} />
+            <Route path="/minigames" element={<Minigames />} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>,
     )
 
     await user.click(screen.getByRole('button', { name: /volver/i }))
@@ -54,12 +59,14 @@ describe('Minigames', () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={['/minigames']}>
-        <Routes>
-          <Route path="/minigames" element={<Minigames />} />
-          <Route path="/bubbles" element={<h1>Vista Burbujas</h1>} />
-        </Routes>
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/minigames']}>
+          <Routes>
+            <Route path="/minigames" element={<Minigames />} />
+            <Route path="/bubbles" element={<h1>Vista Burbujas</h1>} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>,
     )
 
     await user.click(screen.getByLabelText('Burbujas'))

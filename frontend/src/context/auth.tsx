@@ -50,6 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshUser = useCallback(async () => {
     const profile = await getMe()
     setUser(profile)
+    window.dispatchEvent(new CustomEvent('auth:user-loaded', { detail: profile }))
     return profile
   }, [])
 
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       clearToken()
       clearSessionFlag()
       setUser(null)
+      window.dispatchEvent(new CustomEvent('auth:user-cleared'))
     }
   }, [])
 
@@ -121,7 +123,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const handleExpired = () => {
       clearSessionFlag()
+      {
       setUser(null)
+    }
+      window.dispatchEvent(new CustomEvent('auth:user-cleared'))
     }
     window.addEventListener('auth:expired', handleExpired)
     return () => window.removeEventListener('auth:expired', handleExpired)

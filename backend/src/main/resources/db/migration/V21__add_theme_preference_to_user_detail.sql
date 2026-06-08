@@ -1,0 +1,2 @@
+ALTER TABLE user_detail
+    ADD COLUMN IF NOT EXISTS theme_preference VARCHAR(20) NOT NULL DEFAULT 'LIGHT';

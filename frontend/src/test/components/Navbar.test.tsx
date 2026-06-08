@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
+import { ThemeProvider } from '../../context/theme'
 
 const mockUseAuth = vi.fn()
 vi.mock('../../context/auth', () => ({
@@ -21,14 +22,21 @@ describe('Navbar', () => {
 
   const renderWithRouter = () =>
     render(
-      <MemoryRouter>
-        <Navbar />
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter>
+          <Navbar />
+        </MemoryRouter>
+      </ThemeProvider>,
     )
 
   it('renderiza el logo de Huly', () => {
     renderWithRouter()
     expect(screen.getByAltText('Huly logo')).toBeInTheDocument()
+  })
+
+  it('renderiza el toggle de tema en navbar', () => {
+    renderWithRouter()
+    expect(screen.getByRole('button', { name: 'Cambiar a modo noche' })).toBeInTheDocument()
   })
 
   it('renderiza todos los links de navegación', () => {
@@ -61,7 +69,7 @@ describe('Navbar', () => {
     beforeEach(() => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: true,
-        user: { id: 1, name: 'Mili', email: 'mili@huly.com', role: 'USER' },
+        user: { id: 1, name: 'Mili', email: 'mili@huly.com', role: 'USER', themePreference: 'LIGHT' },
         logout: vi.fn(),
       })
     })
@@ -95,6 +103,16 @@ describe('Navbar', () => {
       await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
 
       expect(screen.getAllByText('Jardín').length).toBeGreaterThan(1)
+    })
+
+    it('muestra el control de tema dentro del menú mobile', async () => {
+      const user = userEvent.setup()
+      renderWithRouter()
+
+      await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
+
+      expect(screen.getByText('Tema')).toBeInTheDocument()
+      expect(screen.getAllByRole('button', { name: 'Cambiar a modo noche' }).length).toBeGreaterThan(1)
     })
 
     it('muestra los botones de auth dentro del menú mobile cuando está deslogueado', async () => {

@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
+import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
@@ -29,6 +30,13 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
     }
 
     @Override
+    public ThemePreference findThemePreference(Long userId) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        return userDetail.getThemePreference();
+    }
+
+    @Override
     @Transactional
     public void completeOnboarding(Long userId, String answer1, String answer2, String answer3) {
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
@@ -46,6 +54,15 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
         userDetail.setOnboardingTutorialCompleted(true);
+        userDetailRepository.save(userDetail);
+    }
+
+    @Override
+    @Transactional
+    public void updateThemePreference(Long userId, ThemePreference themePreference) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        userDetail.setThemePreference(themePreference);
         userDetailRepository.save(userDetail);
     }
     

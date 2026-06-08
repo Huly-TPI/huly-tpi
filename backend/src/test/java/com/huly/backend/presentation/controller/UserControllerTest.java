@@ -4,8 +4,10 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
+import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.infrastructure.presentation.controller.UserController;
+import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -43,6 +46,7 @@ class UserControllerTest {
                 .build();
         UserProfile profile = new UserProfile(user, true, false);
         when(getCurrentUserUseCase.execute(1L)).thenReturn(profile);
+        when(userDetailDomainRepository.findThemePreference(1L)).thenReturn(ThemePreference.DARK);
 
         ResponseEntity<UserProfileResponse> response =
                 userController.me(principalWithId(1L));
@@ -56,6 +60,31 @@ class UserControllerTest {
         assertThat(body.getRole()).isEqualTo(UserRole.USER);
         assertThat(body.getOnBoardingCompleted()).isTrue();
         assertThat(body.getOnboardingTutorialCompleted()).isFalse();
+        assertThat(body.getThemePreference()).isEqualTo(ThemePreference.DARK);
+    }
+
+    @Test
+    void updateTheme_shouldPersistThemePreference_whenPrincipalIsValid() {
+        AppUser user = AppUser.builder()
+                .id(1L).name("Mili").email("user@huly.com")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .build();
+        when(getCurrentUserUseCase.execute("user@huly.com")).thenReturn(user);
+
+        ResponseEntity<Void> response = userController.updateTheme(
+                principalWithEmail("user@huly.com"),
+                new UpdateThemePreferenceRequest(ThemePreference.DARK)
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(userDetailDomainRepository).updateThemePreference(1L, ThemePreference.DARK);
+    }
+
+    @Test
+    void updateTheme_shouldThrowUnauthorized_whenPrincipalIsNull() {
+        assertThatThrownBy(() -> userController.updateTheme(null, new UpdateThemePreferenceRequest(ThemePreference.DARK)))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Not authenticated");
     }
 
     @Test
