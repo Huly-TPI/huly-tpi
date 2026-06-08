@@ -1,9 +1,11 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.useCase.payment.HandleWebhookUseCase;
+import com.huly.backend.infrastructure.adapter.mercadopago.MercadoPagoSignatureValidator;
 import com.huly.backend.infrastructure.presentation.dto.payment.WebhookNotificationDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,13 +16,24 @@ import org.springframework.web.bind.annotation.*;
 public class MercadoPagoWebhookController {
 
     private final HandleWebhookUseCase handleWebhookUseCase;
+    private final MercadoPagoSignatureValidator signatureValidator;
 
     @PostMapping("/mercadopago")
-    public ResponseEntity<Void> handleWebhook(@RequestBody WebhookNotificationDto notification) {
+    public ResponseEntity<Void> handleWebhook(
+            @RequestHeader(value = "x-signature", required = false) String xSignature,
+            @RequestHeader(value = "x-request-id", required = false) String xRequestId,
+            @RequestBody WebhookNotificationDto notification) {
+
+        String dataId = notification.data() != null ? notification.data().id() : null;
+        if (!signatureValidator.isValid(xSignature, xRequestId, dataId)) {
+            log.warn("Invalid or missing MP webhook signature, requestId={}", xRequestId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         log.info("MP Webhook received: type={} action={} paymentId={}",
                 notification.type(),
                 notification.action(),
-                notification.data() != null ? notification.data().id() : "null");
+                dataId);
 
         if (!"payment".equals(notification.type()) || notification.data() == null || notification.data().id() == null) {
             return ResponseEntity.ok().build();

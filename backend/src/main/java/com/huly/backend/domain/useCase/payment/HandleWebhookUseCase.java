@@ -12,11 +12,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class HandleWebhookUseCase {
+
+    private static final Set<String> TERMINAL_FAILURE_STATUSES =
+            Set.of("rejected", "cancelled", "refunded", "charged_back");
 
     private final PaymentEventRepository paymentEventRepository;
     private final MercadoPagoPort mercadoPagoPort;
@@ -36,8 +40,10 @@ public class HandleWebhookUseCase {
 
         if ("approved".equals(payment.getStatus())) {
             processApproved(event, mpPaymentId);
-        } else {
+        } else if (TERMINAL_FAILURE_STATUSES.contains(payment.getStatus())) {
             processFailed(event, mpPaymentId, payment);
+        } else {
+            log.info("Payment {} has intermediate status={}, no action taken", mpPaymentId, payment.getStatus());
         }
     }
 

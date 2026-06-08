@@ -45,7 +45,7 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
 
     @Override
     public boolean approveIfPending(Long id, Long mpPaymentId) {
-        int updated = jpaRepository.approveIfNotApproved(id, mpPaymentId, Instant.now(), PaymentStatus.APPROVED);
+        int updated = jpaRepository.approveIfNotApproved(id, mpPaymentId, Instant.now(), PaymentStatus.APPROVED, PaymentStatus.PENDING);
         return updated > 0;
     }
 
