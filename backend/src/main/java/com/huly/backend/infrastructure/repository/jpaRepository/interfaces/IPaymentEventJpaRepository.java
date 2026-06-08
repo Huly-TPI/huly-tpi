@@ -16,9 +16,10 @@ public interface IPaymentEventJpaRepository extends JpaRepository<PaymentEventEn
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE PaymentEventEntity e SET e.status = :approved, e.mpPaymentId = :mpPaymentId, e.updatedAt = :updatedAt " +
-           "WHERE e.id = :id AND e.status <> :approved")
+           "WHERE e.id = :id AND e.status = :pending")
     int approveIfNotApproved(@Param("id") Long id,
                              @Param("mpPaymentId") Long mpPaymentId,
                              @Param("updatedAt") Instant updatedAt,
-                             @Param("approved") PaymentStatus approved);
+                             @Param("approved") PaymentStatus approved,
+                             @Param("pending") PaymentStatus pending);
 }

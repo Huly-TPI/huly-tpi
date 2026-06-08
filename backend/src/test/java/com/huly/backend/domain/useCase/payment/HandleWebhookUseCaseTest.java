@@ -116,6 +116,50 @@ class HandleWebhookUseCaseTest {
     }
 
     @Test
+    void execute_shouldMarkEventFailed_whenPaymentCancelled() {
+        when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.getPayment(99L))
+                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "cancelled", "expired"));
+        when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                .thenReturn(Optional.of(pendingEvent));
+
+        handleWebhookUseCase.execute(99L);
+
+        verify(paymentEventRepository).updateStatus(eq(1L), eq(PaymentStatus.FAILED), eq(99L), any());
+        verifyNoInteractions(coinService);
+    }
+
+    @Test
+    void execute_shouldDoNothing_whenPaymentHasIntermediateStatus() {
+        when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.getPayment(99L))
+                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "in_process", null));
+        when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                .thenReturn(Optional.of(pendingEvent));
+
+        handleWebhookUseCase.execute(99L);
+
+        verify(paymentEventRepository, never()).approveIfPending(any(), any());
+        verify(paymentEventRepository, never()).updateStatus(any(), any(), any(), any());
+        verifyNoInteractions(coinService);
+    }
+
+    @Test
+    void execute_shouldDoNothing_whenPaymentStatusIsPending() {
+        when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.getPayment(99L))
+                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "pending", null));
+        when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                .thenReturn(Optional.of(pendingEvent));
+
+        handleWebhookUseCase.execute(99L);
+
+        verify(paymentEventRepository, never()).approveIfPending(any(), any());
+        verify(paymentEventRepository, never()).updateStatus(any(), any(), any(), any());
+        verifyNoInteractions(coinService);
+    }
+
+    @Test
     void execute_shouldDoNothing_whenNoEventFound() {
         when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
         when(mercadoPagoPort.getPayment(99L))
