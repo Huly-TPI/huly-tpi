@@ -26,13 +26,19 @@ public class MercadoPagoWebhookController {
             return ResponseEntity.ok().build();
         }
 
+        Long mpPaymentId;
         try {
-            Long mpPaymentId = Long.parseLong(notification.data().id());
-            handleWebhookUseCase.execute(mpPaymentId);
+            mpPaymentId = Long.parseLong(notification.data().id());
         } catch (NumberFormatException e) {
             log.warn("Invalid payment id in webhook: {}", notification.data().id());
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            handleWebhookUseCase.execute(mpPaymentId);
         } catch (Exception e) {
-            log.error("Error processing webhook for paymentId={}", notification.data().id(), e);
+            log.error("Error processing webhook for paymentId={}", mpPaymentId, e);
+            return ResponseEntity.internalServerError().build();
         }
 
         return ResponseEntity.ok().build();

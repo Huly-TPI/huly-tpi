@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface PaymentEventRepository {
     PaymentEvent save(PaymentEvent event);
     Optional<PaymentEvent> findByMpPaymentId(Long mpPaymentId);
-    Optional<PaymentEvent> findByMpPreferenceId(String mpPreferenceId);
+    Optional<PaymentEvent> findByExternalReference(String externalReference);
     void updateStatus(Long id, PaymentStatus status, Long mpPaymentId, String errorDetail);
+    boolean approveIfPending(Long id, Long mpPaymentId);
 }

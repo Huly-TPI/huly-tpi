@@ -25,7 +25,10 @@ public class PaymentEventEntity {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "mp_preference_id", nullable = false)
+    @Column(name = "external_reference", nullable = false)
+    private String externalReference;
+
+    @Column(name = "mp_preference_id")
     private String mpPreferenceId;
 
     @Column(name = "mp_payment_id")

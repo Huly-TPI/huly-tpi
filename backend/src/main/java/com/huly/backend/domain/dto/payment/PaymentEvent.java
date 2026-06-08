@@ -12,6 +12,7 @@ public class PaymentEvent {
     private Long id;
     private Long userId;
     private Long productId;
+    private String externalReference;
     private String mpPreferenceId;
     private Long mpPaymentId;
     private PaymentStatus status;
