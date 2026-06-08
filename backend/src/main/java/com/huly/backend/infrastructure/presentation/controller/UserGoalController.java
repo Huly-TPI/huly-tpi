@@ -13,6 +13,7 @@ import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalPageRes
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalResponse;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalUpdateRequest;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,7 @@ public class UserGoalController {
     public ResponseEntity<UserGoalResponse> acceptChallenge(
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody AcceptChallengeRequest request) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
 
         UserGoal created = acceptChallengeUseCase.execute(
                 userId,
@@ -60,7 +61,7 @@ public class UserGoalController {
     public ResponseEntity<UserGoalResponse> add(
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody UserGoalRequest request) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         UserGoal created = addUserGoalUseCase.execute(
                 userId,
                 request.title(),
@@ -75,7 +76,7 @@ public class UserGoalController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(userId, pageable);
         Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(userId, pageable);
@@ -105,6 +106,13 @@ public class UserGoalController {
     public ResponseEntity<UserGoalResponse> complete(@PathVariable Long id) {
         UserGoal completed = completeUserGoalUseCase.execute(id);
         return ResponseEntity.ok(toResponse(completed));
+    }
+
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 
     private UserGoalResponse toResponse(UserGoal userGoal) {

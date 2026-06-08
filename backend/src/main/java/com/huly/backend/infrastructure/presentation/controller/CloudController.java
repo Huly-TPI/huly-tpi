@@ -6,6 +6,7 @@ import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendatio
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationRequest;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationResponse;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudThoughtRequest;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +31,16 @@ public class CloudController {
     public ResponseEntity<Void> saveThought(
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid CloudThoughtRequest request) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         userVectorMemoryService.rememberGuidedCloudInput(userId, UUID.randomUUID().toString(), request.thought());
         return ResponseEntity.noContent().build();
+    }
+
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 
     @PostMapping("/recommendation")

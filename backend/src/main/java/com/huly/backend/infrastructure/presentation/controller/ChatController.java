@@ -8,12 +8,13 @@ import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
-import com.huly.backend.infrastructure.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest;
+import com.huly.backend.infrastructure.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatMessageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatRequest;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatStreamEventResponse;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -50,7 +51,7 @@ public class ChatController {
     public ResponseEntity<ChatResponse> chat(
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid ChatRequest request) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         return ResponseEntity.ok(toResponse(reply));
     }
@@ -63,7 +64,7 @@ public class ChatController {
             return Flux.just(toServerSentEvent(ChatStreamEvent.error("message y conversationId son obligatorios.")));
         }
 
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
                 .map(this::toServerSentEvent);
     }
@@ -72,7 +73,7 @@ public class ChatController {
     public ResponseEntity<Void> challengeDecision(
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid ChatChallengeDecisionRequest request) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         userVectorMemoryService.rememberChallengeDecision(
                 userId,
                 request.conversationId(),
@@ -88,10 +89,17 @@ public class ChatController {
             @PathVariable String conversationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         Page<ChatMessage> result = listChatHistoryUseCase.execute(
                 conversationId, userId, PageRequest.of(page, size, Sort.by("createdAt").ascending()));
         return ResponseEntity.ok(toPageResponse(result));
+    }
+
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 
     private Boolean isBlank(String value) {

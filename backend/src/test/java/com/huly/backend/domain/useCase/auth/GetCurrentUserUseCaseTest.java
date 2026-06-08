@@ -1,12 +1,13 @@
 package com.huly.backend.domain.useCase.auth;
 
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -52,7 +53,7 @@ class GetCurrentUserUseCaseTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> getCurrentUserUseCase.execute(999L))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found");
     }
 }

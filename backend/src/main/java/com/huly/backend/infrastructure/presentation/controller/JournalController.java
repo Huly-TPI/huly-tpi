@@ -4,9 +4,10 @@ import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
 import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
-import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryRequest;
 import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryResponse;
+import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class JournalController {
 
     @GetMapping
     public ResponseEntity<List<JournalEntryResponse>> list(@AuthenticationPrincipal UserDetails principal) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
         List<JournalEntryResponse> entries = listJournalEntriesUseCase.execute(userId)
                 .stream()
                 .map(this::toResponse)
@@ -40,7 +41,7 @@ public class JournalController {
     public ResponseEntity<JournalEntryResponse> create(
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody JournalEntryRequest request) {
-        Long userId = Long.parseLong(principal.getUsername());
+        Long userId = getUserId(principal);
 
         Mood mood = null;
         if (request.mood() != null && !request.mood().isBlank()) {
@@ -61,6 +62,13 @@ public class JournalController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(entry));
+    }
+
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 
     private JournalEntryResponse toResponse(JournalEntry entry) {
