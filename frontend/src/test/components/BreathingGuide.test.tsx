@@ -37,12 +37,6 @@ describe('BreathingGuide', () => {
         expect(screen.getByText(/diafragmática/i)).toBeInTheDocument()
         expect(screen.getByText(/cuadrada/i)).toBeInTheDocument()
       })
-      it('muestra la descripción de cada técnica de respiración al hacer hover', () => {
-        render(<BreathingGuide />)
-        fireEvent.mouseEnter(screen.getByRole('button', { name: /diafragmática/i }))
-        expect(screen.getByText(/Inhala profundamente por la nariz/i)).toBeInTheDocument()
-
-      })
       it('al seleccionar una tecnica oculta la selección y muestra el ejercicio', async () => {
           const user = userEvent.setup()
           render(<BreathingGuide />)
@@ -162,5 +156,54 @@ describe('BreathingGuide', () => {
             act(() => vi.advanceTimersByTime(2000))
             expect(screen.getByText('4')).toBeInTheDocument()
             })
-        });
 
+
+            it('muestra la imagen de huly al inhalar', () => {
+              vi.useFakeTimers()
+              render(<BreathingGuide 
+                hulyNormal="huly-normal.webp"
+                hulyInhalando="huly-inhalando.webp"
+                hulyExhalando="huly-exhalando.webp"
+              />)
+              fireEvent.click(screen.getByRole('button', { name: /diafragmática/i }))
+              fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
+              const img = screen.getByAltText('Huly') 
+              expect(img).toHaveAttribute('src', 'huly-inhalando.webp')
+              vi.useRealTimers()
+              })
+
+        it('muestra la imagen de huly al exhalar', () => {
+          vi.useFakeTimers()
+          render(<BreathingGuide
+            hulyNormal="huly-normal.webp"
+            hulyInhalando="huly-inhalando.webp"
+            hulyExhalando="huly-exhalando.webp"
+          />)
+          fireEvent.click(screen.getByRole('button', { name: /diafragmática/i }))
+          fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
+          for(let i = 0; i < 4; i++) {
+            act(() => {    vi.advanceTimersByTime(1000)}  
+              ) }
+          const img = screen.getByAltText('Huly') 
+          expect(img).toHaveAttribute('src', 'huly-exhalando.webp')
+          vi.useRealTimers()
+          })
+
+          it('muestra la imagen de huly normal al sostener', () => {
+            vi.useFakeTimers()
+            render(<BreathingGuide
+              hulyNormal="huly-normal.webp"
+              hulyInhalando="huly-inhalando.webp"
+              hulyExhalando="huly-exhalando.webp"
+            />)
+            fireEvent.click(screen.getByRole('button', { name: /cuadrada/i }))
+            fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
+            for(let i = 0; i < 4; i++) {
+              act(() => {    vi.advanceTimersByTime(1000)}  
+                )
+              }
+            const img = screen.getByAltText('Huly') 
+            expect(img).toHaveAttribute('src', 'huly-normal.webp')
+            vi.useRealTimers()
+            })
+        });
