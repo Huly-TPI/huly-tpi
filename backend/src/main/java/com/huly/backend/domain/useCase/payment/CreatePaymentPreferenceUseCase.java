@@ -24,22 +24,26 @@ public class CreatePaymentPreferenceUseCase {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("producto", "id", productId));
 
-        // UUID used as external_reference in MP so we can look it up on webhook
         String externalReference = UUID.randomUUID().toString();
-
         PaymentPreferenceResult preference = mercadoPagoPort.createPreference(product, userId, externalReference);
 
-        paymentEventRepository.save(PaymentEvent.builder()
+        paymentEventRepository.save(buildPendingEvent(userId, productId, externalReference, preference.getId(), product.getCoinsAmount()));
+
+        return new PaymentPreferenceResult(preference.getId(), preference.getInitPoint());
+    }
+
+    private PaymentEvent buildPendingEvent(Long userId, Long productId, String externalReference,
+                                           String mpPreferenceId, Integer coinsAmount) {
+        Instant now = Instant.now();
+        return PaymentEvent.builder()
                 .userId(userId)
                 .productId(productId)
                 .externalReference(externalReference)
-                .mpPreferenceId(preference.getId())
+                .mpPreferenceId(mpPreferenceId)
                 .status(PaymentStatus.PENDING)
-                .coinsAmount(product.getCoinsAmount())
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build());
-
-        return new PaymentPreferenceResult(preference.getId(), preference.getInitPoint());
+                .coinsAmount(coinsAmount)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
     }
 }

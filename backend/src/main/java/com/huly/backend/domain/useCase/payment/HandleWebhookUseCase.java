@@ -24,7 +24,6 @@ public class HandleWebhookUseCase {
 
     @Transactional
     public void execute(Long mpPaymentId) {
-        // Idempotency: si ya está aprobado, ignorar
         Optional<PaymentEvent> byPaymentId = paymentEventRepository.findByMpPaymentId(mpPaymentId);
         if (byPaymentId.isPresent() && byPaymentId.get().getStatus() == PaymentStatus.APPROVED) {
             log.info("Payment {} already APPROVED, skipping", mpPaymentId);
@@ -32,27 +31,38 @@ public class HandleWebhookUseCase {
         }
 
         MercadoPagoPaymentResult payment = mercadoPagoPort.getPayment(mpPaymentId);
-
-        PaymentEvent event = paymentEventRepository.findByExternalReference(payment.getExternalReference())
-                .orElseGet(() -> byPaymentId.orElse(null));
-
-        if (event == null) {
-            log.warn("No payment_event found for externalReference={} paymentId={}", payment.getExternalReference(), mpPaymentId);
-            return;
-        }
+        PaymentEvent event = resolveEvent(byPaymentId, payment.getExternalReference(), mpPaymentId);
+        if (event == null) return;
 
         if ("approved".equals(payment.getStatus())) {
-            boolean credited = paymentEventRepository.approveIfPending(event.getId(), mpPaymentId);
-            if (credited) {
-                coinService.credit(event.getUserId(), event.getCoinsAmount());
-                log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());
-            } else {
-                log.info("Payment {} already APPROVED by concurrent webhook, skipping coin credit", mpPaymentId);
-            }
+            processApproved(event, mpPaymentId);
         } else {
-            String detail = payment.getStatus() + ": " + payment.getStatusDetail();
-            paymentEventRepository.updateStatus(event.getId(), PaymentStatus.FAILED, mpPaymentId, detail);
-            log.info("Payment {} FAILED — status={} detail={}", mpPaymentId, payment.getStatus(), payment.getStatusDetail());
+            processFailed(event, mpPaymentId, payment);
         }
+    }
+
+    private PaymentEvent resolveEvent(Optional<PaymentEvent> byPaymentId, String externalReference, Long mpPaymentId) {
+        PaymentEvent event = paymentEventRepository.findByExternalReference(externalReference)
+                .orElseGet(() -> byPaymentId.orElse(null));
+        if (event == null) {
+            log.warn("No payment_event found for externalReference={} paymentId={}", externalReference, mpPaymentId);
+        }
+        return event;
+    }
+
+    private void processApproved(PaymentEvent event, Long mpPaymentId) {
+        boolean credited = paymentEventRepository.approveIfPending(event.getId(), mpPaymentId);
+        if (credited) {
+            coinService.credit(event.getUserId(), event.getCoinsAmount());
+            log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());
+        } else {
+            log.info("Payment {} already APPROVED by concurrent webhook, skipping coin credit", mpPaymentId);
+        }
+    }
+
+    private void processFailed(PaymentEvent event, Long mpPaymentId, MercadoPagoPaymentResult payment) {
+        String detail = payment.getStatus() + ": " + payment.getStatusDetail();
+        paymentEventRepository.updateStatus(event.getId(), PaymentStatus.FAILED, mpPaymentId, detail);
+        log.info("Payment {} FAILED — status={} detail={}", mpPaymentId, payment.getStatus(), payment.getStatusDetail());
     }
 }
