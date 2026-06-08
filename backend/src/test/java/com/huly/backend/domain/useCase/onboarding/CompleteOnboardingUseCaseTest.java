@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.badge.GrantBadgeUseCase;
 
 import java.util.Optional;
 
@@ -30,6 +31,9 @@ class CompleteOnboardingUseCaseTest {
     private UserVectorMemoryService userVectorMemoryService;
     @InjectMocks
     private CompleteOnboardingUseCase completeOnboardingUseCase;
+
+    @Mock
+    private GrantBadgeUseCase grantBadgeUseCase;
 
     private AppUser user;
 
