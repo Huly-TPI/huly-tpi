@@ -13,7 +13,7 @@ import cloudHulyExhalando from '../../assets/breathing/cloud-huly-exhalando.webp
 
 
 export default function Breathing() {
-  const [techniques, setTechniques] = useState<BreathingTechnique[]>([])
+  const [techniques, setTechniques] = useState<BreathingTechnique[] | undefined>(undefined)
   
   useEffect(() => {
     getBreathingTechniques().then(setTechniques).catch(console.error)

@@ -1,9 +1,9 @@
 package com.huly.backend.domain.useCase.onboarding;
 
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +18,9 @@ public class CompleteOnboardingUseCase {
     private final UserDetailDomainRepository userDetailDomainRepository;
     private final UserVectorMemoryService userVectorMemoryService;
     @Transactional
-    public void execute(String email, String answer1, String answer2, String answer3) { 
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado: " + email));
+    public void execute(Long userId, String answer1, String answer2, String answer3) {
+        AppUser user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + userId));
 
         userDetailDomainRepository.completeOnboarding(user.getId(), answer1, answer2, answer3);
         try { 

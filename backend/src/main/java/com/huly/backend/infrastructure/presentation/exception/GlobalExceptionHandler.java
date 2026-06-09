@@ -6,6 +6,7 @@ import com.huly.backend.domain.exception.InfrastructureException;
 import com.huly.backend.domain.exception.InsufficientPermissionsException;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
+import com.huly.backend.domain.exception.AccountNotActiveException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -69,6 +70,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInfrastructureException(InfrastructureException e, HttpServletRequest request) {
         log.error("Infrastructure error: {}", e.getMessage(), e);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, new Exception("Ocurrió un error interno en el servidor"), request, null);
+    }
+
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotActiveException(
+            AccountNotActiveException e,
+            HttpServletRequest request) {
+
+        return buildResponse(HttpStatus.UNAUTHORIZED, e, request, null);
     }
 
     // --- Infrastructure/presentation exceptions ---

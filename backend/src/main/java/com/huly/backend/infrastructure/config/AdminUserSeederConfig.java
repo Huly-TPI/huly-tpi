@@ -36,6 +36,7 @@ public class AdminUserSeederConfig {
                     .password(passwordEncoder.encode("admin123"))
                     .role(UserRole.ADMIN)
                     .status(UserStatus.ACTIVE)
+                    .coins(0)
                     .build();
 
             appUserRepository.save(admin);
