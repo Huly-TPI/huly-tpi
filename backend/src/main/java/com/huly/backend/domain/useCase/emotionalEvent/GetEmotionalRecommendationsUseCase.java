@@ -7,11 +7,9 @@ import com.huly.backend.domain.model.EmotionalRecommendationResult;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.service.EmotionalRecommendationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 @RequiredArgsConstructor
 public class GetEmotionalRecommendationsUseCase {
 
