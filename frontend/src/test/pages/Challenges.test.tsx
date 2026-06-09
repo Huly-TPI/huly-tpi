@@ -18,6 +18,12 @@ vi.mock('../../assets/challenges/plant-stages/plant-3.png', () => ({ default: 'p
 vi.mock('../../assets/challenges/plant-stages/plant-4.png', () => ({ default: 'plant-4.png' }))
 vi.mock('../../assets/challenges/plant-stages/plant-5.png', () => ({ default: 'plant-5.png' }))
 
+const mockRequireAuth = vi.hoisted(() => vi.fn((fn: () => void) => fn()))
+
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({ requireAuth: mockRequireAuth }),
+}))
+
 vi.mock('../../hooks/useUserGoals', () => ({
   useUserGoals: vi.fn(),
 }))
@@ -69,6 +75,7 @@ describe('Challenges', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockedUseUserGoals.mockReturnValue(defaultHookReturn)
+    mockRequireAuth.mockImplementation((fn: () => void) => fn())
   })
 
   const renderChallenges = () => {
@@ -168,5 +175,23 @@ describe('Challenges', () => {
     const { user } = renderChallenges()
     await user.click(screen.getByLabelText('Ver detalles: Ver detalle'))
     expect(screen.getByRole('heading', { name: 'Ver detalle' })).toBeInTheDocument()
+  })
+
+  describe('acceso sin login', () => {
+    beforeEach(() => {
+      mockRequireAuth.mockImplementation(() => {})
+    })
+
+    it('llama a requireAuth al hacer click en Nuevo reto', async () => {
+      const { user } = renderChallenges()
+      await user.click(screen.getByText('+ Nuevo reto'))
+      expect(mockRequireAuth).toHaveBeenCalled()
+    })
+
+    it('no abre el modal de creación cuando no hay sesión', async () => {
+      const { user } = renderChallenges()
+      await user.click(screen.getByText('+ Nuevo reto'))
+      expect(screen.queryByPlaceholderText('¿Qué querés lograr?')).not.toBeInTheDocument()
+    })
   })
 })

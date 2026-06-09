@@ -14,6 +14,7 @@ import boardBg from '../../assets/challenges/board-challenges.png'
 import stumpImg from '../../assets/challenges/stump.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
+import { useAuthGate } from '../../context/authGate'
 
 const CYCLE_SIZE = 16
 
@@ -49,6 +50,7 @@ type ModalState =
 export default function Challenges() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
+  const { requireAuth } = useAuthGate()
   const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -190,7 +192,7 @@ export default function Challenges() {
             )}
 
             <div className="flex justify-end mb-[0.1rem]">
-              <Button variant="primary" size="sm" onClick={() => setModal({ mode: 'create' })}>
+              <Button variant="primary" size="sm" onClick={() => requireAuth(() => setModal({ mode: 'create' }))}>
                 + Nuevo reto
               </Button>
             </div>
