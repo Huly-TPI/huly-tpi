@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useActivitySessionTracker } from '../hooks/useActivitySessionTracker'
 import { useAuthGate } from '../context/authGate'
 import { useTheme } from '../context/theme'
 import BackButton from './Buttons/BackButton/BackButton'
+import { ActivityType } from '../api/activities'
 
 export interface BreathingTechnique {
     id: number
@@ -78,6 +80,10 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
     const [currentRound, setCurrentRound] = useState(1)
     const [isPaused, setIsPaused] = useState(false)
 
+    const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(ActivityType.RESPIRACION, {
+        minDurationSeconds: 10,
+    })
+
     useEffect(() => {
         if (!isRunning || !selected || isPaused) return
 
@@ -98,13 +104,16 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
             setCurrentPhaseIndex(0)
             setTimeLeft(phases[0].duration)
         } else {
+            void saveSession().catch(console.error)
+            
             setIsRunning(false)
             setCurrentPhaseIndex(0)
             setCurrentRound(1)
             setSelected(null)
             setIsPaused(false)
+            stopSession()
         }
-    }, [timeLeft, isRunning, selected, currentPhaseIndex, currentRound, isPaused])
+    }, [timeLeft, isRunning, selected, currentPhaseIndex, currentRound, isPaused, saveSession, stopSession])
 
 
   const hulyImage = (() => {
@@ -131,11 +140,13 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
                 {hulyEl}  
                 <button
                     onClick={() => {
+                        void saveSession().catch(console.error)
                         setSelected(null)
                         setCurrentPhaseIndex(0)
                         setCurrentRound(1)
                         setIsRunning(false)
                         setIsPaused(false)
+                        stopSession()
                     }}
                     className="fixed top-20 left-6 rounded-full bg-[var(--surface-tertiary)] px-4 py-2 text-sm text-violeta shadow-sm backdrop-blur-sm transition-colors hover:brightness-110 flex items-center gap-2"
                 >
@@ -196,11 +207,13 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
                     <h2 className={`text-xl font-bold mb-1 ${isDark ? 'text-[var(--text-primary)]' : 'text-gray-800'}`}>{selected.name}</h2>
                     <p className={`text-sm mb-4 ${isDark ? 'text-[var(--text-secondary)]' : 'text-gray-500'}`}>{selected.description}</p>
                     <button
-                        onClick={() => {
-                            const phases = getPhases(selected)
-                            setTimeLeft(phases[0].duration)
-                            setIsRunning(true)
-                        }}
+                    onClick={() => {
+                        const phases = getPhases(selected)
+                        setTimeLeft(phases[0].duration)
+                        startSession()
+                        markConditionMet()
+                        setIsRunning(true)
+                    }}
                         className="w-full py-3 rounded-full bg-violeta text-white font-medium hover:opacity-100 transition-opacity"
                     >
                         Iniciar

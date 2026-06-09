@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import { type UserGoalResponse } from '../../api/userGoals'
 import Plant from '../../components/Challenges/Plant'
@@ -14,6 +15,7 @@ import boardBg from '../../assets/challenges/board-challenges.png'
 import stumpImg from '../../assets/challenges/stump.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
+import { ActivityType, registerActivitySession } from '../../api/activities'
 
 const CYCLE_SIZE = 16
 
@@ -54,6 +56,10 @@ export default function Challenges() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
 
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.RETO, {
+    autoStart: true,
+  })
+
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
 
@@ -70,7 +76,8 @@ export default function Challenges() {
 
   const handleCreate = useCallback(async (data: { title: string; description: string }) => {
     await createGoal({ title: data.title, description: data.description || undefined })
-  }, [createGoal])
+    markConditionMet()
+  }, [createGoal, markConditionMet])
 
   const handleUpdate = useCallback(async (id: number, data: { title: string; description: string }) => {
     await updateGoal(id, { title: data.title, description: data.description || undefined })
@@ -90,6 +97,8 @@ export default function Challenges() {
     const isHarvest = cycleProgress === CYCLE_SIZE - 1
     try {
       await completeGoal(id)
+      await registerActivitySession({ activityType: ActivityType.RETO })
+      markConditionMet()
       if (isHarvest) {
         setHarvestPlant(completedPlants + 1)
       } else {
@@ -98,22 +107,20 @@ export default function Challenges() {
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Error al completar el reto')
     }
-  }, [cycleProgress, completedPlants, completeGoal, triggerWatering])
+  }, [cycleProgress, completedPlants, completeGoal, triggerWatering, markConditionMet])
 
-  const hasPending  = (pendientes?.totalElements ?? 0) > 0
+  const hasPending = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0
 
   return (
-    <div
-      className="challenges-page relative h-full flex flex-row items-stretch overflow-hidden"
-    >
+    <div className="challenges-page relative h-full flex flex-row items-stretch overflow-hidden">
       <ThemeBackground
         lightSrc={dayBackground}
         darkSrc={nightBackground}
         lightAlt="Fondo de retos"
         darkAlt="Fondo nocturno de retos"
       />
-      <BackButton to="/" />
+      <BackButton to="/" onBeforeNavigate={() => saveSession()} />
 
       <aside className="plant-zone relative z-10 flex-shrink-0 w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-hidden">
         <div className="plant-zone__info flex flex-col items-center gap-[0.6rem] w-full">
@@ -217,12 +224,12 @@ export default function Challenges() {
                   </li>
                 )}
 
-                {hasCompleted && (
+                {hasCompleted ? (
                   <li
                     className="h-[3px] bg-gradient-to-r from-transparent via-[rgba(120,120,120,0.55)] to-transparent my-2 border-none list-none"
                     role="separator"
                   />
-                )}
+                ) : null}
 
                 {hasCompleted && completados!.content.map(goal => (
                   <li key={goal.id}>

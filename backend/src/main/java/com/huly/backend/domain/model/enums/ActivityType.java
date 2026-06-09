@@ -4,5 +4,6 @@ public enum ActivityType {
     RESPIRACION,
     DIARIO,
     NUBE,
-    BURBUJA
+    BURBUJA,
+    RETO
 }
