@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+
 import cardFrame from '../../assets/register/cardFrame.webp'
 
 interface AuthGateModalProps {
@@ -16,11 +17,16 @@ export default function AuthGateModal({
 }: AuthGateModalProps) {
   useEffect(() => {
     if (!open) return
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
+
     document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
   }, [open, onClose])
 
   if (!open) return null
@@ -48,33 +54,67 @@ export default function AuthGateModal({
       >
         <h2
           id="auth-gate-title"
-          className="mb-2 text-center text-2xl md:text-3xl font-bold text-[#4C7C64]"
+          className="mb-2 text-center text-2xl md:text-3xl font-bold text-[#3D3D3D]"
         >
           ¡Necesitás una cuenta!
         </h2>
-        <p className="mb-6 text-center text-sm italic text-[#8c7b66]">
+
+        <p className="mb-8 text-center text-sm text-[#6B6B6B]">
           Para esta acción iniciá sesión o registrate
         </p>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <button
             type="button"
             onClick={onLogin}
-            className="rounded-xl border-b-4 border-[#3d6b44] bg-[#5a8a50] py-3 text-sm font-bold text-white transition-all hover:brightness-105 active:translate-y-[2px] active:border-b-2"
+            className="
+              w-full
+              rounded-full
+              bg-[#8E68B0]
+              py-3
+              text-sm
+              font-semibold
+              text-white
+              shadow-md
+              transition-all
+              hover:brightness-105
+              active:scale-[0.98]
+            "
           >
             Iniciar sesión
           </button>
+
           <button
             type="button"
             onClick={onRegister}
-            className="rounded-xl border-2 border-[#5a8a50] bg-transparent py-3 text-sm font-bold text-[#4C7C64] transition-colors hover:bg-[#5a8a50]/10"
+            className="
+              w-full
+              rounded-full
+              border-2
+              border-[#8E68B0]
+              bg-transparent
+              py-3
+              text-sm
+              font-semibold
+              text-[#8E68B0]
+              transition-all
+              hover:bg-[#8E68B0]/5
+            "
           >
             Registrarse
           </button>
+
           <button
             type="button"
             onClick={onClose}
-            className="mt-1 py-1 text-xs text-[#8c7b66] transition-colors hover:text-[#4C7C64]"
+            className="
+              mt-1
+              text-sm
+              text-[#4C7C64]
+              underline-offset-4
+              transition-all
+              hover:underline
+            "
           >
             Ahora no
           </button>
