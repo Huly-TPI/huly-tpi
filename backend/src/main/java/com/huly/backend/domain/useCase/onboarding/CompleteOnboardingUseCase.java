@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.badge.GrantBadgeUseCase;
+
 
 
 @Service
@@ -17,6 +19,7 @@ public class CompleteOnboardingUseCase {
     private final UserRepository userRepository;
     private final UserDetailDomainRepository userDetailDomainRepository;
     private final UserVectorMemoryService userVectorMemoryService;
+    private final GrantBadgeUseCase grantBadgeUseCase;
     @Transactional
     public void execute(Long userId, String answer1, String answer2, String answer3) {
         AppUser user = userRepository.findById(userId)
@@ -28,6 +31,8 @@ public class CompleteOnboardingUseCase {
     } catch (Exception e) {
             
         }
+
+        grantBadgeUseCase.execute(user.getEmail(), "PRIMER_PASO");
     }
 
 }

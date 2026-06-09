@@ -1,35 +1,24 @@
-import { useEffect, useState } from 'react'
-import { getProducts, createPreference, type Product } from '../../api/payment'
+import { useProducts } from '../../hooks/shop/useProducts'
+import { useUserCoins } from '../../hooks/shop/useUserCoins'
+import { usePurchase } from '../../hooks/shop/usePurchase'
+import { ProductCard } from '../../components/Shop/ProductCard'
+import { CoinsBadge } from '../../components/Shop/CoinsBadge'
 
 export default function Shop() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [buyingId, setBuyingId] = useState<string | null>(null)
+  const { products, loading, error: productsError } = useProducts()
+  const { coins } = useUserCoins()
+  const { buyingId, error: purchaseError, buy } = usePurchase()
 
-  useEffect(() => {
-    getProducts()
-      .then(setProducts)
-      .catch(() => setError('No se pudieron cargar los productos.'))
-      .finally(() => setLoading(false))
-  }, [])
-
-  async function handleBuy(productId: string) {
-    setBuyingId(productId)
-    try {
-      const { initPoint } = await createPreference(productId)
-      window.location.href = initPoint
-    } catch {
-      setError('Error al iniciar el pago. Intentá de nuevo.')
-      setBuyingId(null)
-    }
-  }
+  const error = productsError ?? purchaseError
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 text-center mb-2">Planes y Productos</h1>
-        <p className="text-gray-500 text-center mb-10">Elegí el plan que mejor se adapte a vos</p>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl font-bold text-gray-800">Planes y Productos</h1>
+          {coins !== null && <CoinsBadge coins={coins} />}
+        </div>
+        <p className="text-gray-500 mb-10">Elegí el plan que mejor se adapte a vos</p>
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm text-center">
@@ -44,35 +33,13 @@ export default function Shop() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {products.map((product) => (
-              <div
+              <ProductCard
                 key={product.id}
-                className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4 border border-gray-100 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">{product.name}</h2>
-                  <p className="text-gray-500 text-sm leading-relaxed">{product.description}</p>
-                </div>
-                <div className="text-2xl font-extrabold text-green-700">
-                  ${product.price.toLocaleString('es-AR')}
-                  <span className="text-sm font-normal text-gray-400 ml-1">ARS</span>
-                </div>
-                <button
-                  onClick={() => handleBuy(product.id)}
-                  disabled={buyingId !== null}
-                  className="w-full py-3 rounded-xl bg-green-600 text-white font-semibold text-sm
-                             hover:bg-green-700 active:scale-95 transition-all
-                             disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {buyingId === product.id ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Procesando…
-                    </>
-                  ) : (
-                    'Comprar'
-                  )}
-                </button>
-              </div>
+                product={product}
+                buying={buyingId === product.id}
+                disabled={buyingId !== null}
+                onBuy={buy}
+              />
             ))}
           </div>
         )}
