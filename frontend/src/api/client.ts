@@ -2,7 +2,7 @@ import { ApiError } from './apiError'
 
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 
-type RequestOptions = Omit<RequestInit, 'body'> & {
+export type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
   skipAuthRedirect?: boolean
 }

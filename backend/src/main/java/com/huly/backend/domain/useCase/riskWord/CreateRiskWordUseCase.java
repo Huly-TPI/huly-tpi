@@ -4,14 +4,12 @@ import com.huly.backend.domain.model.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.service.RiskWordService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 /**
  * Caso de uso para la creación de una palabra de riesgo.
  * Construye el objeto de dominio con los parámetros recibidos
  * y delega la lógica de negocio al {@link RiskWordService}.
  */
-@Service
 @RequiredArgsConstructor
 public class CreateRiskWordUseCase {
 

@@ -11,13 +11,11 @@ import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 
 import java.time.Instant;
 
-@Service
 @RequiredArgsConstructor
 public class LoginUseCase {
 

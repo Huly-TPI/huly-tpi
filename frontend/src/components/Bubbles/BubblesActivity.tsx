@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import Bubble from './Bubble'
 import type { Bubble as BubbleType } from './types'
 import './BubblesActivity.css'
@@ -6,6 +7,7 @@ import bgImage from '../../assets/bubbles/background/bubbles-minigame-background
 import fishImage from '../../assets/bubbles/bubble-minigame-fish.webp'
 import Button from '../Buttons/Button/Button'
 import BackButton from '../Buttons/BackButton/BackButton'
+import { ActivityType } from '../../api/activities'
 
 const BUBBLE_COLORS = [
   'rgba(144, 210, 170, 0.55)',
@@ -41,9 +43,19 @@ const BubblesActivity = () => {
   const [poppingIds, setPoppingIds] = useState<Set<string>>(new Set())
   const [poppingPositions, setPoppingPositions] = useState<Map<string, { x: number; y: number }>>(new Map())
   const nextIdRef = useRef(INITIAL_BUBBLES.length)
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([])
+
+  const { startSession, markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.BURBUJA)
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout)
+    }
+  }, [])
 
   const handleBubbleClick = (bubble: BubbleType, position: { x: number; y: number }) => {
     if (poppingIds.has(bubble.id)) return
+    markConditionMet()
     setPoppingPositions(prev => new Map(prev).set(bubble.id, position))
     setPoppingIds(prev => new Set([...prev, bubble.id]))
   }
@@ -60,10 +72,12 @@ const BubblesActivity = () => {
       next.delete(id)
       return next
     })
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       nextIdRef.current++
       setBubbles(prev => [...prev, generateBubble(`b-respawn-${nextIdRef.current}`, 0)])
+      timeoutsRef.current = timeoutsRef.current.filter(t => t !== timeout)
     }, 2000)
+    timeoutsRef.current.push(timeout)
   }
 
   if (!started) {
@@ -77,7 +91,10 @@ const BubblesActivity = () => {
               <p className="text-base text-gray-500 mb-8 leading-relaxed">
                 Explorá cómo te sentís. Tocá las burbujas que van apareciendo y hacelas explotar.
               </p>
-              <Button variant="primary" fullWidth onClick={() => setStarted(true)}>
+              <Button variant="primary" fullWidth onClick={() => {
+                startSession()
+                setStarted(true)
+              }}>
                 Comenzar
               </Button>
             </div>
@@ -98,7 +115,7 @@ const BubblesActivity = () => {
           alt=""
           draggable={false}
         />
-        <BackButton to="/minigames"/>
+        <BackButton to="/minigames" onBeforeNavigate={() => saveSession()} />
         {bubbles.map(bubble => (
           <Bubble
             key={bubble.id}
