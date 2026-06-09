@@ -1,0 +1,16 @@
+package com.huly.backend.infrastructure.config.useCase;
+
+import com.huly.backend.domain.port.EmailPort;
+import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.useCase.lead.RegisterLeadUseCase;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class LeadUseCaseConfig {
+
+    @Bean
+    public RegisterLeadUseCase registerLeadUseCase(UserRepository userRepository, EmailPort emailPort) {
+        return new RegisterLeadUseCase(userRepository, emailPort);
+    }
+}

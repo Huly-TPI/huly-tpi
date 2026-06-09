@@ -4,11 +4,9 @@ import com.huly.backend.domain.model.ActivitySession;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.repository.ActivitySessionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
-@Service
 @RequiredArgsConstructor
 public class RegisterActivitySessionUseCase {
 
