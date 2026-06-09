@@ -2,8 +2,8 @@ package com.huly.backend.domain.useCase.userGoal;
 
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.repository.UserGoalRepository;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +51,7 @@ class DeleteUserGoalUseCaseTest {
         when(userGoalRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> deleteUserGoalUseCase.execute(99L))
-                .isInstanceOf(NotFoundException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
 
         verify(userGoalRepository, never()).save(any());
         verify(userGoalRepository, never()).deleteById(any());

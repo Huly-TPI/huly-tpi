@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.auth;
 
+import com.huly.backend.domain.exception.AccountNotActiveException;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.RefreshToken;
@@ -8,7 +10,6 @@ import com.huly.backend.domain.provider.PasswordHasher;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,14 +31,14 @@ public class LoginUseCase {
     public AuthTokens execute(String email, String rawPassword) {
 
         AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
         if (!passwordHasher.matches(rawPassword, user.getPassword())) {
-            throw new UnauthorizedException("Invalid credentials");
+            throw new InvalidCredentialsException("Invalid credentials");
         }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new UnauthorizedException("Account is not active");
+            throw new AccountNotActiveException("Account is not active");
         }
 
         String accessToken = tokenProvider.generateAccessToken(

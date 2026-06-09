@@ -13,16 +13,19 @@ import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalPageRes
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalResponse;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalUpdateRequest;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/user-goals")
@@ -37,27 +40,30 @@ public class UserGoalController {
     private final CompleteUserGoalUseCase completeUserGoalUseCase;
 
     @PostMapping("/accept")
-    public ResponseEntity<UserGoalResponse> acceptChallenge(@Valid @RequestBody AcceptChallengeRequest request) {
+    public ResponseEntity<UserGoalResponse> acceptChallenge(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody AcceptChallengeRequest request) {
+        Long userId = getUserId(principal);
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        
         UserGoal created = acceptChallengeUseCase.execute(
-                email,
+                userId,
                 request.title(),
                 request.description(),
                 request.activityId()
         );
 
-        log.info("Challenge aceptado exitosamente. userGoalId='{}', email='{}'", created.getId(), email);
+        log.info("Challenge aceptado exitosamente. userGoalId='{}', userId='{}'", created.getId(), userId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
     @PostMapping
-    public ResponseEntity<UserGoalResponse> add(@Valid @RequestBody UserGoalRequest request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ResponseEntity<UserGoalResponse> add(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody UserGoalRequest request) {
+        Long userId = getUserId(principal);
         UserGoal created = addUserGoalUseCase.execute(
-                email,
+                userId,
                 request.title(),
                 request.description(),
                 request.activityId()
@@ -67,12 +73,13 @@ public class UserGoalController {
 
     @GetMapping("/me")
     public ResponseEntity<UserGoalListResponse> listByUser(
+            @AuthenticationPrincipal UserDetails principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Long userId = getUserId(principal);
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(email, pageable);
-        Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(email, pageable);
+        Page<UserGoal> completados = getUserGoalsByUserUseCase.executeCompleted(userId, pageable);
+        Page<UserGoal> pendientes = getUserGoalsByUserUseCase.executePending(userId, pageable);
         return ResponseEntity.ok(new UserGoalListResponse(toPageResponse(completados), toPageResponse(pendientes)));
     }
 
@@ -99,6 +106,13 @@ public class UserGoalController {
     public ResponseEntity<UserGoalResponse> complete(@PathVariable Long id) {
         UserGoal completed = completeUserGoalUseCase.execute(id);
         return ResponseEntity.ok(toResponse(completed));
+    }
+
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 
     private UserGoalResponse toResponse(UserGoal userGoal) {

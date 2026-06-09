@@ -35,6 +35,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<AppUser> findById(Long id) {
+        return jpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
     public AppUser save(AppUser user) {
         AppUserEntity saved = jpaRepository.save(toEntity(user));
 
@@ -50,6 +55,17 @@ public class UserRepositoryImpl implements UserRepository {
         }
 
         return toDomain(saved);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void addCoins(Long userId, int amount) {
+        jpaRepository.addCoins(userId, amount);
+    }
+
+    @Override
+    public int getCoins(Long userId) {
+        return jpaRepository.findCoinsById(userId).orElse(0);
     }
 
     @Override

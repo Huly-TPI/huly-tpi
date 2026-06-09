@@ -5,6 +5,7 @@ export interface Product {
   name: string
   description: string
   price: number
+  coinsAmount: number
 }
 
 export interface CreatePreferenceResponse {

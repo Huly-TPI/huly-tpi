@@ -55,11 +55,12 @@ export default function SceneElement({
       </div>
 
       {to && interactive ? (
-        <Link
+        <Link 
           to={to}
           aria-label={title}
           className={`scene-element__hotspot ${hotspotInteractionClassName} ${sharedClassName} ${hotspotClassName}`}
           style={{ clipPath }}
+          viewTransition 
         />
       ) : (
         <button

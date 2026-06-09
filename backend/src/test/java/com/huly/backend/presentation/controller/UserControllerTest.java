@@ -1,15 +1,17 @@
 package com.huly.backend.presentation.controller;
 
 import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.enums.ThemePreference;
+import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.infrastructure.presentation.controller.UserController;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,11 +34,12 @@ class UserControllerTest {
 
     @Mock private GetCurrentUserUseCase getCurrentUserUseCase;
     @Mock private UserDetailDomainRepository userDetailDomainRepository;
+    @Mock private GetUserCoinsUseCase getUserCoinsUseCase;
 
     @InjectMocks private UserController userController;
 
-    private UserDetails principalWithEmail(String email) {
-        return new User(email, "ignored", Collections.emptyList());
+    private UserDetails principalWithId(Long id) {
+        return new User(String.valueOf(id), "ignored", Collections.emptyList());
     }
 
     @Test
@@ -45,13 +48,12 @@ class UserControllerTest {
                 .id(1L).name("Mili").email("user@huly.com")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .build();
-        when(getCurrentUserUseCase.execute("user@huly.com")).thenReturn(user);
-        when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(java.util.Optional.of(true));
-        when(userDetailDomainRepository.findOnboardingTutorialCompleted(1L)).thenReturn(java.util.Optional.of(false));
+        UserProfile profile = new UserProfile(user, true, false);
+        when(getCurrentUserUseCase.execute(1L)).thenReturn(profile);
         when(userDetailDomainRepository.findThemePreference(1L)).thenReturn(ThemePreference.DARK);
 
         ResponseEntity<UserProfileResponse> response =
-                userController.me(principalWithEmail("user@huly.com"));
+                userController.me(principalWithId(1L));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         UserProfileResponse body = response.getBody();
@@ -67,14 +69,8 @@ class UserControllerTest {
 
     @Test
     void updateTheme_shouldPersistThemePreference_whenPrincipalIsValid() {
-        AppUser user = AppUser.builder()
-                .id(1L).name("Mili").email("user@huly.com")
-                .role(UserRole.USER).status(UserStatus.ACTIVE)
-                .build();
-        when(getCurrentUserUseCase.execute("user@huly.com")).thenReturn(user);
-
         ResponseEntity<Void> response = userController.updateTheme(
-                principalWithEmail("user@huly.com"),
+                principalWithId(1L),
                 new UpdateThemePreferenceRequest(ThemePreference.DARK)
         );
 
@@ -94,5 +90,29 @@ class UserControllerTest {
         assertThatThrownBy(() -> userController.me(null))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("Not authenticated");
+    }
+
+    @Test
+    void getMyCoins_shouldReturnCoins_whenPrincipalIsValid() {
+        when(getUserCoinsUseCase.execute(1L)).thenReturn(750);
+
+        ResponseEntity<com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse> response =
+                userController.getMyCoins(principalWithId(1L));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().coins()).isEqualTo(750);
+    }
+
+    @Test
+    void getMyCoins_shouldReturnZero_whenUserHasNoCoins() {
+        when(getUserCoinsUseCase.execute(1L)).thenReturn(0);
+
+        ResponseEntity<com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse> response =
+                userController.getMyCoins(principalWithId(1L));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().coins()).isZero();
     }
 }
