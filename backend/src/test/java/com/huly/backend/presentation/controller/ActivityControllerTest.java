@@ -33,20 +33,18 @@ class ActivityControllerTest {
     private MockMvc mockMvc;
     private ListActivitiesUseCase listActivitiesUseCase;
     private RegisterActivitySessionUseCase registerActivitySessionUseCase;
-    private UserRepository userRepository;
     private static final Long USER_ID = 1L;
 
     @BeforeEach
     void setUp() {
         listActivitiesUseCase = mock(ListActivitiesUseCase.class);
         registerActivitySessionUseCase = mock(RegisterActivitySessionUseCase.class);
-        userRepository = mock(UserRepository.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken(userDetails, null));
 
-        ActivityController activityController = new ActivityController(listActivitiesUseCase, registerActivitySessionUseCase, userRepository);
+        ActivityController activityController = new ActivityController(listActivitiesUseCase, registerActivitySessionUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(activityController)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())

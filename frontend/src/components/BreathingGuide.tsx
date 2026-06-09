@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useActivitySessionTracker } from '../hooks/useActivitySessionTracker'
 import { useAuthGate } from '../context/authGate'
 import { useTheme } from '../context/theme'

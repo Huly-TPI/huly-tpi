@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import Bubble from './Bubble'
 import type { Bubble as BubbleType } from './types'

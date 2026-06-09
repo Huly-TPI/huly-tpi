@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import { type UserGoalResponse } from '../../api/userGoals'
