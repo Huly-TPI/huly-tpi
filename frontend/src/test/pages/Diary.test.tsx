@@ -26,6 +26,19 @@ vi.mock('../../api/journal', () => ({
   },
 }))
 
+const mockSaveSession = vi.fn().mockResolvedValue({})
+const mockStartSession = vi.fn()
+const mockStopSession = vi.fn()
+
+vi.mock('../../hooks/useActivitySessionTracker', () => ({
+  useActivitySessionTracker: vi.fn(() => ({
+    startSession: mockStartSession,
+    saveSession: mockSaveSession,
+    stopSession: mockStopSession,
+    markConditionMet: vi.fn(),
+  })),
+}))
+
 import Diary from '../../pages/Diary/Diary.tsx'
 import { journalApi } from '../../api/journal'
 import type { JournalEntryResponse } from '../../api/journal'
@@ -140,6 +153,20 @@ describe('Diary', () => {
     expect(screen.getByRole('button', { name: /Guardar/ })).toBeDisabled()
   })
 
+  it('no registra sesión si el usuario no hizo ninguna edición', () => {
+    const { unmount } = render(
+      <ThemeProvider>
+        <MemoryRouter>
+          <Diary />
+        </MemoryRouter>
+      </ThemeProvider>,
+    )
+
+    unmount()
+
+    expect(mockStartSession).not.toHaveBeenCalled()
+  })
+
   it('el botón Guardar se habilita al escribir en cualquier campo', async () => {
     const { user } = renderDiary()
     await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo que sentí')
@@ -204,6 +231,19 @@ describe('Diary', () => {
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Hoy me pasó...')).toHaveValue('')
+    })
+  })
+
+  it('registra la sesión de actividad al guardar una entrada', async () => {
+    mockedCreate.mockResolvedValueOnce(makeEntry())
+    const { user } = renderDiary()
+
+    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Contenido')
+    
+    await user.click(screen.getByRole('button', { name: /Guardar/ }))
+
+    await waitFor(() => {
+      expect(mockSaveSession).toHaveBeenCalled()
     })
   })
 

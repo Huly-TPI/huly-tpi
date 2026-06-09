@@ -22,6 +22,13 @@ vi.mock('../../hooks/useUserGoals', () => ({
   useUserGoals: vi.fn(),
 }))
 
+vi.mock('../../api/activities', () => ({
+  registerActivitySession: vi.fn().mockResolvedValue({}),
+  ActivityType: {
+    RETO: 'RETO',
+  },
+}))
+
 vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
   default: () => <button>Volver</button>,
 }))
@@ -29,6 +36,7 @@ vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
 import Challenges from '../../pages/Challenges/Challenges'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import type { UserGoalResponse } from '../../api/userGoals'
+import { registerActivitySession } from '../../api/activities'
 
 const mockedUseUserGoals = vi.mocked(useUserGoals)
 
@@ -73,14 +81,15 @@ describe('Challenges', () => {
 
   const renderChallenges = () => {
     const user = userEvent.setup()
-    render(
+    const view = render(
       <ThemeProvider>
         <MemoryRouter>
           <Challenges />
         </MemoryRouter>
       </ThemeProvider>
     )
-    return { user }
+
+    return { user, ...view }
   }
 
   it('renderiza el título de la página', () => {
@@ -155,9 +164,67 @@ describe('Challenges', () => {
     await waitFor(() => {
       expect(defaultHookReturn.createGoal).toHaveBeenCalledWith({
         title: 'Reto nuevo',
-        description: undefined,
       })
     })
+  })
+
+  it('registra una sola sesión al salir aunque cree varios retos en la misma visita', async () => {
+    const nowSpy = vi.spyOn(Date, 'now')
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:00Z').getTime())
+
+    const { user, unmount } = renderChallenges()
+
+    await user.click(screen.getByText('+ Nuevo reto'))
+    await user.type(screen.getByPlaceholderText('¿Qué querés lograr?'), 'Reto uno')
+    await user.click(screen.getByText('Guardar'))
+
+    await user.click(screen.getByText('+ Nuevo reto'))
+    await user.type(screen.getByPlaceholderText('¿Qué querés lograr?'), 'Reto dos')
+    await user.click(screen.getByText('Guardar'))
+
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:04Z').getTime())
+    unmount()
+
+    await waitFor(() => {
+      expect(registerActivitySession).toHaveBeenCalledTimes(1)
+      expect(registerActivitySession).toHaveBeenCalledWith({
+        activityType: 'RETO',
+      }, { keepalive: true })
+    })
+
+    nowSpy.mockRestore()
+  })
+
+  it('registra la sesión al completar un reto', async () => {
+    const nowSpy = vi.spyOn(Date, 'now')
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:00Z').getTime())
+
+    mockedUseUserGoals.mockReturnValue({
+      ...defaultHookReturn,
+      pendientes: makePageResponse([makeGoal({ id: 7, title: 'Completar hoy' })]),
+    })
+
+    const { user } = renderChallenges()
+
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:06Z').getTime())
+    await user.click(screen.getByLabelText('Completar reto'))
+
+    await waitFor(() => {
+      expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7)
+      expect(registerActivitySession).toHaveBeenCalledWith({
+        activityType: 'RETO',
+      })
+    })
+
+    nowSpy.mockRestore()
+  })
+
+  it('no registra sesión si entra y se va sin crear ni completar retos', () => {
+    const { unmount } = renderChallenges()
+
+    unmount()
+
+    expect(registerActivitySession).not.toHaveBeenCalled()
   })
 
   it('abre el modal de detalle al hacer click en un reto', async () => {
