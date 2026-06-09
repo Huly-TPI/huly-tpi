@@ -22,9 +22,13 @@ public class MercadoPagoWebhookController {
     public ResponseEntity<Void> handleWebhook(
             @RequestHeader(value = "x-signature", required = false) String xSignature,
             @RequestHeader(value = "x-request-id", required = false) String xRequestId,
+            @RequestParam(value = "data.id", required = false) String dataIdParam,
             @RequestBody WebhookNotificationDto notification) {
 
-        if (!validateSignature(xSignature, xRequestId, notification)) {
+        log.info("MP Webhook raw — x-signature={} x-request-id={} data.id(param)={} body.data.id={}",
+                xSignature, xRequestId, dataIdParam, extractDataId(notification));
+
+        if (!validateSignature(xSignature, xRequestId, dataIdParam, notification)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
@@ -54,8 +58,8 @@ public class MercadoPagoWebhookController {
         }
     }
 
-    private boolean validateSignature(String xSignature, String xRequestId, WebhookNotificationDto notification) {
-        String dataId = extractDataId(notification);
+    private boolean validateSignature(String xSignature, String xRequestId, String dataIdParam, WebhookNotificationDto notification) {
+        String dataId = dataIdParam != null ? dataIdParam : extractDataId(notification);
         boolean valid = signatureValidator.isValid(xSignature, xRequestId, dataId);
         if (!valid) {
             log.warn("Invalid or missing MP webhook signature, requestId={}", xRequestId);
