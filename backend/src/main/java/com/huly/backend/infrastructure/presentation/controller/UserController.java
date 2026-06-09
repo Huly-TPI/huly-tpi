@@ -2,6 +2,8 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
+import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
+import com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.domain.model.enums.ThemePreference;
@@ -25,6 +27,7 @@ public class UserController {
 
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final UserDetailDomainRepository userDetailDomainRepository;
+    private final GetUserCoinsUseCase getUserCoinsUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -47,6 +50,15 @@ public class UserController {
                 .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
                 .themePreference(themePreference)
                 .build());
+    }
+
+    @GetMapping("/me/coins")
+    public ResponseEntity<CoinsResponse> getMyCoins(
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        Long userId = currentUserId(principal);
+        int coins = getUserCoinsUseCase.execute(userId);
+        return ResponseEntity.ok(new CoinsResponse(coins));
     }
 
     @PutMapping("/me/theme")

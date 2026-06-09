@@ -7,6 +7,7 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
+import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.infrastructure.presentation.controller.UserController;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
@@ -33,6 +34,7 @@ class UserControllerTest {
 
     @Mock private GetCurrentUserUseCase getCurrentUserUseCase;
     @Mock private UserDetailDomainRepository userDetailDomainRepository;
+    @Mock private GetUserCoinsUseCase getUserCoinsUseCase;
 
     @InjectMocks private UserController userController;
 
@@ -88,5 +90,29 @@ class UserControllerTest {
         assertThatThrownBy(() -> userController.me(null))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("Not authenticated");
+    }
+
+    @Test
+    void getMyCoins_shouldReturnCoins_whenPrincipalIsValid() {
+        when(getUserCoinsUseCase.execute(1L)).thenReturn(750);
+
+        ResponseEntity<com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse> response =
+                userController.getMyCoins(principalWithId(1L));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().coins()).isEqualTo(750);
+    }
+
+    @Test
+    void getMyCoins_shouldReturnZero_whenUserHasNoCoins() {
+        when(getUserCoinsUseCase.execute(1L)).thenReturn(0);
+
+        ResponseEntity<com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse> response =
+                userController.getMyCoins(principalWithId(1L));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().coins()).isZero();
     }
 }
