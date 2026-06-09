@@ -1,0 +1,11 @@
+package com.huly.backend.domain.repository;
+
+import com.huly.backend.domain.model.UserBadge;
+
+import java.util.List;
+
+public interface UserBadgeRepository {
+    List<UserBadge> findAllByUserId(Long userId);
+    boolean existsByUserIdAndBadgeCode(Long userId, String badgeCode);
+    UserBadge save(UserBadge userBadge);
+}
