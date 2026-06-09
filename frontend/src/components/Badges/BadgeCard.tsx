@@ -10,7 +10,7 @@ interface BadgeCardProps {
 export default function BadgeCard({ badge, unlocked }: BadgeCardProps) {
     return (
          <div className="flex flex-col items-center gap-2">
-            <div className={`relative flex h-[80px] w-[80px] items-center justify-center rounded-[20px] transition-all duration-300
+            <div className={`relative flex h-[90px] w-[90px] items-center justify-center rounded-[20px] transition-all duration-300
                 ${unlocked
                     ? 'bg-white shadow-[0_6px_16px_rgba(136,105,172,0.3)] ring-1 ring-[#8869AC]/20'
                     : 'border-2 border-dashed border-[#8869AC]/40 bg-[#fdf5e8]'
@@ -19,7 +19,7 @@ export default function BadgeCard({ badge, unlocked }: BadgeCardProps) {
                 <img
                     src={badge.imageUrl ?? ''}
                     alt={badge.name}
-                    className={`h-14 w-14 object-contain transition-all duration-300 ${
+                    className={`h-[72px] w-[72px] object-contain transition-all duration-300 ${
                         unlocked ? 'opacity-100 drop-shadow-sm' : 'grayscale opacity-20'
                     }`}
                 />

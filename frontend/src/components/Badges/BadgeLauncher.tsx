@@ -4,7 +4,7 @@ import { useAuth } from '../../context/auth'
 import Button from '../Buttons/Button/Button'
 import BadgeModal from './BadgeModal.tsx'
 
-export default function BadgeLauncher() { 
+export default function BadgeLauncher() {
     const { isAuthenticated } = useAuth()
     const location = useLocation()
     const [isOpen, setIsOpen] = useState(false)
@@ -25,17 +25,14 @@ export default function BadgeLauncher() {
     if (!isAuthenticated || isEmotionalOnboardingRoute || isHomeOnboardingActive) return null
 
     return (<>
-        <Button
+        <button
             type="button"
             onClick={() => setIsOpen(true)}
             aria-label="Abrir insignias"
-            variant="primary"
-            size="sm"
-               className="fixed bottom-5 left-5 z-40 !h-16 !w-16 !min-w-0 rounded-full !p-0 shadow-xl transition hover:scale-105"
+            className="fixed bottom-5 left-5 z-40 h-20 w-20 transition hover:scale-105 drop-shadow-xl"
         >
-            Abrir insignias
-        </Button>
+            <img src="/badges/badge_launcher.webp" alt="Abrir insignias" className="h-full w-full object-contain" />
+        </button>
         <BadgeModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>)
-        }
-    
+}

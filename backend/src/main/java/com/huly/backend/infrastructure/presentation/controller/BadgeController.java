@@ -29,7 +29,7 @@ public class BadgeController {
 
     @GetMapping("/my")
     public ResponseEntity<List<UserBadgeResponse>> getMyBadges(@AuthenticationPrincipal UserDetails userDetails) {
-          List<UserBadgeResponse> response = getUserBadgesUseCase.execute(userDetails.getUsername())
+          List<UserBadgeResponse> response = getUserBadgesUseCase.execute(Long.parseLong(userDetails.getUsername()))
                 .stream()
                 .map(this::toUserBadgeResponse)
                 .toList();  

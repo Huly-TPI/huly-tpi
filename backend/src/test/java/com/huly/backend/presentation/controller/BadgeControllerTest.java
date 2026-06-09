@@ -67,8 +67,8 @@ class BadgeControllerTest {
                 .badge(badge)
                 .obtainedAt(Instant.now())
                 .build();
-        when(userDetails.getUsername()).thenReturn("user@huly.com");
-        when(getUserBadgesUseCase.execute("user@huly.com")).thenReturn(List.of(userBadge));
+        when(userDetails.getUsername()).thenReturn("1");
+        when(getUserBadgesUseCase.execute(1L)).thenReturn(List.of(userBadge));
         var response = badgeController.getMyBadges(userDetails);
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).hasSize(1);
@@ -77,8 +77,8 @@ class BadgeControllerTest {
 
     @Test
     void getMyBadges_shouldReturnEmptyList_whenUserHasNoBadges() {
-        when(userDetails.getUsername()).thenReturn("user@huly.com");
-        when(getUserBadgesUseCase.execute("user@huly.com")).thenReturn(List.of());
+       when(userDetails.getUsername()).thenReturn("1");
+       when(getUserBadgesUseCase.execute(1L)).thenReturn(List.of());
         var response = badgeController.getMyBadges(userDetails);
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).isEmpty();
