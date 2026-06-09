@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/auth'
-import Button from '../Buttons/Button/Button'
 import BadgeModal from './BadgeModal.tsx'
 
 export default function BadgeLauncher() {
