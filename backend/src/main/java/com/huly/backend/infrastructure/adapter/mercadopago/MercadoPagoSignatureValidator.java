@@ -17,7 +17,15 @@ public class MercadoPagoSignatureValidator {
     @Value("${mercadopago.webhook-secret}")
     private String webhookSecret;
 
+    @Value("${mercadopago.webhook-validate-signature:true}")
+    private boolean validateSignature;
+
     public boolean isValid(String xSignature, String xRequestId, String dataId) {
+        if (!validateSignature) {
+            log.warn("MP webhook signature validation DISABLED — accepting all webhooks");
+            return true;
+        }
+
         if (xSignature == null || xRequestId == null || dataId == null) return false;
 
         String ts = extractPart(xSignature, "ts");
