@@ -110,7 +110,7 @@ public class AuthController {
                 .secure(tokenProvider.isCookieSecure())
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
 
         return ResponseEntity.noContent()
@@ -124,7 +124,7 @@ public class AuthController {
                 .secure(tokenProvider.isCookieSecure())
                 .path("/")
                 .maxAge(tokenProvider.getRefreshTokenMaxAgeSecs())
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
     }
 }
