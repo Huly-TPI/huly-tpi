@@ -1,4 +1,6 @@
-const API_BASE_URL = 'https://huly-tpi.onrender.com'; // Actualizar con la URL del backend en prod
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8081'
+  : 'https://huly-tpi.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -130,16 +132,57 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.innerHTML = `
       <span class="modal-icon"><img src="./assets/images/garden/envelope.png" alt="Envelope" width="56" height="56"/></span>
       <h3>¡Ya estás en la lista!</h3>
-      <p class="modal-sub">Te avisamos cuando estés listo para entrar. Sin spam, prometido.</p>
+      <p class="modal-sub">Te avisamos cuando estés listo para entrar.<br/>Sin spam, prometido.</p>
     `;
   }
 
-  document.getElementById('submit-explore')?.addEventListener('click', () => {
-    const email = document.getElementById('exp-email')?.value.trim();
-    if (!email) return;
-    // TODO: POST to /api/early-access with email before redirecting
-    window.open('https://huly-tpi-frontend.onrender.com/', '_blank');
-    closeModal('modal-explore');
+  const FRONTEND_URL = 'https://huly-tpi-frontend.onrender.com';
+
+  document.getElementById('btn-explore')?.addEventListener('click', () => {
+    window.open(FRONTEND_URL, '_blank');
   });
+
+  // Garden video
+  const video     = document.getElementById('garden-video');
+  const btnPlay   = document.getElementById('gvc-play');
+  const btnSound  = document.getElementById('gvc-sound');
+  const iconPlay  = document.getElementById('gvc-icon-play');
+  const iconPause = document.getElementById('gvc-icon-pause');
+  const iconMuted = document.getElementById('gvc-icon-muted');
+  const iconSound = document.getElementById('gvc-icon-sound');
+
+  if (video) {
+    const videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    }, { threshold: 0.3 });
+    videoObserver.observe(video);
+
+    function syncPlayIcons() {
+      iconPlay.style.display  = video.paused ? '' : 'none';
+      iconPause.style.display = video.paused ? 'none' : '';
+    }
+    function syncSoundIcons() {
+      iconMuted.style.display = video.muted ? '' : 'none';
+      iconSound.style.display = video.muted ? 'none' : '';
+    }
+
+    video.addEventListener('play',  syncPlayIcons);
+    video.addEventListener('pause', syncPlayIcons);
+
+    btnPlay.addEventListener('click', () => {
+      video.paused ? video.play() : video.pause();
+    });
+
+    btnSound.addEventListener('click', () => {
+      video.muted = !video.muted;
+      syncSoundIcons();
+    });
+  }
 
 });

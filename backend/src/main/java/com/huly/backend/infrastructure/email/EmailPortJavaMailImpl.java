@@ -135,10 +135,10 @@ public class EmailPortJavaMailImpl implements EmailPort {
                                 hulycomunicaciones@gmail.com
                               </p>
                               <p style="margin:0 0 18px;font-size:12px;color:#ababc8;">
-                                huly.com
+                                https://huly-tpi-frontend.onrender.com/
                               </p>
                               <p style="margin:0;font-size:11px;color:#c8c8dc;">
-                                &copy; 2025 Huly &mdash; Todos los derechos reservados.
+                                &copy; 2026 Huly &mdash; Todos los derechos reservados.
                               </p>
                             </td>
                           </tr>
