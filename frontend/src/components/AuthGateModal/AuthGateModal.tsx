@@ -39,13 +39,21 @@ export default function AuthGateModal({
       aria-labelledby="auth-gate-title"
     >
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-md"
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div
-        className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-8 py-12 md:px-[4.5rem] md:py-14 font-nunito"
+        className="
+          relative
+          w-full
+          max-w-[460px]
+          px-12
+          pt-16
+          pb-12
+          font-nunito
+        "
         style={{
           backgroundImage: `url(${cardFrame})`,
           backgroundSize: '100% 100%',
@@ -54,35 +62,69 @@ export default function AuthGateModal({
       >
         <h2
           id="auth-gate-title"
-          className="mb-2 text-center text-2xl md:text-3xl font-bold text-[#3D3D3D]"
+          className="
+            mb-5
+            text-center
+            text-3xl
+            font-extrabold
+            tracking-tight
+            text-[#3E3A35]
+          "
         >
           ¡Necesitás una cuenta!
         </h2>
 
-        <p className="mb-8 text-center text-sm text-[#6B6B6B]">
-          Para esta acción iniciá sesión o registrate
+        <p
+          className="
+            mx-auto
+            mb-12
+            max-w-[320px]
+            text-center
+            text-base
+            leading-relaxed
+            text-[#6F675F]
+          "
+        >
+          Iniciá sesión o registrate para disfrutar de todas las
+          funcionalidades de Huly.
         </p>
 
-        <div className="flex flex-col gap-4">
+        <div className="mx-auto flex max-w-[340px] flex-col gap-6">
           <button
             type="button"
             onClick={onLogin}
             className="
               w-full
               rounded-full
-              bg-[#8E68B0]
-              py-3
-              text-sm
-              font-semibold
+              bg-[#9B6ACF]
+              py-3.5
+              text-base
+              font-bold
               text-white
-              shadow-md
+              shadow-lg
               transition-all
-              hover:brightness-105
+              duration-200
+              hover:-translate-y-0.5
+              hover:bg-[#8A58C2]
               active:scale-[0.98]
             "
           >
             Iniciar sesión
           </button>
+
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-[#C8B59C]" />
+            <span
+              className="
+                text-sm
+                font-semibold
+                text-[#8C8075]
+              "
+            >
+              o
+            </span>
+            <div className="h-px flex-1 bg-[#C8B59C]" />
+          </div>
 
           <button
             type="button"
@@ -91,14 +133,15 @@ export default function AuthGateModal({
               w-full
               rounded-full
               border-2
-              border-[#8E68B0]
-              bg-transparent
-              py-3
-              text-sm
-              font-semibold
-              text-[#8E68B0]
+              border-[#B892E3]
+              py-3.5
+              text-base
+              font-bold
+              text-[#8D63C7]
               transition-all
-              hover:bg-[#8E68B0]/5
+              duration-200
+              hover:bg-[#9B6ACF]/10
+              hover:-translate-y-0.5
             "
           >
             Registrarse
@@ -109,10 +152,13 @@ export default function AuthGateModal({
             onClick={onClose}
             className="
               mt-1
+              text-center
               text-sm
-              text-[#4C7C64]
+              font-bold
+              text-[#5F5953]
               underline-offset-4
               transition-all
+              hover:text-[#3E3A35]
               hover:underline
             "
           >

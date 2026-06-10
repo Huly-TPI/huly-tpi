@@ -21,11 +21,19 @@ describe('AuthGateModal', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('muestra el título y el mensaje', () => {
-    render(<AuthGateModal {...defaultProps} />)
-    expect(screen.getByText('¡Necesitás una cuenta!')).toBeInTheDocument()
-    expect(screen.getByText(/iniciá sesión o registrate/i)).toBeInTheDocument()
-  })
+ it('muestra el título y el mensaje', () => {
+  render(<AuthGateModal {...defaultProps} />)
+
+  expect(
+    screen.getByText('¡Necesitás una cuenta!')
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(
+      /iniciá sesión o registrate para disfrutar de todas las funcionalidades de huly/i
+    )
+  ).toBeInTheDocument()
+})
 
   it('llama a onLogin al hacer click en iniciar sesión', async () => {
     const onLogin = vi.fn()
