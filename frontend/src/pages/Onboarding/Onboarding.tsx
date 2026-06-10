@@ -18,7 +18,10 @@ export default function Onboarding() {
         }
     }, [loading, navigate, user])
 
-    const { step, options, isLoading, selectOption } = useEmotionalOnboarding(async () => {
+    
+    
+  const { step, step1Options, pillOptions, advance, selectOption, skip } =
+    useEmotionalOnboarding(async () => {
         await refreshUser()
           const myBadges = await badgesApi.getMyBadges()
         const primerPaso = myBadges.find(ub => ub.badge.code === 'PRIMER_PASO')
@@ -32,10 +35,13 @@ export default function Onboarding() {
         return null
     }
 
-    return (<EmotionalOnboarding 
-    step={step}
-     options={options} 
-     isLoading={isLoading} 
-     onSelectOption={selectOption} />
+    return ( <EmotionalOnboarding
+        step={step}
+        step1Options={step1Options}
+        pillOptions={pillOptions}
+        onAdvance={advance}
+        onSelectOption={selectOption}
+        onSkip={skip}
+    />
     )
 }

@@ -25,7 +25,7 @@ describe('BadgeUnloackToast', () => {
 
   it('muestra el mensaje de desbloqueo', () => {
     render(<BadgeUnlockToast badge={makeBadge()} onDismiss={() => {}} />)
-    expect(screen.getByText('¡Nueva insignia desbloqueada!')).toBeInTheDocument()
+    expect(screen.getByText('✨ ¡Nueva estampita!')).toBeInTheDocument()
   })
 
   it('llama onDismiss al hacer click', async () => {
