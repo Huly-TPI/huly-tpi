@@ -132,3 +132,16 @@ gradlew.bat
 # ========================
 HELP.md
 ./docs/
+
+# ========================
+# PYTHON (sensevoice-service)
+# ========================
+sensevoice-service/venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+*.egg

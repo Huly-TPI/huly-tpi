@@ -1,0 +1,23 @@
+# Huly Voice Microservice v4.0 — Python dependencies
+# Install: pip install -r requirements.txt
+
+# Web server
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+python-multipart>=0.0.12
+
+# Transcripción — faster-whisper medium (int8 CPU, no GPU required)
+faster-whisper>=1.0.0
+
+# Detección de emoción — wav2vec2-large-xlsr-53 (53 idiomas incl. español)
+torch>=2.0.0
+transformers>=4.35.0
+huggingface_hub>=0.20.0
+
+# Carga y escritura de audio
+soundfile>=0.12.1
+librosa>=0.10.0
+
+# Utilidades
+numpy>=1.24.0
+pydantic>=2.0.0

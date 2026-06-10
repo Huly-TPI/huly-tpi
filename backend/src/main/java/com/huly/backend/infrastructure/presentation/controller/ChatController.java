@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
@@ -32,7 +33,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -44,6 +47,7 @@ import java.util.Locale;
 public class ChatController {
 
     private final ChatUseCase chatUseCase;
+    private final AudioChatUseCase audioChatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
     private final StreamChatUseCase streamChatUseCase;
     private final AppUserRepository appUserRepository;
@@ -65,6 +69,15 @@ public class ChatController {
         Long userId = currentUserId();
         return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
                 .map(this::toServerSentEvent);
+    }
+
+    @PostMapping(value = "/audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ChatResponse> sendAudioMessage(
+            @RequestPart("audio") MultipartFile audio,
+            @RequestParam("conversationId") String conversationId) {
+        Long userId = currentUserId();
+        ChatReply reply = audioChatUseCase.execute(audio, conversationId, userId);
+        return ResponseEntity.ok(toResponse(reply));
     }
 
     @PostMapping("/challenge-decision")

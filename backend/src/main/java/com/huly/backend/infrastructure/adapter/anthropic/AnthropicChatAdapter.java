@@ -135,7 +135,10 @@ public class AnthropicChatAdapter implements LLMChatPort, StreamingLLMChatPort {
             }
         }
 
-        messages.add(new UserMessage(userMessage));
+        messages.add(new UserMessage(userMessage
+                + "\n\n[FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el objeto JSON válido. "
+                + "Sin texto introductorio, sin explicaciones, sin markdown. "
+                + "Comienza directamente con { y termina con }.]"));
         return messages;
     }
 }

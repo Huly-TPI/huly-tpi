@@ -132,6 +132,38 @@ export function useChatbot() {
     await sendChatMessage(text)
   }
 
+  const sendAudioMessage = async (blob: Blob) => {
+    if (sendingRef.current) return
+    sendingRef.current = true
+
+    const audioUrl = URL.createObjectURL(blob)
+    setMessages(prev => [...prev, { role: 'user', content: '', audioBlob: blob, audioUrl }])
+    setIsSending(true)
+    setError('')
+
+    try {
+      const response = await chatApi.sendAudioMessage(blob, conversationId)
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: response.huly_reply,
+          detected_emotion: response.detected_emotion,
+          intensity: response.intensity,
+          suggested_action: response.suggested_action,
+          generated_challenge: response.generated_challenge,
+        },
+      ])
+    } catch (requestError) {
+      if (requestError instanceof Error) {
+        setError(requestError.message)
+      }
+    } finally {
+      sendingRef.current = false
+      setIsSending(false)
+    }
+  }
+
   const decideChallenge = async (index: number, decision: 'accepted' | 'rejected') => {
     if (sendingRef.current) return
 
@@ -251,6 +283,7 @@ export function useChatbot() {
     error,
     bottomRef,
     sendMessage,
+    sendAudioMessage,
     decideChallenge,
     decideSuggestedAction,
   }

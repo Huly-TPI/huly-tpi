@@ -18,5 +18,12 @@ export interface UserMessage {
   content: string
 }
 
-export type ChatbotMessage = AssistantMessage | UserMessage
+export interface UserAudioMessage {
+  role: 'user'
+  content: string
+  audioBlob: Blob
+  audioUrl: string
+}
+
+export type ChatbotMessage = AssistantMessage | UserMessage | UserAudioMessage
 

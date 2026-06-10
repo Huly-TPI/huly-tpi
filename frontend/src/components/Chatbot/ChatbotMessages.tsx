@@ -60,7 +60,11 @@ export default function ChatbotMessages({
 
       {messages.map((message, index) => (
         <div key={index} className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-          <ChatMessageBubble role={message.role} content={message.content} />
+          <ChatMessageBubble
+            role={message.role}
+            content={message.content}
+            audioUrl={'audioUrl' in message ? message.audioUrl : undefined}
+          />
 
           {message.role === 'assistant' && (
             <div className="ml-1 mt-2 flex w-full max-w-[85%] min-w-0 flex-col gap-2 sm:w-auto">

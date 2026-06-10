@@ -9,6 +9,7 @@ import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
@@ -57,6 +58,7 @@ class ChatControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private ChatUseCase chatUseCase;
+    private AudioChatUseCase audioChatUseCase;
     private ListChatHistoryUseCase listChatHistoryUseCase;
     private StreamChatUseCase streamChatUseCase;
     private AppUserRepository appUserRepository;
@@ -68,6 +70,7 @@ class ChatControllerTest {
     @BeforeEach
     void setUp() {
         chatUseCase = mock(ChatUseCase.class);
+        audioChatUseCase = mock(AudioChatUseCase.class);
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
         streamChatUseCase = mock(StreamChatUseCase.class);
         appUserRepository = mock(AppUserRepository.class);
@@ -82,6 +85,7 @@ class ChatControllerTest {
 
         ChatController controller = new ChatController(
                 chatUseCase,
+                audioChatUseCase,
                 listChatHistoryUseCase,
                 streamChatUseCase,
                 appUserRepository,
