@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './Diary.css'
 import { journalApi, type JournalEntryResponse, type Mood } from '../../api/journal.ts'
 import { useAuth } from '../../context/auth.tsx'
@@ -11,8 +11,7 @@ import BackButton from '../../components/Buttons/BackButton/BackButton.tsx'
 import DiaryConsentModal from '../../components/DiaryConsentModal.tsx'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground.tsx'
 import { useTheme } from '../../context/theme.tsx'
-import { ActivityType } from '../../api/activities'
-import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
+import { useAuthGate } from '../../context/authGate.tsx'
 
 function getDiaryConsentKey(userId: number): string {
   return `diaryTextConsent_${userId}`
@@ -69,9 +68,7 @@ export default function Diary() {
   const { user } = useAuth()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-
-  const { startSession, saveSession, stopSession } = useActivitySessionTracker(ActivityType.DIARIO)
-
+  const { requireAuth } = useAuthGate()
   const diaryPalette = isDark
     ? {
         cardBackground: '#22324d',
@@ -129,7 +126,6 @@ export default function Diary() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showConsentModal, setShowConsentModal] = useState(false)
-  const hasStartedEditingSessionRef = useRef(false)
 
   useEffect(() => {
     if (window.innerWidth < 768) return
@@ -153,12 +149,6 @@ export default function Diary() {
       .catch(() => {})
       .finally(() => setLoadingEntries(false))
   }, [])
-
-    const ensureSessionStarted = () => {
-      if (hasStartedEditingSessionRef.current) return
-      hasStartedEditingSessionRef.current = true
-      startSession()
-    }
 
   const totalPages = entries.length + 1
   const isNewEntry = pageIndex === 0
@@ -221,15 +211,12 @@ export default function Diary() {
       const useTextForAI = user ? localStorage.getItem(getDiaryConsentKey(user.id)) === 'true' : false
       const newEntry = await journalApi.create({ content: contentJson, mood: selectedMood, useTextForAI })
       setEntries((prev) => [newEntry, ...prev])
-      await saveSession({ force: true })
       setAdentro('')
       setPensamiento('')
       setBien('')
       setManana('')
       setSelectedMood(null)
       setPageIndex(0)
-      hasStartedEditingSessionRef.current = false
-      stopSession()
     } catch {
       setError('No se pudo guardar la entrada. Intentá de nuevo.')
     } finally {
@@ -342,10 +329,9 @@ export default function Diary() {
                     key={mood.value}
                     type="button"
                     disabled={!isNewEntry}
-                    onClick={() => {
-                      ensureSessionStarted()
-                      setSelectedMood(selectedMood === mood.value ? null : mood.value)
-                    }}
+                    onClick={() =>
+                      requireAuth(() => setSelectedMood(selectedMood === mood.value ? null : mood.value))
+                    }
                     className="flex flex-col items-center gap-1 group"
                   >
                     <div
@@ -383,12 +369,9 @@ export default function Diary() {
             </p>
             <textarea
               value={displayAdentro}
-              onChange={(e) => {
-                if (!isNewEntry) return
-                ensureSessionStarted()
-                setAdentro(e.target.value)
-              }}
-              readOnly={!isNewEntry}
+              onChange={(e) => isNewEntry && setAdentro(e.target.value)}
+              readOnly={!isNewEntry || !user}
+              onFocus={() => !user && requireAuth(() => {})}
               placeholder="Hoy me pasó..."
               className="flex-1 w-full resize-none border-none outline-none text-sm leading-8 min-h-[180px] rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
               style={{ backgroundColor: diaryPalette.accentSurface, color: diaryPalette.cardText }}
@@ -411,12 +394,9 @@ export default function Diary() {
               </p>
               <textarea
                 value={displayPensamiento}
-                onChange={(e) => {
-                  if (!isNewEntry) return
-                  ensureSessionStarted()
-                  setPensamiento(e.target.value)
-                }}
-                readOnly={!isNewEntry}
+                onChange={(e) => isNewEntry && setPensamiento(e.target.value)}
+                readOnly={!isNewEntry || !user}
+                onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Lo que ya no quiero cargar..."
                 rows={4}
                 className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
@@ -430,12 +410,9 @@ export default function Diary() {
               </p>
               <textarea
                 value={displayBien}
-                onChange={(e) => {
-                  if (!isNewEntry) return
-                  ensureSessionStarted()
-                  setBien(e.target.value)
-                }}
-                readOnly={!isNewEntry}
+                onChange={(e) => isNewEntry && setBien(e.target.value)}
+                readOnly={!isNewEntry || !user}
+                onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Hoy logré..."
                 rows={4}
                 className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(100,153,89,0.7)]"
@@ -449,12 +426,9 @@ export default function Diary() {
               </p>
               <textarea
                 value={displayManana}
-                onChange={(e) => {
-                  if (!isNewEntry) return
-                  ensureSessionStarted()
-                  setManana(e.target.value)
-                }}
-                readOnly={!isNewEntry}
+                onChange={(e) => isNewEntry && setManana(e.target.value)}
+                readOnly={!isNewEntry || !user}
+                onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Mañana quiero..."
                 rows={4}
                 className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[#F2C57C]"
