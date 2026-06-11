@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({
+    requireAuth: (action: () => void) => action(),
+  }),
+}))
+
 import EmotionalCloudsActivity from '../../components/EmotionalClouds/EmotionalCloudsActivity'
 import type { EmotionalCloudsProps } from '../../components/EmotionalClouds/types'
 
@@ -12,10 +19,10 @@ vi.mock('../../components/EmotionalClouds/EmotionalCloud', () => ({
     onRemove: () => void
     onSelect?: () => void
   }) => (
-      <div data-testid={`cloud-${cloud.id}`}>
-        <span onClick={onRemove}>{cloud.text}</span>
-        <button onClick={onSelect}>select</button>
-      </div>
+    <div data-testid={`cloud-${cloud.id}`}>
+      <span onClick={onRemove}>{cloud.text}</span>
+      <button onClick={onSelect}>select</button>
+    </div>
   ),
 }))
 

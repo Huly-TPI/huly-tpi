@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+
 import cardFrame from '../../assets/register/cardFrame.webp'
 
 interface AuthGateModalProps {
@@ -16,11 +17,16 @@ export default function AuthGateModal({
 }: AuthGateModalProps) {
   useEffect(() => {
     if (!open) return
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
+
     document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
   }, [open, onClose])
 
   if (!open) return null
@@ -33,13 +39,21 @@ export default function AuthGateModal({
       aria-labelledby="auth-gate-title"
     >
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-md"
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div
-        className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-8 py-12 md:px-[4.5rem] md:py-14 font-nunito"
+        className="
+          relative
+          w-full
+          max-w-[460px]
+          px-12
+          pt-16
+          pb-12
+          font-nunito
+        "
         style={{
           backgroundImage: `url(${cardFrame})`,
           backgroundSize: '100% 100%',
@@ -48,33 +62,105 @@ export default function AuthGateModal({
       >
         <h2
           id="auth-gate-title"
-          className="mb-2 text-center text-2xl md:text-3xl font-bold text-[#4C7C64]"
+          className="
+            mb-5
+            text-center
+            text-3xl
+            font-extrabold
+            tracking-tight
+            text-[#3E3A35]
+          "
         >
           ¡Necesitás una cuenta!
         </h2>
-        <p className="mb-6 text-center text-sm italic text-[#8c7b66]">
-          Para esta acción iniciá sesión o registrate
+
+        <p
+          className="
+            mx-auto
+            mb-12
+            max-w-[320px]
+            text-center
+            text-base
+            leading-relaxed
+            text-[#6F675F]
+          "
+        >
+          Iniciá sesión o registrate para disfrutar de todas las
+          funcionalidades de Huly.
         </p>
 
-        <div className="flex flex-col gap-3">
+        <div className="mx-auto flex max-w-[340px] flex-col gap-6">
           <button
             type="button"
             onClick={onLogin}
-            className="rounded-xl border-b-4 border-[#3d6b44] bg-[#5a8a50] py-3 text-sm font-bold text-white transition-all hover:brightness-105 active:translate-y-[2px] active:border-b-2"
+            className="
+              w-full
+              rounded-full
+              bg-[#9B6ACF]
+              py-3.5
+              text-base
+              font-bold
+              text-white
+              shadow-lg
+              transition-all
+              duration-200
+              hover:-translate-y-0.5
+              hover:bg-[#8A58C2]
+              active:scale-[0.98]
+            "
           >
             Iniciar sesión
           </button>
+
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-[#C8B59C]" />
+            <span
+              className="
+                text-sm
+                font-semibold
+                text-[#8C8075]
+              "
+            >
+              o
+            </span>
+            <div className="h-px flex-1 bg-[#C8B59C]" />
+          </div>
+
           <button
             type="button"
             onClick={onRegister}
-            className="rounded-xl border-2 border-[#5a8a50] bg-transparent py-3 text-sm font-bold text-[#4C7C64] transition-colors hover:bg-[#5a8a50]/10"
+            className="
+              w-full
+              rounded-full
+              border-2
+              border-[#B892E3]
+              py-3.5
+              text-base
+              font-bold
+              text-[#8D63C7]
+              transition-all
+              duration-200
+              hover:bg-[#9B6ACF]/10
+              hover:-translate-y-0.5
+            "
           >
             Registrarse
           </button>
+
           <button
             type="button"
             onClick={onClose}
-            className="mt-1 py-1 text-xs text-[#8c7b66] transition-colors hover:text-[#4C7C64]"
+            className="
+              mt-1
+              text-center
+              text-sm
+              font-bold
+              text-[#5F5953]
+              underline-offset-4
+              transition-all
+              hover:text-[#3E3A35]
+              hover:underline
+            "
           >
             Ahora no
           </button>
