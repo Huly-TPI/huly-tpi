@@ -78,6 +78,23 @@ class AuthControllerTest {
     }
 
     @Test
+    void login_shouldIssueSecureSameSiteNoneCookie_whenCookieSecureEnabled() throws Exception {
+        when(tokenProvider.isCookieSecure()).thenReturn(true);
+        AuthTokens tokens = AuthTokens.builder()
+                .accessToken("theAccessToken").refreshToken("theRefreshToken")
+                .role(UserRole.USER).build();
+        when(loginUseCase.execute("user@huly.com", "password123")).thenReturn(tokens);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "user@huly.com", "password", "password123"))))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")));
+    }
+
+    @Test
     void login_shouldReturn400_whenEmailIsInvalid() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
