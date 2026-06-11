@@ -49,7 +49,7 @@ describe('BadgeModal', () => {
     it('muestra loading mientras se cargan las insignias', () => {
         mockUseBadges.mockReturnValue({ badges: [], loading: true, error: null })
         render(<BadgeModal isOpen={true} onClose={() => {}} />)
-        expect(screen.getByText('Cargando insignias')).toBeInTheDocument()
+        expect(screen.getByText('Cargando estampitas...')).toBeInTheDocument()
     })
 
     it('llama onClose al hacer click en cerrar', async () => {

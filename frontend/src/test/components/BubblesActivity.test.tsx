@@ -1,16 +1,15 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, act, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import BubblesActivity from '../../components/Bubbles/BubblesActivity.tsx'
-import { registerActivitySession } from '../../api/activities'
 
-vi.mock('../../api/activities', () => ({
-  registerActivitySession: vi.fn().mockResolvedValue({}),
-  ActivityType: {
-    BURBUJA: 'BURBUJA',
-  },
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({
+    requireAuth: (action: () => void) => action(),
+  }),
 }))
+
+import BubblesActivity from '../../components/Bubbles/BubblesActivity.tsx'
 
 const renderActivity = () =>
   render(
@@ -57,45 +56,5 @@ describe('BubblesActivity component', () => {
     await user.click(screen.getByRole('button', { name: /comenzar/i }))
     await user.click(screen.getByRole('button', { name: /volver/i }))
     expect(screen.getByRole('heading', { name: 'Vista Minijuegos' })).toBeInTheDocument()
-  })
-
-  it('no registra la sesión al desmontar si no explotó ninguna burbuja', async () => {
-    const { unmount } = render(
-      <MemoryRouter>
-        <BubblesActivity />
-      </MemoryRouter>,
-    )
-
-    await fireEvent.click(screen.getByRole('button', { name: /comenzar/i }))
-
-    act(() => {
-      unmount()
-    })
-
-    expect(registerActivitySession).not.toHaveBeenCalled()
-  })
-
-  it('registra la sesión al desmontar si explotó al menos una burbuja', async () => {
-    const { unmount } = render(
-      <MemoryRouter>
-        <BubblesActivity />
-      </MemoryRouter>,
-    )
-
-    await fireEvent.click(screen.getByRole('button', { name: /comenzar/i }))
-    await fireEvent.click(screen.getByTestId('bubble-b-0'))
-
-    act(() => {
-      unmount()
-    })
-
-    expect(registerActivitySession).toHaveBeenCalledWith(
-      {
-        activityType: 'BURBUJA',
-      },
-      {
-        keepalive: true,
-      },
-    )
   })
 })

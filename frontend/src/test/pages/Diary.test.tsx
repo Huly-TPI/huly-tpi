@@ -7,8 +7,18 @@ import { ThemeProvider } from '../../context/theme'
 vi.mock('../../assets/garden/light-theme/cloud.webp', () => ({ default: 'cloud.webp' }))
 vi.mock('../../assets/brand/color-logo.webp', () => ({ default: 'color-logo.webp' }))
 
+const mockAuthState = vi.hoisted(() => ({
+  user: { id: 1, name: 'Test', email: 'test@huly.com', role: 'USER' } as { id: number; name: string; email: string; role: string } | null,
+}))
+
 vi.mock('../../context/auth', () => ({
-  useAuth: () => ({ user: { id: 1, name: 'Test', email: 'test@huly.com', role: 'USER' } }),
+  useAuth: () => ({ user: mockAuthState.user }),
+}))
+
+const mockRequireAuth = vi.hoisted(() => vi.fn((fn: () => void) => fn()))
+
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({ requireAuth: mockRequireAuth }),
 }))
 
 const CONSENT_KEY = 'diaryTextConsent_1'
@@ -59,6 +69,8 @@ describe('Diary', () => {
     vi.clearAllMocks()
     localStorage.clear()
     mockedList.mockResolvedValue([])
+    mockAuthState.user = { id: 1, name: 'Test', email: 'test@huly.com', role: 'USER' }
+    mockRequireAuth.mockImplementation((fn: () => void) => fn())
   })
 
   const renderDiary = (consent: 'true' | 'false' | null = 'true') => {
@@ -338,5 +350,57 @@ describe('Diary', () => {
     await user.click(screen.getByText('›'))
 
     expect(screen.getByDisplayValue('Texto plano sin JSON')).toBeInTheDocument()
+  })
+
+  describe('acceso sin login', () => {
+    beforeEach(() => {
+      mockAuthState.user = null
+      mockRequireAuth.mockImplementation(() => {})
+    })
+
+    it('los 4 campos de texto son de solo lectura cuando no hay sesión', () => {
+      renderDiary()
+      expect(screen.getByPlaceholderText('Hoy me pasó...')).toHaveAttribute('readonly')
+      expect(screen.getByPlaceholderText('Lo que ya no quiero cargar...')).toHaveAttribute('readonly')
+      expect(screen.getByPlaceholderText('Hoy logré...')).toHaveAttribute('readonly')
+      expect(screen.getByPlaceholderText('Mañana quiero...')).toHaveAttribute('readonly')
+    })
+
+    it('llama a requireAuth al hacer foco en el campo "Lo que pasa adentro"', async () => {
+      const { user } = renderDiary()
+      await user.click(screen.getByPlaceholderText('Hoy me pasó...'))
+      expect(mockRequireAuth).toHaveBeenCalled()
+    })
+
+    it('llama a requireAuth al hacer foco en el campo de pensamiento', async () => {
+      const { user } = renderDiary()
+      await user.click(screen.getByPlaceholderText('Lo que ya no quiero cargar...'))
+      expect(mockRequireAuth).toHaveBeenCalled()
+    })
+
+    it('llama a requireAuth al hacer foco en el campo de logros', async () => {
+      const { user } = renderDiary()
+      await user.click(screen.getByPlaceholderText('Hoy logré...'))
+      expect(mockRequireAuth).toHaveBeenCalled()
+    })
+
+    it('llama a requireAuth al hacer foco en el campo de mañana', async () => {
+      const { user } = renderDiary()
+      await user.click(screen.getByPlaceholderText('Mañana quiero...'))
+      expect(mockRequireAuth).toHaveBeenCalled()
+    })
+
+    it('llama a requireAuth al hacer click en un emoji de estado de ánimo', async () => {
+      const { user } = renderDiary()
+      await user.click(screen.getByText('Feliz').closest('button')!)
+      expect(mockRequireAuth).toHaveBeenCalled()
+    })
+
+    it('no selecciona el mood cuando no hay sesión', async () => {
+      const { user } = renderDiary()
+      const felizButton = screen.getByText('Feliz').closest('button')!
+      await user.click(felizButton)
+      expect(felizButton.querySelector('div')).not.toHaveClass('bg-green-400')
+    })
   })
 })

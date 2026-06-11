@@ -5,6 +5,7 @@ import {
   type CreateUserGoalRequest,
   type UpdateUserGoalRequest,
 } from '../api/userGoals'
+import { SessionExpiredError } from '../api/client'
 
 export function useUserGoals() {
   const [pendientes, setPending] = useState<UserGoalPageResponse | null>(null)
@@ -20,7 +21,11 @@ export function useUserGoals() {
       setPending(res.pendientes)
       setCompleted(res.completados)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar los retos')
+      if (err instanceof SessionExpiredError) {
+        setError('Debés iniciar sesión para ver tus retos')
+      } else {
+        setError('No pudimos cargar tus retos. Intentá de nuevo más tarde.')
+      }
     } finally {
       setLoading(false)
     }
