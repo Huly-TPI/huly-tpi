@@ -27,21 +27,22 @@ public class CreatePaymentPreferenceUseCase {
         String externalReference = UUID.randomUUID().toString();
         PaymentPreferenceResult preference = mercadoPagoPort.createPreference(product, userId, externalReference);
 
-        paymentEventRepository.save(buildPendingEvent(userId, productId, externalReference, preference.getId(), product.getCoinsAmount()));
+        paymentEventRepository.save(buildPendingEvent(userId, product, externalReference, preference.getId()));
 
         return new PaymentPreferenceResult(preference.getId(), preference.getInitPoint());
     }
 
-    private PaymentEvent buildPendingEvent(Long userId, Long productId, String externalReference,
-                                           String mpPreferenceId, Integer coinsAmount) {
+    private PaymentEvent buildPendingEvent(Long userId, Product product, String externalReference,
+                                           String mpPreferenceId) {
         Instant now = Instant.now();
         return PaymentEvent.builder()
                 .userId(userId)
-                .productId(productId)
+                .productId(product.getId())
                 .externalReference(externalReference)
                 .mpPreferenceId(mpPreferenceId)
                 .status(PaymentStatus.PENDING)
-                .coinsAmount(coinsAmount)
+                .coinsAmount(product.getCoinsAmount())
+                .productType(product.getType())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

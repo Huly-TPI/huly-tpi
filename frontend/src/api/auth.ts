@@ -53,3 +53,12 @@ export const updateThemePreference = (themePreference: UserProfile['themePrefere
 
 export const getUserCoins = () =>
   api.get<{ coins: number }>('/users/me/coins')
+
+export interface Membership {
+  active: boolean
+  planCode: string | null
+  expiresAt: string | null
+}
+
+export const getMyMembership = () =>
+  api.get<Membership>('/users/me/membership')

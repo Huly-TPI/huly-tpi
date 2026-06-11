@@ -4,8 +4,10 @@ import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.PaymentEventRepository;
 import com.huly.backend.domain.repository.ProductRepository;
 import com.huly.backend.domain.service.payment.CoinService;
+import com.huly.backend.domain.service.payment.PlanService;
 import com.huly.backend.domain.useCase.payment.CreatePaymentPreferenceUseCase;
 import com.huly.backend.domain.useCase.payment.HandleWebhookUseCase;
+import com.huly.backend.domain.useCase.payment.ListPlansUseCase;
 import com.huly.backend.domain.useCase.payment.ListProductsUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,11 +29,17 @@ public class PaymentUseCaseConfig {
     }
 
     @Bean
+    public ListPlansUseCase listPlansUseCase(ProductRepository productRepository) {
+        return new ListPlansUseCase(productRepository);
+    }
+
+    @Bean
     public HandleWebhookUseCase handleWebhookUseCase(
             PaymentEventRepository paymentEventRepository,
             MercadoPagoPort mercadoPagoPort,
-            CoinService coinDomainService) {
-        return new HandleWebhookUseCase(paymentEventRepository, mercadoPagoPort, coinDomainService);
+            CoinService coinDomainService,
+            PlanService planDomainService) {
+        return new HandleWebhookUseCase(paymentEventRepository, mercadoPagoPort, coinDomainService, planDomainService);
     }
 
 

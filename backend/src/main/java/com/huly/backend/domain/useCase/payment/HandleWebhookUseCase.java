@@ -3,9 +3,11 @@ package com.huly.backend.domain.useCase.payment;
 import com.huly.backend.domain.dto.payment.MercadoPagoPaymentResult;
 import com.huly.backend.domain.dto.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
+import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.PaymentEventRepository;
 import com.huly.backend.domain.service.payment.CoinService;
+import com.huly.backend.domain.service.payment.PlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ public class HandleWebhookUseCase {
     private final PaymentEventRepository paymentEventRepository;
     private final MercadoPagoPort mercadoPagoPort;
     private final CoinService coinService;
+    private final PlanService planService;
 
     @Transactional
     public void execute(Long mpPaymentId) {
@@ -54,12 +57,17 @@ public class HandleWebhookUseCase {
     }
 
     private void processApproved(PaymentEvent event, Long mpPaymentId) {
-        boolean credited = paymentEventRepository.approveIfPending(event.getId(), mpPaymentId);
-        if (credited) {
+        boolean justApproved = paymentEventRepository.approveIfPending(event.getId(), mpPaymentId);
+        if (!justApproved) {
+            log.info("Payment {} already APPROVED by concurrent webhook, skipping fulfillment", mpPaymentId);
+            return;
+        }
+        if (event.getProductType() == ProductType.PLAN) {
+            planService.activate(event.getUserId(), event.getProductId());
+            log.info("Payment {} APPROVED — activated plan from product {} for user {}", mpPaymentId, event.getProductId(), event.getUserId());
+        } else {
             coinService.credit(event.getUserId(), event.getCoinsAmount());
             log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());
-        } else {
-            log.info("Payment {} already APPROVED by concurrent webhook, skipping coin credit", mpPaymentId);
         }
     }
 
