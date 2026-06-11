@@ -16,6 +16,7 @@ import Login from './pages/Login/Login'
 import Challenges from './pages/Challenges/Challenges'
 import Minigames from './pages/Minigames/Minigames'
 import Shop from './pages/Shop/Shop'
+import Profile from './pages/Profile/Profile'
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/diary" element={<Diary />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/challenges" element={<Challenges />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/guided-breathing" element={<Breathing />} />

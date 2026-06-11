@@ -220,7 +220,7 @@ describe('Challenges', () => {
       expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7)
       expect(registerActivitySession).toHaveBeenCalledWith({
         activityType: 'RETO',
-      })
+      }, undefined)
     })
 
     nowSpy.mockRestore()

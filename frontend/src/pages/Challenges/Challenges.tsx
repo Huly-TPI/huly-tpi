@@ -15,6 +15,8 @@ import stumpImg from '../../assets/challenges/stump.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
 import { useAuthGate } from '../../context/authGate'
+import { ActivityType } from '../../api/activities'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
 const CYCLE_SIZE = 16
 
@@ -59,6 +61,10 @@ export default function Challenges() {
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
 
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.RETO, {
+    autoStart: true,
+  })
+
   const completedCount = completados?.totalElements ?? 0
   const { completedPlants, cycleProgress } = getCycleData(completedCount)
   const plantStage = getPlantStage(cycleProgress)
@@ -72,7 +78,8 @@ export default function Challenges() {
 
   const handleCreate = useCallback(async (data: { title: string; description: string }) => {
     await createGoal({ title: data.title, description: data.description || undefined })
-  }, [createGoal])
+    markConditionMet()
+  }, [createGoal, markConditionMet])
 
   const handleUpdate = useCallback(async (id: number, data: { title: string; description: string }) => {
     await updateGoal(id, { title: data.title, description: data.description || undefined })
@@ -92,6 +99,8 @@ export default function Challenges() {
     const isHarvest = cycleProgress === CYCLE_SIZE - 1
     try {
       await completeGoal(id)
+      markConditionMet()
+      await saveSession()
       if (isHarvest) {
         setHarvestPlant(completedPlants + 1)
       } else {
@@ -100,7 +109,7 @@ export default function Challenges() {
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Error al completar el reto')
     }
-  }, [cycleProgress, completedPlants, completeGoal, triggerWatering])
+  }, [cycleProgress, completedPlants, completeGoal, triggerWatering, markConditionMet, saveSession])
 
   const hasPending  = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0

@@ -12,6 +12,8 @@ import DiaryConsentModal from '../../components/DiaryConsentModal.tsx'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground.tsx'
 import { useTheme } from '../../context/theme.tsx'
 import { useAuthGate } from '../../context/authGate.tsx'
+import { ActivityType } from '../../api/activities'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
 function getDiaryConsentKey(userId: number): string {
   return `diaryTextConsent_${userId}`
@@ -127,6 +129,17 @@ export default function Diary() {
   const [error, setError] = useState<string | null>(null)
   const [showConsentModal, setShowConsentModal] = useState(false)
 
+  const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(
+    ActivityType.DIARIO
+  )
+
+  useEffect(() => {
+    if (adentro.trim() || pensamiento.trim() || bien.trim() || manana.trim() || selectedMood !== null) {
+      startSession()
+      markConditionMet()
+    }
+  }, [adentro, pensamiento, bien, manana, selectedMood, startSession, markConditionMet])
+
   useEffect(() => {
     if (window.innerWidth < 768) return
     const main = document.querySelector('main') as HTMLElement | null
@@ -210,6 +223,10 @@ export default function Diary() {
       })
       const useTextForAI = user ? localStorage.getItem(getDiaryConsentKey(user.id)) === 'true' : false
       const newEntry = await journalApi.create({ content: contentJson, mood: selectedMood, useTextForAI })
+      
+      await saveSession()
+      stopSession()
+
       setEntries((prev) => [newEntry, ...prev])
       setAdentro('')
       setPensamiento('')
