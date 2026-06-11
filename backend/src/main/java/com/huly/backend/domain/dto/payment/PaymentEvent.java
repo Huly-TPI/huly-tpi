@@ -1,6 +1,7 @@
 package com.huly.backend.domain.dto.payment;
 
 import com.huly.backend.domain.model.enums.PaymentStatus;
+import com.huly.backend.domain.model.enums.ProductType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,6 +18,7 @@ public class PaymentEvent {
     private Long mpPaymentId;
     private PaymentStatus status;
     private Integer coinsAmount;
+    private ProductType productType;
     private String errorDetail;
     private Instant createdAt;
     private Instant updatedAt;
