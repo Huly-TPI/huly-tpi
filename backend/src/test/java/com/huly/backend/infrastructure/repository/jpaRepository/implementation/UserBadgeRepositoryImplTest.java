@@ -11,7 +11,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IBadgeJpaRepository;
 import com.huly.backend.infrastructure.repository.entity.BadgeEntity;
 
 import java.time.Instant;

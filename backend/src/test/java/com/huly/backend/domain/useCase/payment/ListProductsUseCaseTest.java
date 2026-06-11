@@ -1,6 +1,7 @@
 package com.huly.backend.domain.useCase.payment;
 
 import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ class ListProductsUseCaseTest {
                 Product.builder().id(3L).name("Pack Premium").description("1500 monedas")
                         .price(new BigDecimal("4999")).coinsAmount(1500).build()
         );
-        when(productRepository.findAll()).thenReturn(products);
+        when(productRepository.findByType(ProductType.COIN_PACK)).thenReturn(products);
 
         List<Product> result = useCase.execute();
 
@@ -45,7 +46,7 @@ class ListProductsUseCaseTest {
 
     @Test
     void execute_shouldReturnEmptyList_whenNoProductsExist() {
-        when(productRepository.findAll()).thenReturn(Collections.emptyList());
+        when(productRepository.findByType(ProductType.COIN_PACK)).thenReturn(Collections.emptyList());
 
         List<Product> result = useCase.execute();
 
@@ -54,10 +55,10 @@ class ListProductsUseCaseTest {
 
     @Test
     void execute_shouldDelegateToRepository() {
-        when(productRepository.findAll()).thenReturn(Collections.emptyList());
+        when(productRepository.findByType(ProductType.COIN_PACK)).thenReturn(Collections.emptyList());
 
         useCase.execute();
 
-        verify(productRepository).findAll();
+        verify(productRepository).findByType(ProductType.COIN_PACK);
     }
 }

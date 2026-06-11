@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.repository.entity;
 
+import com.huly.backend.domain.model.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,4 +30,11 @@ public class ProductEntity {
 
     @Column(name = "coins_amount", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
     private Integer coinsAmount = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'COIN_PACK'")
+    private ProductType type = ProductType.COIN_PACK;
+
+    @Column(name = "plan_code", length = 50)
+    private String planCode;
 }

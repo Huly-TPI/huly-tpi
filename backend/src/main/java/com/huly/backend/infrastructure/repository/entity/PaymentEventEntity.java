@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.repository.entity;
 
 import com.huly.backend.domain.model.enums.PaymentStatus;
+import com.huly.backend.domain.model.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,6 +41,10 @@ public class PaymentEventEntity {
 
     @Column(name = "coins_amount", nullable = false)
     private Integer coinsAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'COIN_PACK'")
+    private ProductType productType;
 
     @Column(name = "error_detail")
     private String errorDetail;
