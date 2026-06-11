@@ -5,14 +5,12 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.badge.GrantBadgeUseCase;
 
 
 
-@Service
 @RequiredArgsConstructor
 public class CompleteOnboardingUseCase {
     

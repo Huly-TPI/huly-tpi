@@ -6,11 +6,9 @@ import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.UpdateEmotionalEventFeedbackCommand;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
-@Service
 @RequiredArgsConstructor
 public class UpdateEmotionalEventFeedbackUseCase {
 

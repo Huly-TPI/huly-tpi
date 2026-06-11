@@ -44,7 +44,7 @@
 .eo-intro__mascot {
     display: block;
     width: 120px;
-    margin: 0 auto 1.25rem;
+    margin: 0 auto 4px;
     animation: eo-idle 2.5s ease-in-out infinite;
 }
 
@@ -65,12 +65,6 @@
     0%, 100% { transform: translateY(0); }
     50%       { transform: translateY(-6px); }
 }
-
-@keyframes eo-float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-8px); }
-}
-
 
 
 .eo-bubble__text {

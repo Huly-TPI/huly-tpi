@@ -1,6 +1,5 @@
 import './EmotionalOnboarding.css'
 import registerBackground from '../../../assets/register/background.webp'
-import cardFrame from '../../../assets/register/cardFrame.webp'
 import hulyGreeting from '../../../assets/register/huly-greeting.webp'
 import type { Step1Option } from '../../../hooks/useEmotionalOnboarding'
 
@@ -14,7 +13,7 @@ const STEP_CONTENT: Record<1 | 2 | 3, { title: string; subtitle: string }> = {
     subtitle: 'Contame un poco más sobre lo que buscás.',
   },
   3: {
-    title: '¿Qué queres que sea Huly para vos?',
+    title: '¿Qué querés que sea Huly para vos?',
     subtitle: 'Tu jardín, a tu manera.',
   },
 }
@@ -36,11 +35,7 @@ export default function EmotionalOnboarding({
   onSelectOption,
   onSkip,
 }: Props) {
-  const cardStyle = {
-    backgroundImage: `url(${cardFrame})`,
-    backgroundSize: '100% 100%',
-    backgroundRepeat: 'no-repeat',
-  }
+
 
   return (
     <div

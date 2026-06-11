@@ -8,10 +8,8 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.port.EmailPort;
 import com.huly.backend.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
 @RequiredArgsConstructor
 public class RegisterLeadUseCase {
 

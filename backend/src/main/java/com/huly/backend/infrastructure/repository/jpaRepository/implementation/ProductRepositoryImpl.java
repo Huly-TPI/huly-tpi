@@ -35,6 +35,7 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .name(entity.getName())
                 .description(entity.getDescription())
                 .price(entity.getPrice())
+                .coinsAmount(entity.getCoinsAmount())
                 .build();
     }
 }

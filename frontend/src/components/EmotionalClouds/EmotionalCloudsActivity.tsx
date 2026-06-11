@@ -4,6 +4,7 @@ import type { Cloud, EmotionalCloudsProps } from './types'
 import './EmotionalClouds.css'
 import Button from '../Buttons/Button/Button'
 import BackButton from '../Buttons/BackButton/BackButton'
+import { useAuthGate } from '../../context/authGate'
 
 const CLOUD_TOPS = ['20%', '28%', '18%', '38%', '25%', '70%','40%', '32%', '55%','60%']
 
@@ -61,6 +62,7 @@ const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: E
   const [input, setInput] = useState('')
   const cloudIdRef = useRef(0)
   const cloudCounterRef = useRef(0)
+  const { requireAuth } = useAuthGate()
 
   const handleAddCloud = useCallback(() => {
     if (input.trim().length === 0) return
@@ -144,6 +146,7 @@ const EmotionalCloudsActivity = ({ onThoughtAdded, onFinish, maxClouds = 10 }: E
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={() => requireAuth(() => {})}
             placeholder="¿Que te está dando vueltas en la cabeza ahora?"
             className="emotional-clouds-input"
             maxLength={100}

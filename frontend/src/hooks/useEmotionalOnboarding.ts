@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { generateOnboardingOptions, completeOnboarding } from '../api/onboarding'
+import {completeOnboarding } from '../api/onboarding'
 import {
     PauseCircleIcon,
     CloudIcon,
@@ -61,10 +61,11 @@ const STEP3_OPTIONS = [
     'Todavía lo estoy descubriendo',
 ]
 
+
 export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
     const [step, setStep] = useState<Step>(0)
     const [pillOptions, setPillOptions] = useState<string[]>([])
-    const [answer, setAnswers] = useState<{ a1?: string, a2?: string}>({})
+    const [answers, setAnswers] = useState<{ a1?: string, a2?: string}>({})
     const advance = () => setStep(1)
 
     const selectOption = async (option: string) => {
@@ -77,7 +78,7 @@ export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
             setPillOptions(STEP3_OPTIONS)
             setStep(3)
         } else if (step === 3) {
-            await completeOnboarding(answer.a1!, answer.a2!, option)
+            await completeOnboarding(answers.a1!, answers.a2!, option)
             await onComplete()
         }
     }
