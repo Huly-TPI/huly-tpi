@@ -127,7 +127,7 @@ class UserControllerTest {
     void getMyMembership_shouldReturnActiveMembership_whenUserHasOne() {
         Instant expiresAt = Instant.now().plus(30, ChronoUnit.DAYS);
         UserPlan plan = UserPlan.builder()
-                .id(1L).userId(1L).planCode("PREMIUM")
+                .id(1L).userId(1L).productId(7L).planCode("PREMIUM")
                 .grantedAt(Instant.now().minus(1, ChronoUnit.DAYS))
                 .expiresAt(expiresAt)
                 .build();
@@ -140,6 +140,7 @@ class UserControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().active()).isTrue();
         assertThat(response.getBody().planCode()).isEqualTo("PREMIUM");
+        assertThat(response.getBody().productId()).isEqualTo("7");
         assertThat(response.getBody().expiresAt()).isEqualTo(expiresAt);
     }
 
@@ -154,6 +155,7 @@ class UserControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().active()).isFalse();
         assertThat(response.getBody().planCode()).isNull();
+        assertThat(response.getBody().productId()).isNull();
         assertThat(response.getBody().expiresAt()).isNull();
     }
 }

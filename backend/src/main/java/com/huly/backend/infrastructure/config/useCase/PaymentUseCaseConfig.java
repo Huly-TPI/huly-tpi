@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.config.useCase;
 import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.PaymentEventRepository;
 import com.huly.backend.domain.repository.ProductRepository;
+import com.huly.backend.domain.repository.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.service.payment.PlanService;
 import com.huly.backend.domain.useCase.payment.CreatePaymentPreferenceUseCase;
@@ -19,8 +20,9 @@ public class PaymentUseCaseConfig {
     public CreatePaymentPreferenceUseCase createPaymentPreferenceUseCase(
             ProductRepository productRepository,
             MercadoPagoPort mercadoPagoPort,
-            PaymentEventRepository paymentEventRepository) {
-        return new CreatePaymentPreferenceUseCase(productRepository, mercadoPagoPort, paymentEventRepository);
+            PaymentEventRepository paymentEventRepository,
+            UserPlanRepository userPlanRepository) {
+        return new CreatePaymentPreferenceUseCase(productRepository, mercadoPagoPort, paymentEventRepository, userPlanRepository);
     }
 
     @Bean

@@ -10,6 +10,7 @@ import java.time.Instant;
 public class UserPlan {
     private Long id;
     private Long userId;
+    private Long productId;
     private String planCode;
     private Instant grantedAt;
     private Instant expiresAt;

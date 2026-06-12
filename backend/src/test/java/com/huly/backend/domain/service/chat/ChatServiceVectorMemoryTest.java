@@ -37,6 +37,7 @@ class ChatServiceVectorMemoryTest {
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
         ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
         ChatIntentDetectionService chatIntentDetectionService = mock(ChatIntentDetectionService.class);
+        ChatQuotaService chatQuotaService= mock(ChatQuotaService.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -57,7 +58,9 @@ class ChatServiceVectorMemoryTest {
                 promptBuilderService,
                 userVectorMemoryService,
                 chatEmotionalRecommendationService,
-                chatIntentDetectionService
+                chatIntentDetectionService,
+                chatQuotaService
+
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();
@@ -83,6 +86,7 @@ class ChatServiceVectorMemoryTest {
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
         ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
         ChatIntentDetectionService chatIntentDetectionService = mock(ChatIntentDetectionService.class);
+        ChatQuotaService chatQuotaService= mock(ChatQuotaService.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -100,7 +104,8 @@ class ChatServiceVectorMemoryTest {
                 promptBuilderService,
                 userVectorMemoryService,
                 chatEmotionalRecommendationService,
-                chatIntentDetectionService
+                chatIntentDetectionService,
+                chatQuotaService
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();

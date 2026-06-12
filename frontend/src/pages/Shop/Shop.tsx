@@ -22,6 +22,7 @@ export default function Shop() {
 
   const loading = tab === 'coins' ? productsLoading : plansLoading
   const error = (tab === 'coins' ? productsError : plansError) ?? purchaseError
+  const activeProductId = membership?.active ? membership.productId : null
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -90,6 +91,7 @@ export default function Shop() {
                 plan={plan}
                 buying={buyingId === plan.id}
                 disabled={buyingId !== null}
+                activeProductId={activeProductId}
                 onBuy={buy}
               />
             ))}

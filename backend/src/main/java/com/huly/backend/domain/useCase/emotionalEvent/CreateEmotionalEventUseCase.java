@@ -3,6 +3,7 @@ package com.huly.backend.domain.useCase.emotionalEvent;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.model.CreateEmotionalEventCommand;
 import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.Vad;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,9 +47,9 @@ public class CreateEmotionalEventUseCase {
             throw new BusinessRuleException("detectedEmotion es obligatorio");
         }
         validateNullableRange("confidence", command.confidence(), 0.0, 1.0);
-        validateNullableRange("valence", command.valence(), -1.0, 1.0);
-        validateNullableRange("arousal", command.arousal(), -1.0, 1.0);
-        validateNullableRange("dominance", command.dominance(), -1.0, 1.0);
+        validateNullableRange("valence", command.valence(), Vad.MIN_VALUE, Vad.MAX_VALUE);
+        validateNullableRange("arousal", command.arousal(), Vad.MIN_VALUE, Vad.MAX_VALUE);
+        validateNullableRange("dominance", command.dominance(), Vad.MIN_VALUE, Vad.MAX_VALUE);
         validateNullableRange("intensity", command.intensity(), 0.0, 1.0);
         validateActivityExists(command.recommendedActivityId(), "recommendedActivityId");
         validateActivityExists(command.chosenActivityId(), "chosenActivityId");

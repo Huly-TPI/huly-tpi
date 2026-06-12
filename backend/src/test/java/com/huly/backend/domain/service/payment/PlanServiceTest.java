@@ -50,6 +50,7 @@ class PlanServiceTest {
 
         UserPlan saved = captureSaved();
         assertThat(saved.getUserId()).isEqualTo(42L);
+        assertThat(saved.getProductId()).isEqualTo(7L);
         assertThat(saved.getPlanCode()).isEqualTo("PREMIUM");
         assertThat(saved.getId()).isNull();
         assertThat(saved.getExpiresAt()).isAfter(before.plus(27, ChronoUnit.DAYS));
@@ -60,7 +61,7 @@ class PlanServiceTest {
     void activate_shouldStackOntoCurrentExpiry_whenRenewingSameActivePlan() {
         Instant futureExpiry = Instant.now().plus(10, ChronoUnit.DAYS);
         UserPlan active = UserPlan.builder()
-                .id(99L).userId(42L).planCode("PREMIUM")
+                .id(99L).userId(42L).productId(7L).planCode("PREMIUM")
                 .grantedAt(Instant.now().minus(20, ChronoUnit.DAYS))
                 .expiresAt(futureExpiry)
                 .build();
@@ -82,7 +83,7 @@ class PlanServiceTest {
     void activate_shouldRestartFromNow_whenSamePlanAlreadyExpired() {
         Instant pastExpiry = Instant.now().minus(5, ChronoUnit.DAYS);
         UserPlan expired = UserPlan.builder()
-                .id(99L).userId(42L).planCode("PREMIUM")
+                .id(99L).userId(42L).productId(7L).planCode("PREMIUM")
                 .grantedAt(Instant.now().minus(40, ChronoUnit.DAYS))
                 .expiresAt(pastExpiry)
                 .build();
@@ -104,7 +105,7 @@ class PlanServiceTest {
         // Usuario con PRO vigente compra PREMIUM → membresía exclusiva: se sobrescribe la fila.
         Instant proExpiry = Instant.now().plus(15, ChronoUnit.DAYS);
         UserPlan activePro = UserPlan.builder()
-                .id(99L).userId(42L).planCode("PRO")
+                .id(99L).userId(42L).productId(8L).planCode("PRO")
                 .grantedAt(Instant.now().minus(15, ChronoUnit.DAYS))
                 .expiresAt(proExpiry)
                 .build();
@@ -117,6 +118,7 @@ class PlanServiceTest {
 
         UserPlan saved = captureSaved();
         assertThat(saved.getId()).isEqualTo(99L);            // reutiliza la misma fila
+        assertThat(saved.getProductId()).isEqualTo(7L);       // ahora apunta al nuevo producto
         assertThat(saved.getPlanCode()).isEqualTo("PREMIUM"); // sobrescribe el plan anterior
         // al cambiar de plan arranca desde ahora, NO acumula el tiempo de PRO
         assertThat(saved.getExpiresAt()).isAfter(before.plus(27, ChronoUnit.DAYS));

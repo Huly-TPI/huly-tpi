@@ -104,6 +104,32 @@ class HandleWebhookUseCaseTest {
     }
 
     @Test
+    void execute_shouldActivatePlan_andCreditCoins_whenApprovedPlanHasCoins() {
+        PaymentEvent planEvent = PaymentEvent.builder()
+                .id(1L)
+                .userId(10L)
+                .productId(7L)
+                .externalReference("uuid-ext-ref")
+                .status(PaymentStatus.PENDING)
+                .coinsAmount(300)
+                .productType(ProductType.PLAN)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+        when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.getPayment(99L))
+                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "approved", "accredited"));
+        when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                .thenReturn(Optional.of(planEvent));
+        when(paymentEventRepository.approveIfPending(1L, 99L)).thenReturn(true);
+
+        handleWebhookUseCase.execute(99L);
+
+        verify(planService).activate(10L, 7L);
+        verify(coinService).credit(10L, 300);
+    }
+
+    @Test
     void execute_shouldNotActivatePlan_whenApproveIfPendingReturnsFalse_forPlan() {
         PaymentEvent planEvent = PaymentEvent.builder()
                 .id(1L).userId(10L).productId(7L).externalReference("uuid-ext-ref")

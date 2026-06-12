@@ -53,6 +53,7 @@ class ChatServiceTest {
     @Mock private UserVectorMemoryService userVectorMemoryService;
     @Mock private ChatEmotionalRecommendationService chatEmotionalRecommendationService;
     @Mock private ChatIntentDetectionService chatIntentDetectionService;
+    @Mock private ChatQuotaService chatQuotaService;
 
     @InjectMocks
     private ChatService chatService;

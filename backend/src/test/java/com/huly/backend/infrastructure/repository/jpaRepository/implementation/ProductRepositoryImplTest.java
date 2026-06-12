@@ -35,7 +35,7 @@ class ProductRepositoryImplTest {
         return ProductEntity.builder()
                 .id(10L).name("Plan Premium").description("Acceso premium")
                 .price(new BigDecimal("9999")).coinsAmount(0)
-                .type(ProductType.PLAN).planCode("PREMIUM")
+                .type(ProductType.PLAN).planCode("PREMIUM").chatDailyLimit(20)
                 .build();
     }
 
@@ -73,6 +73,7 @@ class ProductRepositoryImplTest {
         assertThat(result.get().getId()).isEqualTo(10L);
         assertThat(result.get().getType()).isEqualTo(ProductType.PLAN);
         assertThat(result.get().getPlanCode()).isEqualTo("PREMIUM");
+        assertThat(result.get().getChatDailyLimit()).isEqualTo(20);
     }
 
     @Test
