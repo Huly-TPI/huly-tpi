@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import PostitModal from '../../components/Challenges/PostitModal'
 import type { UserGoalResponse } from '../../api/userGoals'
@@ -132,5 +132,72 @@ describe('PostitModal — sección de imagen', () => {
     await user.click(screen.getByText('✓ Completar'))
 
     expect(onComplete).toHaveBeenCalledWith(1, undefined)
+  })
+
+  it('muestra error y no selecciona el archivo cuando supera los 5 MB', async () => {
+    const user = userEvent.setup()
+    render(
+      <PostitModal
+        initialMode="detail"
+        goal={makeGoal()}
+        onClose={vi.fn()}
+        onComplete={vi.fn()}
+      />
+    )
+
+    const largeFile = new File(['x'], 'foto-grande.jpg', { type: 'image/jpeg' })
+    Object.defineProperty(largeFile, 'size', { value: 6 * 1024 * 1024 })
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(input, largeFile)
+
+    await waitFor(() =>
+      expect(screen.getByText('La imagen no puede superar los 5 MB.')).toBeInTheDocument()
+    )
+    expect(screen.queryByText(/📎/)).not.toBeInTheDocument()
+  })
+
+  it('muestra el mensaje de error cuando onComplete falla', async () => {
+    const user = userEvent.setup()
+    const onComplete = vi.fn().mockRejectedValue(new Error('La imagen no tiene relación con el reto'))
+    const onClose = vi.fn()
+
+    render(
+      <PostitModal
+        initialMode="detail"
+        goal={makeGoal()}
+        onClose={onClose}
+        onComplete={onComplete}
+      />
+    )
+
+    await user.click(screen.getByText('✓ Completar'))
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('La imagen no tiene relación con el reto')
+      ).toBeInTheDocument()
+    )
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('no cierra el modal cuando onComplete falla', async () => {
+    const user = userEvent.setup()
+    const onComplete = vi.fn().mockRejectedValue(new Error('Formato no soportado'))
+    const onClose = vi.fn()
+
+    render(
+      <PostitModal
+        initialMode="detail"
+        goal={makeGoal()}
+        onClose={onClose}
+        onComplete={onComplete}
+      />
+    )
+
+    await user.click(screen.getByText('✓ Completar'))
+
+    await waitFor(() => expect(screen.getByText('✓ Completar')).toBeInTheDocument())
+    expect(onClose).not.toHaveBeenCalled()
   })
 })
