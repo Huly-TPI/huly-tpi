@@ -7,10 +7,16 @@ import PostitModal from '../../components/Challenges/PostitModal'
 import HarvestModal from '../../components/Challenges/HarvestModal'
 import Button from '../../components/Buttons/Button/Button'
 import BackButton from '../../components/Buttons/BackButton/BackButton'
-import dayBackground from '../../assets/garden/light-theme/background/day-background.webp'
+import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
+import dayBackground from '../../assets/shared/day-background.webp'
+import nightBackground from '../../assets/shared/dark-background.webp'
 import boardBg from '../../assets/challenges/board-challenges.png'
 import stumpImg from '../../assets/challenges/stump.png'
 import './Challenges.css'
+import { useTheme } from '../../context/theme'
+import { useAuthGate } from '../../context/authGate'
+import { ActivityType } from '../../api/activities'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
 const CYCLE_SIZE = 16
 
@@ -44,6 +50,9 @@ type ModalState =
   | { mode: 'detail'; goal: UserGoalResponse }
 
 export default function Challenges() {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const { requireAuth } = useAuthGate()
   const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -51,6 +60,10 @@ export default function Challenges() {
 
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
+
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.RETO, {
+    autoStart: true,
+  })
 
   const completedCount = completados?.totalElements ?? 0
   const { completedPlants, cycleProgress } = getCycleData(completedCount)
@@ -65,7 +78,8 @@ export default function Challenges() {
 
   const handleCreate = useCallback(async (data: { title: string; description: string }) => {
     await createGoal({ title: data.title, description: data.description || undefined })
-  }, [createGoal])
+    markConditionMet()
+  }, [createGoal, markConditionMet])
 
   const handleUpdate = useCallback(async (id: number, data: { title: string; description: string }) => {
     await updateGoal(id, { title: data.title, description: data.description || undefined })
@@ -85,6 +99,8 @@ export default function Challenges() {
     const isHarvest = cycleProgress === CYCLE_SIZE - 1
     try {
       await completeGoal(id)
+      markConditionMet()
+      await saveSession()
       if (isHarvest) {
         setHarvestPlant(completedPlants + 1)
       } else {
@@ -93,19 +109,24 @@ export default function Challenges() {
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Error al completar el reto')
     }
-  }, [cycleProgress, completedPlants, completeGoal, triggerWatering])
+  }, [cycleProgress, completedPlants, completeGoal, triggerWatering, markConditionMet, saveSession])
 
   const hasPending  = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0
 
   return (
     <div
-      className="challenges-page h-full flex flex-row items-stretch overflow-hidden"
-      style={{ backgroundImage: `url(${dayBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      className="challenges-page relative h-full flex flex-row items-stretch overflow-hidden"
     >
+      <ThemeBackground
+        lightSrc={dayBackground}
+        darkSrc={nightBackground}
+        lightAlt="Fondo de retos"
+        darkAlt="Fondo nocturno de retos"
+      />
       <BackButton to="/" />
 
-      <aside className="plant-zone flex-shrink-0 w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-hidden">
+      <aside className="plant-zone relative z-10 flex-shrink-0 w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-hidden">
         <div className="plant-zone__info flex flex-col items-center gap-[0.6rem] w-full">
           <h1 className="challenges-title text-2xl font-extrabold text-bosque m-0 text-center tracking-[-0.01em]">
             Mis Retos
@@ -153,13 +174,19 @@ export default function Challenges() {
         </div>
       </aside>
 
-      <div className="challenges-right flex-1 flex items-center justify-end py-8 pr-4">
+      <div className="challenges-right relative z-10 flex-1 flex items-center justify-end py-8 pr-4">
         <section
-          className="board-zone w-[850px] h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+          className="board-zone relative w-[850px] h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden"
           style={{ backgroundImage: `url(${boardBg})` }}
           aria-label="Listado de retos"
         >
-          <div className="board-inner flex-1 flex flex-col gap-[0.7rem] pt-[4rem] pl-[6rem] pr-[5rem] pb-[6rem] overflow-hidden min-h-0">
+          {isDark && (
+            <div
+              className="absolute inset-0 bg-[#2f2418]/[0.12] pointer-events-none"
+              aria-hidden="true"
+            />
+          )}
+          <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-[4rem] pl-[6rem] pr-[5rem] pb-[6rem] overflow-hidden min-h-0">
             {actionError && (
               <div className="flex items-start justify-between gap-[0.6rem] bg-[rgba(255,245,245,0.92)] border border-[#FEB2B2] rounded-[7px] py-[0.55rem] px-[0.75rem] text-[0.8rem] text-[#C53030] leading-[1.4]" role="alert">
                 <span>{actionError}</span>
@@ -174,7 +201,7 @@ export default function Challenges() {
             )}
 
             <div className="flex justify-end mb-[0.1rem]">
-              <Button variant="primary" size="sm" onClick={() => setModal({ mode: 'create' })}>
+              <Button variant="primary" size="sm" onClick={() => requireAuth(() => setModal({ mode: 'create' }))}>
                 + Nuevo reto
               </Button>
             </div>
@@ -189,13 +216,14 @@ export default function Challenges() {
                     <li key={goal.id}>
                       <BoardItem
                         goal={goal}
+                        darkMode={isDark}
                         onSelect={g => setModal({ mode: 'detail', goal: g })}
                         onComplete={handleComplete}
                       />
                     </li>
                   ))
                 ) : (
-                  <li className="text-[0.82rem] text-[#7a5c38] italic list-none py-[0.2rem] [text-shadow:0_1px_0_rgba(255,255,255,0.35)]">
+                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)]">
                     Sembrá tus metas. ¡Creá un nuevo reto!
                   </li>
                 )}
@@ -211,6 +239,7 @@ export default function Challenges() {
                   <li key={goal.id}>
                     <BoardItem
                       goal={goal}
+                      darkMode={isDark}
                       onSelect={g => setModal({ mode: 'detail', goal: g })}
                     />
                   </li>

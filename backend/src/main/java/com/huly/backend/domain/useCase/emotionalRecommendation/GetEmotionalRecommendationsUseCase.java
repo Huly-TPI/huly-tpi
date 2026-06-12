@@ -10,14 +10,12 @@ import com.huly.backend.domain.repository.EmotionalEventRepository;
 import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
  * Retrieves and ranks activities for a validated emotional recommendation query.
  */
-@Service
 @RequiredArgsConstructor
 public class GetEmotionalRecommendationsUseCase {
 

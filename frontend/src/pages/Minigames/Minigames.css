@@ -4,7 +4,11 @@
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  background: #bfe4fb;
+  background: var(--app-bg);
+}
+
+.minigames-page--dark {
+  background: #0c1423;
 }
 
 .minigames-scene {
@@ -32,6 +36,8 @@
   height: 100%;
   width: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 280ms ease;
 }
 
 .minigames-scene__background--desktop {
@@ -40,6 +46,10 @@
 
 .minigames-scene__background--mobile {
   display: block;
+}
+
+.minigames-scene__background--active {
+  opacity: 1;
 }
 
 @media (min-width: 768px) {

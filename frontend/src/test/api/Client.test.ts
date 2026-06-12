@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { api, getToken, setToken, clearToken } from '../../api/client'
+import {
+  api,
+  getToken,
+  setToken,
+  clearToken,
+  tryRehydrateSession,
+  SessionExpiredError,
+} from '../../api/client'
 
 function mockResponse(status: number, body: unknown = {}) {
   return {
@@ -12,11 +19,12 @@ function mockResponse(status: number, body: unknown = {}) {
 
 describe('client', () => {
   beforeEach(() => {
-    localStorage.clear()
+    clearToken()
     vi.restoreAllMocks()
   })
 
   afterEach(() => {
+    clearToken()
     vi.restoreAllMocks()
   })
 
@@ -29,6 +37,10 @@ describe('client', () => {
     it('clearToken borra el token', () => {
       setToken('abc')
       clearToken()
+      expect(getToken()).toBeNull()
+    })
+
+    it('getToken devuelve null si nunca se seteó', () => {
       expect(getToken()).toBeNull()
     })
   })
@@ -85,11 +97,8 @@ describe('client', () => {
       setToken('expired-token')
       const fetchMock = vi
         .spyOn(global, 'fetch')
-        // 1er intento: 401
         .mockResolvedValueOnce(mockResponse(401, {}))
-        // refresh: ok con token nuevo
         .mockResolvedValueOnce(mockResponse(200, { accessToken: 'fresh-token' }))
-        // reintento: ok
         .mockResolvedValueOnce(mockResponse(200, { data: 'ok' }))
 
       const result = await api.get<{ data: string }>('/protected')
@@ -99,7 +108,7 @@ describe('client', () => {
       expect(fetchMock).toHaveBeenCalledTimes(3)
     })
 
-    it('limpia el token y emite auth:expired si el refresh falla', async () => {
+    it('limpia el token, emite auth:expired y lanza SessionExpiredError si el refresh falla', async () => {
       setToken('expired-token')
       const expiredHandler = vi.fn()
       window.addEventListener('auth:expired', expiredHandler)
@@ -108,7 +117,7 @@ describe('client', () => {
         .mockResolvedValueOnce(mockResponse(401, {}))
         .mockResolvedValueOnce(mockResponse(401, {}))
 
-      await expect(api.get('/protected')).rejects.toThrow()
+      await expect(api.get('/protected')).rejects.toBeInstanceOf(SessionExpiredError)
       expect(getToken()).toBeNull()
       expect(expiredHandler).toHaveBeenCalled()
 
@@ -125,6 +134,46 @@ describe('client', () => {
 
       await expect(api.get('/protected')).rejects.toThrow()
       expect(fetchMock).toHaveBeenCalledTimes(3)
+    })
+  })
+
+  describe('tryRehydrateSession', () => {
+    it('devuelve el accessToken y lo guarda en memoria si el refresh es exitoso', async () => {
+      vi.spyOn(global, 'fetch').mockResolvedValue(
+        mockResponse(200, { accessToken: 'rehydrated-token' }),
+      )
+
+      const result = await tryRehydrateSession()
+
+      expect(result).toBe('rehydrated-token')
+      expect(getToken()).toBe('rehydrated-token')
+    })
+
+    it('devuelve null y no setea token si el refresh responde no-ok', async () => {
+      vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse(401, {}))
+
+      const result = await tryRehydrateSession()
+
+      expect(result).toBeNull()
+      expect(getToken()).toBeNull()
+    })
+
+    it('devuelve null si el body no trae accessToken', async () => {
+      vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse(200, {}))
+
+      const result = await tryRehydrateSession()
+
+      expect(result).toBeNull()
+      expect(getToken()).toBeNull()
+    })
+
+    it('devuelve null si el fetch lanza una excepción', async () => {
+      vi.spyOn(global, 'fetch').mockRejectedValue(new Error('Network down'))
+
+      const result = await tryRehydrateSession()
+
+      expect(result).toBeNull()
+      expect(getToken()).toBeNull()
     })
   })
 })

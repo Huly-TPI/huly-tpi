@@ -8,8 +8,8 @@ import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
-import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +68,7 @@ class EmotionalEventUseCaseTest {
         );
 
         assertThatThrownBy(() -> createUseCase.execute(invalid))
-                .isInstanceOf(BadRequestException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("confidence");
     }
 
@@ -126,7 +126,7 @@ class EmotionalEventUseCaseTest {
         assertThatThrownBy(() -> decisionUseCase.execute(
                 10L,
                 new UpdateRecommendationDecisionCommand(RecommendationDecision.CHOSE_OTHER, null)
-        )).isInstanceOf(BadRequestException.class);
+        )).isInstanceOf(BusinessRuleException.class);
     }
 
     @Test

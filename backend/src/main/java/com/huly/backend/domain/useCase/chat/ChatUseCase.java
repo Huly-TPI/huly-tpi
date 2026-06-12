@@ -3,10 +3,7 @@ package com.huly.backend.domain.useCase.chat;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.service.chat.ChatService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-
-@Service
 @RequiredArgsConstructor
 public class ChatUseCase {
 

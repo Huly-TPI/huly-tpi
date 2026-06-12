@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/auth'
+import { useTheme } from '../context/theme'
 import logo from '../assets/brand/monocromatico-menta-logo.png'
+import ThemeToggle from './ThemeToggle/ThemeToggle'
 
 const NAV_LINKS = [
   { to: '/', label: 'Jardín' },
@@ -13,7 +15,9 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const { isAuthenticated, user } = useAuth()
+  const { theme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
+  const isDark = theme === 'dark'
 
   const navRef = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function Navbar() {
   return (
     <nav
       ref={navRef}
-      className="relative z-50 shrink-0 bg-bosque shadow-md"
+      className={`relative z-50 shrink-0 shadow-md ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}
     >
       {/* Barra principal */}
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
@@ -63,6 +67,9 @@ export default function Navbar() {
           ) : (
             <AuthButtons />
           )}
+          <div className="hidden md:block">
+            <ThemeToggle compact />
+          </div>
 
           <button
             type="button"
@@ -77,7 +84,7 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-white/10 bg-bosque px-4 pb-4 md:hidden">
+        <div className={`border-t border-white/10 px-4 pb-4 md:hidden ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}>
           <ul className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map(link => (
               <li key={link.to}>
@@ -91,6 +98,11 @@ export default function Navbar() {
               </li>
             ))}
           </ul>
+
+          <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
+            <span>Tema</span>
+            <ThemeToggle compact />
+          </div>
 
           {!isAuthenticated && (
             <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
@@ -115,6 +127,15 @@ export default function Navbar() {
     </nav>
   )
 }
+
+// function AuthSlotPlaceholder() {
+//   return (
+//     <div
+//       className="hidden h-9 w-36 animate-pulse rounded-full bg-white/10 md:block"
+//       aria-hidden="true"
+//     />
+//   )
+// }
 
 function UserMenu({ name }: { name: string }) {
   const [open, setOpen] = useState(false)
