@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${HULY_POSTGRES_DB:-huly}
+      POSTGRES_USER: ${HULY_POSTGRES_USER:-huly_user}
+      POSTGRES_PASSWORD: ${HULY_POSTGRES_PASSWORD:-huly_pass}
+    ports:
+      - "${HULY_POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
