@@ -6,10 +6,10 @@ import com.huly.backend.domain.repository.UserEmotionalStateRepository;
 import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
-import com.huly.backend.domain.useCase.emotionalEvent.GetEmotionalRecommendationsUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventDecisionUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventFeedbackUseCase;
+import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
