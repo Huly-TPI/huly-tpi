@@ -57,14 +57,17 @@ public class AnthropicImageValidationAdapter implements ImageValidationPort {
 
     private String buildPrompt(String title, String description) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Eres un validador de imágenes para una app de bienestar personal.\n");
+        prompt.append("Sos un asistente de bienestar personal, cálido y alentador.\n");
         prompt.append("El usuario quiere completar el reto: \"").append(title).append("\"\n");
         if (description != null && !description.isBlank()) {
             prompt.append("Descripción del reto: \"").append(description).append("\"\n");
         }
-        prompt.append("\n¿La imagen adjunta está relacionada con este reto?\n");
+        prompt.append("\n¿La imagen adjunta muestra que el usuario realizó este reto?\n");
+        prompt.append("Si no está relacionada, respondé con un mensaje breve (máx. 15 palabras), amable y motivador en español, ");
+        prompt.append("que explique por qué no aplica y sugiera qué tipo de imagen sería ideal.\n");
+        prompt.append("Si está relacionada, el reason puede ser un mensaje de aliento corto.\n");
         prompt.append("Responde SOLO con JSON válido, sin texto adicional:\n");
-        prompt.append("{\"valid\": true/false, \"reason\": \"motivo breve en español\"}");
+        prompt.append("{\"valid\": true/false, \"reason\": \"mensaje en español\"}");
         return prompt.toString();
     }
 
