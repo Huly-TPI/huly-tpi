@@ -13,6 +13,7 @@ export interface Plan {
   name: string
   description: string
   price: number
+  coinsAmount: number
   planCode: string
 }
 

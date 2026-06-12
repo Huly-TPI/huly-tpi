@@ -42,8 +42,10 @@ public class ChatService {
     private final UserVectorMemoryService userVectorMemoryService;
     private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
     private final ChatIntentDetectionService chatIntentDetectionService;
+    private final ChatQuotaService chatQuotaService;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
+        chatQuotaService.assertWithinLimit(userId);
         ChatContext context = buildBlockingContext(message, conversationId, userId);
         ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
         ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
@@ -88,6 +90,7 @@ public class ChatService {
     }
 
     public Flux<ChatStreamEvent> streamMessage(String message, String conversationId, Long userId) {
+        chatQuotaService.assertWithinLimit(userId);
         return Flux.defer(() -> {
             ChatContext context = buildStreamingContext(message, conversationId, userId);
             saveUserMessage(conversationId, message, ChatReply.of(""), userId);

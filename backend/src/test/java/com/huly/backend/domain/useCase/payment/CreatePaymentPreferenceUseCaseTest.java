@@ -3,11 +3,15 @@ package com.huly.backend.domain.useCase.payment;
 import com.huly.backend.domain.dto.payment.PaymentEvent;
 import com.huly.backend.domain.dto.payment.PaymentPreferenceResult;
 import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.dto.payment.UserPlan;
+import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.enums.PaymentStatus;
+import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.PaymentEventRepository;
 import com.huly.backend.domain.repository.ProductRepository;
+import com.huly.backend.domain.repository.UserPlanRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,12 +20,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +38,7 @@ class CreatePaymentPreferenceUseCaseTest {
     @Mock private ProductRepository productRepository;
     @Mock private MercadoPagoPort mercadoPagoPort;
     @Mock private PaymentEventRepository paymentEventRepository;
+    @Mock private UserPlanRepository userPlanRepository;
 
     private CreatePaymentPreferenceUseCase useCase;
 
@@ -38,7 +46,8 @@ class CreatePaymentPreferenceUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CreatePaymentPreferenceUseCase(productRepository, mercadoPagoPort, paymentEventRepository);
+        useCase = new CreatePaymentPreferenceUseCase(
+                productRepository, mercadoPagoPort, paymentEventRepository, userPlanRepository);
 
         product = Product.builder()
                 .id(1L)
@@ -46,6 +55,26 @@ class CreatePaymentPreferenceUseCaseTest {
                 .description("500 monedas")
                 .price(new BigDecimal("9.99"))
                 .coinsAmount(500)
+                .build();
+    }
+
+    private Product planProduct(Long id, String planCode) {
+        return Product.builder()
+                .id(id)
+                .name("Plan " + planCode)
+                .description("Suscripción")
+                .price(new BigDecimal("9999"))
+                .coinsAmount(0)
+                .type(ProductType.PLAN)
+                .planCode(planCode)
+                .build();
+    }
+
+    private UserPlan activePlan(Long productId) {
+        return UserPlan.builder()
+                .id(1L).userId(10L).productId(productId).planCode("PREMIUM")
+                .grantedAt(Instant.now().minus(1, ChronoUnit.DAYS))
+                .expiresAt(Instant.now().plus(30, ChronoUnit.DAYS))
                 .build();
     }
 
@@ -125,5 +154,69 @@ class CreatePaymentPreferenceUseCaseTest {
 
         assertThatThrownBy(() -> useCase.execute(99L, 10L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void execute_shouldThrowBusinessRule_whenBuyingDifferentPlanWhileActive() {
+        Product pro = planProduct(7L, "PRO");
+        when(productRepository.findById(7L)).thenReturn(Optional.of(pro));
+        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(activePlan(5L)));
+
+        assertThatThrownBy(() -> useCase.execute(7L, 10L))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("plan activo");
+
+        verify(mercadoPagoPort, never()).createPreference(any(), any(), any());
+        verify(paymentEventRepository, never()).save(any());
+    }
+
+    @Test
+    void execute_shouldAllowRenewal_whenBuyingSamePlanWhileActive() {
+        Product premium = planProduct(5L, "PREMIUM");
+        when(productRepository.findById(5L)).thenReturn(Optional.of(premium));
+        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(activePlan(5L)));
+        when(mercadoPagoPort.createPreference(eq(premium), eq(10L), any()))
+                .thenReturn(new PaymentPreferenceResult("pref-123", "https://mp.com/checkout"));
+        when(paymentEventRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentPreferenceResult result = useCase.execute(5L, 10L);
+
+        assertThat(result.getId()).isEqualTo("pref-123");
+        verify(paymentEventRepository).save(any());
+    }
+
+    @Test
+    void execute_shouldAllowPlanPurchase_whenNoActiveMembership() {
+        Product premium = planProduct(5L, "PREMIUM");
+        when(productRepository.findById(5L)).thenReturn(Optional.of(premium));
+        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.createPreference(any(), any(), any()))
+                .thenReturn(new PaymentPreferenceResult("pref-123", "https://mp.com/checkout"));
+        when(paymentEventRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentPreferenceResult result = useCase.execute(5L, 10L);
+
+        assertThat(result.getInitPoint()).isEqualTo("https://mp.com/checkout");
+        verify(paymentEventRepository).save(any());
+    }
+
+    @Test
+    void execute_shouldAllowPlanPurchase_whenMembershipExpired() {
+        Product premium = planProduct(5L, "PREMIUM");
+        UserPlan expired = UserPlan.builder()
+                .id(1L).userId(10L).planCode("PREMIUM")
+                .grantedAt(Instant.now().minus(60, ChronoUnit.DAYS))
+                .expiresAt(Instant.now().minus(1, ChronoUnit.DAYS))
+                .build();
+        when(productRepository.findById(5L)).thenReturn(Optional.of(premium));
+        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(expired));
+        when(mercadoPagoPort.createPreference(any(), any(), any()))
+                .thenReturn(new PaymentPreferenceResult("pref-123", "https://mp.com/checkout"));
+        when(paymentEventRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentPreferenceResult result = useCase.execute(5L, 10L);
+
+        assertThat(result.getId()).isEqualTo("pref-123");
+        verify(paymentEventRepository).save(any());
     }
 }

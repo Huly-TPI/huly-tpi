@@ -15,12 +15,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,6 +72,28 @@ class EmotionalEventRepositoryImplTest {
         when(emotionalEventJpaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThat(repository.findById(99L)).isEmpty();
+    }
+
+    @Test
+    void findRecentRecommendationHistoryByUserId_shouldReturnMappedRecentEvents() {
+        when(emotionalEventJpaRepository.findRecommendationHistoryByUserId(eq(1L), any(Pageable.class)))
+                .thenReturn(List.of(entity()));
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        List<EmotionalEvent> result = repository.findRecentRecommendationHistoryByUserId(1L, 20);
+
+        verify(emotionalEventJpaRepository).findRecommendationHistoryByUserId(eq(1L), pageableCaptor.capture());
+        assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
+        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(20);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserId()).isEqualTo(1L);
+        assertThat(result.get(0).getRecommendedActivityId()).isEqualTo(2L);
+        assertThat(result.get(0).getFeedbackScore()).isEqualTo(4);
+    }
+
+    @Test
+    void findRecentRecommendationHistoryByUserId_shouldReturnEmptyWhenUserIdIsMissing() {
+        assertThat(repository.findRecentRecommendationHistoryByUserId(null, 20)).isEmpty();
     }
 
     private EmotionalEvent domain() {
