@@ -1,26 +1,26 @@
 import { useEffect } from 'react'
-import backgroundImage from '../../assets/minigames/light-theme/background/Background-minigames.webp'
-import mobileBackgroundImage from '../../assets/minigames/light-theme/background/mobile/background-minigames-mobile.webp'
 import darkBackgroundImage from '../../assets/minigames/dark-theme/background/Background-minigames.webp'
 import darkMobileBackgroundImage from '../../assets/minigames/dark-theme/background/mobile/background-minigames-mobile.webp'
+import backgroundImage from '../../assets/minigames/light-theme/background/Background-minigames.webp'
+import mobileBackgroundImage from '../../assets/minigames/light-theme/background/mobile/background-minigames-mobile.webp'
 
-import fishImage from '../../assets/minigames/light-theme/fish.webp'
-import easelImage from '../../assets/minigames/light-theme/paddle.webp'
-import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
-import sandImage from '../../assets/minigames/light-theme/sand.webp'
+import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
+import cloudImage from '../../assets/garden/light-theme/cloud.webp'
 import darkFishImage from '../../assets/minigames/dark-theme/fish.webp'
 import darkEaselImage from '../../assets/minigames/dark-theme/paddle.webp'
 import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
 import darkSandImage from '../../assets/minigames/dark-theme/sand.webp'
-import cloudImage from '../../assets/garden/light-theme/cloud.webp'
-import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
+import fishImage from '../../assets/minigames/light-theme/fish.webp'
+import easelImage from '../../assets/minigames/light-theme/paddle.webp'
+import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
+import sandImage from '../../assets/minigames/light-theme/sand.webp'
 
+import BackButton from '../../components/Buttons/BackButton/BackButton'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
-import './Minigames.css'
-import BackButton from '../../components/Buttons/BackButton/BackButton'
 import { useTheme } from '../../context/theme'
+import './Minigames.css'
 
 const FULL_WIDTH = 'w-full'
 const DEFAULT_HOTSPOT = 'left-[2%] top-[4%] h-[92%] w-[96%]'
@@ -89,7 +89,7 @@ const minigameElements: SceneElementDefinition[] = [
         to: '/mandalas',
     },
     {
-        id: 'free-draw',
+        id: 'zen-sand-garden',
         title: 'Arena zen',
         imageAlt: 'Tablero de arena para dibujar libremente',
         image: { light: sandImage, dark: darkSandImage },
@@ -98,7 +98,7 @@ const minigameElements: SceneElementDefinition[] = [
         hotspotClassName: DEFAULT_HOTSPOT,
         clipPath: RECT_CLIP_PATH,
         tooltipClassName: 'bottom-full mb-2',
-        to: '/free-draw',
+        to: '/zen-sand-garden',
     },
 ]
 

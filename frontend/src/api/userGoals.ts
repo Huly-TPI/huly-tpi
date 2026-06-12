@@ -8,6 +8,9 @@ export interface UserGoalResponse {
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED'
   createdAt: string
   activityId: number | null
+  imageUrl: string | null
+  coinsReward: number
+  coinsRewardWithImage: number
 }
 
 export interface UserGoalPageResponse {
@@ -56,8 +59,11 @@ export const userGoalsApi = {
   delete: (id: number) =>
     api.delete<void>(`/user-goals/${id}`),
 
-  complete: (id: number) =>
-    api.patch<UserGoalResponse>(`/user-goals/${id}/complete`),
+  complete: (id: number, image?: File) => {
+    const form = new FormData()
+    if (image) form.append('image', image)
+    return api.patch<UserGoalResponse>(`/user-goals/${id}/complete`, form)
+  },
 
   acceptChallenge: (data: AcceptChallengeRequest) =>
     api.post<UserGoalResponse>('/user-goals/accept', data),

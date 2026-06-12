@@ -1,10 +1,13 @@
 package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.service.payment.CoinService;
+import com.huly.backend.domain.service.userGoal.ImageStorageService;
 import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
+import com.huly.backend.domain.useCase.userGoal.GetGoalImageUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
 import org.springframework.context.annotation.Bean;
@@ -24,8 +27,13 @@ public class UserGoalUseCaseConfig {
     }
 
     @Bean
-    public CompleteUserGoalUseCase completeUserGoalUseCase(UserGoalRepository userGoalRepository) {
-        return new CompleteUserGoalUseCase(userGoalRepository);
+    public CompleteUserGoalUseCase completeUserGoalUseCase(UserGoalRepository userGoalRepository, CoinService coinService, ImageStorageService imageStorageService) {
+        return new CompleteUserGoalUseCase(userGoalRepository, coinService, imageStorageService);
+    }
+
+    @Bean
+    public GetGoalImageUseCase getGoalImageUseCase(ImageStorageService imageStorageService) {
+        return new GetGoalImageUseCase(imageStorageService);
     }
 
     @Bean
