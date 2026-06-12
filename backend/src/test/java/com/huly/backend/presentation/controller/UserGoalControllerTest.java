@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.model.UserPlant;
 import com.huly.backend.domain.model.enums.GoalStatus;
+import com.huly.backend.domain.model.enums.PlantStatus;
 import com.huly.backend.domain.useCase.userGoal.*;
 import com.huly.backend.infrastructure.presentation.controller.UserGoalController;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalRequest;
@@ -191,21 +193,26 @@ class UserGoalControllerTest {
         verify(deleteUserGoalUseCase).execute(1L);
     }
 
+    private CompleteUserGoalUseCase.Result completeResult(Long goalId) {
+        UserPlant plant = UserPlant.builder()
+                .id(1L).userId(USER_ID).plantNumber(1).requiredGoals(5)
+                .completedGoalsCount(1L).status(PlantStatus.GROWING).startedAt(Instant.now()).build();
+        return new CompleteUserGoalUseCase.Result(goal(goalId, "Meta", GoalStatus.COMPLETED), false, null, plant);
+    }
+
     @Test
     void complete_shouldReturn200WithCompletedStatus_whenGoalExists() throws Exception {
-        when(completeUserGoalUseCase.execute(1L))
-                .thenReturn(goal(1L, "Meta", GoalStatus.COMPLETED));
+        when(completeUserGoalUseCase.execute(1L)).thenReturn(completeResult(1L));
 
         mockMvc.perform(patch("/api/user-goals/1/complete"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(jsonPath("$.goal.id").value(1L))
+                .andExpect(jsonPath("$.goal.status").value("COMPLETED"));
     }
 
     @Test
     void complete_shouldDelegateToUseCase_withCorrectId() throws Exception {
-        when(completeUserGoalUseCase.execute(42L))
-                .thenReturn(goal(42L, "Meta", GoalStatus.COMPLETED));
+        when(completeUserGoalUseCase.execute(42L)).thenReturn(completeResult(42L));
 
         mockMvc.perform(patch("/api/user-goals/42/complete"))
                 .andExpect(status().isOk());

@@ -13,6 +13,8 @@ import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalPageRes
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalResponse;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalUpdateRequest;
+import com.huly.backend.infrastructure.presentation.dto.userPlant.GoalCompleteResponse;
+import com.huly.backend.infrastructure.presentation.dto.userPlant.UserPlantSummaryResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -103,9 +105,15 @@ public class UserGoalController {
     }
 
     @PatchMapping("/{id}/complete")
-    public ResponseEntity<UserGoalResponse> complete(@PathVariable Long id) {
-        UserGoal completed = completeUserGoalUseCase.execute(id);
-        return ResponseEntity.ok(toResponse(completed));
+    public ResponseEntity<GoalCompleteResponse> complete(@PathVariable Long id) {
+        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(id);
+        GoalCompleteResponse response = new GoalCompleteResponse(
+                toResponse(result.goal()),
+                result.harvestTriggered(),
+                result.harvestedPlantNumber(),
+                toPlantSummary(result.currentPlant())
+        );
+        return ResponseEntity.ok(response);
     }
 
     private Long getUserId(UserDetails principal) {
@@ -124,6 +132,18 @@ public class UserGoalController {
                 userGoal.getStatus().name(),
                 userGoal.getCreatedAt(),
                 userGoal.getActivityId()
+        );
+    }
+
+    private UserPlantSummaryResponse toPlantSummary(com.huly.backend.domain.model.UserPlant plant) {
+        return new UserPlantSummaryResponse(
+                plant.getId(),
+                plant.getPlantNumber(),
+                plant.getRequiredGoals(),
+                plant.getCompletedGoalsCount() != null ? plant.getCompletedGoalsCount() : 0L,
+                plant.getStatus().name(),
+                plant.getStartedAt(),
+                plant.getCompletedAt()
         );
     }
 

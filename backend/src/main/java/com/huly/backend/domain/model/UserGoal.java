@@ -18,4 +18,5 @@ public class UserGoal {
     private GoalStatus status;
     private Instant createdAt;
     private Long activityId;
+    private Long userPlantId;
 }

@@ -41,4 +41,8 @@ public class UserGoalsEntity {
     @JoinColumn(name = "activity_id", nullable = true)
     private ActivityEntity activity;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_plant_id", nullable = true)
+    private UserPlantEntity userPlant;
+
 }

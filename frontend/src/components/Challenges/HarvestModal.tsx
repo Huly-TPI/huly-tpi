@@ -1,5 +1,5 @@
 import Button from '../Buttons/Button/Button'
-import plant5 from '../../assets/challenges/plant-stages/plant-5.png'
+import { getPlantImages } from '../../config/plantImages'
 
 export interface HarvestModalProps {
   plantNumber: number
@@ -7,11 +7,13 @@ export interface HarvestModalProps {
 }
 
 export default function HarvestModal({ plantNumber, onCreateNew }: HarvestModalProps) {
+  const images = getPlantImages(plantNumber)
+
   return (
     <div className="fixed inset-0 bg-black/[0.42] flex items-center justify-center z-[1000] p-4 backdrop-blur-[3px]" role="dialog" aria-modal="true">
       <div className="harvest-modal bg-white rounded-3xl p-[2rem_1.75rem_1.75rem] w-full max-w-[320px] text-center shadow-[0_24px_64px_rgba(0,0,0,0.28)]">
         <img
-          src={plant5}
+          src={images[5]}
           alt="Planta cosechada"
           className="harvest-modal__plant w-[130px] h-[170px] object-contain drop-shadow-[0_8px_18px_rgba(100,153,89,0.38)]"
         />

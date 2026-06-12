@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useUserGoals } from '../../hooks/useUserGoals'
-import { type UserGoalResponse } from '../../api/userGoals'
+import { type UserGoalResponse, type UserPlantSummaryResponse } from '../../api/userGoals'
+import { userPlantsApi } from '../../api/userPlants'
 import Plant from '../../components/Challenges/Plant'
 import BoardItem from '../../components/Challenges/BoardItem'
 import PostitModal from '../../components/Challenges/PostitModal'
@@ -18,21 +20,9 @@ import { useAuthGate } from '../../context/authGate'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
-const CYCLE_SIZE = 16
-
-function getCycleData(completedCount: number) {
-  const completedPlants = Math.floor(completedCount / CYCLE_SIZE)
-  const cycleProgress = completedCount % CYCLE_SIZE
-  return { completedPlants, cycleProgress }
-}
-
-function getPlantStage(cycleProgress: number): 0 | 1 | 2 | 3 | 4 | 5 {
-  if (cycleProgress === 0) return 0
-  if (cycleProgress <= 2) return 1
-  if (cycleProgress <= 5) return 2
-  if (cycleProgress <= 9) return 3
-  if (cycleProgress <= 13) return 4
-  return 5
+function getPlantStage(progress: number, required: number): 0 | 1 | 2 | 3 | 4 | 5 {
+  if (progress === 0) return 0
+  return Math.min(Math.ceil((progress / required) * 5), 5) as 0 | 1 | 2 | 3 | 4 | 5
 }
 
 const PLANT_HINTS: Record<0 | 1 | 2 | 3 | 4 | 5, string> = {
@@ -53,10 +43,12 @@ export default function Challenges() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const { requireAuth } = useAuthGate()
+  const navigate = useNavigate()
   const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
+  const [currentPlant, setCurrentPlant] = useState<UserPlantSummaryResponse | null>(null)
 
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
@@ -65,10 +57,17 @@ export default function Challenges() {
     autoStart: true,
   })
 
-  const completedCount = completados?.totalElements ?? 0
-  const { completedPlants, cycleProgress } = getCycleData(completedCount)
-  const plantStage = getPlantStage(cycleProgress)
-  const cyclePct = Math.round((cycleProgress / CYCLE_SIZE) * 100)
+  useEffect(() => {
+    userPlantsApi.getCurrent()
+      .then(setCurrentPlant)
+      .catch(() => {/* no plant yet, will be created on first complete */})
+  }, [])
+
+  const cycleProgress = currentPlant?.completedGoalsCount ?? 0
+  const requiredGoals = currentPlant?.requiredGoals ?? 5
+  const completedPlants = (currentPlant?.plantNumber ?? 1) - 1
+  const plantStage = getPlantStage(cycleProgress, requiredGoals)
+  const cyclePct = Math.round((cycleProgress / requiredGoals) * 100)
 
   const triggerWatering = useCallback(() => {
     setIsWatering(true)
@@ -96,20 +95,20 @@ export default function Challenges() {
 
   const handleComplete = useCallback(async (id: number) => {
     setActionError(null)
-    const isHarvest = cycleProgress === CYCLE_SIZE - 1
     try {
-      await completeGoal(id)
+      const result = await completeGoal(id)
       markConditionMet()
       await saveSession()
-      if (isHarvest) {
-        setHarvestPlant(completedPlants + 1)
+      setCurrentPlant(result.currentPlant)
+      if (result.harvestTriggered) {
+        setHarvestPlant(result.harvestedPlantNumber)
       } else {
         triggerWatering()
       }
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Error al completar el reto')
     }
-  }, [cycleProgress, completedPlants, completeGoal, triggerWatering, markConditionMet, saveSession])
+  }, [completeGoal, triggerWatering, markConditionMet, saveSession])
 
   const hasPending  = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0
@@ -134,7 +133,7 @@ export default function Challenges() {
 
           <div className="w-full max-w-[200px] text-center">
             <p className="text-[0.78rem] text-bosque m-0 mb-[0.35rem]">
-              <strong>{cycleProgress}</strong> / {CYCLE_SIZE} en este ciclo
+              <strong>{cycleProgress}</strong> / {requiredGoals} en este ciclo
             </p>
             <div
               className="h-[9px] bg-white/30 rounded-full overflow-hidden w-full"
@@ -161,10 +160,17 @@ export default function Challenges() {
               Plantas cosechadas: <strong>{completedPlants}</strong>
             </p>
           )}
+
+          <button
+            className="mt-1 text-[0.72rem] text-bosque underline underline-offset-2 bg-transparent border-0 cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={() => navigate('/orchard')}
+          >
+            🌿 Ver Huerta
+          </button>
         </div>
 
         <div className="plant-on-stump mt-auto flex flex-col items-center relative mr-3 translate-y-[140px]">
-          <Plant stage={plantStage} isWatering={isWatering} />
+          <Plant stage={plantStage} isWatering={isWatering} plantType={currentPlant?.plantNumber ?? 1} />
           <img
             src={stumpImg}
             className="w-[250px] -mt-[105px] relative z-0 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.22)]"

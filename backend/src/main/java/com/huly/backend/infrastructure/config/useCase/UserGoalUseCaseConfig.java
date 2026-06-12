@@ -1,12 +1,14 @@
 package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.repository.UserPlantRepository;
 import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
+import com.huly.backend.domain.useCase.userPlant.GetOrCreateCurrentPlantUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,8 +26,11 @@ public class UserGoalUseCaseConfig {
     }
 
     @Bean
-    public CompleteUserGoalUseCase completeUserGoalUseCase(UserGoalRepository userGoalRepository) {
-        return new CompleteUserGoalUseCase(userGoalRepository);
+    public CompleteUserGoalUseCase completeUserGoalUseCase(
+            UserGoalRepository userGoalRepository,
+            UserPlantRepository userPlantRepository,
+            GetOrCreateCurrentPlantUseCase getOrCreateCurrentPlantUseCase) {
+        return new CompleteUserGoalUseCase(userGoalRepository, userPlantRepository, getOrCreateCurrentPlantUseCase);
     }
 
     @Bean
