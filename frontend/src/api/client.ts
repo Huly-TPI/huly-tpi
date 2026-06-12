@@ -70,16 +70,17 @@ async function request<T>(
 ): Promise<T> {
   const { body, headers, skipAuthRedirect, ...rest } = options
   const token = getToken()
+  const isFormData = body instanceof FormData
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
   })
 
   if (

@@ -66,6 +66,9 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
                 .status(domain.getStatus())
                 .createdAt(domain.getCreatedAt())
                 .activity(activity)
+                .imageUrl(domain.getImageUrl())
+                .coinsReward(domain.getCoinsReward() != null ? domain.getCoinsReward() : 10)
+                .coinsRewardWithImage(domain.getCoinsRewardWithImage() != null ? domain.getCoinsRewardWithImage() : 25)
                 .build();
     }
 
@@ -78,6 +81,9 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .activityId(entity.getActivity() != null ? entity.getActivity().getId() : null)
+                .imageUrl(entity.getImageUrl())
+                .coinsReward(entity.getCoinsReward())
+                .coinsRewardWithImage(entity.getCoinsRewardWithImage())
                 .build();
     }
 }

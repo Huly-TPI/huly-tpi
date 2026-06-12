@@ -9,5 +9,8 @@ public record UserGoalResponse(
         String description,
         String status,
         Instant createdAt,
-        Long activityId
+        Long activityId,
+        String imageUrl,
+        Integer coinsReward,
+        Integer coinsRewardWithImage
 ) {}
