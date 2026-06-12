@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createPreference } from '../../api/payment'
+import { ApiError } from '../../api/apiError'
 
 export function usePurchase() {
   const [buyingId, setBuyingId] = useState<string | null>(null)
@@ -22,8 +23,10 @@ export function usePurchase() {
         window.location.href = initPoint
         return
       }
-    } catch {
-      setError('Error al iniciar el pago. Intentá de nuevo.')
+    } catch (err) {
+      // Si el backend rechazó con una regla de negocio (ej. ya tenés un plan activo),
+      // mostramos su mensaje; si no, un genérico.
+      setError(err instanceof ApiError ? err.message : 'Error al iniciar el pago. Intentá de nuevo.')
       if (popup) popup.close()
     } finally {
       setBuyingId(null)

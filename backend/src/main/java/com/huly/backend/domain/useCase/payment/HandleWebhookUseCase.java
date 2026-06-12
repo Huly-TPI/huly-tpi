@@ -65,6 +65,11 @@ public class HandleWebhookUseCase {
         if (event.getProductType() == ProductType.PLAN) {
             planService.activate(event.getUserId(), event.getProductId());
             log.info("Payment {} APPROVED — activated plan from product {} for user {}", mpPaymentId, event.getProductId(), event.getUserId());
+            Integer coins = event.getCoinsAmount();
+            if (coins != null && coins > 0) {
+                coinService.credit(event.getUserId(), coins);
+                log.info("Payment {} APPROVED — credited {} bonus coins from plan to user {}", mpPaymentId, coins, event.getUserId());
+            }
         } else {
             coinService.credit(event.getUserId(), event.getCoinsAmount());
             log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());

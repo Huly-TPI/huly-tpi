@@ -49,6 +49,7 @@ public class PaymentController {
                         p.getName(),
                         p.getDescription(),
                         p.getPrice(),
+                        p.getCoinsAmount(),
                         p.getPlanCode()))
                 .toList();
         return ResponseEntity.ok(plans);
