@@ -9,7 +9,7 @@ permissions:
 
 on:
   push:
-    branches: [ main, dev ]
+    # sin 'branches' -> dispara en TODAS las branches
     paths:
       - 'backend/**'
       - 'frontend/**'
@@ -22,6 +22,10 @@ on:
       - 'backend/**'
       - 'frontend/**'
       - '.github/workflows/CI.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
@@ -55,15 +59,10 @@ jobs:
           echo "✔ PR válido hacia main"
 
 
-  # FRONTEND BUILD — DEV + MAIN
+  # FRONTEND BUILD — TODAS LAS BRANCHES
 
   build-frontend:
     runs-on: ubuntu-latest
-    if: >
-      github.ref_name == 'dev' ||
-      github.ref_name == 'main' ||
-      github.base_ref == 'dev' ||
-      github.base_ref == 'main'
 
     defaults:
       run:
@@ -87,15 +86,10 @@ jobs:
         run: npm run build
 
 
-  # BACKEND BUILD — DEV + MAIN
+  # BACKEND BUILD — TODAS LAS BRANCHES
 
   build-backend:
     runs-on: ubuntu-latest
-    if: >
-      github.ref_name == 'dev' ||
-      github.ref_name == 'main' ||
-      github.base_ref == 'dev' ||
-      github.base_ref == 'main'
 
     defaults:
       run:
@@ -110,21 +104,20 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'maven'
 
       - name: Build backend with Maven
         run: mvn clean install -DskipTests=true
 
 
 
-  # TEST COVERAGE — DEV + MAIN
+  # TEST COVERAGE — SOLO PR A DEV
 
   test-coverage:
     runs-on: ubuntu-latest
     if: >
-      github.ref_name == 'dev' ||
-      github.ref_name == 'main' ||
-      github.base_ref == 'dev' ||
-      github.base_ref == 'main'
+      github.event_name == 'pull_request' &&
+      github.base_ref == 'dev'
 
     permissions:
       contents: read
@@ -143,6 +136,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'maven'
 
       - name: Run tests with coverage
         run: mvn verify -Dspring.profiles.active=h2-test
