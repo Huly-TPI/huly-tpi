@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
-import { getSettings, setSettings } from '../utils/storage';
+import { getSettings, setSettings, getToken } from '../utils/storage';
 import { pushRemoteSettings } from '../api/client';
 import { ExtensionSettings } from '../utils/types';
 import { STORAGE_KEYS } from '../utils/constants';
@@ -16,6 +16,7 @@ export const PREDEFINED_SITES = [
 
 export const usePopupSettings = () => {
   const [settings, setSettingsState] = useState<ExtensionSettings | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [mins, setMins] = useState<number>(0);
   const [secs, setSecs] = useState<number>(0);
   const [newDomain, setNewDomain] = useState<string>('');
@@ -27,6 +28,10 @@ export const usePopupSettings = () => {
       setSettingsState(s);
       setMins(Math.floor(s.pauseIntervalSeconds / 60));
       setSecs(s.pauseIntervalSeconds % 60);
+    });
+
+    getToken().then((token) => {
+      setIsLoggedIn(!!token);
     });
 
     browser.storage.local.get(STORAGE_KEYS.ACCUMULATED_SCROLL_TIME).then((data) => {
@@ -44,6 +49,9 @@ export const usePopupSettings = () => {
           setMins(Math.floor(newSettings.pauseIntervalSeconds / 60));
           setSecs(newSettings.pauseIntervalSeconds % 60);
         }
+      }
+      if (changes[STORAGE_KEYS.TOKEN]) {
+        setIsLoggedIn(!!changes[STORAGE_KEYS.TOKEN].newValue);
       }
     };
 
@@ -146,6 +154,7 @@ export const usePopupSettings = () => {
 
   return {
     settings,
+    isLoggedIn,
     mins,
     secs,
     newDomain,

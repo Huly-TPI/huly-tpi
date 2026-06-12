@@ -21,10 +21,14 @@ export const getToken = (): string | null => accessToken
 
 export const setToken = (token: string): void => {
   accessToken = token
+  sessionStorage.setItem('huly:token', token)
+  window.dispatchEvent(new CustomEvent('huly:session', { detail: { token } }))
 }
 
 export const clearToken = (): void => {
   accessToken = null
+  sessionStorage.removeItem('huly:token')
+  window.dispatchEvent(new CustomEvent('huly:session', { detail: { token: null } }))
 }
 
 interface RefreshResponse {

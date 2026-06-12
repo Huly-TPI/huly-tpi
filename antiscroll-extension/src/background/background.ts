@@ -4,7 +4,6 @@ import { fetchRemoteSettings, pushMetrics } from '../api/client';
 import { ALARM_KEYS, STORAGE_KEYS } from '../utils/constants';
 import { updateMetric } from '../utils/metrics';
 
-// Register alarms globally (runs when the service worker starts)
 browser.alarms.create(ALARM_KEYS.SYNC_METRICS, { periodInMinutes: 5 });
 browser.alarms.create(ALARM_KEYS.FETCH_SETTINGS, { periodInMinutes: 15 });
 
@@ -13,7 +12,6 @@ browser.runtime.onInstalled.addListener(async () => {
   await browser.storage.local.set({ [STORAGE_KEYS.ACCUMULATED_SCROLL_TIME]: 0 });
 });
 
-// Implement immediate sync helper
 async function syncMetricsNow() {
   try {
     const metricsMap = await getMetrics();
@@ -34,10 +32,8 @@ async function syncMetricsNow() {
   }
 }
 
-// Sync on startup
 syncMetricsNow();
 
-// Handle Alarms
 browser.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === ALARM_KEYS.SYNC_METRICS) {
     await syncMetricsNow();
@@ -73,12 +69,19 @@ browser.runtime.onMessage.addListener(async (message) => {
       await syncMetricsNow();
       break;
     case 'SET_TOKEN':
+      console.log('[Huly Anti-Scroll BG] Received SET_TOKEN event. Token present:', !!data?.token);
       await setToken(data?.token || null);
       if (data?.token) {
+        console.log('[Huly Anti-Scroll BG] Fetching remote settings...');
         const remoteSettings = await fetchRemoteSettings();
         if (remoteSettings) {
+          console.log('[Huly Anti-Scroll BG] Successfully fetched remote settings:', remoteSettings);
           await setSettings(remoteSettings);
+        } else {
+          console.warn('[Huly Anti-Scroll BG] Failed to fetch remote settings from backend.');
         }
+      } else {
+        console.log('[Huly Anti-Scroll BG] Token cleared.');
       }
       await syncMetricsNow();
       break;
@@ -93,6 +96,12 @@ browser.runtime.onMessageExternal.addListener(async (message, sender) => {
   if (type === 'SET_ENABLED') {
     await setSettings({ enabled });
     return { success: true, message: `Extension ${enabled ? 'enabled' : 'disabled'}` };
+  }
+
+  if (type === 'SET_CONSENT') {
+    const consent = message.consent;
+    await setSettings({ dataSharingConsent: consent });
+    return { success: true, message: `Consent updated to ${consent}` };
   }
 
   if (type === 'SET_INTERVAL') {

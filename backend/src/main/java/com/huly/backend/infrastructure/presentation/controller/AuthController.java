@@ -119,12 +119,13 @@ public class AuthController {
     }
 
     private ResponseCookie buildRefreshCookie(String token) {
+        boolean isSecure = tokenProvider.isCookieSecure();
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
-                .secure(tokenProvider.isCookieSecure())
+                .secure(isSecure)
                 .path("/")
                 .maxAge(tokenProvider.getRefreshTokenMaxAgeSecs())
-                .sameSite("None")
+                .sameSite(isSecure ? "None" : "Lax")
                 .build();
     }
 }

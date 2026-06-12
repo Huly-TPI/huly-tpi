@@ -86,6 +86,8 @@ export const fetchRemoteSettings = async (): Promise<Partial<ExtensionSettings> 
       gardenUrl: data.gardenUrl,
       backendUrl: data.backendUrl,
       monitoredDomains: data.monitoredDomains,
+      dataSharingConsent: data.dataSharingConsent,
+      userName: data.userName,
     };
   } catch (error) {
     console.error('Failed to fetch settings:', error);
@@ -113,6 +115,7 @@ export const pushRemoteSettings = async (settings: Partial<ExtensionSettings>): 
         enabled: merged.enabled,
         pauseIntervalMinutes: Math.floor(merged.pauseIntervalSeconds / 60),
         monitoredDomains: merged.monitoredDomains,
+        dataSharingConsent: merged.dataSharingConsent,
       }),
     });
 
@@ -130,6 +133,7 @@ export const pushRemoteSettings = async (settings: Partial<ExtensionSettings>): 
             enabled: merged.enabled,
             pauseIntervalMinutes: Math.floor(merged.pauseIntervalSeconds / 60),
             monitoredDomains: merged.monitoredDomains,
+            dataSharingConsent: merged.dataSharingConsent,
           }),
         });
       } else {

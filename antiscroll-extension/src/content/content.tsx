@@ -19,24 +19,41 @@ let originalBodyOverflow = '';
 async function init() {
   settings = await getSettings();
 
-  // Listen for storage settings changes
+  const isHulyPage = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.origin.includes('huly-tpi-frontend');
+
+  if (isHulyPage) {
+    console.log('[Huly Anti-Scroll] Content script initialized on Huly page.');
+    document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true');
+    document.documentElement.setAttribute('data-huly-antiscroll-enabled', settings?.enabled ? 'true' : 'false');
+    document.documentElement.setAttribute('data-huly-antiscroll-consent', settings?.dataSharingConsent ? 'true' : 'false');
+    if (browser.runtime.id) {
+      document.documentElement.setAttribute('data-huly-antiscroll-id', browser.runtime.id);
+    }
+
+
+  }
+
   browser.storage.onChanged.addListener((changes) => {
     if (changes[STORAGE_KEYS.SETTINGS]) {
       settings = { ...settings, ...changes[STORAGE_KEYS.SETTINGS].newValue } as ExtensionSettings;
+      if (isHulyPage && settings) {
+        document.documentElement.setAttribute('data-huly-antiscroll-enabled', settings.enabled ? 'true' : 'false');
+        document.documentElement.setAttribute('data-huly-antiscroll-consent', settings.dataSharingConsent ? 'true' : 'false');
+      }
     }
   });
 
-  // Capturing Huly session tokens
-  const isHulyPage = window.location.origin === 'http://localhost:5173' || window.location.origin.includes('huly-tpi-frontend');
   if (isHulyPage) {
     const token = sessionStorage.getItem('huly:token');
     if (token) {
-      browser.runtime.sendMessage({ type: 'SET_TOKEN', data: { token } });
+      console.log('[Huly Anti-Scroll] Found token on page load, sending to background.');
+      browser.runtime.sendMessage({ type: 'SET_TOKEN', data: { token } }).catch(e => console.error('[Huly Anti-Scroll] Send token error:', e));
     }
 
     window.addEventListener('huly:session', (event: any) => {
       const t = event.detail?.token || null;
-      browser.runtime.sendMessage({ type: 'SET_TOKEN', data: { token: t } });
+      console.log('[Huly Anti-Scroll] Received huly:session event, token present:', !!t);
+      browser.runtime.sendMessage({ type: 'SET_TOKEN', data: { token: t } }).catch(e => console.error('[Huly Anti-Scroll] Send session token error:', e));
     });
   }
 
@@ -57,7 +74,7 @@ function setupTracking() {
     if (isMonitored() && !scrolled && !shadowContainer) {
       browser.runtime.sendMessage({ type: 'SCROLL', domain: DOMAIN });
       scrolled = true;
-      setTimeout(() => { scrolled = false; }, 2000); // Debounce
+      setTimeout(() => { scrolled = false; }, 2000);
     }
   }, { passive: true });
 
@@ -99,11 +116,11 @@ function listenForMessages() {
 }
 
 async function showModal() {
-  if (shadowContainer) return; // Already showing
+  if (shadowContainer) return;
 
   const settings = await getSettings();
   
-  // Inject Font into the main document (needed for Shadow DOM in some browsers)
+
   if (!document.getElementById('huly-font-link')) {
     const fontLink = document.createElement('link');
     fontLink.id = 'huly-font-link';
@@ -112,7 +129,6 @@ async function showModal() {
     document.head.appendChild(fontLink);
   }
 
-  // Save original scroll styles and disable page scrolling
   originalHtmlOverflow = document.documentElement.style.overflow;
   originalBodyOverflow = document.body.style.overflow;
   document.documentElement.style.overflow = 'hidden';
@@ -126,7 +142,7 @@ async function showModal() {
   shadowContainer.style.left = '0';
   shadowContainer.style.width = '100vw';
   shadowContainer.style.height = '100vh';
-  shadowContainer.style.pointerEvents = 'none'; // Only the modal content should capture clicks
+  shadowContainer.style.pointerEvents = 'none';
   document.body.appendChild(shadowContainer);
 
   const shadow = shadowContainer.attachShadow({ mode: 'open' });
@@ -134,7 +150,6 @@ async function showModal() {
   const regularFontUrl = browser.runtime.getURL('fonts/Nunito-Regular.ttf');
   const boldFontUrl = browser.runtime.getURL('fonts/Nunito-Bold.ttf');
 
-  // Inject styles directly
   const style = document.createElement('style');
   style.textContent = `
     @font-face {
@@ -239,7 +254,6 @@ async function showModal() {
   `;
   shadow.appendChild(style);
 
-  // Create a wrapper for React
   const rootElement = document.createElement('div');
   rootElement.style.pointerEvents = 'auto';
   rootElement.style.width = '100%';
@@ -273,7 +287,6 @@ function destroyModal() {
     shadowContainer.remove();
     shadowContainer = null;
   }
-  // Restore scroll
   document.documentElement.style.overflow = originalHtmlOverflow || '';
   document.body.style.overflow = originalBodyOverflow || '';
 }

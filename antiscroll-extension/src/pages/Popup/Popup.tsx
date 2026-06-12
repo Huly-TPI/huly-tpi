@@ -5,6 +5,7 @@ import './Popup.css';
 const Popup: React.FC = () => {
   const {
     settings,
+    isLoggedIn,
     mins,
     secs,
     newDomain,
@@ -27,8 +28,22 @@ const Popup: React.FC = () => {
     <div className="huly-popup">
       <header className="huly-popup-header">
         <img src="/color-logo.webp" alt="Huly" className="huly-logo" />
-        <h1 className="huly-popup-title">Pausa digital</h1>
+        <h1 className="huly-popup-title">Pausa digital: Anti-Scroll</h1>
       </header>
+
+      {isLoggedIn && settings.userName ? (
+        <div className="huly-user-badge">
+          <span>Hola, <strong>{settings.userName}</strong>! 👋</span>
+        </div>
+      ) : settings.userName ? (
+        <div className="huly-user-badge offline">
+          <span>Sesión cerrada (Último: <strong>{settings.userName}</strong>)</span>
+        </div>
+      ) : (
+        <div className="huly-user-badge offline">
+          <span>Inicia sesión en Huly para guardar tus datos</span>
+        </div>
+      )}
       
       <main className="huly-popup-content">
         <div className="huly-setting-item">

@@ -4,6 +4,8 @@ export interface ExtensionSettings {
   gardenUrl: string;
   backendUrl: string;
   monitoredDomains: string[];
+  dataSharingConsent: boolean;
+  userName?: string;
 }
 
 export interface DomainMetric {

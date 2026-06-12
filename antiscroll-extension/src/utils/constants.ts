@@ -2,10 +2,12 @@ import { ExtensionSettings } from './types';
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
   enabled: true,
-  pauseIntervalSeconds: 1200, // 20 minutes default
-  gardenUrl: 'http://localhost:5173/garden', // Default dev URL
+  pauseIntervalSeconds: 1200,
+  gardenUrl: 'http://localhost:5173/garden',
   backendUrl: 'http://localhost:8080',
   monitoredDomains: ['twitter.com', 'x.com', 'instagram.com', 'tiktok.com', 'youtube.com', 'facebook.com'],
+  dataSharingConsent: false,
+  userName: '',
 };
 
 export const STORAGE_KEYS = {
