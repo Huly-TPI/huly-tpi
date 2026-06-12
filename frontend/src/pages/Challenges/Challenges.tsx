@@ -94,11 +94,11 @@ export default function Challenges() {
     }
   }, [deleteGoal])
 
-  const handleComplete = useCallback(async (id: number) => {
+  const handleComplete = useCallback(async (id: number, image?: File) => {
     setActionError(null)
     const isHarvest = cycleProgress === CYCLE_SIZE - 1
     try {
-      await completeGoal(id)
+      await completeGoal(id, image)
       markConditionMet()
       await saveSession()
       if (isHarvest) {

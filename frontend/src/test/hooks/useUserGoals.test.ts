@@ -160,7 +160,7 @@ describe('useUserGoals', () => {
     })
 
     expect(result.current.pendientes?.content).toHaveLength(0)
-    expect(mockedComplete).toHaveBeenCalledWith(5)
+    expect(mockedComplete).toHaveBeenCalledWith(5, undefined)
   })
 
   it('completeGoal refresca silenciosamente tras el error y relanza la excepción', async () => {

@@ -63,8 +63,8 @@ public class SpringAiVectorMemoryService implements VectorMemoryService {
         policy.validateSaveCommand(command);
         String content = policy.normalizeContent(command.content());
         if (!policy.shouldRemember(command, content)) {
-            log.debug("Memoria vectorial ignorada por politica para userId={} sourceType={}",
-                    command.userId(), command.sourceType());
+            log.info("Memoria vectorial ignorada por politica para userId={} sourceType={} contentLength={}",
+                    command.userId(), command.sourceType(), content.length());
             return;
         }
 

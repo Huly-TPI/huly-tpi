@@ -10,8 +10,10 @@ import org.springframework.data.domain.Pageable;
 public class ListChatHistoryUseCase {
 
     private final ChatMessageRepository chatMessageRepository;
+    private final InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
 
     public Page<ChatMessage> execute(String conversationId, Long userId, Pageable pageable) {
+        initializeChatPreferencesUseCase.execute(userId, conversationId);
         return chatMessageRepository.findByConversationIdAndUserId(conversationId, userId, pageable);
     }
 }
