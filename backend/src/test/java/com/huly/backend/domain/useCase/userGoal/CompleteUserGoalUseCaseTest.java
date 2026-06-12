@@ -120,4 +120,45 @@ class CompleteUserGoalUseCaseTest {
 
         assertThat(result.getImageUrl()).isEqualTo("/api/user-goals/images/photo.jpg");
     }
+
+    @Test
+    void execute_shouldReturnEarlyWithoutSaving_whenGoalAlreadyCompleted() {
+        UserGoal completed = UserGoal.builder()
+                .id(1L).userId(10L).title("Meta").status(GoalStatus.COMPLETED)
+                .createdAt(Instant.now()).build();
+        when(userGoalRepository.findById(1L)).thenReturn(Optional.of(completed));
+
+        UserGoal result = completeUserGoalUseCase.execute(1L, null);
+
+        verify(userGoalRepository, never()).save(any());
+        verify(coinService, never()).credit(anyLong(), anyInt());
+        assertThat(result.getStatus()).isEqualTo(GoalStatus.COMPLETED);
+    }
+
+    @Test
+    void execute_shouldUseCustomCoinsReward_whenCoinsRewardIsSet() {
+        UserGoal goal = UserGoal.builder()
+                .id(1L).userId(10L).title("Meta").status(GoalStatus.PENDING)
+                .coinsReward(15).createdAt(Instant.now()).build();
+        when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
+        when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        completeUserGoalUseCase.execute(1L, null);
+
+        verify(coinService).credit(10L, 15);
+    }
+
+    @Test
+    void execute_shouldUseCustomCoinsRewardWithImage_whenCoinsRewardWithImageIsSet() {
+        UserGoal goal = UserGoal.builder()
+                .id(1L).userId(10L).title("Meta").status(GoalStatus.PENDING)
+                .coinsRewardWithImage(40).createdAt(Instant.now()).build();
+        when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
+        when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MultipartFile image = mockImage("/api/user-goals/images/photo.jpg");
+
+        completeUserGoalUseCase.execute(1L, image);
+
+        verify(coinService).credit(10L, 40);
+    }
 }

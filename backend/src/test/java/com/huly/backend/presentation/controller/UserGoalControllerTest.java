@@ -243,4 +243,36 @@ class UserGoalControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.IMAGE_JPEG));
     }
+
+    @Test
+    void getImage_shouldReturn200WithPngContentType_whenFilenameIsPng() throws Exception, IOException {
+        Path imageFile = tempDir.resolve("photo.png");
+        Files.write(imageFile, new byte[]{1, 2, 3});
+        when(getGoalImageUseCase.execute("photo.png")).thenReturn(imageFile);
+
+        mockMvc.perform(get("/api/user-goals/images/photo.png"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_PNG));
+    }
+
+    @Test
+    void getImage_shouldReturn200WithGifContentType_whenFilenameIsGif() throws Exception, IOException {
+        Path imageFile = tempDir.resolve("anim.gif");
+        Files.write(imageFile, new byte[]{1, 2, 3});
+        when(getGoalImageUseCase.execute("anim.gif")).thenReturn(imageFile);
+
+        mockMvc.perform(get("/api/user-goals/images/anim.gif"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_GIF));
+    }
+
+    @Test
+    void add_shouldReturn401_whenNotAuthenticated() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(post("/api/user-goals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UserGoalRequest("Titulo", null, null))))
+                .andExpect(status().isUnauthorized());
+    }
 }
