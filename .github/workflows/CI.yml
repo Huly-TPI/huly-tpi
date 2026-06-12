@@ -166,11 +166,25 @@ jobs:
           path: backend/target/site/jacoco/
 
       - name: Post coverage comment on PR
+        id: jacoco
         if: github.event_name == 'pull_request'
         uses: madrapps/jacoco-report@v1.7.2
         with:
           paths: backend/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           title: 'Test Coverage'
-          min-coverage-overall: 0
+          min-coverage-overall: 80
           min-coverage-changed-files: 0
+
+      - name: Enforce minimum coverage (80%)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = parseFloat('${{ steps.jacoco.outputs.coverage-overall }}')
+            core.info(`Cobertura general: ${coverage}%`)
+            if (isNaN(coverage) || coverage < 80) {
+              core.setFailed(`❌ Cobertura ${coverage}% por debajo del mínimo requerido (80%).`)
+            } else {
+              core.info('✔ Cobertura cumple el mínimo de 80%.')
+            }
