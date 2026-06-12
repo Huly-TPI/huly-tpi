@@ -1,7 +1,7 @@
-ALTER TABLE user_setting ADD COLUMN pause_interval_minutes INTEGER;
-ALTER TABLE user_setting ADD COLUMN monitored_domains TEXT;
+ALTER TABLE user_setting ADD COLUMN IF NOT EXISTS pause_interval_minutes INTEGER;
+ALTER TABLE user_setting ADD COLUMN IF NOT EXISTS monitored_domains TEXT;
 
-CREATE TABLE extension_metrics (
+CREATE TABLE IF NOT EXISTS extension_metrics (
     id SERIAL PRIMARY KEY,
     id_app_user BIGINT NOT NULL,
     domain VARCHAR(255) NOT NULL,
@@ -12,3 +12,4 @@ CREATE TABLE extension_metrics (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_extension_metrics_user FOREIGN KEY (id_app_user) REFERENCES app_user(id)
 );
+

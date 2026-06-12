@@ -1,0 +1,2 @@
+ALTER TABLE user_setting ADD COLUMN IF NOT EXISTS data_sharing_consent BOOLEAN DEFAULT FALSE;
+
