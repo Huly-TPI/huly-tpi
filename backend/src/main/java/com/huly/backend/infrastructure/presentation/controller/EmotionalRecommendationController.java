@@ -2,7 +2,8 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
-import com.huly.backend.domain.useCase.emotionalEvent.GetEmotionalRecommendationsUseCase;
+import com.huly.backend.domain.model.Vad;
+import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation.EmotionalRecommendationRequest;
 import com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation.EmotionalRecommendationResponse;
 import jakarta.validation.Valid;
@@ -30,14 +31,7 @@ public class EmotionalRecommendationController {
 
     private EmotionalRecommendationQuery toQuery(EmotionalRecommendationRequest request) {
         return new EmotionalRecommendationQuery(
-                request.userId(),
-                request.source(),
-                request.inputText(),
-                request.detectedEmotion(),
-                request.confidence(),
-                request.valence(),
-                request.arousal(),
-                request.dominance(),
+                new Vad(request.valence(), request.arousal(), request.dominance()),
                 request.intensity(),
                 request.userGoal()
         );
