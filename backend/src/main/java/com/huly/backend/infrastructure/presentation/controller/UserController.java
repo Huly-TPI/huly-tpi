@@ -70,7 +70,11 @@ public class UserController {
     ) {
         Long userId = currentUserId(principal);
         MembershipResponse response = getCurrentMembershipUseCase.execute(userId)
-                .map(p -> new MembershipResponse(true, p.getPlanCode(), p.getExpiresAt()))
+                .map(p -> new MembershipResponse(
+                        true,
+                        p.getPlanCode(),
+                        p.getProductId() != null ? p.getProductId().toString() : null,
+                        p.getExpiresAt()))
                 .orElseGet(MembershipResponse::inactive);
         return ResponseEntity.ok(response);
     }

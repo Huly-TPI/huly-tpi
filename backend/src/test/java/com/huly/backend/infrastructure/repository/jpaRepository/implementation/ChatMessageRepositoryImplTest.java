@@ -150,4 +150,18 @@ class ChatMessageRepositoryImplTest {
 
         assertThat(result.getContent().get(0).detectedEmotion()).isNull();
     }
+
+    // ── countUserMessagesSince ───────────────────────────────────────────────
+
+    @Test
+    void countUserMessagesSince_shouldDelegateToJpaCountingUserRole() {
+        Instant since = Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS);
+        when(jpa.countByChatSessionAppUserIdAndRoleAndCreatedAtAfter(10L, MessageRole.USER, since))
+                .thenReturn(7L);
+
+        long result = repository.countUserMessagesSince(10L, since);
+
+        assertThat(result).isEqualTo(7L);
+        verify(jpa).countByChatSessionAppUserIdAndRoleAndCreatedAtAfter(10L, MessageRole.USER, since);
+    }
 }

@@ -16,4 +16,5 @@ public class Product {
     private Integer coinsAmount;
     private ProductType type;
     private String planCode;
+    private Integer chatDailyLimit;
 }

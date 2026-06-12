@@ -27,7 +27,7 @@ class UserPlanRepositoryImplTest {
 
     private UserPlanEntity entity() {
         return UserPlanEntity.builder()
-                .id(1L).userId(10L).planCode("PREMIUM")
+                .id(1L).userId(10L).productId(7L).planCode("PREMIUM")
                 .grantedAt(Instant.now().minus(1, ChronoUnit.DAYS))
                 .expiresAt(Instant.now().plus(30, ChronoUnit.DAYS))
                 .build();
@@ -43,6 +43,7 @@ class UserPlanRepositoryImplTest {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo(1L);
         assertThat(result.get().getUserId()).isEqualTo(10L);
+        assertThat(result.get().getProductId()).isEqualTo(7L);
         assertThat(result.get().getPlanCode()).isEqualTo("PREMIUM");
         assertThat(result.get().getGrantedAt()).isEqualTo(entity.getGrantedAt());
         assertThat(result.get().getExpiresAt()).isEqualTo(entity.getExpiresAt());
@@ -60,12 +61,12 @@ class UserPlanRepositoryImplTest {
         Instant granted = Instant.now().minus(2, ChronoUnit.DAYS);
         Instant expires = Instant.now().plus(28, ChronoUnit.DAYS);
         UserPlan domain = UserPlan.builder()
-                .id(1L).userId(10L).planCode("PRO")
+                .id(1L).userId(10L).productId(8L).planCode("PRO")
                 .grantedAt(granted).expiresAt(expires)
                 .build();
         when(jpaRepository.save(any(UserPlanEntity.class))).thenReturn(
                 UserPlanEntity.builder()
-                        .id(1L).userId(10L).planCode("PRO")
+                        .id(1L).userId(10L).productId(8L).planCode("PRO")
                         .grantedAt(granted).expiresAt(expires)
                         .build());
 
@@ -76,11 +77,13 @@ class UserPlanRepositoryImplTest {
         UserPlanEntity persisted = captor.getValue();
         assertThat(persisted.getId()).isEqualTo(1L);
         assertThat(persisted.getUserId()).isEqualTo(10L);
+        assertThat(persisted.getProductId()).isEqualTo(8L);
         assertThat(persisted.getPlanCode()).isEqualTo("PRO");
         assertThat(persisted.getGrantedAt()).isEqualTo(granted);
         assertThat(persisted.getExpiresAt()).isEqualTo(expires);
 
         assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getProductId()).isEqualTo(8L);
         assertThat(result.getPlanCode()).isEqualTo("PRO");
     }
 }

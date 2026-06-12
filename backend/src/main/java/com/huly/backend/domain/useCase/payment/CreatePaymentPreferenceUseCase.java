@@ -44,7 +44,7 @@ public class CreatePaymentPreferenceUseCase {
 
     /**
      * Impide comprar un plan distinto al que ya está vigente. Permite renovar el mismo
-     * plan (mismo planCode) y no aplica a productos que no son planes.
+     * plan (mismo producto) y no aplica a productos que no son planes.
      */
     private void validatePlanPurchase(Product product, Long userId) {
         if (product.getType() != ProductType.PLAN) {
@@ -53,7 +53,7 @@ public class CreatePaymentPreferenceUseCase {
         Instant now = Instant.now();
         userPlanRepository.findByUser(userId)
                 .filter(p -> p.isActive(now))
-                .filter(active -> !Objects.equals(active.getPlanCode(), product.getPlanCode()))
+                .filter(active -> !Objects.equals(active.getProductId(), product.getId()))
                 .ifPresent(active -> {
                     throw new BusinessRuleException(
                             "Ya tenés un plan activo. No podés comprar otro plan distinto hasta que venza.");
