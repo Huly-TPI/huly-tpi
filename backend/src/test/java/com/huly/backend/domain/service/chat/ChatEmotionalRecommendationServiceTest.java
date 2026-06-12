@@ -121,6 +121,7 @@ class ChatEmotionalRecommendationServiceTest {
         ArgumentCaptor<EmotionalRecommendationQuery> queryCaptor =
                 ArgumentCaptor.forClass(EmotionalRecommendationQuery.class);
         verify(recommendationsUseCase).execute(queryCaptor.capture());
+        assertThat(queryCaptor.getValue().userId()).isEqualTo(3L);
         assertThat(queryCaptor.getValue().vad().valence()).isEqualTo(-0.85);
         assertThat(queryCaptor.getValue().vad().arousal()).isEqualTo(0.35);
         assertThat(queryCaptor.getValue().vad().dominance()).isEqualTo(-0.75);

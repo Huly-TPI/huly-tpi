@@ -22,8 +22,16 @@ public class EmotionalEventUseCaseConfig {
     }
 
     @Bean
-    public GetEmotionalRecommendationsUseCase getEmotionalRecommendationsUseCase(ActivityRepository activityRepository, EmotionalRecommendationService recommendationService) {
-        return new GetEmotionalRecommendationsUseCase(activityRepository, recommendationService);
+    public GetEmotionalRecommendationsUseCase getEmotionalRecommendationsUseCase(
+            ActivityRepository activityRepository,
+            EmotionalEventRepository emotionalEventRepository,
+            EmotionalRecommendationService recommendationService
+    ) {
+        return new GetEmotionalRecommendationsUseCase(
+                activityRepository,
+                emotionalEventRepository,
+                recommendationService
+        );
     }
 
     @Bean

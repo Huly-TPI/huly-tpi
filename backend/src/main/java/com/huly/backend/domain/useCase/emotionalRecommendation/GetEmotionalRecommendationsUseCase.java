@@ -1,10 +1,12 @@
 package com.huly.backend.domain.useCase.emotionalRecommendation;
 
 import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.Vad;
 import com.huly.backend.domain.repository.ActivityRepository;
+import com.huly.backend.domain.repository.EmotionalEventRepository;
 import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +21,10 @@ public class GetEmotionalRecommendationsUseCase {
 
     private static final double MIN_INTENSITY = 0.0;
     private static final double MAX_INTENSITY = 1.0;
+    private static final int HISTORY_LIMIT = 20;
 
     private final ActivityRepository activityRepository;
+    private final EmotionalEventRepository emotionalEventRepository;
     private final EmotionalRecommendationService recommendationService;
 
     /**
@@ -35,7 +39,15 @@ public class GetEmotionalRecommendationsUseCase {
         validateRange("intensity", query.intensity(), MIN_INTENSITY, MAX_INTENSITY);
 
         List<Activity> activities = activityRepository.findAll();
-        return recommendationService.recommend(query, activities);
+        List<EmotionalEvent> userHistory = userHistory(query.userId());
+        return recommendationService.recommend(query, activities, userHistory);
+    }
+
+    private List<EmotionalEvent> userHistory(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return emotionalEventRepository.findRecentRecommendationHistoryByUserId(userId, HISTORY_LIMIT);
     }
 
     private void validateVad(Vad vad) {
