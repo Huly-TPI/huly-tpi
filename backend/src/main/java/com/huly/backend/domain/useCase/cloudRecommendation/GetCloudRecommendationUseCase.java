@@ -12,10 +12,12 @@ import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class GetCloudRecommendationUseCase {
 
@@ -31,17 +33,21 @@ public class GetCloudRecommendationUseCase {
     private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
 
     public CloudRecommendation execute(List<String> thoughts) {
+        return execute(thoughts, null);
+    }
+
+    public CloudRecommendation execute(List<String> thoughts, Long userId) {
         String userMessage = String.join("\n", thoughts);
         try {
             EmotionalAnalysisResult analysis = analyze(userMessage);
             EmotionalAnalysisResult recommendationAnalysis = recommendationPolicy.resolve(
-                    null,
+                    userId,
                     analysis,
                     null,
                     true
             );
 
-            EmotionalRecommendationResult result = recommendationsUseCase.execute(toQuery(recommendationAnalysis));
+            EmotionalRecommendationResult result = recommendationsUseCase.execute(toQuery(recommendationAnalysis, userId));
             if (result.recommendations().isEmpty()) {
                 return fallback();
             }
@@ -59,8 +65,9 @@ public class GetCloudRecommendationUseCase {
         return result == null ? EmotionalAnalysisResult.neutral() : result;
     }
 
-    private EmotionalRecommendationQuery toQuery(EmotionalAnalysisResult analysis) {
+    private EmotionalRecommendationQuery toQuery(EmotionalAnalysisResult analysis, Long userId) {
         return new EmotionalRecommendationQuery(
+                userId,
                 analysis.vad(),
                 analysis.intensity(),
                 analysis.userGoal()

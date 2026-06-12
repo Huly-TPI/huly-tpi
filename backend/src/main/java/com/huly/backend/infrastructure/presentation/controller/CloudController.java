@@ -30,24 +30,22 @@ public class CloudController {
     @PostMapping("/thought")
     public ResponseEntity<Void> saveThought(
             @AuthenticationPrincipal UserDetails principal,
-            @RequestBody @Valid CloudThoughtRequest request) {
+            @RequestBody @Valid CloudThoughtRequest request
+    ) {
         Long userId = getUserId(principal);
         userVectorMemoryService.rememberGuidedCloudInput(userId, UUID.randomUUID().toString(), request.thought());
         return ResponseEntity.noContent().build();
     }
 
-    private Long getUserId(UserDetails principal) {
-        if (principal == null) {
-            throw new UnauthorizedException("Not authenticated");
-        }
-        return Long.parseLong(principal.getUsername());
-    }
-
     @PostMapping("/recommendation")
     public ResponseEntity<CloudRecommendationResponse> getRecommendation(
+            @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid CloudRecommendationRequest request
     ) {
-        CloudRecommendation recommendation = getCloudRecommendationUseCase.execute(request.thoughts());
+        CloudRecommendation recommendation = getCloudRecommendationUseCase.execute(
+                request.thoughts(),
+                getUserId(principal)
+        );
         return ResponseEntity.ok(new CloudRecommendationResponse(
                 recommendation.activityType(),
                 recommendation.actionId(),
@@ -55,5 +53,12 @@ public class CloudController {
                 recommendation.description(),
                 recommendation.redirectUrl()
         ));
+    }
+
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 }

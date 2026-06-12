@@ -107,6 +107,7 @@ public class ChatEmotionalRecommendationService {
     ) {
         try {
             EmotionalRecommendationQuery query = new EmotionalRecommendationQuery(
+                    userId,
                     analysis.vad(),
                     analysis.intensity(),
                     analysis.userGoal()
