@@ -15,7 +15,7 @@ class VectorMemoryPolicyTest {
     private final VectorMemoryProperties properties = new VectorMemoryProperties();
     private final VectorMemoryPolicy policy = new VectorMemoryPolicy(
             properties,
-            List.of(new ChatbotVectorMemoryPolicy()),
+            List.of(new ChatbotVectorMemoryPolicy(), new GuidedCloudsVectorMemoryPolicy()),
             new DefaultVectorMemorySourcePolicy()
     );
 
@@ -75,6 +75,57 @@ class VectorMemoryPolicyTest {
         );
 
         assertThat(policy.shouldRemember(command, "me gusta jugar a la play")).isTrue();
+    }
+
+    @Test
+    void shouldRemember_shouldRejectShortMessageBelowGlobalMinimumForChatbot() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.CHATBOT,
+                "conv-1",
+                "USER_CHAT_MESSAGE",
+                "CHAT_MESSAGE",
+                "ab",
+                "conv-1",
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "ab")).isFalse();
+    }
+
+    @Test
+    void shouldRemember_shouldAcceptShortMessageAtGuidedCloudsMinimum() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_CLOUDS,
+                null,
+                null,
+                null,
+                "ab",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "ab")).isTrue();
+    }
+
+    @Test
+    void shouldRemember_shouldRejectMessageBelowGuidedCloudsMinimum() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_CLOUDS,
+                null,
+                null,
+                null,
+                "a",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "a")).isFalse();
     }
 
     @Test
