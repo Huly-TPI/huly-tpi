@@ -3,6 +3,7 @@ package com.huly.backend.domain.service.vector;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.text.Normalizer;
@@ -13,6 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Component
 public class VectorMemoryPolicy {
 
@@ -59,19 +61,30 @@ public class VectorMemoryPolicy {
 
     public Boolean shouldRemember(SaveVectorMemoryCommand command, String content) {
         String normalized = normalizeContent(content);
-        if (normalized.length() < properties.getMinContentLength()) {
+
+        VectorMemorySourcePolicy sourcePolicy = sourcePolicies.getOrDefault(command.sourceType(), defaultSourcePolicy);
+        int effectiveMinLength = sourcePolicy.minContentLength() >= 0
+                ? sourcePolicy.minContentLength()
+                : properties.getMinContentLength();
+
+        if (normalized.length() < effectiveMinLength) {
+            log.info("Memoria vectorial descartada por longitud insuficiente ({} < {}) userId={} sourceType={}",
+                    normalized.length(), effectiveMinLength, command.userId(), command.sourceType());
             return false;
         }
 
         String comparable = comparableText(normalized);
         if (TRIVIAL_MESSAGES.contains(comparable)) {
+            log.info("Memoria vectorial descartada por mensaje trivial userId={} sourceType={}",
+                    command.userId(), command.sourceType());
             return false;
         }
         if (containsAny(comparable, SENSITIVE_SIGNALS)) {
+            log.info("Memoria vectorial descartada por señal sensible userId={} sourceType={}",
+                    command.userId(), command.sourceType());
             return false;
         }
-        return Boolean.TRUE.equals(sourcePolicies.getOrDefault(command.sourceType(), defaultSourcePolicy)
-                .shouldRemember(comparable));
+        return Boolean.TRUE.equals(sourcePolicy.shouldRemember(comparable));
     }
 
     public void validateSaveCommand(SaveVectorMemoryCommand command) {
