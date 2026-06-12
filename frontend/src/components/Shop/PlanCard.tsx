@@ -4,14 +4,14 @@ interface PlanCardProps {
   plan: Plan
   buying: boolean
   disabled: boolean
-  /** planCode de la membresía activa del usuario, o null si no tiene una vigente. */
-  activePlanCode: string | null
+  /** id del producto de la membresía activa del usuario, o null si no tiene una vigente. */
+  activeProductId: string | null
   onBuy: (planId: string) => void
 }
 
-export function PlanCard({ plan, buying, disabled, activePlanCode, onBuy }: PlanCardProps) {
-  const isCurrentPlan = activePlanCode === plan.planCode
-  const blockedByOtherPlan = activePlanCode !== null && !isCurrentPlan
+export function PlanCard({ plan, buying, disabled, activeProductId, onBuy }: PlanCardProps) {
+  const isCurrentPlan = activeProductId === plan.id
+  const blockedByOtherPlan = activeProductId !== null && !isCurrentPlan
   const buttonDisabled = disabled || blockedByOtherPlan
 
   const label = isCurrentPlan

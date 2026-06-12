@@ -70,9 +70,9 @@ class CreatePaymentPreferenceUseCaseTest {
                 .build();
     }
 
-    private UserPlan activePlan(String planCode) {
+    private UserPlan activePlan(Long productId) {
         return UserPlan.builder()
-                .id(1L).userId(10L).planCode(planCode)
+                .id(1L).userId(10L).productId(productId).planCode("PREMIUM")
                 .grantedAt(Instant.now().minus(1, ChronoUnit.DAYS))
                 .expiresAt(Instant.now().plus(30, ChronoUnit.DAYS))
                 .build();
@@ -160,7 +160,7 @@ class CreatePaymentPreferenceUseCaseTest {
     void execute_shouldThrowBusinessRule_whenBuyingDifferentPlanWhileActive() {
         Product pro = planProduct(7L, "PRO");
         when(productRepository.findById(7L)).thenReturn(Optional.of(pro));
-        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(activePlan("PREMIUM")));
+        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(activePlan(5L)));
 
         assertThatThrownBy(() -> useCase.execute(7L, 10L))
                 .isInstanceOf(BusinessRuleException.class)
@@ -174,7 +174,7 @@ class CreatePaymentPreferenceUseCaseTest {
     void execute_shouldAllowRenewal_whenBuyingSamePlanWhileActive() {
         Product premium = planProduct(5L, "PREMIUM");
         when(productRepository.findById(5L)).thenReturn(Optional.of(premium));
-        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(activePlan("PREMIUM")));
+        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(activePlan(5L)));
         when(mercadoPagoPort.createPreference(eq(premium), eq(10L), any()))
                 .thenReturn(new PaymentPreferenceResult("pref-123", "https://mp.com/checkout"));
         when(paymentEventRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));

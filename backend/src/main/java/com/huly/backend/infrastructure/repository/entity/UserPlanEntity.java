@@ -22,6 +22,9 @@ public class UserPlanEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "product_id")
+    private Long productId;
+
     @Column(name = "plan_code", nullable = false, length = 50)
     private String planCode;
 
