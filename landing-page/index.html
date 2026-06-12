@@ -40,8 +40,20 @@
       <div class="hero-garden-content">
         <div class="garden-card">
           <div class="garden-card-img">
-            <strong>Imagen</strong>
-            <span class="ph-note">800 × 500px</span>
+            <video id="hero-video" src="assets/video/huly.mp4" autoplay muted loop playsinline></video>
+            <div class="video-controls">
+              <button class="vc-btn" id="vc-play" aria-label="Pausar"></button>
+              <button class="vc-btn" id="vc-mute" aria-label="Activar sonido"></button>
+              <div class="vc-speed-wrap">
+                <button class="vc-btn vc-speed-btn" id="vc-speed">1×</button>
+                <div class="vc-speed-menu" id="vc-speed-menu">
+                  <button data-speed="0.5">0.5×</button>
+                  <button data-speed="1" class="active">1×</button>
+                  <button data-speed="1.5">1.5×</button>
+                  <button data-speed="2">2×</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="garden-card-txt">
             <h2>Tu jardín, tu ritmo,<br><span>tu bienestar.</span></h2>
