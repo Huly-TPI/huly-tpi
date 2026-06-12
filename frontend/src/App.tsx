@@ -1,20 +1,21 @@
-import { Routes, Route } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/auth'
 import AppLayout from './layouts/AppLayout'
 import BackofficeLayout from './layouts/BackofficeLayout'
-import Home from './pages/Home'
-import NotFound from './pages/NotFound'
-import Diary from './pages/Diary/Diary.tsx'
-import Breathing from './pages/Breathing/Breathing'
-import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
-import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
-import Register from './pages/Register/Register'
-import ChatbotPage from './pages/Backoffice/ChatbotPage'
-import Onboarding from './pages/Onboarding/Onboarding'
 import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
-import Login from './pages/Login/Login'
+import ChatbotPage from './pages/Backoffice/ChatbotPage'
+import Breathing from './pages/Breathing/Breathing'
+import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Challenges from './pages/Challenges/Challenges'
+import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
+import Diary from './pages/Diary/Diary.tsx'
+import Home from './pages/Home'
+import Login from './pages/Login/Login'
 import Minigames from './pages/Minigames/Minigames'
+import NotFound from './pages/NotFound'
+import Onboarding from './pages/Onboarding/Onboarding'
+import Register from './pages/Register/Register'
+import SandZenGarden from './pages/SandZenGarden/SandZenGarden.tsx'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 
@@ -41,6 +42,7 @@ const App = () => {
           <Route path="/guided-breathing" element={<Breathing />} />
           <Route path="/clouds" element={<CloudsActivity />} />
           <Route path="/bubbles" element={<BubblesActivity />} />
+          <Route path="/zen-sand-garden" element={<SandZenGarden />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Route>

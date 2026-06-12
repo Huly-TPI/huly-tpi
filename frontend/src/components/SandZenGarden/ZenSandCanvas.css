@@ -1,0 +1,116 @@
+.zen-sand {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding: clamp(5rem, 9vh, 7rem) clamp(1rem, 4vw, 3rem) 2rem;
+}
+
+.zen-sand__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.zen-sand__eyebrow {
+  margin: 0 0 0.35rem;
+  color: #4c7c64;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.zen-sand__title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(1.75rem, 4vw, 2.65rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.zen-sand__description {
+  max-width: 42rem;
+  margin: 0.65rem 0 0;
+  color: var(--text-secondary);
+  font-size: clamp(0.95rem, 2vw, 1.08rem);
+}
+
+.zen-sand__frame {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(0.5rem, 1.5vw, 0.85rem);
+  border: 1px solid rgba(111, 76, 38, 0.28);
+  border-radius: clamp(1.15rem, 3vw, 2rem);
+  background:
+    linear-gradient(145deg, rgba(113, 73, 36, 0.92), rgba(75, 46, 25, 0.96)),
+    #704a29;
+  box-shadow:
+    0 1.5rem 3rem rgba(64, 43, 25, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.zen-sand__frame::after {
+  position: absolute;
+  inset: clamp(0.5rem, 1.5vw, 0.85rem);
+  border-radius: clamp(0.7rem, 2vw, 1.3rem);
+  box-shadow: inset 0 0 1.5rem rgba(83, 51, 24, 0.26);
+  content: '';
+  pointer-events: none;
+}
+
+.zen-sand__canvas {
+  display: block;
+  width: 100%;
+  height: clamp(22rem, 58vh, 39rem);
+  border-radius: clamp(0.7rem, 2vw, 1.3rem);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.zen-sand__canvas:focus-visible {
+  outline: 3px solid rgba(136, 105, 172, 0.55);
+  outline-offset: 4px;
+}
+
+.zen-sand__hint {
+  margin: 0.8rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+html.dark .zen-sand__eyebrow {
+  color: #accca4;
+}
+
+html.dark .zen-sand__frame {
+  border-color: rgba(233, 204, 146, 0.18);
+  box-shadow:
+    0 1.5rem 3rem rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 640px) {
+  .zen-sand {
+    padding-top: 4.75rem;
+  }
+
+  .zen-sand__header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .zen-sand__canvas {
+    height: min(58vh, 31rem);
+    min-height: 20rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zen-sand__canvas {
+    scroll-behavior: auto;
+  }
+}
