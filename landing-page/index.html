@@ -32,7 +32,7 @@
       </p>
       <div class="hero-btns">
         <button class="btn-primary" data-modal="register">Quiero crear mi jardín</button>
-        <button class="btn-ghost"   data-modal="explore">Prefiero explorar primero</button>
+        <a href="https://huly-tpi-frontend.onrender.com/" class="btn-ghost">Prefiero explorar primero</a>
       </div>
     </div>
 
@@ -40,8 +40,20 @@
       <div class="hero-garden-content">
         <div class="garden-card">
           <div class="garden-card-img">
-            <strong>Imagen</strong>
-            <span class="ph-note">800 × 500px</span>
+            <video id="hero-video" src="assets/video/huly.mp4" autoplay muted loop playsinline></video>
+            <div class="video-controls">
+              <button class="vc-btn" id="vc-play" aria-label="Pausar"></button>
+              <button class="vc-btn" id="vc-mute" aria-label="Activar sonido"></button>
+              <div class="vc-speed-wrap">
+                <button class="vc-btn vc-speed-btn" id="vc-speed">1×</button>
+                <div class="vc-speed-menu" id="vc-speed-menu">
+                  <button data-speed="0.5">0.5×</button>
+                  <button data-speed="1" class="active">1×</button>
+                  <button data-speed="1.5">1.5×</button>
+                  <button data-speed="2">2×</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="garden-card-txt">
             <h2>Tu jardín, tu ritmo,<br><span>tu bienestar.</span></h2>
@@ -191,26 +203,6 @@
       </div>
       <button class="modal-submit" id="submit-register">Quiero mi jardín</button>
       <p class="modal-microcopy">Sin spam. Te avisamos cuando estés listo para entrar.</p>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="modal-explore">
-    <div class="modal">
-      <button class="modal-close" data-close="modal-explore">&times;</button>
-      <span class="modal-icon">
-        <img src="./assets/images/garden/lens.png" alt="Lens" width="56" height="56"/>
-      </span>
-      <h3>Explorá el jardín</h3>
-      <p class="modal-sub">
-        Dejanos tu mail y entrá a conocer a Huly y el jardín que te espera.<br>
-        Sos parte de los primeros en descubrirlo.
-      </p>
-      <div class="modal-field">
-        <label for="exp-email">Tu email</label>
-        <input type="email" id="exp-email" placeholder="tu@mail.com" autocomplete="email"/>
-      </div>
-      <button class="modal-submit" id="submit-explore">Entrar →</button>
-      <p class="modal-microcopy">Sin spam. Solo te escribimos cuando haya novedades.</p>
     </div>
   </div>
 
