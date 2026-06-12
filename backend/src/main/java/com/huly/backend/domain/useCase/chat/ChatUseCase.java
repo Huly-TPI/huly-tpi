@@ -8,9 +8,10 @@ import lombok.RequiredArgsConstructor;
 public class ChatUseCase {
 
     private final ChatService chatService;
+    private final HandleChatPreferencesUseCase handleChatPreferencesUseCase;
 
     public ChatReply execute(String message, String conversationId, Long userId) {
-        return chatService.processMessage(message, conversationId, userId);
+        return handleChatPreferencesUseCase.execute(userId, conversationId, message)
+                .orElseGet(() -> chatService.processMessage(message, conversationId, userId));
     }
 }
-

@@ -1,7 +1,9 @@
 package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
+import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.model.vector.VectorMemory;
@@ -127,5 +129,29 @@ class PromptBuilderServiceTest {
                 .contains("RETO SOLICITADO POR EL USUARIO")
                 .contains("Debes devolver generated_challenge")
                 .contains("Tambien debes presentar ese reto");
+    }
+
+    @Test
+    void buildEnrichedPrompt_shouldIncludeStructuredConversationPreferences() {
+        ChatPersonalizationContext personalization = new ChatPersonalizationContext(
+                "Sergio Ramírez",
+                "Checho",
+                CommunicationStyle.DIRECT);
+
+        String result = service.buildEnrichedPrompt(
+                "base",
+                List.of(),
+                List.of(),
+                null,
+                ChatUserIntent.NONE,
+                personalization);
+
+        assertThat(result)
+                .contains("PREFERENCIAS CONVERSACIONALES DEL USUARIO")
+                .contains("Nombre real registrado: Sergio Ramírez")
+                .contains("Nombre preferido: Checho")
+                .contains("Estilo preferido: directo")
+                .contains(CommunicationStyle.DIRECT.promptInstruction())
+                .contains("Respetá siempre el estilo preferido");
     }
 }

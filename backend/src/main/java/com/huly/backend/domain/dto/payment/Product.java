@@ -1,5 +1,6 @@
 package com.huly.backend.domain.dto.payment;
 
+import com.huly.backend.domain.model.enums.ProductType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,4 +14,7 @@ public class Product {
     private String description;
     private BigDecimal price;
     private Integer coinsAmount;
+    private ProductType type;
+    private String planCode;
+    private Integer chatDailyLimit;
 }

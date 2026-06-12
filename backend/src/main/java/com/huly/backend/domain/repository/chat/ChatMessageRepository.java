@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.chat.ConversationMessage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface ChatMessageRepository {
@@ -14,4 +15,7 @@ public interface ChatMessageRepository {
     List<ConversationMessage> findBySessionId(Long sessionId);
 
     Page<ChatMessage> findByConversationIdAndUserId(String conversationId, Long userId, Pageable pageable);
+
+    /** Cantidad de mensajes enviados por el usuario (rol USER) desde el instante dado. */
+    long countUserMessagesSince(Long userId, Instant since);
 }
