@@ -1,27 +1,37 @@
 import { ApiError } from './apiError'
 
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
-const TOKEN_KEY = 'huly:access-token'
 
-type RequestOptions = Omit<RequestInit, 'body'> & {
+export type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
   skipAuthRedirect?: boolean
 }
 
-export const getToken = (): string | null =>
-  window.localStorage.getItem(TOKEN_KEY)
+export class SessionExpiredError extends Error {
+  constructor() {
+    super('Session expired')
+    this.name = 'SessionExpiredError'
+  }
+}
 
-export const setToken = (token: string): void =>
-  window.localStorage.setItem(TOKEN_KEY, token)
+let accessToken: string | null = null
+let inFlightRefresh: Promise<string | null> | null = null
 
-export const clearToken = (): void =>
-  window.localStorage.removeItem(TOKEN_KEY)
+export const getToken = (): string | null => accessToken
+
+export const setToken = (token: string): void => {
+  accessToken = token
+}
+
+export const clearToken = (): void => {
+  accessToken = null
+}
 
 interface RefreshResponse {
   accessToken?: string
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+async function performRefresh(): Promise<string | null> {
   try {
     const response = await fetch(`${BASE_URL}/auth/refresh`, {
       method: 'POST',
@@ -40,6 +50,19 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+function refreshAccessToken(): Promise<string | null> {
+  if (inFlightRefresh) {
+    return inFlightRefresh
+  }
+  inFlightRefresh = performRefresh().finally(() => {
+    inFlightRefresh = null
+  })
+  return inFlightRefresh
+}
+
+export const tryRehydrateSession = (): Promise<string | null> =>
+  refreshAccessToken()
+
 async function request<T>(
   path: string,
   options: RequestOptions = {},
@@ -50,7 +73,6 @@ async function request<T>(
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
-
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
@@ -72,6 +94,7 @@ async function request<T>(
     }
     clearToken()
     window.dispatchEvent(new CustomEvent('auth:expired'))
+    throw new SessionExpiredError()
   }
 
   if (!response.ok) {

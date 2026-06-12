@@ -15,8 +15,8 @@ import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.EmotionalAnalysisPort;
-import com.huly.backend.domain.useCase.CreateEmotionalEventUseCase;
-import com.huly.backend.domain.useCase.GetEmotionalRecommendationsUseCase;
+import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
+import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -48,6 +48,7 @@ class ChatEmotionalRecommendationServiceTest {
         service = new ChatEmotionalRecommendationService(
                 emotionalAnalysisPort,
                 promptBuilderService,
+                new ChatEmotionalRecommendationPolicy(),
                 recommendationsUseCase,
                 createEmotionalEventUseCase
         );
@@ -120,9 +121,9 @@ class ChatEmotionalRecommendationServiceTest {
         ArgumentCaptor<EmotionalRecommendationQuery> queryCaptor =
                 ArgumentCaptor.forClass(EmotionalRecommendationQuery.class);
         verify(recommendationsUseCase).execute(queryCaptor.capture());
-        assertThat(queryCaptor.getValue().source()).isEqualTo(EmotionalEventSource.CHATBOT);
-        assertThat(queryCaptor.getValue().detectedEmotion()).isEqualTo("GRIEF");
-        assertThat(queryCaptor.getValue().valence()).isEqualTo(-0.85);
+        assertThat(queryCaptor.getValue().vad().valence()).isEqualTo(-0.85);
+        assertThat(queryCaptor.getValue().vad().arousal()).isEqualTo(0.35);
+        assertThat(queryCaptor.getValue().vad().dominance()).isEqualTo(-0.75);
 
         ArgumentCaptor<CreateEmotionalEventCommand> commandCaptor =
                 ArgumentCaptor.forClass(CreateEmotionalEventCommand.class);

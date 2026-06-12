@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://huly-tpi.onrender.com'; // Actualizar con la URL del backend en prod
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const revealObserver = new IntersectionObserver((entries) => {
@@ -57,12 +59,51 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.modal-overlay.open').forEach((m) => closeModal(m.id));
   });
 
-  document.getElementById('submit-register')?.addEventListener('click', () => {
-    const username = document.getElementById('reg-username')?.value.trim();
-    const email    = document.getElementById('reg-email')?.value.trim();
-    if (!username || !email) return;
-    // TODO: POST to /api/early-access with username, email
-    console.log('Register:', { username, email });
+  document.getElementById('submit-register')?.addEventListener('click', async () => {
+    const nicknameInput = document.getElementById('reg-username');
+    const emailInput    = document.getElementById('reg-email');
+    const submitBtn     = document.getElementById('submit-register');
+    const nickname      = nicknameInput?.value.trim();
+    const email         = emailInput?.value.trim();
+
+    if (!nickname || !email) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showModalError('modal-register', 'Ingresá un email válido.');
+      return;
+    }
+
+    const originalLabel = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando...';
+    clearModalError('modal-register');
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, nickname, sourceAction: 'LANDING' }),
+      });
+
+      if (res.status === 201) {
+        showModalSuccess('modal-register');
+        return;
+      }
+
+      if (res.status === 409) {
+        showModalError('modal-register', 'Este email ya está registrado.');
+      } else if (res.status === 400) {
+        showModalError('modal-register', 'Revisá los datos ingresados.');
+      } else {
+        showModalError('modal-register', 'Algo salió mal. Intentá de nuevo.');
+      }
+    } catch {
+      showModalError('modal-register', 'No pudimos conectarnos. Intentá de nuevo.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalLabel;
+    }
   });
 
   // Video controls

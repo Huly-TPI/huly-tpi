@@ -7,23 +7,24 @@ import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
 import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
-import com.huly.backend.exception.GlobalExceptionHandler;
-import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
-import com.huly.backend.presentation.dto.journal.JournalEntryRequest;
+import com.huly.backend.infrastructure.presentation.controller.JournalController;
+import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryRequest;
+import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -44,26 +45,22 @@ class JournalControllerTest {
 
     private CreateJournalEntryUseCase createJournalEntryUseCase;
     private ListJournalEntriesUseCase listJournalEntriesUseCase;
-    private AppUserRepository appUserRepository;
 
-    private static final String USER_EMAIL = "test@huly.com";
     private static final Long USER_ID = 1L;
 
     @BeforeEach
     void setUp() {
         createJournalEntryUseCase = mock(CreateJournalEntryUseCase.class);
         listJournalEntriesUseCase = mock(ListJournalEntriesUseCase.class);
-        appUserRepository = mock(AppUserRepository.class);
 
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(authentication.getName()).thenReturn(USER_EMAIL);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken(userDetails, null));
 
         JournalController controller = new JournalController(
-                createJournalEntryUseCase, listJournalEntriesUseCase, appUserRepository);
+                createJournalEntryUseCase, listJournalEntriesUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -71,10 +68,6 @@ class JournalControllerTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
-    }
-
-    private AppUserEntity mockUser() {
-        return AppUserEntity.builder().id(USER_ID).build();
     }
 
     private JournalEntry buildEntry(Long id, String content, Mood mood) {
@@ -86,7 +79,6 @@ class JournalControllerTest {
 
     @Test
     void create_shouldReturn201_whenRequestHasValidContentAndMood() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Hoy me sentí bien"), eq(Mood.HAPPY), anyBoolean()))
                 .thenReturn(buildEntry(10L, "Hoy me sentí bien", Mood.HAPPY));
 
@@ -101,7 +93,6 @@ class JournalControllerTest {
 
     @Test
     void create_shouldReturn201_whenMoodIsNull() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Solo escribir"), eq(null), anyBoolean()))
                 .thenReturn(buildEntry(10L, "Solo escribir", null));
 
@@ -114,7 +105,6 @@ class JournalControllerTest {
 
     @Test
     void create_shouldReturn201_whenMoodIsLowercase() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), any(), eq(Mood.SAD), anyBoolean()))
                 .thenReturn(buildEntry(10L, "Hoy fue difícil", Mood.SAD));
 
@@ -142,8 +132,6 @@ class JournalControllerTest {
 
     @Test
     void create_shouldReturn400_whenMoodIsInvalid() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
-
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new JournalEntryRequest("Hoy fue raro", "INVALIDO", null))))
@@ -151,18 +139,7 @@ class JournalControllerTest {
     }
 
     @Test
-    void create_shouldReturn404_whenUserNotFound() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
-
-        mockMvc.perform(post("/api/journal")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new JournalEntryRequest("Contenido válido", null, null))))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
     void create_shouldPassUseTextForAITrueToUseCase_whenFieldIsTrue() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(true)))
                 .thenReturn(buildEntry(10L, "Contenido", Mood.HAPPY));
 
@@ -174,7 +151,6 @@ class JournalControllerTest {
 
     @Test
     void create_shouldPassUseTextForAIFalseToUseCase_whenFieldIsFalse() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(false)))
                 .thenReturn(buildEntry(10L, "Contenido", Mood.HAPPY));
 
@@ -186,7 +162,6 @@ class JournalControllerTest {
 
     @Test
     void create_shouldDefaultToTrueForUseTextForAI_whenFieldIsNull() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(true)))
                 .thenReturn(buildEntry(10L, "Contenido", null));
 
@@ -198,7 +173,6 @@ class JournalControllerTest {
 
     @Test
     void list_shouldReturn200WithEntries_whenUserHasEntries() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of(
                 buildEntry(2L, "Segunda entrada", Mood.CALM),
                 buildEntry(1L, "Primera entrada", Mood.HAPPY)
@@ -215,7 +189,6 @@ class JournalControllerTest {
 
     @Test
     void list_shouldReturn200WithEmptyList_whenUserHasNoEntries() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/journal"))
@@ -225,7 +198,6 @@ class JournalControllerTest {
 
     @Test
     void list_shouldReturn200WithNullMood_whenEntryHasNoMood() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(mockUser()));
         when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of(
                 buildEntry(1L, "Sin mood", null)
         ));
@@ -233,13 +205,5 @@ class JournalControllerTest {
         mockMvc.perform(get("/api/journal"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].mood").doesNotExist());
-    }
-
-    @Test
-    void list_shouldReturn404_whenUserNotFound() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/api/journal"))
-                .andExpect(status().isNotFound());
     }
 }

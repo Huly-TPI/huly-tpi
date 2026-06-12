@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
+import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
@@ -34,6 +35,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<AppUser> findById(Long id) {
+        return jpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
     public AppUser save(AppUser user) {
         AppUserEntity saved = jpaRepository.save(toEntity(user));
 
@@ -44,10 +50,22 @@ public class UserRepositoryImpl implements UserRepository {
                     .birth(user.getBirthDate())
                     .createdAt(Instant.now())
                     .onboardingTutorialCompleted(false)
+                    .themePreference(ThemePreference.LIGHT)
                     .build());
         }
 
         return toDomain(saved);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void addCoins(Long userId, int amount) {
+        jpaRepository.addCoins(userId, amount);
+    }
+
+    @Override
+    public int getCoins(Long userId) {
+        return jpaRepository.findCoinsById(userId).orElse(0);
     }
 
     @Override
@@ -58,6 +76,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .sourceAction(sourceAction)
                 .createdAt(Instant.now())
                 .onboardingTutorialCompleted(false)
+                .themePreference(ThemePreference.LIGHT)
                 .build());
     }
 

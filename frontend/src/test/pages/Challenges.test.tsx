@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { ThemeProvider } from '../../context/theme'
 
-vi.mock('../../assets/garden/light-theme/background/day-background.webp', () => ({ default: 'day-bg.webp' }))
+vi.mock('../../assets/shared/day-background.webp', () => ({ default: 'day-bg.webp' }))
+vi.mock('../../assets/shared/dark-background.webp', () => ({ default: 'dark-bg.webp' }))
 vi.mock('../../assets/challenges/stump.png', () => ({ default: 'stump.png' }))
 vi.mock('../../assets/challenges/watering-can.png', () => ({ default: 'watering-can.png' }))
 vi.mock('../../assets/challenges/challenge-detail-bg.png', () => ({ default: 'challenge-detail-bg.png' }))
@@ -16,8 +18,21 @@ vi.mock('../../assets/challenges/plant-stages/plant-3.png', () => ({ default: 'p
 vi.mock('../../assets/challenges/plant-stages/plant-4.png', () => ({ default: 'plant-4.png' }))
 vi.mock('../../assets/challenges/plant-stages/plant-5.png', () => ({ default: 'plant-5.png' }))
 
+const mockRequireAuth = vi.hoisted(() => vi.fn((fn: () => void) => fn()))
+
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({ requireAuth: mockRequireAuth }),
+}))
+
 vi.mock('../../hooks/useUserGoals', () => ({
   useUserGoals: vi.fn(),
+}))
+
+vi.mock('../../api/activities', () => ({
+  registerActivitySession: vi.fn().mockResolvedValue({}),
+  ActivityType: {
+    RETO: 'RETO',
+  },
 }))
 
 vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
@@ -27,6 +42,7 @@ vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
 import Challenges from '../../pages/Challenges/Challenges'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import type { UserGoalResponse } from '../../api/userGoals'
+import { registerActivitySession } from '../../api/activities'
 
 const mockedUseUserGoals = vi.mocked(useUserGoals)
 
@@ -67,16 +83,20 @@ describe('Challenges', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockedUseUserGoals.mockReturnValue(defaultHookReturn)
+    mockRequireAuth.mockImplementation((fn: () => void) => fn())
   })
 
   const renderChallenges = () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <Challenges />
-      </MemoryRouter>
+    const view = render(
+      <ThemeProvider>
+        <MemoryRouter>
+          <Challenges />
+        </MemoryRouter>
+      </ThemeProvider>
     )
-    return { user }
+
+    return { user, ...view }
   }
 
   it('renderiza el título de la página', () => {
@@ -151,9 +171,67 @@ describe('Challenges', () => {
     await waitFor(() => {
       expect(defaultHookReturn.createGoal).toHaveBeenCalledWith({
         title: 'Reto nuevo',
-        description: undefined,
       })
     })
+  })
+
+  it('registra una sola sesión al salir aunque cree varios retos en la misma visita', async () => {
+    const nowSpy = vi.spyOn(Date, 'now')
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:00Z').getTime())
+
+    const { user, unmount } = renderChallenges()
+
+    await user.click(screen.getByText('+ Nuevo reto'))
+    await user.type(screen.getByPlaceholderText('¿Qué querés lograr?'), 'Reto uno')
+    await user.click(screen.getByText('Guardar'))
+
+    await user.click(screen.getByText('+ Nuevo reto'))
+    await user.type(screen.getByPlaceholderText('¿Qué querés lograr?'), 'Reto dos')
+    await user.click(screen.getByText('Guardar'))
+
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:04Z').getTime())
+    unmount()
+
+    await waitFor(() => {
+      expect(registerActivitySession).toHaveBeenCalledTimes(1)
+      expect(registerActivitySession).toHaveBeenCalledWith({
+        activityType: 'RETO',
+      }, { keepalive: true })
+    })
+
+    nowSpy.mockRestore()
+  })
+
+  it('registra la sesión al completar un reto', async () => {
+    const nowSpy = vi.spyOn(Date, 'now')
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:00Z').getTime())
+
+    mockedUseUserGoals.mockReturnValue({
+      ...defaultHookReturn,
+      pendientes: makePageResponse([makeGoal({ id: 7, title: 'Completar hoy' })]),
+    })
+
+    const { user } = renderChallenges()
+
+    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:06Z').getTime())
+    await user.click(screen.getByLabelText('Completar reto'))
+
+    await waitFor(() => {
+      expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7)
+      expect(registerActivitySession).toHaveBeenCalledWith({
+        activityType: 'RETO',
+      }, undefined)
+    })
+
+    nowSpy.mockRestore()
+  })
+
+  it('no registra sesión si entra y se va sin crear ni completar retos', () => {
+    const { unmount } = renderChallenges()
+
+    unmount()
+
+    expect(registerActivitySession).not.toHaveBeenCalled()
   })
 
   it('abre el modal de detalle al hacer click en un reto', async () => {
@@ -164,5 +242,23 @@ describe('Challenges', () => {
     const { user } = renderChallenges()
     await user.click(screen.getByLabelText('Ver detalles: Ver detalle'))
     expect(screen.getByRole('heading', { name: 'Ver detalle' })).toBeInTheDocument()
+  })
+
+  describe('acceso sin login', () => {
+    beforeEach(() => {
+      mockRequireAuth.mockImplementation(() => {})
+    })
+
+    it('llama a requireAuth al hacer click en Nuevo reto', async () => {
+      const { user } = renderChallenges()
+      await user.click(screen.getByText('+ Nuevo reto'))
+      expect(mockRequireAuth).toHaveBeenCalled()
+    })
+
+    it('no abre el modal de creación cuando no hay sesión', async () => {
+      const { user } = renderChallenges()
+      await user.click(screen.getByText('+ Nuevo reto'))
+      expect(screen.queryByPlaceholderText('¿Qué querés lograr?')).not.toBeInTheDocument()
+    })
   })
 })

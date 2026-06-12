@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.exception.NotFoundException;
+import com.huly.backend.domain.model.enums.ThemePreference;
+import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
 import org.junit.jupiter.api.Test;
@@ -72,6 +73,27 @@ class UserDetailDomainRepositoryImplTest {
     }
 
     @Test
+    void findThemePreference_shouldReturnValue_whenUserDetailExists() {
+        UserDetailEntity entity = UserDetailEntity.builder()
+                .id(4L).themePreference(ThemePreference.DARK).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(4L))
+                .thenReturn(Optional.of(entity));
+
+        ThemePreference result = userDetailDomainRepository.findThemePreference(4L);
+
+        assertThat(result).isEqualTo(ThemePreference.DARK);
+    }
+
+    @Test
+    void findThemePreference_shouldThrowNotFoundException_whenUserDetailNotFound() {
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(104L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userDetailDomainRepository.findThemePreference(104L))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
     void completeOnboarding_shouldSetAnswersAndMarkCompleted() {
         UserDetailEntity entity = UserDetailEntity.builder().id(1L).build();
         when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(1L))
@@ -118,6 +140,28 @@ class UserDetailDomainRepositoryImplTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userDetailDomainRepository.completeTutorial(101L))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void updateThemePreference_shouldPersistThemePreference() {
+        UserDetailEntity entity = UserDetailEntity.builder().id(5L).themePreference(ThemePreference.LIGHT).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(5L))
+                .thenReturn(Optional.of(entity));
+
+        userDetailDomainRepository.updateThemePreference(5L, ThemePreference.DARK);
+
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+        verify(userDetailRepository).save(captor.capture());
+        assertThat(captor.getValue().getThemePreference()).isEqualTo(ThemePreference.DARK);
+    }
+
+    @Test
+    void updateThemePreference_shouldThrowNotFoundException_whenUserDetailNotFound() {
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(105L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userDetailDomainRepository.updateThemePreference(105L, ThemePreference.DARK))
                 .isInstanceOf(NotFoundException.class);
     }
 

@@ -1,17 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useEmotionalOnboarding } from '../../hooks/useEmotionalOnboarding'
-import { generateOnboardingOptions, completeOnboarding } from '../../api/onboarding' 
+import { completeOnboarding } from '../../api/onboarding'
 
 vi.mock('../../api/onboarding', () => ({
-    generateOnboardingOptions: vi.fn(),
     completeOnboarding: vi.fn(),
 }))
 
-const STEP1_options = ['Calmar mi mente', 'Manejar el estrés', 'Explorar mis emociones', 'Desconectarme un rato', 'Expresar lo que siento',
-                        'Encontrar mi espacio de pausa']
-
-       
 describe('useEmotionalOnboarding', () => {
     const onComplete = vi.fn()
 
@@ -19,74 +14,70 @@ describe('useEmotionalOnboarding', () => {
         vi.clearAllMocks()
     })
 
-    it('inicia en el paso 1 con opciones predefinidas', () => {
+    it('inicia en el step 0 (intro)', () => {
         const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
+        expect(result.current.step).toBe(0)
+    })
+
+    it('advance() pasa al step 1 con las 4 tarjetas', () => {
+        const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
+        act(() => { result.current.advance() })
         expect(result.current.step).toBe(1)
-        expect(result.current.options).toEqual(STEP1_options)
-        expect(result.current.isLoading).toBe(false)
+        expect(result.current.step1Options).toHaveLength(4)
     })
 
-    it('avanza al paso 2 y llama a la API cuando se elige una opción del paso 1', async () => {
-        vi.mocked(generateOnboardingOptions).mockResolvedValueOnce({ options: ['A', 'B', 'C', 'D'] })
+    it('selectOption en step 1 avanza al step 2 con pills mapeadas según la elección', async () => {
         const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
-        act(() => {
-            result.current.selectOption('Desestresarme') 
-        })
+        await act(async () => { result.current.advance() })
+        await act(async () => { result.current.selectOption('Soltar lo que cargo') })
+        expect(result.current.step).toBe(2)
+        expect(result.current.pillOptions).toContain('Poner en palabras lo que siento')
+        expect(result.current.pillOptions).toHaveLength(4)
+    })
 
+    it('selectOption en step 2 avanza al step 3 con las opciones de cierre', async () => {
+        const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
+        await act(async () => { result.current.advance() })
+        await act(async () => { result.current.selectOption('Un momento para mí') })
+        await waitFor(() => { expect(result.current.step).toBe(2) })
+        await act(async () => { result.current.selectOption('Bajar el ritmo') })
+        expect(result.current.step).toBe(3)
+        expect(result.current.pillOptions).toContain('Mi espacio de pausa diaria')
+        expect(result.current.pillOptions).toHaveLength(4)
+    })
+
+    it('selectOption en step 3 llama a completeOnboarding con las 3 respuestas y luego onComplete', async () => {
+        vi.mocked(completeOnboarding).mockResolvedValueOnce(undefined)
+        const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
+        await act(async () => { result.current.advance() })
+        await act(async () => { result.current.selectOption('Descansar un rato') })
         await waitFor(() => expect(result.current.step).toBe(2))
-        expect(generateOnboardingOptions).toHaveBeenCalledWith(2, 'Desestresarme')
-        expect(result.current.options).toEqual(['A', 'B', 'C', 'D'] )
-    })  
-
-    it('avanza al paso 3 y llama a la API cuando se elige una opción del paso 2', async () => {
-        vi.mocked(generateOnboardingOptions) 
-            .mockResolvedValueOnce({ options: ['A', 'B', 'C', 'D'] })
-            .mockResolvedValueOnce({ options: ['W', 'X', 'Y', 'Z'] })
-        const { result } = renderHook(() => useEmotionalOnboarding(onComplete ))
-        act(() => {
-            result.current.selectOption('Desestresarme') 
-        })
-        await waitFor(() => expect(result.current.step).toBe(2))
-        act(() => {
-            result.current.selectOption('A')
-
-        })
+        await act(async () => { result.current.selectOption('Jugar algo tranquilo') })
         await waitFor(() => expect(result.current.step).toBe(3))
-        expect(generateOnboardingOptions).toHaveBeenCalledWith(3, 'A')
-        expect(result.current.options).toEqual(['W', 'X', 'Y', 'Z'])
+        await act(async () => { result.current.selectOption('Todavía lo estoy descubriendo') })
+        expect(completeOnboarding).toHaveBeenCalledWith(
+            'Descansar un rato',
+            'Jugar algo tranquilo',
+            'Todavía lo estoy descubriendo'
+        )
+        expect(onComplete).toHaveBeenCalledTimes(1)
     })
 
-    it('completa el onboarding y llama a onComplete con la opción elegida', async () => {
-        vi.mocked(generateOnboardingOptions) 
-            .mockResolvedValueOnce({ options: ['A', 'B', 'C', 'D'] })
-            .mockResolvedValueOnce({ options: ['W', 'X', 'Y', 'Z'] })
-            vi.mocked(completeOnboarding).mockResolvedValueOnce(undefined)
-
-            const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
-            act(() => {
-                result.current.selectOption('Desestresarme') 
-            })
-            await waitFor(() => expect(result.current.step).toBe(2))
-            act(() => {
-                result.current.selectOption('A')
-            })
-            await waitFor(() => expect(result.current.step).toBe(3))
-            act(() => {
-                result.current.selectOption('W')
-            })
-            await waitFor(() => expect(completeOnboarding).toHaveBeenCalledWith('Desestresarme', 'A', 'W'))
-            expect(onComplete).toHaveBeenCalledTimes(1)
-    })
-
-    it('muestra isLoading mientras espera la respuesta de la API', async () => {
-        let resolve: (val: { options: string[] }) => void
-        vi.mocked(generateOnboardingOptions).mockReturnValueOnce(new Promise(res => resolve = res))
+    it('skip() llama a completeOnboarding con strings vacios y luego onComplete', async () => {
+        vi.mocked(completeOnboarding).mockResolvedValueOnce(undefined)
         const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
-        act(() => {
-            result.current.selectOption('Desestresarme') 
+        await act(async () => { result.current.skip() })
+        await waitFor(() => {
+            expect(completeOnboarding).toHaveBeenCalledWith(
+            'Prefiero no decirlo',
+            'Prefiero no decirlo',
+            'Todavía lo estoy descubriendo'
+        )
         })
-        expect(result.current.isLoading).toBe(true)
-        act(() => resolve!({ options: ['A', 'B', 'C', 'D'] }))
-        await waitFor(() => expect(result.current.isLoading).toBe(false))
+        expect(onComplete).toHaveBeenCalledTimes(1)
+
+
     })
+
+
 })
