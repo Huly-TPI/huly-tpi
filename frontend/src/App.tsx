@@ -21,6 +21,7 @@ import Register from './pages/Register/Register'
 import SandZenGarden from './pages/SandZenGarden/SandZenGarden.tsx'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
+import Privacy from './pages/Privacy/Privacy'
 
 const App = () => {
   return (
@@ -35,6 +36,8 @@ const App = () => {
           <Route path="usuarios" element={<UsersBackofficePage />} />
           <Route path="usuarios/:id" element={<UsersBackofficePage />} />
         </Route>
+
+        <Route path="/privacy" element={<Privacy />} />
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />

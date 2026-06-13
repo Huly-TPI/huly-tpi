@@ -135,7 +135,7 @@ describe('AntiScrollConsentModal', () => {
 
     expect(checkboxes[0]).toBeChecked()
     expect(mockedSaveSettings).toHaveBeenCalled()
-    expect(window.chrome.runtime.sendMessage).toHaveBeenCalledWith(
+    expect((window as any).chrome.runtime.sendMessage).toHaveBeenCalledWith(
       'ext-id-123',
       expect.objectContaining({ type: 'SET_ENABLED', enabled: true })
     )

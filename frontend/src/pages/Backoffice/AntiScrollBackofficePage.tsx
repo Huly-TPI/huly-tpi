@@ -19,11 +19,9 @@ export default function AntiScrollBackofficePage() {
     configError,
     saveSuccess,
     handleSaveConfig,
-    totalModals,
     totalRedirects,
     totalIgnore,
     redirectRate,
-    ignoreRate,
     maxAppTime,
   } = useAntiScrollDashboard()
 

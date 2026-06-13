@@ -143,7 +143,7 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
 
         <img src={colorLogo} alt="Huly" className="h-12 object-contain mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-[#8869AC] dark:text-violeta-claro mb-4">
-          Pausa digital: anti-scroll
+          Pausa digital: Anti-Scroll
         </h2>
 
         <div className="text-[var(--text-secondary)] text-sm leading-relaxed mb-6 text-left whitespace-pre-line">

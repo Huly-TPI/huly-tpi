@@ -89,10 +89,7 @@ describe('useAntiScrollDashboard', () => {
 
     mockedGetAntiScrollDashboard.mockResolvedValueOnce(mockDashboard)
     mockedGetAntiScrollConfig.mockResolvedValueOnce(mockConfig)
-    mockedSaveAntiScrollConfig.mockResolvedValueOnce({
-      defaultPauseIntervalMinutes: 25,
-      termsAndConditions: 'Nuevos Términos',
-    })
+    mockedSaveAntiScrollConfig.mockResolvedValueOnce(undefined)
 
     let timerCallback: (() => void) | undefined
     const originalSetTimeout = global.setTimeout
