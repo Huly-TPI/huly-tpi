@@ -14,6 +14,12 @@ browser.runtime.onInstalled.addListener(async () => {
 
 async function syncMetricsNow() {
   try {
+    const settings = await getSettings();
+    if (!settings.dataSharingConsent) {
+      console.log('Sincronización omitida: No se ha otorgado consentimiento para compartir datos (dataSharingConsent es false).');
+      return;
+    }
+
     const metricsMap = await getMetrics();
     const metricsList = Object.values(metricsMap);
     
