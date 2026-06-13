@@ -126,6 +126,49 @@ class AdminUserControllerTest {
     }
 
     @Test
+    void getBackofficeUsers_shouldHandleNulls() throws Exception {
+        BackofficeUserSummary summary = BackofficeUserSummary.builder()
+                .id(3L)
+                .name("Jane Doe")
+                .email("jane@example.com")
+                .role(null)
+                .status(null)
+                .birthDate(LocalDate.of(2000, 1, 1))
+                .antiScrollEnabled(false)
+                .dataSharingConsent(false)
+                .mostUsedApp(null)
+                .mostUsedAppActiveSeconds(0)
+                .totalScrollTimeSeconds(0)
+                .dailyScrollTimeSeconds(null)
+                .topApps(null)
+                .build();
+
+        when(listBackofficeUsersUseCase.execute()).thenReturn(List.of(summary));
+
+        mockMvc.perform(get("/api/admin/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(3))
+                .andExpect(jsonPath("$[0].name").value("Jane Doe"))
+                .andExpect(jsonPath("$[0].email").value("jane@example.com"))
+                .andExpect(jsonPath("$[0].role").isEmpty())
+                .andExpect(jsonPath("$[0].status").isEmpty())
+                .andExpect(jsonPath("$[0].antiScrollEnabled").value(false))
+                .andExpect(jsonPath("$[0].dataSharingConsent").value(false))
+                .andExpect(jsonPath("$[0].mostUsedApp").isEmpty())
+                .andExpect(jsonPath("$[0].topApps").isEmpty());
+    }
+
+    @Test
+    void getAntiScrollConfig_shouldReturnDefaultConfig() throws Exception {
+        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
+
+        mockMvc.perform(get("/api/admin/users/antiscroll/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultPauseIntervalMinutes").value(20))
+                .andExpect(jsonPath("$.termsAndConditions").value("El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!"));
+    }
+
+    @Test
     void updateAntiScrollConfig_shouldSaveConfig() throws Exception {
         com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest request = new com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest(15, "nuevos terminos");
 
@@ -135,5 +178,24 @@ class AdminUserControllerTest {
                 .andExpect(status().isOk());
 
         verify(antiScrollConfigRepository).save(any());
+    }
+
+    @Test
+    void updateAntiScrollConfig_shouldSaveConfig_whenAlreadyExists() throws Exception {
+        com.huly.backend.domain.model.extension.AntiScrollConfig config = com.huly.backend.domain.model.extension.AntiScrollConfig.builder()
+                .id(1L)
+                .defaultPauseIntervalMinutes(25)
+                .termsAndConditions("terminos existentes")
+                .build();
+        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.of(config));
+
+        com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest request = new com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest(15, "nuevos terminos");
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/admin/users/antiscroll/config")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(antiScrollConfigRepository).save(argThat(c -> c.getId() == 1L && c.getDefaultPauseIntervalMinutes() == 15));
     }
 }
