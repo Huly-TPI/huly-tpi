@@ -4,7 +4,6 @@
  
 }
 
-/* ── Main lantern (newest) ── */
 
 .lantern-main {
   transition: opacity 0.5s ease, transform 0.5s ease;
@@ -15,7 +14,6 @@
   animation: lantern-appear 0.8s ease-out forwards, lantern-bob 4s ease-in-out 0.8s infinite;
 }
 
-/* ── Background lanterns (older ones) ── */
 
 .lantern-bg {
   transition: all 0.6s ease;
@@ -25,8 +23,6 @@
 .lantern-float-2 { animation: lantern-drift-2 7s ease-in-out infinite; }
 .lantern-float-3 { animation: lantern-drift-3 5.5s ease-in-out infinite; }
 .lantern-float-4 { animation: lantern-drift-4 6.5s ease-in-out infinite; }
-
-/* ── Release animation (lantern flies up from input) ── */
 
 .lantern-release {
   animation: lantern-release 1s ease-out forwards;
@@ -53,6 +49,37 @@
     padding: 3.5rem 1.5rem 0.5rem;
     flex-shrink: 0;
     animation: fade-in 0.6s ease both;
+}
+
+.lantern-text p {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.lanterns-page--dark .lantern-title {
+  color: #e5eef7;
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(229, 238, 247, 0.25);
+}
+
+.lanterns-page--dark .lantern-subtitle {
+  color: #e5eef7;
+  opacity: 0.9;
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.lantern-day {
+  filter:
+    brightness(0.94)
+    saturate(0.95)
+    contrast(1.02)
+    drop-shadow(0 8px 12px rgba(0, 0, 0, 0.18));
 }
 /* ── Keyframes ── */
 
@@ -107,14 +134,11 @@
   }
 }
 
-/* ── Input bar ── */
-
 .lanterns-input-bar {
   background: rgba(75, 60, 100, 0.75);
   backdrop-filter: blur(8px);
 }
 
-/* ── Lantern text overlay ── */
 
 .lantern-text {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -122,7 +146,6 @@
   word-break: break-word;
 }
 
-/* ── Reduce motion ── */
 
 @media (prefers-reduced-motion: reduce) {
   .lantern-main,
@@ -145,7 +168,7 @@
   justify-content: center;
   gap: 8px;
   padding: 20px 60px 24px;
-  aspect-ratio: 4 / 2; /* más achatado */
+  aspect-ratio: 4 / 2; 
 }
 
 .paper-bg-img {
@@ -158,7 +181,6 @@
   pointer-events: none;
 }
 
-/* Eliminá el ::before — ya no hace falta */
 .paper-panel::before {
   display: none;
 }
