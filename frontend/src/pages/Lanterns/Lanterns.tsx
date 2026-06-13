@@ -35,15 +35,11 @@ export default function LanternsActivity() {
   const [inputText, setInputText] = useState('')
   const [animatingId, setAnimatingId] = useState<string | null>(null)
 
-  const mainLantern = lanterns[0] ?? null
-  const bgLanterns = lanterns.slice(1)
-
   const currentLanternImage = isDark ? darkLanternImage : lanternImage
   const currentPaperImage = isDark ? darkPaperImage : paperImage
 
   const handleRelease = useCallback(() => {
     const trimmed = inputText.trim()
-
     if (!trimmed) return
 
     const newLantern: Lantern = {
@@ -88,56 +84,50 @@ export default function LanternsActivity() {
         </header>
       </div>
 
-      {/* Faroles pequeños */}
-      {bgLanterns.map((lantern, index) => {
-        const pos = BG_POSITIONS[index]
-        if (!pos) return null
+      {/* Todos los faroles en un solo loop */}
+      {lanterns.map((lantern, index) => {
+        const isMain = index === 0
+        const bgPos = BG_POSITIONS[index - 1]
+
+        const positionStyle: React.CSSProperties = isMain
+          ? { top: '28%', left: '45%' }
+          : bgPos
+            ? { top: bgPos.top, left: bgPos.left }
+            : { top: '0%', left: '50%', opacity: 0 }
 
         return (
           <div
             key={lantern.id}
-            className={`lantern-bg absolute ${pos.floatClass} ${pos.size}`}
-            style={{
-              top: pos.top,
-              left: pos.left,
-            }}
+            className={`lantern-item absolute transition-all duration-700 ease-in-out ${
+              isMain
+                ? `z-10 w-[55%] -translate-x-1/2 md:w-[30%] ${
+                    animatingId === lantern.id ? 'lantern-main-enter' : 'lantern-main'
+                  }`
+                : `${bgPos?.size ?? 'w-[16%] md:w-[10%]'} ${bgPos?.floatClass ?? ''}`
+            }`}
+            style={positionStyle}
           >
-            <img
-              src={currentLanternImage}
-              alt=""
-              className={`h-auto w-full opacity-80 ${!isDark ? 'lantern-day' : 'lantern-night'
+            <div className="relative">
+              <img
+                src={currentLanternImage}
+                alt={isMain ? 'Farolito con tu pensamiento' : ''}
+                className={`h-auto w-full ${!isDark ? 'lantern-day' : 'lantern-night'} ${
+                  !isMain ? 'opacity-80' : ''
                 }`}
-              draggable={false}
-            />
+                draggable={false}
+              />
+
+              {isMain && (
+                <div className="lantern-text absolute inset-0 flex items-center justify-center px-[28%] pb-[22%] pt-[15%]">
+                  <p className="text-center font-nunito text-[10px] font-semibold leading-tight text-[#5a3e28] md:text-xs overflow-hidden line-clamp-4">
+                    {lantern.text}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )
       })}
-
-      {/* Farol principal */}
-      {mainLantern && (
-        <div
-          className={`absolute left-[45%] top-[28%] z-10 w-[55%] -translate-x-1/2 md:w-[30%] ${animatingId === mainLantern.id
-            ? 'lantern-main-enter'
-            : 'lantern-main'
-            }`}
-        >
-          <div className="relative">
-            <img
-              src={currentLanternImage}
-              alt="Farolito"
-              className={`h-auto w-full ${!isDark ? 'lantern-day' : 'lantern-night'
-                }`}
-              draggable={false}
-            />
-
-            <div className="lantern-text absolute inset-0 flex items-center justify-center px-[28%] pb-[22%] pt-[15%]">
-              <p className="text-center font-nunito text-[10px] font-semibold leading-tight text-[#5a3e28] md:text-xs overflow-hidden line-clamp-4">
-                {mainLantern.text}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Papel inferior */}
       <div className="relative z-20 mt-auto flex justify-center px-4 pb-0 mb-[-110px]">
