@@ -143,16 +143,15 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
 
         <img src={colorLogo} alt="Huly" className="h-12 object-contain mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-[#8869AC] dark:text-violeta-claro mb-4">
-          Pausa digital: Anti-Scroll
+          Pausa digital: anti-scroll
         </h2>
 
-        <div className="text-[var(--text-secondary)] text-sm leading-relaxed mb-6 text-left space-y-3">
-          <p>
-            El modo Anti-Scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir.
-          </p>
-          <p>
-            Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!
-          </p>
+        <div className="text-[var(--text-secondary)] text-sm leading-relaxed mb-6 text-left whitespace-pre-line">
+          {settings?.termsAndConditions || (
+            `El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir.
+
+            Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!`
+          )}
         </div>
 
         {loading ? (
@@ -162,7 +161,7 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
             <div className="flex items-center justify-between p-3 bg-[var(--surface-secondary)] rounded-xl gap-4">
               <div className="text-left">
                 <div className="font-semibold text-sm text-[var(--text-primary)]">
-                  {isInstalled ? 'Extensión Anti-Scroll' : 'Extensión no instalada'}
+                  {isInstalled ? 'Extensión anti-scroll' : 'Extensión no instalada'}
                 </div>
                 <div className="text-xs text-[var(--text-secondary)] mt-0.5">
                   {isInstalled

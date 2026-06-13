@@ -92,7 +92,7 @@ describe('AntiScrollConsentModal', () => {
       expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
     })
 
-    expect(screen.getByText('Extensión Anti-Scroll')).toBeInTheDocument()
+    expect(screen.getByText('Extensión anti-scroll')).toBeInTheDocument()
     expect(screen.getByText('Activo y limitando el scroll infinito')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /descargar/i })).not.toBeInTheDocument()
   })

@@ -12,8 +12,11 @@ import org.springframework.context.annotation.Configuration;
 public class ExtensionUseCaseConfig {
 
     @Bean
-    public GetExtensionSettingsUseCase getExtensionSettingsUseCase(ExtensionSettingsRepository settingsRepository) {
-        return new GetExtensionSettingsUseCase(settingsRepository);
+    public GetExtensionSettingsUseCase getExtensionSettingsUseCase(
+            ExtensionSettingsRepository settingsRepository,
+            com.huly.backend.domain.repository.extension.AntiScrollConfigRepository antiScrollConfigRepository
+    ) {
+        return new GetExtensionSettingsUseCase(settingsRepository, antiScrollConfigRepository);
     }
 
     @Bean

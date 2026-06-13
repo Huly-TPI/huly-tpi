@@ -4,6 +4,9 @@ import AppLayout from './layouts/AppLayout'
 import BackofficeLayout from './layouts/BackofficeLayout'
 import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
 import ChatbotPage from './pages/Backoffice/ChatbotPage'
+import AntiScrollBackofficePage from './pages/Backoffice/AntiScrollBackofficePage'
+import DashboardPage from './pages/Backoffice/DashboardPage'
+import UsersBackofficePage from './pages/Backoffice/UsersBackofficePage'
 import Breathing from './pages/Breathing/Breathing'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Challenges from './pages/Challenges/Challenges'
@@ -25,9 +28,12 @@ const App = () => {
     <AuthProvider>
       <Routes>
         <Route path="/backoffice" element={<BackofficeLayout />}>
-          <Route index element={<ChatbotPage />} />
+          <Route index element={<DashboardPage />} />
           <Route path="login" element={<BackofficeLogin />} />
           <Route path="chatbot" element={<ChatbotPage />} />
+          <Route path="antiscroll" element={<AntiScrollBackofficePage />} />
+          <Route path="usuarios" element={<UsersBackofficePage />} />
+          <Route path="usuarios/:id" element={<UsersBackofficePage />} />
         </Route>
 
         <Route element={<AppLayout />}>

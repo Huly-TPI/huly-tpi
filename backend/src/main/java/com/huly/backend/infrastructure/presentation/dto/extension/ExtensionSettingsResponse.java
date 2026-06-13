@@ -27,4 +27,7 @@ public class ExtensionSettingsResponse {
 
     @JsonProperty("userName")
     private String userName;
+
+    @JsonProperty("termsAndConditions")
+    private String termsAndConditions;
 }

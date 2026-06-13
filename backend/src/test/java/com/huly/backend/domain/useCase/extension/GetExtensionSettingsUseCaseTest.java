@@ -22,11 +22,15 @@ class GetExtensionSettingsUseCaseTest {
     @Mock
     private ExtensionSettingsRepository settingsRepository;
 
+    @Mock
+    private com.huly.backend.domain.repository.extension.AntiScrollConfigRepository antiScrollConfigRepository;
+
     @InjectMocks
     private GetExtensionSettingsUseCase getExtensionSettingsUseCase;
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
         ReflectionTestUtils.setField(getExtensionSettingsUseCase, "frontendUrl", "http://localhost:5173");
         ReflectionTestUtils.setField(getExtensionSettingsUseCase, "backendUrl", "http://localhost:8080");
     }
@@ -66,5 +70,20 @@ class GetExtensionSettingsUseCaseTest {
         assertThat(result.getGardenUrl()).isEqualTo("http://localhost:5173/garden");
         assertThat(result.getBackendUrl()).isEqualTo("http://localhost:8080");
         assertThat(result.getMonitoredDomains()).contains("twitter.com", "x.com", "instagram.com");
+    }
+
+    @Test
+    void execute_shouldReturnDynamicDefaultSettings_whenSettingsDoNotExistAndConfigExists() {
+        com.huly.backend.domain.model.extension.AntiScrollConfig config = com.huly.backend.domain.model.extension.AntiScrollConfig.builder()
+                .defaultPauseIntervalMinutes(35)
+                .termsAndConditions("dynamic terms")
+                .build();
+        when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.of(config));
+        when(settingsRepository.findByUserId(3L)).thenReturn(Optional.empty());
+
+        ExtensionSettings result = getExtensionSettingsUseCase.execute(3L);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getPauseIntervalMinutes()).isEqualTo(35);
     }
 }

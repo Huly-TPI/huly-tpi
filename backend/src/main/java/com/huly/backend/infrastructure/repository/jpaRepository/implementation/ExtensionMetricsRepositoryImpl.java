@@ -35,4 +35,30 @@ public class ExtensionMetricsRepositoryImpl implements ExtensionMetricsRepositor
 
         extensionMetricJpaRepository.saveAll(entities);
     }
+
+    @Override
+    public List<ExtensionMetric> findByUserId(Long userId) {
+        return extensionMetricJpaRepository.findByAppUserId(userId).stream()
+                .map(entity -> ExtensionMetric.builder()
+                        .domain(entity.getDomain())
+                        .activeSeconds(entity.getActiveSeconds())
+                        .scrollCount(entity.getScrollCount())
+                        .modalsShown(entity.getModalsShown())
+                        .redirects(entity.getRedirects())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public List<ExtensionMetric> findAllConsentingMetrics() {
+        return extensionMetricJpaRepository.findAllConsentingMetrics().stream()
+                .map(entity -> ExtensionMetric.builder()
+                        .domain(entity.getDomain())
+                        .activeSeconds(entity.getActiveSeconds())
+                        .scrollCount(entity.getScrollCount())
+                        .modalsShown(entity.getModalsShown())
+                        .redirects(entity.getRedirects())
+                        .build())
+                .toList();
+    }
 }

@@ -46,6 +46,7 @@ class ExtensionControllerTest {
     private SaveExtensionSettingsUseCase saveExtensionSettingsUseCase;
     private SaveExtensionMetricsUseCase saveExtensionMetricsUseCase;
     private GetCurrentUserUseCase getCurrentUserUseCase;
+    private com.huly.backend.domain.repository.extension.AntiScrollConfigRepository antiScrollConfigRepository;
 
     @BeforeEach
     void setUp() {
@@ -53,6 +54,9 @@ class ExtensionControllerTest {
         saveExtensionSettingsUseCase = mock(SaveExtensionSettingsUseCase.class);
         saveExtensionMetricsUseCase = mock(SaveExtensionMetricsUseCase.class);
         getCurrentUserUseCase = mock(GetCurrentUserUseCase.class);
+        antiScrollConfigRepository = mock(com.huly.backend.domain.repository.extension.AntiScrollConfigRepository.class);
+
+        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
@@ -62,7 +66,8 @@ class ExtensionControllerTest {
                 getExtensionSettingsUseCase,
                 saveExtensionSettingsUseCase,
                 saveExtensionMetricsUseCase,
-                getCurrentUserUseCase
+                getCurrentUserUseCase,
+                antiScrollConfigRepository
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)

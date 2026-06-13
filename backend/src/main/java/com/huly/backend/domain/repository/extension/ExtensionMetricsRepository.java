@@ -5,4 +5,6 @@ import java.util.List;
 
 public interface ExtensionMetricsRepository {
     void saveAll(Long userId, List<ExtensionMetric> metrics);
+    List<ExtensionMetric> findByUserId(Long userId);
+    List<ExtensionMetric> findAllConsentingMetrics();
 }

@@ -7,6 +7,7 @@ export interface ExtensionSettings {
   backendUrl: string
   monitoredDomains: string[]
   dataSharingConsent: boolean
+  termsAndConditions?: string
 }
 
 export const getExtensionSettings = async (): Promise<ExtensionSettings> => {
