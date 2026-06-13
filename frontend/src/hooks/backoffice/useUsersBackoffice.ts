@@ -12,15 +12,6 @@ const DAYS = [
   { key: '6', label: 'Domingo' },
 ]
 
-const DAY_FACTORS: Record<string, number> = {
-  '0': 0.15,
-  '1': 0.12,
-  '2': 0.18,
-  '3': 0.22,
-  '4': 0.25,
-  '5': 0.05,
-  '6': 0.03,
-}
 
 export function useUsersBackoffice() {
   const { id } = useParams()
@@ -56,49 +47,59 @@ export function useUsersBackoffice() {
   const selectedUserId = id ? Number(id) : null
   const selectedUser = users.find((u) => u.id === selectedUserId)
 
-  const weekFactor = selectedWeek === 'current' ? 1.0 : 0.85
-
   const getDailyTime = (dayKey: string) => {
-    if (!selectedUser) return 0
-    const factor = DAY_FACTORS[dayKey] || 0
-    return Math.round(selectedUser.totalScrollTimeSeconds * weekFactor * factor)
+    if (!selectedUser || !selectedUser.dailyScrollTimeSeconds) return 0
+    const key = `${selectedWeek === 'current' ? 'current' : 'previous'}_${dayKey}`
+    return selectedUser.dailyScrollTimeSeconds[key] || 0
   }
+
+  const currentWeekTotal = DAYS.reduce((sum, day) => sum + (selectedUser?.dailyScrollTimeSeconds?.[`current_${day.key}`] || 0), 0)
+  const previousWeekTotal = DAYS.reduce((sum, day) => sum + (selectedUser?.dailyScrollTimeSeconds?.[`previous_${day.key}`] || 0), 0)
+  
+  const selectedWeekTotal = selectedWeek === 'current' ? currentWeekTotal : previousWeekTotal
+
+  const weekFactor = selectedUser && selectedUser.totalScrollTimeSeconds > 0
+    ? selectedWeekTotal / selectedUser.totalScrollTimeSeconds
+    : 0
 
   let activeFactor = 1.0
   if (selectedDay !== 'all') {
-    activeFactor = DAY_FACTORS[selectedDay] || 1.0
+    activeFactor = selectedWeekTotal > 0
+      ? getDailyTime(selectedDay) / selectedWeekTotal
+      : 0
   }
 
   const filteredTotalTime = selectedUser
-    ? Math.round(selectedUser.totalScrollTimeSeconds * weekFactor * activeFactor)
+    ? (selectedDay === 'all' ? selectedWeekTotal : getDailyTime(selectedDay))
     : 0
 
   const domainList: { domain: string; seconds: number }[] = []
-  if (selectedUser && selectedUser.mostUsedApp) {
-    const app1Seconds = Math.round(selectedUser.mostUsedAppActiveSeconds * weekFactor * activeFactor)
-    domainList.push({
-      domain: selectedUser.mostUsedApp,
-      seconds: app1Seconds,
-    })
+  if (selectedUser) {
+    if (selectedUser.topApps && selectedUser.topApps.length > 0) {
+      selectedUser.topApps.forEach((app) => {
+        const scaledSeconds = Math.round(app.totalActiveSeconds * weekFactor * activeFactor)
+        if (scaledSeconds > 0) {
+          domainList.push({
+            domain: app.domain,
+            seconds: scaledSeconds,
+          })
+        }
+      })
+    } else if (selectedUser.mostUsedApp) {
+      const app1Seconds = Math.round(selectedUser.mostUsedAppActiveSeconds * weekFactor * activeFactor)
+      domainList.push({
+        domain: selectedUser.mostUsedApp,
+        seconds: app1Seconds,
+      })
+    }
 
-    const remaining = filteredTotalTime - app1Seconds
+    const sumTopAppsSeconds = domainList.reduce((sum, d) => sum + d.seconds, 0)
+    const remaining = filteredTotalTime - sumTopAppsSeconds
     if (remaining > 0) {
-      const secondDomain = selectedUser.mostUsedApp === 'instagram.com' ? 'tiktok.com' : 'instagram.com'
-      if (remaining > 60) {
-        domainList.push({
-          domain: secondDomain,
-          seconds: Math.round(remaining * 0.6),
-        })
-        domainList.push({
-          domain: 'Otros sitios',
-          seconds: Math.round(remaining * 0.4),
-        })
-      } else {
-        domainList.push({
-          domain: 'Otros sitios',
-          seconds: remaining,
-        })
-      }
+      domainList.push({
+        domain: 'Otros sitios',
+        seconds: remaining,
+      })
     }
   }
 

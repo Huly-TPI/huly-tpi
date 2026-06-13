@@ -12,6 +12,8 @@ export interface BackofficeUserResponse {
   mostUsedApp: string | null
   mostUsedAppActiveSeconds: number
   totalScrollTimeSeconds: number
+  dailyScrollTimeSeconds?: Record<string, number>
+  topApps?: TopAppResponse[]
 }
 
 export interface TopAppResponse {

@@ -45,9 +45,7 @@ export default function UsersBackofficePage() {
           <p className="text-[16px] text-[#A0AEC0]">Ver información general y estadísticas de navegación</p>
         </div>
 
-        {/* Profile left column width: 240px */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
-          {/* Profile Card */}
           <SectionCard className="flex flex-col gap-6 bg-white h-fit">
             <div className="flex flex-col items-center text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-violeta-claro/30 text-[32px] font-black text-violeta mb-3 shadow-inner">
@@ -81,123 +79,121 @@ export default function UsersBackofficePage() {
             </div>
           </SectionCard>
 
-          {/* Interactive Navigation Stats */}
-          <div className="flex flex-col gap-4">
-            {selectedUser.dataSharingConsent ? (
-              hasUsageData ? (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 max-w-3xl w-full">
-                  {/* Daily scroll list */}
-                  <SectionCard className="bg-white hover:shadow-md transition duration-300">
-                    <h3 className="text-base font-bold text-gray-700 mb-1">Tiempo scrolleando por día</h3>
-                    <p className="text-xs text-gray-400 mb-5">Haz clic en un día para filtrar el tiempo por dominio</p>
+          {selectedUser.antiScrollEnabled && (
+            <div className="flex flex-col gap-4">
+              {selectedUser.dataSharingConsent ? (
+                hasUsageData ? (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 max-w-3xl w-full">
+                    <SectionCard className="bg-white hover:shadow-md transition duration-300">
+                      <h3 className="text-base font-bold text-gray-700 mb-1">Tiempo scrolleando por día</h3>
+                      <p className="text-xs text-gray-400 mb-5">Haz clic en un día para filtrar el tiempo por dominio</p>
 
-                    <div className="space-y-2.5">
-                      {DAYS.map((day) => {
-                        const dailyTime = getDailyTime(day.key)
-                        const isSelected = selectedDay === day.key
-                        return (
-                          <button
-                            key={day.key}
-                            onClick={() => setSelectedDay(isSelected ? 'all' : day.key)}
-                            className={`flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-all border ${
-                              isSelected
-                                ? 'bg-[#8869AC] text-white border-[#8869AC] shadow-sm'
-                                : 'text-gray-600 bg-gray-50/50 hover:bg-gray-50 border-gray-100 hover:border-gray-200'
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className={`h-2.5 w-2.5 rounded-full ${isSelected ? 'bg-white' : 'bg-[#8869AC]/55'}`} />
-                              {day.label}
-                            </span>
-                            <span className={isSelected ? 'text-white' : 'text-gray-800 font-bold'}>
-                              {formatConsumptionTime(dailyTime)}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </SectionCard>
+                      <div className="space-y-2.5">
+                        {DAYS.map((day) => {
+                          const dailyTime = getDailyTime(day.key)
+                          const isSelected = selectedDay === day.key
+                          return (
+                            <button
+                              key={day.key}
+                              onClick={() => setSelectedDay(isSelected ? 'all' : day.key)}
+                              className={`flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-all border ${
+                                isSelected
+                                  ? 'bg-violeta text-white border-violeta shadow-sm'
+                                  : 'text-gray-600 bg-gray-50/50 hover:bg-gray-50 border-gray-100 hover:border-gray-200'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className={`h-2.5 w-2.5 rounded-full ${isSelected ? 'bg-white' : 'bg-violeta/55'}`} />
+                                {day.label}
+                              </span>
+                              <span className={isSelected ? 'text-white' : 'text-gray-800 font-bold'}>
+                                {formatConsumptionTime(dailyTime)}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </SectionCard>
 
-                  {/* Domain metrics list */}
-                  <SectionCard className="bg-white hover:shadow-md transition duration-300 flex flex-col justify-between">
-                    <div>
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-gray-50 pb-3">
-                        <h3 className="text-base font-bold text-gray-700">Tiempo en cada dominio</h3>
-                        
-                        {/* Interactive Filter dropdowns */}
-                        <div className="flex gap-2">
-                          <select
-                            value={selectedWeek}
-                            onChange={(e) => setSelectedWeek(e.target.value)}
-                            className="rounded-lg border border-gray-200 bg-gray-50 py-1 px-2.5 text-xs font-bold text-gray-600 outline-none cursor-pointer focus:border-[#8869AC]"
-                          >
-                            <option value="current">Esta semana</option>
-                            <option value="previous">Semana anterior</option>
-                          </select>
+                    <SectionCard className="bg-white hover:shadow-md transition duration-300 flex flex-col justify-between">
+                      <div>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-gray-50 pb-3">
+                          <h3 className="text-base font-bold text-gray-700">Tiempo en cada dominio</h3>
+                          
+                          <div className="flex gap-2">
+                            <select
+                              value={selectedWeek}
+                              onChange={(e) => setSelectedWeek(e.target.value)}
+                              className="rounded-lg border border-gray-200 bg-gray-50 py-1 px-2.5 text-xs font-bold text-gray-600 outline-none cursor-pointer focus:border-violeta"
+                            >
+                              <option value="current">Esta semana</option>
+                              <option value="previous">Semana anterior</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          {domainList.length > 0 && domainList.some((d) => d.seconds > 0) ? (
+                            domainList.map((app) => {
+                              const percentage = (app.seconds / maxDomainTime) * 100
+                              return (
+                                <div key={app.domain} className="space-y-1">
+                                  <div className="flex justify-between text-xs font-semibold text-gray-600">
+                                    <span className="font-mono flex items-center gap-1.5 truncate">
+                                      <DomainFavicon
+                                        domain={app.domain}
+                                        size={14}
+                                        className="shrink-0 shadow-sm bg-gray-50"
+                                      />
+                                      {app.domain}
+                                    </span>
+                                    <span>{formatConsumptionTime(app.seconds)}</span>
+                                  </div>
+                                  <div className="w-full h-2 bg-gray-50 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-violeta to-violeta-claro rounded-full"
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })
+                          ) : (
+                            <div className="py-8 text-center text-sm text-gray-400">No hay datos de consumo para este día</div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        {domainList.length > 0 && domainList.some((d) => d.seconds > 0) ? (
-                          domainList.map((app) => {
-                            const percentage = (app.seconds / maxDomainTime) * 100
-                            return (
-                              <div key={app.domain} className="space-y-1">
-                                <div className="flex justify-between text-xs font-semibold text-gray-600">
-                                  <span className="font-mono flex items-center gap-1.5 truncate">
-                                    <DomainFavicon
-                                      domain={app.domain}
-                                      size={14}
-                                      className="shrink-0 shadow-sm bg-gray-50"
-                                    />
-                                    {app.domain}
-                                  </span>
-                                  <span>{formatConsumptionTime(app.seconds)}</span>
-                                </div>
-                                <div className="w-full h-2 bg-gray-50 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-gradient-to-r from-[#8869AC] to-[#D1CAEF] rounded-full"
-                                    style={{ width: `${percentage}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          })
-                        ) : (
-                          <div className="py-8 text-center text-sm text-gray-400">No hay datos de consumo para este día</div>
-                        )}
+                      <div className="mt-4 border-t border-gray-50 pt-3 flex justify-between items-center text-xs font-bold text-gray-400">
+                        <span>Total filtrado</span>
+                        <span className="text-gray-700 text-sm font-extrabold">{formatConsumptionTime(filteredTotalTime)}</span>
                       </div>
+                    </SectionCard>
+                  </div>
+                ) : (
+                  <SectionCard className="bg-white flex flex-col items-center justify-center text-center py-12 px-4 border border-dashed border-gray-200 max-w-3xl w-full">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-500 mb-3">
+                      <HelpCircle className="h-6 w-6" strokeWidth={1.8} />
                     </div>
-
-                    <div className="mt-4 border-t border-gray-50 pt-3 flex justify-between items-center text-xs font-bold text-gray-400">
-                      <span>Total filtrado</span>
-                      <span className="text-gray-700 text-sm font-extrabold">{formatConsumptionTime(filteredTotalTime)}</span>
-                    </div>
+                    <h4 className="text-sm font-bold text-gray-700 mb-1">Sin estadísticas de uso</h4>
+                    <p className="text-xs text-gray-400 max-w-sm">
+                      El usuario ha aprobado compartir sus datos de navegación, pero aún no se registran eventos activos desde la extensión.
+                    </p>
                   </SectionCard>
-                </div>
+                )
               ) : (
                 <SectionCard className="bg-white flex flex-col items-center justify-center text-center py-12 px-4 border border-dashed border-gray-200 max-w-3xl w-full">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-500 mb-3">
-                    <HelpCircle className="h-6 w-6" strokeWidth={1.8} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500 mb-3">
+                    <ShieldAlert className="h-6 w-6" strokeWidth={1.8} />
                   </div>
-                  <h4 className="text-sm font-bold text-gray-700 mb-1">Sin estadísticas de uso</h4>
+                  <h4 className="text-sm font-bold text-gray-700 mb-1">Estadísticas privadas</h4>
                   <p className="text-xs text-gray-400 max-w-sm">
-                    El usuario ha aprobado compartir sus datos de navegación, pero aún no se registran eventos activos desde la extensión.
+                    Este usuario no ha autorizado compartir sus estadísticas de bienestar o no tiene iniciada su sesión en la extensión de Chrome.
                   </p>
                 </SectionCard>
-              )
-            ) : (
-              <SectionCard className="bg-white flex flex-col items-center justify-center text-center py-12 px-4 border border-dashed border-gray-200 max-w-3xl w-full">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500 mb-3">
-                  <ShieldAlert className="h-6 w-6" strokeWidth={1.8} />
-                </div>
-                <h4 className="text-sm font-bold text-gray-700 mb-1">Estadísticas privadas</h4>
-                <p className="text-xs text-gray-400 max-w-sm">
-                  Este usuario no ha autorizado compartir sus estadísticas de bienestar o no tiene iniciada su sesión en la extensión de Chrome.
-                </p>
-              </SectionCard>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     )

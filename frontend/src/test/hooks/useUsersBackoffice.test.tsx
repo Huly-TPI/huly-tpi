@@ -24,6 +24,26 @@ const mockUsers = [
     mostUsedApp: 'instagram.com',
     mostUsedAppActiveSeconds: 3600,
     totalScrollTimeSeconds: 5000,
+    dailyScrollTimeSeconds: {
+      current_0: 0,
+      current_1: 1000,
+      current_2: 1000,
+      current_3: 1000,
+      current_4: 1000,
+      current_5: 500,
+      current_6: 500,
+      previous_0: 0,
+      previous_1: 1000,
+      previous_2: 1000,
+      previous_3: 1000,
+      previous_4: 1000,
+      previous_5: 500,
+      previous_6: 500,
+    },
+    topApps: [
+      { domain: 'instagram.com', totalActiveSeconds: 3600 },
+      { domain: 'twitter.com', totalActiveSeconds: 1000 },
+    ],
   },
   {
     id: 3,
@@ -103,23 +123,49 @@ describe('useUsersBackoffice', () => {
     expect(result.current.selectedUser?.name).toBe('John Doe')
     expect(result.current.hasUsageData).toBe(true)
 
-    // Verificar cálculos de distribución diaria (ej: lunes con factor 0.15)
-    // 5000 * 1.0 * 0.15 = 750
-    expect(result.current.getDailyTime('0')).toBe(750)
+    expect(result.current.getDailyTime('0')).toBe(0)
 
-    // Cambiar semana para aplicar factor 0.85
     act(() => {
       result.current.setSelectedWeek('previous')
     })
-    // 5000 * 0.85 * 0.15 = 638
-    expect(result.current.getDailyTime('0')).toBe(638)
+    expect(result.current.getDailyTime('0')).toBe(0)
 
-    // Cambiar día seleccionado
     act(() => {
       result.current.setSelectedDay('0')
     })
-    expect(result.current.filteredTotalTime).toBe(638)
-    expect(result.current.domainList[0].domain).toBe('instagram.com')
+    expect(result.current.filteredTotalTime).toBe(0)
+  })
+
+  it('calcula los factores y la lista de dominios correctamente según el filtro de semana y día', async () => {
+    mockedGetBackofficeUsers.mockResolvedValueOnce(mockUsers)
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
+        <Routes>
+          <Route path="/backoffice/usuarios/:id" element={children} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    const { result } = renderHook(() => useUsersBackoffice(), { wrapper })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.filteredTotalTime).toBe(5000)
+    expect(result.current.domainList).toHaveLength(3)
+    expect(result.current.domainList[0]).toEqual({ domain: 'instagram.com', seconds: 3600 })
+    expect(result.current.domainList[1]).toEqual({ domain: 'twitter.com', seconds: 1000 })
+    expect(result.current.domainList[2]).toEqual({ domain: 'Otros sitios', seconds: 400 })
+
+    act(() => {
+      result.current.setSelectedDay('1')
+    })
+
+    expect(result.current.filteredTotalTime).toBe(1000)
+    expect(result.current.domainList).toHaveLength(3)
+    expect(result.current.domainList[0]).toEqual({ domain: 'instagram.com', seconds: 720 })
+    expect(result.current.domainList[1]).toEqual({ domain: 'twitter.com', seconds: 200 })
+    expect(result.current.domainList[2]).toEqual({ domain: 'Otros sitios', seconds: 80 })
   })
 
   it('maneja errores en la API de carga de usuarios', async () => {

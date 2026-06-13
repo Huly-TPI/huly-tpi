@@ -63,9 +63,7 @@ describe('AntiScrollBackofficePage', () => {
     expect(screen.getByText('Panel antiscroll')).toBeInTheDocument()
     expect(screen.getByText('40.0%')).toBeInTheDocument()
     expect(screen.getByText('instagram.com')).toBeInTheDocument()
-    expect(screen.getAllByText('1')[0]).toBeInTheDocument() // Active extension users count check
-    
-    // Check configuration inputs
+    expect(screen.getAllByText('1')[0]).toBeInTheDocument()
     expect(screen.getByLabelText('Tiempo de pausa por defecto (minutos)')).toBeInTheDocument()
     expect(screen.getByLabelText('Mensaje de consentimiento de datos')).toBeInTheDocument()
   })

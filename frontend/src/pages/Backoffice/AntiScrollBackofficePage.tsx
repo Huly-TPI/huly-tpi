@@ -45,7 +45,6 @@ export default function AntiScrollBackofficePage() {
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
-      {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-[30px] font-extrabold leading-tight text-[#8869AC]">Panel antiscroll</h1>
         <p className="text-[16px] text-[#A0AEC0]">
@@ -53,11 +52,8 @@ export default function AntiScrollBackofficePage() {
         </p>
       </div>
 
-      {/* Main layout: left side metrics stacked, right side large domains dashboard */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr] w-full">
-        {/* Left Column: Stacked compact cards */}
         <div className="flex flex-col gap-6">
-          {/* Tasa de retorno */}
           <SectionCard className="bg-white flex flex-col justify-between hover:shadow-md transition duration-300 p-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -117,7 +113,6 @@ export default function AntiScrollBackofficePage() {
             </div>
           </SectionCard>
 
-          {/* Usuarios en la extensión */}
           <SectionCard className="bg-white flex flex-col justify-between hover:shadow-md transition duration-300 p-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -170,9 +165,7 @@ export default function AntiScrollBackofficePage() {
           </SectionCard>
         </div>
 
-        {/* Right Column: Grid for Config and Consumed domains */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-stretch">
-          {/* Section: Configuración de la extensión */}
           <SectionCard className="bg-white hover:shadow-md transition duration-300 p-4 flex flex-col gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -252,7 +245,6 @@ export default function AntiScrollBackofficePage() {
             )}
           </SectionCard>
 
-          {/* Section: Páginas más consumidas */}
           <SectionCard className="bg-white hover:shadow-md transition duration-300 p-4 flex flex-col h-full gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">

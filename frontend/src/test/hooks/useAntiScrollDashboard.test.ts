@@ -52,7 +52,6 @@ describe('useAntiScrollDashboard', () => {
     expect(result.current.defaultTime).toBe(30)
     expect(result.current.terms).toBe('Términos y condiciones aceptados')
 
-    // Verificar cálculos derivados
     expect(result.current.totalModals).toBe(100)
     expect(result.current.totalRedirects).toBe(40)
     expect(result.current.totalIgnore).toBe(60)
@@ -134,7 +133,6 @@ describe('useAntiScrollDashboard', () => {
       termsAndConditions: 'Nuevos Términos',
     })
 
-    // El indicador de éxito se apaga después de 3 segundos
     expect(timerCallback).toBeDefined()
     act(() => {
       timerCallback?.()

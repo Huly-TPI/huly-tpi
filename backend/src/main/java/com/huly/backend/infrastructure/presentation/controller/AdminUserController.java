@@ -45,6 +45,10 @@ public class AdminUserController {
                         .mostUsedApp(u.getMostUsedApp())
                         .mostUsedAppActiveSeconds(u.getMostUsedAppActiveSeconds())
                         .totalScrollTimeSeconds(u.getTotalScrollTimeSeconds())
+                        .dailyScrollTimeSeconds(u.getDailyScrollTimeSeconds())
+                        .topApps(u.getTopApps() != null ? u.getTopApps().stream()
+                                .map(t -> new TopAppResponse(t.getDomain(), t.getTotalActiveSeconds()))
+                                .toList() : List.of())
                         .build())
                 .toList();
         return ResponseEntity.ok(responses);

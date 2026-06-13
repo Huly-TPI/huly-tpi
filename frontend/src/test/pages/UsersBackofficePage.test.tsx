@@ -136,6 +136,22 @@ describe('UsersBackofficePage', () => {
         mostUsedApp: 'instagram.com',
         mostUsedAppActiveSeconds: 3600,
         totalScrollTimeSeconds: 5000,
+        dailyScrollTimeSeconds: {
+          current_0: 1000,
+          current_1: 1000,
+          current_2: 1000,
+          current_3: 1000,
+          current_4: 1000,
+          current_5: 0,
+          current_6: 0,
+          previous_0: 1000,
+          previous_1: 1000,
+          previous_2: 1000,
+          previous_3: 1000,
+          previous_4: 1000,
+          previous_5: 0,
+          previous_6: 0,
+        },
       },
     ])
 
@@ -164,5 +180,39 @@ describe('UsersBackofficePage', () => {
 
     expect(screen.queryByText('Detalle de usuario')).not.toBeInTheDocument()
     expect(screen.getByText('John Doe')).toBeInTheDocument()
+  })
+
+  it('no muestra las estadísticas si el usuario no tiene habilitado antiscroll', async () => {
+    mockedGetBackofficeUsers.mockResolvedValueOnce([
+      {
+        id: 2,
+        name: 'John Doe',
+        email: 'john@example.com',
+        role: 'USER',
+        status: 'ACTIVE',
+        birthDate: '2000-01-01',
+        antiScrollEnabled: false,
+        dataSharingConsent: true,
+        mostUsedApp: 'instagram.com',
+        mostUsedAppActiveSeconds: 3600,
+        totalScrollTimeSeconds: 5000,
+      },
+    ])
+
+    render(
+      <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
+        <Routes>
+          <Route path="/backoffice/usuarios/:id" element={<UsersBackofficePage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Detalle de usuario')).toBeInTheDocument()
+    expect(screen.queryByText('Tiempo scrolleando por día')).not.toBeInTheDocument()
+    expect(screen.queryByText('Tiempo en cada dominio')).not.toBeInTheDocument()
   })
 })

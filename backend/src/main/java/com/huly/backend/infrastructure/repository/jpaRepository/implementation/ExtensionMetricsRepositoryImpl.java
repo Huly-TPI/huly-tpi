@@ -30,6 +30,7 @@ public class ExtensionMetricsRepositoryImpl implements ExtensionMetricsRepositor
                         .scrollCount(m.getScrollCount())
                         .modalsShown(m.getModalsShown())
                         .redirects(m.getRedirects())
+                        .createdAt(m.getCreatedAt() != null ? m.getCreatedAt() : java.time.Instant.now())
                         .build())
                 .toList();
 
@@ -45,6 +46,7 @@ public class ExtensionMetricsRepositoryImpl implements ExtensionMetricsRepositor
                         .scrollCount(entity.getScrollCount())
                         .modalsShown(entity.getModalsShown())
                         .redirects(entity.getRedirects())
+                        .createdAt(entity.getCreatedAt())
                         .build())
                 .toList();
     }
@@ -58,6 +60,7 @@ public class ExtensionMetricsRepositoryImpl implements ExtensionMetricsRepositor
                         .scrollCount(entity.getScrollCount())
                         .modalsShown(entity.getModalsShown())
                         .redirects(entity.getRedirects())
+                        .createdAt(entity.getCreatedAt())
                         .build())
                 .toList();
     }

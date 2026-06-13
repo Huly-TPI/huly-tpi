@@ -64,6 +64,8 @@ class AdminUserControllerTest {
                 .mostUsedApp("instagram.com")
                 .mostUsedAppActiveSeconds(3600)
                 .totalScrollTimeSeconds(5000)
+                .dailyScrollTimeSeconds(java.util.Map.of("current_0", 100))
+                .topApps(List.of(new TopAppStats("instagram.com", 3600)))
                 .build();
 
         when(listBackofficeUsersUseCase.execute()).thenReturn(List.of(summary));
@@ -79,7 +81,10 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$[0].dataSharingConsent").value(true))
                 .andExpect(jsonPath("$[0].mostUsedApp").value("instagram.com"))
                 .andExpect(jsonPath("$[0].mostUsedAppActiveSeconds").value(3600))
-                .andExpect(jsonPath("$[0].totalScrollTimeSeconds").value(5000));
+                .andExpect(jsonPath("$[0].totalScrollTimeSeconds").value(5000))
+                .andExpect(jsonPath("$[0].dailyScrollTimeSeconds.current_0").value(100))
+                .andExpect(jsonPath("$[0].topApps[0].domain").value("instagram.com"))
+                .andExpect(jsonPath("$[0].topApps[0].totalActiveSeconds").value(3600));
     }
 
     @Test

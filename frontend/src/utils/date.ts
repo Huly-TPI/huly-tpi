@@ -27,8 +27,8 @@ export function formatConsumptionTime(seconds: number): string {
   if (seconds < 3600) {
     return `${Math.round(seconds / 60)} min`
   }
-  if (seconds < 86400) {
-    return `${(seconds / 3600).toFixed(1)} h`
-  }
-  return `${(seconds / 86400).toFixed(1)} días`
+  const totalMinutes = Math.round(seconds / 60)
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  return `${h}:${m.toString().padStart(2, '0')} h`
 }

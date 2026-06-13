@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Builder
@@ -21,4 +23,6 @@ public class BackofficeUserSummary {
     private String mostUsedApp;
     private Integer mostUsedAppActiveSeconds;
     private Integer totalScrollTimeSeconds;
+    private Map<String, Integer> dailyScrollTimeSeconds;
+    private List<TopAppStats> topApps;
 }
