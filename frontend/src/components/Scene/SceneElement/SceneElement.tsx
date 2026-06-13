@@ -21,6 +21,7 @@ export default function SceneElement({
   tooltipClassName = '',
   theme = 'light',
   to,
+  onClick,
 }: SceneElementProps) {
   const sharedClassName = [
     'absolute',
@@ -61,6 +62,7 @@ export default function SceneElement({
           className={`scene-element__hotspot ${hotspotInteractionClassName} ${sharedClassName} ${hotspotClassName}`}
           style={{ clipPath }}
           viewTransition 
+          onClick={onClick}
         />
       ) : (
         <button
@@ -69,6 +71,7 @@ export default function SceneElement({
           disabled={!interactive}
           className={`scene-element__hotspot ${hotspotInteractionClassName} ${sharedClassName} ${hotspotClassName}`}
           style={{ clipPath }}
+          onClick={onClick}
         />
       )}
     </div>

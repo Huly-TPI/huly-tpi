@@ -1,0 +1,73 @@
+# .github/workflows/deploy.yml
+name: Deploy (Render)
+
+# Deploy a Render vía Deploy Hooks.
+# En cada push a main se deployan las 3 apps (sin importar qué cambió):
+# - backend/      -> huly-tpi-backend  (Docker)
+# - frontend/     -> huly-tpi-frontend (Static)
+# - landing-page/ -> huly-landing-page (Static)
+#
+# Requisitos (una sola vez):
+#   1. En Render, cada servicio: Settings -> Deploy Hook -> copiar la URL.
+#   2. En GitHub: Settings -> Secrets and variables -> Actions -> agregar:
+#        RENDER_DEPLOY_HOOK_BACKEND
+#        RENDER_DEPLOY_HOOK_FRONTEND
+#        RENDER_DEPLOY_HOOK_LANDING
+#   3. En Render, poner Auto-Deploy en "Off" en cada servicio para que el
+#      único disparador sea este workflow (evita deploys duplicados).
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:        # permite deploy manual desde la pestaña Actions
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-render-${{ github.ref }}
+  cancel-in-progress: false   # no cancelar un deploy en curso
+
+jobs:
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy — backend
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "❌ Falta el secret RENDER_DEPLOY_HOOK_BACKEND."
+            exit 1
+          fi
+          echo "🚀 Disparando deploy de huly-tpi-backend..."
+          curl -fsS -X POST "$HOOK"
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy — frontend
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "❌ Falta el secret RENDER_DEPLOY_HOOK_FRONTEND."
+            exit 1
+          fi
+          echo "🚀 Disparando deploy de huly-tpi-frontend..."
+          curl -fsS -X POST "$HOOK"
+
+  deploy-landing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy — landing
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_LANDING }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "❌ Falta el secret RENDER_DEPLOY_HOOK_LANDING."
+            exit 1
+          fi
+          echo "🚀 Disparando deploy de huly-landing-page..."
+          curl -fsS -X POST "$HOOK"

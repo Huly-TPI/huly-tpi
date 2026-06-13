@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.repository.ProductRepository;
 import com.huly.backend.infrastructure.repository.entity.ProductEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IProductJpaRepository;
@@ -29,6 +30,14 @@ public class ProductRepositoryImpl implements ProductRepository {
         return jpaRepository.findById(id).map(this::toDomain);
     }
 
+    @Override
+    public List<Product> findByType(ProductType type) {
+        return jpaRepository.findByType(type)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private Product toDomain(ProductEntity entity) {
         return Product.builder()
                 .id(entity.getId())
@@ -36,6 +45,9 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .description(entity.getDescription())
                 .price(entity.getPrice())
                 .coinsAmount(entity.getCoinsAmount())
+                .type(entity.getType())
+                .planCode(entity.getPlanCode())
+                .chatDailyLimit(entity.getChatDailyLimit())
                 .build();
     }
 }

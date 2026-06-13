@@ -96,53 +96,50 @@ public class EmailPortJavaMailImpl implements EmailPort {
                         que preparamos especialmente para vos.
                       </p>
 
-                      <!-- CTA -->
-                      <table cellpadding="0" cellspacing="0" border="0">
-                        <tr>
-                          <td align="center"
-                              style="background:linear-gradient(135deg,#6c47ff,#9b7aff);
-                                     border-radius:10px;">
-                            <a href="https://huly-tpi-frontend.onrender.com"
-                               style="display:inline-block;padding:14px 36px;
-                                      color:#ffffff;text-decoration:none;
-                                      font-size:15px;font-weight:700;
-                                      letter-spacing:0.5px;">
-                              Explorar Huly
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
 
+                              <!-- CTA -->
+                              <table cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                  <td align="center"
+                                      style="background-color:#5c34ef;border-radius:10px;">
+                                    <a href="https://huly-tpi-frontend.onrender.com"
+                                       style="display:inline-block;padding:14px 36px;
+                                              color:#ffffff;text-decoration:none;
+                                              font-size:15px;font-weight:700;
+                                              letter-spacing:0.5px;">
+                                      Explorar Huly
+                                    </a>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
                   <!-- Divider -->
                   <tr>
                     <td style="padding:0 48px;">
                       <div style="border-top:1px solid #eeebff;"></div>
                     </td>
                   </tr>
-
-                  <!-- Footer / Firma -->
-                  <tr>
-                    <td style="padding:28px 48px 36px;text-align:center;">
-                      <p style="margin:0 0 2px;font-size:13px;color:#9090b0;">
-                        Con cariño,
-                      </p>
-                      <p style="margin:0 0 18px;font-size:16px;font-weight:700;color:#6c47ff;">
-                        El equipo de Huly
-                      </p>
-                      <p style="margin:0 0 6px;font-size:12px;color:#ababc8;">
-                        hulycomunicaciones@gmail.com
-                      </p>
-                      <p style="margin:0 0 18px;font-size:12px;color:#ababc8;">
-                        huly.com
-                      </p>
-                      <p style="margin:0;font-size:11px;color:#c8c8dc;">
-                        &copy; 2025 Huly &mdash; Todos los derechos reservados.
-                      </p>
-                    </td>
-                  </tr>
-
+                          <!-- Footer / Firma -->
+                          <tr>
+                            <td style="padding:28px 48px 36px;text-align:center;">
+                              <p style="margin:0 0 2px;font-size:13px;color:#9090b0;">
+                                Con cariño,
+                              </p>
+                              <p style="margin:0 0 18px;font-size:16px;font-weight:700;color:#6c47ff;">
+                                El equipo de Huly
+                              </p>
+                              <p style="margin:0 0 6px;font-size:12px;color:#ababc8;">
+                                hulycomunicaciones@gmail.com
+                              </p>
+                              <p style="margin:0 0 18px;font-size:12px;color:#ababc8;">
+                                https://huly-tpi-frontend.onrender.com/
+                              </p>
+                              <p style="margin:0;font-size:11px;color:#c8c8dc;">
+                                &copy; 2026 Huly &mdash; Todos los derechos reservados.
+                              </p>
+                            </td>
+                          </tr>
                 </table>
                 <!-- /Card -->
 

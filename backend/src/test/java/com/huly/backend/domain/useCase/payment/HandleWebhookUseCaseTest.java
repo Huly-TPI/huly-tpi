@@ -3,9 +3,11 @@ package com.huly.backend.domain.useCase.payment;
 import com.huly.backend.domain.dto.payment.MercadoPagoPaymentResult;
 import com.huly.backend.domain.dto.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
+import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.PaymentEventRepository;
 import com.huly.backend.domain.service.payment.CoinService;
+import com.huly.backend.domain.service.payment.PlanService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +28,7 @@ class HandleWebhookUseCaseTest {
     @Mock private PaymentEventRepository paymentEventRepository;
     @Mock private MercadoPagoPort mercadoPagoPort;
     @Mock private CoinService coinService;
+    @Mock private PlanService planService;
 
     @InjectMocks private HandleWebhookUseCase handleWebhookUseCase;
 
@@ -71,6 +74,78 @@ class HandleWebhookUseCaseTest {
         handleWebhookUseCase.execute(99L);
 
         verify(coinService).credit(10L, 500);
+        verifyNoInteractions(planService);
+    }
+
+    @Test
+    void execute_shouldActivatePlan_andNotCreditCoins_whenApprovedEventIsPlan() {
+        PaymentEvent planEvent = PaymentEvent.builder()
+                .id(1L)
+                .userId(10L)
+                .productId(7L)
+                .externalReference("uuid-ext-ref")
+                .status(PaymentStatus.PENDING)
+                .coinsAmount(0)
+                .productType(ProductType.PLAN)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+        when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.getPayment(99L))
+                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "approved", "accredited"));
+        when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                .thenReturn(Optional.of(planEvent));
+        when(paymentEventRepository.approveIfPending(1L, 99L)).thenReturn(true);
+
+        handleWebhookUseCase.execute(99L);
+
+        verify(planService).activate(10L, 7L);
+        verifyNoInteractions(coinService);
+    }
+
+    @Test
+    void execute_shouldActivatePlan_andCreditCoins_whenApprovedPlanHasCoins() {
+        PaymentEvent planEvent = PaymentEvent.builder()
+                .id(1L)
+                .userId(10L)
+                .productId(7L)
+                .externalReference("uuid-ext-ref")
+                .status(PaymentStatus.PENDING)
+                .coinsAmount(300)
+                .productType(ProductType.PLAN)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+        when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.getPayment(99L))
+                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "approved", "accredited"));
+        when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                .thenReturn(Optional.of(planEvent));
+        when(paymentEventRepository.approveIfPending(1L, 99L)).thenReturn(true);
+
+        handleWebhookUseCase.execute(99L);
+
+        verify(planService).activate(10L, 7L);
+        verify(coinService).credit(10L, 300);
+    }
+
+    @Test
+    void execute_shouldNotActivatePlan_whenApproveIfPendingReturnsFalse_forPlan() {
+        PaymentEvent planEvent = PaymentEvent.builder()
+                .id(1L).userId(10L).productId(7L).externalReference("uuid-ext-ref")
+                .status(PaymentStatus.PENDING).coinsAmount(0).productType(ProductType.PLAN)
+                .createdAt(Instant.now()).updatedAt(Instant.now()).build();
+        when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+        when(mercadoPagoPort.getPayment(99L))
+                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "approved", "accredited"));
+        when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                .thenReturn(Optional.of(planEvent));
+        when(paymentEventRepository.approveIfPending(1L, 99L)).thenReturn(false);
+
+        handleWebhookUseCase.execute(99L);
+
+        verifyNoInteractions(planService);
+        verifyNoInteractions(coinService);
     }
 
     @Test

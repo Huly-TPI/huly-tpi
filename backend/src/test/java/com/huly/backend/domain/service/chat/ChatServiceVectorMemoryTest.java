@@ -9,6 +9,8 @@ import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
 import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import com.huly.backend.domain.repository.RiskWordRepository;
+import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,10 @@ class ChatServiceVectorMemoryTest {
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
         ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
         ChatIntentDetectionService chatIntentDetectionService = mock(ChatIntentDetectionService.class);
+        ChatQuotaService chatQuotaService= mock(ChatQuotaService.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        ChatConversationPreferenceRepository preferenceRepository =
+                mock(ChatConversationPreferenceRepository.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -57,7 +63,10 @@ class ChatServiceVectorMemoryTest {
                 promptBuilderService,
                 userVectorMemoryService,
                 chatEmotionalRecommendationService,
-                chatIntentDetectionService
+                chatIntentDetectionService,
+                chatQuotaService,
+                userRepository,
+                preferenceRepository
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();
@@ -83,6 +92,10 @@ class ChatServiceVectorMemoryTest {
         UserVectorMemoryService userVectorMemoryService = mock(UserVectorMemoryService.class);
         ChatEmotionalRecommendationService chatEmotionalRecommendationService = mock(ChatEmotionalRecommendationService.class);
         ChatIntentDetectionService chatIntentDetectionService = mock(ChatIntentDetectionService.class);
+        ChatQuotaService chatQuotaService= mock(ChatQuotaService.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        ChatConversationPreferenceRepository preferenceRepository =
+                mock(ChatConversationPreferenceRepository.class);
 
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
@@ -100,7 +113,10 @@ class ChatServiceVectorMemoryTest {
                 promptBuilderService,
                 userVectorMemoryService,
                 chatEmotionalRecommendationService,
-                chatIntentDetectionService
+                chatIntentDetectionService,
+                chatQuotaService,
+                userRepository,
+                preferenceRepository
         );
 
         List<ChatStreamEvent> events = chatService.streamMessage("hola", "conv-1", 1L).collectList().block();
