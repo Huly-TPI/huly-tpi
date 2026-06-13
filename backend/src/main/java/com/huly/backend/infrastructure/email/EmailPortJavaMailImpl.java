@@ -163,7 +163,7 @@ public class EmailPortJavaMailImpl implements EmailPort {
       helper.setTo(to);
       helper.setFrom("hulycomunicaciones@gmail.com", "Huly");
       helper.setSubject("¡Te extrañamos en Huly!");
-      helper.setText(buildReEngagementHtml(), true);
+      helper.setText(EMAIL_BODY, true);
       helper.addInline("logo", new ClassPathResource("email/logo.png"));
       mailSender.send(message);
       log.info("[MAIL] Email de re-engagement enviado → to={}", to);
@@ -172,52 +172,60 @@ public class EmailPortJavaMailImpl implements EmailPort {
     }
   }
 
-  private String buildReEngagementHtml() {
-    return """
-        <!DOCTYPE html>
-        <html lang="es">
-        <body style="margin:0;padding:0;background-color:#f0eeff;font-family:Arial,Helvetica,sans-serif;">
-          <table width="100%%" cellpadding="0" cellspacing="0" border="0"
-                style="background-color:#f0eeff;padding:40px 16px;">
-            <tr><td align="center">
-              <table width="600" cellpadding="0" cellspacing="0" border="0"
-                    style="max-width:600px;background-color:#ffffff;border-radius:20px;
-                            box-shadow:0 8px 32px rgba(108,71,255,0.14);">
-                <tr>
-                  <td align="center" style="background:linear-gradient(135deg,#5c34ef,#9b7aff);padding:36px 40px;">
-                    <img src="cid:logo" alt="Huly" width="150" style="display:block;height:auto;"/>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:40px 48px;">
-                    <h1 style="color:#1a1040;font-size:26px;">¡Te extrañamos!</h1>
-                    <p style="color:#4a4a6a;font-size:16px;line-height:1.7;">
-                      Hace unos días que no te vemos por Huly. ¿Cómo estás?
-                      Volvé y registrá cómo te sentís hoy.
-                    </p>
-                    <table cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td style="background:linear-gradient(135deg,#6c47ff,#9b7aff);border-radius:10px;">
-                          <a href="https://huly-tpi-frontend.onrender.com"
-                            style="display:inline-block;padding:14px 36px;color:#ffffff;
-                                    text-decoration:none;font-size:15px;font-weight:700;">
-                            Volver a Huly
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:20px 48px 36px;text-align:center;">
-                    <p style="font-size:13px;color:#9090b0;">Con cariño, el equipo de Huly</p>
-                  </td>
-                </tr>
-              </table>
-            </td></tr>
-          </table>
-        </body>
-        </html>
-        """;
-  }
+  private static final String EMAIL_BODY = """
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="utf-8"/>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+            </style>
+          </head>
+          <body style="margin:0;padding:0;background-color:#E9F1EA;
+                       font-family:'Nunito',Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                  style="background-color:#E9F1EA;padding:40px 16px;">
+              <tr><td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0"
+                      style="max-width:600px;background-color:#ffffff;border-radius:20px;
+                              box-shadow:0 4px 24px rgba(136,105,172,0.12);">
+                  <tr>
+                    <td align="center" style="background-color:#8869AC;padding:34px 40px;">
+                      <img src="cid:logo" alt="Huly" width="150" style="display:block;height:auto;"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:38px 48px 28px;">
+                      <h1 style="color:#2D2D2D;font-size:26px;font-weight:800;margin:0 0 16px;">
+                        Hace unos días que no pasás...
+                      </h1>
+                      <p style="color:#6B6B6B;font-size:16px;line-height:1.75;font-weight:400;margin:0 0 28px;">
+                        Cuando necesites una pausa, acá estamos.
+                        Sin apuro, sin nada pendiente.
+                        El jardín te espera.
+                      </p>
+                      <table cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="background-color:#8869AC;border-radius:10px;">
+                            <a href="https://huly-tpi-frontend.onrender.com"
+                              style="display:inline-block;padding:14px 36px;color:#ffffff;
+                                      text-decoration:none;font-size:15px;font-weight:600;">
+                              Volver al jardín
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:20px 48px 36px;border-top:1px solid #E9F1EA;">
+                      <p style="font-size:13px;color:#6B6B6B;margin:0;">Con cariño, el equipo de Huly 🌿</p>
+                    </td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+          </body>
+          </html>
+      """;
 }

@@ -17,13 +17,13 @@ public class VapidConfig {
     @Value("${vapid.private-key}")
     private String privateKey;
 
-        @Value("${vapid.subject")
+    @Value("${vapid.subject}")
     private String subject;
     
     
     @Bean
     public PushService pushService() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
-        return new PushService(publicKey, privateKey);
+        return new PushService(publicKey, privateKey, subject);
     }
 }

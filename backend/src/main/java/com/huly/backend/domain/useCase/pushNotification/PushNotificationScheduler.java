@@ -16,9 +16,9 @@ public class PushNotificationScheduler {
         private final PushSubscriptionRepository pushSubscriptionRepository;
         private final PushNotificationAdapter pushNotificationAdapter;
 
-        private static final String PAYLOAD = """
-                    {"title":"Huly te espera","body":"¿Cómo te sentís hoy? Entrá y registrá tu estado emocional."}
-                """;
+      private static final String PAYLOAD = """
+                        {"title":"¿Cómo estás hoy?","body":"Pasá al jardín un ratito 🌱"}
+                        """;
 
         
 

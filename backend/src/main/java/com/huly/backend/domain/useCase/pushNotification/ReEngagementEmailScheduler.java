@@ -22,7 +22,6 @@ public class ReEngagementEmailScheduler {
         Instant cutoff = Instant.now().minus(3, ChronoUnit.DAYS);
         userRepository.findUsersInactiveSince(cutoff).forEach(user -> { 
             emailPort.sendReEngagement(user.getEmail());
-            log.info("[RE-ENGAGEMENT] Email enviado → to={}", user.getEmail());
         });
     }
 }

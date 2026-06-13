@@ -87,6 +87,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<AppUser> findUsersInactiveSince(Instant since) {
         return jpaRepository.findByLastLoginAtBefore(since).stream()
                 .map(this::toDomain)
