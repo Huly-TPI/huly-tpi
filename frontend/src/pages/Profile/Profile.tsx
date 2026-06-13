@@ -1,7 +1,9 @@
 import { Navigate } from 'react-router-dom'
+import { useState } from 'react'
 import { useAuth } from '../../context/auth'
 import { useTheme } from '../../context/theme'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
+import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
 import clockImage from '../../assets/profile/light-theme/clock.webp'
@@ -80,6 +82,7 @@ function getFirstName(name: string): string {
 export default function Profile() {
   const { user, loading } = useAuth()
   const { theme } = useTheme()
+  const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
 
   if (loading) {
     return (
@@ -93,11 +96,24 @@ export default function Profile() {
     return <Navigate to="/login" replace />
   }
 
+  const renderedElements = profileElements.map(element => {
+    if (element.id === 'clock') {
+      return {
+        ...element,
+        onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+          e.preventDefault()
+          setShowAntiScrollModal(true)
+        },
+      }
+    }
+    return element
+  })
+
   return (
     <main className="profile-page" aria-label="Perfil de usuario">
       <div className="profile-scene-scroll" aria-label="Habitacion de perfil">
         <section className="profile-scene">
-          {profileElements.map(element => (
+          {renderedElements.map(element => (
             <SceneElement key={element.id} theme={theme} {...element} />
           ))}
 
@@ -107,6 +123,9 @@ export default function Profile() {
           </div>
         </section>
       </div>
+      {showAntiScrollModal && (
+        <AntiScrollConsentModal onClose={() => setShowAntiScrollModal(false)} />
+      )}
     </main>
   )
 }
