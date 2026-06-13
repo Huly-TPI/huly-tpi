@@ -16,6 +16,8 @@ import Login from './pages/Login/Login'
 import Challenges from './pages/Challenges/Challenges'
 import Minigames from './pages/Minigames/Minigames'
 import Shop from './pages/Shop/Shop'
+import LanternActivity from './pages/Lanterns/Lanterns'
+
 
 const App = () => {
   return (
@@ -38,6 +40,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/guided-breathing" element={<Breathing />} />
           <Route path="/clouds" element={<CloudsActivity />} />
+          <Route path="/lanterns" element={<LanternActivity />} />
           <Route path="/bubbles" element={<BubblesActivity />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />

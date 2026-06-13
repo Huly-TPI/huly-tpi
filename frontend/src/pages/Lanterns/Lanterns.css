@@ -1,0 +1,236 @@
+.lanterns-page {
+  background-size: cover;
+  background-position: center 20%;
+ 
+}
+
+/* ── Main lantern (newest) ── */
+
+.lantern-main {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  animation: lantern-bob 4s ease-in-out infinite;
+}
+
+.lantern-main-enter {
+  animation: lantern-appear 0.8s ease-out forwards, lantern-bob 4s ease-in-out 0.8s infinite;
+}
+
+/* ── Background lanterns (older ones) ── */
+
+.lantern-bg {
+  transition: all 0.6s ease;
+}
+
+.lantern-float-1 { animation: lantern-drift-1 6s ease-in-out infinite; }
+.lantern-float-2 { animation: lantern-drift-2 7s ease-in-out infinite; }
+.lantern-float-3 { animation: lantern-drift-3 5.5s ease-in-out infinite; }
+.lantern-float-4 { animation: lantern-drift-4 6.5s ease-in-out infinite; }
+
+/* ── Release animation (lantern flies up from input) ── */
+
+.lantern-release {
+  animation: lantern-release 1s ease-out forwards;
+}
+
+.lantern-title {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 800;
+    color: #5b3d8a;
+    margin: 0 0 0.25rem;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.5);
+}
+
+.lantern-subtitle {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    color: #5b3d8a;
+    opacity: 0.75;
+    margin: 0;
+}
+
+.lantern-header {
+    position: relative;
+    z-index: 5;
+    padding: 3.5rem 1.5rem 0.5rem;
+    flex-shrink: 0;
+    animation: fade-in 0.6s ease both;
+}
+/* ── Keyframes ── */
+
+@keyframes lantern-appear {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lantern-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes lantern-drift-1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(6px, -10px); }
+}
+
+@keyframes lantern-drift-2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-8px, -14px); }
+}
+
+@keyframes lantern-drift-3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(4px, -8px); }
+}
+
+@keyframes lantern-drift-4 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-5px, -12px); }
+}
+
+@keyframes lantern-release {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Input bar ── */
+
+.lanterns-input-bar {
+  background: rgba(75, 60, 100, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+/* ── Lantern text overlay ── */
+
+.lantern-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── Reduce motion ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .lantern-main,
+  .lantern-main-enter,
+  .lantern-bg,
+  .lantern-float-1,
+  .lantern-float-2,
+  .lantern-float-3,
+  .lantern-float-4,
+  .lantern-release {
+    animation: none;
+  }
+}
+.paper-panel {
+  width: min(95%, 750px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 60px 24px;
+  aspect-ratio: 4 / 2; /* más achatado */
+}
+
+.paper-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Eliminá el ::before — ya no hace falta */
+.paper-panel::before {
+  display: none;
+}
+
+.paper-title,
+.paper-input-row {
+  position: relative;
+  z-index: 1;
+}
+
+.paper-title {
+  text-align: center;
+
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+
+  color: #8d5cc5;
+
+  margin-bottom: 0.5rem;
+
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+}
+
+.paper-input-row {
+  width: 100%;
+  max-width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.paper-input {
+  flex: 1;
+  height: 44px;
+  border-radius: 999px;
+  border: 3px solid #b89bdf;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0 18px;
+  font-size: 0.9rem;
+  color: #6e5a89;
+  outline: none;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.08),
+    0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.2s ease;
+}
+
+.paper-button {
+  height: 44px;
+  min-width: 90px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 24px;
+  background: linear-gradient(180deg, #b18cf0 0%, #8f6dd1 100%);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(141, 92, 197, 0.3);
+  transition: all 0.2s ease;
+}
+
+.paper-input:focus {
+  border-color: #9e79d7;
+}
+
+.paper-input::placeholder {
+  color: #b8a7d0;
+}
+
+.paper-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
