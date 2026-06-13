@@ -33,6 +33,7 @@ export default function PostitModal({
   const [description, setDescription] = useState(goal?.description ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [completeError, setCompleteError] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -105,7 +106,17 @@ export default function PostitModal({
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={e => setSelectedImage(e.target.files?.[0] ?? null)}
+                  onChange={e => {
+                    const file = e.target.files?.[0] ?? null
+                    if (file && file.size > 5 * 1024 * 1024) {
+                      setCompleteError('La imagen no puede superar los 5 MB.')
+                      setSelectedImage(null)
+                      e.target.value = ''
+                      return
+                    }
+                    setCompleteError(null)
+                    setSelectedImage(file)
+                  }}
                 />
                 <p className="text-[0.65rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.06em] m-0 mb-[0.35rem]">
                   Foto del logro (opcional)
@@ -130,14 +141,23 @@ export default function PostitModal({
                 </button>
               </div>
             )}
+            {completeError && (
+              <p className="text-[0.73rem] text-[#9b2c2c] mt-[0.4rem] mb-[0.1rem] bg-[rgba(229,62,62,0.08)] rounded p-[0.3rem_0.5rem] leading-[1.4]">
+                {completeError}
+              </p>
+            )}
             <div className="flex flex-col gap-[0.45rem] mt-[0.5rem]">
               {!isCompleted && onComplete && (
                 <Button
                   variant="primary"
                   size="sm"
                   fullWidth
-                  onClick={async () => { await onComplete(goal.id, selectedImage ?? undefined); onClose() }}
-                  onAsyncError={() => {}}
+                  onClick={async () => {
+                    setCompleteError(null)
+                    await onComplete(goal.id, selectedImage ?? undefined)
+                    onClose()
+                  }}
+                  onAsyncError={err => setCompleteError(err instanceof Error ? err.message : 'Error inesperado')}
                 >
                   ✓ Completar
                 </Button>

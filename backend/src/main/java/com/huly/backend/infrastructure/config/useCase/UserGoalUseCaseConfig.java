@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.provider.ImageValidationPort;
 import com.huly.backend.domain.repository.UserGoalRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.service.userGoal.ImageStorageService;
@@ -27,8 +28,8 @@ public class UserGoalUseCaseConfig {
     }
 
     @Bean
-    public CompleteUserGoalUseCase completeUserGoalUseCase(UserGoalRepository userGoalRepository, CoinService coinService, ImageStorageService imageStorageService) {
-        return new CompleteUserGoalUseCase(userGoalRepository, coinService, imageStorageService);
+    public CompleteUserGoalUseCase completeUserGoalUseCase(UserGoalRepository userGoalRepository, CoinService coinService, ImageStorageService imageStorageService, ImageValidationPort imageValidationPort) {
+        return new CompleteUserGoalUseCase(userGoalRepository, coinService, imageStorageService, imageValidationPort);
     }
 
     @Bean
