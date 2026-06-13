@@ -15,6 +15,7 @@ class CorsFilterTest {
 
     private static final String FRONTEND_URL = "http://localhost:5173";
     private static final String LANDING_URL  = "http://localhost:3000";
+    private static final String EXTENSION_URL = "chrome-extension://kmkblhmalfkbnkipaohgfllbecajkpom";
 
     private CorsFilter filter;
     private MockHttpServletRequest request;
@@ -23,7 +24,7 @@ class CorsFilterTest {
 
     @BeforeEach
     void setUp() {
-        filter = new CorsFilter(FRONTEND_URL, LANDING_URL);
+        filter = new CorsFilter(FRONTEND_URL, LANDING_URL, EXTENSION_URL);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         filterChain = new MockFilterChain();
@@ -135,6 +136,19 @@ class CorsFilterTest {
         filter.doFilter(request, response, filterChain);
 
         assertThat(response.getHeader("Access-Control-Allow-Origin")).isEqualTo(LANDING_URL);
+        assertThat(response.getHeader("Access-Control-Allow-Credentials")).isEqualTo("true");
+        assertThat(filterChain.getRequest()).isNotNull();
+    }
+
+    @Test
+    void doFilter_shouldPassThroughWithCorsHeaders_whenRequestFromChromeExtension() throws ServletException, IOException {
+        request.setRequestURI("/api/extension/metrics");
+        request.setMethod("POST");
+        request.addHeader("Origin", EXTENSION_URL);
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(response.getHeader("Access-Control-Allow-Origin")).isEqualTo(EXTENSION_URL);
         assertThat(response.getHeader("Access-Control-Allow-Credentials")).isEqualTo("true");
         assertThat(filterChain.getRequest()).isNotNull();
     }

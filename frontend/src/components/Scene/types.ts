@@ -16,4 +16,5 @@ export interface SceneElementDefinition {
   interactive?: boolean
   tooltipClassName?: string
   to?: string
+  onClick?: (event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void
 }
