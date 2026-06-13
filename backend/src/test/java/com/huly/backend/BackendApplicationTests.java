@@ -2,6 +2,9 @@ package com.huly.backend;
 
 import com.huly.backend.domain.provider.LLMChatPort;
 import com.huly.backend.domain.provider.StreamingLLMChatPort;
+
+import nl.martijndwars.webpush.PushService;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,6 +19,9 @@ class BackendApplicationTests {
 
     @MockitoBean
     private StreamingLLMChatPort streamingLLMChatPort;
+
+    @MockitoBean
+    private PushService pushService;
 
     @Test
     void contextLoads() {

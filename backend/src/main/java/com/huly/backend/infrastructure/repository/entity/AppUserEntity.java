@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
+import java.time.Instant;
 
 @Entity
 @Table(name = "app_user")
@@ -36,6 +37,9 @@ public class AppUserEntity {
 
     @Column(name = "coins", nullable = false)
     private Integer coins = 0;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDetailEntity> userDetails;

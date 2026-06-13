@@ -3,7 +3,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
-
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.huly.backend.domain.model.AppUser;
@@ -78,6 +78,19 @@ public class UserRepositoryImpl implements UserRepository {
                 .onboardingTutorialCompleted(false)
                 .themePreference(ThemePreference.LIGHT)
                 .build());
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void updateLastLogin(Long userId) {
+        jpaRepository.updateLastLogin(userId, Instant.now());
+    }
+
+    @Override
+    public List<AppUser> findUsersInactiveSince(Instant since) {
+        return jpaRepository.findByLastLoginAtBefore(since).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     private AppUser toDomain(AppUserEntity entity) {
