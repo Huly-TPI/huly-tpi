@@ -23,15 +23,14 @@ export default function Header({ onOpenSidebar, userInitial }: HeaderProps) {
           Huly - Backoffice
         </h1>
 
-        <div className="flex items-center">
-          <ThemeToggle compact />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#D1CAEF] dark:bg-[#2A233C] text-[#8869AC] dark:text-[#A78BFA] text-sm font-extrabold shadow-sm ring-2 ring-white dark:ring-[#172033] mr-3">
+          {userInitial}
         </div>
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#D1CAEF] dark:bg-[#2A233C] text-[#8869AC] dark:text-[#A78BFA] text-sm font-extrabold shadow-sm ring-2 ring-white dark:ring-[#172033] mr-4 lg:mr-6">
-          {userInitial || 'A'}
+        <div className="flex items-center mr-4 lg:mr-6">
+          <ThemeToggle compact />
         </div>
       </div>
     </header>
   )
 }
-

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { backofficeLogin } from '../../api/auth'
-import { setToken } from '../../api/client'
 import { useAuthForm } from '../../hooks/useAuthForm'
 import { required, validEmail } from '../../utils/validation'
 import Button from '../../components/Buttons/Button/Button'
 import { Leaf, Eye, EyeOff } from 'lucide-react'
 import colorLogo from '../../assets/brand/color-logo.webp'
+
+import { useAuth } from '../../context/auth'
 
 const INITIAL_VALUES = { email: '', password: '' }
 
@@ -26,6 +27,7 @@ const getInputClassName = (hasError: boolean) => {
 export default function BackofficeLogin() {
   const navigate = useNavigate()
   const role = localStorage.getItem('role')
+  const { loginWithToken } = useAuth()
 
   if (role === 'ADMIN') 
     return <Navigate to="/backoffice" replace />
@@ -45,8 +47,8 @@ export default function BackofficeLogin() {
 
     try {
       const res = await backofficeLogin({ email: values.email, password: values.password })
-      setToken(res.accessToken)
       localStorage.setItem('role', res.role)
+      await loginWithToken(res.accessToken)
       navigate('/backoffice')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error inesperado'

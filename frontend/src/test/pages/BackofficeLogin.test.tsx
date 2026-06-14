@@ -9,6 +9,13 @@ vi.mock('../../api/auth', () => ({
     backofficeLogin: vi.fn(),
 }))
 
+const mockLoginWithToken = vi.fn().mockResolvedValue(undefined)
+vi.mock('../../context/auth', () => ({
+    useAuth: () => ({
+        loginWithToken: mockLoginWithToken,
+    }),
+}))
+
 const mockSetToken = vi.fn()
 vi.mock('../../api/client', () => ({
     setToken: (t: string) => mockSetToken(t),
@@ -111,7 +118,7 @@ describe('BackofficeLogin', () => {
         await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
         await waitFor(() => {
-            expect(mockSetToken).toHaveBeenCalledWith('token-123')
+            expect(mockLoginWithToken).toHaveBeenCalledWith('token-123')
             expect(localStorage.getItem('role')).toBe('ADMIN')
         })
     })

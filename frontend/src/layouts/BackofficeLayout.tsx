@@ -26,7 +26,7 @@ export default function BackofficeLayout() {
     }
   }
 
-  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'A'
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : ''
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#EDF2ED] dark:bg-[#09111f] font-sans transition-colors duration-200">
