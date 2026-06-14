@@ -13,7 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import java.time.Instant;
 import com.huly.backend.domain.model.enums.SourceAction;
 
 import java.time.LocalDate;
@@ -312,5 +312,29 @@ class UserRepositoryImplTest {
 
         assertThat(userRepository.findByEmail("user@huly.com").get().getBirthDate()).isNull();
         assertThat(userRepository.findByEmail("user2@huly.com").get().getBirthDate()).isNull();
+    }
+
+     @Test
+    void findUsersInactiveSince_shouldReturnMappedDomainsWithNameAndBirth() {
+        UserDetailEntity detail = UserDetailEntity.builder()
+                .name("Test")
+                .birth(LocalDate.of(2000, 1, 1))
+                .build();
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(7L).email("inactive@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .userDetails(List.of(detail))
+                .build();
+        when(jpaRepository.findByLastLoginAtBefore(any(Instant.class)))
+                .thenReturn(List.of(entity));
+
+        List<AppUser> result = userRepository.findUsersInactiveSince(Instant.now());
+
+        assertThat(result).hasSize(1);
+        AppUser user = result.get(0);
+        assertThat(user.getId()).isEqualTo(7L);
+        assertThat(user.getEmail()).isEqualTo("inactive@huly.com");
+        assertThat(user.getName()).isEqualTo("Test");
+        assertThat(user.getBirthDate()).isEqualTo(LocalDate.of(2000, 1, 1));
     }
 }
