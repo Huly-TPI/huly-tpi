@@ -118,8 +118,8 @@ export default function LanternsActivity() {
               />
 
               {isMain && (
-                <div className="lantern-text absolute inset-0 flex items-center justify-center px-[28%] pb-[22%] pt-[15%]">
-                  <p className="text-center font-nunito text-[10px] font-semibold leading-tight text-[#5a3e28] md:text-xs overflow-hidden line-clamp-4">
+                <div className="lantern-note absolute left-[32%] right-[32%] top-[18%] bottom-[42%] flex flex-col items-center justify-center">
+                  <p className="text-center font-nunito text-[8px] font-semibold leading-tight md:text-[10px] overflow-hidden line-clamp-3">
                     {lantern.text}
                   </p>
                 </div>

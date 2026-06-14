@@ -23,6 +23,18 @@
   transition: opacity 0.7s ease;
 }
 
+.lantern-note {
+  transform: rotate(-2deg);
+}
+
+.lantern-note p {
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: #4a3520;
+  text-shadow: none;
+}
+
 .lantern-float-1 { animation: lantern-drift-1 6s ease-in-out infinite; }
 .lantern-float-2 { animation: lantern-drift-2 7s ease-in-out infinite; }
 .lantern-float-3 { animation: lantern-drift-3 5.5s ease-in-out infinite; }
