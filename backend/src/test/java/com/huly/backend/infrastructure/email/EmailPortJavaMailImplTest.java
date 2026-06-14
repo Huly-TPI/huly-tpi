@@ -87,4 +87,26 @@ class EmailPortJavaMailImplTest {
 
         verify(mailSender, never()).send(any(MimeMessage.class));
     }
+
+    @Test
+    void sendReEngagement_shouldCallMailSenderSend() {
+        emailPort.sendReEngagement("user@example.com");
+        verify(mailSender).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void sendWelcomeLead_enviaElMensaje() {
+        emailPort.sendWelcomeLead("user@example.com", "TestUser");
+        verify(mailSender).send(any(MimeMessage.class));
+    }
+
+    @Test 
+    void sendReEngagement_noPropagaExcepcion_cuandoFallaElEnvio() {
+        doThrow(new RuntimeException("SMTP down")).when(mailSender).send(any(MimeMessage.class));
+        emailPort.sendReEngagement("user@example.com");
+        verify(mailSender).send(any(MimeMessage.class));
+    }
+
+
+
 }
