@@ -2,33 +2,33 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import UsersBackofficePage from '../../pages/Backoffice/UsersBackofficePage'
+import UsersPage from '../../pages/Backoffice/UsersPage'
 import * as adminApi from '../../api/admin'
 
 vi.mock('../../api/admin', () => ({
-  getBackofficeUsers: vi.fn(),
+  getUsers: vi.fn(),
   getAntiScrollDashboard: vi.fn(),
 }))
 
-const mockedGetBackofficeUsers = vi.mocked(adminApi.getBackofficeUsers)
+const mockedGetUsers = vi.mocked(adminApi.getUsers)
 
-describe('UsersBackofficePage', () => {
+describe('UsersPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('muestra el estado cargando inicialmente', () => {
-    mockedGetBackofficeUsers.mockReturnValue(new Promise(() => {}))
+    mockedGetUsers.mockReturnValue(new Promise(() => {}))
     render(
       <MemoryRouter>
-        <UsersBackofficePage />
+        <UsersPage />
       </MemoryRouter>
     )
     expect(screen.getByText('Cargando usuarios...')).toBeInTheDocument()
   })
 
   it('renderiza la lista de usuarios correctamente', async () => {
-    mockedGetBackofficeUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValueOnce([
       {
         id: 2,
         name: 'John Doe',
@@ -59,7 +59,7 @@ describe('UsersBackofficePage', () => {
 
     render(
       <MemoryRouter>
-        <UsersBackofficePage />
+        <UsersPage />
       </MemoryRouter>
     )
 
@@ -75,7 +75,7 @@ describe('UsersBackofficePage', () => {
 
   it('filtra usuarios por busqueda', async () => {
     const user = userEvent.setup()
-    mockedGetBackofficeUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValueOnce([
       {
         id: 2,
         name: 'John Doe',
@@ -106,7 +106,7 @@ describe('UsersBackofficePage', () => {
 
     render(
       <MemoryRouter>
-        <UsersBackofficePage />
+        <UsersPage />
       </MemoryRouter>
     )
 
@@ -123,7 +123,7 @@ describe('UsersBackofficePage', () => {
 
   it('navega a detalle al hacer click en el ojo y regresa', async () => {
     const user = userEvent.setup()
-    mockedGetBackofficeUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValueOnce([
       {
         id: 2,
         name: 'John Doe',
@@ -158,8 +158,8 @@ describe('UsersBackofficePage', () => {
     render(
       <MemoryRouter initialEntries={['/backoffice/usuarios']}>
         <Routes>
-          <Route path="/backoffice/usuarios" element={<UsersBackofficePage />} />
-          <Route path="/backoffice/usuarios/:id" element={<UsersBackofficePage />} />
+          <Route path="/backoffice/usuarios" element={<UsersPage />} />
+          <Route path="/backoffice/usuarios/:id" element={<UsersPage />} />
         </Routes>
       </MemoryRouter>
     )
@@ -183,7 +183,7 @@ describe('UsersBackofficePage', () => {
   })
 
   it('no muestra las estadísticas si el usuario no tiene habilitado antiscroll', async () => {
-    mockedGetBackofficeUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValueOnce([
       {
         id: 2,
         name: 'John Doe',
@@ -202,7 +202,7 @@ describe('UsersBackofficePage', () => {
     render(
       <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
         <Routes>
-          <Route path="/backoffice/usuarios/:id" element={<UsersBackofficePage />} />
+          <Route path="/backoffice/usuarios/:id" element={<UsersPage />} />
         </Routes>
       </MemoryRouter>
     )

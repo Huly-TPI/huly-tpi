@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getBackofficeUsers, BackofficeUserResponse } from '../../api/admin'
+import { getUsers, UserResponse } from '../../api/admin'
 
 const DAYS = [
   { key: '0', label: 'Lunes' },
@@ -12,11 +12,10 @@ const DAYS = [
   { key: '6', label: 'Domingo' },
 ]
 
-
-export function useUsersBackoffice() {
+export function useUsers() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [users, setUsers] = useState<BackofficeUserResponse[]>([])
+  const [users, setUsers] = useState<UserResponse[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +24,7 @@ export function useUsersBackoffice() {
   const [selectedDay, setSelectedDay] = useState('all')
 
   useEffect(() => {
-    getBackofficeUsers()
+    getUsers()
       .then((data) => {
         setUsers(data)
       })

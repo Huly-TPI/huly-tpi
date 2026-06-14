@@ -9,11 +9,11 @@ export function EmotionalCategoriesSection() {
   const { categories, loading } = useEmotionalCategories()
 
   return (
-    <SectionCard bg="bg-[#EDF2ED]" padding="p-0" className="shadow-none">
+    <SectionCard bg="bg-[#EDF2ED] dark:bg-[#09111f]" padding="p-0" className="shadow-none">
       <div className="mb-4 flex items-center justify-between gap-2 px-4 pt-4 lg:px-5 lg:pt-5">
         <div className="flex items-center gap-2">
           <img src={purpleSmile} alt="" className="w-6 h-6 object-contain -translate-y-0.0" />
-          <h2 className="text-[20px] font-bold text-[#2D3748]">Panel de categorías emocionales</h2>
+          <h2 className="text-[20px] font-bold text-[#2D3748] dark:text-gray-100">Panel de categorías emocionales</h2>
         </div>
         <Button variant="tertiary" size="sm">
           Gestionar todas
@@ -23,7 +23,7 @@ export function EmotionalCategoriesSection() {
       {loading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex flex-col rounded-2xl bg-white p-5 shadow-sm">
+            <div key={i} className="flex flex-col rounded-2xl bg-white dark:bg-[#172033] p-5 shadow-sm">
               <Skeleton className="h-14 w-14 rounded-2xl" />
               <Skeleton className="mt-4 h-4 w-3/4" />
               <Skeleton className="mt-1 h-3 w-full" />
