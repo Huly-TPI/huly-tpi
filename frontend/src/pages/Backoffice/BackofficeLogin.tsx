@@ -16,10 +16,10 @@ const VALIDATION_RULES = {
 }
 
 const getInputClassName = (hasError: boolean) => {
-  return `w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-all ${
+  return `w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-all dark:bg-[#09111f] dark:text-gray-100 ${
     hasError
       ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
-      : 'border-gray-200 focus:border-[#8869AC] focus:ring-2 focus:ring-[#8869AC]/20'
+      : 'border-gray-200 dark:border-gray-800 focus:border-[#8869AC] dark:focus:border-[#A78BFA] focus:ring-2 focus:ring-[#8869AC]/20'
   }`
 }
 
@@ -61,22 +61,22 @@ export default function BackofficeLogin() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#EDF2ED]">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-10 shadow-md">
+    <div className="flex min-h-screen items-center justify-center bg-[#EDF2ED] dark:bg-[#09111f] transition-colors duration-200">
+      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[#172033] p-10 shadow-md dark:shadow-none dark:border dark:border-gray-800/40">
 
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D1CAEF]">
-            <Leaf className="h-8 w-8 text-[#8869AC] fill-[#8869AC]" strokeWidth={1.8} />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D1CAEF] dark:bg-[#2A233C]">
+            <Leaf className="h-8 w-8 text-[#8869AC] dark:text-[#A78BFA] fill-[#8869AC] dark:fill-[#A78BFA]" strokeWidth={1.8} />
           </div>
           <img src={colorLogo} alt="Huly" className="h-8 object-contain" />
-          <p className="text-xs font-bold uppercase tracking-widest text-[#A0AEC0]">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#A0AEC0] dark:text-gray-500">
             Backoffice
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-[#4A5568]">Email</label>
+            <label className="text-sm font-semibold text-[#4A5568] dark:text-gray-300">Email</label>
             <input
               type="text"
               value={values.email}
@@ -90,7 +90,7 @@ export default function BackofficeLogin() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-[#4A5568]">Contraseña</label>
+            <label className="text-sm font-semibold text-[#4A5568] dark:text-gray-300">Contraseña</label>
             <div className="relative">
               <input
                 type={passwordVisible ? 'text' : 'password'}
@@ -102,7 +102,7 @@ export default function BackofficeLogin() {
               <button
                 type="button"
                 onClick={() => setPasswordVisible(prev => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 aria-label={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {passwordVisible ? (
@@ -118,7 +118,7 @@ export default function BackofficeLogin() {
           </div>
 
           {apiError && (
-            <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">
+            <p className="rounded-xl bg-red-50 dark:bg-red-950/20 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30">
               {apiError}
             </p>
           )}

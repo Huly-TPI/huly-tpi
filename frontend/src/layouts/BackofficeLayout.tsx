@@ -29,17 +29,17 @@ export default function BackofficeLayout() {
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'A'
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#EDF2ED] font-sans">
+    <div className="flex h-screen overflow-hidden bg-[#EDF2ED] dark:bg-[#09111f] font-sans transition-colors duration-200">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onLogout={handleLogout}
       />
 
-      <div className="flex flex-1 min-w-0 flex-col h-screen overflow-hidden bg-[#EDF2ED] relative">
+      <div className="flex flex-1 min-w-0 flex-col h-screen overflow-hidden bg-[#EDF2ED] dark:bg-[#09111f] relative transition-colors duration-200">
         <Header onOpenSidebar={() => setSidebarOpen(true)} userInitial={userInitial} />
 
-        <div className="pointer-events-none absolute left-0 right-0 z-10 h-10 lg:h-12 bg-gradient-to-b from-[#EDF2ED] to-transparent top-[72px] lg:top-[92px]" />
+        <div className="pointer-events-none absolute left-0 right-0 z-10 h-10 lg:h-12 bg-gradient-to-b from-[#EDF2ED] dark:from-[#09111f] to-transparent top-[72px] lg:top-[92px]" />
 
         <main className="flex-1 min-h-0 overflow-y-auto p-6 lg:p-8">
           <Outlet />

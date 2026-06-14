@@ -4,15 +4,15 @@ import { AlertOctagon } from 'lucide-react'
 export default function BackofficeNotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 animate-fadeIn">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-red-50 text-red-500 mb-6 shadow-sm">
+      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 mb-6 shadow-sm">
         <AlertOctagon className="h-10 w-10" strokeWidth={1.8} />
       </div>
       
-      <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight mb-2">
+      <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 tracking-tight mb-2">
         Página no encontrada
       </h2>
       
-      <p className="text-gray-400 text-sm max-w-md mb-8">
+      <p className="text-gray-400 dark:text-gray-500 text-sm max-w-md mb-8">
         La sección del backoffice a la que intentas acceder no existe o no tienes los permisos necesarios para verla.
       </p>
 
