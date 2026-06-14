@@ -25,7 +25,6 @@ vi.mock('../../api/client', () => ({
 }))
 
 vi.mock('../../assets/brand/color-logo.webp', () => ({ default: 'color-logo.webp' }))
-vi.mock('../../assets/backoffice/hojita.webp', () => ({ default: 'hojita.webp' }))
 
 import { backofficeLogin } from '../../api/auth'
 
@@ -149,5 +148,35 @@ describe('BackofficeLogin', () => {
         await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
         expect(screen.getByRole('button', { name: 'Ingresando...' })).toBeDisabled()
+    })
+
+    it('redirige al backoffice si ya tiene el rol ADMIN en localStorage', () => {
+        localStorage.setItem('role', 'ADMIN')
+        render(
+            <MemoryRouter initialEntries={['/backoffice/login']}>
+                <Routes>
+                    <Route path="/backoffice/login" element={<BackofficeLogin />} />
+                    <Route path="/backoffice" element={<h1>Backoffice</h1>} />
+                </Routes>
+            </MemoryRouter>
+        )
+        expect(screen.getByText('Backoffice')).toBeInTheDocument()
+        expect(screen.queryByPlaceholderText('Correo electrónico')).not.toBeInTheDocument()
+    })
+
+    it('alterna la visibilidad de la contraseña al hacer clic en el ojo', async () => {
+        const { user } = renderWithRouter()
+        const passwordInput = screen.getByPlaceholderText('••••••••') as HTMLInputElement
+
+        expect(passwordInput.type).toBe('password')
+
+        const toggleButton = screen.getByLabelText('Mostrar contraseña')
+        await user.click(toggleButton)
+
+        expect(passwordInput.type).toBe('text')
+        expect(screen.getByLabelText('Ocultar contraseña')).toBeInTheDocument()
+
+        await user.click(toggleButton)
+        expect(passwordInput.type).toBe('password')
     })
 })

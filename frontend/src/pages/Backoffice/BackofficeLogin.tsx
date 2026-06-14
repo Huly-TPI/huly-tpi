@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { backofficeLogin } from '../../api/auth'
 import { setToken } from '../../api/client'
 import { useAuthForm } from '../../hooks/useAuthForm'
 import { required, validEmail } from '../../utils/validation'
 import Button from '../../components/Buttons/Button/Button'
+import { Leaf, Eye, EyeOff } from 'lucide-react'
 import colorLogo from '../../assets/brand/color-logo.webp'
-import hojita from '../../assets/backoffice/hojita.webp'
 
 const INITIAL_VALUES = { email: '', password: '' }
 
@@ -15,9 +15,24 @@ const VALIDATION_RULES = {
   password: [required()],
 }
 
+const getInputClassName = (hasError: boolean) => {
+  return `w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-all ${
+    hasError
+      ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
+      : 'border-gray-200 focus:border-[#8869AC] focus:ring-2 focus:ring-[#8869AC]/20'
+  }`
+}
+
 export default function BackofficeLogin() {
   const navigate = useNavigate()
+  const role = localStorage.getItem('role')
+
+  if (role === 'ADMIN') 
+    return <Navigate to="/backoffice" replace />
+
   const { values, errors, handleChange, validateAll } = useAuthForm(INITIAL_VALUES, VALIDATION_RULES)
+
+  const [passwordVisible, setPasswordVisible] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -51,7 +66,7 @@ export default function BackofficeLogin() {
 
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D1CAEF]">
-            <img src={hojita} alt="" className="h-8 w-8 object-contain mix-blend-multiply" />
+            <Leaf className="h-8 w-8 text-[#8869AC] fill-[#8869AC]" strokeWidth={1.8} />
           </div>
           <img src={colorLogo} alt="Huly" className="h-8 object-contain" />
           <p className="text-xs font-bold uppercase tracking-widest text-[#A0AEC0]">
@@ -67,7 +82,7 @@ export default function BackofficeLogin() {
               value={values.email}
               onChange={e => handleChange('email', e.target.value)}
               placeholder="Correo electrónico"
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#8869AC] focus:ring-2 focus:ring-[#8869AC]/20 transition"
+              className={getInputClassName(!!errors.email)}
             />
             {errors.email && (
               <p className="text-xs text-red-500">{errors.email}</p>
@@ -76,13 +91,27 @@ export default function BackofficeLogin() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-[#4A5568]">Contraseña</label>
-            <input
-              type="password"
-              value={values.password}
-              onChange={e => handleChange('password', e.target.value)}
-              placeholder="••••••••"
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#8869AC] focus:ring-2 focus:ring-[#8869AC]/20 transition"
-            />
+            <div className="relative">
+              <input
+                type={passwordVisible ? 'text' : 'password'}
+                value={values.password}
+                onChange={e => handleChange('password', e.target.value)}
+                placeholder="••••••••"
+                className={`pr-12 ${getInputClassName(!!errors.password)}`}
+              />
+              <button
+                type="button"
+                onClick={() => setPasswordVisible(prev => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {passwordVisible ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-xs text-red-500">{errors.password}</p>
             )}

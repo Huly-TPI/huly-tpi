@@ -1,12 +1,12 @@
-import { useUsersBackoffice } from '../../hooks/backoffice/useUsersBackoffice'
-import { BackofficeUserResponse } from '../../api/admin'
+import { useUsers } from '../../hooks/backoffice/useUsers'
+import { UserResponse } from '../../api/admin'
 import { SectionCard } from '../../components/backoffice/SectionCard'
 import { Table, Column } from '../../components/backoffice/Table'
 import DomainFavicon from '../../components/backoffice/DomainFavicon'
 import { formatConsumptionTime } from '../../utils/date'
 import { ChevronLeft, Search, Eye, HelpCircle, ShieldAlert } from 'lucide-react'
 
-export default function UsersBackofficePage() {
+export default function UsersPage() {
   const {
     search,
     setSearch,
@@ -26,7 +26,7 @@ export default function UsersBackofficePage() {
     hasUsageData,
     handleBack,
     navigate,
-  } = useUsersBackoffice()
+  } = useUsers()
 
   if (selectedUser) {
     return (
@@ -199,7 +199,7 @@ export default function UsersBackofficePage() {
     )
   }
 
-  const userColumns: Column<BackofficeUserResponse>[] = [
+  const userColumns: Column<UserResponse>[] = [
     {
       header: 'Usuario',
       render: (u) => (

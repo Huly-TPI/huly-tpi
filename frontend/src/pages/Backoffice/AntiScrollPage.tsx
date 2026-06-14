@@ -5,7 +5,7 @@ import { formatConsumptionTime } from '../../utils/date'
 import { RefreshCw, Monitor, Database, Link2, Settings, Clock, FileText, CheckCircle } from 'lucide-react'
 import Button from '../../components/Buttons/Button/Button'
 
-export default function AntiScrollBackofficePage() {
+export default function AntiScrollPage() {
   const {
     dashboard,
     loading,
