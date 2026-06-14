@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,10 +30,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserRepositoryImplTest {
 
-    @Mock private AppUserRepository jpaRepository;
-    @Mock private UserDetailRepository userDetailRepository;
+    @Mock
+    private AppUserRepository jpaRepository;
+    @Mock
+    private UserDetailRepository userDetailRepository;
 
-    @InjectMocks private UserRepositoryImpl userRepository;
+    @InjectMocks
+    private UserRepositoryImpl userRepository;
 
     @Test
     void findByEmail_shouldReturnMappedDomain_whenEntityExists() {
@@ -166,8 +170,7 @@ class UserRepositoryImplTest {
                 .id(1L).email("user@huly.com").password("encoded")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .userDetails(List.of(
-                        UserDetailEntity.builder().name("Mili").build()
-                ))
+                        UserDetailEntity.builder().name("Mili").build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -215,8 +218,7 @@ class UserRepositoryImplTest {
                 .userDetails(List.of(
                         UserDetailEntity.builder().name(null).build(),
                         UserDetailEntity.builder().name("Mili").build(),
-                        UserDetailEntity.builder().name("Otro").build()
-                ))
+                        UserDetailEntity.builder().name("Otro").build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -285,8 +287,7 @@ class UserRepositoryImplTest {
                 .id(1L).email("user@huly.com").password("encoded")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .userDetails(List.of(
-                        UserDetailEntity.builder().birth(LocalDate.of(1995, 5, 5)).build()
-                ))
+                        UserDetailEntity.builder().birth(LocalDate.of(1995, 5, 5)).build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -314,7 +315,7 @@ class UserRepositoryImplTest {
         assertThat(userRepository.findByEmail("user2@huly.com").get().getBirthDate()).isNull();
     }
 
-     @Test
+    @Test
     void findUsersInactiveSince_shouldReturnMappedDomainsWithNameAndBirth() {
         UserDetailEntity detail = UserDetailEntity.builder()
                 .name("Test")
@@ -336,5 +337,29 @@ class UserRepositoryImplTest {
         assertThat(user.getEmail()).isEqualTo("inactive@huly.com");
         assertThat(user.getName()).isEqualTo("Test");
         assertThat(user.getBirthDate()).isEqualTo(LocalDate.of(2000, 1, 1));
+    }
+
+    @Test
+    void findUsersInactiveSince_shouldMapNameAndBirthAsNull_whenUserDetailsHaveNoValues() {
+        UserDetailEntity detail = UserDetailEntity.builder().build();
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(8L).email("sindatos@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .userDetails(List.of(detail))
+                .build();
+        when(jpaRepository.findByLastLoginAtBefore(any(Instant.class)))
+                .thenReturn(List.of(entity));
+
+        List<AppUser> result = userRepository.findUsersInactiveSince(Instant.now());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isNull();
+        assertThat(result.get(0).getBirthDate()).isNull();
+    }
+
+    @Test
+    void updateLastLogin_shouldDelegateToJpaWithCurrentInstant() {
+        userRepository.updateLastLogin(5L);
+        verify(jpaRepository).updateLastLogin(eq(5L), any(Instant.class));
     }
 }
