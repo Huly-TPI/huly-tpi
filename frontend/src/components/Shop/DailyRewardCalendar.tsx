@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react'
+import {
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  FireIcon,
+  TrophyIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/solid'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 
 interface DailyRewardCalendarProps {
@@ -45,8 +52,9 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
     <div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-gray-100">
       <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
         <h2 className="text-xl font-bold text-gray-800">Recompensa diaria</h2>
-        <span className="text-sm font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1">
-          🔥 Racha: {status.currentStreak} {status.currentStreak === 1 ? 'día' : 'días'}
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1">
+          <FireIcon className="w-4 h-4 text-orange-500" />
+          Racha: {status.currentStreak} {status.currentStreak === 1 ? 'día' : 'días'}
         </span>
       </div>
       <p className="text-gray-500 text-sm mb-5">
@@ -77,10 +85,17 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
                     : 'bg-gray-50 border-gray-200 opacity-60',
               ].join(' ')}
             >
-              <span className="text-[11px] font-semibold text-gray-500">
-                Día {day.dayNumber} {isLast && '👑'}
+              <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-gray-500">
+                Día {day.dayNumber}
+                {isLast && <TrophyIcon className="w-3.5 h-3.5 text-amber-500" />}
               </span>
-              <span className="text-lg" aria-hidden="true">{isClaimed ? '✅' : '🪙'}</span>
+              {isClaimed ? (
+                <CheckCircleIcon className="w-6 h-6 text-yellow-600" />
+              ) : (
+                <CurrencyDollarIcon
+                  className={`w-6 h-6 ${isClaimable ? 'text-yellow-500' : 'text-gray-400'}`}
+                />
+              )}
               <span
                 className={`text-sm font-bold ${
                   isClaimed ? 'text-yellow-700' : isClaimable ? 'text-yellow-600' : 'text-gray-400'
@@ -114,8 +129,9 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
           )}
         </button>
       ) : (
-        <div className="w-full py-3 rounded-xl bg-gray-100 text-gray-500 font-semibold text-sm text-center">
-          Ya reclamaste hoy ✓ — Volvé mañana
+        <div className="w-full py-3 rounded-xl bg-gray-100 text-gray-500 font-semibold text-sm flex items-center justify-center gap-1.5">
+          <CheckCircleIcon className="w-5 h-5 text-green-500" />
+          Ya reclamaste hoy — Volvé mañana
         </div>
       )}
 
@@ -125,7 +141,7 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
           aria-live="polite"
           className="fixed bottom-24 right-5 z-50 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#e6b800] px-5 py-4 shadow-xl text-white"
         >
-          <span className="text-2xl" aria-hidden="true">🪙</span>
+          <CurrencyDollarIcon className="w-7 h-7 text-white" aria-hidden="true" />
           <div>
             <p className="text-sm opacity-90 m-0">¡Recompensa reclamada!</p>
             <p className="font-bold text-lg m-0">+{toastCoins} monedas</p>
@@ -135,7 +151,7 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
             onClick={() => setToastCoins(null)}
             className="ml-1 rounded-full p-1.5 hover:bg-white/20 transition bg-transparent border-0 cursor-pointer text-white"
           >
-            ✕
+            <XMarkIcon className="w-4 h-4" />
           </button>
         </div>
       )}
