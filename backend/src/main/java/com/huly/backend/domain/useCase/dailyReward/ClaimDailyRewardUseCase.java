@@ -38,13 +38,14 @@ public class ClaimDailyRewardUseCase {
             throw new BusinessRuleException("No hay recompensas diarias configuradas.");
         }
 
-        int nextDay = DailyRewardCycle.computeNextDay(state, today, cycle.size());
-        int coins = resolveCoins(cycle, nextDay);
+        int newStreak = DailyRewardCycle.nextStreak(state, today);
+        int cycleDay = DailyRewardCycle.cycleDay(newStreak, cycle.size());
+        int coins = resolveCoins(cycle, cycleDay);
 
         coinService.credit(userId, coins);
-        userDetailDomainRepository.updateDailyClaim(userId, nextDay, today);
+        userDetailDomainRepository.updateDailyClaim(userId, newStreak, today);
 
-        return new DailyRewardClaim(coins, nextDay, nextDay);
+        return new DailyRewardClaim(coins, cycleDay, newStreak);
     }
 
     private int resolveCoins(List<DailyReward> cycle, int dayNumber) {

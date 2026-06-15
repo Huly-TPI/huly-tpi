@@ -53,6 +53,7 @@ public class DailyRewardController {
                         .map(d -> new DailyRewardDayResponse(d.getDayNumber(), d.getCoins()))
                         .toList(),
                 status.currentStreak(),
+                status.completedDays(),
                 status.canClaimToday(),
                 status.nextDay()
         );

@@ -79,6 +79,7 @@ class ClaimDailyRewardUseCaseTest {
 
         assertThat(result.dayNumber()).isEqualTo(4);
         assertThat(result.coins()).isEqualTo(25);
+        assertThat(result.newStreak()).isEqualTo(4);
         verify(coinService).credit(USER_ID, 25);
         verify(userDetailDomainRepository).updateDailyClaim(USER_ID, 4, TODAY);
     }
@@ -98,7 +99,9 @@ class ClaimDailyRewardUseCaseTest {
     }
 
     @Test
-    void execute_shouldWrapToDayOne_whenCycleWasCompleted() {
+    void execute_shouldWrapCycleButKeepGrowingStreak_whenCycleWasCompleted() {
+        // Racha 7 (completó el ciclo) y reclamo consecutivo: el premio vuelve al Día 1,
+        // pero la racha total sigue creciendo a 8.
         when(userDetailDomainRepository.findDailyClaimState(USER_ID))
                 .thenReturn(new DailyClaimState(7, TODAY.minusDays(1)));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
@@ -107,8 +110,25 @@ class ClaimDailyRewardUseCaseTest {
 
         assertThat(result.dayNumber()).isEqualTo(1);
         assertThat(result.coins()).isEqualTo(10);
+        assertThat(result.newStreak()).isEqualTo(8);
         verify(coinService).credit(USER_ID, 10);
-        verify(userDetailDomainRepository).updateDailyClaim(USER_ID, 1, TODAY);
+        verify(userDetailDomainRepository).updateDailyClaim(USER_ID, 8, TODAY);
+    }
+
+    @Test
+    void execute_shouldContinueSecondCycle_whenStreakAlreadyPastCycle() {
+        // Racha 8 (Día 2 del segundo ciclo) consecutiva -> Día 2 / coins 15 / racha 9.
+        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
+                .thenReturn(new DailyClaimState(8, TODAY.minusDays(1)));
+        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
+
+        DailyRewardClaim result = useCase.execute(USER_ID);
+
+        assertThat(result.dayNumber()).isEqualTo(2);
+        assertThat(result.coins()).isEqualTo(15);
+        assertThat(result.newStreak()).isEqualTo(9);
+        verify(coinService).credit(USER_ID, 15);
+        verify(userDetailDomainRepository).updateDailyClaim(USER_ID, 9, TODAY);
     }
 
     @Test

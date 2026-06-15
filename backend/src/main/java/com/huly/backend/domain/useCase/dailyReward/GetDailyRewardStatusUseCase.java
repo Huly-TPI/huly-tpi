@@ -25,10 +25,21 @@ public class GetDailyRewardStatusUseCase {
         List<DailyReward> cycle = dailyRewardRepository.findAllOrderByDay();
 
         boolean canClaimToday = !today.equals(state.lastClaimDate());
-        int nextDay = cycle.isEmpty()
-                ? 0
-                : DailyRewardCycle.computeNextDay(state, today, cycle.size());
+        int currentStreak = DailyRewardCycle.isAlive(state, today) ? state.streak() : 0;
 
-        return new DailyRewardStatus(cycle, state.streak(), canClaimToday, nextDay);
+        int nextDay = 0;
+        int completedDays = 0;
+        if (!cycle.isEmpty()) {
+            int n = cycle.size();
+            if (canClaimToday) {
+                nextDay = DailyRewardCycle.cycleDay(DailyRewardCycle.nextStreak(state, today), n);
+                completedDays = nextDay - 1;
+            } else {
+                // Ya reclamó hoy: los días 1..cycleDay(streak) están completos.
+                completedDays = DailyRewardCycle.cycleDay(state.streak(), n);
+            }
+        }
+
+        return new DailyRewardStatus(cycle, currentStreak, completedDays, canClaimToday, nextDay);
     }
 }

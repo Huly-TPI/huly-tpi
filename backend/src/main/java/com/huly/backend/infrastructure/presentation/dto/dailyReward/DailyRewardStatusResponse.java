@@ -5,6 +5,7 @@ import java.util.List;
 public record DailyRewardStatusResponse(
         List<DailyRewardDayResponse> days,
         int currentStreak,
+        int completedDays,
         boolean canClaimToday,
         int nextDay
 ) {

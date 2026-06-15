@@ -8,6 +8,7 @@ import { ProductCard } from '../../components/Shop/ProductCard'
 import { PlanCard } from '../../components/Shop/PlanCard'
 import { CoinsBadge } from '../../components/Shop/CoinsBadge'
 import { MembershipBadge } from '../../components/Shop/MembershipBadge'
+import { DailyRewardCalendar } from '../../components/Shop/DailyRewardCalendar'
 
 type ShopTab = 'coins' | 'subscriptions'
 
@@ -16,7 +17,7 @@ export default function Shop() {
 
   const { products, loading: productsLoading, error: productsError } = useProducts()
   const { plans, loading: plansLoading, error: plansError } = usePlans()
-  const { coins } = useUserCoins()
+  const { coins, refresh: refreshCoins } = useUserCoins()
   const { membership } = useMembership()
   const { buyingId, error: purchaseError, buy } = usePurchase()
 
@@ -35,6 +36,8 @@ export default function Shop() {
           </div>
         </div>
         <p className="text-gray-500 mb-6">Elegí el plan que mejor se adapte a vos</p>
+
+        <DailyRewardCalendar onClaimed={refreshCoins} />
 
         <div className="inline-flex items-center gap-1 bg-gray-100 rounded-xl p-1 mb-8">
           <button
