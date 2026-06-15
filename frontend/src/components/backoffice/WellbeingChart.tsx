@@ -45,16 +45,14 @@ export function WellbeingChart({ points, labels }: WellbeingChartProps) {
           const y = padY + innerH - ((v - minV) / (maxV - minV)) * innerH
           return (
             <g key={v}>
-              <line x1={padX} y1={y} x2={W - padX} y2={y} stroke="#f0f0f0" strokeWidth="1" />
-              <text x={padX - 4} y={y + 3.5} fontSize="8" fill="#c4c4c4" textAnchor="end">{v}</text>
+              <line x1={padX} y1={y} x2={W - padX} y2={y} className="stroke-[#f0f0f0] dark:stroke-gray-800/60" strokeWidth="1" />
+              <text x={padX - 4} y={y + 3.5} fontSize="8" className="fill-[#c4c4c4] dark:fill-gray-600" textAnchor="end">{v}</text>
             </g>
           )
         })}
 
-        {/* Area fill */}
         <path d={areaPath} fill="url(#wellGrad)" />
 
-        {/* Line */}
         <polyline
           points={polyline}
           fill="none"
@@ -64,14 +62,12 @@ export function WellbeingChart({ points, labels }: WellbeingChartProps) {
           strokeLinecap="round"
         />
 
-        {/* Dots */}
         {xs.map((x, i) => (
           <circle key={i} cx={x} cy={ys[i]} r="3" fill="#8869AC" />
         ))}
 
-        {/* X labels */}
         {xs.map((x, i) => (
-          <text key={i} x={x} y={H + 16} fontSize="8" fill="#b0b0b0" textAnchor="middle">
+          <text key={i} x={x} y={H + 16} fontSize="8" className="fill-[#b0b0b0] dark:fill-gray-500" textAnchor="middle">
             {labels[i]}
           </text>
         ))}

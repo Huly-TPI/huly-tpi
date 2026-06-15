@@ -185,6 +185,14 @@ function UserMenu({ name }: { name: string }) {
           >
             Mi perfil
           </Link>
+          <Link
+            to="/privacy"
+            role="menuitem"
+            className="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+            onClick={() => setOpen(false)}
+          >
+            Centro de privacidad
+          </Link>
           <button
             type="button"
             role="menuitem"

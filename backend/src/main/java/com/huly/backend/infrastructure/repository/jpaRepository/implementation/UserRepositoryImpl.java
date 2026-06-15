@@ -1,6 +1,8 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -69,6 +71,13 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public List<AppUser> findAllNonAdmins() {
+        return jpaRepository.findByRoleNot(com.huly.backend.domain.model.enums.UserRole.ADMIN).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public void saveLeadDetail(Long userId, String nickname, SourceAction sourceAction) {
         userDetailRepository.save(UserDetailEntity.builder()
                 .appUser(AppUserEntity.builder().id(userId).build())
@@ -89,6 +98,14 @@ public class UserRepositoryImpl implements UserRepository {
                         .orElse(null)
                 : null;
 
+        LocalDate birth = entity.getUserDetails() != null
+                ? entity.getUserDetails().stream()
+                        .map(UserDetailEntity::getBirth)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null)
+                : null;
+
         return AppUser.builder()
                 .id(entity.getId())
                 .name(name)
@@ -96,8 +113,8 @@ public class UserRepositoryImpl implements UserRepository {
                 .password(entity.getPassword())
                 .role(entity.getRole())
                 .status(entity.getStatus())
+                .birthDate(birth)
                 .build();
-
     }
 
     private AppUserEntity toEntity(AppUser domain) {
