@@ -24,7 +24,7 @@
 }
 
 .lantern-note {
-  transform: rotate(-2deg);
+  transform: rotate(10deg);
 }
 
 .lantern-note p {
@@ -33,6 +33,9 @@
   line-height: 1.4;
   color: #4a3520;
   text-shadow: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .lantern-float-1 { animation: lantern-drift-1 6s ease-in-out infinite; }
@@ -49,7 +52,6 @@
     font-weight: 800;
     color: #5b3d8a;
     margin: 0 0 0.25rem;
-    text-shadow: 0 1px 3px rgba(255,255,255,0.5);
 }
 
 .lantern-subtitle {
@@ -78,9 +80,6 @@
 
 .lanterns-page--dark .lantern-title {
   color: #e5eef7;
-  text-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.6),
-    0 0 12px rgba(229, 238, 247, 0.25);
 }
 
 .lanterns-page--dark .lantern-subtitle {

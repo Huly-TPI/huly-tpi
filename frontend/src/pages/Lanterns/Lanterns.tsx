@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 
 import background from '../../assets/lanterns/ligth-theme/background-lanterns.webp'
 import darkBackground from '../../assets/lanterns/dark-theme/background/night-background.webp'
-import lanternImage from '../../assets/lanterns/dark-theme/lantern.webp'
-import darkLanternImage from '../../assets/lanterns/dark-theme/lantern.webp'
+import lanternImage from '../../assets/lanterns/ligth-theme/Lantern-Ligth.webp'
+import darkLanternImage from '../../assets/lanterns/dark-theme/Lantern-Dark.webp'
 import paperImage from '../../assets/lanterns/paper.webp'
 import darkPaperImage from '../../assets/lanterns/paper.webp'
 
@@ -17,7 +17,7 @@ interface Lantern {
 }
 
 const MAX_LANTERNS = 5
-const MAX_TEXT_LENGTH = 120
+const MAX_TEXT_LENGTH = 20
 
 const BG_POSITIONS = [
   { top: '5%', left: '60%', size: 'w-[22%] md:w-[14%]', floatClass: 'lantern-float-1' },
@@ -118,8 +118,8 @@ export default function LanternsActivity() {
               />
 
               {isMain && (
-                <div className="lantern-note absolute left-[32%] right-[32%] top-[18%] bottom-[42%] flex flex-col items-center justify-center">
-                  <p className="text-center font-nunito text-[8px] font-semibold leading-tight md:text-[10px] overflow-hidden line-clamp-3">
+                <div className="lantern-note absolute left-[40%] right-[32%] top-[18%] bottom-[42%] flex flex-col items-center justify-center">
+                  <p className="text-center font-nunito text-[12px] font-semibold leading-tight md:text-[14px] overflow-hidden line-clamp-3">
                     {lantern.text}
                   </p>
                 </div>
