@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
+  BoltIcon,
   CheckCircleIcon,
   CurrencyDollarIcon,
-  FireIcon,
   TrophyIcon,
   XMarkIcon,
 } from '@heroicons/react/24/solid'
@@ -53,7 +53,7 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
       <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
         <h2 className="text-xl font-bold text-gray-800">Recompensa diaria</h2>
         <span className="inline-flex items-center gap-1 text-sm font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1">
-          <FireIcon className="w-4 h-4 text-orange-500" />
+          <BoltIcon className="w-4 h-4 text-amber-500" />
           Racha: {status.currentStreak} {status.currentStreak === 1 ? 'día' : 'días'}
         </span>
       </div>
