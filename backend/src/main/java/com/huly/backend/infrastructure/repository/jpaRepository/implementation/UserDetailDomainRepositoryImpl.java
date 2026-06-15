@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
+import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Component
@@ -65,5 +67,23 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
         userDetail.setThemePreference(themePreference);
         userDetailRepository.save(userDetail);
     }
-    
+
+    @Override
+    public DailyClaimState findDailyClaimState(Long userId) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        int streak = userDetail.getDailyRewardStreak() != null ? userDetail.getDailyRewardStreak() : 0;
+        return new DailyClaimState(streak, userDetail.getLastDailyClaimDate());
+    }
+
+    @Override
+    @Transactional
+    public void updateDailyClaim(Long userId, int streak, LocalDate claimDate) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        userDetail.setDailyRewardStreak(streak);
+        userDetail.setLastDailyClaimDate(claimDate);
+        userDetailRepository.save(userDetail);
+    }
+
 }

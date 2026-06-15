@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import AntiScrollBackofficePage from '../../pages/Backoffice/AntiScrollBackofficePage'
+import AntiScrollPage from '../../pages/Backoffice/AntiScrollPage'
 import * as adminApi from '../../api/admin'
 
 vi.mock('../../api/admin', () => ({
-  getBackofficeUsers: vi.fn(),
+  getUsers: vi.fn(),
   getAntiScrollDashboard: vi.fn(),
   getAntiScrollConfig: vi.fn(),
   saveAntiScrollConfig: vi.fn(),
@@ -30,7 +30,7 @@ const defaultConfig = {
   termsAndConditions: 'El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir.',
 }
 
-describe('AntiScrollBackofficePage', () => {
+describe('AntiScrollPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -40,7 +40,7 @@ describe('AntiScrollBackofficePage', () => {
     mockedGetAntiScrollConfig.mockReturnValue(new Promise(() => {}))
     render(
       <MemoryRouter>
-        <AntiScrollBackofficePage />
+        <AntiScrollPage />
       </MemoryRouter>
     )
     expect(screen.getByText('Cargando datos de antiscroll...')).toBeInTheDocument()
@@ -52,7 +52,7 @@ describe('AntiScrollBackofficePage', () => {
 
     render(
       <MemoryRouter>
-        <AntiScrollBackofficePage />
+        <AntiScrollPage />
       </MemoryRouter>
     )
 
@@ -68,3 +68,4 @@ describe('AntiScrollBackofficePage', () => {
     expect(screen.getByLabelText('Mensaje de consentimiento de datos')).toBeInTheDocument()
   })
 })
+

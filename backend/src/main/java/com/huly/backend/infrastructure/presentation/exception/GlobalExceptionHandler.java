@@ -2,6 +2,7 @@ package com.huly.backend.infrastructure.presentation.exception;
 
 import com.huly.backend.domain.exception.AccountNotActiveException;
 import com.huly.backend.domain.exception.BusinessRuleException;
+import com.huly.backend.domain.exception.DailyRewardAlreadyClaimedException;
 import com.huly.backend.domain.exception.DuplicateResourceException;
 import com.huly.backend.domain.exception.ImageValidationUnavailableException;
 import com.huly.backend.domain.exception.InfrastructureException;
@@ -62,6 +63,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ErrorResponse> handleBusinessRuleException(BusinessRuleException e, HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, e, request, null);
+    }
+
+    @ExceptionHandler(DailyRewardAlreadyClaimedException.class)
+    public ResponseEntity<ErrorResponse> handleDailyRewardAlreadyClaimedException(DailyRewardAlreadyClaimedException e, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, e, request, null);
     }
 
     @ExceptionHandler(InsufficientPermissionsException.class)
