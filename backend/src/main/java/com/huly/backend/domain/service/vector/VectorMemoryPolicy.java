@@ -79,6 +79,9 @@ public class VectorMemoryPolicy {
                     command.userId(), command.sourceType());
             return false;
         }
+        if (command.sourceType() == VectorMemorySource.CHATBOT && command.contentType() != null && !"CHAT_MESSAGE".equals(command.contentType())) {
+            return true;
+        }
         if (containsAny(comparable, SENSITIVE_SIGNALS)) {
             log.info("Memoria vectorial descartada por señal sensible userId={} sourceType={}",
                     command.userId(), command.sourceType());

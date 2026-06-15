@@ -8,6 +8,14 @@ import com.huly.backend.domain.model.admin.BackofficeUserSummary;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesResponse;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
+import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsResponse;
+import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsUseCase;
+import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsResponse;
+import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUseCase;
+import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsUseCase;
+import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsResponse;
 import com.huly.backend.infrastructure.presentation.controller.AdminUserController;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +37,10 @@ class AdminUserControllerTest {
     private ListBackofficeUsersUseCase listBackofficeUsersUseCase;
     private GetAntiScrollDashboardUseCase getAntiScrollDashboardUseCase;
     private com.huly.backend.domain.repository.extension.AntiScrollConfigRepository antiScrollConfigRepository;
+    private GetUserActivitiesUseCase getUserActivitiesUseCase;
+    private GetUserAiDiagnosticsUseCase getUserAiDiagnosticsUseCase;
+    private GetUserFinancialsUseCase getUserFinancialsUseCase;
+    private GetUserAntiScrollStatsUseCase getUserAntiScrollStatsUseCase;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -36,13 +48,21 @@ class AdminUserControllerTest {
         listBackofficeUsersUseCase = mock(ListBackofficeUsersUseCase.class);
         getAntiScrollDashboardUseCase = mock(GetAntiScrollDashboardUseCase.class);
         antiScrollConfigRepository = mock(com.huly.backend.domain.repository.extension.AntiScrollConfigRepository.class);
+        getUserActivitiesUseCase = mock(GetUserActivitiesUseCase.class);
+        getUserAiDiagnosticsUseCase = mock(GetUserAiDiagnosticsUseCase.class);
+        getUserFinancialsUseCase = mock(GetUserFinancialsUseCase.class);
+        getUserAntiScrollStatsUseCase = mock(GetUserAntiScrollStatsUseCase.class);
 
         when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
 
         AdminUserController controller = new AdminUserController(
                 listBackofficeUsersUseCase,
                 getAntiScrollDashboardUseCase,
-                antiScrollConfigRepository
+                antiScrollConfigRepository,
+                getUserActivitiesUseCase,
+                getUserAiDiagnosticsUseCase,
+                getUserFinancialsUseCase,
+                getUserAntiScrollStatsUseCase
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -197,5 +217,60 @@ class AdminUserControllerTest {
                 .andExpect(status().isOk());
 
         verify(antiScrollConfigRepository).save(argThat(c -> c.getId() == 1L && c.getDefaultPauseIntervalMinutes() == 15));
+    }
+
+    @Test
+    void getUserActivities_shouldReturnActivities() throws Exception {
+        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null);
+        when(getUserActivitiesUseCase.execute(any())).thenReturn(result);
+
+        mockMvc.perform(get("/api/admin/users/2/statistics/activities"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.todayActivitiesCount").value(5));
+    }
+
+    @Test
+    void getUserAiDiagnostics_shouldReturnAiDiagnostics() throws Exception {
+        GetUserAiDiagnosticsResponse result = new GetUserAiDiagnosticsResponse(java.util.List.of(), java.util.List.of(), null, null, null, null, null, 0, null, null, null, null, null);
+        when(getUserAiDiagnosticsUseCase.execute(any())).thenReturn(result);
+
+        mockMvc.perform(get("/api/admin/users/2/statistics/ai"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aiMemories").isArray());
+    }
+
+    @Test
+    void getUserFinancials_shouldReturnFinancials() throws Exception {
+        GetUserFinancialsResponse result = new GetUserFinancialsResponse(java.util.List.of(), java.math.BigDecimal.TEN);
+        when(getUserFinancialsUseCase.execute(any())).thenReturn(result);
+
+        mockMvc.perform(get("/api/admin/users/2/statistics/finance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalEarnings").value(10));
+    }
+
+    @Test
+    void getUserAntiScrollStats_shouldReturnStats() throws Exception {
+        GetUserAntiScrollStatsResponse result = new GetUserAntiScrollStatsResponse(
+                true,
+                true,
+                "instagram.com",
+                300,
+                500,
+                java.util.Map.of("current_0", 100),
+                List.of(new TopAppStats("instagram.com", 300))
+        );
+        when(getUserAntiScrollStatsUseCase.execute(any())).thenReturn(result);
+
+        mockMvc.perform(get("/api/admin/users/2/statistics/antiscroll"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.antiScrollEnabled").value(true))
+                .andExpect(jsonPath("$.dataSharingConsent").value(true))
+                .andExpect(jsonPath("$.mostUsedApp").value("instagram.com"))
+                .andExpect(jsonPath("$.mostUsedAppActiveSeconds").value(300))
+                .andExpect(jsonPath("$.totalScrollTimeSeconds").value(500))
+                .andExpect(jsonPath("$.dailyScrollTimeSeconds.current_0").value(100))
+                .andExpect(jsonPath("$.topApps[0].domain").value("instagram.com"))
+                .andExpect(jsonPath("$.topApps[0].totalActiveSeconds").value(300));
     }
 }

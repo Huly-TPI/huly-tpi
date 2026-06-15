@@ -96,6 +96,30 @@ class EmotionalEventRepositoryImplTest {
         assertThat(repository.findRecentRecommendationHistoryByUserId(null, 20)).isEmpty();
     }
 
+    @Test
+    void findByUserId_shouldReturnMappedList() {
+        when(emotionalEventJpaRepository.findByUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(entity()));
+
+        List<EmotionalEvent> result = repository.findByUserId(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(10L);
+        assertThat(result.get(0).getUserId()).isEqualTo(1L);
+        verify(emotionalEventJpaRepository).findByUserIdOrderByCreatedAtDesc(1L);
+    }
+
+    @Test
+    void findRecommendationEventsByUserId_shouldReturnMappedList() {
+        when(emotionalEventJpaRepository.findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(1L))
+                .thenReturn(List.of(entity()));
+
+        List<EmotionalEvent> result = repository.findRecommendationEventsByUserId(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getRecommendationDecision()).isEqualTo(RecommendationDecision.ACCEPTED);
+        verify(emotionalEventJpaRepository).findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(1L);
+    }
+
     private EmotionalEvent domain() {
         Instant now = Instant.now();
         return EmotionalEvent.builder()

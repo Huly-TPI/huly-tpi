@@ -7,9 +7,17 @@ import React from 'react'
 
 vi.mock('../../api/admin', () => ({
   getUsers: vi.fn(),
+  getUserActivities: vi.fn(),
+  getUserAiDiagnostics: vi.fn(),
+  getUserFinancials: vi.fn(),
+  getUserAntiScroll: vi.fn(),
 }))
 
 const mockedGetUsers = vi.mocked(adminApi.getUsers)
+const mockedGetUserActivities = vi.mocked(adminApi.getUserActivities)
+const mockedGetUserAiDiagnostics = vi.mocked(adminApi.getUserAiDiagnostics)
+const mockedGetUserFinancials = vi.mocked(adminApi.getUserFinancials)
+const mockedGetUserAntiScroll = vi.mocked(adminApi.getUserAntiScroll)
 
 const mockUsers = [
   {
@@ -21,29 +29,6 @@ const mockUsers = [
     birthDate: '2000-01-01',
     antiScrollEnabled: true,
     dataSharingConsent: true,
-    mostUsedApp: 'instagram.com',
-    mostUsedAppActiveSeconds: 3600,
-    totalScrollTimeSeconds: 5000,
-    dailyScrollTimeSeconds: {
-      current_0: 0,
-      current_1: 1000,
-      current_2: 1000,
-      current_3: 1000,
-      current_4: 1000,
-      current_5: 500,
-      current_6: 500,
-      previous_0: 0,
-      previous_1: 1000,
-      previous_2: 1000,
-      previous_3: 1000,
-      previous_4: 1000,
-      previous_5: 500,
-      previous_6: 500,
-    },
-    topApps: [
-      { domain: 'instagram.com', totalActiveSeconds: 3600 },
-      { domain: 'twitter.com', totalActiveSeconds: 1000 },
-    ],
   },
   {
     id: 3,
@@ -54,15 +39,58 @@ const mockUsers = [
     birthDate: null,
     antiScrollEnabled: false,
     dataSharingConsent: false,
-    mostUsedApp: null,
-    mostUsedAppActiveSeconds: 0,
-    totalScrollTimeSeconds: 0,
   },
 ]
+
+const mockAntiScrollStats = {
+  antiScrollEnabled: true,
+  dataSharingConsent: true,
+  mostUsedApp: 'instagram.com',
+  mostUsedAppActiveSeconds: 3600,
+  totalScrollTimeSeconds: 5000,
+  dailyScrollTimeSeconds: {
+    current_0: 0,
+    current_1: 1000,
+    current_2: 1000,
+    current_3: 1000,
+    current_4: 1000,
+    current_5: 500,
+    current_6: 500,
+    previous_0: 0,
+    previous_1: 1000,
+    previous_2: 1000,
+    previous_3: 1000,
+    previous_4: 1000,
+    previous_5: 500,
+    previous_6: 500,
+  },
+  topApps: [
+    { domain: 'instagram.com', totalActiveSeconds: 3600 },
+    { domain: 'twitter.com', totalActiveSeconds: 1000 },
+  ],
+}
 
 describe('useUsers', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockedGetUserActivities.mockResolvedValue({
+      activitySessions: [],
+      todayActivitiesCount: 0,
+      favoriteActivity: null,
+      averageSessionsText: 'Sin registros',
+      activityDistribution: {}
+    })
+    mockedGetUserAiDiagnostics.mockResolvedValue({
+      aiMemories: [],
+      emotionalEvents: [],
+      preferredName: null,
+      communicationStyle: null
+    })
+    mockedGetUserFinancials.mockResolvedValue({
+      paymentEvents: [],
+      totalEarnings: 0
+    })
+    mockedGetUserAntiScroll.mockResolvedValue(mockAntiScrollStats)
   })
 
   it('carga los usuarios al montar', async () => {
@@ -121,8 +149,13 @@ describe('useUsers', () => {
 
     expect(result.current.selectedUser).toBeDefined()
     expect(result.current.selectedUser?.name).toBe('John Doe')
-    expect(result.current.hasUsageData).toBe(true)
 
+    act(() => {
+      result.current.setActiveTab('antiscroll')
+    })
+    await waitFor(() => expect(result.current.antiscrollLoading).toBe(false))
+
+    expect(result.current.hasUsageData).toBe(true)
     expect(result.current.getDailyTime('0')).toBe(0)
 
     act(() => {
@@ -150,6 +183,11 @@ describe('useUsers', () => {
     const { result } = renderHook(() => useUsers(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
+
+    act(() => {
+      result.current.setActiveTab('antiscroll')
+    })
+    await waitFor(() => expect(result.current.antiscrollLoading).toBe(false))
 
     expect(result.current.filteredTotalTime).toBe(5000)
     expect(result.current.domainList).toHaveLength(3)
@@ -181,5 +219,75 @@ describe('useUsers', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBe('no se pudieron cargar los usuarios')
+  })
+
+  it('realiza lazy loading de estadísticas según la pestaña activa y filtra por timeframe independientemente', async () => {
+    mockedGetUsers.mockResolvedValueOnce(mockUsers)
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
+        <Routes>
+          <Route path="/backoffice/usuarios/:id" element={children} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    const { result } = renderHook(() => useUsers(), { wrapper })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(mockedGetUserActivities).toHaveBeenCalledWith(2, 'total')
+    expect(mockedGetUserAiDiagnostics).not.toHaveBeenCalled()
+    expect(mockedGetUserFinancials).not.toHaveBeenCalled()
+    expect(mockedGetUserAntiScroll).not.toHaveBeenCalled()
+
+    vi.clearAllMocks()
+
+    act(() => {
+      result.current.setActiveTab('ai')
+    })
+    await waitFor(() => expect(result.current.aiLoading).toBe(false))
+    expect(mockedGetUserAiDiagnostics).toHaveBeenCalledWith(2)
+    expect(mockedGetUserActivities).not.toHaveBeenCalled()
+    expect(mockedGetUserFinancials).not.toHaveBeenCalled()
+    expect(mockedGetUserAntiScroll).not.toHaveBeenCalled()
+
+    vi.clearAllMocks()
+
+    act(() => {
+      result.current.setActiveTab('finance')
+    })
+    await waitFor(() => expect(result.current.financialsLoading).toBe(false))
+    expect(mockedGetUserFinancials).toHaveBeenCalledWith(2)
+    expect(mockedGetUserActivities).not.toHaveBeenCalled()
+    expect(mockedGetUserAiDiagnostics).not.toHaveBeenCalled()
+    expect(mockedGetUserAntiScroll).not.toHaveBeenCalled()
+
+    vi.clearAllMocks()
+
+    act(() => {
+      result.current.setActiveTab('antiscroll')
+    })
+    await waitFor(() => expect(result.current.antiscrollLoading).toBe(false))
+    expect(mockedGetUserAntiScroll).toHaveBeenCalledWith(2)
+    expect(mockedGetUserActivities).not.toHaveBeenCalled()
+    expect(mockedGetUserAiDiagnostics).not.toHaveBeenCalled()
+    expect(mockedGetUserFinancials).not.toHaveBeenCalled()
+
+    vi.clearAllMocks()
+
+    act(() => {
+      result.current.setActivityTimeframe('week')
+    })
+    expect(mockedGetUserActivities).not.toHaveBeenCalled()
+
+    act(() => {
+      result.current.setActiveTab('usage')
+    })
+    await waitFor(() => expect(result.current.activitiesLoading).toBe(false))
+    expect(mockedGetUserActivities).toHaveBeenCalledWith(2, 'week')
+    expect(mockedGetUserAiDiagnostics).not.toHaveBeenCalled()
+    expect(mockedGetUserFinancials).not.toHaveBeenCalled()
+    expect(mockedGetUserAntiScroll).not.toHaveBeenCalled()
   })
 })

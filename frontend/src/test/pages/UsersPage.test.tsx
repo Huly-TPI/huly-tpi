@@ -3,18 +3,71 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import UsersPage from '../../pages/Backoffice/UsersPage'
+import UserDetailPage from '../../pages/Backoffice/UserDetailPage'
 import * as adminApi from '../../api/admin'
 
 vi.mock('../../api/admin', () => ({
   getUsers: vi.fn(),
   getAntiScrollDashboard: vi.fn(),
+  getUserActivities: vi.fn(),
+  getUserAiDiagnostics: vi.fn(),
+  getUserFinancials: vi.fn(),
+  getUserAntiScroll: vi.fn(),
 }))
 
 const mockedGetUsers = vi.mocked(adminApi.getUsers)
+const mockedGetUserActivities = vi.mocked(adminApi.getUserActivities)
+const mockedGetUserAiDiagnostics = vi.mocked(adminApi.getUserAiDiagnostics)
+const mockedGetUserFinancials = vi.mocked(adminApi.getUserFinancials)
+const mockedGetUserAntiScroll = vi.mocked(adminApi.getUserAntiScroll)
 
 describe('UsersPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockedGetUserActivities.mockResolvedValue({
+      activitySessions: [],
+      todayActivitiesCount: 0,
+      favoriteActivity: null,
+      averageSessionsText: 'Sin registros',
+      activityDistribution: {}
+    })
+    mockedGetUserAiDiagnostics.mockResolvedValue({
+      aiMemories: [],
+      emotionalEvents: [],
+      preferredName: null,
+      communicationStyle: null
+    })
+    mockedGetUserFinancials.mockResolvedValue({
+      paymentEvents: [],
+      totalEarnings: 0
+    })
+    mockedGetUserAntiScroll.mockResolvedValue({
+      antiScrollEnabled: true,
+      dataSharingConsent: true,
+      mostUsedApp: 'instagram.com',
+      mostUsedAppActiveSeconds: 3600,
+      totalScrollTimeSeconds: 5000,
+      dailyScrollTimeSeconds: {
+        current_0: 0,
+        current_1: 1000,
+        current_2: 1000,
+        current_3: 1000,
+        current_4: 1000,
+        current_5: 500,
+        current_6: 500,
+        previous_0: 0,
+        previous_1: 1000,
+        previous_2: 1000,
+        previous_3: 1000,
+        previous_4: 1000,
+        previous_5: 500,
+        previous_6: 500,
+      },
+      topApps: [
+        { domain: 'instagram.com', totalActiveSeconds: 3600 },
+        { domain: 'twitter.com', totalActiveSeconds: 1000 },
+      ],
+    })
   })
 
   it('muestra el estado cargando inicialmente', () => {
@@ -28,7 +81,7 @@ describe('UsersPage', () => {
   })
 
   it('renderiza la lista de usuarios correctamente', async () => {
-    mockedGetUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValue([
       {
         id: 2,
         name: 'John Doe',
@@ -75,7 +128,7 @@ describe('UsersPage', () => {
 
   it('filtra usuarios por busqueda', async () => {
     const user = userEvent.setup()
-    mockedGetUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValue([
       {
         id: 2,
         name: 'John Doe',
@@ -123,7 +176,7 @@ describe('UsersPage', () => {
 
   it('navega a detalle al hacer click en el ojo y regresa', async () => {
     const user = userEvent.setup()
-    mockedGetUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValue([
       {
         id: 2,
         name: 'John Doe',
@@ -159,7 +212,7 @@ describe('UsersPage', () => {
       <MemoryRouter initialEntries={['/backoffice/usuarios']}>
         <Routes>
           <Route path="/backoffice/usuarios" element={<UsersPage />} />
-          <Route path="/backoffice/usuarios/:id" element={<UsersPage />} />
+          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
         </Routes>
       </MemoryRouter>
     )
@@ -171,9 +224,13 @@ describe('UsersPage', () => {
     const detailBtn = screen.getByLabelText('Ver detalles de John Doe')
     await user.click(detailBtn)
 
-    expect(screen.getByText('Detalle de usuario')).toBeInTheDocument()
+    expect(await screen.findByText('Detalle de usuario')).toBeInTheDocument()
     expect(screen.getByText('john@example.com')).toBeInTheDocument()
-    expect(screen.getAllByText('instagram.com')[0]).toBeInTheDocument()
+
+    const antiscrollTab = screen.getByRole('button', { name: /Antiscroll/i })
+    await user.click(antiscrollTab)
+
+    expect(await screen.findByText('instagram.com')).toBeInTheDocument()
 
     const backBtn = screen.getByLabelText('volver')
     await user.click(backBtn)
@@ -183,7 +240,7 @@ describe('UsersPage', () => {
   })
 
   it('no muestra las estadísticas si el usuario no tiene habilitado antiscroll', async () => {
-    mockedGetUsers.mockResolvedValueOnce([
+    mockedGetUsers.mockResolvedValue([
       {
         id: 2,
         name: 'John Doe',
@@ -202,16 +259,12 @@ describe('UsersPage', () => {
     render(
       <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
         <Routes>
-          <Route path="/backoffice/usuarios/:id" element={<UsersPage />} />
+          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
         </Routes>
       </MemoryRouter>
     )
 
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument()
-    })
-
-    expect(screen.getByText('Detalle de usuario')).toBeInTheDocument()
+    expect(await screen.findByText('Detalle de usuario')).toBeInTheDocument()
     expect(screen.queryByText('Tiempo scrolleando por día')).not.toBeInTheDocument()
     expect(screen.queryByText('Tiempo en cada dominio')).not.toBeInTheDocument()
   })

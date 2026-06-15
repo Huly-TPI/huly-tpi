@@ -154,4 +154,23 @@ class VectorMemoryPolicyTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("query is required");
     }
+
+    @Test
+    void shouldRemember_shouldBypassFiltersForStructuralChatbotMemories() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.CHATBOT,
+                "challenge-decision-1",
+                "CHALLENGE_DECISION",
+                "CHALLENGE_DECISION",
+                "El usuario rechazo el reto: Mirá a tu alrededor.",
+                "conv-1",
+                null,
+                null
+        );
+
+        // Even though this content doesn't contain standard chatbot signals like "me llamo",
+        // it should still be remembered because it's a structural memory (contentType = "CHALLENGE_DECISION")
+        assertThat(policy.shouldRemember(command, command.content())).isTrue();
+    }
 }

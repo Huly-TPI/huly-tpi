@@ -9,10 +9,15 @@ import com.huly.backend.domain.model.vector.SearchVectorMemoriesQuery;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
+import com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand;
 import com.huly.backend.domain.provider.VectorMemoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,6 +51,8 @@ public class UserVectorMemoryService {
     private final VectorMemoryService vectorMemoryService;
     private final VectorMemoryProperties vectorMemoryProperties;
     private final UserProfileFactExtractor userProfileFactExtractor;
+    private final ObjectProvider<ChatModel> chatModelProvider;
+    private final JdbcTemplate jdbcTemplate;
 
     public List<VectorMemory> findRelevantUserMemories(Long userId, String query) {
         return findRelevantUserMemoriesBySources(userId, ALL_USER_MEMORY_SOURCES, query);
@@ -364,11 +371,100 @@ public class UserVectorMemoryService {
     private void saveMemory(SaveVectorMemoryCommand command) {
         try {
             vectorMemoryService.saveMemory(command);
+            if (command != null && command.userId() != null && !"PERSONALITY_SUMMARY".equals(command.contentType())) {
+                CompletableFuture.runAsync(() -> {
+                    generateAndSavePersonalitySummary(command.userId());
+                });
+            }
         } catch (Exception e) {
             log.warn("No se pudo guardar memoria vectorial userId={} sourceType={}",
                     command != null ? command.userId() : null,
                     command != null ? command.sourceType() : null,
                     e);
+        }
+    }
+
+    public void deletePersonalitySummary(Long userId) {
+        try {
+            vectorMemoryService.deleteMemories(new DeleteVectorMemoryCommand(
+                    userId,
+                    VectorMemorySource.CHATBOT,
+                    "personality-summary"
+            ));
+        } catch (Exception e) {
+            log.warn("Error deleting old personality summary: {}", e.getMessage());
+        }
+    }
+
+    public List<String> getAllMemoryContents(Long userId) {
+        try {
+            String sql = "SELECT content FROM vector_store WHERE metadata ->> 'userId' = ? AND COALESCE(metadata ->> 'deleted', 'false') = 'false' AND (metadata ->> 'contentType' IS NULL OR metadata ->> 'contentType' != 'PERSONALITY_SUMMARY')";
+            return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("content"), userId.toString());
+        } catch (Exception e) {
+            log.warn("Error getting all memory contents for userId={}: {}", userId, e.getMessage());
+            return List.of();
+        }
+    }
+
+    private void generateAndSavePersonalitySummary(Long userId) {
+        try {
+            List<String> contents = getAllMemoryContents(userId);
+            if (contents.isEmpty()) {
+                log.info("No hay memorias suficientes para generar resumen de personalidad para userId={}", userId);
+                return;
+            }
+
+            String memoriesJoined = String.join("\n- ", contents);
+            if (memoriesJoined.length() > 4000) {
+                memoriesJoined = memoriesJoined.substring(0, 4000) + "...";
+            }
+
+            String systemPrompt = """
+                Eres un psicólogo clínico experto analizando el comportamiento de un usuario en base a sus registros de interacción con un asistente de bienestar.
+                Tu tarea es generar un análisis del perfil psicológico/conductual y receptividades del usuario en formato JSON.
+                
+                Debes responder estrictamente con un objeto JSON válido estructurado con las siguientes claves (no agregues introducciones, explicaciones ni formato adicional, solo el JSON puro):
+                {
+                  "summary": "Un párrafo corto (de 3 a 4 oraciones como máximo) en español sobre el perfil psicológico y conductual del usuario. Sé empático, profesional y constructivo. IMPORTANTE: No comiences el texto con títulos, negritas ni asteriscos (no uses '**Perfil Psicológico y Conductual**' ni similar). Tampoco menciones términos técnicos (como 'logs', 'memoria', 'vectores', etc.).",
+                  "accepted": "Una frase muy corta y concisa de 3 a 5 palabras en español que generalice lo que el usuario suele aceptar (ej. 'actividades relajantes', 'retos sencillos al aire libre').",
+                  "rejected": "Una frase muy corta y concisa de 3 a 5 palabras en español que generalice lo que el usuario suele rechazar o ignorar (ej. 'ejercicios físicos exigentes', 'interacciones sociales')."
+                }
+                """;
+
+            String userMessage = "Analiza las siguientes memorias del usuario para estructurar el JSON:\n\n- " + memoriesJoined;
+
+            ChatModel chat = chatModelProvider.getIfAvailable();
+            if (chat == null) {
+                log.warn("ChatModel no disponible. No se puede generar perfil de personalidad.");
+                return;
+            }
+
+            org.springframework.ai.chat.model.ChatResponse response = chat.call(new org.springframework.ai.chat.prompt.Prompt(List.of(
+                new org.springframework.ai.chat.messages.SystemMessage(systemPrompt),
+                new org.springframework.ai.chat.messages.UserMessage(userMessage)
+            )));
+
+            if (response != null && response.getResult() != null && response.getResult().getOutput() != null) {
+                String summary = response.getResult().getOutput().getText();
+                if (summary != null && !summary.isBlank()) {
+                    deletePersonalitySummary(userId);
+
+                    saveMemory(new SaveVectorMemoryCommand(
+                            userId,
+                            VectorMemorySource.CHATBOT,
+                            "personality-summary",
+                            "PERSONALITY_SUMMARY",
+                            "PERSONALITY_SUMMARY",
+                            summary.trim(),
+                            null,
+                            null,
+                            Map.of("contentType", "PERSONALITY_SUMMARY", "feature", "PERSONALITY_SUMMARY")
+                    ));
+                    log.info("Perfil de personalidad generado e insertado para userId={}", userId);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error generando perfil de personalidad para userId={}", userId, e);
         }
     }
 

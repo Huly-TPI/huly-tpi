@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getUsers, UserResponse } from '../../api/admin'
+import {
+  getUsers,
+  UserResponse,
+  getUserActivities,
+  getUserAiDiagnostics,
+  getUserFinancials,
+  getUserAntiScroll,
+  UserActivitiesResponse,
+  UserAiDiagnosticsResponse,
+  UserFinancialsResponse,
+  UserAntiScrollResponse
+} from '../../api/admin'
 
 const DAYS = [
   { key: '0', label: 'Lunes' },
@@ -23,6 +34,29 @@ export function useUsers() {
   const [selectedWeek, setSelectedWeek] = useState('current')
   const [selectedDay, setSelectedDay] = useState('all')
 
+  const [activeTab, setActiveTab] = useState<'antiscroll' | 'usage' | 'ai' | 'finance'>('usage')
+
+  const [activities, setActivities] = useState<UserActivitiesResponse | null>(null)
+  const [activitiesLoading, setActivitiesLoading] = useState(false)
+  const [activitiesError, setActivitiesError] = useState<string | null>(null)
+
+  const [aiDiagnostics, setAiDiagnostics] = useState<UserAiDiagnosticsResponse | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+
+  const [financials, setFinancials] = useState<UserFinancialsResponse | null>(null)
+  const [financialsLoading, setFinancialsLoading] = useState(false)
+  const [financialsError, setFinancialsError] = useState<string | null>(null)
+
+  const [antiscrollStats, setAntiscrollStats] = useState<UserAntiScrollResponse | null>(null)
+  const [antiscrollLoading, setAntiscrollLoading] = useState(false)
+  const [antiscrollError, setAntiscrollError] = useState<string | null>(null)
+
+  const [activityTimeframe, setActivityTimeframe] = useState<'total' | 'month' | 'week' | 'today'>('total')
+
+  const selectedUserId = id ? Number(id) : null
+  const selectedUser = users.find((u) => u.id === selectedUserId)
+
   useEffect(() => {
     getUsers()
       .then((data) => {
@@ -37,28 +71,111 @@ export function useUsers() {
       })
   }, [])
 
+  useEffect(() => {
+    // Clear data when user changes
+    setActivities(null)
+    setAiDiagnostics(null)
+    setFinancials(null)
+    setAntiscrollStats(null)
+    setActivitiesError(null)
+    setAiError(null)
+    setFinancialsError(null)
+    setAntiscrollError(null)
+    setActivityTimeframe('total')
+    setActiveTab('usage')
+  }, [selectedUserId])
+
+  useEffect(() => {
+    if (selectedUserId && activeTab === 'usage') {
+      setActivitiesLoading(true)
+      setActivitiesError(null)
+      getUserActivities(selectedUserId, activityTimeframe)
+        .then((data) => {
+          setActivities(data)
+        })
+        .catch((err) => {
+          console.error(err)
+          setActivitiesError('No se pudieron cargar las actividades del usuario')
+        })
+        .finally(() => {
+          setActivitiesLoading(false)
+        })
+    }
+  }, [selectedUserId, activityTimeframe, activeTab])
+
+  useEffect(() => {
+    if (selectedUserId && activeTab === 'ai') {
+      setAiLoading(true)
+      setAiError(null)
+      getUserAiDiagnostics(selectedUserId)
+        .then((data) => {
+          setAiDiagnostics(data)
+        })
+        .catch((err) => {
+          console.error(err)
+          setAiError('No se pudieron cargar las métricas de la IA')
+        })
+        .finally(() => {
+          setAiLoading(false)
+        })
+    }
+  }, [selectedUserId, activeTab])
+
+  useEffect(() => {
+    if (selectedUserId && activeTab === 'finance') {
+      setFinancialsLoading(true)
+      setFinancialsError(null)
+      getUserFinancials(selectedUserId)
+        .then((data) => {
+          setFinancials(data)
+        })
+        .catch((err) => {
+          console.error(err)
+          setFinancialsError('No se pudieron cargar las métricas financieras')
+        })
+        .finally(() => {
+          setFinancialsLoading(false)
+        })
+    }
+  }, [selectedUserId, activeTab])
+
+  useEffect(() => {
+    if (selectedUserId && activeTab === 'antiscroll') {
+      setAntiscrollLoading(true)
+      setAntiscrollError(null)
+      getUserAntiScroll(selectedUserId)
+        .then((data) => {
+          setAntiscrollStats(data)
+        })
+        .catch((err) => {
+          console.error(err)
+          setAntiscrollError('No se pudieron cargar las métricas de Antiscroll')
+        })
+        .finally(() => {
+          setAntiscrollLoading(false)
+        })
+    }
+  }, [selectedUserId, activeTab])
+
   const filteredUsers = users.filter(
     (u) =>
       (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
       (u.email && u.email.toLowerCase().includes(search.toLowerCase()))
   )
 
-  const selectedUserId = id ? Number(id) : null
-  const selectedUser = users.find((u) => u.id === selectedUserId)
-
   const getDailyTime = (dayKey: string) => {
-    if (!selectedUser || !selectedUser.dailyScrollTimeSeconds) return 0
+    if (!antiscrollStats || !antiscrollStats.dailyScrollTimeSeconds) return 0
     const key = `${selectedWeek === 'current' ? 'current' : 'previous'}_${dayKey}`
-    return selectedUser.dailyScrollTimeSeconds[key] || 0
+    return antiscrollStats.dailyScrollTimeSeconds[key] || 0
   }
 
-  const currentWeekTotal = DAYS.reduce((sum, day) => sum + (selectedUser?.dailyScrollTimeSeconds?.[`current_${day.key}`] || 0), 0)
-  const previousWeekTotal = DAYS.reduce((sum, day) => sum + (selectedUser?.dailyScrollTimeSeconds?.[`previous_${day.key}`] || 0), 0)
+  const currentWeekTotal = DAYS.reduce((sum, day) => sum + (antiscrollStats?.dailyScrollTimeSeconds?.[`current_${day.key}`] || 0), 0)
+  const previousWeekTotal = DAYS.reduce((sum, day) => sum + (antiscrollStats?.dailyScrollTimeSeconds?.[`previous_${day.key}`] || 0), 0)
   
   const selectedWeekTotal = selectedWeek === 'current' ? currentWeekTotal : previousWeekTotal
 
-  const weekFactor = selectedUser && selectedUser.totalScrollTimeSeconds > 0
-    ? selectedWeekTotal / selectedUser.totalScrollTimeSeconds
+  const weekFactor = antiscrollStats && antiscrollStats.totalScrollTimeSeconds > 0
+    ? selectedWeekTotal / antiscrollStats.totalScrollTimeSeconds
     : 0
 
   let activeFactor = 1.0
@@ -68,14 +185,14 @@ export function useUsers() {
       : 0
   }
 
-  const filteredTotalTime = selectedUser
+  const filteredTotalTime = antiscrollStats
     ? (selectedDay === 'all' ? selectedWeekTotal : getDailyTime(selectedDay))
     : 0
 
   const domainList: { domain: string; seconds: number }[] = []
-  if (selectedUser) {
-    if (selectedUser.topApps && selectedUser.topApps.length > 0) {
-      selectedUser.topApps.forEach((app) => {
+  if (antiscrollStats) {
+    if (antiscrollStats.topApps && antiscrollStats.topApps.length > 0) {
+      antiscrollStats.topApps.forEach((app) => {
         const scaledSeconds = Math.round(app.totalActiveSeconds * weekFactor * activeFactor)
         if (scaledSeconds > 0) {
           domainList.push({
@@ -84,10 +201,10 @@ export function useUsers() {
           })
         }
       })
-    } else if (selectedUser.mostUsedApp) {
-      const app1Seconds = Math.round(selectedUser.mostUsedAppActiveSeconds * weekFactor * activeFactor)
+    } else if (antiscrollStats.mostUsedApp) {
+      const app1Seconds = Math.round(antiscrollStats.mostUsedAppActiveSeconds * weekFactor * activeFactor)
       domainList.push({
-        domain: selectedUser.mostUsedApp,
+        domain: antiscrollStats.mostUsedApp,
         seconds: app1Seconds,
       })
     }
@@ -103,7 +220,7 @@ export function useUsers() {
   }
 
   const maxDomainTime = domainList.length > 0 ? Math.max(...domainList.map((d) => d.seconds)) : 1
-  const hasUsageData = selectedUser ? (!!selectedUser.mostUsedApp || selectedUser.totalScrollTimeSeconds > 0) : false
+  const hasUsageData = antiscrollStats ? (!!antiscrollStats.mostUsedApp || antiscrollStats.totalScrollTimeSeconds > 0) : false
 
   const handleBack = () => {
     setSelectedWeek('current')
@@ -131,5 +248,21 @@ export function useUsers() {
     hasUsageData,
     handleBack,
     navigate,
+    activityTimeframe,
+    setActivityTimeframe,
+    activeTab,
+    setActiveTab,
+    activities,
+    activitiesLoading,
+    activitiesError,
+    aiDiagnostics,
+    aiLoading,
+    aiError,
+    financials,
+    financialsLoading,
+    financialsError,
+    antiscrollStats,
+    antiscrollLoading,
+    antiscrollError,
   }
 }
