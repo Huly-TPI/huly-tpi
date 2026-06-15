@@ -14,5 +14,6 @@ public interface UserRepository {
     void saveLeadDetail(Long userId, String nickname, SourceAction sourceAction);
     void addCoins(Long userId, int amount);
     int getCoins(Long userId);
+    int debitCoins(Long userId, int amount);
     List<AppUser> findAllNonAdmins();
 }

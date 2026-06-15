@@ -8,6 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CoinServiceTest {
@@ -20,5 +22,18 @@ class CoinServiceTest {
         coinService.credit(42L, 500);
 
         verify(userRepository).addCoins(42L, 500);
+    }
+
+    @Test
+    void debit_shouldCallDebitCoins_whenBalanceIsSufficiente() {
+        when(userRepository.debitCoins(42L, 500)).thenReturn(1);
+        coinService.debit(42L, 500);
+        verify(userRepository).debitCoins(42L, 500);
+    }
+
+    @Test
+    void debit_shouldThrowException_whenBalanceIsInsufficient() {
+        when(userRepository.debitCoins(42L, 500)).thenReturn(0);
+        assertThatThrownBy(() -> coinService.debit(42L, 500)).isInstanceOf(RuntimeException.class);
     }
 }

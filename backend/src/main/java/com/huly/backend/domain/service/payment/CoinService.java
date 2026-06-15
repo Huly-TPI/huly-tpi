@@ -13,4 +13,12 @@ public class CoinService {
     public void credit(Long userId, int amount) {
         userRepository.addCoins(userId, amount);
     }
+
+    public void debit(Long userId, int amount) {
+        int rowsAffected = userRepository.debitCoins(userId, amount);
+        if (rowsAffected == 0) {
+            throw new RuntimeException("Saldo de monedas insuficiente");
+        }
+    }
+    
 }
