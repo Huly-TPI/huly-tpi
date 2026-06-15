@@ -1,6 +1,6 @@
 import { api } from './client'
 
-export interface BackofficeUserResponse {
+export interface UserResponse {
   id: number
   name: string
   email: string
@@ -30,8 +30,8 @@ export interface AntiScrollDashboardResponse {
   topUsedApps: TopAppResponse[]
 }
 
-export const getBackofficeUsers = async (): Promise<BackofficeUserResponse[]> => {
-  return api.get<BackofficeUserResponse[]>('/admin/users')
+export const getUsers = async (): Promise<UserResponse[]> => {
+  return api.get<UserResponse[]>('/admin/users')
 }
 
 export const getAntiScrollDashboard = async (): Promise<AntiScrollDashboardResponse> => {

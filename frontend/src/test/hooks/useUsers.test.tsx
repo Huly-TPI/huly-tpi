@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { useUsersBackoffice } from '../../hooks/backoffice/useUsersBackoffice'
+import { useUsers } from '../../hooks/backoffice/useUsers'
 import * as adminApi from '../../api/admin'
 import React from 'react'
 
 vi.mock('../../api/admin', () => ({
-  getBackofficeUsers: vi.fn(),
+  getUsers: vi.fn(),
 }))
 
-const mockedGetBackofficeUsers = vi.mocked(adminApi.getBackofficeUsers)
+const mockedGetUsers = vi.mocked(adminApi.getUsers)
 
 const mockUsers = [
   {
@@ -60,13 +60,13 @@ const mockUsers = [
   },
 ]
 
-describe('useUsersBackoffice', () => {
+describe('useUsers', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('carga los usuarios al montar', async () => {
-    mockedGetBackofficeUsers.mockResolvedValueOnce(mockUsers)
+    mockedGetUsers.mockResolvedValueOnce(mockUsers)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter>
@@ -74,7 +74,7 @@ describe('useUsersBackoffice', () => {
       </MemoryRouter>
     )
 
-    const { result } = renderHook(() => useUsersBackoffice(), { wrapper })
+    const { result } = renderHook(() => useUsers(), { wrapper })
 
     expect(result.current.loading).toBe(true)
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -84,7 +84,7 @@ describe('useUsersBackoffice', () => {
   })
 
   it('filtra los usuarios por búsqueda', async () => {
-    mockedGetBackofficeUsers.mockResolvedValueOnce(mockUsers)
+    mockedGetUsers.mockResolvedValueOnce(mockUsers)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter>
@@ -92,7 +92,7 @@ describe('useUsersBackoffice', () => {
       </MemoryRouter>
     )
 
-    const { result } = renderHook(() => useUsersBackoffice(), { wrapper })
+    const { result } = renderHook(() => useUsers(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -105,7 +105,7 @@ describe('useUsersBackoffice', () => {
   })
 
   it('detecta el usuario seleccionado mediante params y calcula estadísticas', async () => {
-    mockedGetBackofficeUsers.mockResolvedValueOnce(mockUsers)
+    mockedGetUsers.mockResolvedValueOnce(mockUsers)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
@@ -115,7 +115,7 @@ describe('useUsersBackoffice', () => {
       </MemoryRouter>
     )
 
-    const { result } = renderHook(() => useUsersBackoffice(), { wrapper })
+    const { result } = renderHook(() => useUsers(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -137,7 +137,7 @@ describe('useUsersBackoffice', () => {
   })
 
   it('calcula los factores y la lista de dominios correctamente según el filtro de semana y día', async () => {
-    mockedGetBackofficeUsers.mockResolvedValueOnce(mockUsers)
+    mockedGetUsers.mockResolvedValueOnce(mockUsers)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
@@ -147,7 +147,7 @@ describe('useUsersBackoffice', () => {
       </MemoryRouter>
     )
 
-    const { result } = renderHook(() => useUsersBackoffice(), { wrapper })
+    const { result } = renderHook(() => useUsers(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -169,7 +169,7 @@ describe('useUsersBackoffice', () => {
   })
 
   it('maneja errores en la API de carga de usuarios', async () => {
-    mockedGetBackofficeUsers.mockRejectedValueOnce(new Error('API Error'))
+    mockedGetUsers.mockRejectedValueOnce(new Error('API Error'))
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter>
@@ -177,7 +177,7 @@ describe('useUsersBackoffice', () => {
       </MemoryRouter>
     )
 
-    const { result } = renderHook(() => useUsersBackoffice(), { wrapper })
+    const { result } = renderHook(() => useUsers(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBe('no se pudieron cargar los usuarios')

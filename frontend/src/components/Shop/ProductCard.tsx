@@ -1,3 +1,4 @@
+import { CurrencyDollarIcon } from '@heroicons/react/24/solid'
 import type { Product } from '../../api/payment'
 
 interface ProductCardProps {
@@ -13,7 +14,7 @@ export function ProductCard({ product, buying, disabled, onBuy }: ProductCardPro
       <div className="flex-1">
         <h2 className="text-xl font-bold text-gray-800 mb-1">{product.name}</h2>
         <div className="flex items-center gap-1 mb-2">
-          <span className="text-yellow-500">🪙</span>
+          <CurrencyDollarIcon className="w-4 h-4 text-yellow-500" />
           <span className="text-yellow-700 font-semibold text-sm">
             {product.coinsAmount.toLocaleString('es-AR')} monedas
           </span>

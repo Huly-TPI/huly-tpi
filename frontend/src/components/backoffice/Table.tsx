@@ -18,7 +18,7 @@ export function Table<T>({ data, columns, keyExtractor, className = '' }: TableP
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="border-b border-gray-100 text-xs font-bold uppercase tracking-wider text-gray-400">
+          <tr className="border-b border-gray-100 dark:border-gray-800 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
             {columns.map((col, idx) => (
               <th key={idx} className={`pb-3 pr-4 ${col.className || ''}`}>
                 {col.header}
@@ -26,9 +26,9 @@ export function Table<T>({ data, columns, keyExtractor, className = '' }: TableP
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 text-sm text-gray-600">
+        <tbody className="divide-y divide-gray-50 dark:divide-gray-800/40 text-sm text-gray-600 dark:text-gray-300">
           {data.map((item) => (
-            <tr key={keyExtractor(item)} className="hover:bg-gray-50/50">
+            <tr key={keyExtractor(item)} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/35">
               {columns.map((col, idx) => (
                 <td key={idx} className={`py-3.5 pr-4 ${col.className || ''}`}>
                   {col.render(item)}
