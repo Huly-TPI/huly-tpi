@@ -101,5 +101,76 @@ class GetUserActivitiesUseCaseTest {
         assertThat(response.activitySessions()).hasSize(2);
     }
 
+    @Test
+    void execute_shouldHandleWeeklyTimeframe_withSingularAndPluralText() {
+        ActivitySession session1 = ActivitySession.builder()
+                .id(1L)
+                .userId(USER_ID)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+        ActivitySession session2 = ActivitySession.builder()
+                .id(2L)
+                .userId(USER_ID)
+                .activityType(ActivityType.DIARIO)
+                .createdAt(Instant.now())
+                .build();
 
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        
+        when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of(session1));
+        when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of(session1));
+        GetUserActivitiesResponse responseSingular = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.WEEK));
+        assertThat(responseSingular.averageSessionsText()).isEqualTo("1 sesión/semana");
+
+        when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of(session1, session2));
+        when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of(session1, session2));
+        GetUserActivitiesResponse responsePlural = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.WEEK));
+        assertThat(responsePlural.averageSessionsText()).isEqualTo("2 sesiones/semana");
+    }
+
+    @Test
+    void execute_shouldHandleMonthlyTimeframe() {
+        Instant now = Instant.now();
+        Instant thirtyDaysAgo = now.minus(30, ChronoUnit.DAYS);
+        ActivitySession oldSession = ActivitySession.builder()
+                .id(1L)
+                .userId(USER_ID)
+                .activityType(ActivityType.DIARIO)
+                .createdAt(thirtyDaysAgo)
+                .build();
+        ActivitySession recentSession = ActivitySession.builder()
+                .id(2L)
+                .userId(USER_ID)
+                .activityType(ActivityType.DIARIO)
+                .createdAt(now)
+                .build();
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of(oldSession, recentSession));
+        when(activitySessionRepository.countByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(1L);
+        when(activitySessionRepository.findOldestSessionByUserId(USER_ID)).thenReturn(Optional.of(oldSession));
+        when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of(recentSession, oldSession));
+
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.MONTH));
+        assertThat(response.averageSessionsText()).contains("sesiones/semana");
+    }
+
+    @Test
+    void execute_shouldHandleTodayTimeframe_withSingularText() {
+        ActivitySession session = ActivitySession.builder()
+                .id(1L)
+                .userId(USER_ID)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of(session));
+        when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of(session));
+
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TODAY));
+        assertThat(response.averageSessionsText()).isEqualTo("1 sesión hoy");
+    }
 }
+

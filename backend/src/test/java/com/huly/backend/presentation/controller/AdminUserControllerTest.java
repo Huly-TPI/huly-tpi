@@ -1,6 +1,8 @@
 package com.huly.backend.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.model.enums.Timeframe;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.admin.AntiScrollDashboardStats;
@@ -109,6 +111,16 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$[0].topApps[0].totalActiveSeconds").value(3600))
                 .andExpect(jsonPath("$[0].coins").value(100))
                 .andExpect(jsonPath("$[0].plan").value("PREMIUM_PLAN"));
+    }
+
+    @Test
+    void getBackofficeUsers_withSearchParam_shouldPassSearchParamToUseCase() throws Exception {
+        when(listBackofficeUsersUseCase.execute("alice")).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/admin/users").param("search", "alice"))
+                .andExpect(status().isOk());
+
+        verify(listBackofficeUsersUseCase).execute("alice");
     }
 
     @Test
@@ -227,31 +239,77 @@ class AdminUserControllerTest {
 
     @Test
     void getUserActivities_shouldReturnActivities() throws Exception {
-        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null);
+        com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse session =
+                new com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse(1L, "RESPIRACION", java.time.Instant.now());
+        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(session), 5L, "RESPIRACION", "1.5", java.util.Map.of("RESPIRACION", 5));
         when(getUserActivitiesUseCase.execute(any())).thenReturn(result);
 
         mockMvc.perform(get("/api/admin/users/2/statistics/activities"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.todayActivitiesCount").value(5));
+                .andExpect(jsonPath("$.todayActivitiesCount").value(5))
+                .andExpect(jsonPath("$.activitySessions[0].id").value(1))
+                .andExpect(jsonPath("$.activitySessions[0].activityType").value("RESPIRACION"))
+                .andExpect(jsonPath("$.favoriteActivity").value("RESPIRACION"))
+                .andExpect(jsonPath("$.averageSessionsText").value("1.5"))
+                .andExpect(jsonPath("$.activityDistribution.RESPIRACION").value(5));
+    }
+
+    @Test
+    void getUserActivities_withSpecificTimeframe_shouldPassConvertedTimeframeToUseCase() throws Exception {
+        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null);
+        when(getUserActivitiesUseCase.execute(eq(new GetUserActivitiesRequest(2L, Timeframe.WEEK)))).thenReturn(result);
+
+        mockMvc.perform(get("/api/admin/users/2/statistics/activities").param("timeframe", "week"))
+                .andExpect(status().isOk());
+
+        verify(getUserActivitiesUseCase).execute(new GetUserActivitiesRequest(2L, Timeframe.WEEK));
+    }
+
+    @Test
+    void getUserActivities_withInvalidTimeframe_shouldReturnInternalServerError() throws Exception {
+        mockMvc.perform(get("/api/admin/users/2/statistics/activities").param("timeframe", "invalid"))
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
     void getUserAiDiagnostics_shouldReturnAiDiagnostics() throws Exception {
-        GetUserAiDiagnosticsResponse result = new GetUserAiDiagnosticsResponse(java.util.List.of(), java.util.List.of(), null, null, null, null, null, 0, null, null, null, null, null);
+        com.huly.backend.domain.useCase.admin.userAiDiagnostics.VectorMemoryResponse memory =
+                new com.huly.backend.domain.useCase.admin.userAiDiagnostics.VectorMemoryResponse("mem-1", "content", "USER", "FACT", "2026-06-16T00:00:00Z");
+        com.huly.backend.domain.useCase.admin.userAiDiagnostics.EmotionalEventResponse event =
+                new com.huly.backend.domain.useCase.admin.userAiDiagnostics.EmotionalEventResponse(
+                        10L, "source", "inputText", "detectedEmotion", 0.9, 0.8, 0.7, 0.6, 0.5, "userGoal", "recommendation", 100L, 200L, "ACCEPTED", 5, "feedbackText", java.time.Instant.now()
+                );
+        GetUserAiDiagnosticsResponse result = new GetUserAiDiagnosticsResponse(
+                java.util.List.of(memory), java.util.List.of(event), "Alice", "style", "summary",
+                java.util.List.of("topic1"), java.util.List.of("strategy1"), 80, "HIGH", java.util.List.of("act1"), java.util.List.of("act2"), "JOY", java.util.Map.of("JOY", 10)
+        );
         when(getUserAiDiagnosticsUseCase.execute(any())).thenReturn(result);
 
         mockMvc.perform(get("/api/admin/users/2/statistics/ai"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.aiMemories").isArray());
+                .andExpect(jsonPath("$.aiMemories[0].id").value("mem-1"))
+                .andExpect(jsonPath("$.aiMemories[0].content").value("content"))
+                .andExpect(jsonPath("$.emotionalEvents[0].id").value(10))
+                .andExpect(jsonPath("$.emotionalEvents[0].inputText").value("inputText"))
+                .andExpect(jsonPath("$.preferredName").value("Alice"))
+                .andExpect(jsonPath("$.receptivityScore").value(80))
+                .andExpect(jsonPath("$.receptivityLabel").value("HIGH"))
+                .andExpect(jsonPath("$.dominantEmotion").value("JOY"));
     }
 
     @Test
     void getUserFinancials_shouldReturnFinancials() throws Exception {
-        GetUserFinancialsResponse result = new GetUserFinancialsResponse(java.util.List.of(), java.math.BigDecimal.TEN);
+        com.huly.backend.domain.useCase.admin.userFinancials.PaymentEventResponse payment =
+                new com.huly.backend.domain.useCase.admin.userFinancials.PaymentEventResponse(
+                        100L, 200L, "product", java.math.BigDecimal.TEN, "ref", 300L, "SUCCESS", 100, "COIN_PACK", java.time.Instant.now()
+                );
+        GetUserFinancialsResponse result = new GetUserFinancialsResponse(java.util.List.of(payment), java.math.BigDecimal.TEN);
         when(getUserFinancialsUseCase.execute(any())).thenReturn(result);
 
         mockMvc.perform(get("/api/admin/users/2/statistics/finance"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentEvents[0].id").value(100))
+                .andExpect(jsonPath("$.paymentEvents[0].productName").value("product"))
                 .andExpect(jsonPath("$.totalEarnings").value(10));
     }
 

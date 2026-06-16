@@ -169,8 +169,96 @@ class VectorMemoryPolicyTest {
                 null
         );
 
-        // Even though this content doesn't contain standard chatbot signals like "me llamo",
-        // it should still be remembered because it's a structural memory (contentType = "CHALLENGE_DECISION")
         assertThat(policy.shouldRemember(command, command.content())).isTrue();
+    }
+
+    @Test
+    void normalizeContent_shouldHandleNullAndMaxLength() {
+        assertThat(policy.normalizeContent(null)).isEmpty();
+
+        properties.setMaxContentLength(5);
+        assertThat(policy.normalizeContent("abcdefgh")).isEqualTo("abcde");
+        properties.setMaxContentLength(500);
+    }
+
+    @Test
+    void validateSaveCommand_shouldThrowOnInvalidInputs() {
+        assertThatThrownBy(() -> policy.validateSaveCommand(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Vector memory command is required");
+
+        SaveVectorMemoryCommand commandNullUser = new SaveVectorMemoryCommand(null, VectorMemorySource.CHATBOT, "id", "src", "type", "content", null, null, null);
+        assertThatThrownBy(() -> policy.validateSaveCommand(commandNullUser))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("userId is required");
+
+        SaveVectorMemoryCommand commandNullSourceType = new SaveVectorMemoryCommand(1L, null, "id", "src", "type", "content", null, null, null);
+        assertThatThrownBy(() -> policy.validateSaveCommand(commandNullSourceType))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("sourceType is required");
+
+        SaveVectorMemoryCommand commandBlankContent = new SaveVectorMemoryCommand(1L, VectorMemorySource.CHATBOT, "id", "src", "type", "   ", null, null, null);
+        assertThatThrownBy(() -> policy.validateSaveCommand(commandBlankContent))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("content is required");
+    }
+
+    @Test
+    void validateAndNormalizeQuery_shouldThrowOnInvalidInputs() {
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Vector memory query is required");
+
+        SearchVectorMemoryQuery nullUser = new SearchVectorMemoryQuery(null, VectorMemorySource.CHATBOT, "query", 5, 0.5);
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(nullUser))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("userId is required");
+
+        SearchVectorMemoryQuery nullSource = new SearchVectorMemoryQuery(1L, null, "query", 5, 0.5);
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(nullSource))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("sourceType is required");
+
+        SearchVectorMemoryQuery nullLimit = new SearchVectorMemoryQuery(1L, VectorMemorySource.CHATBOT, "query", null, 0.5);
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(nullLimit))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("limit must be between");
+
+        SearchVectorMemoryQuery highLimit = new SearchVectorMemoryQuery(1L, VectorMemorySource.CHATBOT, "query", 100, 0.5);
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(highLimit))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("limit must be between");
+
+        SearchVectorMemoryQuery nullThreshold = new SearchVectorMemoryQuery(1L, VectorMemorySource.CHATBOT, "query", 5, null);
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(nullThreshold))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("similarityThreshold must be between");
+
+        SearchVectorMemoryQuery lowThreshold = new SearchVectorMemoryQuery(1L, VectorMemorySource.CHATBOT, "query", 5, -0.1);
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(lowThreshold))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("similarityThreshold must be between");
+
+        SearchVectorMemoryQuery highThreshold = new SearchVectorMemoryQuery(1L, VectorMemorySource.CHATBOT, "query", 5, 1.1);
+        assertThatThrownBy(() -> policy.validateAndNormalizeQuery(highThreshold))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("similarityThreshold must be between");
+    }
+
+    @Test
+    void shouldRemember_shouldUseDefaultPolicy_whenSourcePolicyIsMissing() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.ONBOARDING,
+                null,
+                null,
+                null,
+                "a",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "a")).isFalse();
     }
 }

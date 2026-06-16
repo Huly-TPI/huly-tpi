@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -137,4 +137,105 @@ class ActivitySessionRepositoryImplTest {
         assertThat(result.get(0).getId()).isEqualTo(10L);
         verify(activitySessionJpaRepository).findTop5ByUserIdAndCreatedAtAfterOrderByCreatedAtDesc(userId, start);
     }
+
+    @Test
+    void findByUserIdAndCreatedAtAfter_shouldReturnMappedList() {
+        Long userId = 1L;
+        Instant start = Instant.now().minusSeconds(3600);
+        AppUserEntity userEntity = new AppUserEntity();
+        userEntity.setId(userId);
+        ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
+                .id(10L)
+                .user(userEntity)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+
+        when(activitySessionJpaRepository.findByUserIdAndCreatedAtAfter(userId, start))
+                .thenReturn(List.of(sessionEntity));
+
+        List<ActivitySession> result = activitySessionRepository.findByUserIdAndCreatedAtAfter(userId, start);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(10L);
+        verify(activitySessionJpaRepository).findByUserIdAndCreatedAtAfter(userId, start);
+    }
+
+    @Test
+    void findRecentByUserId_shouldHandleLimitConditions() {
+        Long userId = 1L;
+        AppUserEntity userEntity = new AppUserEntity();
+        userEntity.setId(userId);
+        ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
+                .id(10L)
+                .user(userEntity)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+
+        List<ActivitySession> resultZero = activitySessionRepository.findRecentByUserId(userId, 0);
+        assertThat(resultZero).isEmpty();
+
+        when(activitySessionJpaRepository.findByUserId(eq(userId), any(Pageable.class)))
+                .thenReturn(List.of(sessionEntity));
+        List<ActivitySession> resultTen = activitySessionRepository.findRecentByUserId(userId, 10);
+        assertThat(resultTen).hasSize(1);
+    }
+
+    @Test
+    void findRecentByUserIdAndCreatedAtAfter_shouldHandleLimitConditions() {
+        Long userId = 1L;
+        Instant start = Instant.now().minusSeconds(3600);
+        AppUserEntity userEntity = new AppUserEntity();
+        userEntity.setId(userId);
+        ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
+                .id(10L)
+                .user(userEntity)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+
+        List<ActivitySession> resultZero = activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(userId, start, 0);
+        assertThat(resultZero).isEmpty();
+
+        when(activitySessionJpaRepository.findByUserIdAndCreatedAtAfter(eq(userId), eq(start), any(Pageable.class)))
+                .thenReturn(List.of(sessionEntity));
+        List<ActivitySession> resultTen = activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(userId, start, 10);
+        assertThat(resultTen).hasSize(1);
+    }
+
+    @Test
+    void countByUserIdAndCreatedAtAfter_shouldReturnCount() {
+        Long userId = 1L;
+        Instant start = Instant.now().minusSeconds(3600);
+        when(activitySessionJpaRepository.countByUserIdAndCreatedAtAfter(userId, start)).thenReturn(15L);
+
+        long count = activitySessionRepository.countByUserIdAndCreatedAtAfter(userId, start);
+
+        assertThat(count).isEqualTo(15L);
+        verify(activitySessionJpaRepository).countByUserIdAndCreatedAtAfter(userId, start);
+    }
+
+    @Test
+    void findOldestSessionByUserId_shouldReturnOldest() {
+        Long userId = 1L;
+        AppUserEntity userEntity = new AppUserEntity();
+        userEntity.setId(userId);
+        ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
+                .id(10L)
+                .user(userEntity)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+
+        when(activitySessionJpaRepository.findFirstByUserIdOrderByCreatedAtAsc(userId))
+                .thenReturn(Optional.of(sessionEntity));
+
+        Optional<ActivitySession> result = activitySessionRepository.findOldestSessionByUserId(userId);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(10L);
+        verify(activitySessionJpaRepository).findFirstByUserIdOrderByCreatedAtAsc(userId);
+    }
 }
+

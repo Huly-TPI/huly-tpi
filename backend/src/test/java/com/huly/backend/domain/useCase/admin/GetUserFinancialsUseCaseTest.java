@@ -78,4 +78,42 @@ class GetUserFinancialsUseCaseTest {
             assertThat(item.status()).isEqualTo("APPROVED");
         });
     }
+
+    @Test
+    void execute_shouldThrowException_whenProductIsMissing() {
+        Long userId = 1L;
+        PaymentEvent payment = PaymentEvent.builder()
+                .id(200L)
+                .userId(userId)
+                .productId(999L)
+                .status(PaymentStatus.APPROVED)
+                .productType(ProductType.PLAN)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(AppUser.builder().id(userId).build()));
+        when(paymentEventRepository.findByUserId(userId)).thenReturn(List.of(payment));
+        when(productRepository.findByIds(List.of(999L))).thenReturn(List.of());
+
+        assertThatThrownBy(() -> useCase.execute(new GetUserFinancialsRequest(userId)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Missing product for paymentEventId=200, productId=999");
+    }
+
+    @Test
+    void execute_shouldThrowException_whenProductIdIsNull() {
+        Long userId = 1L;
+        PaymentEvent payment = PaymentEvent.builder()
+                .id(200L)
+                .userId(userId)
+                .productId(null)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(AppUser.builder().id(userId).build()));
+        when(paymentEventRepository.findByUserId(userId)).thenReturn(List.of(payment));
+        when(productRepository.findByIds(List.of())).thenReturn(List.of());
+
+        assertThatThrownBy(() -> useCase.execute(new GetUserFinancialsRequest(userId)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Missing product for paymentEventId=200, productId=null");
+    }
 }

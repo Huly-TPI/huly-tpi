@@ -128,4 +128,109 @@ class GetUserAiDiagnosticsUseCaseTest {
         assertThat(response.acceptedActivities()).containsExactly("Actividades de meditacion");
         assertThat(response.ignoredActivities()).containsExactly("Eventos sociales masivos");
     }
+
+    @Test
+    void execute_shouldHandleDifferentReceptivityLabelsAndScores() {
+        EmotionalEvent ev1 = EmotionalEvent.builder()
+                .id(1L).userId(USER_ID).source(EmotionalEventSource.CHATBOT)
+                .generatedRecommendation("respiración guiada")
+                .recommendationDecision(RecommendationDecision.ACCEPTED).build();
+        EmotionalEvent ev2 = EmotionalEvent.builder()
+                .id(2L).userId(USER_ID).source(EmotionalEventSource.CHATBOT)
+                .generatedRecommendation("diario emocional")
+                .recommendationDecision(RecommendationDecision.IGNORED).build();
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
+        when(vectorMemoryRepository.findPersonalitySummaryByUserId(USER_ID)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of(ev1, ev2));
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of(ev1, ev2));
+        when(preferenceRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        GetUserAiDiagnosticsResponse responseMod = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(responseMod.receptivityScore()).isEqualTo(50);
+        assertThat(responseMod.receptivityLabel()).isEqualTo("Receptividad moderada");
+        assertThat(responseMod.acceptedActivities()).contains("Respiración Guiada");
+        assertThat(responseMod.ignoredActivities()).contains("Diario Emocional");
+
+        EmotionalEvent ev3 = EmotionalEvent.builder()
+                .id(3L).userId(USER_ID).source(EmotionalEventSource.CHATBOT)
+                .generatedRecommendation("nube")
+                .recommendationDecision(RecommendationDecision.IGNORED).build();
+        EmotionalEvent ev4 = EmotionalEvent.builder()
+                .id(4L).userId(USER_ID).source(EmotionalEventSource.CHATBOT)
+                .generatedRecommendation("burbuja")
+                .recommendationDecision(RecommendationDecision.IGNORED).build();
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of(ev1, ev2, ev3, ev4));
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of(ev1, ev2, ev3, ev4));
+
+        GetUserAiDiagnosticsResponse responseLow = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(responseLow.receptivityScore()).isEqualTo(25);
+        assertThat(responseLow.receptivityLabel()).isEqualTo("Baja receptividad");
+
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of());
+
+        GetUserAiDiagnosticsResponse responseNone = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(responseNone.receptivityScore()).isZero();
+        assertThat(responseNone.receptivityLabel()).isEqualTo("Sin recomendaciones registradas");
+    }
+
+    @Test
+    void execute_shouldDetectTopicsAndCopingStrategies() {
+        VectorMemoryEntry memory1 = new VectorMemoryEntry("1", "Tengo mucho examen y estudio en la universidad, me da ansiedad", "CHATBOT", "TEXT_MEMORY", null);
+        VectorMemoryEntry memory2 = new VectorMemoryEntry("2", "Me gusta escuchar música y hacer ejercicio para relajarme", "CHATBOT", "TEXT_MEMORY", null);
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory1, memory2));
+        when(vectorMemoryRepository.findPersonalitySummaryByUserId(USER_ID)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of());
+        when(preferenceRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        GetUserAiDiagnosticsResponse response = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(response.topicsDetected()).contains("Estrés laboral o académico", "Ansiedad o Preocupaciones");
+        assertThat(response.copingStrategies()).contains("Música y Arte", "Actividad Física", "Meditación y Respiración");
+    }
+
+    @Test
+    void execute_shouldCleanPersonalitySummaryHeadersAndMarkdown() {
+        String markdownSummary = """
+                ```json
+                {
+                  "summary": "**Perfil Psicológico y Conductual** El usuario es receptivo.",
+                  "accepted": "Yoga",
+                  "rejected": "Pesas"
+                }
+                ```
+                """;
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
+        when(vectorMemoryRepository.findPersonalitySummaryByUserId(USER_ID)).thenReturn(Optional.of(markdownSummary));
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of());
+        when(preferenceRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        GetUserAiDiagnosticsResponse response = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(response.personalitySummary()).isEqualTo("El usuario es receptivo.");
+    }
+
+    @Test
+    void execute_shouldDetectChallengeDecisionsInVectorMemory() {
+        VectorMemoryEntry memory1 = new VectorMemoryEntry("1", "Aceptó el reto de respirar", "CHALLENGE_DECISION", "CHALLENGE_DECISION", null);
+        VectorMemoryEntry memory2 = new VectorMemoryEntry("2", "Rechazó el reto de meditar", "CHALLENGE_DECISION", "CHALLENGE_DECISION", null);
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory1, memory2));
+        when(vectorMemoryRepository.findPersonalitySummaryByUserId(USER_ID)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of());
+        when(preferenceRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        GetUserAiDiagnosticsResponse response = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(response.receptivityScore()).isEqualTo(50);
+        assertThat(response.acceptedActivities()).contains("Retos Diarios");
+        assertThat(response.ignoredActivities()).contains("Retos Diarios");
+    }
 }

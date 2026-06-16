@@ -1,6 +1,7 @@
 package com.huly.backend.domain.useCase.admin;
 
 import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.admin.BackofficeUserSummary;
@@ -72,14 +73,92 @@ class ListBackofficeUsersUseCaseTest {
         assertThat(summary.getCoins()).isEqualTo(50);
         assertThat(summary.getPlan()).isEqualTo("Gratuito");
         
-        // Assert metrics are empty or null
         assertThat(summary.getMostUsedApp()).isNull();
         assertThat(summary.getMostUsedAppActiveSeconds()).isEqualTo(0);
         assertThat(summary.getTotalScrollTimeSeconds()).isEqualTo(0);
         assertThat(summary.getTopApps()).isEmpty();
         assertThat(summary.getDailyScrollTimeSeconds()).isEmpty();
         
-        // Verify metricsRepository is not called
         verifyNoInteractions(metricsRepository);
     }
+
+    @Test
+    void executeWithSearch_shouldFilterByNameAndEmailCaseInsensitive() {
+        AppUser user1 = AppUser.builder().id(1L).name("Alice Smith").email("alice@gmail.com").build();
+        AppUser user2 = AppUser.builder().id(2L).name("Bob Jones").email("bob@huly.com").build();
+
+        when(userRepository.findAllNonAdmins()).thenReturn(List.of(user1, user2));
+        when(settingsRepository.findByUserId(anyLong())).thenReturn(Optional.empty());
+        when(userRepository.getCoins(anyLong())).thenReturn(0);
+        when(userPlanRepository.findByUser(anyLong())).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(anyLong())).thenReturn(List.of());
+
+        List<BackofficeUserSummary> searchByName = useCase.execute("alice");
+        assertThat(searchByName).hasSize(1);
+        assertThat(searchByName.get(0).getName()).isEqualTo("Alice Smith");
+
+        List<BackofficeUserSummary> searchByEmail = useCase.execute("HULY");
+        assertThat(searchByEmail).hasSize(1);
+        assertThat(searchByEmail.get(0).getEmail()).isEqualTo("bob@huly.com");
+
+        List<BackofficeUserSummary> searchNoResults = useCase.execute("nonexistent");
+        assertThat(searchNoResults).isEmpty();
+
+        List<BackofficeUserSummary> searchNull = useCase.execute(null);
+        assertThat(searchNull).hasSize(2);
+
+        List<BackofficeUserSummary> searchBlank = useCase.execute("   ");
+        assertThat(searchBlank).hasSize(2);
+    }
+
+    @Test
+    void execute_shouldDetermineDominantEmotionCorrectly() {
+        AppUser user = AppUser.builder().id(1L).name("Test User").email("test@example.com").build();
+
+        EmotionalEvent ev1 = EmotionalEvent.builder().detectedEmotion("Happy").build();
+        EmotionalEvent ev2 = EmotionalEvent.builder().detectedEmotion("Sad").build();
+        EmotionalEvent ev3 = EmotionalEvent.builder().detectedEmotion("Happy").build();
+        EmotionalEvent evNull = EmotionalEvent.builder().detectedEmotion(null).build();
+
+        when(userRepository.findAllNonAdmins()).thenReturn(List.of(user));
+        when(settingsRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        when(userRepository.getCoins(1L)).thenReturn(0);
+        when(userPlanRepository.findByUser(1L)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(1L)).thenReturn(List.of(ev1, ev2, ev3, evNull));
+
+        List<BackofficeUserSummary> result = useCase.execute();
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDominantEmotion()).isEqualTo("HAPPY");
+    }
+
+    @Test
+    void execute_shouldDefaultToNeutral_whenNoEmotionalEventsWithEmotion() {
+        AppUser user = AppUser.builder().id(1L).name("Test User").email("test@example.com").build();
+        EmotionalEvent evNull = EmotionalEvent.builder().detectedEmotion(null).build();
+
+        when(userRepository.findAllNonAdmins()).thenReturn(List.of(user));
+        when(settingsRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        when(userRepository.getCoins(1L)).thenReturn(0);
+        when(userPlanRepository.findByUser(1L)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(1L)).thenReturn(List.of(evNull));
+
+        List<BackofficeUserSummary> result = useCase.execute();
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDominantEmotion()).isEqualTo("NEUTRAL");
+    }
+
+    @Test
+    void executeWithSearch_shouldNotThrowNpe_whenUserFieldsAreNull() {
+        AppUser user = AppUser.builder().id(1L).name(null).email(null).build();
+
+        when(userRepository.findAllNonAdmins()).thenReturn(List.of(user));
+        when(settingsRepository.findByUserId(anyLong())).thenReturn(Optional.empty());
+        when(userRepository.getCoins(anyLong())).thenReturn(0);
+        when(userPlanRepository.findByUser(anyLong())).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(anyLong())).thenReturn(List.of());
+
+        List<BackofficeUserSummary> result = useCase.execute("test");
+        assertThat(result).isEmpty();
+    }
 }
+

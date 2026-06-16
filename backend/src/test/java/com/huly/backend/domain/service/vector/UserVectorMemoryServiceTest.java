@@ -327,6 +327,99 @@ class UserVectorMemoryServiceTest {
         assertThat(contents).containsExactly("Me siento feliz");
     }
 
+    @Test
+    void rememberOnboardingGoals_shouldTriggerAsyncPersonalitySummaryGeneration() {
+        org.springframework.ai.chat.model.ChatModel chatModel = mock(org.springframework.ai.chat.model.ChatModel.class);
+        when(chatModelProvider.getIfAvailable()).thenReturn(chatModel);
+        
+        org.springframework.ai.chat.model.ChatResponse chatResponse = mock(org.springframework.ai.chat.model.ChatResponse.class);
+        org.springframework.ai.chat.model.Generation generation = mock(org.springframework.ai.chat.model.Generation.class);
+        org.springframework.ai.chat.messages.AssistantMessage assistantMessage = mock(org.springframework.ai.chat.messages.AssistantMessage.class);
+        
+        when(chatModel.call(any(org.springframework.ai.chat.prompt.Prompt.class))).thenReturn(chatResponse);
+        when(chatResponse.getResult()).thenReturn(generation);
+        when(generation.getOutput()).thenReturn(assistantMessage);
+        when(assistantMessage.getText()).thenReturn("{\"summary\": \"Test profile summary\", \"accepted\": \"activity\", \"rejected\": \"none\"}");
+
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenReturn(List.of("Memory content 1", "Memory content 2"));
+
+        service.rememberOnboardingGoals(1L, "Goal1", "Goal2", "Goal3");
+
+        assertThat(vectorMemoryService.savedCommands).isNotEmpty();
+        
+        long start = System.currentTimeMillis();
+        while (vectorMemoryService.savedCommands.size() < 2 && (System.currentTimeMillis() - start) < 3000) {
+            try { Thread.sleep(50); } catch (InterruptedException e) {}
+        }
+        
+        assertThat(vectorMemoryService.savedCommands).hasSize(2);
+        SaveVectorMemoryCommand personalityCommand = vectorMemoryService.savedCommands.get(1);
+        assertThat(personalityCommand.contentType()).isEqualTo("PERSONALITY_SUMMARY");
+        assertThat(personalityCommand.content()).contains("Test profile summary");
+    }
+
+    @Test
+    void generatePersonalitySummary_shouldHandleNullChatModelAndEmptyMemories() {
+        when(chatModelProvider.getIfAvailable()).thenReturn(null);
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenReturn(List.of());
+
+        service.rememberOnboardingGoals(1L, "Goal1", "Goal2", "Goal3");
+
+        try { Thread.sleep(200); } catch (InterruptedException e) {}
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+    }
+
+    @Test
+    void rememberRecommendedActivity_shouldDoNothing_whenActionIsNull() {
+        service.rememberRecommendedActivity(1L, "conv-1", 100L, null);
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void rememberActivityRecommendationDecision_shouldDoNothing_whenParametersAreInvalid() {
+        service.rememberActivityRecommendationDecision(null);
+        service.rememberActivityRecommendationDecision(com.huly.backend.domain.model.EmotionalEvent.builder().build());
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void rememberGeneratedChallenge_shouldDoNothing_whenChallengeIsNullOrTitleIsBlank() {
+        service.rememberGeneratedChallenge(1L, "conv-1", null);
+        service.rememberGeneratedChallenge(1L, "conv-1", new com.huly.backend.domain.model.chat.ChatReply.GeneratedChallenge("", "desc"));
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void rememberChallengeDecision_shouldDoNothing_whenParametersAreInvalid() {
+        service.rememberChallengeDecision(null, "conv-1", "title", "desc", "ACCEPTED");
+        service.rememberChallengeDecision(1L, "conv-1", "", "desc", "ACCEPTED");
+        service.rememberChallengeDecision(1L, "conv-1", "title", "desc", "");
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void deletePersonalitySummary_shouldLogWarning_whenVectorStoreFails() {
+        VectorMemoryService throwingService = mock(VectorMemoryService.class);
+        doThrow(new RuntimeException("Delete failed")).when(throwingService).deleteMemories(any());
+        
+        UserVectorMemoryService testService = new UserVectorMemoryService(throwingService, properties, new UserProfileFactExtractor(), chatModelProvider, jdbcTemplate);
+        
+        assertThatCode(() -> testService.deletePersonalitySummary(1L))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void getAllMemoryContents_shouldReturnEmptyList_whenJdbcThrowsException() {
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenThrow(new RuntimeException("JDBC error"));
+
+        List<String> contents = service.getAllMemoryContents(1L);
+        assertThat(contents).isEmpty();
+    }
+
     private static final class RecordingVectorMemoryService implements VectorMemoryService {
 
         private final List<SaveVectorMemoryCommand> savedCommands = new ArrayList<>();

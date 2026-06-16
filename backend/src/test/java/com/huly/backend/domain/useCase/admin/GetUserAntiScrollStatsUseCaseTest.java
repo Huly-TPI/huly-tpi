@@ -90,7 +90,7 @@ class GetUserAntiScrollStatsUseCaseTest {
         ExtensionMetric metric3 = ExtensionMetric.builder()
                 .domain("youtube.com")
                 .activeSeconds(60)
-                .createdAt(now.minus(7, ChronoUnit.DAYS)) // previous week
+                .createdAt(now.minus(7, ChronoUnit.DAYS))
                 .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -107,5 +107,49 @@ class GetUserAntiScrollStatsUseCaseTest {
         assertThat(response.topApps()).hasSize(2);
         assertThat(response.topApps().get(0).getDomain()).isEqualTo("instagram.com");
         assertThat(response.topApps().get(1).getDomain()).isEqualTo("youtube.com");
+    }
+
+    @Test
+    void execute_shouldHandleNullAndEmptyMetricsList() {
+        Long userId = 1L;
+        AppUser user = AppUser.builder().id(userId).build();
+        ExtensionSettings settings = ExtensionSettings.builder()
+                .enabled(true)
+                .dataSharingConsent(true)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+        when(metricsRepository.findByUserId(userId)).thenReturn(null);
+
+        GetUserAntiScrollStatsResponse responseNull = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
+        assertThat(responseNull.mostUsedApp()).isNull();
+
+        when(metricsRepository.findByUserId(userId)).thenReturn(List.of());
+        GetUserAntiScrollStatsResponse responseEmpty = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
+        assertThat(responseEmpty.mostUsedApp()).isNull();
+    }
+
+    @Test
+    void execute_shouldSkipMetric_whenCreatedAtIsNull() {
+        Long userId = 1L;
+        AppUser user = AppUser.builder().id(userId).build();
+        ExtensionSettings settings = ExtensionSettings.builder()
+                .enabled(true)
+                .dataSharingConsent(true)
+                .build();
+
+        ExtensionMetric metricNullDate = ExtensionMetric.builder()
+                .domain("youtube.com")
+                .activeSeconds(120)
+                .createdAt(null)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+        when(metricsRepository.findByUserId(userId)).thenReturn(List.of(metricNullDate));
+
+        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
+        assertThat(response.totalScrollTimeSeconds()).isEqualTo(120);
     }
 }
