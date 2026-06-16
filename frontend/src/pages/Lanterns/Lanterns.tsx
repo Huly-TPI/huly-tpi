@@ -6,14 +6,23 @@ import darkBackground from '../../assets/lanterns/dark-theme/background/night-ba
 import lanternImage from '../../assets/lanterns/ligth-theme/Lantern-Ligth.webp'
 import darkLanternImage from '../../assets/lanterns/dark-theme/Lantern-Dark.webp'
 import paperImage from '../../assets/lanterns/paper.webp'
-import darkPaperImage from '../../assets/lanterns/paper.webp'
 
 import { useTheme } from '../../context/theme'
+import { api } from '../../api/client'
+import Button from '../../components/Buttons/Button/Button'
 import './Lanterns.css'
 
 interface Lantern {
   id: string
   text: string
+}
+
+interface RecommendationResponse {
+  activity_type: string
+  action_id: string
+  title: string
+  description: string
+  redirect_url: string
 }
 
 const MAX_LANTERNS = 5
@@ -26,6 +35,13 @@ const BG_POSITIONS = [
   { top: '47%', left: '85%', size: 'w-[16%] md:w-[10%]', floatClass: 'lantern-float-4' },
 ] as const
 
+const ACTIVITY_LABELS: Record<string, string> = {
+  diary: 'al diario',
+  clouds: 'a las nubes',
+  breathing: 'a respiración guiada',
+  bubbles: 'a las burbujas',
+}
+
 export default function LanternsActivity() {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -34,9 +50,11 @@ export default function LanternsActivity() {
   const [lanterns, setLanterns] = useState<Lantern[]>([])
   const [inputText, setInputText] = useState('')
   const [animatingId, setAnimatingId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null)
 
   const currentLanternImage = isDark ? darkLanternImage : lanternImage
-  const currentPaperImage = isDark ? darkPaperImage : paperImage
 
   const handleRelease = useCallback(() => {
     const trimmed = inputText.trim()
@@ -48,11 +66,40 @@ export default function LanternsActivity() {
     }
 
     setAnimatingId(newLantern.id)
+    setSelectedId(newLantern.id)
     setLanterns(prev => [newLantern, ...prev].slice(0, MAX_LANTERNS))
     setInputText('')
 
     setTimeout(() => setAnimatingId(null), 800)
   }, [inputText])
+
+  const handleSoltar = useCallback(() => {
+    setLanterns(prev => {
+      const next = prev.filter(l => l.id !== selectedId)
+      setSelectedId(next[0]?.id ?? null)
+      return next
+    })
+  }, [selectedId])
+
+  const handleTrabajar = useCallback(async () => {
+    const lantern = lanterns.find(l => l.id === selectedId)
+    if (!lantern) return
+    setLoading(true)
+    try {
+      const rec = await api.post<RecommendationResponse>('/clouds/recommendation', { thoughts: [lantern.text] })
+      setRecommendation(rec)
+    } catch (error) {
+      console.error('Error al obtener recomendación:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [lanterns, selectedId])
+
+  const handleNavigate = useCallback(() => {
+    if (!recommendation) return
+    navigate(recommendation.redirect_url)
+    setRecommendation(null)
+  }, [navigate, recommendation])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -60,6 +107,9 @@ export default function LanternsActivity() {
       handleRelease()
     }
   }
+
+  const selectedLantern = lanterns.find(l => l.id === selectedId)
+  const bgLanterns = lanterns.filter(l => l.id !== selectedId)
 
   return (
     <div
@@ -84,55 +134,113 @@ export default function LanternsActivity() {
         </header>
       </div>
 
-      {/* Todos los faroles en un solo loop */}
-      {lanterns.map((lantern, index) => {
-        const isMain = index === 0
-        const bgPos = BG_POSITIONS[index - 1]
+      {/* Farol seleccionado con botones abajo */}
+      {selectedLantern && (
+        <div
+          className={`absolute z-[25] flex w-[55%] -translate-x-1/2 flex-col items-center md:w-[30%] transition-all duration-700 ease-in-out ${
+            animatingId === selectedLantern.id ? 'lantern-main-enter' : 'lantern-main'
+          }`}
+          style={{ top: '20%', left: '45%' }}
+        >
+          <div className="relative w-full">
+            <img
+              src={currentLanternImage}
+              alt="Farolito con tu pensamiento"
+              className={`h-auto w-full ${!isDark ? 'lantern-day' : ''}`}
+              draggable={false}
+            />
+            <div className="lantern-note absolute left-[40%] right-[32%] top-[18%] bottom-[42%] flex flex-col items-center justify-center">
+              <p className="text-center font-nunito text-[12px] font-semibold leading-tight md:text-[14px] overflow-hidden line-clamp-3">
+                {selectedLantern.text}
+              </p>
+            </div>
+          </div>
 
-        const positionStyle: React.CSSProperties = isMain
-          ? { top: '28%', left: '45%' }
-          : bgPos
-            ? { top: bgPos.top, left: bgPos.left }
-            : { top: '0%', left: '50%', opacity: 0 }
+          <div className="mt-2 flex gap-3">
+            <button
+              type="button"
+              onClick={handleSoltar}
+              className="lantern-action-btn lantern-action-btn--soltar"
+            >
+              Soltar
+            </button>
+            <button
+              type="button"
+              onClick={handleTrabajar}
+              className="lantern-action-btn lantern-action-btn--trabajar"
+            >
+              Trabajar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Faroles de fondo — clickeables para traer al frente */}
+      {bgLanterns.map((lantern, index) => {
+        const bgPos = BG_POSITIONS[index]
+        if (!bgPos) return null
 
         return (
-          <div
+          <button
             key={lantern.id}
-            className={`lantern-item absolute transition-all duration-700 ease-in-out ${
-              isMain
-                ? `z-10 w-[55%] -translate-x-1/2 md:w-[30%] ${
-                    animatingId === lantern.id ? 'lantern-main-enter' : 'lantern-main'
-                  }`
-                : `${bgPos?.size ?? 'w-[16%] md:w-[10%]'} ${bgPos?.floatClass ?? ''}`
-            }`}
-            style={positionStyle}
+            type="button"
+            onClick={() => setSelectedId(lantern.id)}
+            className={`lantern-item absolute z-[15] border-0 bg-transparent p-0 ${bgPos.size} ${bgPos.floatClass}`}
+            style={{ top: bgPos.top, left: bgPos.left }}
           >
             <div className="relative">
               <img
                 src={currentLanternImage}
-                alt={isMain ? 'Farolito con tu pensamiento' : ''}
-                className={`h-auto w-full ${!isDark ? 'lantern-day' : 'lantern-night'} ${
-                  !isMain ? 'opacity-80' : ''
-                }`}
+                alt=""
+                className={`h-auto w-full opacity-80 transition-opacity hover:opacity-100 ${!isDark ? 'lantern-day' : ''}`}
                 draggable={false}
               />
-
-              {isMain && (
-                <div className="lantern-note absolute left-[40%] right-[32%] top-[18%] bottom-[42%] flex flex-col items-center justify-center">
-                  <p className="text-center font-nunito text-[12px] font-semibold leading-tight md:text-[14px] overflow-hidden line-clamp-3">
-                    {lantern.text}
-                  </p>
-                </div>
-              )}
+              <div className="lantern-note absolute left-[40%] right-[32%] top-[18%] bottom-[42%] flex flex-col items-center justify-center">
+                <p className="text-center font-nunito text-[6px] font-semibold leading-tight overflow-hidden line-clamp-3">
+                  {lantern.text}
+                </p>
+              </div>
             </div>
-          </div>
+          </button>
         )
       })}
+
+      {/* Loading overlay */}
+      {loading && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+          <p className="text-xl font-semibold text-[#8869AC]">Analizando tu pensamiento...</p>
+        </div>
+      )}
+
+      {/* Modal de recomendación */}
+      {recommendation && !loading && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl sm:p-8">
+            <h2 className="mb-3 text-2xl font-bold text-[#8869AC]">
+              {recommendation.title}
+            </h2>
+            <p className="mb-6 leading-relaxed text-gray-500">
+              {recommendation.description}
+            </p>
+            <Button variant="primary" fullWidth onClick={handleNavigate}>
+              Ir {ACTIVITY_LABELS[recommendation.activity_type] ?? 'a la actividad'}
+            </Button>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => setRecommendation(null)}
+              className="mt-3"
+            >
+              Quedarme aquí
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Papel inferior */}
       <div className="relative z-20 mt-auto flex justify-center px-4 pb-0 mb-[-110px]">
         <div className="paper-panel">
-          <img src={currentPaperImage} alt="" className="paper-bg-img" draggable={false} />
+          <img src={paperImage} alt="" className="paper-bg-img" draggable={false} />
           <h3 className="paper-title">
             Escribe un pensamiento y déjalo ir
           </h3>

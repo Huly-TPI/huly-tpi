@@ -162,6 +162,36 @@
 }
 
 
+.lantern-action-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.lantern-action-btn--soltar {
+  background: rgba(255, 255, 255, 0.88);
+  color: #8869AC;
+  backdrop-filter: blur(4px);
+}
+
+.lantern-action-btn--trabajar {
+  background: linear-gradient(180deg, #b18cf0 0%, #8f6dd1 100%);
+  color: white;
+}
+
+.lantern-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lantern-main,
   .lantern-main-enter,
