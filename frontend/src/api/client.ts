@@ -2,6 +2,15 @@ import { ApiError } from './apiError'
 
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 
+export const getBackendOrigin = (): string => {
+  const rawApiUrl = import.meta.env.VITE_API_URL?.trim()
+
+  if (!rawApiUrl) 
+    return window.location.origin
+  
+  return new URL(rawApiUrl, window.location.origin).origin
+}
+
 export type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
   skipAuthRedirect?: boolean
@@ -78,6 +87,7 @@ async function request<T>(
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
+    cache: 'no-store',
     credentials: 'include',
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
