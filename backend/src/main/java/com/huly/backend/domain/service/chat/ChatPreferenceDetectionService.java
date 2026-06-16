@@ -21,15 +21,19 @@ public class ChatPreferenceDetectionService {
     private static final Pattern NAME_FORMAT = Pattern.compile(
             "[\\p{L}][\\p{L}'’-]*(?:\\s+[\\p{L}][\\p{L}'’-]*){0,2}");
     private static final List<Pattern> NAME_INTENT_PATTERNS = List.of(
+            pattern("(?:me\\s+)?(?:pod[eé]s|puedes)\\s+decir\\s+(.+)$"),
             pattern("(?:ahora|desde ahora|de ahora en adelante|a partir de ahora)\\s*[,;:]?\\s*"
                     + "(?:decime|dime|ll[aá]mame|puedes llamarme|pod[eé]s llamarme)\\s+(.+)$"),
             pattern("(?:cambi[aá]|cambia)\\s+mi\\s+nombre\\s+a\\s+(.+)$"),
             pattern("(?:prefiero|quiero|me gustar[ií]a)\\s+que\\s+me\\s+(?:digas|llames)\\s+(.+)$"),
             pattern("(?:puedes|pod[eé]s)\\s+llamarme\\s+(.+)$"),
-            pattern("(?:ll[aá]mame|decime|dime)\\s+(.+)$")
+            pattern("(?:ll[aá]mame|decime|dime)\\s+(.+)$"),
+            pattern("(?:mi\\s+nombre\\s+es|me\\s+llamo)\\s+([^,;.!?]+)")
     );
     private static final Set<String> INVALID_NAMES = Set.of(
-            "algo", "como", "cuando", "donde", "hola", "nada", "porque", "que", "quien", "todo");
+            "algo", "como", "cuando", "donde", "hola", "nada", "porque", "que", "quien", "todo",
+            "boa", "buen", "buena", "buenas", "buenos", "dia", "dias", "tarde", "tardes", "noche",
+            "noches", "gracias", "bien", "tranqui", "chill");
     private static final List<String> STYLE_INTENT_SIGNALS = List.of(
             "hablame", "quiero que seas", "quiero que me hables", "prefiero que seas", "prefiero que me hables",
             "respondeme", "se mas", "no seas tan", "baja un poco el tono", "cambia el tono");
@@ -52,6 +56,9 @@ public class ChatPreferenceDetectionService {
             return explicitName;
         }
         if (!Boolean.TRUE.equals(onboarding)) {
+            return Optional.empty();
+        }
+        if (containsSentencePunctuation(compact)) {
             return Optional.empty();
         }
         return sanitizeName(compact);
@@ -93,6 +100,9 @@ public class ChatPreferenceDetectionService {
         if (normalized.contains("corto") && normalized.contains("direct")) {
             return Optional.of(CommunicationStyle.CONCISE_DIRECT);
         }
+        if (normalized.contains("indirect")) {
+            return Optional.of(CommunicationStyle.INDIRECT);
+        }
         if (normalized.contains("direct")) {
             return Optional.of(CommunicationStyle.DIRECT);
         }
@@ -102,7 +112,10 @@ public class ChatPreferenceDetectionService {
         if (normalized.contains("neutr")) {
             return Optional.of(CommunicationStyle.NEUTRAL);
         }
-        if (normalized.contains("seri") || normalized.contains("formal")) {
+        if (normalized.contains("formal")) {
+            return Optional.of(CommunicationStyle.FORMAL);
+        }
+        if (normalized.contains("seri")) {
             return Optional.of(CommunicationStyle.SERIOUS);
         }
         if (normalized.contains("amable") || normalized.contains("simpatic")) {
@@ -146,6 +159,10 @@ public class ChatPreferenceDetectionService {
         return Optional.of(toDisplayName(candidate));
     }
 
+    public Optional<String> validatePreferredName(String candidate) {
+        return sanitizeName(candidate);
+    }
+
     private String toDisplayName(String candidate) {
         if (!candidate.equals(candidate.toLowerCase(Locale.ROOT))) {
             return candidate;
@@ -166,6 +183,15 @@ public class ChatPreferenceDetectionService {
         String compact = compact(value).toLowerCase(Locale.ROOT);
         return Normalizer.normalize(compact, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "");
+    }
+
+    private boolean containsSentencePunctuation(String value) {
+        return value.indexOf(',') >= 0
+                || value.indexOf(';') >= 0
+                || value.indexOf(':') >= 0
+                || value.indexOf('.') >= 0
+                || value.indexOf('?') >= 0
+                || value.indexOf('!') >= 0;
     }
 
     private static Pattern pattern(String regex) {

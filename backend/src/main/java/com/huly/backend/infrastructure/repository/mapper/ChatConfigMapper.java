@@ -12,6 +12,8 @@ public class ChatConfigMapper {
                 .id(chatConfig.getId())
                 .riskDetectionEnabled(chatConfig.getRiskDetectionEnabled())
                 .systemPrompt(chatConfig.getSystemPrompt())
+                .preferredNameQuestionEnabled(chatConfig.getPreferredNameQuestionEnabled())
+                .communicationStyleQuestionEnabled(chatConfig.getCommunicationStyleQuestionEnabled())
                 .build();
     }
 
@@ -20,6 +22,8 @@ public class ChatConfigMapper {
                 .id(entity.getId())
                 .riskDetectionEnabled(entity.getRiskDetectionEnabled())
                 .systemPrompt(entity.getSystemPrompt())
+                .preferredNameQuestionEnabled(entity.getPreferredNameQuestionEnabled())
+                .communicationStyleQuestionEnabled(entity.getCommunicationStyleQuestionEnabled())
                 .build();
     }
 }

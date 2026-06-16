@@ -22,8 +22,11 @@ public class ChatUseCaseConfig {
     }
 
     @Bean
-    public StreamChatUseCase streamChatUseCase(ChatService chatService) {
-        return new StreamChatUseCase(chatService);
+    public StreamChatUseCase streamChatUseCase(
+            ChatService chatService,
+            HandleChatPreferencesUseCase handleChatPreferencesUseCase
+    ) {
+        return new StreamChatUseCase(chatService, handleChatPreferencesUseCase);
     }
 
     @Bean

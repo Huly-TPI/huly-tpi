@@ -34,9 +34,16 @@ public class ChatConversationPreference {
      * @return initial preference state
      */
     public static ChatConversationPreference begin(Long userId, Instant now) {
+        return begin(userId, ChatOnboardingStatus.ASKED_PREFERRED_NAME, now);
+    }
+
+    public static ChatConversationPreference begin(
+            Long userId,
+            ChatOnboardingStatus initialStatus,
+            Instant now) {
         return ChatConversationPreference.builder()
                 .userId(userId)
-                .onboardingStatus(ChatOnboardingStatus.ASKED_PREFERRED_NAME)
+                .onboardingStatus(initialStatus)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -53,6 +60,14 @@ public class ChatConversationPreference {
         return toBuilder()
                 .preferredName(name)
                 .onboardingStatus(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
+                .updatedAt(now)
+                .build();
+    }
+
+    public ChatConversationPreference withPreferredNamePendingStyle(String name, Instant now) {
+        return toBuilder()
+                .preferredName(name)
+                .onboardingStatus(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
                 .updatedAt(now)
                 .build();
     }
@@ -96,6 +111,20 @@ public class ChatConversationPreference {
     public ChatConversationPreference updateCommunicationStyle(CommunicationStyle style, Instant now) {
         return toBuilder()
                 .communicationStyle(style)
+                .updatedAt(now)
+                .build();
+    }
+
+    public ChatConversationPreference markCommunicationStyleAsked(Instant now) {
+        return toBuilder()
+                .onboardingStatus(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
+                .updatedAt(now)
+                .build();
+    }
+
+    public ChatConversationPreference complete(Instant now) {
+        return toBuilder()
+                .onboardingStatus(ChatOnboardingStatus.COMPLETED)
                 .updatedAt(now)
                 .build();
     }
