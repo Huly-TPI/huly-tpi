@@ -155,4 +155,25 @@ class ClaimDailyRewardUseCaseTest {
         verify(coinService, never()).credit(anyLong(), anyInt());
         verify(userDetailDomainRepository, never()).updateDailyClaim(anyLong(), anyInt(), any());
     }
+
+    @Test
+    void execute_shouldFallbackToFirstDayCoins_whenCycleDayMissingFromConfig() {
+        // Config con "huecos": N=2 filas pero sin el day_number 2 -> el cycleDay calculado (2)
+        // no existe en la config y cae al primer día.
+        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
+                .thenReturn(new DailyClaimState(1, TODAY.minusDays(1)));
+        List<DailyReward> gappedCycle = List.of(
+                DailyReward.builder().id(1L).dayNumber(1).coins(10).build(),
+                DailyReward.builder().id(2L).dayNumber(5).coins(99).build());
+        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(gappedCycle);
+
+        DailyRewardClaim result = useCase.execute(USER_ID);
+
+        // newStreak=2 (consecutivo); cycleDay = ((2-1) % 2) + 1 = 2, ausente -> coins del primero (10).
+        assertThat(result.newStreak()).isEqualTo(2);
+        assertThat(result.dayNumber()).isEqualTo(2);
+        assertThat(result.coins()).isEqualTo(10);
+        verify(coinService).credit(USER_ID, 10);
+        verify(userDetailDomainRepository).updateDailyClaim(USER_ID, 2, TODAY);
+    }
 }
