@@ -12,7 +12,6 @@ import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
@@ -20,7 +19,6 @@ import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import com.huly.backend.domain.repository.RiskWordRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
@@ -29,21 +27,17 @@ import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
-    private static final String STREAM_ERROR_MESSAGE = "No se pudo completar la respuesta del asistente.";
     private static final String STYLE_QUESTION =
             "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
                     + "formal, directa, indirecta, cercana o como un amigo.";
 
     private final LLMChatPort llmChatPort;
-    private final StreamingLLMChatPort streamingLLMChatPort;
     private final ChatMemoryPort chatMemoryPort;
     private final ChatConfigRepository chatConfigRepository;
     private final RiskWordRepository riskWordRepository;
@@ -113,51 +107,6 @@ public class ChatService {
                 userIntent == ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
     }
 
-    public Flux<ChatStreamEvent> streamMessage(String message, String conversationId, Long userId) {
-        return streamMessage(message, conversationId, userId, false);
-    }
-
-    public Flux<ChatStreamEvent> streamMessage(
-            String message,
-            String conversationId,
-            Long userId,
-            boolean offerCommunicationStyleWhenSafe) {
-        chatQuotaService.assertWithinLimit(userId);
-        return Flux.defer(() -> {
-            ChatContext context = buildStreamingContext(message, conversationId, userId);
-            saveUserMessage(conversationId, message, ChatReply.of(""), userId);
-
-            StringBuilder assistantContent = new StringBuilder();
-
-            return streamingLLMChatPort.stream(context.systemPrompt(), message, context.history())
-                    .filter(delta -> delta != null && !delta.isBlank())
-                    .map(delta -> {
-                        assistantContent.append(delta);
-                        return ChatStreamEvent.delta(delta);
-                    })
-                    .concatWith(Mono.fromCallable(() -> completeStream(
-                            message,
-                            conversationId,
-                            userId,
-                            context,
-                            assistantContent.toString(),
-                            offerCommunicationStyleWhenSafe))
-                            .flatMapMany(completion -> completion.followUpDelta() == null
-                                    ? Flux.just(
-                                            ChatStreamEvent.metadata(completion.reply()),
-                                            ChatStreamEvent.done(completion.reply()))
-                                    : Flux.just(
-                                            ChatStreamEvent.delta(completion.followUpDelta()),
-                                            ChatStreamEvent.metadata(completion.reply()),
-                                            ChatStreamEvent.done(completion.reply()))))
-                    .doOnCancel(() -> log.info("Stream de chat cancelado userId={} conversationId={}",
-                            userId, conversationId));
-        }).onErrorResume(e -> {
-            log.warn("Error durante stream de chat userId={} conversationId={}", userId, conversationId, e);
-            return Flux.just(ChatStreamEvent.error(STREAM_ERROR_MESSAGE));
-        });
-    }
-
     private ChatContext buildBlockingContext(String message, String conversationId, Long userId) {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
@@ -179,51 +128,10 @@ public class ChatService {
                 preference != null ? preference.getCommunicationStyle() : null);
     }
 
-    private ChatContext buildStreamingContext(String message, String conversationId, Long userId) {
-        String basePrompt = basePrompt();
-        List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
-        List<RiskWord> riskWords = riskWordRepository.findAllActive();
-        ChatPersonalizationContext personalization = loadPersonalizationContext(userId);
-        String systemPrompt = promptBuilderService.buildStreamingPrompt(
-                basePrompt,
-                riskWords,
-                memories,
-                personalization);
-        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
-        return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history, personalization);
-    }
-
     private String basePrompt() {
         return chatConfigRepository.findFirst()
                 .map(ChatConfig::getSystemPrompt)
                 .orElse("");
-    }
-
-    private ChatStreamCompletion completeStream(
-            String message,
-            String conversationId,
-            Long userId,
-            ChatContext context,
-            String assistantContent,
-            boolean offerCommunicationStyleWhenSafe) {
-        ChatReply metadata = extractMetadata(message, context);
-        ChatReply finalReply = new ChatReply(
-                assistantContent,
-                metadata.detectedEmotion(),
-                metadata.intensity(),
-                metadata.riskDetected(),
-                metadata.matchedWord());
-        ChatReply enrichedReply = appendCommunicationStyleQuestionIfSafe(
-                finalReply,
-                userId,
-                offerCommunicationStyleWhenSafe);
-
-        saveAssistantMessage(conversationId, enrichedReply.content(), userId);
-        userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
-        String followUpDelta = enrichedReply.content().equals(assistantContent)
-                ? null
-                : enrichedReply.content().substring(assistantContent.length());
-        return new ChatStreamCompletion(enrichedReply, followUpDelta);
     }
 
     private ChatReply appendCommunicationStyleQuestionIfSafe(
@@ -258,19 +166,6 @@ public class ChatService {
                 reply.matchedWord(),
                 reply.suggestedAction(),
                 reply.generatedChallenge());
-    }
-
-    private ChatReply extractMetadata(String message, ChatContext context) {
-        try {
-            String metadataPrompt = promptBuilderService.buildMetadataPrompt(
-                    context.basePrompt(),
-                    context.riskWords(),
-                    context.memories());
-            return llmChatPort.chat(metadataPrompt, message, context.history());
-        } catch (Exception e) {
-            log.warn("No se pudo extraer metadata de chat en streaming", e);
-            return ChatReply.of("");
-        }
     }
 
     private ChatReply applyRecommendationOutcome(
@@ -375,10 +270,5 @@ public class ChatService {
                     history,
                     personalization);
         }
-    }
-
-    private record ChatStreamCompletion(
-            ChatReply reply,
-            String followUpDelta) {
     }
 }
