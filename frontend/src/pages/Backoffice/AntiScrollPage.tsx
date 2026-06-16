@@ -91,7 +91,7 @@ export default function AntiScrollPage() {
                   />
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl font-black text-gray-800 dark:text-gray-100">{redirectRate.toFixed(1)}%</span>
+                  <span className="text-xl font-black text-gray-800 dark:text-gray-100">{redirectRate.toFixed(1)}%</span>
                   <span className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Retorno</span>
                 </div>
               </div>
