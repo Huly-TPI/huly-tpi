@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://huly-tpi.onrender.com'; // Actualizar con la URL del backend en prod
+const API_BASE_URL = 'https://huly-tpi.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -58,6 +58,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key !== 'Escape') return;
     document.querySelectorAll('.modal-overlay.open').forEach((m) => closeModal(m.id));
   });
+
+  function showModalError(modalId, message) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const errEl = modal.querySelector('.modal-error');
+    if (!errEl) return;
+    errEl.textContent = message;
+    errEl.hidden = false;
+  }
+
+  function clearModalError(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const errEl = modal.querySelector('.modal-error');
+    if (errEl) {
+      errEl.textContent = '';
+      errEl.hidden = true;
+    }
+  }
+
+  function showModalSuccess(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const inner = modal.querySelector('.modal');
+    if (!inner) return;
+    inner.innerHTML = `
+      <h3>¡Ya estás anotado!</h3>
+      <p class="modal-sub">Te avisamos en cuanto abramos las puertas. Hasta pronto.</p>
+    `;
+  }
 
   document.getElementById('submit-register')?.addEventListener('click', async () => {
     const nicknameInput = document.getElementById('reg-username');

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record BotConfigResponse(
         Long id,
         @JsonProperty("risk_detection_enabled") Boolean riskDetectionEnabled,
-        @JsonProperty("system_prompt") String systemPrompt
+        @JsonProperty("system_prompt") String systemPrompt,
+        @JsonProperty("preferred_name_question_enabled") Boolean preferredNameQuestionEnabled,
+        @JsonProperty("communication_style_question_enabled") Boolean communicationStyleQuestionEnabled
 ) {
 }
