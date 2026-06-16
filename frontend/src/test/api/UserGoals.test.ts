@@ -63,9 +63,17 @@ describe('userGoalsApi', () => {
     expect(mockedDelete).toHaveBeenCalledWith('/user-goals/3')
   })
 
-  it('complete llama a PATCH /user-goals/{id}/complete', async () => {
+  it('complete llama a PATCH /user-goals/{id}/complete con FormData', async () => {
     mockedPatch.mockResolvedValueOnce({ id: 7, status: 'COMPLETED' } as never)
     await userGoalsApi.complete(7)
-    expect(mockedPatch).toHaveBeenCalledWith('/user-goals/7/complete')
+    expect(mockedPatch).toHaveBeenCalledWith('/user-goals/7/complete', expect.any(FormData))
+  })
+
+  it('complete incluye la imagen en el FormData cuando se provee', async () => {
+    mockedPatch.mockResolvedValueOnce({ id: 7, status: 'COMPLETED' } as never)
+    const file = new File(['img'], 'foto.jpg', { type: 'image/jpeg' })
+    await userGoalsApi.complete(7, file)
+    const [, formData] = mockedPatch.mock.calls[0] as [string, FormData]
+    expect(formData.get('image')).toBe(file)
   })
 })

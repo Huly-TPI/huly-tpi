@@ -7,4 +7,8 @@ public interface VectorMemorySourcePolicy {
     VectorMemorySource sourceType();
 
     Boolean shouldRemember(String normalizedContent);
+
+    default int minContentLength() {
+        return -1;
+    }
 }

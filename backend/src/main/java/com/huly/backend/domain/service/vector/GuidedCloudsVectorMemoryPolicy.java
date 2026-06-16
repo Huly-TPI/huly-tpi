@@ -15,4 +15,9 @@ public class GuidedCloudsVectorMemoryPolicy implements VectorMemorySourcePolicy 
     public Boolean shouldRemember(String normalizedContent) {
         return true;
     }
+
+    @Override
+    public int minContentLength() {
+        return 2;
+    }
 }

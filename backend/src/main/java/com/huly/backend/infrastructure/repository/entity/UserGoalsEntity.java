@@ -41,4 +41,13 @@ public class UserGoalsEntity {
     @JoinColumn(name = "activity_id", nullable = true)
     private ActivityEntity activity;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    @Column(name = "coins_reward", nullable = false)
+    private Integer coinsReward = 10;
+
+    @Column(name = "coins_reward_with_image", nullable = false)
+    private Integer coinsRewardWithImage = 25;
+
 }

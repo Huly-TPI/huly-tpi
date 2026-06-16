@@ -132,3 +132,9 @@ gradlew.bat
 # ========================
 HELP.md
 ./docs/
+
+# ========================
+# EXTENSION
+# ========================
+antiscroll-extension/node_modules/
+antiscroll-extension/dist/
