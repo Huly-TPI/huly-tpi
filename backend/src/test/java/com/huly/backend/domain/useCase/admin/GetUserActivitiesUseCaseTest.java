@@ -172,5 +172,107 @@ class GetUserActivitiesUseCaseTest {
         GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TODAY));
         assertThat(response.averageSessionsText()).isEqualTo("1 sesión hoy");
     }
+
+    @Test
+    void execute_shouldHandleTodayTimeframe_withPluralText() {
+        ActivitySession session1 = ActivitySession.builder()
+                .id(1L)
+                .userId(USER_ID)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+        ActivitySession session2 = ActivitySession.builder()
+                .id(2L)
+                .userId(USER_ID)
+                .activityType(ActivityType.RESPIRACION)
+                .createdAt(Instant.now())
+                .build();
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of(session1, session2));
+        when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of(session1, session2));
+
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TODAY));
+        assertThat(response.averageSessionsText()).isEqualTo("2 sesiones hoy");
+    }
+
+    @Test
+    void execute_shouldHandleIntegerAveragePerWeekAndEmptyOldestSession() {
+        Instant now = Instant.now();
+        Instant sevenDaysAgo = now.minus(7, ChronoUnit.DAYS);
+        ActivitySession oldSession = ActivitySession.builder()
+                .id(1L)
+                .userId(USER_ID)
+                .activityType(ActivityType.DIARIO)
+                .createdAt(sevenDaysAgo)
+                .build();
+        ActivitySession recentSession = ActivitySession.builder()
+                .id(2L)
+                .userId(USER_ID)
+                .activityType(ActivityType.DIARIO)
+                .createdAt(now)
+                .build();
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(activitySessionRepository.findByUserId(USER_ID)).thenReturn(List.of(oldSession, recentSession));
+        when(activitySessionRepository.findOldestSessionByUserId(USER_ID)).thenReturn(Optional.empty());
+        when(activitySessionRepository.findRecentByUserId(USER_ID, 5)).thenReturn(List.of(recentSession, oldSession));
+
+        assertThatThrownBy(() -> useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TOTAL)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Missing oldest activity session for userId=");
+                
+        // Now mock oldest session to test integer averagePerWeek
+        when(activitySessionRepository.findOldestSessionByUserId(USER_ID)).thenReturn(Optional.of(oldSession));
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TOTAL));
+        assertThat(response.averageSessionsText()).isEqualTo("2 sesiones/semana");
+    }
+
+    @Test
+    void execute_shouldHandleUnrecognizedActivityType() {
+        ActivitySession mockSession = mock(ActivitySession.class);
+        ActivityType mockType = mock(ActivityType.class);
+        when(mockType.name()).thenReturn("OTHER");
+        when(mockSession.getActivityType()).thenReturn(mockType);
+        when(mockSession.getId()).thenReturn(1L);
+        when(mockSession.getCreatedAt()).thenReturn(Instant.now());
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of(mockSession));
+        when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of(mockSession));
+
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TODAY));
+        assertThat(response.activityDistribution()).doesNotContainKey("OTHER");
+    }
+
+    @Test
+    void execute_shouldHandleZeroSessions() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of());
+        when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of());
+
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TODAY));
+        assertThat(response.averageSessionsText()).isEqualTo("Sin registros");
+    }
+
+    @Test
+    void execute_shouldHandleAveragePerWeekExactlyOne() {
+        Instant now = Instant.now();
+        Instant sevenDaysAgo = now.minus(7, ChronoUnit.DAYS);
+        ActivitySession oldSession = ActivitySession.builder()
+                .id(1L)
+                .userId(USER_ID)
+                .activityType(ActivityType.DIARIO)
+                .createdAt(sevenDaysAgo)
+                .build();
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(activitySessionRepository.findByUserId(USER_ID)).thenReturn(List.of(oldSession));
+        when(activitySessionRepository.findOldestSessionByUserId(USER_ID)).thenReturn(Optional.of(oldSession));
+        when(activitySessionRepository.findRecentByUserId(USER_ID, 5)).thenReturn(List.of(oldSession));
+
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TOTAL));
+        assertThat(response.averageSessionsText()).isEqualTo("1 sesión/semana");
+    }
 }
 

@@ -160,5 +160,34 @@ class ListBackofficeUsersUseCaseTest {
         List<BackofficeUserSummary> result = useCase.execute("test");
         assertThat(result).isEmpty();
     }
+
+    @Test
+    void execute_shouldDetermineUserPlanCorrectly_whenUserHasActiveOrInactivePlan() {
+        AppUser userActive = AppUser.builder().id(1L).name("Active User").build();
+        AppUser userInactive = AppUser.builder().id(2L).name("Inactive User").build();
+
+        UserPlan activePlan = UserPlan.builder()
+                .planCode("Premium")
+                .expiresAt(java.time.Instant.now().plusSeconds(86400))
+                .build();
+        UserPlan inactivePlan = UserPlan.builder()
+                .planCode("Pro")
+                .expiresAt(java.time.Instant.now().minusSeconds(86400))
+                .build();
+
+        when(userRepository.findAllNonAdmins()).thenReturn(List.of(userActive, userInactive));
+        when(settingsRepository.findByUserId(anyLong())).thenReturn(Optional.empty());
+        when(userRepository.getCoins(anyLong())).thenReturn(0);
+        when(emotionalEventRepository.findByUserId(anyLong())).thenReturn(List.of());
+
+        when(userPlanRepository.findByUser(1L)).thenReturn(Optional.of(activePlan));
+        when(userPlanRepository.findByUser(2L)).thenReturn(Optional.of(inactivePlan));
+
+        List<BackofficeUserSummary> result = useCase.execute();
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getPlan()).isEqualTo("Premium");
+        assertThat(result.get(1).getPlan()).isEqualTo("Gratuito");
+    }
 }
 

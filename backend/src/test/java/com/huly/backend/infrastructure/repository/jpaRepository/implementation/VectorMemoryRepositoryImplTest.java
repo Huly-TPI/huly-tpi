@@ -114,4 +114,19 @@ class VectorMemoryRepositoryImplTest {
 
         repository.findMemoriesByUserIdExcludingSummary(1L);
     }
+
+    @Test
+    void findPersonalitySummary_rowMapper_shouldMapCorrectly() throws Exception {
+        ResultSet rs = mock(ResultSet.class);
+        when(rs.getString("content")).thenReturn("Personality Summary Content");
+
+        doAnswer(invocation -> {
+            RowMapper<String> mapper = invocation.getArgument(1);
+            String mapped = mapper.mapRow(rs, 1);
+            assertThat(mapped).isEqualTo("Personality Summary Content");
+            return List.of(mapped);
+        }).when(jdbcTemplate).query(anyString(), any(RowMapper.class), anyString());
+
+        repository.findPersonalitySummaryByUserId(1L);
+    }
 }

@@ -233,4 +233,59 @@ class GetUserAiDiagnosticsUseCaseTest {
         assertThat(response.acceptedActivities()).contains("Retos Diarios");
         assertThat(response.ignoredActivities()).contains("Retos Diarios");
     }
+
+    @Test
+    void execute_shouldHandleJsonParsingErrors() {
+        String invalidJson = "{invalidJsonString";
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
+        when(vectorMemoryRepository.findPersonalitySummaryByUserId(USER_ID)).thenReturn(Optional.of(invalidJson));
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of());
+        when(preferenceRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        GetUserAiDiagnosticsResponse response = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(response.personalitySummary()).isEqualTo(invalidJson);
+    }
+
+    @Test
+    void execute_shouldHandleMissingGeneratedRecommendationAndNullMemoryContent() {
+        EmotionalEvent blankRecEvent = EmotionalEvent.builder()
+                .id(1L).userId(USER_ID).source(EmotionalEventSource.CHATBOT)
+                .generatedRecommendation("   ").build();
+        VectorMemoryEntry nullContentMemory = new VectorMemoryEntry("1", null, "CHATBOT", "TEXT_MEMORY", null);
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(nullContentMemory));
+        when(vectorMemoryRepository.findPersonalitySummaryByUserId(USER_ID)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of(blankRecEvent));
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of(blankRecEvent));
+        when(preferenceRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        GetUserAiDiagnosticsResponse response = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(response.receptivityScore()).isZero();
+    }
+
+    @Test
+    void execute_shouldHandleChallengeDecisionWithoutKeywordsAndSimplifyVariousRecommendationNames() {
+        VectorMemoryEntry irrelevantMemory = new VectorMemoryEntry("1", "checking some challenge status", "CHALLENGE_DECISION", "CHALLENGE_DECISION", null);
+        EmotionalEvent challengeRecEvent = EmotionalEvent.builder()
+                .id(1L).userId(USER_ID).source(EmotionalEventSource.CHATBOT)
+                .generatedRecommendation("el reto semanal es correr")
+                .recommendationDecision(RecommendationDecision.ACCEPTED).build();
+        EmotionalEvent otherRecEvent = EmotionalEvent.builder()
+                .id(2L).userId(USER_ID).source(EmotionalEventSource.CHATBOT)
+                .generatedRecommendation("some unrecognized activity")
+                .recommendationDecision(RecommendationDecision.ACCEPTED).build();
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(irrelevantMemory));
+        when(vectorMemoryRepository.findPersonalitySummaryByUserId(USER_ID)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of(challengeRecEvent, otherRecEvent));
+        when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of(challengeRecEvent, otherRecEvent));
+        when(preferenceRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        GetUserAiDiagnosticsResponse response = useCase.execute(new GetUserAiDiagnosticsRequest(USER_ID));
+        assertThat(response.acceptedActivities()).contains("Retos Diarios", "some unrecognized activity");
+    }
 }
