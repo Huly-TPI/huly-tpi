@@ -47,7 +47,7 @@ class ChatServiceVectorMemoryTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildStreamingPrompt(any(), any(), any())).thenReturn("stream prompt");
+        when(promptBuilderService.buildStreamingPrompt(any(), any(), any(), any())).thenReturn("stream prompt");
         when(promptBuilderService.buildMetadataPrompt(any(), any(), any())).thenReturn("metadata prompt");
         when(streamingLLMChatPort.stream("stream prompt", "hola", List.of()))
                 .thenReturn(Flux.just("hola ", "mundo"));
@@ -100,7 +100,7 @@ class ChatServiceVectorMemoryTest {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
         when(userVectorMemoryService.findRelevantUserMemories(1L, "hola")).thenReturn(List.of());
         when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildStreamingPrompt(any(), any(), any())).thenReturn("stream prompt");
+        when(promptBuilderService.buildStreamingPrompt(any(), any(), any(), any())).thenReturn("stream prompt");
         when(streamingLLMChatPort.stream("stream prompt", "hola", List.of()))
                 .thenReturn(Flux.error(new RuntimeException("provider down")));
 

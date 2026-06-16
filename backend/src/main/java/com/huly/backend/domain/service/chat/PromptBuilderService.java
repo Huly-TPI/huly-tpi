@@ -70,7 +70,16 @@ public class PromptBuilderService {
     }
 
     public String buildStreamingPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
+        return buildStreamingPrompt(basePrompt, riskWords, memories, null);
+    }
+
+    public String buildStreamingPrompt(
+            String basePrompt,
+            List<RiskWord> riskWords,
+            List<VectorMemory> memories,
+            ChatPersonalizationContext personalization) {
         StringBuilder sb = basePromptBuilder(basePrompt);
+        appendConversationPreferences(sb, personalization);
         appendVectorMemories(sb, memories);
         appendStreamingInstructions(sb);
         appendRiskWords(sb, riskWords);

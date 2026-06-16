@@ -1,6 +1,7 @@
 package com.huly.backend.domain.service.chat;
 
 import java.util.List;
+import java.time.Instant;
 
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,9 @@ import reactor.core.publisher.Mono;
 public class ChatService {
 
     private static final String STREAM_ERROR_MESSAGE = "No se pudo completar la respuesta del asistente.";
+    private static final String STYLE_QUESTION =
+            "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
+                    + "formal, directa, indirecta, cercana o como un amigo.";
 
     private final LLMChatPort llmChatPort;
     private final StreamingLLMChatPort streamingLLMChatPort;
@@ -52,6 +56,14 @@ public class ChatService {
     private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
+        return processMessage(message, conversationId, userId, false);
+    }
+
+    public ChatReply processMessage(
+            String message,
+            String conversationId,
+            Long userId,
+            boolean offerCommunicationStyleWhenSafe) {
         chatQuotaService.assertWithinLimit(userId);
         ChatContext context = buildBlockingContext(message, conversationId, userId);
         ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
@@ -72,6 +84,10 @@ public class ChatService {
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
         reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
         ChatReply finalReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
+        finalReply = appendCommunicationStyleQuestionIfSafe(
+                finalReply,
+                userId,
+                offerCommunicationStyleWhenSafe);
         saveUserMessage(conversationId, message, finalReply, userId);
         saveAssistantMessage(conversationId, finalReply.content(), userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
@@ -98,6 +114,14 @@ public class ChatService {
     }
 
     public Flux<ChatStreamEvent> streamMessage(String message, String conversationId, Long userId) {
+        return streamMessage(message, conversationId, userId, false);
+    }
+
+    public Flux<ChatStreamEvent> streamMessage(
+            String message,
+            String conversationId,
+            Long userId,
+            boolean offerCommunicationStyleWhenSafe) {
         chatQuotaService.assertWithinLimit(userId);
         return Flux.defer(() -> {
             ChatContext context = buildStreamingContext(message, conversationId, userId);
@@ -116,10 +140,16 @@ public class ChatService {
                             conversationId,
                             userId,
                             context,
-                            assistantContent.toString()))
-                            .flatMapMany(reply -> Flux.just(
-                                    ChatStreamEvent.metadata(reply),
-                                    ChatStreamEvent.done(reply))))
+                            assistantContent.toString(),
+                            offerCommunicationStyleWhenSafe))
+                            .flatMapMany(completion -> completion.followUpDelta() == null
+                                    ? Flux.just(
+                                            ChatStreamEvent.metadata(completion.reply()),
+                                            ChatStreamEvent.done(completion.reply()))
+                                    : Flux.just(
+                                            ChatStreamEvent.delta(completion.followUpDelta()),
+                                            ChatStreamEvent.metadata(completion.reply()),
+                                            ChatStreamEvent.done(completion.reply()))))
                     .doOnCancel(() -> log.info("Stream de chat cancelado userId={} conversationId={}",
                             userId, conversationId));
         }).onErrorResume(e -> {
@@ -153,9 +183,14 @@ public class ChatService {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
-        String systemPrompt = promptBuilderService.buildStreamingPrompt(basePrompt, riskWords, memories);
+        ChatPersonalizationContext personalization = loadPersonalizationContext(userId);
+        String systemPrompt = promptBuilderService.buildStreamingPrompt(
+                basePrompt,
+                riskWords,
+                memories,
+                personalization);
         List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
-        return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history, null);
+        return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history, personalization);
     }
 
     private String basePrompt() {
@@ -164,12 +199,13 @@ public class ChatService {
                 .orElse("");
     }
 
-    private ChatReply completeStream(
+    private ChatStreamCompletion completeStream(
             String message,
             String conversationId,
             Long userId,
             ChatContext context,
-            String assistantContent) {
+            String assistantContent,
+            boolean offerCommunicationStyleWhenSafe) {
         ChatReply metadata = extractMetadata(message, context);
         ChatReply finalReply = new ChatReply(
                 assistantContent,
@@ -177,10 +213,51 @@ public class ChatService {
                 metadata.intensity(),
                 metadata.riskDetected(),
                 metadata.matchedWord());
+        ChatReply enrichedReply = appendCommunicationStyleQuestionIfSafe(
+                finalReply,
+                userId,
+                offerCommunicationStyleWhenSafe);
 
-        saveAssistantMessage(conversationId, assistantContent, userId);
+        saveAssistantMessage(conversationId, enrichedReply.content(), userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
-        return finalReply;
+        String followUpDelta = enrichedReply.content().equals(assistantContent)
+                ? null
+                : enrichedReply.content().substring(assistantContent.length());
+        return new ChatStreamCompletion(enrichedReply, followUpDelta);
+    }
+
+    private ChatReply appendCommunicationStyleQuestionIfSafe(
+            ChatReply reply,
+            Long userId,
+            boolean offerCommunicationStyleWhenSafe) {
+        if (!offerCommunicationStyleWhenSafe
+                || Boolean.TRUE.equals(reply.riskDetected())
+                || (reply.intensity() != null && reply.intensity() >= 7)
+                || reply.suggestedAction() != null) {
+            return reply;
+        }
+
+        ChatConversationPreference pendingPreference = chatConversationPreferenceRepository.findByUserId(userId)
+                .filter(preference -> preference.getOnboardingStatus()
+                        == com.huly.backend.domain.model.enums.ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
+                .orElse(null);
+        if (pendingPreference == null) {
+            return reply;
+        }
+        chatConversationPreferenceRepository.save(
+                pendingPreference.markCommunicationStyleAsked(Instant.now()));
+
+        String content = reply.content() == null || reply.content().isBlank()
+                ? STYLE_QUESTION
+                : reply.content().trim() + "\n\n" + STYLE_QUESTION;
+        return new ChatReply(
+                content,
+                reply.detectedEmotion(),
+                reply.intensity(),
+                reply.riskDetected(),
+                reply.matchedWord(),
+                reply.suggestedAction(),
+                reply.generatedChallenge());
     }
 
     private ChatReply extractMetadata(String message, ChatContext context) {
@@ -298,5 +375,10 @@ public class ChatService {
                     history,
                     personalization);
         }
+    }
+
+    private record ChatStreamCompletion(
+            ChatReply reply,
+            String followUpDelta) {
     }
 }
