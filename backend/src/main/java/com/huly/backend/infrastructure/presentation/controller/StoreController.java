@@ -1,9 +1,11 @@
 package com.huly.backend.infrastructure.presentation.controller;
+
 import com.huly.backend.domain.model.StoreItem;
 import com.huly.backend.domain.model.UserStoreItem;
 import com.huly.backend.domain.useCase.store.BuyStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.EquipStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.GetUserInventoryUseCase;
+import com.huly.backend.domain.useCase.store.UnequipStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.ListStoreItemsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.store.InventoryItemResponse;
 import com.huly.backend.infrastructure.presentation.dto.store.StoreItemResponse;
@@ -24,6 +26,7 @@ public class StoreController {
     private final GetUserInventoryUseCase getUserInventoryUseCase;
     private final BuyStoreItemUseCase buyStoreItemUseCase;
     private final EquipStoreItemUseCase equipStoreItemUseCase;
+    private final UnequipStoreItemUseCase unequipStoreItemUseCase;
 
     @GetMapping("/items")
     public ResponseEntity<List<StoreItemResponse>> getItems() {
@@ -32,12 +35,13 @@ public class StoreController {
     }
 
     @GetMapping("/inventory")
-    public ResponseEntity<List<InventoryItemResponse>> getMyInventory(@AuthenticationPrincipal UserDetails userDetails) {
-        List<InventoryItemResponse> response = getUserInventoryUseCase.execute(Long.parseLong(userDetails.getUsername())).stream()
-        .map(this::toInventoryResponse).toList();
+    public ResponseEntity<List<InventoryItemResponse>> getMyInventory(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<InventoryItemResponse> response = getUserInventoryUseCase
+                .execute(Long.parseLong(userDetails.getUsername())).stream()
+                .map(this::toInventoryResponse).toList();
         return ResponseEntity.ok(response);
     }
-
 
     @PostMapping("/items/{id}/buy")
     public ResponseEntity<Void> buyItem(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
@@ -51,15 +55,20 @@ public class StoreController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/items/{id}/unequip")
+    public ResponseEntity<Void> unequipItem(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        unequipStoreItemUseCase.execute(Long.parseLong(userDetails.getUsername()), id);
+        return ResponseEntity.ok().build();
+    }
+
     private StoreItemResponse toItemResponse(StoreItem item) {
-        return new StoreItemResponse( 
+        return new StoreItemResponse(
                 item.getId(),
-                item.getName(), 
+                item.getName(),
                 item.getDescription(),
                 item.getCategory().name(),
                 item.getAssetKey(),
-                item.getPriceCoins()
-        );
+                item.getPriceCoins());
     }
 
     private InventoryItemResponse toInventoryResponse(UserStoreItem owned) {
@@ -68,8 +77,7 @@ public class StoreController {
                 owned.getStoreItem().getName(),
                 owned.getStoreItem().getCategory().name(),
                 owned.getStoreItem().getAssetKey(),
-                owned.isEquipped()
-        );
+                owned.isEquipped());
     }
-    
+
 }

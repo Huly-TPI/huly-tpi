@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getUserCoins } from '../../api/auth'
 import { useAuth } from '../../context/auth'
 
@@ -7,12 +7,17 @@ export function useUserCoins() {
   const [coins, setCoins] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (authLoading) return
-    getUserCoins()
+  const refetch = useCallback(() => {
+    return getUserCoins()
       .then(({ coins: c }) => setCoins(c))
       .catch(() => setError('No se pudieron cargar las monedas.'))
-  }, [authLoading])
+  }, [])
+  
+  
+  useEffect(() => {
+    if (authLoading) return
+    refetch() 
+  }, [authLoading, refetch])
 
-  return { coins, error }
+  return { coins, error, refetch }
 }

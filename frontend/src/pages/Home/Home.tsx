@@ -1,6 +1,6 @@
 import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
 import dayMobileBackgroundImage from '../../assets/garden/light-theme/background/mobile/day-background.webp'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import cloudImage from '../../assets/garden/light-theme/cloud.webp'
 import houseImage from '../../assets/garden/light-theme/house.webp'
 import notebookImage from '../../assets/garden/light-theme/notebook.webp'
@@ -16,10 +16,13 @@ import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-plant.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
+import StoreModal from '../../components/Shop/StoreModal'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useTheme } from '../../context/theme'
 import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
+import { useInventory } from '../../hooks/store/useInventory'
+import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
 import './Home.css'
 
@@ -30,6 +33,10 @@ const THEME_BEHAVIOR: Record<SceneTheme, { restrictedElementIds: Set<string> }> 
   dark: {
     restrictedElementIds: new Set<string>(),
   },
+}
+
+const CATEGORY_BY_ELEMENT_ID: Record<string, string> = {
+  house: 'HOUSE',
 }
 
 const cloudClipPath =
@@ -131,6 +138,9 @@ const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds)
 
 export default function Home() {
   const { theme: sceneTheme } = useTheme()
+  const [isStoreOpen, setIsStoreOpen] = useState(false)
+  const { inventory, refetch: refetchInventory } = useInventory()
+  const equippedByCategory = resolveEquippedImages(inventory)
   const {
     onboardingMode,
     onboardingStepIndex,
@@ -168,8 +178,8 @@ export default function Home() {
       }
     }
     for (const step of homeOnboardingSteps) {
-      if (step.mascot) 
-        sources.add(step.mascot.imageSrc)      
+      if (step.mascot)
+        sources.add(step.mascot.imageSrc)
     }
 
     sources.forEach(src => {
@@ -180,11 +190,17 @@ export default function Home() {
 
   const currentThemeBehavior = THEME_BEHAVIOR[sceneTheme]
   const renderedSceneElements = sceneElements.map(element => {
+    const category = CATEGORY_BY_ELEMENT_ID[element.id]
+    const equipped = category ? equippedByCategory[category] : undefined
+    const withCosmetic = equipped
+      ? { ...element, image: { light: equipped.light, dark: equipped.dark } }
+      : element
+
     const isRestrictedForTheme = currentThemeBehavior.restrictedElementIds.has(element.id)
-    if (!isRestrictedForTheme && !shouldRenderOnboarding) return element
+    if (!isRestrictedForTheme && !shouldRenderOnboarding) return withCosmetic
 
     return {
-      ...element,
+      ...withCosmetic,
       interactive: false,
     }
   })
@@ -235,6 +251,17 @@ export default function Home() {
           />
         ) : null}
       </section>
+
+      <button
+        type="button"
+        onClick={() => setIsStoreOpen(true)}
+        aria-label="Abrir tienda"
+        className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#4C7C64] text-2xl text-white shadow-lg transition hover:bg-[#3d6450] active:scale-95"
+      >
+        🛍️
+      </button>
+
+      <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
     </main>
   )
 }

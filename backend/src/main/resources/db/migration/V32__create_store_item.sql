@@ -8,7 +8,5 @@ CREATE TABLE store_item (
 );
 
 INSERT INTO store_item (name, description, category, asset_key, price_coins) VALUES
-    ('Casa rosa', 'Pinta tu casa de un rosa suave', 'HOUSE', 'casa-rosa', 50),
-    ('Casa celeste', 'Un celeste tranquilo para tu casa', 'HOUSE', 'casa-celeste', 50),
-    ('Maceta lila', 'Una maceta en tono lila', 'POT', 'maceta-lila', 30),
-    ('Maceta terracota', 'Maceta de barro terracota', 'POT', 'maceta-terracota', 30);
+    ('Casa rosa', 'Pinta tu casa de un rosa suave', 'HOUSE', 'house-pink', 50),
+    ('Casa celeste', 'Un celeste tranquilo para tu casa', 'HOUSE', 'house-blue', 50);

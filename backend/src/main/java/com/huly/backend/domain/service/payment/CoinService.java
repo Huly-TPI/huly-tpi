@@ -1,5 +1,5 @@
 package com.huly.backend.domain.service.payment;
-
+import com.huly.backend.domain.exception.InsufficientCoinsException;
 import com.huly.backend.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class CoinService {
     public void debit(Long userId, int amount) {
         int rowsAffected = userRepository.debitCoins(userId, amount);
         if (rowsAffected == 0) {
-            throw new RuntimeException("Saldo de monedas insuficiente");
+            throw new InsufficientCoinsException("Saldo de monedas insuficiente");
         }
     }
     

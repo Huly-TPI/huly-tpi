@@ -6,6 +6,7 @@ import com.huly.backend.domain.useCase.store.BuyStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.EquipStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.GetUserInventoryUseCase;
 import com.huly.backend.domain.useCase.store.ListStoreItemsUseCase;
+import com.huly.backend.domain.useCase.store.UnequipStoreItemUseCase;
 import com.huly.backend.infrastructure.presentation.controller.StoreController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,9 @@ public class StoreControllerTest {
 
     @Mock
     private EquipStoreItemUseCase equipStoreItemUseCase;
+
+    @Mock
+    private UnequipStoreItemUseCase unequipStoreItemUseCase;
 
     @Mock private UserDetails userDetails;
 
@@ -89,6 +93,14 @@ public class StoreControllerTest {
         var response = storeController.equipItem(10L, userDetails);
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         verify(equipStoreItemUseCase).execute(7L, 10L);
+    }
+
+    @Test
+    void unequip_shouldDelegateToUseCaseAndReturnOk() {
+        when(userDetails.getUsername()).thenReturn("7");
+        var response = storeController.unequipItem(10L, userDetails);
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        verify(unequipStoreItemUseCase).execute(7L, 10L);
     }
     
 }

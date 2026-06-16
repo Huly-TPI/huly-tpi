@@ -6,8 +6,7 @@ import com.huly.backend.domain.useCase.store.BuyStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.EquipStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.GetUserInventoryUseCase;
 import com.huly.backend.domain.useCase.store.ListStoreItemsUseCase;
-import com.mercadopago.resources.user.User;
-
+import com.huly.backend.domain.useCase.store.UnequipStoreItemUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,6 +33,11 @@ public class StoreUseCaseConfig {
     @Bean 
     public EquipStoreItemUseCase equipStoreItemUseCase(StoreItemRepository storeItemRepository, UserStoreItemRepository userStoreItemRepository) {
         return new EquipStoreItemUseCase(storeItemRepository, userStoreItemRepository);
+    }
+
+    @Bean
+    public UnequipStoreItemUseCase unequipStoreItemUseCase(UserStoreItemRepository userStoreItemRepository) {
+        return new UnequipStoreItemUseCase(userStoreItemRepository);
     }
     
 }

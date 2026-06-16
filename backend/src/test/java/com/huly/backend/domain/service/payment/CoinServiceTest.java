@@ -1,6 +1,7 @@
 package com.huly.backend.domain.service.payment;
 
 import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.exception.InsufficientCoinsException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,6 +35,6 @@ class CoinServiceTest {
     @Test
     void debit_shouldThrowException_whenBalanceIsInsufficient() {
         when(userRepository.debitCoins(42L, 500)).thenReturn(0);
-        assertThatThrownBy(() -> coinService.debit(42L, 500)).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> coinService.debit(42L, 500)).isInstanceOf(InsufficientCoinsException.class);
     }
 }
