@@ -9,11 +9,9 @@ import com.huly.backend.domain.repository.ActivityRepository;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
-@Service
 @RequiredArgsConstructor
 public class UpdateEmotionalEventDecisionUseCase {
 

@@ -23,6 +23,7 @@ class MercadoPagoSignatureValidatorTest {
     void setUp() {
         validator = new MercadoPagoSignatureValidator();
         ReflectionTestUtils.setField(validator, "webhookSecret", SECRET);
+        ReflectionTestUtils.setField(validator, "validateSignature", true);
     }
 
     @Test

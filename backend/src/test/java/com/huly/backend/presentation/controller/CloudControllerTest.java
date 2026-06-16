@@ -72,7 +72,7 @@ class CloudControllerTest {
                 "diary", "diary", "Escribí en tu diario",
                 "Plasmar tus emociones puede ayudarte.", "/diary"
         );
-        when(getCloudRecommendationUseCase.execute(any())).thenReturn(recommendation);
+        when(getCloudRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(recommendation);
 
         mockMvc.perform(post("/api/clouds/recommendation")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,7 +103,7 @@ class CloudControllerTest {
 
     @Test
     void getRecommendation_shouldDelegateThoughtsToUseCase() throws Exception {
-        when(getCloudRecommendationUseCase.execute(any())).thenReturn(
+        when(getCloudRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(
                 new CloudRecommendation("diary", "diary", "Título", "Desc.", "/diary"));
 
         mockMvc.perform(post("/api/clouds/recommendation")
@@ -111,7 +111,7 @@ class CloudControllerTest {
                         .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of("no puedo dejar de pensar")))))
                 .andExpect(status().isOk());
 
-        verify(getCloudRecommendationUseCase).execute(List.of("no puedo dejar de pensar"));
+        verify(getCloudRecommendationUseCase).execute(List.of("no puedo dejar de pensar"), USER_ID);
     }
 
     // ── /thought ─────────────────────────────────────────────────────────────

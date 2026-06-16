@@ -27,6 +27,8 @@ class ListChatHistoryUseCaseTest {
 
     @Mock
     private ChatMessageRepository chatMessageRepository;
+    @Mock
+    private InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
 
     @InjectMocks
     private ListChatHistoryUseCase listChatHistoryUseCase;
@@ -46,6 +48,7 @@ class ListChatHistoryUseCaseTest {
         assertThat(result).isEqualTo(expected);
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).content()).isEqualTo("hola");
+        verify(initializeChatPreferencesUseCase).execute(userId, conversationId);
         verify(chatMessageRepository).findByConversationIdAndUserId(conversationId, userId, pageable);
     }
 
@@ -61,6 +64,7 @@ class ListChatHistoryUseCaseTest {
         Page<ChatMessage> result = listChatHistoryUseCase.execute(conversationId, userId, pageable);
 
         assertThat(result).isEmpty();
+        verify(initializeChatPreferencesUseCase).execute(userId, conversationId);
         verify(chatMessageRepository).findByConversationIdAndUserId(conversationId, userId, pageable);
     }
 

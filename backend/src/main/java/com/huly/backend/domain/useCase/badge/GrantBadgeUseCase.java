@@ -8,11 +8,9 @@ import com.huly.backend.domain.repository.UserBadgeRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
-@Service
 @RequiredArgsConstructor
 public class GrantBadgeUseCase {
     private final BadgeRepository badgeRepository;

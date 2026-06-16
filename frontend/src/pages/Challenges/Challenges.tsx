@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import { type UserGoalResponse } from '../../api/userGoals'
 import Plant from '../../components/Challenges/Plant'
@@ -15,6 +15,8 @@ import stumpImg from '../../assets/challenges/stump.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
 import { useAuthGate } from '../../context/authGate'
+import { ActivityType } from '../../api/activities'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
 const CYCLE_SIZE = 16
 
@@ -55,9 +57,20 @@ export default function Challenges() {
   const [isWatering, setIsWatering] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
+  const [coinToast, setCoinToast] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (coinToast === null) return
+    const timer = setTimeout(() => setCoinToast(null), 3500)
+    return () => clearTimeout(timer)
+  }, [coinToast])
 
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
+
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.RETO, {
+    autoStart: true,
+  })
 
   const completedCount = completados?.totalElements ?? 0
   const { completedPlants, cycleProgress } = getCycleData(completedCount)
@@ -72,7 +85,8 @@ export default function Challenges() {
 
   const handleCreate = useCallback(async (data: { title: string; description: string }) => {
     await createGoal({ title: data.title, description: data.description || undefined })
-  }, [createGoal])
+    markConditionMet()
+  }, [createGoal, markConditionMet])
 
   const handleUpdate = useCallback(async (id: number, data: { title: string; description: string }) => {
     await updateGoal(id, { title: data.title, description: data.description || undefined })
@@ -87,11 +101,18 @@ export default function Challenges() {
     }
   }, [deleteGoal])
 
-  const handleComplete = useCallback(async (id: number) => {
+  const handleComplete = useCallback(async (id: number, image?: File) => {
     setActionError(null)
+    const goal = pendientes?.content.find(g => g.id === id)
+    const coinsEarned = image
+      ? (goal?.coinsRewardWithImage ?? 25)
+      : (goal?.coinsReward ?? 10)
     const isHarvest = cycleProgress === CYCLE_SIZE - 1
     try {
-      await completeGoal(id)
+      await completeGoal(id, image)
+      markConditionMet()
+      await saveSession()
+      setCoinToast(coinsEarned)
       if (isHarvest) {
         setHarvestPlant(completedPlants + 1)
       } else {
@@ -100,7 +121,7 @@ export default function Challenges() {
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Error al completar el reto')
     }
-  }, [cycleProgress, completedPlants, completeGoal, triggerWatering])
+  }, [pendientes, cycleProgress, completedPlants, completeGoal, triggerWatering, markConditionMet, saveSession])
 
   const hasPending  = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0
@@ -258,6 +279,27 @@ export default function Challenges() {
           plantNumber={harvestPlant}
           onCreateNew={() => { setHarvestPlant(null); setModal({ mode: 'create' }) }}
         />
+      )}
+
+      {coinToast !== null && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-24 right-5 z-50 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#e6b800] px-5 py-4 shadow-xl text-white"
+        >
+          <span className="text-2xl" aria-hidden="true">🪙</span>
+          <div>
+            <p className="text-sm opacity-90 m-0">¡Reto completado!</p>
+            <p className="font-bold text-lg m-0">+{coinToast} monedas</p>
+          </div>
+          <button
+            aria-label="Cerrar"
+            onClick={() => setCoinToast(null)}
+            className="ml-1 rounded-full p-1.5 hover:bg-white/20 transition bg-transparent border-0 cursor-pointer text-white"
+          >
+            ✕
+          </button>
+        </div>
       )}
     </div>
   )

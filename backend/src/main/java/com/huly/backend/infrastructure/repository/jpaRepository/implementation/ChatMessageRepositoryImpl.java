@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.EmotionType;
+import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.infrastructure.repository.entity.ChatMessageEntity;
 import com.huly.backend.infrastructure.repository.entity.ChatSessionEntity;
@@ -59,6 +60,11 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
     public Page<ChatMessage> findByConversationIdAndUserId(String conversationId, Long userId, Pageable pageable) {
         return jpa.findByChatSessionConversationIdAndChatSessionAppUserId(conversationId, userId, pageable)
                 .map(this::toChatMessage);
+    }
+
+    @Override
+    public long countUserMessagesSince(Long userId, Instant since) {
+        return jpa.countByChatSessionAppUserIdAndRoleAndCreatedAtAfter(userId, MessageRole.USER, since);
     }
 
     private ChatMessage toChatMessage(ChatMessageEntity e) {

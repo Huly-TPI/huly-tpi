@@ -1,85 +1,123 @@
 import './EmotionalOnboarding.css'
 import registerBackground from '../../../assets/register/background.webp'
-import cardFrame from '../../../assets/register/cardFrame.webp'
+import hulyGreeting from '../../../assets/register/huly-greeting.webp'
+import type { Step1Option } from '../../../hooks/useEmotionalOnboarding'
+
+const STEP_CONTENT: Record<1 | 2 | 3, { title: string; subtitle: string }> = {
+  1: {
+    title: '¿Qué te trae a Huly?',
+    subtitle: 'Elegí lo que más te resuena.',
+  },
+  2: {
+    title: '¿Por dónde te gustaría empezar?',
+    subtitle: 'Contame un poco más sobre lo que buscás.',
+  },
+  3: {
+    title: '¿Qué querés que sea Huly para vos?',
+    subtitle: 'Tu jardín, a tu manera.',
+  },
+}
+
 type Props = {
-    step: 1 | 2 | 3
-    options: string[]
-    isLoading: boolean
-    onSelectOption: (option: string) => void
+  step: 0 | 1 | 2 | 3
+  step1Options: Step1Option[]
+  pillOptions: string[]
+  onAdvance: () => void
+  onSelectOption: (option: string) => void
+  onSkip: () => Promise<void>
 }
 
-const TITLES: Record<1 | 2 | 3, string> = {
-  1: '¿Qué querés lograr?',
-  2: '¿Qué aspecto te llama más?',
-  3: '¿Cómo querés empezar?',
-}
+export default function EmotionalOnboarding({
+  step,
+  step1Options,
+  pillOptions,
+  onAdvance,
+  onSelectOption,
+  onSkip,
+}: Props) {
 
-const SUBTITLES: Record<1 | 2 | 3, string> = {
-  1: 'Elegí lo que más se acerca a lo que buscás hoy.',
-  2: 'Basándonos en tu elección, ¿qué te llama más la atención?',
-  3: 'Casi listo. Elegí cómo dar el primer paso.',
-}
 
-export default function EmotionalOnboarding({ step, options, isLoading, onSelectOption }: Props) {
   return (
     <div
-      className="relative h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden"
-      style={{
-        backgroundImage: `url(${registerBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      className="eo-container"
+      style={{ backgroundImage: `url(${registerBackground})` }}
     >
-      <div className="absolute inset-0 backdrop-blur-md" />
+      <div className="eo-overlay" />
 
-      <div
-        className="relative z-10 w-full max-w-md mx-4 px-10 py-12 md:px-16 md:py-14"
-        style={{
-          backgroundImage: `url(${cardFrame})`,
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <div className="flex justify-center gap-2 mb-5" aria-hidden="true">
-          {[1, 2, 3].map(s => (
-            <div
-              key={s}
-              className={`h-2 rounded-full transition-all duration-200 ${
-                s === step ? 'w-5 bg-[#4C7C64]' : 'w-2 bg-[#ACCCA4]'
-              }`}
-            />
-          ))}
+      {step === 0 && (
+        <div className="eo-intro">
+          <div className="eo-bubble">
+            <div className="eo-mascot-wrapper">
+              <img src={hulyGreeting} alt="Huly" className="eo-intro__mascot" />
+              <div className="eo-mascot-shadow" />
+            </div>
+            <p className="eo-bubble__text">
+              ¡Hola! Me alegra que estés acá.
+              <br />
+              Antes de entrar al jardín, te hago unas preguntas cortitas para conocerte mejor y personalizar tu experiencia.
+            </p>
+            <button className="eo-btn-primary" onClick={onAdvance}>
+              Empezar
+            </button>
+            <button className="eo-btn-skip-link" onClick={onSkip}>
+              Saltar por ahora
+            </button>
+          </div>
         </div>
+      )}
 
-        <h2 className="mb-2 text-center text-2xl font-bold text-[#4C7C64]">
-          {TITLES[step]}
-        </h2>
-        <p className="mb-6 text-center text-sm italic text-[#8c7b66]">
-          {SUBTITLES[step]}
-        </p>
-
-        {isLoading ? (
-          <div
-            role="status"
-            className="flex justify-center items-center py-8 text-[#4C7C64] font-semibold text-sm"
-          >
-            Cargando opciones...
+      {step > 0 && (
+        <div className="eo-card">
+          <div className="eo-header">
+            <div className="eo-progress" aria-hidden="true">
+              <div
+                className="eo-progress__bar"
+                style={{ width: `${(step / 3) * 100}%` }}
+              />
+            </div>
+            <button className="eo-btn-skip-top" onClick={onSkip}>
+              Saltar
+            </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {options.map(option => (
-            <button
-                  key={option}
-                  onClick={() => onSelectOption(option)}
-                  disabled={isLoading}
-                  className="emotional-onboarding-option"
+
+          <h2 className="eo-title">
+            {STEP_CONTENT[step as 1 | 2 | 3].title}
+          </h2>
+          <p className="eo-subtitle">
+            {STEP_CONTENT[step as 1 | 2 | 3].subtitle}
+          </p>
+
+          {step === 1 && (
+            <div className="eo-cards-grid">
+              {step1Options.map(opt => (
+                <button
+                  key={opt.title}
+                  className="eo-card-option"
+                  onClick={() => onSelectOption(opt.title)}
                 >
-                  {option}
+                  <opt.Icon className="eo-card-option__icon" />
+                  <span className="eo-card-option__title">{opt.title}</span>
+                  <span className="eo-card-option__subtitle">{opt.subtitle}</span>
                 </button>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+
+          {(step === 2 || step === 3) && (
+            <div className="eo-pills">
+              {pillOptions.map(opt => (
+                <button
+                  key={opt}
+                  className="eo-pill"
+                  onClick={() => onSelectOption(opt)}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

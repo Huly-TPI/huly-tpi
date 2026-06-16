@@ -7,9 +7,7 @@ import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.repository.JournalEntryRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class CreateJournalEntryUseCase {
 

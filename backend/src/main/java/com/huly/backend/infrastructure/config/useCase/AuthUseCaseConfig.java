@@ -1,0 +1,49 @@
+package com.huly.backend.infrastructure.config.useCase;
+
+import com.huly.backend.domain.provider.PasswordHasher;
+import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.repository.RefreshTokenRepository;
+import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
+import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
+import com.huly.backend.domain.useCase.auth.LoginUseCase;
+import com.huly.backend.domain.useCase.auth.LogoutUseCase;
+import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
+import com.huly.backend.domain.useCase.auth.RegisterUseCase;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AuthUseCaseConfig {
+
+    @Bean
+    public LoginUseCase loginUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenProvider tokenProvider, PasswordHasher passwordHasher, UserDetailDomainRepository userDetailDomainRepository) {
+        return new LoginUseCase(userRepository, refreshTokenRepository, tokenProvider, passwordHasher, userDetailDomainRepository);
+    }
+
+    @Bean
+    public AdminLoginUseCase adminLoginUseCase(UserRepository userRepository, LoginUseCase loginUseCase) {
+        return new AdminLoginUseCase(userRepository, loginUseCase);
+    }
+
+    @Bean
+    public RegisterUseCase registerUseCase(UserRepository userRepository, PasswordHasher passwordHasher, LoginUseCase loginUseCase) {
+        return new RegisterUseCase(userRepository, passwordHasher, loginUseCase);
+    }
+
+    @Bean
+    public LogoutUseCase logoutUseCase(RefreshTokenRepository refreshTokenRepository) {
+        return new LogoutUseCase(refreshTokenRepository);
+    }
+
+    @Bean
+    public RefreshTokenUseCase refreshTokenUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenProvider tokenProvider) {
+        return new RefreshTokenUseCase(userRepository, refreshTokenRepository, tokenProvider);
+    }
+
+    @Bean
+    public GetCurrentUserUseCase getCurrentUserUseCase(UserRepository userRepository, UserDetailDomainRepository userDetailDomainRepository) {
+        return new GetCurrentUserUseCase(userRepository, userDetailDomainRepository);
+    }
+}

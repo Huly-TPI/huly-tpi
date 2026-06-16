@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -262,5 +263,52 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErrorResponse> r2 = handler.handleResourceNotFoundException(ex2, request);
 
         assertNotEquals(r1.getBody().getTraceId(), r2.getBody().getTraceId());
+    }
+
+    @Test
+    void testHandleInvalidGoalImageException() {
+        InvalidGoalImageException exception = new InvalidGoalImageException("La imagen no corresponde al reto");
+
+        ResponseEntity<ErrorResponse> response = handler.handleInvalidGoalImageException(exception, request);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(422, response.getBody().getStatus());
+        assertEquals("Unprocessable Entity", response.getBody().getError());
+        assertEquals("La imagen no corresponde al reto", response.getBody().getMessage());
+        assertEquals("/api/test", response.getBody().getPath());
+        assertNotNull(response.getBody().getTraceId());
+    }
+
+    @Test
+    void testHandleImageValidationUnavailableException() {
+        ImageValidationUnavailableException exception = new ImageValidationUnavailableException(
+                "Servicio no disponible", new RuntimeException("timeout")
+        );
+
+        ResponseEntity<ErrorResponse> response = handler.handleImageValidationUnavailableException(exception, request);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(503, response.getBody().getStatus());
+        assertEquals("Service Unavailable", response.getBody().getError());
+        assertEquals(
+                "El servicio de validación de imágenes no está disponible. Intentá de nuevo más tarde.",
+                response.getBody().getMessage()
+        );
+        assertEquals("/api/test", response.getBody().getPath());
+    }
+
+    @Test
+    void testHandleMaxUploadSizeExceededException() {
+        MaxUploadSizeExceededException exception = new MaxUploadSizeExceededException(5L * 1024 * 1024);
+
+        ResponseEntity<ErrorResponse> response = handler.handleMaxUploadSizeExceededException(exception, request);
+
+        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(413, response.getBody().getStatus());
+        assertEquals("Payload Too Large", response.getBody().getError());
+        assertEquals("La imagen no puede superar los 5 MB.", response.getBody().getMessage());
     }
 }

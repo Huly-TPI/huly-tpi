@@ -1,6 +1,7 @@
 package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.EmotionType;
@@ -41,7 +42,25 @@ public class PromptBuilderService {
             SuggestedChatAction suggestedAction,
             ChatUserIntent userIntent
     ) {
+        return buildEnrichedPrompt(
+                basePrompt,
+                riskWords,
+                memories,
+                suggestedAction,
+                userIntent,
+                null);
+    }
+
+    public String buildEnrichedPrompt(
+            String basePrompt,
+            List<RiskWord> riskWords,
+            List<VectorMemory> memories,
+            SuggestedChatAction suggestedAction,
+            ChatUserIntent userIntent,
+            ChatPersonalizationContext personalization
+    ) {
         StringBuilder sb = basePromptBuilder(basePrompt);
+        appendConversationPreferences(sb, personalization);
         appendVectorMemories(sb, memories);
         appendSuggestedActionContext(sb, suggestedAction);
         appendUserIntentContext(sb, userIntent);
@@ -75,6 +94,36 @@ public class PromptBuilderService {
 
     private StringBuilder basePromptBuilder(String basePrompt) {
         return new StringBuilder(basePrompt == null ? "" : basePrompt);
+    }
+
+    private void appendConversationPreferences(
+            StringBuilder sb,
+            ChatPersonalizationContext personalization) {
+        if (personalization == null) {
+            return;
+        }
+
+        sb.append("\n\n=== PREFERENCIAS CONVERSACIONALES DEL USUARIO ===");
+        appendTrustedValue(sb, "Nombre real registrado", personalization.registeredName());
+        appendTrustedValue(sb, "Nombre preferido", personalization.preferredName());
+        if (personalization.communicationStyle() != null) {
+            sb.append("\nEstilo preferido: ")
+                    .append(personalization.communicationStyle().displayName());
+            sb.append("\nInstrucción de estilo: ")
+                    .append(personalization.communicationStyle().promptInstruction());
+        }
+        sb.append("\nEstas preferencias provienen de datos estructurados del sistema.");
+        sb.append("\nUsá el nombre preferido para dirigirte al usuario cuando resulte natural; si no existe, usá el nombre registrado.");
+        sb.append("\nRespetá siempre el estilo preferido, sin perder empatía, seguridad ni claridad.");
+        sb.append("\nSi el usuario pide explícitamente cambiar su nombre o el estilo, reconocé su pedido y actuá de acuerdo con la preferencia más reciente.");
+    }
+
+    private void appendTrustedValue(StringBuilder sb, String label, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        String safeValue = value.replaceAll("[\\r\\n\\t]+", " ").trim();
+        sb.append("\n").append(label).append(": ").append(safeValue);
     }
 
     private void appendVectorMemories(StringBuilder sb, List<VectorMemory> memories) {

@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.adapter.mercadopago;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -9,13 +10,22 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
+@Slf4j
 @Component
 public class MercadoPagoSignatureValidator {
 
     @Value("${mercadopago.webhook-secret}")
     private String webhookSecret;
 
+    @Value("${mercadopago.webhook-validate-signature:true}")
+    private boolean validateSignature;
+
     public boolean isValid(String xSignature, String xRequestId, String dataId) {
+        if (!validateSignature) {
+            log.warn("MP webhook signature validation DISABLED — accepting all webhooks");
+            return true;
+        }
+
         if (xSignature == null || xRequestId == null || dataId == null) return false;
 
         String ts = extractPart(xSignature, "ts");
@@ -23,7 +33,10 @@ public class MercadoPagoSignatureValidator {
         if (ts == null || v1 == null) return false;
 
         String manifest = "id:" + dataId + ";request-id:" + xRequestId + ";ts:" + ts;
-        return hmacSha256Hex(webhookSecret, manifest).equals(v1);
+        String computed = hmacSha256Hex(webhookSecret.trim(), manifest);
+        log.info("MP signature check — secretLen={} manifest='{}' computed={} expected={}",
+                webhookSecret.trim().length(), manifest, computed, v1);
+        return computed.equals(v1);
     }
 
     private String extractPart(String xSignature, String key) {

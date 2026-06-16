@@ -2,8 +2,10 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.dto.payment.PaymentPreferenceResult;
 import com.huly.backend.domain.useCase.payment.CreatePaymentPreferenceUseCase;
+import com.huly.backend.domain.useCase.payment.ListPlansUseCase;
 import com.huly.backend.domain.useCase.payment.ListProductsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.payment.CreatePreferenceResponse;
+import com.huly.backend.infrastructure.presentation.dto.payment.PlanResponse;
 import com.huly.backend.infrastructure.presentation.dto.payment.ProductResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import java.util.List;
 public class PaymentController {
 
     private final ListProductsUseCase listProductsUseCase;
+    private final ListPlansUseCase listPlansUseCase;
     private final CreatePaymentPreferenceUseCase createPaymentPreferenceUseCase;
 
 
@@ -36,6 +39,20 @@ public class PaymentController {
                         p.getCoinsAmount()))
                 .toList();
         return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/plans")
+    public ResponseEntity<List<PlanResponse>> getPlans() {
+        List<PlanResponse> plans = listPlansUseCase.execute().stream()
+                .map(p -> new PlanResponse(
+                        String.valueOf(p.getId()),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getPrice(),
+                        p.getCoinsAmount(),
+                        p.getPlanCode()))
+                .toList();
+        return ResponseEntity.ok(plans);
     }
 
     @PostMapping("/preference/{productId}")

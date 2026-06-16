@@ -56,6 +56,15 @@ class UserGoalRepositoryImplTest {
         return UserGoalsEntity.builder()
                 .id(id).appUser(userEntity(userId)).title("T").description("D")
                 .status(GoalStatus.PENDING).createdAt(Instant.now()).activity(activity)
+                .coinsReward(10).coinsRewardWithImage(25)
+                .build();
+    }
+
+    private UserGoalsEntity savedEntityWithImage(Long id, Long userId, String imageUrl, int coinsReward, int coinsRewardWithImage) {
+        return UserGoalsEntity.builder()
+                .id(id).appUser(userEntity(userId)).title("T").description("D")
+                .status(GoalStatus.PENDING).createdAt(Instant.now())
+                .imageUrl(imageUrl).coinsReward(coinsReward).coinsRewardWithImage(coinsRewardWithImage)
                 .build();
     }
 
@@ -168,5 +177,46 @@ class UserGoalRepositoryImplTest {
     void deleteById_shouldDelegateToJpa() {
         repositoryImpl.deleteById(1L);
         verify(jpaRepository).deleteById(1L);
+    }
+
+    @Test
+    void save_shouldMapImageUrlAndCoinFields() {
+        UserGoal domain = UserGoal.builder()
+                .userId(10L).title("T").status(GoalStatus.PENDING).createdAt(Instant.now())
+                .imageUrl("/api/user-goals/images/photo.jpg")
+                .coinsReward(15).coinsRewardWithImage(30)
+                .build();
+
+        when(appUserRepository.getReferenceById(10L)).thenReturn(userEntity(10L));
+        when(jpaRepository.save(any())).thenReturn(
+                savedEntityWithImage(1L, 10L, "/api/user-goals/images/photo.jpg", 15, 30));
+
+        ArgumentCaptor<UserGoalsEntity> captor = ArgumentCaptor.forClass(UserGoalsEntity.class);
+        UserGoal result = repositoryImpl.save(domain);
+
+        verify(jpaRepository).save(captor.capture());
+        assertThat(captor.getValue().getImageUrl()).isEqualTo("/api/user-goals/images/photo.jpg");
+        assertThat(captor.getValue().getCoinsReward()).isEqualTo(15);
+        assertThat(captor.getValue().getCoinsRewardWithImage()).isEqualTo(30);
+        assertThat(result.getImageUrl()).isEqualTo("/api/user-goals/images/photo.jpg");
+        assertThat(result.getCoinsReward()).isEqualTo(15);
+        assertThat(result.getCoinsRewardWithImage()).isEqualTo(30);
+    }
+
+    @Test
+    void save_shouldUseDefaultCoinValues_whenDomainHasNullCoinFields() {
+        UserGoal domain = UserGoal.builder()
+                .userId(10L).title("T").status(GoalStatus.PENDING).createdAt(Instant.now())
+                .build();
+
+        when(appUserRepository.getReferenceById(10L)).thenReturn(userEntity(10L));
+        when(jpaRepository.save(any())).thenReturn(savedEntity(1L, 10L, null));
+
+        ArgumentCaptor<UserGoalsEntity> captor = ArgumentCaptor.forClass(UserGoalsEntity.class);
+        repositoryImpl.save(domain);
+
+        verify(jpaRepository).save(captor.capture());
+        assertThat(captor.getValue().getCoinsReward()).isEqualTo(10);
+        assertThat(captor.getValue().getCoinsRewardWithImage()).isEqualTo(25);
     }
 }

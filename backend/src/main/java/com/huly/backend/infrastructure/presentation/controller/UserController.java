@@ -3,7 +3,9 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.UserProfile;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
+import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse;
+import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.domain.model.enums.ThemePreference;
@@ -28,6 +30,7 @@ public class UserController {
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final UserDetailDomainRepository userDetailDomainRepository;
     private final GetUserCoinsUseCase getUserCoinsUseCase;
+    private final GetCurrentMembershipUseCase getCurrentMembershipUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -59,6 +62,21 @@ public class UserController {
         Long userId = currentUserId(principal);
         int coins = getUserCoinsUseCase.execute(userId);
         return ResponseEntity.ok(new CoinsResponse(coins));
+    }
+
+    @GetMapping("/me/membership")
+    public ResponseEntity<MembershipResponse> getMyMembership(
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        Long userId = currentUserId(principal);
+        MembershipResponse response = getCurrentMembershipUseCase.execute(userId)
+                .map(p -> new MembershipResponse(
+                        true,
+                        p.getPlanCode(),
+                        p.getProductId() != null ? p.getProductId().toString() : null,
+                        p.getExpiresAt()))
+                .orElseGet(MembershipResponse::inactive);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/me/theme")
