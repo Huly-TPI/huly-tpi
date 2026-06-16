@@ -4,11 +4,17 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from '../../context/theme'
 import Profile from '../../pages/Profile/Profile'
+import { completeProfileTutorial } from '../../api/onboarding'
 
 const mockUseAuth = vi.fn()
+const mockRefreshUser = vi.fn()
 
 vi.mock('../../context/auth', () => ({
   useAuth: () => mockUseAuth(),
+}))
+
+vi.mock('../../api/onboarding', () => ({
+  completeProfileTutorial: vi.fn(),
 }))
 
 const authenticatedUser = {
@@ -18,18 +24,22 @@ const authenticatedUser = {
   role: 'USER',
   onBoardingCompleted: true,
   onboardingTutorialCompleted: true,
+  profileOnboardingTutorialCompleted: true,
   themePreference: 'LIGHT',
 }
 
 describe('Profile', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     window.localStorage.clear()
     window.localStorage.setItem('huly:scene-theme', 'light')
-    window.localStorage.setItem('huly:profile-onboarding-seen:v2:1', 'true')
     mockUseAuth.mockReturnValue({
       user: authenticatedUser,
       loading: false,
+      refreshUser: mockRefreshUser,
     })
+    vi.mocked(completeProfileTutorial).mockResolvedValue(undefined)
+    mockRefreshUser.mockResolvedValue(authenticatedUser)
   })
 
   const renderProfile = () => {
@@ -121,7 +131,14 @@ describe('Profile', () => {
   })
 
   it('muestra el tutorial de perfil la primera vez que se entra', async () => {
-    window.localStorage.removeItem('huly:profile-onboarding-seen:v2:1')
+    mockUseAuth.mockReturnValue({
+      user: {
+        ...authenticatedUser,
+        profileOnboardingTutorialCompleted: false,
+      },
+      loading: false,
+      refreshUser: mockRefreshUser,
+    })
 
     renderProfile()
 
@@ -129,12 +146,19 @@ describe('Profile', () => {
     expect(screen.getByRole('heading', { name: 'Tu habitación personal' })).toBeInTheDocument()
     expect(screen.queryByText('Bienvenido a')).not.toBeInTheDocument()
     expect(screen.queryByRole('img', { name: 'Huly' })).not.toBeInTheDocument()
-    expect(window.localStorage.getItem('huly:profile-onboarding-seen:v2:1')).toBeNull()
+    expect(completeProfileTutorial).not.toHaveBeenCalled()
   })
 
   it('avanza el tutorial de perfil y lo oculta al finalizar', async () => {
     const user = userEvent.setup()
-    window.localStorage.removeItem('huly:profile-onboarding-seen:v2:1')
+    mockUseAuth.mockReturnValue({
+      user: {
+        ...authenticatedUser,
+        profileOnboardingTutorialCompleted: false,
+      },
+      loading: false,
+      refreshUser: mockRefreshUser,
+    })
 
     renderProfile()
 
@@ -148,8 +172,9 @@ describe('Profile', () => {
 
     await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
 
+    expect(completeProfileTutorial).toHaveBeenCalledTimes(1)
+    expect(mockRefreshUser).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(window.localStorage.getItem('huly:profile-onboarding-seen:v2:1')).toBe('true')
   })
 
   it('no vuelve a mostrar el tutorial de perfil cuando ya fue visto', () => {

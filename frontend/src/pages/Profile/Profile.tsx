@@ -2,10 +2,12 @@ import { Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/auth'
 import { useTheme } from '../../context/theme'
+import { completeProfileTutorial } from '../../api/onboarding'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
+import { useSceneOnboarding } from '../../hooks/useSceneOnboarding'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
 import clockImage from '../../assets/profile/light-theme/clock.webp'
 import mirrorImage from '../../assets/profile/light-theme/mirror.webp'
@@ -77,36 +79,28 @@ const profileElements: SceneElementDefinition[] = [
   },
 ]
 
+const selectProfileTutorialCompleted = (currentUser: { profileOnboardingTutorialCompleted?: boolean }) =>
+  currentUser.profileOnboardingTutorialCompleted
+
 function getFirstName(name: string): string {
   return name.trim().split(/\s+/)[0] || 'Usuario'
-}
-
-function getProfileOnboardingStorageKey(userId: number): string {
-  return `huly:profile-onboarding-seen:v2:${userId}`
 }
 
 export default function Profile() {
   const { user, loading } = useAuth()
   const { theme } = useTheme()
   const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
-  const [onboardingMode, setOnboardingMode] = useState<'hidden' | 'intro' | 'steps'>('hidden')
-  const [onboardingStepIndex, setOnboardingStepIndex] = useState(0)
-
-  useEffect(() => {
-    if (!user) {
-      setOnboardingMode('hidden')
-      return
-    }
-
-    const storageKey = getProfileOnboardingStorageKey(user.id)
-    if (window.localStorage.getItem(storageKey) === 'true') {
-      setOnboardingMode('hidden')
-      return
-    }
-
-    setOnboardingStepIndex(0)
-    setOnboardingMode('intro')
-  }, [user])
+  const {
+    onboardingMode,
+    onboardingStepIndex,
+    shouldRenderOnboarding,
+    startOnboarding,
+    advanceOnboarding,
+  } = useSceneOnboarding({
+    totalSteps: profileOnboardingSteps.length,
+    completedSelector: selectProfileTutorialCompleted,
+    completeTutorial: completeProfileTutorial,
+  })
 
   useEffect(() => {
     if (onboardingMode !== 'hidden') {
@@ -123,24 +117,6 @@ export default function Profile() {
     return undefined
   }, [onboardingMode])
 
-  const startOnboarding = () => {
-    setOnboardingStepIndex(0)
-    setOnboardingMode('steps')
-  }
-
-  const advanceOnboarding = () => {
-    if (onboardingStepIndex >= profileOnboardingSteps.length - 1) {
-      if (user) {
-        window.localStorage.setItem(getProfileOnboardingStorageKey(user.id), 'true')
-      }
-      setOnboardingStepIndex(0)
-      setOnboardingMode('hidden')
-      return
-    }
-
-    setOnboardingStepIndex(currentIndex => currentIndex + 1)
-  }
-
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-fondo">
@@ -153,7 +129,6 @@ export default function Profile() {
     return <Navigate to="/login" replace />
   }
 
-  const shouldRenderOnboarding = onboardingMode !== 'hidden'
   const renderedElements = profileElements.map(element => {
     const baseElement = shouldRenderOnboarding
       ? {
@@ -187,7 +162,7 @@ export default function Profile() {
             <strong>{getFirstName(user.name)}</strong>
           </div>
 
-          {shouldRenderOnboarding ? (
+          {onboardingMode !== 'hidden' ? (
             <HomeOnboarding
               mode={onboardingMode}
               theme={theme}
