@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import background from '../../assets/lanterns/ligth-theme/background-lanterns.webp'
@@ -9,12 +9,14 @@ import paperImage from '../../assets/lanterns/paper.webp'
 
 import { useTheme } from '../../context/theme'
 import { api } from '../../api/client'
+import { lanternsApi } from '../../api/lanterns'
 import Button from '../../components/Buttons/Button/Button'
 import './Lanterns.css'
 
 interface Lantern {
-  id: string
+  id: number
   text: string
+  workedOn: boolean
 }
 
 interface RecommendationResponse {
@@ -49,36 +51,58 @@ export default function LanternsActivity() {
 
   const [lanterns, setLanterns] = useState<Lantern[]>([])
   const [inputText, setInputText] = useState('')
-  const [animatingId, setAnimatingId] = useState<string | null>(null)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [animatingId, setAnimatingId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null)
 
   const currentLanternImage = isDark ? darkLanternImage : lanternImage
 
-  const handleRelease = useCallback(() => {
+  useEffect(() => {
+    lanternsApi.list()
+      .then(thoughts => {
+        const mapped = thoughts.slice(0, MAX_LANTERNS)
+        setLanterns(mapped)
+        setSelectedId(mapped[0]?.id ?? null)
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleRelease = useCallback(async () => {
     const trimmed = inputText.trim()
-    if (!trimmed) return
-
-    const newLantern: Lantern = {
-      id: crypto.randomUUID(),
-      text: trimmed,
-    }
-
-    setAnimatingId(newLantern.id)
-    setSelectedId(newLantern.id)
-    setLanterns(prev => [newLantern, ...prev].slice(0, MAX_LANTERNS))
+    if (!trimmed || lanterns.length >= MAX_LANTERNS) return
     setInputText('')
-
-    setTimeout(() => setAnimatingId(null), 800)
-  }, [inputText])
+    try {
+      const created = await lanternsApi.create(trimmed)
+      setAnimatingId(created.id)
+      setSelectedId(created.id)
+      setLanterns(prev => [created, ...prev].slice(0, MAX_LANTERNS))
+      setTimeout(() => setAnimatingId(null), 800)
+    } catch {
+      setInputText(trimmed)
+    }
+  }, [inputText, lanterns.length])
 
   const handleSoltar = useCallback(() => {
+    if (selectedId === null) return
+    const idToRemove = selectedId
     setLanterns(prev => {
-      const next = prev.filter(l => l.id !== selectedId)
+      const next = prev.filter(l => l.id !== idToRemove)
       setSelectedId(next[0]?.id ?? null)
       return next
     })
+    lanternsApi.updateStatus(idToRemove, 'CANCELLED').catch(() => {})
+  }, [selectedId])
+
+  const handleCompletar = useCallback(() => {
+    if (selectedId === null) return
+    const idToRemove = selectedId
+    setLanterns(prev => {
+      const next = prev.filter(l => l.id !== idToRemove)
+      setSelectedId(next[0]?.id ?? null)
+      return next
+    })
+    lanternsApi.updateStatus(idToRemove, 'COMPLETED').catch(() => {})
   }, [selectedId])
 
   const handleTrabajar = useCallback(async () => {
@@ -88,6 +112,10 @@ export default function LanternsActivity() {
     try {
       const rec = await api.post<RecommendationResponse>('/clouds/recommendation', { thoughts: [lantern.text] })
       setRecommendation(rec)
+      if (!lantern.workedOn) {
+        lanternsApi.markWorkedOn(lantern.id).catch(() => {})
+        setLanterns(prev => prev.map(l => l.id === lantern.id ? { ...l, workedOn: true } : l))
+      }
     } catch (error) {
       console.error('Error al obtener recomendación:', error)
     } finally {
@@ -171,6 +199,15 @@ export default function LanternsActivity() {
             >
               Trabajar
             </button>
+            {selectedLantern.workedOn && (
+              <button
+                type="button"
+                onClick={handleCompletar}
+                className="lantern-action-btn lantern-action-btn--completar"
+              >
+                Completar
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -250,14 +287,15 @@ export default function LanternsActivity() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="¿Qué te está dando vueltas en la cabeza ahora?"
+              placeholder={lanterns.length >= MAX_LANTERNS ? 'Soltá o completá un pensamiento primero' : '¿Qué te está dando vueltas en la cabeza ahora?'}
               maxLength={MAX_TEXT_LENGTH}
               className="paper-input"
+              disabled={lanterns.length >= MAX_LANTERNS}
             />
             <button
               type="button"
               onClick={handleRelease}
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || lanterns.length >= MAX_LANTERNS}
               className="paper-button"
             >
               Soltar
