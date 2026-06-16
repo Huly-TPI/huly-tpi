@@ -20,7 +20,6 @@ import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import com.huly.backend.domain.repository.RiskWordRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
@@ -53,7 +52,6 @@ import static org.mockito.Mockito.when;
 class ChatServiceTest {
 
     @Mock private LLMChatPort llmChatPort;
-    @Mock private StreamingLLMChatPort streamingLLMChatPort;
     @Mock private ChatMemoryPort chatMemoryPort;
     @Mock private ChatConfigRepository chatConfigRepository;
     @Mock private RiskWordRepository riskWordRepository;

@@ -6,7 +6,6 @@ import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.HandleChatPreferencesUseCase;
 import com.huly.backend.domain.useCase.chat.InitializeChatPreferencesUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
-import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,14 +18,6 @@ public class ChatUseCaseConfig {
             HandleChatPreferencesUseCase handleChatPreferencesUseCase
     ) {
         return new ChatUseCase(chatService, handleChatPreferencesUseCase);
-    }
-
-    @Bean
-    public StreamChatUseCase streamChatUseCase(
-            ChatService chatService,
-            HandleChatPreferencesUseCase handleChatPreferencesUseCase
-    ) {
-        return new StreamChatUseCase(chatService, handleChatPreferencesUseCase);
     }
 
     @Bean
