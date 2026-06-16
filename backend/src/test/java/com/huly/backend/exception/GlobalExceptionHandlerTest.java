@@ -10,7 +10,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -310,5 +315,52 @@ class GlobalExceptionHandlerTest {
         assertEquals(413, response.getBody().getStatus());
         assertEquals("Payload Too Large", response.getBody().getError());
         assertEquals("La imagen no puede superar los 5 MB.", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleDailyRewardAlreadyClaimedException() {
+        DailyRewardAlreadyClaimedException exception =
+                new DailyRewardAlreadyClaimedException("Ya reclamaste tu recompensa de hoy.");
+
+        ResponseEntity<ErrorResponse> response = handler.handleDailyRewardAlreadyClaimedException(exception, request);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(409, response.getBody().getStatus());
+        assertEquals("Conflict", response.getBody().getError());
+        assertEquals("Ya reclamaste tu recompensa de hoy.", response.getBody().getMessage());
+        assertEquals("/api/test", response.getBody().getPath());
+        assertNotNull(response.getBody().getTraceId());
+    }
+
+    @Test
+    void testHandleAccountNotActiveException() {
+        AccountNotActiveException exception = new AccountNotActiveException("Cuenta no activada");
+
+        ResponseEntity<ErrorResponse> response = handler.handleAccountNotActiveException(exception, request);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(401, response.getBody().getStatus());
+        assertEquals("Unauthorized", response.getBody().getError());
+        assertEquals("Cuenta no activada", response.getBody().getMessage());
+    }
+
+    @Test
+    void testHandleValidationExceptions() {
+        MethodArgumentNotValidException exception = mock(MethodArgumentNotValidException.class);
+        BindingResult bindingResult = mock(BindingResult.class);
+        when(exception.getBindingResult()).thenReturn(bindingResult);
+        when(bindingResult.getAllErrors())
+                .thenReturn(List.of(new FieldError("userGoalRequest", "title", "no debe estar vacío")));
+
+        ResponseEntity<ErrorResponse> response = handler.handleValidationExceptions(exception, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(400, response.getBody().getStatus());
+        assertEquals("Error de validación en los datos enviados", response.getBody().getMessage());
+        assertNotNull(response.getBody().getErrors());
+        assertEquals("no debe estar vacío", response.getBody().getErrors().get("title"));
     }
 }
