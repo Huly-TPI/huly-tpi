@@ -30,7 +30,8 @@ describe('Navbar', () => {
     )
 
   it('renderiza el logo de Huly', () => {
-    renderWithRouter()
+    const { container } = renderWithRouter()
+    expect(container.querySelector('nav')).toHaveClass('z-[300]')
     expect(screen.getByAltText('Huly logo')).toBeInTheDocument()
   })
 

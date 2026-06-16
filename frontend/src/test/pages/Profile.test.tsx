@@ -25,6 +25,7 @@ describe('Profile', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.localStorage.setItem('huly:scene-theme', 'light')
+    window.localStorage.setItem('huly:profile-onboarding-seen:v2:1', 'true')
     mockUseAuth.mockReturnValue({
       user: authenticatedUser,
       loading: false,
@@ -85,7 +86,7 @@ describe('Profile', () => {
 
     expect(screen.getByRole('button', { name: 'Espejo' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Volver al jardin' })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('button', { name: 'Cofre' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Baúl' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reloj' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Musica' })).toBeInTheDocument()
   })
@@ -95,7 +96,7 @@ describe('Profile', () => {
 
     expect(screen.getByAltText('Espejo del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Ventana hacia el jardin')).toBeInTheDocument()
-    expect(screen.getByAltText('Cofre del perfil')).toBeInTheDocument()
+    expect(screen.getByAltText('Baúl del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Reloj del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Equipo de musica del perfil')).toBeInTheDocument()
   })
@@ -117,5 +118,43 @@ describe('Profile', () => {
     await user.click(screen.getByRole('link', { name: 'Volver al jardin' }))
 
     expect(screen.getByRole('heading', { name: 'Vista Jardin' })).toBeInTheDocument()
+  })
+
+  it('muestra el tutorial de perfil la primera vez que se entra', async () => {
+    window.localStorage.removeItem('huly:profile-onboarding-seen:v2:1')
+
+    renderProfile()
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tu habitación personal' })).toBeInTheDocument()
+    expect(screen.queryByText('Bienvenido a')).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Huly' })).not.toBeInTheDocument()
+    expect(window.localStorage.getItem('huly:profile-onboarding-seen:v2:1')).toBeNull()
+  })
+
+  it('avanza el tutorial de perfil y lo oculta al finalizar', async () => {
+    const user = userEvent.setup()
+    window.localStorage.removeItem('huly:profile-onboarding-seen:v2:1')
+
+    renderProfile()
+
+    await user.click(await screen.findByRole('button', { name: 'Comenzar con el tutorial' }))
+    expect(screen.getByRole('heading', { name: 'Ventana' })).toBeInTheDocument()
+    expect(document.querySelector('.home-onboarding__mascot')).not.toBeInTheDocument()
+
+    for (let index = 0; index < 4; index += 1) {
+      await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(window.localStorage.getItem('huly:profile-onboarding-seen:v2:1')).toBe('true')
+  })
+
+  it('no vuelve a mostrar el tutorial de perfil cuando ya fue visto', () => {
+    renderProfile()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

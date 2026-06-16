@@ -12,6 +12,10 @@ export default function HomeOnboarding({
   currentStepIndex,
   onStart,
   onAdvance,
+  intro = {
+    title: 'Tu espacio para cuidar tus pensamientos',
+    subtitle: 'Vamos a descubrir el jardín y todo lo que podés hacer en cada rincón',
+  },
 }: HomeOnboardingProps) {
   const { dialogRef, handleDialogKeyDown } = useDialogFocusTrap({
     focusKey: `${mode}:${currentStepIndex}`,
@@ -30,7 +34,7 @@ export default function HomeOnboarding({
         onKeyDown={handleDialogKeyDown}
       >
         <div className="home-onboarding__overlay" />
-        <HomeOnboardingIntro onStart={onStart} />
+        <HomeOnboardingIntro {...intro} onStart={onStart} />
       </div>
     )
   }

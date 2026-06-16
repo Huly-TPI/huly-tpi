@@ -27,9 +27,18 @@ export interface HomeOnboardingProps {
   currentStepIndex: number
   onStart: () => void
   onAdvance: () => void
+  intro?: HomeOnboardingIntroContent
 }
 
-export interface HomeOnboardingIntroProps {
+export interface HomeOnboardingIntroContent {
+  kicker?: string
+  showBrand?: boolean
+  title?: string
+  subtitle?: string
+  startLabel?: string
+}
+
+export interface HomeOnboardingIntroProps extends HomeOnboardingIntroContent {
   onStart: () => void
 }
 
