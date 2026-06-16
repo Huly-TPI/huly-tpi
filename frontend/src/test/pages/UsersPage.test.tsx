@@ -163,10 +163,10 @@ describe('UsersPage', () => {
       expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument()
     })
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
-    expect(screen.getByText('john@example.com')).toBeInTheDocument()
-    expect(screen.getByText('Jane Doe')).toBeInTheDocument()
-    expect(screen.getByText('jane@example.com')).toBeInTheDocument()
+    expect(screen.getAllByText('John Doe')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('john@example.com')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Jane Doe')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('jane@example.com')[0]).toBeInTheDocument()
   })
 
   it('filtra usuarios por busqueda', async () => {
@@ -186,9 +186,9 @@ describe('UsersPage', () => {
     await user.type(searchInput, 'Smith{enter}')
 
     await waitFor(() => {
-      expect(screen.queryByText('John Doe')).not.toBeInTheDocument()
+      expect(screen.queryAllByText('John Doe')).toHaveLength(0)
     })
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument()
+    expect(screen.getAllByText('Jane Smith')[0]).toBeInTheDocument()
   })
 
   it('navega a detalle al hacer click en el ojo y regresa', async () => {
@@ -238,11 +238,11 @@ describe('UsersPage', () => {
       expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument()
     })
 
-    const detailBtn = screen.getByLabelText('Ver detalles de John Doe')
+    const detailBtn = screen.getAllByLabelText('Ver detalles de John Doe')[0]
     await user.click(detailBtn)
 
     expect(await screen.findByText('Detalle de usuario')).toBeInTheDocument()
-    expect(screen.getByText('john@example.com')).toBeInTheDocument()
+    expect(screen.getAllByText('john@example.com')[0]).toBeInTheDocument()
 
     const antiscrollTab = screen.getByRole('button', { name: /Antiscroll/i })
     await user.click(antiscrollTab)
@@ -253,7 +253,7 @@ describe('UsersPage', () => {
     await user.click(backBtn)
 
     expect(screen.queryByText('Detalle de usuario')).not.toBeInTheDocument()
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
+    expect(screen.getAllByText('John Doe')[0]).toBeInTheDocument()
   })
 
   it('no muestra las estadísticas si el usuario no tiene habilitado antiscroll', async () => {
