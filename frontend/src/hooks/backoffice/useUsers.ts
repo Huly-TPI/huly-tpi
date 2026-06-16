@@ -58,7 +58,8 @@ export function useUsers() {
   const selectedUser = users.find((u) => u.id === selectedUserId)
 
   useEffect(() => {
-    getUsers()
+    setLoading(true)
+    getUsers(search)
       .then((data) => {
         setUsers(data)
       })
@@ -69,7 +70,7 @@ export function useUsers() {
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [search])
 
   useEffect(() => {
     // Clear data when user changes
@@ -157,11 +158,7 @@ export function useUsers() {
     }
   }, [selectedUserId, activeTab])
 
-  const filteredUsers = users.filter(
-    (u) =>
-      (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
-      (u.email && u.email.toLowerCase().includes(search.toLowerCase()))
-  )
+  const filteredUsers = users
 
   const getDailyTime = (dayKey: string) => {
     if (!antiscrollStats || !antiscrollStats.dailyScrollTimeSeconds) return 0

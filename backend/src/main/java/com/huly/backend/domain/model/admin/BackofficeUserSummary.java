@@ -27,4 +27,5 @@ public class BackofficeUserSummary {
     private List<TopAppStats> topApps;
     private Integer coins;
     private String plan;
+    private String dominantEmotion;
 }

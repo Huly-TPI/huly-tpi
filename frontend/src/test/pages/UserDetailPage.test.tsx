@@ -45,8 +45,7 @@ describe('UserDetailPage', () => {
     render(<UserDetailPage />)
     expect(screen.getByText('John Doe')).toBeInTheDocument()
     expect(screen.getByText('john@example.com')).toBeInTheDocument()
-    expect(screen.getByText('USER')).toBeInTheDocument()
-    expect(screen.getByText('ACTIVE')).toBeInTheDocument()
+    expect(screen.getByText('Activo')).toBeInTheDocument()
   })
 
   it('muestra la pestaña de Uso y Actividades con estadísticas', () => {

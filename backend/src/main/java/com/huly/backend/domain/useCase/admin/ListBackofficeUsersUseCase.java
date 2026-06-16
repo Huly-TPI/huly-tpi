@@ -10,6 +10,8 @@ import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.UserPlanRepository;
 import com.huly.backend.domain.dto.payment.UserPlan;
+import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.model.EmotionalEvent;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
@@ -22,9 +24,22 @@ public class ListBackofficeUsersUseCase {
     private final ExtensionSettingsRepository settingsRepository;
     private final ExtensionMetricsRepository metricsRepository;
     private final UserPlanRepository userPlanRepository;
+    private final EmotionalEventRepository emotionalEventRepository;
 
     public List<BackofficeUserSummary> execute() {
+        return execute(null);
+    }
+
+    public List<BackofficeUserSummary> execute(String search) {
         List<AppUser> users = userRepository.findAllNonAdmins();
+        if (search != null && !search.isBlank()) {
+            String lowercaseSearch = search.toLowerCase();
+            users = users.stream()
+                    .filter(u -> (u.getName() != null && u.getName().toLowerCase().contains(lowercaseSearch))
+                            || (u.getEmail() != null && u.getEmail().toLowerCase().contains(lowercaseSearch)))
+                    .toList();
+        }
+
         List<BackofficeUserSummary> summaries = new ArrayList<>();
 
         for (AppUser user : users) {
@@ -37,6 +52,26 @@ public class ListBackofficeUsersUseCase {
                     .filter(p -> p.isActive(java.time.Instant.now()))
                     .map(UserPlan::getPlanCode)
                     .orElse("Gratuito");
+
+            // Calculate dominant emotion
+            List<EmotionalEvent> emotionalEvents = emotionalEventRepository.findByUserId(user.getId());
+            Map<String, Integer> emotionDistribution = new LinkedHashMap<>();
+            for (EmotionalEvent event : emotionalEvents) {
+                if (event.getDetectedEmotion() == null) 
+                    continue;
+                
+                String emotion = event.getDetectedEmotion().trim().toUpperCase();
+                emotionDistribution.put(emotion, emotionDistribution.getOrDefault(emotion, 0) + 1);
+            }
+
+            String dominantEmotion = "NEUTRAL";
+            int maxEmotionCount = 0;
+            for (Map.Entry<String, Integer> entry : emotionDistribution.entrySet()) {
+                if (entry.getValue() > maxEmotionCount) {
+                    maxEmotionCount = entry.getValue();
+                    dominantEmotion = entry.getKey();
+                }
+            }
 
             summaries.add(BackofficeUserSummary.builder()
                     .id(user.getId())
@@ -54,6 +89,7 @@ public class ListBackofficeUsersUseCase {
                     .topApps(List.of())
                     .coins(coins)
                     .plan(plan)
+                    .dominantEmotion(dominantEmotion)
                     .build());
         }
 

@@ -16,6 +16,7 @@ export interface UserResponse {
   topApps?: TopAppResponse[]
   coins?: number
   plan?: string | null
+  dominantEmotion?: string | null
 }
 
 export interface TopAppResponse {
@@ -108,8 +109,9 @@ export interface AntiScrollDashboardResponse {
   topUsedApps: TopAppResponse[]
 }
 
-export const getUsers = async (): Promise<UserResponse[]> => {
-  return api.get<UserResponse[]>('/admin/users')
+export const getUsers = async (search?: string): Promise<UserResponse[]> => {
+  const url = search ? `/admin/users?search=${encodeURIComponent(search)}` : '/admin/users'
+  return api.get<UserResponse[]>(url)
 }
 
 export const getAntiScrollDashboard = async (): Promise<AntiScrollDashboardResponse> => {

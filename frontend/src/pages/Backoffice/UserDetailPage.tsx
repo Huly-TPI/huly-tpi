@@ -96,6 +96,22 @@ export default function UserDetailPage() {
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-400 dark:text-gray-555">Monedas</span>
+                <span className="font-bold text-amber-500 dark:text-amber-400">
+                  {selectedUser.coins ?? 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-400 dark:text-gray-555">Plan</span>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-5 ${
+                  selectedUser.plan && selectedUser.plan !== 'Gratuito' && selectedUser.plan !== 'FREE'
+                    ? 'bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
+                }`}>
+                  {selectedUser.plan}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
                 <span className="font-semibold text-gray-400 dark:text-gray-555">Antiscroll</span>
                 <span className={`inline-flex items-center font-bold ${selectedUser.antiScrollEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                   {selectedUser.antiScrollEnabled ? (
@@ -113,22 +129,6 @@ export default function UserDetailPage() {
                   ) : (
                     <X className="h-4 w-4 stroke-[3]" />
                   )}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-semibold text-gray-400 dark:text-gray-555">Monedas</span>
-                <span className="font-bold text-amber-500 dark:text-amber-400">
-                  {selectedUser.coins ?? 0}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-semibold text-gray-400 dark:text-gray-555">Plan</span>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-5 ${
-                  selectedUser.plan && selectedUser.plan !== 'Gratuito' && selectedUser.plan !== 'FREE'
-                    ? 'bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
-                }`}>
-                  {selectedUser.plan}
                 </span>
               </div>
             </div>

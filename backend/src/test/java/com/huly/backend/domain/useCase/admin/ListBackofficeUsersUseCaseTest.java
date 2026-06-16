@@ -26,6 +26,7 @@ class ListBackofficeUsersUseCaseTest {
     private ExtensionSettingsRepository settingsRepository;
     private ExtensionMetricsRepository metricsRepository;
     private UserPlanRepository userPlanRepository;
+    private com.huly.backend.domain.repository.EmotionalEventRepository emotionalEventRepository;
     private ListBackofficeUsersUseCase useCase;
 
     @BeforeEach
@@ -34,7 +35,8 @@ class ListBackofficeUsersUseCaseTest {
         settingsRepository = mock(ExtensionSettingsRepository.class);
         metricsRepository = mock(ExtensionMetricsRepository.class);
         userPlanRepository = mock(UserPlanRepository.class);
-        useCase = new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository);
+        emotionalEventRepository = mock(com.huly.backend.domain.repository.EmotionalEventRepository.class);
+        useCase = new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository, emotionalEventRepository);
     }
 
     @Test
@@ -57,6 +59,7 @@ class ListBackofficeUsersUseCaseTest {
         when(settingsRepository.findByUserId(2L)).thenReturn(Optional.of(settings));
         when(userRepository.getCoins(2L)).thenReturn(50);
         when(userPlanRepository.findByUser(2L)).thenReturn(Optional.empty());
+        when(emotionalEventRepository.findByUserId(2L)).thenReturn(List.of());
 
         List<BackofficeUserSummary> result = useCase.execute();
 

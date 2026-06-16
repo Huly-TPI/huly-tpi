@@ -73,6 +73,14 @@ const mockAntiScrollStats = {
 describe('useUsers', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockedGetUsers.mockImplementation(async (search?: string) => {
+      if (!search) return mockUsers
+      return mockUsers.filter(
+        (u) =>
+          (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
+          (u.email && u.email.toLowerCase().includes(search.toLowerCase()))
+      )
+    })
     mockedGetUserActivities.mockResolvedValue({
       activitySessions: [],
       todayActivitiesCount: 0,
@@ -128,7 +136,9 @@ describe('useUsers', () => {
       result.current.setSearch('smith')
     })
 
-    expect(result.current.filteredUsers).toHaveLength(1)
+    await waitFor(() => {
+      expect(result.current.filteredUsers).toHaveLength(1)
+    })
     expect(result.current.filteredUsers[0].name).toBe('Jane Smith')
   })
 

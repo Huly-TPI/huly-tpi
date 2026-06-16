@@ -21,9 +21,52 @@ const mockedGetUserAiDiagnostics = vi.mocked(adminApi.getUserAiDiagnostics)
 const mockedGetUserFinancials = vi.mocked(adminApi.getUserFinancials)
 const mockedGetUserAntiScroll = vi.mocked(adminApi.getUserAntiScroll)
 
+const mockUsersList = [
+  {
+    id: 2,
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'USER',
+    status: 'ACTIVE',
+    birthDate: '2000-01-01',
+    antiScrollEnabled: true,
+    dataSharingConsent: true,
+    mostUsedApp: 'instagram.com',
+    mostUsedAppActiveSeconds: 3600,
+    totalScrollTimeSeconds: 5000,
+    coins: 100,
+    plan: 'PREMIUM_PLAN',
+    dominantEmotion: 'JOY',
+  },
+  {
+    id: 3,
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    role: 'USER',
+    status: 'ACTIVE',
+    birthDate: null,
+    antiScrollEnabled: false,
+    dataSharingConsent: false,
+    mostUsedApp: null,
+    mostUsedAppActiveSeconds: 0,
+    totalScrollTimeSeconds: 0,
+    coins: 0,
+    plan: 'Gratuito',
+    dominantEmotion: 'NEUTRAL',
+  },
+]
+
 describe('UsersPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockedGetUsers.mockImplementation(async (search?: string) => {
+      if (!search) return mockUsersList
+      return mockUsersList.filter(
+        (u) =>
+          (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
+          (u.email && u.email.toLowerCase().includes(search.toLowerCase()))
+      )
+    })
     mockedGetUserActivities.mockResolvedValue({
       activitySessions: [],
       todayActivitiesCount: 0,
@@ -128,34 +171,6 @@ describe('UsersPage', () => {
 
   it('filtra usuarios por busqueda', async () => {
     const user = userEvent.setup()
-    mockedGetUsers.mockResolvedValue([
-      {
-        id: 2,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'USER',
-        status: 'ACTIVE',
-        birthDate: '2000-01-01',
-        antiScrollEnabled: true,
-        dataSharingConsent: true,
-        mostUsedApp: 'instagram.com',
-        mostUsedAppActiveSeconds: 3600,
-        totalScrollTimeSeconds: 5000,
-      },
-      {
-        id: 3,
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        role: 'USER',
-        status: 'ACTIVE',
-        birthDate: null,
-        antiScrollEnabled: false,
-        dataSharingConsent: false,
-        mostUsedApp: null,
-        mostUsedAppActiveSeconds: 0,
-        totalScrollTimeSeconds: 0,
-      },
-    ])
 
     render(
       <MemoryRouter>
@@ -168,9 +183,11 @@ describe('UsersPage', () => {
     })
 
     const searchInput = screen.getByPlaceholderText('Buscar por nombre o email...')
-    await user.type(searchInput, 'Smith')
+    await user.type(searchInput, 'Smith{enter}')
 
-    expect(screen.queryByText('John Doe')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByText('John Doe')).not.toBeInTheDocument()
+    })
     expect(screen.getByText('Jane Smith')).toBeInTheDocument()
   })
 

@@ -90,7 +90,7 @@ class AdminUserControllerTest {
                 .plan("PREMIUM_PLAN")
                 .build();
 
-        when(listBackofficeUsersUseCase.execute()).thenReturn(List.of(summary));
+        when(listBackofficeUsersUseCase.execute(any())).thenReturn(List.of(summary));
 
         mockMvc.perform(get("/api/admin/users"))
                 .andExpect(status().isOk())
@@ -169,7 +169,7 @@ class AdminUserControllerTest {
                 .plan(null)
                 .build();
 
-        when(listBackofficeUsersUseCase.execute()).thenReturn(List.of(summary));
+        when(listBackofficeUsersUseCase.execute(any())).thenReturn(List.of(summary));
 
         mockMvc.perform(get("/api/admin/users"))
                 .andExpect(status().isOk())

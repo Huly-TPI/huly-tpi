@@ -186,8 +186,8 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BackofficeUserResponse>> getBackofficeUsers() {
-        List<BackofficeUserResponse> responses = listBackofficeUsersUseCase.execute().stream()
+    public ResponseEntity<List<BackofficeUserResponse>> getBackofficeUsers(@RequestParam(required = false) String search) {
+        List<BackofficeUserResponse> responses = listBackofficeUsersUseCase.execute(search).stream()
                 .map(u -> BackofficeUserResponse.builder()
                         .id(u.getId())
                         .name(u.getName())
@@ -206,6 +206,7 @@ public class AdminUserController {
                                 .toList() : List.of())
                         .coins(u.getCoins())
                         .plan(u.getPlan())
+                        .dominantEmotion(u.getDominantEmotion())
                         .build())
                 .toList();
         return ResponseEntity.ok(responses);

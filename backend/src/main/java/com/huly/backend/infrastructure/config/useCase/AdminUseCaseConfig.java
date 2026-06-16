@@ -29,9 +29,10 @@ public class AdminUseCaseConfig {
             UserRepository userRepository,
             ExtensionSettingsRepository settingsRepository,
             ExtensionMetricsRepository metricsRepository,
-            UserPlanRepository userPlanRepository
+            UserPlanRepository userPlanRepository,
+            EmotionalEventRepository emotionalEventRepository
     ) {
-        return new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository);
+        return new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository, emotionalEventRepository);
     }
 
     @Bean

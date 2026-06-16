@@ -25,4 +25,5 @@ public class BackofficeUserResponse {
     private List<TopAppResponse> topApps;
     private Integer coins;
     private String plan;
+    private String dominantEmotion;
 }
