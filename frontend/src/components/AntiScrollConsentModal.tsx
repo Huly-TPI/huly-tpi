@@ -3,6 +3,9 @@ import Button from './Buttons/Button/Button'
 import colorLogo from '../assets/brand/color-logo.webp'
 import { getExtensionSettings, saveExtensionSettings, ExtensionSettings } from '../api/extension'
 
+const CHROME_WEB_STORE_URL =
+  'https://chromewebstore.google.com/detail/opafcmdcpkhcfnbfmfipdninpkkpamgh?utm_source=item-share-cb'
+
 interface ToggleSwitchProps {
   checked: boolean
   onChange: () => void
@@ -33,7 +36,6 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
   const [isEnabled, setIsEnabled] = useState(false)
   const [consent, setConsent] = useState(false)
   const [extId, setExtId] = useState<string | null>(null)
-  const [showInstructions, setShowInstructions] = useState(false)
 
   useEffect(() => {
     const checkInstalled = () => {
@@ -120,14 +122,8 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
     }
   }
 
-  const handleDownload = () => {
-    const link = document.createElement('a')
-    link.href = '/antiscroll-extension.zip'
-    link.download = 'huly-antiscroll-extension.zip'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    setShowInstructions(true)
+  const handleInstall = () => {
+    window.open(CHROME_WEB_STORE_URL, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -148,9 +144,9 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
 
         <div className="text-[var(--text-secondary)] text-sm leading-relaxed mb-6 text-left whitespace-pre-line">
           {settings?.termsAndConditions || (
-            `El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir.
+            `El modo anti-scroll es simplemente una herramienta para acompanarte cuando sientas que necesitas frenar un poco. No hay reglas estrictas ni metas que cumplir.
 
-            Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!`
+Activalo cuando quieras priorizar tu concentracion o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. Cero presiones, el ritmo lo marcas vos.`
           )}
         </div>
 
@@ -161,22 +157,22 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
             <div className="flex items-center justify-between p-3 bg-[var(--surface-secondary)] rounded-xl gap-4">
               <div className="text-left">
                 <div className="font-semibold text-sm text-[var(--text-primary)]">
-                  {isInstalled ? 'Extensión anti-scroll' : 'Extensión no instalada'}
+                  {isInstalled ? 'Extension anti-scroll' : 'Extension no instalada'}
                 </div>
                 <div className="text-xs text-[var(--text-secondary)] mt-0.5">
                   {isInstalled
                     ? isEnabled
                       ? 'Activo y limitando el scroll infinito'
                       : 'Desactivado temporalmente'
-                    : 'Descarga la extensión para limitar el scroll'}
+                    : 'Instala la extension desde Chrome Web Store'}
                 </div>
               </div>
 
               {isInstalled ? (
                 <ToggleSwitch checked={isEnabled} onChange={handleToggleEnabled} />
               ) : (
-                <Button variant="primary" size="sm" onClick={handleDownload}>
-                  Descargar
+                <Button variant="primary" size="sm" onClick={handleInstall}>
+                  Instalar
                 </Button>
               )}
             </div>
@@ -184,30 +180,18 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
             <div className="flex items-center justify-between p-3 bg-[var(--surface-secondary)] rounded-xl gap-4">
               <div className="text-left">
                 <div className="font-semibold text-sm text-[var(--text-primary)]">
-                  Recopilar estadísticas de bienestar
+                  Recopilar estadisticas de bienestar
                 </div>
                 <div className="text-xs text-[var(--text-secondary)] mt-0.5 leading-normal">
-                  Acepto que mis datos de uso (tiempo de scroll en redes) sean recopilados de forma segura e impersonal mientras mi sesión en Huly esté abierta.
+                  Acepto que mis datos de uso (tiempo de scroll en redes) sean recopilados de
+                  forma segura e impersonal mientras mi sesion en Huly este abierta.
                 </div>
                 <div className="text-left text-xs text-bosque dark:text-menta font-semibold mt-1">
-                  * Si cierras sesión o desmarcas esta opción, tus datos no serán recopilados.
+                  * Si cierras sesion o desmarcas esta opcion, tus datos no seran recopilados.
                 </div>
               </div>
               <ToggleSwitch checked={consent} onChange={handleToggleConsent} />
             </div>
-          </div>
-        )}
-
-        {showInstructions && !isInstalled && (
-          <div className="text-left bg-purple-50 dark:bg-purple-950/20 text-[#5e4030] dark:text-[#d3cceb] rounded-xl p-4 text-xs mb-6 space-y-2 border border-purple-100 dark:border-purple-900/30">
-            <div className="font-bold text-[#8869AC] dark:text-violeta-claro text-sm">¿Cómo instalar la extensión?</div>
-            <ol className="list-decimal pl-4 space-y-1">
-              <li>Descomprime el archivo <strong>huly-antiscroll-extension.zip</strong> descargado.</li>
-              <li>Abre tu navegador Chrome u otro basado en Chromium y ve a <code className="bg-white dark:bg-gray-800 dark:text-gray-200 px-1 py-0.5 rounded font-mono text-[10px]">chrome://extensions/</code>.</li>
-              <li>Activa el <strong>Modo de desarrollador</strong> (esquina superior derecha).</li>
-              <li>Haz clic en <strong>Cargar descomprimida</strong> (esquina superior izquierda).</li>
-              <li>Selecciona la carpeta descomprimida. ¡Y listo!</li>
-            </ol>
           </div>
         )}
 
