@@ -10,23 +10,12 @@ import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.regex.Pattern;
 
-/**
- * Resolves conversational preferences using strict rules first and semantic
- * extraction only as a fallback.
- */
 @Service
 @RequiredArgsConstructor
 public class ChatPreferenceResolutionService {
 
     private static final double MIN_AI_CONFIDENCE = 0.85;
-    private static final Pattern MIXED_CONTENT = Pattern.compile(
-            "(?:^|[,.!?;]\\s*|\\b(?:y|pero|ademas|tambien)\\s+)"
-                    + "(?:estoy|me siento|necesito|quiero hablar|te cuento|me pasa|ayudame|"
-                    + "podrias ayudarme|tengo|siento|pienso|hoy)",
-            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     private final ChatPreferenceDetectionService deterministicDetectionService;
     private final ChatPreferenceExtractionPort extractionPort;
@@ -100,13 +89,6 @@ public class ChatPreferenceResolutionService {
                 style,
                 type,
                 semanticResult.confidence());
-    }
-
-    private ChatPreferenceMessageType classify(String message) {
-        String normalized = normalize(message);
-        return MIXED_CONTENT.matcher(normalized).find()
-                ? ChatPreferenceMessageType.MIXED
-                : ChatPreferenceMessageType.PREFERENCE_ONLY;
     }
 
     private String normalize(String value) {

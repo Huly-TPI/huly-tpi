@@ -23,16 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Optional;
 
-/**
- * Handles optional conversational onboarding and explicit preference changes.
- */
 @Service
 @RequiredArgsConstructor
 public class HandleChatPreferencesUseCase {
-
-    private static final String STYLE_QUESTION =
-            "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
-                    + "formal, directa, indirecta, cercana o como un amigo.";
 
     private final ChatConversationPreferenceRepository preferenceRepository;
     private final ChatPreferenceResolutionService resolutionService;
@@ -204,7 +197,7 @@ public class HandleChatPreferencesUseCase {
                     + detection.communicationStyle().displayName() + ".";
         }
         if (preference.getOnboardingStatus() == ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE) {
-            return prefix + " " + STYLE_QUESTION;
+            return prefix + " " + CommunicationStyle.QUESTION_TEXT;
         }
         return prefix;
     }

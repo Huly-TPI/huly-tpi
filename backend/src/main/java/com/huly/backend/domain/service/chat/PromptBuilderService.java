@@ -10,46 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PromptBuilderService {
-
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords) {
-        return buildEnrichedPrompt(basePrompt, riskWords, Collections.emptyList());
-    }
-
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, null);
-    }
-
-    public String buildEnrichedPrompt(
-            String basePrompt,
-            List<RiskWord> riskWords,
-            List<VectorMemory> memories,
-            SuggestedChatAction suggestedAction
-    ) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, suggestedAction, ChatUserIntent.NONE);
-    }
-
-    public String buildEnrichedPrompt(
-            String basePrompt,
-            List<RiskWord> riskWords,
-            List<VectorMemory> memories,
-            SuggestedChatAction suggestedAction,
-            ChatUserIntent userIntent
-    ) {
-        return buildEnrichedPrompt(
-                basePrompt,
-                riskWords,
-                memories,
-                suggestedAction,
-                userIntent,
-                null);
-    }
 
     public String buildEnrichedPrompt(
             String basePrompt,

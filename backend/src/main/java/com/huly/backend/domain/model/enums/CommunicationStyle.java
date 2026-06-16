@@ -1,8 +1,5 @@
 package com.huly.backend.domain.model.enums;
 
-/**
- * Defines the supported communication styles for chatbot responses.
- */
 public enum CommunicationStyle {
     NEUTRAL("neutro", "Usá un tono equilibrado, claro y sin excesiva informalidad."),
     SERIOUS("serio", "Usá un tono serio, sobrio y respetuoso."),
@@ -17,6 +14,10 @@ public enum CommunicationStyle {
     MOTIVATIONAL("motivador", "Usá un tono motivador, realista y orientado a pequeños avances."),
     CONCISE_DIRECT("corto y directo", "Respondé de forma breve, concreta y directa.");
 
+    public static final String QUESTION_TEXT =
+            "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
+                    + "formal, directa, indirecta, cercana o como un amigo.";
+
     private final String displayName;
     private final String promptInstruction;
 
@@ -25,20 +26,10 @@ public enum CommunicationStyle {
         this.promptInstruction = promptInstruction;
     }
 
-    /**
-     * Returns the user-facing style name.
-     *
-     * @return style display name
-     */
     public String displayName() {
         return displayName;
     }
 
-    /**
-     * Returns the instruction injected into the chatbot prompt.
-     *
-     * @return prompt instruction for this style
-     */
     public String promptInstruction() {
         return promptInstruction;
     }

@@ -122,8 +122,14 @@ class HandleChatPreferencesUseCaseTest {
 
     @Test
     void execute_shouldSaveCommunicationStyleAndCompleteOnboarding() {
-        ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
-                .withPreferredName("Sergito", Instant.now());
+        ChatConversationPreference preference = ChatConversationPreference.builder()
+                .id(10L)
+                .userId(1L)
+                .preferredName("Sergito")
+                .onboardingStatus(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
+                .createdAt(Instant.parse("2026-01-01T00:00:00Z"))
+                .updatedAt(Instant.now())
+                .build();
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
         when(resolutionService.resolve("informal", ChatPreferenceExpectedField.COMMUNICATION_STYLE))
                 .thenReturn(result(null, CommunicationStyle.INFORMAL, ChatPreferenceMessageType.PREFERENCE_ONLY));

@@ -15,6 +15,7 @@ import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
+import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
@@ -32,10 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class ChatService {
-
-    private static final String STYLE_QUESTION =
-            "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
-                    + "formal, directa, indirecta, cercana o como un amigo.";
 
     private final LLMChatPort llmChatPort;
     private final ChatMemoryPort chatMemoryPort;
@@ -156,8 +153,8 @@ public class ChatService {
                 pendingPreference.markCommunicationStyleAsked(Instant.now()));
 
         String content = reply.content() == null || reply.content().isBlank()
-                ? STYLE_QUESTION
-                : reply.content().trim() + "\n\n" + STYLE_QUESTION;
+                ? CommunicationStyle.QUESTION_TEXT
+                : reply.content().trim() + "\n\n" + CommunicationStyle.QUESTION_TEXT;
         return new ChatReply(
                 content,
                 reply.detectedEmotion(),
