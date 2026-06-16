@@ -16,6 +16,8 @@ class ChatConfigMapperTest {
                 .id(1L)
                 .riskDetectionEnabled(true)
                 .systemPrompt("mi prompt")
+                .preferredNameQuestionEnabled(false)
+                .communicationStyleQuestionEnabled(true)
                 .build();
 
         ChatConfigEntity entity = mapper.toEntity(domain);
@@ -23,6 +25,8 @@ class ChatConfigMapperTest {
         assertThat(entity.getId()).isEqualTo(1L);
         assertThat(entity.getRiskDetectionEnabled()).isTrue();
         assertThat(entity.getSystemPrompt()).isEqualTo("mi prompt");
+        assertThat(entity.getPreferredNameQuestionEnabled()).isFalse();
+        assertThat(entity.getCommunicationStyleQuestionEnabled()).isTrue();
     }
 
     @Test
@@ -42,6 +46,8 @@ class ChatConfigMapperTest {
                 .id(2L)
                 .riskDetectionEnabled(false)
                 .systemPrompt("prompt base")
+                .preferredNameQuestionEnabled(true)
+                .communicationStyleQuestionEnabled(false)
                 .build();
 
         ChatConfig domain = mapper.toDomain(entity);
@@ -49,6 +55,8 @@ class ChatConfigMapperTest {
         assertThat(domain.getId()).isEqualTo(2L);
         assertThat(domain.getRiskDetectionEnabled()).isFalse();
         assertThat(domain.getSystemPrompt()).isEqualTo("prompt base");
+        assertThat(domain.getPreferredNameQuestionEnabled()).isTrue();
+        assertThat(domain.getCommunicationStyleQuestionEnabled()).isFalse();
     }
 
     @Test

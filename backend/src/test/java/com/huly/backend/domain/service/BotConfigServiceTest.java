@@ -47,6 +47,8 @@ class BotConfigServiceTest {
         assertThat(result.getId()).isNull();
         assertThat(result.getRiskDetectionEnabled()).isFalse();
         assertThat(result.getSystemPrompt()).isEmpty();
+        assertThat(result.getPreferredNameQuestionEnabled()).isTrue();
+        assertThat(result.getCommunicationStyleQuestionEnabled()).isTrue();
     }
 
     // ── updateConfig ─────────────────────────────────────────────────────────
@@ -104,5 +106,18 @@ class BotConfigServiceTest {
         verify(chatConfigRepository).save(captor.capture());
         assertThat(captor.getValue().getId()).isEqualTo(2L);
         assertThat(result).isEqualTo(saved);
+    }
+
+    @Test
+    void updateConfig_shouldUpdatePersonalizationQuestionFlags() {
+        ChatConfig existing = new ChatConfig(1L, true, "prompt", true, true);
+        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(existing));
+        when(chatConfigRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChatConfig result = botConfigService.updateConfig(
+                new UpdateBotConfigCommand(true, "prompt", false, false));
+
+        assertThat(result.getPreferredNameQuestionEnabled()).isFalse();
+        assertThat(result.getCommunicationStyleQuestionEnabled()).isFalse();
     }
 }

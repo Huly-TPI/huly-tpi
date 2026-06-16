@@ -4,7 +4,7 @@ import Button from '../Buttons/Button/Button'
 const FLOW_NODE_STYLES: Record<string, { bg: string; border: string; labelColor: string }> = {
   amber:  { bg: 'bg-amber-50 dark:bg-amber-950/20',  border: 'border-amber-200 dark:border-amber-900/30',  labelColor: 'text-amber-500 dark:text-amber-400' },
   green:  { bg: 'bg-green-50 dark:bg-green-950/20',  border: 'border-green-200 dark:border-green-900/30',  labelColor: 'text-green-500 dark:text-green-400' },
-  violet: { bg: 'bg-violet-50 dark:bg-violet-950/20', border: 'border-violet-200 dark:border-violet-900/30', labelColor: 'text-violeta dark:text-[#A78BFA]'   },
+  violet: { bg: 'bg-violet-50 dark:bg-violet-950/20', border: 'border-violet-200 dark:border-violet-900/30', labelColor: 'text-violeta dark:text-violeta-claro'   },
 }
 
 interface FlowNodeProps {

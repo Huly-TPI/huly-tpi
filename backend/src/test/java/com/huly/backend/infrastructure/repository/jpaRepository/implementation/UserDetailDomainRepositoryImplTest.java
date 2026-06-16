@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
+import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -162,6 +164,64 @@ class UserDetailDomainRepositoryImplTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userDetailDomainRepository.updateThemePreference(105L, ThemePreference.DARK))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void findDailyClaimState_shouldReturnStreakAndDate_whenPresent() {
+        UserDetailEntity entity = UserDetailEntity.builder()
+                .id(1L).dailyRewardStreak(5).lastDailyClaimDate(LocalDate.of(2026, 6, 12)).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(1L))
+                .thenReturn(Optional.of(entity));
+
+        DailyClaimState state = userDetailDomainRepository.findDailyClaimState(1L);
+
+        assertThat(state.streak()).isEqualTo(5);
+        assertThat(state.lastClaimDate()).isEqualTo(LocalDate.of(2026, 6, 12));
+    }
+
+    @Test
+    void findDailyClaimState_shouldDefaultStreakToZero_whenStreakIsNull() {
+        UserDetailEntity entity = UserDetailEntity.builder()
+                .id(1L).dailyRewardStreak(null).lastDailyClaimDate(null).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(1L))
+                .thenReturn(Optional.of(entity));
+
+        DailyClaimState state = userDetailDomainRepository.findDailyClaimState(1L);
+
+        assertThat(state.streak()).isEqualTo(0);
+        assertThat(state.lastClaimDate()).isNull();
+    }
+
+    @Test
+    void findDailyClaimState_shouldThrowNotFoundException_whenUserDetailNotFound() {
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(99L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userDetailDomainRepository.findDailyClaimState(99L))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void updateDailyClaim_shouldPersistStreakAndDate() {
+        UserDetailEntity entity = UserDetailEntity.builder().id(1L).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(1L))
+                .thenReturn(Optional.of(entity));
+
+        userDetailDomainRepository.updateDailyClaim(1L, 4, LocalDate.of(2026, 6, 12));
+
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+        verify(userDetailRepository).save(captor.capture());
+        assertThat(captor.getValue().getDailyRewardStreak()).isEqualTo(4);
+        assertThat(captor.getValue().getLastDailyClaimDate()).isEqualTo(LocalDate.of(2026, 6, 12));
+    }
+
+    @Test
+    void updateDailyClaim_shouldThrowNotFoundException_whenUserDetailNotFound() {
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(99L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userDetailDomainRepository.updateDailyClaim(99L, 1, LocalDate.of(2026, 6, 12)))
                 .isInstanceOf(NotFoundException.class);
     }
 

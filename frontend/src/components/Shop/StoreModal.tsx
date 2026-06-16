@@ -15,7 +15,7 @@ interface StoreModalProps {
 
 export default function StoreModal({ isOpen, onClose, inventory = [], refetchInventory = async () => { } }: StoreModalProps) {
   const { items, loading: itemsLoading, error: itemsError } = useStoreItems()
-  const { coins, refetch: refetchCoins } = useUserCoins()
+  const { coins, refresh: refetchCoins } = useUserCoins()
   const { busyId, error: actionError, buy, equip, unequip } = useCosmeticActions()
 
   if (!isOpen) return null

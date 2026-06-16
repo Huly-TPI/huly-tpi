@@ -8,11 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface IPaymentEventJpaRepository extends JpaRepository<PaymentEventEntity, Long> {
     Optional<PaymentEventEntity> findByMpPaymentId(Long mpPaymentId);
     Optional<PaymentEventEntity> findByExternalReference(String externalReference);
+    List<PaymentEventEntity> findByUserId(Long userId);
+    List<PaymentEventEntity> findByUserIdAndStatus(Long userId, PaymentStatus status);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE PaymentEventEntity e SET e.status = :approved, e.mpPaymentId = :mpPaymentId, e.updatedAt = :updatedAt " +

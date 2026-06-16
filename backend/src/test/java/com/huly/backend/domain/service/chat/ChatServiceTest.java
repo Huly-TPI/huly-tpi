@@ -20,7 +20,6 @@ import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import com.huly.backend.domain.repository.RiskWordRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
@@ -46,13 +45,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
 
     @Mock private LLMChatPort llmChatPort;
-    @Mock private StreamingLLMChatPort streamingLLMChatPort;
     @Mock private ChatMemoryPort chatMemoryPort;
     @Mock private ChatConfigRepository chatConfigRepository;
     @Mock private RiskWordRepository riskWordRepository;
@@ -298,6 +297,58 @@ class ChatServiceTest {
         assertThat(result.generatedChallenge().title()).isEqualTo("Reto de accion pequena");
         verify(promptBuilderService).buildEnrichedPrompt(
                 any(), any(), any(), eq(null), eq(ChatUserIntent.CHALLENGE_REQUEST), any());
+    }
+
+    @Test
+    void processMessage_shouldAppendStyleQuestionWhenReplyIsSafe() {
+        ChatConversationPreference preference = ChatConversationPreference.builder()
+                .id(5L)
+                .userId(1L)
+                .preferredName("Crack")
+                .onboardingStatus(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
+                .build();
+        when(chatConversationPreferenceRepository.findByUserId(1L))
+                .thenReturn(Optional.of(preference));
+        givenDefaultSetup(
+                "",
+                List.of(),
+                "prompt",
+                List.of(),
+                new ChatReply("Todo bien por acá.", EmotionType.JOY, 3, false, null));
+
+        ChatReply result = chatService.processMessage("qué onda", "conv-1", 1L, true);
+
+        assertThat(result.content())
+                .contains("Todo bien por acá.")
+                .contains("Cómo te gustaría que te hable");
+        ArgumentCaptor<ChatConversationPreference> captor =
+                ArgumentCaptor.forClass(ChatConversationPreference.class);
+        verify(chatConversationPreferenceRepository).save(captor.capture());
+        assertThat(captor.getValue().getOnboardingStatus())
+                .isEqualTo(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE);
+    }
+
+    @Test
+    void processMessage_shouldPostponeStyleQuestionWhenRiskIsDetected() {
+        ChatConversationPreference preference = ChatConversationPreference.builder()
+                .id(5L)
+                .userId(1L)
+                .preferredName("Crack")
+                .onboardingStatus(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
+                .build();
+        when(chatConversationPreferenceRepository.findByUserId(1L))
+                .thenReturn(Optional.of(preference));
+        givenDefaultSetup(
+                "",
+                List.of(),
+                "prompt",
+                List.of(),
+                new ChatReply("Estoy acá para acompañarte.", EmotionType.SADNESS, 9, true, "riesgo"));
+
+        ChatReply result = chatService.processMessage("estoy muy mal", "conv-1", 1L, true);
+
+        assertThat(result.content()).doesNotContain("Cómo te gustaría");
+        verify(chatConversationPreferenceRepository, never()).save(any());
     }
 
     private void givenDefaultSetup(String basePrompt, List<RiskWord> riskWords,

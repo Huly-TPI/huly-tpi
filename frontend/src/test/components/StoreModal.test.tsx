@@ -35,7 +35,7 @@ describe('StoreModal', () => {
         mockUseStoreItems.mockReturnValue({ items: [], loading: false, error: null })
         mockUseInventory.mockReturnValue({ inventory: [], refetch: vi.fn() })
         mockUseCosmeticActions.mockReturnValue({ busyId: null, error: null, buy: vi.fn(), equip: vi.fn(), unequip: vi.fn() })
-        mockUseUserCoins.mockReturnValue({ coins: 100, refetch: vi.fn() })
+        mockUseUserCoins.mockReturnValue({ coins: 100, refresh: vi.fn() })
     })
 
     it('no renderiza nada cuando isOpen es false', () => {

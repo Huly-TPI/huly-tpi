@@ -17,6 +17,8 @@ public class BotConfigService {
                 .orElse(ChatConfig.builder()
                         .riskDetectionEnabled(false)
                         .systemPrompt("")
+                        .preferredNameQuestionEnabled(true)
+                        .communicationStyleQuestionEnabled(true)
                         .build());
     }
 
@@ -32,7 +34,19 @@ public class BotConfigService {
                         command.systemPrompt() != null
                                 ? command.systemPrompt()
                                 : existing.getSystemPrompt())
+                .preferredNameQuestionEnabled(
+                        command.preferredNameQuestionEnabled() != null
+                                ? command.preferredNameQuestionEnabled()
+                                : enabledOrDefault(existing.getPreferredNameQuestionEnabled()))
+                .communicationStyleQuestionEnabled(
+                        command.communicationStyleQuestionEnabled() != null
+                                ? command.communicationStyleQuestionEnabled()
+                                : enabledOrDefault(existing.getCommunicationStyleQuestionEnabled()))
                 .build();
         return chatConfigRepository.save(updated);
+    }
+
+    private Boolean enabledOrDefault(Boolean value) {
+        return value == null ? true : value;
     }
 }

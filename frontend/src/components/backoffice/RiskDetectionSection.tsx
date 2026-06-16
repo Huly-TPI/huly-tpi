@@ -91,7 +91,7 @@ export function RiskDetectionSection({
           <button
             onClick={onPrev}
             disabled={!hasPrev || loading}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] dark:border-gray-800 bg-white dark:bg-[#09111f] text-[#4A5568] dark:text-gray-300 shadow-sm dark:shadow-none transition-colors hover:border-[#8869AC] dark:hover:border-[#A78BFA] hover:text-[#8869AC] dark:hover:text-[#A78BFA] disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] dark:border-gray-800 bg-white dark:bg-[#09111f] text-[#4A5568] dark:text-gray-300 shadow-sm dark:shadow-none transition-colors hover:border-violeta dark:hover:border-violeta-claro hover:text-violeta dark:hover:text-violeta-claro disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Página anterior"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -102,7 +102,7 @@ export function RiskDetectionSection({
           <button
             onClick={onNext}
             disabled={!hasNext || loading}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] dark:border-gray-800 bg-white dark:bg-[#09111f] text-[#4A5568] dark:text-gray-300 shadow-sm dark:shadow-none transition-colors hover:border-[#8869AC] dark:hover:border-[#A78BFA] hover:text-[#8869AC] dark:hover:text-[#A78BFA] disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] dark:border-gray-800 bg-white dark:bg-[#09111f] text-[#4A5568] dark:text-gray-300 shadow-sm dark:shadow-none transition-colors hover:border-violeta dark:hover:border-violeta-claro hover:text-violeta dark:hover:text-violeta-claro disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Página siguiente"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -121,12 +121,12 @@ export function RiskDetectionSection({
             value={newWord}
             onChange={e => setNewWord(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#09111f] text-gray-700 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#8869AC] dark:focus:border-[#A78BFA]"
+            className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#09111f] text-gray-700 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-violeta dark:focus:border-violeta-claro"
           />
           <select
             value={newSeverity}
             onChange={e => setNewSeverity(e.target.value as RiskSeverity)}
-            className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#09111f] px-3 py-2 text-xs text-[#4A5568] dark:text-gray-200 focus:outline-none focus:border-[#8869AC] dark:focus:border-[#A78BFA]"
+            className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#09111f] px-3 py-2 text-xs text-[#4A5568] dark:text-gray-200 focus:outline-none focus:border-violeta dark:focus:border-violeta-claro"
           >
             <option value="HIGH">CRÍTICO (Alto)</option>
             <option value="MEDIUM">ALTO (Medio)</option>

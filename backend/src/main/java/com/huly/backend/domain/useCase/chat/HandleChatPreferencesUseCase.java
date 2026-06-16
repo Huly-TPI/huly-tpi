@@ -2,14 +2,19 @@ package com.huly.backend.domain.useCase.chat;
 
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.chat.ChatOnboardingInitialization;
+import com.huly.backend.domain.model.chat.ChatPreferenceDetectionResult;
+import com.huly.backend.domain.model.chat.ChatPreferenceHandlingResult;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
+import com.huly.backend.domain.model.enums.ChatPreferenceExpectedField;
+import com.huly.backend.domain.model.enums.ChatPreferenceMessageType;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.provider.ChatMemoryPort;
+import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
-import com.huly.backend.domain.service.chat.ChatPreferenceDetectionService;
+import com.huly.backend.domain.service.chat.ChatPreferenceResolutionService;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,121 +24,218 @@ import java.time.Instant;
 import java.util.Optional;
 
 /**
- * Handles deterministic chatbot onboarding answers and explicit preference changes.
+ * Handles optional conversational onboarding and explicit preference changes.
  */
 @Service
 @RequiredArgsConstructor
 public class HandleChatPreferencesUseCase {
 
+    private static final String STYLE_QUESTION =
+            "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
+                    + "formal, directa, indirecta, cercana o como un amigo.";
+
     private final ChatConversationPreferenceRepository preferenceRepository;
-    private final ChatPreferenceDetectionService detectionService;
+    private final ChatPreferenceResolutionService resolutionService;
     private final InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
     private final ChatMemoryPort chatMemoryPort;
     private final ChatQuotaService chatQuotaService;
+    private final ChatConfigRepository chatConfigRepository;
 
-    /**
-     * Processes a message as conversational-preference input when applicable.
-     *
-     * @param userId authenticated user identifier
-     * @param conversationId active conversation identifier
-     * @param message user message
-     * @return handled chatbot reply, or empty when normal chat processing should continue
-     */
     @Transactional
-    public Optional<ChatReply> execute(Long userId, String conversationId, String message) {
-        Optional<ChatConversationPreference> storedPreference = preferenceRepository.findByUserId(userId);
+    public ChatPreferenceHandlingResult execute(
+            Long userId,
+            String conversationId,
+            String message) {
+        Optional<ChatConversationPreference> storedPreference =
+                preferenceRepository.findByUserId(userId);
         if (storedPreference.isEmpty()) {
             chatQuotaService.assertWithinLimit(userId);
             ChatOnboardingInitialization initialization =
                     initializeChatPreferencesUseCase.execute(userId, conversationId);
             return Boolean.TRUE.equals(initialization.initialized())
-                    ? Optional.of(ChatReply.of(initialization.assistantMessage()))
-                    : Optional.empty();
+                    ? ChatPreferenceHandlingResult.handled(
+                            ChatReply.of(initialization.assistantMessage()))
+                    : ChatPreferenceHandlingResult.continueChat();
         }
 
         ChatConversationPreference preference = storedPreference.get();
-        if (preference.getOnboardingStatus() == ChatOnboardingStatus.ASKED_PREFERRED_NAME) {
-            chatQuotaService.assertWithinLimit(userId);
-            return Optional.of(handleOnboardingName(preference, conversationId, message));
+        return switch (preference.getOnboardingStatus()) {
+            case ASKED_PREFERRED_NAME ->
+                    handleExpectedName(preference, conversationId, message);
+            case PENDING_COMMUNICATION_STYLE ->
+                    handlePendingStyle(preference, conversationId, message);
+            case ASKED_COMMUNICATION_STYLE ->
+                    handleExpectedStyle(preference, conversationId, message);
+            case COMPLETED ->
+                    handleCompletedPreferenceChange(preference, conversationId, message);
+        };
+    }
+
+    private ChatPreferenceHandlingResult handleExpectedName(
+            ChatConversationPreference preference,
+            String conversationId,
+            String message) {
+        ChatPreferenceDetectionResult detection = resolutionService.resolve(
+                message,
+                ChatPreferenceExpectedField.PREFERRED_NAME);
+        if (!detection.hasPreference()) {
+            preferenceRepository.save(preference.complete(Instant.now()));
+            return ChatPreferenceHandlingResult.continueChat();
+        }
+
+        Instant now = Instant.now();
+        ChatConversationPreference updated = preference;
+        if (detection.preferredName() != null) {
+            updated = updated.withPreferredNamePendingStyle(detection.preferredName(), now);
+        }
+        if (detection.communicationStyle() != null) {
+            updated = updated.withCommunicationStyle(detection.communicationStyle(), now);
+        } else if (!communicationStyleQuestionEnabled()) {
+            updated = updated.complete(now);
+        } else if (detection.messageType() == ChatPreferenceMessageType.PREFERENCE_ONLY) {
+            updated = updated.markCommunicationStyleAsked(now);
+        }
+        preferenceRepository.save(updated);
+
+        if (detection.messageType() == ChatPreferenceMessageType.MIXED) {
+            return updated.getOnboardingStatus() == ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE
+                    ? ChatPreferenceHandlingResult.continueChatAndOfferStyle()
+                    : ChatPreferenceHandlingResult.continueChat();
+        }
+
+        String response = buildNameResponse(detection, updated);
+        return directReply(preference.getUserId(), conversationId, message, response);
+    }
+
+    private ChatPreferenceHandlingResult handlePendingStyle(
+            ChatConversationPreference preference,
+            String conversationId,
+            String message) {
+        ChatPreferenceDetectionResult detection = resolutionService.resolve(
+                message,
+                ChatPreferenceExpectedField.ANY);
+        if (detection.communicationStyle() == null) {
+            return ChatPreferenceHandlingResult.continueChatAndOfferStyle();
+        }
+        return saveStyleChange(preference, conversationId, message, detection);
+    }
+
+    private ChatPreferenceHandlingResult handleExpectedStyle(
+            ChatConversationPreference preference,
+            String conversationId,
+            String message) {
+        ChatPreferenceDetectionResult detection = resolutionService.resolve(
+                message,
+                ChatPreferenceExpectedField.COMMUNICATION_STYLE);
+        if (detection.communicationStyle() == null) {
+            preferenceRepository.save(preference.complete(Instant.now()));
+            return ChatPreferenceHandlingResult.continueChat();
+        }
+        return saveStyleChange(preference, conversationId, message, detection);
+    }
+
+    private ChatPreferenceHandlingResult saveStyleChange(
+            ChatConversationPreference preference,
+            String conversationId,
+            String message,
+            ChatPreferenceDetectionResult detection) {
+        CommunicationStyle style = detection.communicationStyle();
+        preferenceRepository.save(preference.withCommunicationStyle(style, Instant.now()));
+        if (detection.messageType() == ChatPreferenceMessageType.MIXED) {
+            return ChatPreferenceHandlingResult.continueChat();
+        }
+        String response = "Entendido"
+                + preferredNameSuffix(preference)
+                + ". Desde ahora voy a hablarte con un estilo " + style.displayName() + ".";
+        return directReply(preference.getUserId(), conversationId, message, response);
+    }
+
+    private ChatPreferenceHandlingResult handleCompletedPreferenceChange(
+            ChatConversationPreference preference,
+            String conversationId,
+            String message) {
+        ChatPreferenceDetectionResult detection = resolutionService.resolve(
+                message,
+                ChatPreferenceExpectedField.ANY);
+        if (!detection.hasPreference()) {
+            return ChatPreferenceHandlingResult.continueChat();
+        }
+
+        ChatConversationPreference updated = preference;
+        Instant now = Instant.now();
+        if (detection.preferredName() != null) {
+            updated = updated.updatePreferredName(detection.preferredName(), now);
+        }
+        if (detection.communicationStyle() != null) {
+            updated = updated.updateCommunicationStyle(detection.communicationStyle(), now);
+        }
+        preferenceRepository.save(updated);
+
+        if (detection.messageType() == ChatPreferenceMessageType.MIXED) {
+            return ChatPreferenceHandlingResult.continueChat();
+        }
+        return directReply(
+                preference.getUserId(),
+                conversationId,
+                message,
+                buildCompletedChangeResponse(detection));
+    }
+
+    private ChatPreferenceHandlingResult directReply(
+            Long userId,
+            String conversationId,
+            String userMessage,
+            String assistantMessage) {
+        chatQuotaService.assertWithinLimit(userId);
+        saveExchange(userId, conversationId, userMessage, assistantMessage);
+        return ChatPreferenceHandlingResult.handled(ChatReply.of(assistantMessage));
+    }
+
+    private String buildNameResponse(
+            ChatPreferenceDetectionResult detection,
+            ChatConversationPreference preference) {
+        if (detection.preferredName() == null) {
+            return "Entendido. Desde ahora voy a hablarte con un estilo "
+                    + detection.communicationStyle().displayName() + ".";
+        }
+        String prefix = "Perfecto, " + detection.preferredName() + ".";
+        if (detection.communicationStyle() != null) {
+            return prefix + " Desde ahora voy a hablarte con un estilo "
+                    + detection.communicationStyle().displayName() + ".";
         }
         if (preference.getOnboardingStatus() == ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE) {
-            chatQuotaService.assertWithinLimit(userId);
-            return Optional.of(handleOnboardingStyle(preference, conversationId, message));
+            return prefix + " " + STYLE_QUESTION;
         }
-        return handleCompletedPreferenceChange(preference, conversationId, message);
+        return prefix;
     }
 
-    private ChatReply handleOnboardingName(
-            ChatConversationPreference preference,
-            String conversationId,
-            String message) {
-        Optional<String> preferredName = detectionService.detectPreferredName(message, true);
-        if (preferredName.isEmpty()) {
-            return saveExchange(
-                    preference.getUserId(),
-                    conversationId,
-                    message,
-                    "No llegué a identificar el nombre. Podés responder, por ejemplo, \"Sergio\" o \"Llamame Sergito\".");
+    private String buildCompletedChangeResponse(ChatPreferenceDetectionResult detection) {
+        if (detection.preferredName() != null && detection.communicationStyle() != null) {
+            return "Listo, de ahora en adelante te voy a decir " + detection.preferredName()
+                    + " y voy a hablarte con un estilo "
+                    + detection.communicationStyle().displayName() + ".";
         }
-
-        ChatConversationPreference updated =
-                preference.withPreferredName(preferredName.get(), Instant.now());
-        preferenceRepository.save(updated);
-        String response = "Perfecto, " + preferredName.get()
-                + ". ¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, directa, cercana o como un amigo.";
-        return saveExchange(preference.getUserId(), conversationId, message, response);
+        if (detection.preferredName() != null) {
+            return "Listo, de ahora en adelante te voy a decir "
+                    + detection.preferredName() + ".";
+        }
+        return "Entendido. Desde ahora voy a hablarte con un estilo "
+                + detection.communicationStyle().displayName() + ".";
     }
 
-    private ChatReply handleOnboardingStyle(
-            ChatConversationPreference preference,
-            String conversationId,
-            String message) {
-        Optional<CommunicationStyle> style = detectionService.detectCommunicationStyle(message, true);
-        if (style.isEmpty()) {
-            return saveExchange(
-                    preference.getUserId(),
-                    conversationId,
-                    message,
-                    "No llegué a identificar el estilo. Podés elegir, por ejemplo, neutro, amable, informal, directo, cercano o suave y contenedor.");
-        }
-
-        preferenceRepository.save(preference.withCommunicationStyle(style.get(), Instant.now()));
+    private String preferredNameSuffix(ChatConversationPreference preference) {
         String preferredName = preference.getPreferredName();
-        String response = "Entendido"
-                + (preferredName == null || preferredName.isBlank() ? "" : ", " + preferredName)
-                + ". Desde ahora voy a hablarte con un estilo " + style.get().displayName() + ".";
-        return saveExchange(preference.getUserId(), conversationId, message, response);
+        return preferredName == null || preferredName.isBlank() ? "" : ", " + preferredName;
     }
 
-    private Optional<ChatReply> handleCompletedPreferenceChange(
-            ChatConversationPreference preference,
-            String conversationId,
-            String message) {
-        Optional<String> preferredName = detectionService.detectPreferredName(message, false);
-        if (preferredName.isPresent()) {
-            chatQuotaService.assertWithinLimit(preference.getUserId());
-            preferenceRepository.save(preference.updatePreferredName(preferredName.get(), Instant.now()));
-            return Optional.of(saveExchange(
-                    preference.getUserId(),
-                    conversationId,
-                    message,
-                    "Listo, de ahora en adelante te voy a decir " + preferredName.get() + "."));
-        }
-
-        Optional<CommunicationStyle> style = detectionService.detectCommunicationStyle(message, false);
-        if (style.isPresent()) {
-            chatQuotaService.assertWithinLimit(preference.getUserId());
-            preferenceRepository.save(preference.updateCommunicationStyle(style.get(), Instant.now()));
-            return Optional.of(saveExchange(
-                    preference.getUserId(),
-                    conversationId,
-                    message,
-                    "Entendido. Desde ahora voy a hablarte con un estilo " + style.get().displayName() + "."));
-        }
-        return Optional.empty();
+    private boolean communicationStyleQuestionEnabled() {
+        return chatConfigRepository.findFirst()
+                .map(config -> config.getCommunicationStyleQuestionEnabled() == null
+                        || config.getCommunicationStyleQuestionEnabled())
+                .orElse(true);
     }
 
-    private ChatReply saveExchange(
+    private void saveExchange(
             Long userId,
             String conversationId,
             String userMessage,
@@ -146,6 +248,5 @@ public class HandleChatPreferencesUseCase {
                 conversationId,
                 ConversationMessage.of(MessageRole.ASSISTANT, assistantMessage),
                 userId);
-        return ChatReply.of(assistantMessage);
     }
 }

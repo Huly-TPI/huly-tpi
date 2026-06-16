@@ -22,6 +22,7 @@ export const tryToRefreshToken = async (): Promise<string | null> => {
     const { backendUrl } = await getSettings();
     const response = await fetch(`${backendUrl}/api/auth/refresh`, {
       method: 'POST',
+      cache: 'no-store',
       credentials: 'include',
     });
 
@@ -63,7 +64,10 @@ export const fetchRemoteSettings = async (): Promise<Partial<ExtensionSettings> 
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    let response = await fetch(`${backendUrl}/api/extension/settings`, { headers });
+    let response = await fetch(`${backendUrl}/api/extension/settings`, {
+      headers,
+      cache: 'no-store',
+    });
     
     if (response.status === 401) {
       const newToken = await tryToRefreshToken();
@@ -71,7 +75,10 @@ export const fetchRemoteSettings = async (): Promise<Partial<ExtensionSettings> 
         const retryHeaders: HeadersInit = {
           'Authorization': `Bearer ${newToken}`
         };
-        response = await fetch(`${backendUrl}/api/extension/settings`, { headers: retryHeaders });
+        response = await fetch(`${backendUrl}/api/extension/settings`, {
+          headers: retryHeaders,
+          cache: 'no-store',
+        });
       } else {
         return null;
       }

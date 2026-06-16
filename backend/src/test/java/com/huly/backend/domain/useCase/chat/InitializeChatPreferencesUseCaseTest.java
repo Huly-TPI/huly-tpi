@@ -2,6 +2,7 @@ package com.huly.backend.domain.useCase.chat;
 
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
+import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.chat.ChatOnboardingInitialization;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
@@ -9,6 +10,7 @@ import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
+import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +36,8 @@ class InitializeChatPreferencesUseCaseTest {
     private UserRepository userRepository;
     @Mock
     private ChatMemoryPort chatMemoryPort;
+    @Mock
+    private ChatConfigRepository chatConfigRepository;
     @InjectMocks
     private InitializeChatPreferencesUseCase useCase;
 
@@ -42,6 +46,8 @@ class InitializeChatPreferencesUseCaseTest {
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(AppUser.builder().id(1L).name("Sergio").build()));
+        when(chatConfigRepository.findFirst())
+                .thenReturn(Optional.of(new ChatConfig(1L, true, "prompt", true, true)));
 
         ChatOnboardingInitialization result = useCase.execute(1L, "conv-1");
 
@@ -79,5 +85,45 @@ class InitializeChatPreferencesUseCaseTest {
         assertThat(result.assistantMessage()).isNull();
         verify(preferenceRepository, never()).save(any());
         verify(chatMemoryPort, never()).addMessage(any(), any(), any());
+    }
+
+    @Test
+    void execute_shouldAskStyleDirectlyWhenNameQuestionIsDisabled() {
+        when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(AppUser.builder().id(1L).name("Sergio").build()));
+        when(chatConfigRepository.findFirst())
+                .thenReturn(Optional.of(new ChatConfig(1L, true, "prompt", false, true)));
+
+        ChatOnboardingInitialization result = useCase.execute(1L, "conv-1");
+
+        assertThat(result.assistantMessage())
+                .contains("Hola Sergio")
+                .contains("Cómo te gustaría que te hable");
+        ArgumentCaptor<ChatConversationPreference> captor =
+                ArgumentCaptor.forClass(ChatConversationPreference.class);
+        verify(preferenceRepository).save(captor.capture());
+        assertThat(captor.getValue().getOnboardingStatus())
+                .isEqualTo(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE);
+    }
+
+    @Test
+    void execute_shouldCreateGeneralGreetingWhenBothQuestionsAreDisabled() {
+        when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(AppUser.builder().id(1L).name("Sergio").build()));
+        when(chatConfigRepository.findFirst())
+                .thenReturn(Optional.of(new ChatConfig(1L, true, "prompt", false, false)));
+
+        ChatOnboardingInitialization result = useCase.execute(1L, "conv-1");
+
+        assertThat(result.assistantMessage())
+                .contains("En qué te puedo ayudar")
+                .doesNotContain("Cómo te gustaría");
+        ArgumentCaptor<ChatConversationPreference> captor =
+                ArgumentCaptor.forClass(ChatConversationPreference.class);
+        verify(preferenceRepository).save(captor.capture());
+        assertThat(captor.getValue().getOnboardingStatus())
+                .isEqualTo(ChatOnboardingStatus.COMPLETED);
     }
 }
