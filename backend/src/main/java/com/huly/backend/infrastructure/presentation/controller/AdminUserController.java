@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
+import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
@@ -78,7 +79,7 @@ public class AdminUserController {
     public ResponseEntity<UserActivitiesResponse> getUserActivities(
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "total") String timeframe) {
-        GetUserActivitiesResponse result = getUserActivitiesUseCase.execute(new GetUserActivitiesRequest(id, timeframe));
+        GetUserActivitiesResponse result = getUserActivitiesUseCase.execute(new GetUserActivitiesRequest(id, Timeframe.fromString(timeframe)));
         List<ActivitySessionDto> sessions = result.activitySessions().stream()
                 .map(s -> ActivitySessionDto.builder()
                         .id(s.id())

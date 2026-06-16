@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Timeframe } from '../../types/timeframe'
 import {
   getUsers,
   UserResponse,
@@ -52,7 +53,7 @@ export function useUsers() {
   const [antiscrollLoading, setAntiscrollLoading] = useState(false)
   const [antiscrollError, setAntiscrollError] = useState<string | null>(null)
 
-  const [activityTimeframe, setActivityTimeframe] = useState<'total' | 'month' | 'week' | 'today'>('total')
+  const [activityTimeframe, setActivityTimeframe] = useState<Timeframe>('total')
 
   const selectedUserId = id ? Number(id) : null
   const selectedUser = users.find((u) => u.id === selectedUserId)

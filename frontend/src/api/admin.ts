@@ -1,4 +1,5 @@
 import { api } from './client'
+import { Timeframe } from '../types/timeframe'
 
 export interface UserResponse {
   id: number
@@ -131,7 +132,7 @@ export const saveAntiScrollConfig = async (config: AntiScrollConfigResponse): Pr
   return api.post<void>('/admin/users/antiscroll/config', config)
 }
 
-export const getUserActivities = async (userId: number, timeframe?: string): Promise<UserActivitiesResponse> => {
+export const getUserActivities = async (userId: number, timeframe?: Timeframe): Promise<UserActivitiesResponse> => {
   const url = timeframe ? `/admin/users/${userId}/statistics/activities?timeframe=${timeframe}` : `/admin/users/${userId}/statistics/activities`
   return api.get<UserActivitiesResponse>(url)
 }

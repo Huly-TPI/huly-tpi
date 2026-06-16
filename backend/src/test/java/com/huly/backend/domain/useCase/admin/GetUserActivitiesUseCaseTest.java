@@ -3,6 +3,7 @@ package com.huly.backend.domain.useCase.admin.userActivities;
 import com.huly.backend.domain.model.ActivitySession;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.ActivityType;
+import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.repository.ActivitySessionRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +40,7 @@ class GetUserActivitiesUseCaseTest {
     void execute_shouldThrowException_whenUserNotFound() {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.execute(new GetUserActivitiesRequest(USER_ID, "total")))
+        assertThatThrownBy(() -> useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TOTAL)))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Usuario no encontrado");
     }
@@ -58,7 +59,7 @@ class GetUserActivitiesUseCaseTest {
         when(activitySessionRepository.findByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class))).thenReturn(List.of(session));
         when(activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(eq(USER_ID), any(Instant.class), eq(5))).thenReturn(List.of(session));
 
-        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, "today"));
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TODAY));
 
         assertThat(response.todayActivitiesCount()).isEqualTo(1);
         assertThat(response.favoriteActivity()).isEqualTo("RESPIRACION");
@@ -94,18 +95,11 @@ class GetUserActivitiesUseCaseTest {
         when(activitySessionRepository.findOldestSessionByUserId(USER_ID)).thenReturn(Optional.of(oldSession));
         when(activitySessionRepository.findRecentByUserId(USER_ID, 5)).thenReturn(List.of(recentSession, oldSession));
 
-        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, "total"));
+        GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TOTAL));
 
         assertThat(response.averageSessionsText()).isEqualTo("1.4 sesiones/semana");
         assertThat(response.activitySessions()).hasSize(2);
     }
 
-    @Test
-    void execute_shouldThrowException_whenTimeframeIsInvalid() {
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
 
-        assertThatThrownBy(() -> useCase.execute(new GetUserActivitiesRequest(USER_ID, "year")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid timeframe: year");
-    }
 }

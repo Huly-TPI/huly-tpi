@@ -53,7 +53,6 @@ public class ListBackofficeUsersUseCase {
                     .map(UserPlan::getPlanCode)
                     .orElse("Gratuito");
 
-            // Calculate dominant emotion
             List<EmotionalEvent> emotionalEvents = emotionalEventRepository.findByUserId(user.getId());
             Map<String, Integer> emotionDistribution = new LinkedHashMap<>();
             for (EmotionalEvent event : emotionalEvents) {

@@ -1,6 +1,7 @@
 package com.huly.backend.domain.useCase.admin.userActivities;
 
 import com.huly.backend.domain.model.ActivitySession;
+import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.repository.ActivitySessionRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class GetUserActivitiesUseCase {
 
     public GetUserActivitiesResponse execute(GetUserActivitiesRequest request) {
         Long userId = request.userId();
-        String timeframe = request.timeframe();
+        Timeframe timeframe = request.timeframe();
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -30,13 +31,13 @@ public class GetUserActivitiesUseCase {
         Instant now = Instant.now();
         ZoneId zone = ZoneId.systemDefault();
         LocalDate today = now.atZone(zone).toLocalDate();
-        Instant timeframeStart = resolveTimeframeStart(timeframe, now, zone, today);
+        Instant timeframeStart = timeframe.getStartInstant(now, zone);
 
         List<ActivitySession> filteredSessions = timeframeStart == null
                 ? activitySessionRepository.findByUserId(userId)
                 : activitySessionRepository.findByUserIdAndCreatedAtAfter(userId, timeframeStart);
 
-        long todayActivitiesCount = "today".equalsIgnoreCase(timeframe)
+        long todayActivitiesCount = timeframe == Timeframe.TODAY
                 ? filteredSessions.size()
                 : activitySessionRepository.countByUserIdAndCreatedAtAfter(userId, today.atStartOfDay(zone).toInstant());
 
@@ -66,9 +67,9 @@ public class GetUserActivitiesUseCase {
         String averageSessionsText = "Sin registros";
         int totalSessionsCount = filteredSessions.size();
         if (totalSessionsCount > 0) {
-            if ("today".equalsIgnoreCase(timeframe)) {
+            if (timeframe == Timeframe.TODAY) {
                 averageSessionsText = totalSessionsCount + (totalSessionsCount == 1 ? " sesión hoy" : " sesiones hoy");
-            } else if ("week".equalsIgnoreCase(timeframe)) {
+            } else if (timeframe == Timeframe.WEEK) {
                 averageSessionsText = totalSessionsCount + (totalSessionsCount == 1 ? " sesión/semana" : " sesiones/semana");
             } else {
                 long oldestSessionEpochMillis = activitySessionRepository.findOldestSessionByUserId(userId)
@@ -79,7 +80,7 @@ public class GetUserActivitiesUseCase {
 
                 long diffMillis = now.toEpochMilli() - oldestSessionEpochMillis;
                 double diffDays = Math.max(1.0, diffMillis / (1000.0 * 60.0 * 60.0 * 24.0));
-                double timeframeDays = "month".equalsIgnoreCase(timeframe) ? 30.0 : diffDays;
+                double timeframeDays = timeframe == Timeframe.MONTH ? 30.0 : diffDays;
                 double activeDays = Math.min(timeframeDays, diffDays);
                 double diffWeeks = Math.max(1.0, activeDays / 7.0);
                 double averagePerWeek = Math.round((totalSessionsCount / diffWeeks) * 10.0) / 10.0;
@@ -99,7 +100,7 @@ public class GetUserActivitiesUseCase {
                         session.getId(),
                         Objects.requireNonNull(session.getActivityType(), "ActivitySession activityType is required").name(),
                         session.getCreatedAt()
-                ))
+                    ))
                 .toList();
 
         return new GetUserActivitiesResponse(
@@ -109,21 +110,5 @@ public class GetUserActivitiesUseCase {
                 averageSessionsText,
                 distribution
         );
-    }
-
-    private Instant resolveTimeframeStart(String timeframe, Instant now, ZoneId zone, LocalDate today) {
-        if (timeframe == null || timeframe.equalsIgnoreCase("total")) {
-            return null;
-        }
-        if (timeframe.equalsIgnoreCase("today")) {
-            return today.atStartOfDay(zone).toInstant();
-        }
-        if (timeframe.equalsIgnoreCase("week")) {
-            return now.minus(7, ChronoUnit.DAYS);
-        }
-        if (timeframe.equalsIgnoreCase("month")) {
-            return now.minus(30, ChronoUnit.DAYS);
-        }
-        throw new IllegalArgumentException("Invalid timeframe: " + timeframe);
     }
 }

@@ -1,13 +1,14 @@
 import { ActivityType, ACTIVITY_METADATA } from '../../../types/ai'
 import { TrendingUp, Calendar } from 'lucide-react'
 import { UserActivitiesResponse } from '../../../api/admin'
+import { Timeframe } from '../../../types/timeframe'
 
 interface UsageTabProps {
   activities: UserActivitiesResponse | null
   activitiesLoading: boolean
   activitiesError: string | null
-  activityTimeframe: 'total' | 'month' | 'week' | 'today'
-  setActivityTimeframe: (timeframe: 'total' | 'month' | 'week' | 'today') => void
+  activityTimeframe: Timeframe
+  setActivityTimeframe: (timeframe: Timeframe) => void
 }
 
 export function UsageTab({
