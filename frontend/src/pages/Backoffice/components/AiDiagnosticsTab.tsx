@@ -33,9 +33,9 @@ export function AiDiagnosticsTab({
   if (!aiDiagnostics) return null
 
   return (
-    <div className="flex flex-col gap-6 animate-fadeIn">
+    <div className="flex flex-col gap-6 animate-fadeIn lg:flex-grow lg:min-h-0">
       {/* Grid 1: Synthesized Summary & Personality Profile */}
-      <div className="bg-gradient-to-br from-violeta/10 to-violeta-claro/5 dark:from-[#2A233C]/20 dark:to-transparent border border-violeta/20 rounded-2xl p-5 flex flex-col md:flex-row gap-6 shadow-sm">
+      <div className="bg-gradient-to-br from-violeta/10 to-violeta-claro/5 dark:from-[#2A233C]/20 dark:to-transparent border border-violeta/20 rounded-2xl p-5 flex flex-col md:flex-row gap-6 shadow-sm shrink-0">
         <div className="flex-grow flex flex-col gap-3 justify-center">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
@@ -66,7 +66,7 @@ export function AiDiagnosticsTab({
       </div>
 
       {/* Grid 2: Decision Tracking (Acceptance), Assistant Preferences & Emotion Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:flex-grow lg:min-h-0">
         
         {/* Receptivity Card */}
         <div className="bg-gray-55/50 dark:bg-[#09111f]/40 border border-gray-100 dark:border-gray-800/40 rounded-xl p-5 flex flex-col justify-between">
@@ -188,13 +188,13 @@ export function AiDiagnosticsTab({
         </div>
 
         {/* Emotion Distribution Card */}
-        <div className="bg-gray-55/50 dark:bg-[#09111f]/40 border border-gray-100 dark:border-gray-800/40 rounded-xl p-5">
+        <div className="bg-gray-55/50 dark:bg-[#09111f]/40 border border-gray-100 dark:border-gray-800/40 rounded-xl p-5 flex flex-col">
           <div className="flex items-center gap-2 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
               <Sparkles className="h-5 w-5" strokeWidth={1.8} />
             </div>
             <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">
-              Estado Emocional Predominante: <span className="text-violeta dark:text-violeta-claro font-extrabold">{mapEmotionToSpanish(aiDiagnostics.dominantEmotion ?? null)}</span>
+              Estado emocional predominante: <span className="text-violeta dark:text-violeta-claro font-extrabold">{mapEmotionToSpanish(aiDiagnostics.dominantEmotion ?? null)}</span>
             </h2>
           </div>
           {(() => {

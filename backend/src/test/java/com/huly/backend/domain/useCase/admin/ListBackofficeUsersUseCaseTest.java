@@ -8,6 +8,8 @@ import com.huly.backend.domain.model.extension.ExtensionSettings;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.dto.payment.UserPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +25,7 @@ class ListBackofficeUsersUseCaseTest {
     private UserRepository userRepository;
     private ExtensionSettingsRepository settingsRepository;
     private ExtensionMetricsRepository metricsRepository;
+    private UserPlanRepository userPlanRepository;
     private ListBackofficeUsersUseCase useCase;
 
     @BeforeEach
@@ -30,7 +33,8 @@ class ListBackofficeUsersUseCaseTest {
         userRepository = mock(UserRepository.class);
         settingsRepository = mock(ExtensionSettingsRepository.class);
         metricsRepository = mock(ExtensionMetricsRepository.class);
-        useCase = new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository);
+        userPlanRepository = mock(UserPlanRepository.class);
+        useCase = new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository);
     }
 
     @Test
@@ -51,6 +55,8 @@ class ListBackofficeUsersUseCaseTest {
 
         when(userRepository.findAllNonAdmins()).thenReturn(List.of(user));
         when(settingsRepository.findByUserId(2L)).thenReturn(Optional.of(settings));
+        when(userRepository.getCoins(2L)).thenReturn(50);
+        when(userPlanRepository.findByUser(2L)).thenReturn(Optional.empty());
 
         List<BackofficeUserSummary> result = useCase.execute();
 
@@ -60,6 +66,8 @@ class ListBackofficeUsersUseCaseTest {
         assertThat(summary.getName()).isEqualTo("John Doe");
         assertThat(summary.isAntiScrollEnabled()).isTrue();
         assertThat(summary.isDataSharingConsent()).isTrue();
+        assertThat(summary.getCoins()).isEqualTo(50);
+        assertThat(summary.getPlan()).isEqualTo("Gratuito");
         
         // Assert metrics are empty or null
         assertThat(summary.getMostUsedApp()).isNull();

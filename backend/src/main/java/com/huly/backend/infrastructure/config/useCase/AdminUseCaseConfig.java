@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Configuration;
 
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 
+import com.huly.backend.domain.repository.UserPlanRepository;
+
 @Configuration
 public class AdminUseCaseConfig {
 
@@ -26,9 +28,10 @@ public class AdminUseCaseConfig {
     public ListBackofficeUsersUseCase listBackofficeUsersUseCase(
             UserRepository userRepository,
             ExtensionSettingsRepository settingsRepository,
-            ExtensionMetricsRepository metricsRepository
+            ExtensionMetricsRepository metricsRepository,
+            UserPlanRepository userPlanRepository
     ) {
-        return new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository);
+        return new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository);
     }
 
     @Bean

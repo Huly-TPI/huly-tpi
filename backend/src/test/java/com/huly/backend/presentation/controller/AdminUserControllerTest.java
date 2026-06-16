@@ -86,6 +86,8 @@ class AdminUserControllerTest {
                 .totalScrollTimeSeconds(5000)
                 .dailyScrollTimeSeconds(java.util.Map.of("current_0", 100))
                 .topApps(List.of(new TopAppStats("instagram.com", 3600)))
+                .coins(100)
+                .plan("PREMIUM_PLAN")
                 .build();
 
         when(listBackofficeUsersUseCase.execute()).thenReturn(List.of(summary));
@@ -104,7 +106,9 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$[0].totalScrollTimeSeconds").value(5000))
                 .andExpect(jsonPath("$[0].dailyScrollTimeSeconds.current_0").value(100))
                 .andExpect(jsonPath("$[0].topApps[0].domain").value("instagram.com"))
-                .andExpect(jsonPath("$[0].topApps[0].totalActiveSeconds").value(3600));
+                .andExpect(jsonPath("$[0].topApps[0].totalActiveSeconds").value(3600))
+                .andExpect(jsonPath("$[0].coins").value(100))
+                .andExpect(jsonPath("$[0].plan").value("PREMIUM_PLAN"));
     }
 
     @Test
@@ -161,6 +165,8 @@ class AdminUserControllerTest {
                 .totalScrollTimeSeconds(0)
                 .dailyScrollTimeSeconds(null)
                 .topApps(null)
+                .coins(null)
+                .plan(null)
                 .build();
 
         when(listBackofficeUsersUseCase.execute()).thenReturn(List.of(summary));

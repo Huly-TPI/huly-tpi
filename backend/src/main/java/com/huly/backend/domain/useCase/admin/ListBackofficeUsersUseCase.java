@@ -8,6 +8,8 @@ import com.huly.backend.domain.model.extension.ExtensionSettings;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
+import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.dto.payment.UserPlan;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
@@ -19,6 +21,7 @@ public class ListBackofficeUsersUseCase {
     private final UserRepository userRepository;
     private final ExtensionSettingsRepository settingsRepository;
     private final ExtensionMetricsRepository metricsRepository;
+    private final UserPlanRepository userPlanRepository;
 
     public List<BackofficeUserSummary> execute() {
         List<AppUser> users = userRepository.findAllNonAdmins();
@@ -28,6 +31,12 @@ public class ListBackofficeUsersUseCase {
             Optional<ExtensionSettings> settingsOpt = settingsRepository.findByUserId(user.getId());
             boolean antiScrollEnabled = settingsOpt.map(ExtensionSettings::isEnabled).orElse(false);
             boolean consent = settingsOpt.map(ExtensionSettings::isDataSharingConsent).orElse(false);
+
+            int coins = userRepository.getCoins(user.getId());
+            String plan = userPlanRepository.findByUser(user.getId())
+                    .filter(p -> p.isActive(java.time.Instant.now()))
+                    .map(UserPlan::getPlanCode)
+                    .orElse("Gratuito");
 
             summaries.add(BackofficeUserSummary.builder()
                     .id(user.getId())
@@ -43,6 +52,8 @@ public class ListBackofficeUsersUseCase {
                     .totalScrollTimeSeconds(0)
                     .dailyScrollTimeSeconds(Map.of())
                     .topApps(List.of())
+                    .coins(coins)
+                    .plan(plan)
                     .build());
         }
 

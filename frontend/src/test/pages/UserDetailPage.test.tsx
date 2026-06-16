@@ -143,7 +143,7 @@ describe('UserDetailPage', () => {
 
     render(<UserDetailPage />)
 
-    expect(screen.getByText('Total Ganancias Generadas')).toBeInTheDocument()
+    expect(screen.getByText('Total ganancias generadas')).toBeInTheDocument()
     expect(screen.getAllByText('$49,99').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('Historial de Transacciones')).toBeInTheDocument()
     expect(screen.getByText('Premium Plan')).toBeInTheDocument()

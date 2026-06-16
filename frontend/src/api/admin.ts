@@ -9,11 +9,13 @@ export interface UserResponse {
   birthDate: string | null
   antiScrollEnabled: boolean
   dataSharingConsent: boolean
-  mostUsedApp: string | null
-  mostUsedAppActiveSeconds: number
-  totalScrollTimeSeconds: number
+  mostUsedApp?: string | null
+  mostUsedAppActiveSeconds?: number
+  totalScrollTimeSeconds?: number
   dailyScrollTimeSeconds?: Record<string, number>
   topApps?: TopAppResponse[]
+  coins?: number
+  plan?: string | null
 }
 
 export interface TopAppResponse {

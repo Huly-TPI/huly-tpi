@@ -204,6 +204,8 @@ public class AdminUserController {
                         .topApps(u.getTopApps() != null ? u.getTopApps().stream()
                                 .map(t -> new TopAppResponse(t.getDomain(), t.getTotalActiveSeconds()))
                                 .toList() : List.of())
+                        .coins(u.getCoins())
+                        .plan(u.getPlan())
                         .build())
                 .toList();
         return ResponseEntity.ok(responses);

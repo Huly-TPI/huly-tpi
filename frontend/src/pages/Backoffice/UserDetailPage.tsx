@@ -1,6 +1,6 @@
 import { useUsers } from '../../hooks/backoffice/useUsers'
 import { SectionCard } from '../../components/backoffice/SectionCard'
-import { ChevronLeft, ShieldAlert, Brain, Activity, DollarSign } from 'lucide-react'
+import { ChevronLeft, ShieldAlert, Brain, Activity, DollarSign, Check, X } from 'lucide-react'
 import { UsageTab } from './components/UsageTab'
 import { AiDiagnosticsTab } from './components/AiDiagnosticsTab'
 import { AntiScrollTab } from './components/AntiScrollTab'
@@ -83,24 +83,52 @@ export default function UserDetailPage() {
             </div>
 
             <div className="space-y-4 border-t border-gray-50 dark:border-gray-800 pt-4">
-              <div className="flex justify-between text-sm">
-                <span className="font-semibold text-gray-400 dark:text-gray-555">Rol</span>
-                <span className="font-bold text-gray-700 dark:text-gray-300">{selectedUser.role}</span>
-              </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between items-center text-sm">
                 <span className="font-semibold text-gray-400 dark:text-gray-555">Estado</span>
-                <span className="font-bold text-green-600 dark:text-green-400">{selectedUser.status}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="font-semibold text-gray-400 dark:text-gray-555">Antiscroll</span>
-                <span className={`font-bold ${selectedUser.antiScrollEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-555'}`}>
-                  {selectedUser.antiScrollEnabled ? 'activo' : 'inactivo'}
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-5 ${
+                  selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVO'
+                    ? 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
+                }`}>
+                  {selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVO' 
+                    ? 'Activo' 
+                    : selectedUser.status.charAt(0).toUpperCase() + selectedUser.status.slice(1).toLowerCase()}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="font-semibold text-gray-400 dark:text-gray-555">Compartir datos</span>
-                <span className={`font-bold ${selectedUser.dataSharingConsent ? 'text-blue-600 dark:text-blue-400' : 'text-red-500 dark:text-red-400'}`}>
-                  {selectedUser.dataSharingConsent ? 'autorizado' : 'denegado'}
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-400 dark:text-gray-555">Antiscroll</span>
+                <span className={`inline-flex items-center font-bold ${selectedUser.antiScrollEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                  {selectedUser.antiScrollEnabled ? (
+                    <Check className="h-4 w-4 stroke-[3]" />
+                  ) : (
+                    <X className="h-4 w-4 stroke-[3]" />
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-400 dark:text-gray-555">Compartir datos (Antiscroll)</span>
+                <span className={`inline-flex items-center font-bold ${selectedUser.dataSharingConsent ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                  {selectedUser.dataSharingConsent ? (
+                    <Check className="h-4 w-4 stroke-[3]" />
+                  ) : (
+                    <X className="h-4 w-4 stroke-[3]" />
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-400 dark:text-gray-555">Monedas</span>
+                <span className="font-bold text-amber-500 dark:text-amber-400">
+                  {selectedUser.coins ?? 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-400 dark:text-gray-555">Plan</span>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-5 ${
+                  selectedUser.plan && selectedUser.plan !== 'Gratuito' && selectedUser.plan !== 'FREE'
+                    ? 'bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
+                }`}>
+                  {selectedUser.plan}
                 </span>
               </div>
             </div>
@@ -159,7 +187,7 @@ export default function UserDetailPage() {
           </div>
 
           {/* Tab content panel: expands and scrolls internally */}
-          <div className="animate-fadeIn lg:flex-grow lg:min-h-0 lg:overflow-y-auto pr-1">
+          <div className="animate-fadeIn lg:flex-grow lg:min-h-0 lg:overflow-y-auto pr-1 lg:flex lg:flex-col">
             {activeTab === 'antiscroll' && (
               <AntiScrollTab
                 antiscrollStats={antiscrollStats}
