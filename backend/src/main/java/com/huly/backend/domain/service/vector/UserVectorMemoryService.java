@@ -131,7 +131,7 @@ public class UserVectorMemoryService {
                         profileFacts,
                         conversationId,
                         null,
-                metadata("CHATBOT_PROFILE")
+                        metadata("CHATBOT_PROFILE")
                 )));
     }
 
@@ -263,7 +263,7 @@ public class UserVectorMemoryService {
     }
 
     public void rememberGuidedCloudInput(Long userId, String cloudSessionId, String content) {
-        saveMemory(new SaveVectorMemoryCommand(
+        saveSimpleMemory(
                 userId,
                 VectorMemorySource.GUIDED_CLOUDS,
                 cloudSessionId,
@@ -272,13 +272,12 @@ public class UserVectorMemoryService {
                 content,
                 null,
                 null,
-                metadata("GUIDED_CLOUDS")
-        ));
+                "GUIDED_CLOUDS");
     }
 
     public void rememberJournalEntry(Long userId, Long journalEntryId, String content) {
         String sourceId = journalEntryId != null ? journalEntryId.toString() : null;
-        saveMemory(new SaveVectorMemoryCommand(
+        saveSimpleMemory(
                 userId,
                 VectorMemorySource.EMOTIONAL_JOURNAL,
                 sourceId,
@@ -287,13 +286,12 @@ public class UserVectorMemoryService {
                 content,
                 null,
                 sourceId,
-                metadata("EMOTIONAL_JOURNAL")
-        ));
+                "EMOTIONAL_JOURNAL");
     }
 
     public void rememberOnboardingGoals(Long userId, String answer1, String answer2, String answer3) {
         String content = String.format("Goal 1: %s\nGoal 2: %s\nGoal 3: %s", answer1, answer2, answer3);
-        saveMemory(new SaveVectorMemoryCommand(
+        saveSimpleMemory(
                 userId,
                 VectorMemorySource.ONBOARDING,
                 userMemorySourceId(userId),
@@ -302,8 +300,7 @@ public class UserVectorMemoryService {
                 content,
                 null,
                 null,
-                metadata("ONBOARDING")
-        ));
+                "ONBOARDING");
     }
 
     private List<String> buildRecallQueries(String query) {
@@ -370,6 +367,29 @@ public class UserVectorMemoryService {
                     command != null ? command.sourceType() : null,
                     e);
         }
+    }
+
+    private void saveSimpleMemory(
+            Long userId,
+            VectorMemorySource sourceType,
+            String sourceId,
+            String memoryType,
+            String contentType,
+            String content,
+            String conversationId,
+            String relatedEntityId,
+            String feature) {
+        saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                sourceType,
+                sourceId,
+                memoryType,
+                contentType,
+                content,
+                conversationId,
+                relatedEntityId,
+                metadata(feature)
+        ));
     }
 
     private String userMemorySourceId(Long userId) {
