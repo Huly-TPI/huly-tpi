@@ -73,6 +73,19 @@ class UserDetailDomainRepositoryImplTest {
     }
 
     @Test
+    void findProfileOnboardingTutorialCompleted_shouldReturnValue_whenUserDetailExists() {
+        UserDetailEntity entity = UserDetailEntity.builder()
+                .id(2L).profileOnboardingTutorialCompleted(true).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(2L))
+                .thenReturn(Optional.of(entity));
+
+        Optional<Boolean> result = userDetailDomainRepository.findProfileOnboardingTutorialCompleted(2L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get()).isTrue();
+    }
+
+    @Test
     void findThemePreference_shouldReturnValue_whenUserDetailExists() {
         UserDetailEntity entity = UserDetailEntity.builder()
                 .id(4L).themePreference(ThemePreference.DARK).build();
@@ -141,6 +154,19 @@ class UserDetailDomainRepositoryImplTest {
 
         assertThatThrownBy(() -> userDetailDomainRepository.completeTutorial(101L))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void completeProfileTutorial_shouldMarkProfileTutorialCompleted() {
+        UserDetailEntity entity = UserDetailEntity.builder().id(3L).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(3L))
+                .thenReturn(Optional.of(entity));
+
+        userDetailDomainRepository.completeProfileTutorial(3L);
+
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+        verify(userDetailRepository).save(captor.capture());
+        assertThat(captor.getValue().getProfileOnboardingTutorialCompleted()).isTrue();
     }
 
     @Test

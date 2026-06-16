@@ -52,6 +52,7 @@ public class UserRepositoryImpl implements UserRepository {
                     .birth(user.getBirthDate())
                     .createdAt(Instant.now())
                     .onboardingTutorialCompleted(false)
+                    .profileOnboardingTutorialCompleted(false)
                     .themePreference(ThemePreference.LIGHT)
                     .build());
         }
@@ -85,6 +86,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .sourceAction(sourceAction)
                 .createdAt(Instant.now())
                 .onboardingTutorialCompleted(false)
+                .profileOnboardingTutorialCompleted(false)
                 .themePreference(ThemePreference.LIGHT)
                 .build());
     }

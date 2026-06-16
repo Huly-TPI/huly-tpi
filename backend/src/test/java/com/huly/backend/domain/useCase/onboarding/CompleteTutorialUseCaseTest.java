@@ -27,6 +27,13 @@ class CompleteTutorialUseCaseTest {
     }
 
     @Test
+    void executeProfile_shouldCompleteProfileTutorial() {
+        completeTutorialUseCase.executeProfile(1L);
+
+        verify(userDetailDomainRepository).completeProfileTutorial(1L);
+    }
+
+    @Test
     void execute_shouldPropagateNotFound_whenUserDetailDoesNotExist() {
         doThrow(new NotFoundException("No se encontraron datos del usuario"))
                 .when(userDetailDomainRepository).completeTutorial(99L);

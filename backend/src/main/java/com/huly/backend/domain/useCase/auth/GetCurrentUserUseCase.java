@@ -23,7 +23,9 @@ public class GetCurrentUserUseCase {
                 .findOnBoardingCompleted(userId).orElse(false);
         boolean onboardingTutorialCompleted = userDetailDomainRepository
                 .findOnboardingTutorialCompleted(userId).orElse(false);
+        boolean profileOnboardingTutorialCompleted = userDetailDomainRepository
+                .findProfileOnboardingTutorialCompleted(userId).orElse(false);
 
-        return new UserProfile(user, onBoardingCompleted, onboardingTutorialCompleted);
+        return new UserProfile(user, onBoardingCompleted, onboardingTutorialCompleted, profileOnboardingTutorialCompleted);
     }
 }

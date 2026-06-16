@@ -106,4 +106,12 @@ class OnboardingControllerTest {
 
         verify(completeTutorialUseCase).execute(USER_ID);
     }
+
+    @Test
+    void completeProfileTutorial_shouldReturn204() throws Exception {
+        mockMvc.perform(post("/api/onboarding/profile-onboarding-tutorial/complete"))
+                .andExpect(status().isNoContent());
+
+        verify(completeTutorialUseCase).executeProfile(USER_ID);
+    }
 }

@@ -13,4 +13,9 @@ public class CompleteTutorialUseCase {
     public void execute(Long userId) {
         userDetailDomainRepository.completeTutorial(userId);
     }
+
+    @Transactional
+    public void executeProfile(Long userId) {
+        userDetailDomainRepository.completeProfileTutorial(userId);
+    }
 }
