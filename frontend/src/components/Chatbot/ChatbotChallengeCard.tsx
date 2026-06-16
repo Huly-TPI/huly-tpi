@@ -16,24 +16,28 @@ export default function ChatbotChallengeCard({
   onReject,
 }: ChatbotChallengeCardProps) {
   return (
-    <div className="rounded-xl border border-menta bg-fondo p-3">
+    <div className="w-full min-w-0 rounded-xl border border-bosque/45 bg-bosque/10 p-3 sm:p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-bosque">Reto propuesto</p>
-      <p className="mt-1 text-sm font-semibold text-gray-800">{title}</p>
-      <p className="mt-1 text-xs text-gray-600">{description}</p>
+      <p className="mt-1 break-words text-sm font-semibold text-[var(--text-primary)] sm:text-[0.95rem]">
+        {title}
+      </p>
+      <p className="mt-1 break-words text-xs leading-relaxed text-[var(--text-secondary)] sm:text-sm">
+        {description}
+      </p>
 
       {!decision && (
-        <div className="mt-2 flex gap-2">
-          <Button type="button" variant="primary" size="sm" onClick={onAccept}>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Button type="button" variant="success" size="sm" onClick={onAccept} fullWidth>
             Aceptar
           </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={onReject}>
+          <Button type="button" variant="successSecondary" size="sm" onClick={onReject} fullWidth>
             Rechazar
           </Button>
         </div>
       )}
 
       {decision && (
-        <p className="mt-2 text-xs font-semibold text-bosque">
+        <p className="mt-2 text-xs font-semibold text-bosque dark:text-menta">
           {decision === 'accepted' ? 'Reto aceptado.' : 'Reto rechazado.'}
         </p>
       )}

@@ -4,9 +4,6 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -36,6 +33,9 @@ public class AppUserEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
     private UserStatus status;
+
+    @Column(name = "coins", nullable = false)
+    private Integer coins = 0;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDetailEntity> userDetails;

@@ -1,6 +1,12 @@
 import { useState, type ButtonHTMLAttributes, type MouseEvent, type PropsWithChildren } from 'react'
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'alert'
+type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'tertiary'
+  | 'alert'
+  | 'success'
+  | 'successSecondary'
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 type ButtonClickHandler = (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>
@@ -42,6 +48,10 @@ export default function Button({
       'border-transparent bg-violeta text-white hover:shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.12)] focus-visible:outline-[#8869ac59]',
     secondary:
       'border-violeta bg-transparent text-violeta hover:shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.08)] focus-visible:outline-[#8869ac59]',
+    success:
+      'border-transparent bg-bosque text-white hover:shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.12)] focus-visible:outline-[rgba(76,124,100,0.35)]',
+    successSecondary:
+      'border-bosque bg-transparent text-bosque hover:shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.08)] focus-visible:outline-[rgba(76,124,100,0.35)]',
     tertiary:
       'min-w-0 border-transparent bg-transparent px-2 py-1 text-bosque font-medium hover:font-semibold transition-[font-weight] duration-300 focus-visible:outline-[rgba(76,124,100,0.35)]',
     alert:

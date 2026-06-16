@@ -1,0 +1,40 @@
+.theme-background {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 280ms ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+.theme-background--active {
+  opacity: 1;
+}
+
+.theme-background--desktop {
+  display: none;
+}
+
+.theme-background--mobile {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .theme-background--desktop {
+    display: block;
+    object-position: center 52%;
+  }
+
+  .theme-background--mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .theme-background--desktop {
+    object-position: center 56%;
+  }
+}

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Register from '../../pages/Register/Register'
 import { ApiError } from '../../api/apiError'
+import { ThemeProvider } from '../../context/theme'
 
 vi.mock('../../api/auth', () => ({
     register: vi.fn(),
@@ -28,14 +29,16 @@ describe('Register', () => {
     const renderWithRouter = () => {
         const user = userEvent.setup()
         render(
-            <MemoryRouter initialEntries={['/register']}>
-                <Routes>
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/" element={<h1>Home</h1>} />
-                    <Route path="/login" element={<h1>Login</h1>} />
-                    <Route path="/onboarding" element={<h1>Onboarding</h1>} />
-                </Routes>
-            </MemoryRouter>,
+            <ThemeProvider>
+                <MemoryRouter initialEntries={['/register']}>
+                    <Routes>
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/" element={<h1>Home</h1>} />
+                        <Route path="/login" element={<h1>Login</h1>} />
+                        <Route path="/onboarding" element={<h1>Onboarding</h1>} />
+                    </Routes>
+                </MemoryRouter>
+            </ThemeProvider>,
         )
         return { user }
     }

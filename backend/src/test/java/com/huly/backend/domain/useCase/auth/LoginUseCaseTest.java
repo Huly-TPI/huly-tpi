@@ -8,8 +8,9 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.provider.PasswordHasher;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
+import com.huly.backend.domain.exception.AccountNotActiveException;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,7 +72,7 @@ class LoginUseCaseTest {
         when(userRepository.findByEmail("missing@huly.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> loginUseCase.execute("missing@huly.com", "rawPass"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 
@@ -81,7 +82,7 @@ class LoginUseCaseTest {
         when(passwordHasher.matches("wrongPass", "encodedPass")).thenReturn(false);
 
         assertThatThrownBy(() -> loginUseCase.execute("user@huly.com", "wrongPass"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 
@@ -94,7 +95,7 @@ class LoginUseCaseTest {
         when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
 
         assertThatThrownBy(() -> loginUseCase.execute("user@huly.com", "rawPass"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(AccountNotActiveException.class)
                 .hasMessageContaining("not active");
     }
 

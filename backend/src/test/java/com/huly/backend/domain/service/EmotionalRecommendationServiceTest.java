@@ -3,8 +3,8 @@ package com.huly.backend.domain.service;
 import com.huly.backend.domain.model.Activity;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.Vad;
 import com.huly.backend.domain.model.enums.ActivityType;
-import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -85,14 +85,7 @@ class EmotionalRecommendationServiceTest {
             String userGoal
     ) {
         return new EmotionalRecommendationQuery(
-                1L,
-                EmotionalEventSource.CHATBOT,
-                "texto",
-                "ANSIEDAD",
-                0.9,
-                valence,
-                arousal,
-                dominance,
+                new Vad(valence, arousal, dominance),
                 intensity,
                 userGoal
         );

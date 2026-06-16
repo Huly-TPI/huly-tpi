@@ -7,6 +7,8 @@ describe('Button', () => {
   it.each([
     { variant: 'primary' as const, expectedClass: 'bg-violeta' },
     { variant: 'secondary' as const, expectedClass: 'text-violeta' },
+    { variant: 'success' as const, expectedClass: 'bg-bosque' },
+    { variant: 'successSecondary' as const, expectedClass: 'text-bosque' },
     { variant: 'tertiary' as const, expectedClass: 'text-bosque' },
     { variant: 'alert' as const, expectedClass: 'bg-anaranjado' },
   ])('aplica variante visual $variant', ({ variant, expectedClass }) => {

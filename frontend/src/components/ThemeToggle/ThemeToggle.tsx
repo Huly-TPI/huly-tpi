@@ -1,7 +1,11 @@
 import { useTheme } from '../../context/theme'
 import './ThemeToggle.css'
 
-export default function ThemeToggle() {
+interface ThemeToggleProps {
+  compact?: boolean
+}
+
+export default function ThemeToggle({ compact = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
   const ariaLabel = isDark ? 'Cambiar a modo dia' : 'Cambiar a modo noche'
@@ -9,7 +13,7 @@ export default function ThemeToggle() {
   return (
     <button
       type="button"
-      className={`theme-toggle ${isDark ? 'theme-toggle--dark' : 'theme-toggle--light'}`}
+      className={`theme-toggle ${compact ? 'theme-toggle--compact' : ''} ${isDark ? 'theme-toggle--dark' : 'theme-toggle--light'}`}
       onClick={toggleTheme}
       aria-label={ariaLabel}
       aria-pressed={isDark}

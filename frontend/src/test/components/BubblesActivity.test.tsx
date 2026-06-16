@@ -1,7 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+
+vi.mock('../../context/authGate', () => ({
+  useAuthGate: () => ({
+    requireAuth: (action: () => void) => action(),
+  }),
+}))
+
 import BubblesActivity from '../../components/Bubbles/BubblesActivity.tsx'
 
 const renderActivity = () =>

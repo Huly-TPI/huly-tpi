@@ -4,8 +4,8 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -65,7 +65,7 @@ class AdminLoginUseCaseTest {
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminLoginUseCase.execute(EMAIL, PASSWORD))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid credentials");
     }
 
@@ -74,7 +74,7 @@ class AdminLoginUseCaseTest {
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userWithRole(UserRole.USER)));
 
         assertThatThrownBy(() -> adminLoginUseCase.execute(EMAIL, PASSWORD))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid credentials");
     }
 
@@ -83,7 +83,7 @@ class AdminLoginUseCaseTest {
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userWithRole(UserRole.LEAD)));
 
         assertThatThrownBy(() -> adminLoginUseCase.execute(EMAIL, PASSWORD))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid credentials");
     }
 }

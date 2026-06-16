@@ -4,6 +4,7 @@ import colorLogo from '../assets/brand/color-logo.webp'
 import hojita from '../assets/backoffice/hojita.webp'
 import cerrarSesion from '../assets/backoffice/logout.webp'
 import { logout } from '../api/auth'
+import { clearToken } from '../api/client'
 
 // ─── Design tokens (from Figma) ──────────────────────────────────────────────
 // Sidebar bg:       #FFFFFF
@@ -96,10 +97,13 @@ export default function BackofficeLayout() {
   }
 
   const handleLogout = async () => {
-    try { await logout() } catch {}
-    localStorage.removeItem('token')
-    localStorage.removeItem('role')
-    navigate('/backoffice/login')
+    try {
+      await logout()
+    } finally {
+      clearToken()
+      localStorage.removeItem('role')
+      navigate('/backoffice/login')
+    }
   }
 
   return (
@@ -149,10 +153,9 @@ export default function BackofficeLayout() {
                   end={item.end}
                   onClick={() => setSidebarOpen(false)}
                   className={({ isActive }) =>
-                    `flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
-                      isActive
-                        ? 'bg-[#8869AC] text-white shadow-sm'
-                        : 'text-[#4A5568] hover:bg-[#D1CAEF]/30 hover:text-[#8869AC]'
+                    `flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${isActive
+                      ? 'bg-[#8869AC] text-white shadow-sm'
+                      : 'text-[#4A5568] hover:bg-[#D1CAEF]/30 hover:text-[#8869AC]'
                     }`
                   }
                 >

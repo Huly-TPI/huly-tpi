@@ -3,23 +3,24 @@ package com.huly.backend.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.CloudRecommendation;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
-import com.huly.backend.domain.useCase.GetCloudRecommendationUseCase;
-import com.huly.backend.exception.GlobalExceptionHandler;
-import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
+import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
+import com.huly.backend.infrastructure.presentation.controller.CloudController;
+import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,30 +38,23 @@ class CloudControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private GetCloudRecommendationUseCase getCloudRecommendationUseCase;
     private UserVectorMemoryService userVectorMemoryService;
-    private AppUserRepository appUserRepository;
 
-    private static final String USER_EMAIL = "test@huly.com";
     private static final Long USER_ID = 1L;
 
     @BeforeEach
     void setUp() {
         getCloudRecommendationUseCase = mock(GetCloudRecommendationUseCase.class);
         userVectorMemoryService = mock(UserVectorMemoryService.class);
-        appUserRepository = mock(AppUserRepository.class);
 
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(authentication.getName()).thenReturn(USER_EMAIL);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        when(appUserRepository.findByEmail(USER_EMAIL))
-                .thenReturn(Optional.of(AppUserEntity.builder().id(USER_ID).build()));
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken(userDetails, null));
 
         CloudController controller = new CloudController(
-                getCloudRecommendationUseCase, userVectorMemoryService, appUserRepository);
+                getCloudRecommendationUseCase, userVectorMemoryService);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -138,16 +132,6 @@ class CloudControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(userVectorMemoryService).rememberGuidedCloudInput(eq(USER_ID), anyString(), eq("me siento ansioso"));
-    }
-
-    @Test
-    void saveThought_shouldReturn404_whenUserNotFound() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
-
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thought", "un pensamiento"))))
-                .andExpect(status().isNotFound());
     }
 
     @Test

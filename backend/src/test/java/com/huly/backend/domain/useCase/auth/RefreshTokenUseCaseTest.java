@@ -7,8 +7,9 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.provider.TokenProvider;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
+import com.huly.backend.domain.exception.AccountNotActiveException;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,14 +55,13 @@ class RefreshTokenUseCaseTest {
 
     @Test
     void execute_shouldRotateTokenAndReturnNewPair_whenTokenIsValid() {
-        when(tokenProvider.isTokenValid("validRefreshToken")).thenReturn(true);
+        mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("user@huly.com");
-        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(activeUser));
         when(tokenProvider.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("newAccess");
         when(tokenProvider.generateRefreshToken(1L, "user@huly.com")).thenReturn("newRefresh");
         when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
-        when(refreshTokenRepository.save(any())).thenReturn(null);
 
         AuthTokens result = refreshTokenUseCase.execute("validRefreshToken");
 
@@ -74,29 +75,69 @@ class RefreshTokenUseCaseTest {
         when(tokenProvider.isTokenValid("badToken")).thenReturn(false);
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("badToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid or expired refresh token");
+    }
+
+    @Test
+    void execute_shouldThrowUnauthorized_whenTokenIsNotRefreshType() {
+        when(tokenProvider.isTokenValid("accessToken")).thenReturn(true);
+        when(tokenProvider.isRefreshToken("accessToken")).thenReturn(false);
+
+        assertThatThrownBy(() -> refreshTokenUseCase.execute("accessToken"))
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("Invalid or expired refresh token");
     }
 
     @Test
     void execute_shouldThrowUnauthorized_whenTokenNotFoundInDb() {
-        when(tokenProvider.isTokenValid("orphanToken")).thenReturn(true);
+        mockValidRefreshToken("orphanToken");
         when(refreshTokenRepository.findByToken("orphanToken")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("orphanToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("not found or already used");
     }
 
     @Test
+    void execute_shouldThrowUnauthorizedAndDeleteToken_whenStoredTokenIsExpired() {
+        RefreshToken expired = RefreshToken.builder()
+                .id(11L).userId(1L).token("expiredToken")
+                .createdAt(Instant.now().minusSeconds(7200))
+                .expiredAt(Instant.now().minusSeconds(60))
+                .build();
+
+        mockValidRefreshToken("expiredToken");
+        when(refreshTokenRepository.findByToken("expiredToken")).thenReturn(Optional.of(expired));
+
+        assertThatThrownBy(() -> refreshTokenUseCase.execute("expiredToken"))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("expired");
+
+        verify(refreshTokenRepository).delete(expired);
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void execute_shouldThrowUnauthorized_whenUserIdMissingFromToken() {
+        mockValidRefreshToken("noUserIdToken");
+        when(refreshTokenRepository.findByToken("noUserIdToken")).thenReturn(Optional.of(storedToken));
+        when(tokenProvider.extractUserId("noUserIdToken")).thenReturn(null);
+
+        assertThatThrownBy(() -> refreshTokenUseCase.execute("noUserIdToken"))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid refresh token");
+    }
+
+    @Test
     void execute_shouldThrowUnauthorized_whenUserNotFound() {
-        when(tokenProvider.isTokenValid("validRefreshToken")).thenReturn(true);
+        mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("ghost@huly.com");
-        when(userRepository.findByEmail("ghost@huly.com")).thenReturn(Optional.empty());
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(999L);
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(AccountNotActiveException.class)
                 .hasMessageContaining("User not found");
     }
 
@@ -107,22 +148,22 @@ class RefreshTokenUseCaseTest {
                 .role(UserRole.USER).status(UserStatus.BLOCKED)
                 .build();
 
-        when(tokenProvider.isTokenValid("validRefreshToken")).thenReturn(true);
+        mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("user@huly.com");
-        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(inactiveUser));
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(inactiveUser));
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
-                .isInstanceOf(UnauthorizedException.class)
+                .isInstanceOf(AccountNotActiveException.class)
                 .hasMessageContaining("not active");
     }
 
     @Test
     void execute_shouldSaveNewRefreshTokenWithCorrectData() {
-        when(tokenProvider.isTokenValid("validRefreshToken")).thenReturn(true);
+        mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractEmail("validRefreshToken")).thenReturn("user@huly.com");
-        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(activeUser));
         when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("newAccess");
         when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("newRefresh");
         when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
@@ -136,5 +177,10 @@ class RefreshTokenUseCaseTest {
         assertThat(saved.getToken()).isEqualTo("newRefresh");
         assertThat(saved.getUserId()).isEqualTo(1L);
         assertThat(saved.getExpiredAt()).isAfter(saved.getCreatedAt());
+    }
+
+    private void mockValidRefreshToken(String token) {
+        when(tokenProvider.isTokenValid(token)).thenReturn(true);
+        when(tokenProvider.isRefreshToken(token)).thenReturn(true);
     }
 }
