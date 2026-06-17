@@ -46,8 +46,11 @@
     linear-gradient(145deg, rgba(113, 73, 36, 0.92), rgba(75, 46, 25, 0.96)),
     #704a29;
   box-shadow:
-    0 1.5rem 3rem rgba(64, 43, 25, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    /* 0 1.5rem 3rem rgba(64, 43, 25, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25), */
+    0 25px 25px -12px rgba(0, 0, 0, 0.55),
+    0 8px 10px /6px rgba(0, 0, 0 , 0.75),
+    inset 0 1px - rgba(255,2555,255, 0.25)
 }
 
 .zen-sand__frame::after {
@@ -88,8 +91,11 @@ html.dark .zen-sand__eyebrow {
 html.dark .zen-sand__frame {
   border-color: rgba(233, 204, 146, 0.18);
   box-shadow:
-    0 1.5rem 3rem rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    /* 0 1.5rem 3rem rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16); */
+    0 25px 25px -12px rgba(0, 0, 0, 0.75),
+    0 8px 10px -6px rgba(0, 0, 0 , 0.95),
+    inset 0 1px 0 rgba(255,255,255, 0.25)
 }
 
 @media (max-width: 640px) {
