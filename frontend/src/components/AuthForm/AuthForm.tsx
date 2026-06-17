@@ -145,6 +145,7 @@ export default function AuthForm({
               checked={termsAccepted ?? false}
               onChange={(e) => onTermsChange(e.target.checked)}
               className="size-4 rounded border-[#d4c4a8] accent-[#5a8a50]"
+              style={{ colorScheme: 'light' }}
             />
             <span className="text-xs text-[#8c7b66]">
               Acepto los{' '}
