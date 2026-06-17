@@ -21,4 +21,8 @@ public interface IEmotionalEventJpaRepository extends JpaRepository<EmotionalEve
             @Param("userId") Long userId,
             Pageable pageable
     );
+
+    List<EmotionalEventEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    List<EmotionalEventEntity> findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(Long userId);
 }

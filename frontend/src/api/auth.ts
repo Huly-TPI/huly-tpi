@@ -24,6 +24,7 @@ export interface UserProfile {
   role: string
   onBoardingCompleted?: boolean
   onboardingTutorialCompleted?: boolean
+  profileOnboardingTutorialCompleted?: boolean
   themePreference: 'LIGHT' | 'DARK'
 }
 

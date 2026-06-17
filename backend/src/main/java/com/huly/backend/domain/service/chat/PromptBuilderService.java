@@ -10,46 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PromptBuilderService {
-
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords) {
-        return buildEnrichedPrompt(basePrompt, riskWords, Collections.emptyList());
-    }
-
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, null);
-    }
-
-    public String buildEnrichedPrompt(
-            String basePrompt,
-            List<RiskWord> riskWords,
-            List<VectorMemory> memories,
-            SuggestedChatAction suggestedAction
-    ) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, suggestedAction, ChatUserIntent.NONE);
-    }
-
-    public String buildEnrichedPrompt(
-            String basePrompt,
-            List<RiskWord> riskWords,
-            List<VectorMemory> memories,
-            SuggestedChatAction suggestedAction,
-            ChatUserIntent userIntent
-    ) {
-        return buildEnrichedPrompt(
-                basePrompt,
-                riskWords,
-                memories,
-                suggestedAction,
-                userIntent,
-                null);
-    }
 
     public String buildEnrichedPrompt(
             String basePrompt,
@@ -65,22 +31,6 @@ public class PromptBuilderService {
         appendSuggestedActionContext(sb, suggestedAction);
         appendUserIntentContext(sb, userIntent);
         appendResponseInstructions(sb);
-        appendRiskWords(sb, riskWords);
-        return sb.toString();
-    }
-
-    public String buildStreamingPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        StringBuilder sb = basePromptBuilder(basePrompt);
-        appendVectorMemories(sb, memories);
-        appendStreamingInstructions(sb);
-        appendRiskWords(sb, riskWords);
-        return sb.toString();
-    }
-
-    public String buildMetadataPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        StringBuilder sb = basePromptBuilder(basePrompt);
-        appendVectorMemories(sb, memories);
-        appendMetadataInstructions(sb);
         appendRiskWords(sb, riskWords);
         return sb.toString();
     }
@@ -188,30 +138,6 @@ public class PromptBuilderService {
 
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
-    }
-
-    private void appendStreamingInstructions(StringBuilder sb) {
-        sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA EN STREAMING ===");
-        sb.append("\nRespondé en texto natural, cálido y directo. No devuelvas JSON ni markdown técnico.");
-        sb.append("\nLa metadata emocional y de riesgo se calculará después; durante el stream solo escribí la respuesta para el usuario.");
-    }
-
-    private void appendMetadataInstructions(StringBuilder sb) {
-        sb.append("\n\n=== INSTRUCCIONES DE ANALISIS ===");
-        sb.append("\nAnalizá el mensaje del usuario y respondé únicamente con un JSON válido con exactamente este formato:");
-        sb.append("\n{");
-        sb.append("\n  \"huly_reply\": \"\",");
-        sb.append("\n  \"detected_emotion\": \"<").append(buildEmotionList()).append(">\",");
-        sb.append("\n  \"intensity\": <número del 1 al 10>,");
-        sb.append("\n  \"risk_detected\": <true|false>,");
-        sb.append("\n  \"matched_word\": \"<frase de riesgo detectada, o null>\",");
-        sb.append("\n  \"generated_challenge\": <objeto con title y description, o null>");
-        sb.append("\n}");
-        sb.append("\n");
-        sb.append("\nReglas para generated_challenge:");
-        sb.append("\n- Incluilo SOLO cuando el contexto lo justifique: emoción negativa de intensidad >= 5 o situación concreta que se beneficiaría de un reto personal.");
-        sb.append("\n- Si no corresponde, devolvé null.");
-        sb.append("\n- Formato cuando corresponde: { \"title\": \"<título corto>\", \"description\": \"<descripción accionable en 1-2 oraciones>\" }");
     }
 
     private void appendEmotionalAnalysisInstructions(StringBuilder sb) {

@@ -55,7 +55,7 @@ class UserControllerTest {
                 .id(1L).name("Mili").email("user@huly.com")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .build();
-        UserProfile profile = new UserProfile(user, true, false);
+        UserProfile profile = new UserProfile(user, true, false, true);
         when(getCurrentUserUseCase.execute(1L)).thenReturn(profile);
         when(userDetailDomainRepository.findThemePreference(1L)).thenReturn(ThemePreference.DARK);
 
@@ -71,6 +71,7 @@ class UserControllerTest {
         assertThat(body.getRole()).isEqualTo(UserRole.USER);
         assertThat(body.getOnBoardingCompleted()).isTrue();
         assertThat(body.getOnboardingTutorialCompleted()).isFalse();
+        assertThat(body.getProfileOnboardingTutorialCompleted()).isTrue();
         assertThat(body.getThemePreference()).isEqualTo(ThemePreference.DARK);
     }
 

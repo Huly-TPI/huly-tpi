@@ -31,6 +31,14 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public List<Product> findByIds(List<Long> ids) {
+        return jpaRepository.findAllById(ids)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Product> findByType(ProductType type) {
         return jpaRepository.findByType(type)
                 .stream()

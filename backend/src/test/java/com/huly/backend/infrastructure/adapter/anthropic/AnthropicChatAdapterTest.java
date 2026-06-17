@@ -11,7 +11,6 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.prompt.Prompt;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -39,28 +38,6 @@ class AnthropicChatAdapterTest {
         when(chatResponse.getResult()).thenReturn(generation);
         when(generation.getOutput()).thenReturn(output);
         when(output.getText()).thenReturn(text);
-    }
-
-
-    private ChatResponse chatResponse(String text) {
-        ChatResponse chatResponse = mock(ChatResponse.class);
-        Generation generation = mock(Generation.class);
-        AssistantMessage output = mock(AssistantMessage.class);
-        when(chatResponse.getResult()).thenReturn(generation);
-        when(generation.getOutput()).thenReturn(output);
-        when(output.getText()).thenReturn(text);
-        return chatResponse;
-    }
-
-    @Test
-    void stream_shouldReturnTextDeltasFromModelStream() {
-        ChatResponse first = chatResponse("hola ");
-        ChatResponse second = chatResponse("mundo");
-        when(chatModel.stream(any(Prompt.class))).thenReturn(Flux.just(first, second));
-
-        List<String> result = adapter.stream("prompt", "hola", List.of()).collectList().block();
-
-        assertThat(result).containsExactly("hola ", "mundo");
     }
 
     // ── parseResponse - valid JSON ────────────────────────────────────────────

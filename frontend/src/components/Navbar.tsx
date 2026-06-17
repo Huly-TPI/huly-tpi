@@ -35,7 +35,7 @@ export default function Navbar() {
   return (
     <nav
       ref={navRef}
-      className={`relative z-50 shrink-0 shadow-md ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}
+      className={`relative z-[300] shrink-0 shadow-md ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}
     >
       {/* Barra principal */}
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">

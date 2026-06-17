@@ -22,6 +22,25 @@ class ChatPreferenceDetectionServiceTest {
     }
 
     @Test
+    void detectPreferredName_shouldPreferAliasAndNeverUseGreetingAsName() {
+        assertThat(service.detectPreferredName(
+                "Boa tarde, mi nombre es Sergio pero me podes decir crack",
+                true)).contains("Crack");
+    }
+
+    @Test
+    void detectPreferredName_shouldRejectStandalonePortugueseGreeting() {
+        assertThat(service.detectPreferredName("Boa tarde", true)).isEmpty();
+    }
+
+    @Test
+    void detectPreferredName_shouldExtractDeclaredNameWhenNoAliasExists() {
+        assertThat(service.detectPreferredName(
+                "Hola, mi nombre es Sergio",
+                true)).contains("Sergio");
+    }
+
+    @Test
     void detectPreferredName_shouldNotTreatOrdinaryQuestionAsNameChange() {
         assertThat(service.detectPreferredName("Decime qué pensás", false)).isEmpty();
     }
@@ -36,6 +55,18 @@ class ChatPreferenceDetectionServiceTest {
     void detectCommunicationStyle_shouldDetectExplicitDirectStyleChange() {
         assertThat(service.detectCommunicationStyle("Respondeme más corto y directo", false))
                 .contains(CommunicationStyle.CONCISE_DIRECT);
+    }
+
+    @Test
+    void detectCommunicationStyle_shouldDistinguishIndirectFromDirect() {
+        assertThat(service.detectCommunicationStyle("Quiero que me hables indirecto", false))
+                .contains(CommunicationStyle.INDIRECT);
+    }
+
+    @Test
+    void detectCommunicationStyle_shouldSupportFormalStyle() {
+        assertThat(service.detectCommunicationStyle("formal", true))
+                .contains(CommunicationStyle.FORMAL);
     }
 
     @Test

@@ -7,6 +7,8 @@ import fishImage from '../../assets/bubbles/bubble-minigame-fish.webp'
 import Button from '../Buttons/Button/Button'
 import BackButton from '../Buttons/BackButton/BackButton'
 import { useAuthGate } from '../../context/authGate'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
+import { ActivityType } from '../../api/activities'
 
 const BUBBLE_COLORS = [
   'rgba(144, 210, 170, 0.55)',
@@ -44,8 +46,13 @@ const BubblesActivity = () => {
   const nextIdRef = useRef(INITIAL_BUBBLES.length)
   const { requireAuth } = useAuthGate()
 
+  const { startSession, markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.BURBUJA, {
+    autoStart: false
+  })
+
   const handleBubbleClick = (bubble: BubbleType, position: { x: number; y: number }) => {
     if (poppingIds.has(bubble.id)) return
+    markConditionMet()
     setPoppingPositions(prev => new Map(prev).set(bubble.id, position))
     setPoppingIds(prev => new Set([...prev, bubble.id]))
   }
@@ -79,7 +86,10 @@ const BubblesActivity = () => {
               <p className="text-base text-gray-500 mb-8 leading-relaxed">
                 Explorá cómo te sentís. Tocá las burbujas que van apareciendo y hacelas explotar.
               </p>
-              <Button variant="primary" fullWidth onClick={() => requireAuth(() => setStarted(true))}>
+              <Button variant="primary" fullWidth onClick={() => requireAuth(() => {
+                setStarted(true)
+                startSession()
+              })}>
                 Comenzar
               </Button>
             </div>
@@ -100,7 +110,7 @@ const BubblesActivity = () => {
           alt=""
           draggable={false}
         />
-        <BackButton to="/minigames"/>
+        <BackButton to="/minigames" onBeforeNavigate={saveSession} />
         {bubbles.map(bubble => (
           <Bubble
             key={bubble.id}
