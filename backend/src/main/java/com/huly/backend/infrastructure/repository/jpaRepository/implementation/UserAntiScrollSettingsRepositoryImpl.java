@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.extension.ExtensionSettings;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserSettingEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class ExtensionSettingsRepositoryImpl implements ExtensionSettingsRepository {
+public class UserAntiScrollSettingsRepositoryImpl implements UserAntiScrollSettingsRepository {
 
     private final IUserSettingJpaRepository userSettingJpaRepository;
     private final AppUserRepository appUserRepository;
 
     @Override
-    public Optional<ExtensionSettings> findByUserId(Long userId) {
+    public Optional<UserAntiScrollSettings> findByUserId(Long userId) {
         return userSettingJpaRepository.findByAppUser_Id(userId)
                 .map(entity -> {
                     List<String> domains;
@@ -39,7 +39,7 @@ public class ExtensionSettingsRepositoryImpl implements ExtensionSettingsReposit
                         Integer pauseIntervalMinutes = entity.getPauseIntervalMinutes();
                         pauseIntervalSeconds = (pauseIntervalMinutes != null ? pauseIntervalMinutes : 20) * 60;
                     }
-                    return ExtensionSettings.builder()
+                    return UserAntiScrollSettings.builder()
                             .enabled(entity.getAntiScrollEnabled() != null ? entity.getAntiScrollEnabled() : true)
                             .pauseIntervalSeconds(pauseIntervalSeconds)
                             .monitoredDomains(domains)
@@ -49,7 +49,7 @@ public class ExtensionSettingsRepositoryImpl implements ExtensionSettingsReposit
     }
 
     @Override
-    public void save(Long userId, ExtensionSettings settings) {
+    public void save(Long userId, UserAntiScrollSettings settings) {
         UserSettingEntity entity = userSettingJpaRepository.findByAppUser_Id(userId)
                 .orElseGet(() -> {
                     AppUserEntity user = appUserRepository.getReferenceById(userId);

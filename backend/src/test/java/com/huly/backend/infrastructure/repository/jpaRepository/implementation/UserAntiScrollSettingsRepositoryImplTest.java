@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.extension.ExtensionSettings;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserSettingEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ExtensionSettingsRepositoryImplTest {
+class UserAntiScrollSettingsRepositoryImplTest {
 
     @Mock
     private IUserSettingJpaRepository userSettingJpaRepository;
@@ -30,7 +30,7 @@ class ExtensionSettingsRepositoryImplTest {
     private AppUserRepository appUserRepository;
 
     @InjectMocks
-    private ExtensionSettingsRepositoryImpl repository;
+    private UserAntiScrollSettingsRepositoryImpl repository;
 
     @Test
     void findByUserId_shouldReturnMappedSettings_whenFoundWithNonNullFields() {
@@ -44,10 +44,10 @@ class ExtensionSettingsRepositoryImplTest {
 
         when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
 
-        Optional<ExtensionSettings> result = repository.findByUserId(userId);
+        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
 
         assertThat(result).isPresent();
-        ExtensionSettings settings = result.get();
+        UserAntiScrollSettings settings = result.get();
         assertThat(settings.isEnabled()).isTrue();
         assertThat(settings.getPauseIntervalSeconds()).isEqualTo(30);
         assertThat(settings.getMonitoredDomains()).containsExactly("youtube.com", "tiktok.com", "x.com");
@@ -67,10 +67,10 @@ class ExtensionSettingsRepositoryImplTest {
 
         when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
 
-        Optional<ExtensionSettings> result = repository.findByUserId(userId);
+        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
 
         assertThat(result).isPresent();
-        ExtensionSettings settings = result.get();
+        UserAntiScrollSettings settings = result.get();
         assertThat(settings.isEnabled()).isTrue(); // Default value fallback
         assertThat(settings.getPauseIntervalSeconds()).isEqualTo(1200); // Default value fallback
         assertThat(settings.getMonitoredDomains()).hasSize(6); // Default list fallback
@@ -87,7 +87,7 @@ class ExtensionSettingsRepositoryImplTest {
 
         when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
 
-        Optional<ExtensionSettings> result = repository.findByUserId(userId);
+        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
 
         assertThat(result).isPresent();
         assertThat(result.get().getPauseIntervalSeconds()).isEqualTo(720);
@@ -102,10 +102,10 @@ class ExtensionSettingsRepositoryImplTest {
 
         when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
 
-        Optional<ExtensionSettings> result = repository.findByUserId(userId);
+        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
 
         assertThat(result).isPresent();
-        ExtensionSettings settings = result.get();
+        UserAntiScrollSettings settings = result.get();
         assertThat(settings.getMonitoredDomains()).hasSize(6); // Default list fallback
     }
 
@@ -130,7 +130,7 @@ class ExtensionSettingsRepositoryImplTest {
 
         when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(existingEntity));
 
-        ExtensionSettings settingsToSave = ExtensionSettings.builder()
+        UserAntiScrollSettings settingsToSave = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .pauseIntervalSeconds(45)
                 .monitoredDomains(List.of("twitter.com", "reddit.com"))
@@ -154,7 +154,7 @@ class ExtensionSettingsRepositoryImplTest {
         when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.empty());
         when(appUserRepository.getReferenceById(userId)).thenReturn(mockUser);
 
-        ExtensionSettings settingsToSave = ExtensionSettings.builder()
+        UserAntiScrollSettings settingsToSave = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .pauseIntervalSeconds(35)
                 .monitoredDomains(null)

@@ -1,14 +1,14 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
-import com.huly.backend.domain.useCase.extension.GetExtensionSettingsUseCase;
-import com.huly.backend.domain.useCase.extension.GetExtensionSettingsResponse;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
+import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsResponse;
+import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveExtensionMetricsUseCase;
-import com.huly.backend.domain.useCase.extension.SaveExtensionSettingsUseCase;
+import com.huly.backend.domain.useCase.extension.SaveUserAntiScrollSettingsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionMetricRequest;
-import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionSettingsRequest;
-import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionSettingsResponse;
+import com.huly.backend.infrastructure.presentation.dto.extension.AntiScrollSettingsRequest;
+import com.huly.backend.infrastructure.presentation.dto.extension.AntiScrollSettingsResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,32 +24,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExtensionController {
 
-    private final GetExtensionSettingsUseCase getExtensionSettingsUseCase;
-    private final SaveExtensionSettingsUseCase saveExtensionSettingsUseCase;
+    private final GetUserAntiScrollSettingsUseCase getUserAntiScrollSettingsUseCase;
+    private final SaveUserAntiScrollSettingsUseCase saveUserAntiScrollSettingsUseCase;
     private final SaveExtensionMetricsUseCase saveExtensionMetricsUseCase;
 
     @GetMapping("/settings")
-    public ResponseEntity<ExtensionSettingsResponse> getSettings(
+    public ResponseEntity<AntiScrollSettingsResponse> getSettings(
             @AuthenticationPrincipal UserDetails principal
     ) {
         Long userId = getUserId(principal);
-        GetExtensionSettingsResponse settings = getExtensionSettingsUseCase.execute(userId);
+        GetUserAntiScrollSettingsResponse settings = getUserAntiScrollSettingsUseCase.execute(userId);
         return ResponseEntity.ok(toResponse(settings));
     }
 
     @PostMapping("/settings")
     public ResponseEntity<Void> saveSettings(
             @AuthenticationPrincipal UserDetails principal,
-            @Valid @RequestBody ExtensionSettingsRequest request
+            @Valid @RequestBody AntiScrollSettingsRequest request
     ) {
         Long userId = getUserId(principal);
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(request.isEnabled())
                 .pauseIntervalSeconds(request.getPauseIntervalSeconds())
                 .monitoredDomains(request.getMonitoredDomains())
                 .dataSharingConsent(request.isDataSharingConsent())
                 .build();
-        saveExtensionSettingsUseCase.execute(userId, settings);
+        saveUserAntiScrollSettingsUseCase.execute(userId, settings);
         return ResponseEntity.ok().build();
     }
 
@@ -73,8 +73,8 @@ public class ExtensionController {
         return Long.parseLong(principal.getUsername());
     }
 
-    private ExtensionSettingsResponse toResponse(GetExtensionSettingsResponse settings) {
-        return ExtensionSettingsResponse.builder()
+    private AntiScrollSettingsResponse toResponse(GetUserAntiScrollSettingsResponse settings) {
+        return AntiScrollSettingsResponse.builder()
                 .enabled(settings.enabled())
                 .pauseIntervalSeconds(settings.pauseIntervalSeconds())
                 .gardenUrl(settings.gardenUrl())

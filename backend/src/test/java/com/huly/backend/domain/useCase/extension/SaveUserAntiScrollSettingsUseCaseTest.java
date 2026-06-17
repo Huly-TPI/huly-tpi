@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.extension;
 
-import com.huly.backend.domain.model.extension.ExtensionSettings;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,24 +13,24 @@ import java.util.List;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class SaveExtensionSettingsUseCaseTest {
+class SaveUserAntiScrollSettingsUseCaseTest {
 
     @Mock
-    private ExtensionSettingsRepository settingsRepository;
+    private UserAntiScrollSettingsRepository settingsRepository;
 
     @InjectMocks
-    private SaveExtensionSettingsUseCase saveExtensionSettingsUseCase;
+    private SaveUserAntiScrollSettingsUseCase saveUserAntiScrollSettingsUseCase;
 
     @Test
     void execute_shouldSaveSettingsInRepository() {
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .pauseIntervalSeconds(15)
                 .monitoredDomains(List.of("x.com"))
                 .dataSharingConsent(false)
                 .build();
 
-        saveExtensionSettingsUseCase.execute(10L, settings);
+        saveUserAntiScrollSettingsUseCase.execute(10L, settings);
 
         verify(settingsRepository).save(10L, settings);
     }

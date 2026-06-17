@@ -1,18 +1,18 @@
 package com.huly.backend.infrastructure.repository.mapper;
 
-import com.huly.backend.domain.model.extension.AntiScrollConfig;
+import com.huly.backend.domain.model.extension.AntiScrollGlobalConfig;
 import com.huly.backend.infrastructure.repository.entity.AntiScrollConfigEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class AntiScrollConfigMapperTest {
+class AntiScrollGlobalConfigMapperTest {
 
-    private final AntiScrollConfigMapper mapper = new AntiScrollConfigMapper();
+    private final AntiScrollGlobalConfigMapper mapper = new AntiScrollGlobalConfigMapper();
 
     @Test
     void toEntity_shouldMapCorrectly() {
-        AntiScrollConfig config = AntiScrollConfig.builder()
+        AntiScrollGlobalConfig config = AntiScrollGlobalConfig.builder()
                 .id(1L)
                 .defaultPauseIntervalMinutes(15)
                 .termsAndConditions("test terms")
@@ -34,7 +34,7 @@ class AntiScrollConfigMapperTest {
                 .termsAndConditions("domain terms")
                 .build();
 
-        AntiScrollConfig config = mapper.toDomain(entity);
+        AntiScrollGlobalConfig config = mapper.toDomain(entity);
 
         assertThat(config).isNotNull();
         assertThat(config.getId()).isEqualTo(2L);

@@ -3,9 +3,9 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollConfigUseCase;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollConfigRequest;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollConfigUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigRequest;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsRequest;
@@ -37,8 +37,8 @@ public class AdminUserController {
 
     private final ListBackofficeUsersUseCase listBackofficeUsersUseCase;
     private final GetAntiScrollDashboardUseCase getAntiScrollDashboardUseCase;
-    private final GetAntiScrollConfigUseCase getAntiScrollConfigUseCase;
-    private final UpdateAntiScrollConfigUseCase updateAntiScrollConfigUseCase;
+    private final GetAntiScrollGlobalConfigUseCase getAntiScrollGlobalConfigUseCase;
+    private final UpdateAntiScrollGlobalConfigUseCase updateAntiScrollGlobalConfigUseCase;
     private final GetUserActivitiesUseCase getUserActivitiesUseCase;
     private final GetUserAiDiagnosticsUseCase getUserAiDiagnosticsUseCase;
     private final GetUserFinancialsUseCase getUserFinancialsUseCase;
@@ -86,13 +86,13 @@ public class AdminUserController {
 
     @GetMapping("/antiscroll/config")
     public ResponseEntity<AntiScrollConfigResponse> getAntiScrollConfig() {
-        var result = getAntiScrollConfigUseCase.execute();
+        var result = getAntiScrollGlobalConfigUseCase.execute();
         return ResponseEntity.ok(adminPresentationMapper.toAntiScrollConfigResponse(result));
     }
 
     @PostMapping("/antiscroll/config")
     public ResponseEntity<Void> updateAntiScrollConfig(@Valid @RequestBody AntiScrollConfigRequest request) {
-        updateAntiScrollConfigUseCase.execute(new UpdateAntiScrollConfigRequest(
+        updateAntiScrollGlobalConfigUseCase.execute(new UpdateAntiScrollGlobalConfigRequest(
                 request.getDefaultPauseIntervalMinutes(),
                 request.getTermsAndConditions()
         ));

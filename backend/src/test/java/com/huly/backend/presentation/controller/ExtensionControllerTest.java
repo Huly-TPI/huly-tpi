@@ -1,19 +1,15 @@
 package com.huly.backend.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.UserProfile;
-import com.huly.backend.domain.model.enums.UserRole;
-import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
-import com.huly.backend.domain.useCase.extension.GetExtensionSettingsUseCase;
-import com.huly.backend.domain.useCase.extension.GetExtensionSettingsResponse;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
+import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsResponse;
+import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveExtensionMetricsUseCase;
-import com.huly.backend.domain.useCase.extension.SaveExtensionSettingsUseCase;
+import com.huly.backend.domain.useCase.extension.SaveUserAntiScrollSettingsUseCase;
 import com.huly.backend.infrastructure.presentation.controller.ExtensionController;
+import com.huly.backend.infrastructure.presentation.dto.extension.AntiScrollSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionMetricRequest;
-import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionSettingsRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,14 +38,14 @@ class ExtensionControllerTest {
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private GetExtensionSettingsUseCase getExtensionSettingsUseCase;
-    private SaveExtensionSettingsUseCase saveExtensionSettingsUseCase;
+    private GetUserAntiScrollSettingsUseCase getUserAntiScrollSettingsUseCase;
+    private SaveUserAntiScrollSettingsUseCase saveUserAntiScrollSettingsUseCase;
     private SaveExtensionMetricsUseCase saveExtensionMetricsUseCase;
 
     @BeforeEach
     void setUp() {
-        getExtensionSettingsUseCase = mock(GetExtensionSettingsUseCase.class);
-        saveExtensionSettingsUseCase = mock(SaveExtensionSettingsUseCase.class);
+        getUserAntiScrollSettingsUseCase = mock(GetUserAntiScrollSettingsUseCase.class);
+        saveUserAntiScrollSettingsUseCase = mock(SaveUserAntiScrollSettingsUseCase.class);
         saveExtensionMetricsUseCase = mock(SaveExtensionMetricsUseCase.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
@@ -57,8 +53,8 @@ class ExtensionControllerTest {
                 new TestingAuthenticationToken(userDetails, null));
 
         ExtensionController controller = new ExtensionController(
-                getExtensionSettingsUseCase,
-                saveExtensionSettingsUseCase,
+                getUserAntiScrollSettingsUseCase,
+                saveUserAntiScrollSettingsUseCase,
                 saveExtensionMetricsUseCase
         );
 
@@ -75,7 +71,7 @@ class ExtensionControllerTest {
 
     @Test
     void getSettings_shouldReturn200WithSettingsAndUserName() throws Exception {
-        GetExtensionSettingsResponse settings = GetExtensionSettingsResponse.builder()
+        GetUserAntiScrollSettingsResponse settings = GetUserAntiScrollSettingsResponse.builder()
                 .enabled(true)
                 .pauseIntervalSeconds(15)
                 .gardenUrl("http://localhost:5173/")
@@ -86,7 +82,7 @@ class ExtensionControllerTest {
                 .termsAndConditions("dynamic terms")
                 .build();
 
-        when(getExtensionSettingsUseCase.execute(USER_ID)).thenReturn(settings);
+        when(getUserAntiScrollSettingsUseCase.execute(USER_ID)).thenReturn(settings);
 
         mockMvc.perform(get("/api/extension/settings"))
                 .andExpect(status().isOk())
@@ -100,7 +96,7 @@ class ExtensionControllerTest {
 
     @Test
     void saveSettings_shouldReturn200_whenRequestIsValid() throws Exception {
-        ExtensionSettingsRequest request = new ExtensionSettingsRequest();
+        AntiScrollSettingsRequest request = new AntiScrollSettingsRequest();
         request.setEnabled(true);
         request.setPauseIntervalSeconds(20);
         request.setMonitoredDomains(List.of("tiktok.com"));
@@ -111,7 +107,7 @@ class ExtensionControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(saveExtensionSettingsUseCase).execute(eq(USER_ID), any(ExtensionSettings.class));
+        verify(saveUserAntiScrollSettingsUseCase).execute(eq(USER_ID), any(UserAntiScrollSettings.class));
     }
 
     @Test

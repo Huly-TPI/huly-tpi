@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class ExtensionSettingsResponse {
+public class AntiScrollSettingsResponse {
     private boolean enabled;
     
     @JsonProperty("pauseIntervalSeconds")

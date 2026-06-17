@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.admin.antiScrollConfig;
 
-public record GetAntiScrollConfigResponse(
+public record UpdateAntiScrollGlobalConfigRequest(
         int defaultPauseIntervalMinutes,
         String termsAndConditions
 ) {

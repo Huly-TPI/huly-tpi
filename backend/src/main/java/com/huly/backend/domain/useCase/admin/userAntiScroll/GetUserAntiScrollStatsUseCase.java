@@ -3,10 +3,10 @@ package com.huly.backend.domain.useCase.admin.userAntiScroll;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class GetUserAntiScrollStatsUseCase {
 
     private final UserRepository userRepository;
-    private final ExtensionSettingsRepository settingsRepository;
+    private final UserAntiScrollSettingsRepository settingsRepository;
     private final ExtensionMetricsRepository metricsRepository;
 
     public GetUserAntiScrollStatsResponse execute(GetUserAntiScrollStatsRequest request) {
@@ -25,9 +25,9 @@ public class GetUserAntiScrollStatsUseCase {
         userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Optional<ExtensionSettings> settingsOpt = settingsRepository.findByUserId(userId);
-        boolean antiScrollEnabled = settingsOpt.map(ExtensionSettings::isEnabled).orElse(false);
-        boolean consent = settingsOpt.map(ExtensionSettings::isDataSharingConsent).orElse(false);
+        Optional<UserAntiScrollSettings> settingsOpt = settingsRepository.findByUserId(userId);
+        boolean antiScrollEnabled = settingsOpt.map(UserAntiScrollSettings::isEnabled).orElse(false);
+        boolean consent = settingsOpt.map(UserAntiScrollSettings::isDataSharingConsent).orElse(false);
 
         String mostUsedApp = null;
         int mostUsedAppActiveSeconds = 0;

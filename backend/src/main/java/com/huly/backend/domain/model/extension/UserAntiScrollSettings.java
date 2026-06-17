@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class ExtensionSettings {
+public class UserAntiScrollSettings {
     private boolean enabled;
     private int pauseIntervalSeconds;
     private List<String> monitoredDomains;

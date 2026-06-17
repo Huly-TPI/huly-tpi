@@ -2,10 +2,10 @@ package com.huly.backend.domain.useCase.admin.userAntiScroll;
 
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,14 +22,14 @@ import static org.mockito.Mockito.when;
 class GetUserAntiScrollStatsUseCaseTest {
 
     private UserRepository userRepository;
-    private ExtensionSettingsRepository settingsRepository;
+    private UserAntiScrollSettingsRepository settingsRepository;
     private ExtensionMetricsRepository metricsRepository;
     private GetUserAntiScrollStatsUseCase useCase;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        settingsRepository = mock(ExtensionSettingsRepository.class);
+        settingsRepository = mock(UserAntiScrollSettingsRepository.class);
         metricsRepository = mock(ExtensionMetricsRepository.class);
         useCase = new GetUserAntiScrollStatsUseCase(userRepository, settingsRepository, metricsRepository);
     }
@@ -47,7 +47,7 @@ class GetUserAntiScrollStatsUseCaseTest {
     void execute_shouldReturnEmptyMetrics_whenConsentIsFalse() {
         Long userId = 1L;
         AppUser user = AppUser.builder().id(userId).build();
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(false)
                 .build();
@@ -69,7 +69,7 @@ class GetUserAntiScrollStatsUseCaseTest {
     void execute_shouldReturnCalculatedMetrics_whenConsentIsTrue() {
         Long userId = 1L;
         AppUser user = AppUser.builder().id(userId).build();
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(true)
                 .build();
@@ -113,7 +113,7 @@ class GetUserAntiScrollStatsUseCaseTest {
     void execute_shouldHandleNullAndEmptyMetricsList() {
         Long userId = 1L;
         AppUser user = AppUser.builder().id(userId).build();
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(true)
                 .build();
@@ -134,7 +134,7 @@ class GetUserAntiScrollStatsUseCaseTest {
     void execute_shouldSkipMetric_whenCreatedAtIsNull() {
         Long userId = 1L;
         AppUser user = AppUser.builder().id(userId).build();
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(true)
                 .build();

@@ -3,7 +3,7 @@ package com.huly.backend.infrastructure.presentation.mapper;
 import com.huly.backend.domain.model.admin.AntiScrollDashboardStats;
 import com.huly.backend.domain.model.admin.BackofficeUserSummary;
 import com.huly.backend.domain.model.admin.TopAppStats;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollConfigResponse;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigResponse;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesResponse;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsResponse;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsResponse;
@@ -154,7 +154,7 @@ public class AdminPresentationMapper {
                 .build();
     }
 
-    public AntiScrollConfigResponse toAntiScrollConfigResponse(GetAntiScrollConfigResponse config) {
+    public AntiScrollConfigResponse toAntiScrollConfigResponse(GetAntiScrollGlobalConfigResponse config) {
         return AntiScrollConfigResponse.builder()
                 .defaultPauseIntervalMinutes(config.defaultPauseIntervalMinutes())
                 .termsAndConditions(config.termsAndConditions())
