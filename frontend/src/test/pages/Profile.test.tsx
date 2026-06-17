@@ -4,11 +4,17 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from '../../context/theme'
 import Profile from '../../pages/Profile/Profile'
+import { completeProfileTutorial } from '../../api/onboarding'
 
 const mockUseAuth = vi.fn()
+const mockRefreshUser = vi.fn()
 
 vi.mock('../../context/auth', () => ({
   useAuth: () => mockUseAuth(),
+}))
+
+vi.mock('../../api/onboarding', () => ({
+  completeProfileTutorial: vi.fn(),
 }))
 
 const authenticatedUser = {
@@ -18,17 +24,22 @@ const authenticatedUser = {
   role: 'USER',
   onBoardingCompleted: true,
   onboardingTutorialCompleted: true,
+  profileOnboardingTutorialCompleted: true,
   themePreference: 'LIGHT',
 }
 
 describe('Profile', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     window.localStorage.clear()
     window.localStorage.setItem('huly:scene-theme', 'light')
     mockUseAuth.mockReturnValue({
       user: authenticatedUser,
       loading: false,
+      refreshUser: mockRefreshUser,
     })
+    vi.mocked(completeProfileTutorial).mockResolvedValue(undefined)
+    mockRefreshUser.mockResolvedValue(authenticatedUser)
   })
 
   const renderProfile = () => {
@@ -85,7 +96,7 @@ describe('Profile', () => {
 
     expect(screen.getByRole('button', { name: 'Espejo' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Volver al jardin' })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('button', { name: 'Cofre' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Baúl' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reloj' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Musica' })).toBeInTheDocument()
   })
@@ -95,7 +106,7 @@ describe('Profile', () => {
 
     expect(screen.getByAltText('Espejo del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Ventana hacia el jardin')).toBeInTheDocument()
-    expect(screen.getByAltText('Cofre del perfil')).toBeInTheDocument()
+    expect(screen.getByAltText('Baúl del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Reloj del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Equipo de musica del perfil')).toBeInTheDocument()
   })
@@ -117,5 +128,58 @@ describe('Profile', () => {
     await user.click(screen.getByRole('link', { name: 'Volver al jardin' }))
 
     expect(screen.getByRole('heading', { name: 'Vista Jardin' })).toBeInTheDocument()
+  })
+
+  it('muestra el tutorial de perfil la primera vez que se entra', async () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        ...authenticatedUser,
+        profileOnboardingTutorialCompleted: false,
+      },
+      loading: false,
+      refreshUser: mockRefreshUser,
+    })
+
+    renderProfile()
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tu habitación personal' })).toBeInTheDocument()
+    expect(screen.queryByText('Bienvenido a')).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Huly' })).not.toBeInTheDocument()
+    expect(completeProfileTutorial).not.toHaveBeenCalled()
+  })
+
+  it('avanza el tutorial de perfil y lo oculta al finalizar', async () => {
+    const user = userEvent.setup()
+    mockUseAuth.mockReturnValue({
+      user: {
+        ...authenticatedUser,
+        profileOnboardingTutorialCompleted: false,
+      },
+      loading: false,
+      refreshUser: mockRefreshUser,
+    })
+
+    renderProfile()
+
+    await user.click(await screen.findByRole('button', { name: 'Comenzar con el tutorial' }))
+    expect(screen.getByRole('heading', { name: 'Ventana' })).toBeInTheDocument()
+    expect(document.querySelector('.home-onboarding__mascot')).not.toBeInTheDocument()
+
+    for (let index = 0; index < 4; index += 1) {
+      await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
+
+    expect(completeProfileTutorial).toHaveBeenCalledTimes(1)
+    expect(mockRefreshUser).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('no vuelve a mostrar el tutorial de perfil cuando ya fue visto', () => {
+    renderProfile()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

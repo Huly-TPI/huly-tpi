@@ -93,7 +93,7 @@ class ExtensionControllerTest {
                 .build();
 
         AppUser user = AppUser.builder().id(USER_ID).name("Jim").role(UserRole.USER).status(UserStatus.ACTIVE).build();
-        UserProfile profile = new UserProfile(user, true, true);
+        UserProfile profile = new UserProfile(user, true, true, true);
 
         when(getExtensionSettingsUseCase.execute(USER_ID)).thenReturn(settings);
         when(getCurrentUserUseCase.execute(USER_ID)).thenReturn(profile);

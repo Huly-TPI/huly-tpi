@@ -52,4 +52,13 @@ public class OnboardingController {
         completeTutorialUseCase.execute(userId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/profile-onboarding-tutorial/complete")
+    public ResponseEntity<Void> completeProfileTutorial(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        completeTutorialUseCase.executeProfile(userId);
+        return ResponseEntity.noContent().build();
+    }
 }

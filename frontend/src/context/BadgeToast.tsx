@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { BadgeResponse } from '../api/badges'
 import BadgeUnlockToast from '../components/Badges/BadgeUnlockToast'
 
@@ -12,14 +12,28 @@ const BadgeToastContext = createContext<BadgeToastContextType>({
 
 export function BadgeToastProvider({ children }: { children: React.ReactNode }) {
   const [badge, setBadge] = useState<BadgeResponse | null>(null)
+  const [isHomeOnboardingActive, setIsHomeOnboardingActive] = useState(
+    document.body.getAttribute('data-home-onboarding-active') === 'true',
+  )
 
   const showBadgeToast = useCallback((badge: BadgeResponse) => setBadge(badge), [])
   const dismiss = useCallback(() => setBadge(null), [])
 
+  useEffect(() => {
+    const syncHomeOnboardingState = () => {
+      setIsHomeOnboardingActive(document.body.getAttribute('data-home-onboarding-active') === 'true')
+    }
+
+    window.addEventListener('home-onboarding-visibility-change', syncHomeOnboardingState)
+    return () => {
+      window.removeEventListener('home-onboarding-visibility-change', syncHomeOnboardingState)
+    }
+  }, [])
+
   return (
     <BadgeToastContext.Provider value={{ showBadgeToast }}>
       {children}
-      {badge && <BadgeUnlockToast badge={badge} onDismiss={dismiss} />}
+      {badge && !isHomeOnboardingActive && <BadgeUnlockToast badge={badge} onDismiss={dismiss} />}
     </BadgeToastContext.Provider>
   )
 }
