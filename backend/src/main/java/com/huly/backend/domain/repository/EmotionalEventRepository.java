@@ -11,4 +11,8 @@ public interface EmotionalEventRepository {
     Optional<EmotionalEvent> findById(Long id);
 
     List<EmotionalEvent> findRecentRecommendationHistoryByUserId(Long userId, int limit);
+
+    List<EmotionalEvent> findByUserId(Long userId);
+
+    List<EmotionalEvent> findRecommendationEventsByUserId(Long userId);
 }

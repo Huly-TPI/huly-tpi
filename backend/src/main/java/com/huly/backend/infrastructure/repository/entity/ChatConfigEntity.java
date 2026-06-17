@@ -24,4 +24,9 @@ public class ChatConfigEntity {
     @Column(name = "system_prompt")
     private String systemPrompt;
 
+    @Column(name = "preferred_name_question_enabled", nullable = false)
+    private Boolean preferredNameQuestionEnabled;
+
+    @Column(name = "communication_style_question_enabled", nullable = false)
+    private Boolean communicationStyleQuestionEnabled;
 }

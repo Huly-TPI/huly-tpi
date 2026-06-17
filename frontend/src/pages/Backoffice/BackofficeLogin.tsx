@@ -20,7 +20,7 @@ const getInputClassName = (hasError: boolean) => {
   return `w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-all dark:bg-[#09111f] dark:text-gray-100 ${
     hasError
       ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
-      : 'border-gray-200 dark:border-gray-800 focus:border-[#8869AC] dark:focus:border-[#A78BFA] focus:ring-2 focus:ring-[#8869AC]/20'
+      : 'border-gray-200 dark:border-gray-800 focus:border-violeta dark:focus:border-violeta-claro focus:ring-2 focus:ring-violeta/20'
   }`
 }
 
@@ -68,7 +68,7 @@ export default function BackofficeLogin() {
 
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D1CAEF] dark:bg-[#2A233C]">
-            <Leaf className="h-8 w-8 text-[#8869AC] dark:text-[#A78BFA] fill-[#8869AC] dark:fill-[#A78BFA]" strokeWidth={1.8} />
+            <Leaf className="h-8 w-8 text-violeta dark:text-violeta-claro fill-violeta dark:fill-violeta-claro" strokeWidth={1.8} />
           </div>
           <img src={colorLogo} alt="Huly" className="h-8 object-contain" />
           <p className="text-xs font-bold uppercase tracking-widest text-[#A0AEC0] dark:text-gray-500">

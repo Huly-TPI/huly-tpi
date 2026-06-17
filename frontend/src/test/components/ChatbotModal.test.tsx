@@ -15,6 +15,7 @@ vi.mock('../../hooks/useChatbot', () => ({
     sendMessage: vi.fn(),
     decideChallenge: vi.fn(),
     decideSuggestedAction: vi.fn(),
+    resetConversation: vi.fn(),
   }),
 }))
 

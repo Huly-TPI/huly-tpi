@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { LogOut, X, Leaf } from 'lucide-react'
 import colorLogo from '../../assets/brand/color-logo.webp'
+import ThemeToggle from '../ThemeToggle/ThemeToggle'
 
 interface SidebarProps {
   isOpen: boolean
@@ -97,7 +98,7 @@ export default function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
         <div className="flex items-center justify-between px-4 py-6">
           <div className="flex items-center gap-3">
             <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#D1CAEF] dark:bg-[#2A233C]">
-              <Leaf className="h-8 w-8 text-[#8869AC] dark:text-[#A78BFA] fill-[#8869AC] dark:fill-[#A78BFA]" strokeWidth={1.8} />
+              <Leaf className="h-8 w-8 text-violeta dark:text-violeta-claro fill-violeta dark:fill-violeta-claro" strokeWidth={1.8} />
             </div>
             <div className="min-w-0">
               <img src={colorLogo} alt="Huly" className="h-9 w-auto object-contain object-left" />
@@ -128,14 +129,14 @@ export default function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
                   onClick={onClose}
                   className={({ isActive }) =>
                     `flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all group ${isActive
-                      ? 'bg-[#8869AC] text-white shadow-sm'
-                      : 'text-[#4A5568] dark:text-gray-300 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 hover:text-[#8869AC] dark:hover:text-[#A78BFA]'
+                      ? 'bg-violeta text-white shadow-sm'
+                      : 'text-[#4A5568] dark:text-gray-300 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 hover:text-violeta dark:hover:text-violeta-claro'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <span className={isActive ? 'text-white' : 'text-[#A0AEC0] dark:text-gray-500 group-hover:text-[#8869AC] dark:group-hover:text-[#A78BFA] transition-colors'}>
+                      <span className={isActive ? 'text-white' : 'text-[#A0AEC0] dark:text-gray-500 group-hover:text-violeta dark:group-hover:text-violeta-claro transition-colors'}>
                         {item.icon}
                       </span>
                       {item.label}
@@ -148,6 +149,10 @@ export default function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
         </nav>
 
         <div className="shrink-0 px-4 pb-5 pt-2">
+          <div className="lg:hidden flex items-center justify-between px-3 py-2.5 mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-800/60 rounded-xl bg-gray-55/50 dark:bg-[#09111f]/40">
+            <span>Tema</span>
+            <ThemeToggle compact />
+          </div>
           <div className="mx-0 mb-3 h-px bg-gray-100 dark:bg-gray-800" />
           <button
             onClick={onLogout}

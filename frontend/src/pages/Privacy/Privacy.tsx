@@ -102,19 +102,19 @@ const EXTENSION_POLICY: PolicyDocument = {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
             <div className="p-4 rounded-xl border border-gray-100 dark:border-gray-800/40 bg-gray-50/50 dark:bg-gray-900/40">
-              <span className="font-mono text-xs font-bold text-[#8869AC] dark:text-[#A78BFA]">storage</span>
+              <span className="font-mono text-xs font-bold text-violeta dark:text-violeta-claro">storage</span>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Guarda tu configuración personalizada de pausas y métricas acumuladas localmente en tu navegador.</p>
             </div>
             <div className="p-4 rounded-xl border border-gray-100 dark:border-gray-800/40 bg-gray-50/50 dark:bg-gray-900/40">
-              <span className="font-mono text-xs font-bold text-[#8869AC] dark:text-[#A78BFA]">tabs</span>
+              <span className="font-mono text-xs font-bold text-violeta dark:text-violeta-claro">tabs</span>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Detecta qué pestaña estás visitando para pausar o iniciar los contadores de tiempo activo únicamente en sitios web relevantes.</p>
             </div>
             <div className="p-4 rounded-xl border border-gray-100 dark:border-gray-800/40 bg-gray-50/50 dark:bg-gray-900/40">
-              <span className="font-mono text-xs font-bold text-[#8869AC] dark:text-[#A78BFA]">alarms</span>
+              <span className="font-mono text-xs font-bold text-violeta dark:text-violeta-claro">alarms</span>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Programa las alarmas internas que disparan el recordatorio visual para tomar un descanso.</p>
             </div>
             <div className="p-4 rounded-xl border border-gray-100 dark:border-gray-800/40 bg-gray-50/50 dark:bg-gray-900/40">
-              <span className="font-mono text-xs font-bold text-[#8869AC] dark:text-[#A78BFA]">host_permissions (&lt;all_urls&gt;)</span>
+              <span className="font-mono text-xs font-bold text-violeta dark:text-violeta-claro">host_permissions (&lt;all_urls&gt;)</span>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Permite inyectar de forma segura la interfaz de aviso de descanso (el modal de pausa) en cualquier pestaña activa cuando se cumple el tiempo configurado.</p>
             </div>
           </div>
@@ -168,13 +168,13 @@ export default function Privacy() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 text-[#A0AEC0] dark:text-gray-500 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#2A233C]/50 hover:text-[#8869AC] dark:hover:text-[#A78BFA] rounded-xl transition-all"
+              className="p-2 text-[#A0AEC0] dark:text-gray-500 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#2A233C]/50 hover:text-violeta dark:hover:text-violeta-claro rounded-xl transition-all"
               aria-label="Volver"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight text-[#8869AC] dark:text-[#A78BFA] flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight text-violeta dark:text-violeta-claro flex items-center gap-2">
                 Centro de privacidad
               </h1>
               <p className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
@@ -202,8 +202,8 @@ export default function Privacy() {
                 onClick={() => setActiveTab('general')}
                 className={`flex flex-1 lg:w-full items-center justify-center lg:justify-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
                   activeTab === 'general'
-                    ? 'bg-[#8869AC] dark:bg-[#A78BFA] text-white dark:text-[#09111f] shadow-sm'
-                    : 'text-[#4A5568] dark:text-gray-300 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#2A233C]/50 hover:text-[#8869AC] dark:hover:text-[#A78BFA]'
+                    ? 'bg-violeta dark:bg-violeta-claro text-white dark:text-[#09111f] shadow-sm'
+                    : 'text-[#4A5568] dark:text-gray-300 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#2A233C]/50 hover:text-violeta dark:hover:text-violeta-claro'
                 }`}
               >
                 <AppWindow className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'general' ? 'text-white dark:text-[#09111f]' : 'text-[#A0AEC0] dark:text-gray-500'}`} />
@@ -214,8 +214,8 @@ export default function Privacy() {
                 onClick={() => setActiveTab('extension')}
                 className={`flex flex-1 lg:w-full items-center justify-center lg:justify-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
                   activeTab === 'extension'
-                    ? 'bg-[#8869AC] dark:bg-[#A78BFA] text-white dark:text-[#09111f] shadow-sm'
-                    : 'text-[#4A5568] dark:text-gray-300 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#2A233C]/50 hover:text-[#8869AC] dark:hover:text-[#A78BFA]'
+                    ? 'bg-violeta dark:bg-violeta-claro text-white dark:text-[#09111f] shadow-sm'
+                    : 'text-[#4A5568] dark:text-gray-300 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#2A233C]/50 hover:text-violeta dark:hover:text-violeta-claro'
                 }`}
               >
                 <Globe className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'extension' ? 'text-white dark:text-[#09111f]' : 'text-[#A0AEC0] dark:text-gray-500'}`} />
@@ -233,7 +233,7 @@ export default function Privacy() {
           <article className="space-y-8 animate-fadeIn">
             <div className="border-b border-gray-100 dark:border-gray-800/40 pb-5">
               {activeDoc.badge && (
-                <span className="bg-[#D1CAEF]/40 dark:bg-[#2A233C]/50 text-[#8869AC] dark:text-[#A78BFA] text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="bg-[#D1CAEF]/40 dark:bg-[#2A233C]/50 text-violeta dark:text-violeta-claro text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
                   {activeDoc.badge}
                 </span>
               )}
@@ -242,8 +242,8 @@ export default function Privacy() {
               </h2>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-xs text-[#A0AEC0] dark:text-gray-500">Última actualización: {activeDoc.lastUpdated}</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-[#8869AC] dark:bg-[#A78BFA]" />
-                <span className="text-xs text-[#8869AC] dark:text-[#A78BFA] font-bold">{activeDoc.subtitle}</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-violeta dark:bg-violeta-claro" />
+                <span className="text-xs text-violeta dark:text-violeta-claro font-bold">{activeDoc.subtitle}</span>
               </div>
             </div>
 
@@ -263,8 +263,8 @@ export default function Privacy() {
                         : undefined
                     }
                   >
-                    <h3 className="text-lg font-bold flex items-center gap-2 mb-3 text-[#8869AC] dark:text-[#A78BFA]">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#D1CAEF]/30 dark:bg-[#2A233C]/50 text-[#8869AC] dark:text-[#A78BFA]">
+                    <h3 className="text-lg font-bold flex items-center gap-2 mb-3 text-violeta dark:text-violeta-claro">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#D1CAEF]/30 dark:bg-[#2A233C]/50 text-violeta dark:text-violeta-claro">
                         <Icon className="w-4 h-4" />
                       </div>
                       {sec.title}
