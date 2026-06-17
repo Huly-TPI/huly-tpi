@@ -83,7 +83,7 @@ export default function LanternsActivity() {
     }
   }, [inputText, lanterns.length])
 
-  const handleSoltar = useCallback(() => {
+  const handleLiberar = useCallback(() => {
     if (selectedId === null) return
     const idToRemove = selectedId
     setLanterns(prev => {
@@ -187,10 +187,10 @@ export default function LanternsActivity() {
           <div className="mt-2 flex gap-3">
             <button
               type="button"
-              onClick={handleSoltar}
+              onClick={handleLiberar}
               className="lantern-action-btn lantern-action-btn--soltar"
             >
-              Soltar
+              Liberar
             </button>
             <button
               type="button"
@@ -278,9 +278,7 @@ export default function LanternsActivity() {
       <div className="relative z-20 mt-auto flex justify-center px-4 pb-0 mb-[-110px]">
         <div className="paper-panel">
           <img src={paperImage} alt="" className="paper-bg-img" draggable={false} />
-          <h3 className="paper-title">
-            Escribe un pensamiento y déjalo ir
-          </h3>
+        
           <div className="paper-input-row">
             <input
               type="text"
