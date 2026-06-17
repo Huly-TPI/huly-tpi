@@ -7,7 +7,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
-@ActiveProfiles("h2-test")
+@ActiveProfiles("coverage-test")
 class BackendApplicationTests {
 
     @MockitoBean
