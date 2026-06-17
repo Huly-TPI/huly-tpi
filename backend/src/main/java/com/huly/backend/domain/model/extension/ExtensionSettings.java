@@ -10,8 +10,6 @@ import java.util.List;
 public class ExtensionSettings {
     private boolean enabled;
     private int pauseIntervalSeconds;
-    private String gardenUrl;
-    private String backendUrl;
     private List<String> monitoredDomains;
     private boolean dataSharingConsent;
 }

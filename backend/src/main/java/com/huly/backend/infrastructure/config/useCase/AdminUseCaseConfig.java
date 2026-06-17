@@ -6,10 +6,13 @@ import com.huly.backend.domain.repository.EmotionalEventRepository;
 import com.huly.backend.domain.repository.PaymentEventRepository;
 import com.huly.backend.domain.repository.ProductRepository;
 import com.huly.backend.domain.repository.VectorMemoryRepository;
+import com.huly.backend.domain.repository.extension.AntiScrollConfigRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
 import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollConfigUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollConfigUseCase;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsUseCase;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUseCase;
@@ -78,5 +81,19 @@ public class AdminUseCaseConfig {
             ProductRepository productRepository
     ) {
         return new GetUserFinancialsUseCase(userRepository, paymentEventRepository, productRepository);
+    }
+
+    @Bean
+    public GetAntiScrollConfigUseCase getAntiScrollConfigUseCase(
+            AntiScrollConfigRepository antiScrollConfigRepository
+    ) {
+        return new GetAntiScrollConfigUseCase(antiScrollConfigRepository);
+    }
+
+    @Bean
+    public UpdateAntiScrollConfigUseCase updateAntiScrollConfigUseCase(
+            AntiScrollConfigRepository antiScrollConfigRepository
+    ) {
+        return new UpdateAntiScrollConfigUseCase(antiScrollConfigRepository);
     }
 }

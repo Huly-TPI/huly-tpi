@@ -3,9 +3,9 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
 import com.huly.backend.domain.model.extension.ExtensionSettings;
 import com.huly.backend.domain.useCase.extension.GetExtensionSettingsUseCase;
+import com.huly.backend.domain.useCase.extension.GetExtensionSettingsResponse;
 import com.huly.backend.domain.useCase.extension.SaveExtensionMetricsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveExtensionSettingsUseCase;
-import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionMetricRequest;
 import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionSettingsResponse;
@@ -27,20 +27,14 @@ public class ExtensionController {
     private final GetExtensionSettingsUseCase getExtensionSettingsUseCase;
     private final SaveExtensionSettingsUseCase saveExtensionSettingsUseCase;
     private final SaveExtensionMetricsUseCase saveExtensionMetricsUseCase;
-    private final GetCurrentUserUseCase getCurrentUserUseCase;
-    private final com.huly.backend.domain.repository.extension.AntiScrollConfigRepository antiScrollConfigRepository;
 
     @GetMapping("/settings")
     public ResponseEntity<ExtensionSettingsResponse> getSettings(
             @AuthenticationPrincipal UserDetails principal
     ) {
         Long userId = getUserId(principal);
-        ExtensionSettings settings = getExtensionSettingsUseCase.execute(userId);
-        String userName = getCurrentUserUseCase.execute(userId).user().getName();
-        String terms = antiScrollConfigRepository.findFirst()
-                .map(com.huly.backend.domain.model.extension.AntiScrollConfig::getTermsAndConditions)
-                .orElse("El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!");
-        return ResponseEntity.ok(toResponse(settings, userName, terms));
+        GetExtensionSettingsResponse settings = getExtensionSettingsUseCase.execute(userId);
+        return ResponseEntity.ok(toResponse(settings));
     }
 
     @PostMapping("/settings")
@@ -74,21 +68,21 @@ public class ExtensionController {
 
     private Long getUserId(UserDetails principal) {
         if (principal == null) 
-            throw new UnauthorizedException("Not authenticated");
-        
+            throw new UnauthorizedException("Not authenticated");       
+
         return Long.parseLong(principal.getUsername());
     }
 
-    private ExtensionSettingsResponse toResponse(ExtensionSettings settings, String userName, String termsAndConditions) {
+    private ExtensionSettingsResponse toResponse(GetExtensionSettingsResponse settings) {
         return ExtensionSettingsResponse.builder()
-                .enabled(settings.isEnabled())
-                .pauseIntervalSeconds(settings.getPauseIntervalSeconds())
-                .gardenUrl(settings.getGardenUrl())
-                .backendUrl(settings.getBackendUrl())
-                .monitoredDomains(settings.getMonitoredDomains())
-                .dataSharingConsent(settings.isDataSharingConsent())
-                .userName(userName)
-                .termsAndConditions(termsAndConditions)
+                .enabled(settings.enabled())
+                .pauseIntervalSeconds(settings.pauseIntervalSeconds())
+                .gardenUrl(settings.gardenUrl())
+                .backendUrl(settings.backendUrl())
+                .monitoredDomains(settings.monitoredDomains())
+                .dataSharingConsent(settings.dataSharingConsent())
+                .userName(settings.userName())
+                .termsAndConditions(settings.termsAndConditions())
                 .build();
     }
 

@@ -1,14 +1,17 @@
 package com.huly.backend.domain.useCase.extension;
 
+import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.enums.UserRole;
+import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.extension.ExtensionSettings;
 import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,14 +28,24 @@ class GetExtensionSettingsUseCaseTest {
     @Mock
     private com.huly.backend.domain.repository.extension.AntiScrollConfigRepository antiScrollConfigRepository;
 
-    @InjectMocks
+    @Mock
+    private GetCurrentUserUseCase getCurrentUserUseCase;
+
     private GetExtensionSettingsUseCase getExtensionSettingsUseCase;
 
     @BeforeEach
     void setUp() {
         org.mockito.Mockito.lenient().when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.empty());
-        ReflectionTestUtils.setField(getExtensionSettingsUseCase, "frontendUrl", "http://localhost:5173");
-        ReflectionTestUtils.setField(getExtensionSettingsUseCase, "backendUrl", "http://localhost:8080");
+        AppUser user = AppUser.builder().id(1L).name("Jim").role(UserRole.USER).status(UserStatus.ACTIVE).build();
+        org.mockito.Mockito.lenient().when(getCurrentUserUseCase.execute(org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(new UserProfile(user, true, true, true));
+        getExtensionSettingsUseCase = new GetExtensionSettingsUseCase(
+                settingsRepository,
+                antiScrollConfigRepository,
+                getCurrentUserUseCase,
+                "http://localhost:5173",
+                "http://localhost:8080"
+        );
     }
 
     @Test
@@ -40,36 +53,37 @@ class GetExtensionSettingsUseCaseTest {
         ExtensionSettings existingSettings = ExtensionSettings.builder()
                 .enabled(false)
                 .pauseIntervalSeconds(30)
-                .gardenUrl("http://localhost:5173/")
-                .backendUrl("http://localhost:8080")
                 .monitoredDomains(List.of("twitter.com"))
                 .dataSharingConsent(true)
                 .build();
 
         when(settingsRepository.findByUserId(1L)).thenReturn(Optional.of(existingSettings));
 
-        ExtensionSettings result = getExtensionSettingsUseCase.execute(1L);
+        GetExtensionSettingsResponse result = getExtensionSettingsUseCase.execute(1L);
 
         assertThat(result).isNotNull();
-        assertThat(result.isEnabled()).isFalse();
-        assertThat(result.getPauseIntervalSeconds()).isEqualTo(30);
-        assertThat(result.isDataSharingConsent()).isTrue();
-        assertThat(result.getMonitoredDomains()).containsExactly("twitter.com");
+        assertThat(result.enabled()).isFalse();
+        assertThat(result.pauseIntervalSeconds()).isEqualTo(30);
+        assertThat(result.dataSharingConsent()).isTrue();
+        assertThat(result.monitoredDomains()).containsExactly("twitter.com");
+        assertThat(result.gardenUrl()).isEqualTo("http://localhost:5173/");
+        assertThat(result.backendUrl()).isEqualTo("http://localhost:8080");
+        assertThat(result.userName()).isEqualTo("Jim");
     }
 
     @Test
     void execute_shouldReturnDefaultSettings_whenSettingsDoNotExist() {
         when(settingsRepository.findByUserId(2L)).thenReturn(Optional.empty());
 
-        ExtensionSettings result = getExtensionSettingsUseCase.execute(2L);
+        GetExtensionSettingsResponse result = getExtensionSettingsUseCase.execute(2L);
 
         assertThat(result).isNotNull();
-        assertThat(result.isEnabled()).isTrue();
-        assertThat(result.getPauseIntervalSeconds()).isEqualTo(1200);
-        assertThat(result.isDataSharingConsent()).isFalse();
-        assertThat(result.getGardenUrl()).isEqualTo("http://localhost:5173/");
-        assertThat(result.getBackendUrl()).isEqualTo("http://localhost:8080");
-        assertThat(result.getMonitoredDomains()).contains("twitter.com", "x.com", "instagram.com");
+        assertThat(result.enabled()).isTrue();
+        assertThat(result.pauseIntervalSeconds()).isEqualTo(1200);
+        assertThat(result.dataSharingConsent()).isFalse();
+        assertThat(result.gardenUrl()).isEqualTo("http://localhost:5173/");
+        assertThat(result.backendUrl()).isEqualTo("http://localhost:8080");
+        assertThat(result.monitoredDomains()).contains("twitter.com", "x.com", "instagram.com");
     }
 
     @Test
@@ -81,9 +95,10 @@ class GetExtensionSettingsUseCaseTest {
         when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.of(config));
         when(settingsRepository.findByUserId(3L)).thenReturn(Optional.empty());
 
-        ExtensionSettings result = getExtensionSettingsUseCase.execute(3L);
+        GetExtensionSettingsResponse result = getExtensionSettingsUseCase.execute(3L);
 
         assertThat(result).isNotNull();
-        assertThat(result.getPauseIntervalSeconds()).isEqualTo(2100);
+        assertThat(result.pauseIntervalSeconds()).isEqualTo(2100);
+        assertThat(result.termsAndConditions()).isEqualTo("dynamic terms");
     }
 }

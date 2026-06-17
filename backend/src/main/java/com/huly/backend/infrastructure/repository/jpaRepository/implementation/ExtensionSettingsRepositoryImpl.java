@@ -7,7 +7,6 @@ import com.huly.backend.infrastructure.repository.entity.UserSettingEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserSettingJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -21,12 +20,6 @@ public class ExtensionSettingsRepositoryImpl implements ExtensionSettingsReposit
 
     private final IUserSettingJpaRepository userSettingJpaRepository;
     private final AppUserRepository appUserRepository;
-
-    @Value("${frontend.url}")
-    private String frontendUrl;
-
-    @Value("${backend.url}")
-    private String backendUrl;
 
     @Override
     public Optional<ExtensionSettings> findByUserId(Long userId) {
@@ -49,8 +42,6 @@ public class ExtensionSettingsRepositoryImpl implements ExtensionSettingsReposit
                     return ExtensionSettings.builder()
                             .enabled(entity.getAntiScrollEnabled() != null ? entity.getAntiScrollEnabled() : true)
                             .pauseIntervalSeconds(pauseIntervalSeconds)
-                            .gardenUrl(frontendUrl + "/")
-                            .backendUrl(backendUrl)
                             .monitoredDomains(domains)
                             .dataSharingConsent(entity.getDataSharingConsent() != null ? entity.getDataSharingConsent() : false)
                             .build();

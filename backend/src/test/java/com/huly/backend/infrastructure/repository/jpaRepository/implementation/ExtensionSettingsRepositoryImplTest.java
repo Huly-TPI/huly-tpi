@@ -12,7 +12,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,12 +32,6 @@ class ExtensionSettingsRepositoryImplTest {
     @InjectMocks
     private ExtensionSettingsRepositoryImpl repository;
 
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(repository, "frontendUrl", "http://frontend.com");
-        ReflectionTestUtils.setField(repository, "backendUrl", "http://backend.com");
-    }
-
     @Test
     void findByUserId_shouldReturnMappedSettings_whenFoundWithNonNullFields() {
         Long userId = 1L;
@@ -57,8 +50,6 @@ class ExtensionSettingsRepositoryImplTest {
         ExtensionSettings settings = result.get();
         assertThat(settings.isEnabled()).isTrue();
         assertThat(settings.getPauseIntervalSeconds()).isEqualTo(30);
-        assertThat(settings.getGardenUrl()).isEqualTo("http://frontend.com/");
-        assertThat(settings.getBackendUrl()).isEqualTo("http://backend.com");
         assertThat(settings.getMonitoredDomains()).containsExactly("youtube.com", "tiktok.com", "x.com");
         assertThat(settings.isDataSharingConsent()).isTrue();
     }

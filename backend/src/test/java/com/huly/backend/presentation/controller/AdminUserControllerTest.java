@@ -10,6 +10,10 @@ import com.huly.backend.domain.model.admin.BackofficeUserSummary;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollConfigResponse;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollConfigUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollConfigRequest;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollConfigUseCase;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesResponse;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsResponse;
@@ -20,6 +24,7 @@ import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollSta
 import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsResponse;
 import com.huly.backend.infrastructure.presentation.controller.AdminUserController;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.AdminPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,7 +43,8 @@ class AdminUserControllerTest {
     private MockMvc mockMvc;
     private ListBackofficeUsersUseCase listBackofficeUsersUseCase;
     private GetAntiScrollDashboardUseCase getAntiScrollDashboardUseCase;
-    private com.huly.backend.domain.repository.extension.AntiScrollConfigRepository antiScrollConfigRepository;
+    private GetAntiScrollConfigUseCase getAntiScrollConfigUseCase;
+    private UpdateAntiScrollConfigUseCase updateAntiScrollConfigUseCase;
     private GetUserActivitiesUseCase getUserActivitiesUseCase;
     private GetUserAiDiagnosticsUseCase getUserAiDiagnosticsUseCase;
     private GetUserFinancialsUseCase getUserFinancialsUseCase;
@@ -49,22 +55,28 @@ class AdminUserControllerTest {
     void setUp() {
         listBackofficeUsersUseCase = mock(ListBackofficeUsersUseCase.class);
         getAntiScrollDashboardUseCase = mock(GetAntiScrollDashboardUseCase.class);
-        antiScrollConfigRepository = mock(com.huly.backend.domain.repository.extension.AntiScrollConfigRepository.class);
+        getAntiScrollConfigUseCase = mock(GetAntiScrollConfigUseCase.class);
+        updateAntiScrollConfigUseCase = mock(UpdateAntiScrollConfigUseCase.class);
         getUserActivitiesUseCase = mock(GetUserActivitiesUseCase.class);
         getUserAiDiagnosticsUseCase = mock(GetUserAiDiagnosticsUseCase.class);
         getUserFinancialsUseCase = mock(GetUserFinancialsUseCase.class);
         getUserAntiScrollStatsUseCase = mock(GetUserAntiScrollStatsUseCase.class);
 
-        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
+        when(getAntiScrollConfigUseCase.execute()).thenReturn(new GetAntiScrollConfigResponse(
+                20,
+                "El modo anti-scroll es simplemente una herramienta para acompa\u00f1arte cuando sientas que necesit\u00e1s frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentraci\u00f3n o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. \u00a1Cero presiones, el ritmo lo marc\u00e1s vos!"
+        ));
 
         AdminUserController controller = new AdminUserController(
                 listBackofficeUsersUseCase,
                 getAntiScrollDashboardUseCase,
-                antiScrollConfigRepository,
+                getAntiScrollConfigUseCase,
+                updateAntiScrollConfigUseCase,
                 getUserActivitiesUseCase,
                 getUserAiDiagnosticsUseCase,
                 getUserFinancialsUseCase,
-                getUserAntiScrollStatsUseCase
+                getUserAntiScrollStatsUseCase,
+                new AdminPresentationMapper()
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -149,11 +161,7 @@ class AdminUserControllerTest {
 
     @Test
     void getAntiScrollConfig_shouldReturnConfig() throws Exception {
-        com.huly.backend.domain.model.extension.AntiScrollConfig config = com.huly.backend.domain.model.extension.AntiScrollConfig.builder()
-                .defaultPauseIntervalMinutes(25)
-                .termsAndConditions("terminos de prueba")
-                .build();
-        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.of(config));
+        when(getAntiScrollConfigUseCase.execute()).thenReturn(new GetAntiScrollConfigResponse(25, "terminos de prueba"));
 
         mockMvc.perform(get("/api/admin/users/antiscroll/config"))
                 .andExpect(status().isOk())
@@ -198,8 +206,6 @@ class AdminUserControllerTest {
 
     @Test
     void getAntiScrollConfig_shouldReturnDefaultConfig() throws Exception {
-        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
-
         mockMvc.perform(get("/api/admin/users/antiscroll/config"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.defaultPauseIntervalMinutes").value(20))
@@ -215,18 +221,11 @@ class AdminUserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(antiScrollConfigRepository).save(any());
+        verify(updateAntiScrollConfigUseCase).execute(new UpdateAntiScrollConfigRequest(15, "nuevos terminos"));
     }
 
     @Test
-    void updateAntiScrollConfig_shouldSaveConfig_whenAlreadyExists() throws Exception {
-        com.huly.backend.domain.model.extension.AntiScrollConfig config = com.huly.backend.domain.model.extension.AntiScrollConfig.builder()
-                .id(1L)
-                .defaultPauseIntervalMinutes(25)
-                .termsAndConditions("terminos existentes")
-                .build();
-        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.of(config));
-
+    void updateAntiScrollConfig_shouldDelegateRequestAsIs() throws Exception {
         com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest request = new com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest(15, "nuevos terminos");
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/admin/users/antiscroll/config")
@@ -234,7 +233,7 @@ class AdminUserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(antiScrollConfigRepository).save(argThat(c -> c.getId() == 1L && c.getDefaultPauseIntervalMinutes() == 15));
+        verify(updateAntiScrollConfigUseCase).execute(new UpdateAntiScrollConfigRequest(15, "nuevos terminos"));
     }
 
     @Test
