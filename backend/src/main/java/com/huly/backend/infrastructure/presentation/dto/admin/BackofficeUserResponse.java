@@ -23,4 +23,7 @@ public class BackofficeUserResponse {
     private Integer totalScrollTimeSeconds;
     private Map<String, Integer> dailyScrollTimeSeconds;
     private List<TopAppResponse> topApps;
+    private Integer coins;
+    private String plan;
+    private String dominantEmotion;
 }
