@@ -25,8 +25,8 @@ class SaveExtensionSettingsUseCaseTest {
     void execute_shouldSaveSettingsInRepository() {
         ExtensionSettings settings = ExtensionSettings.builder()
                 .enabled(true)
-                .pauseIntervalMinutes(15)
-                .gardenUrl("http://localhost:5173/garden")
+                .pauseIntervalSeconds(15)
+                .gardenUrl("http://localhost:5173/")
                 .backendUrl("http://localhost:8080")
                 .monitoredDomains(List.of("x.com"))
                 .dataSharingConsent(false)

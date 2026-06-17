@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -56,7 +57,7 @@ class ExtensionControllerTest {
         getCurrentUserUseCase = mock(GetCurrentUserUseCase.class);
         antiScrollConfigRepository = mock(com.huly.backend.domain.repository.extension.AntiScrollConfigRepository.class);
 
-        when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
+        when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.empty());
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
@@ -85,8 +86,8 @@ class ExtensionControllerTest {
     void getSettings_shouldReturn200WithSettingsAndUserName() throws Exception {
         ExtensionSettings settings = ExtensionSettings.builder()
                 .enabled(true)
-                .pauseIntervalMinutes(15)
-                .gardenUrl("http://localhost:5173/garden")
+                .pauseIntervalSeconds(15)
+                .gardenUrl("http://localhost:5173/")
                 .backendUrl("http://localhost:8080")
                 .monitoredDomains(List.of("twitter.com", "x.com"))
                 .dataSharingConsent(true)
@@ -101,8 +102,8 @@ class ExtensionControllerTest {
         mockMvc.perform(get("/api/extension/settings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true))
-                .andExpect(jsonPath("$.pauseIntervalMinutes").value(15))
-                .andExpect(jsonPath("$.gardenUrl").value("http://localhost:5173/garden"))
+                .andExpect(jsonPath("$.pauseIntervalSeconds").value(15))
+                .andExpect(jsonPath("$.gardenUrl").value("http://localhost:5173/"))
                 .andExpect(jsonPath("$.userName").value("Jim"))
                 .andExpect(jsonPath("$.dataSharingConsent").value(true));
     }
@@ -111,7 +112,7 @@ class ExtensionControllerTest {
     void saveSettings_shouldReturn200_whenRequestIsValid() throws Exception {
         ExtensionSettingsRequest request = new ExtensionSettingsRequest();
         request.setEnabled(true);
-        request.setPauseIntervalMinutes(20);
+        request.setPauseIntervalSeconds(20);
         request.setMonitoredDomains(List.of("tiktok.com"));
         request.setDataSharingConsent(true);
 

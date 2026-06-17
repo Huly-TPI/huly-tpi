@@ -2,7 +2,7 @@ import { api } from './client'
 
 export interface ExtensionSettings {
   enabled: boolean
-  pauseIntervalMinutes: number
+  pauseIntervalSeconds: number
   gardenUrl: string
   backendUrl: string
   monitoredDomains: string[]

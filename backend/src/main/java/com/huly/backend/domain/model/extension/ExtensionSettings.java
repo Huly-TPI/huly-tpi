@@ -9,7 +9,7 @@ import java.util.List;
 @Builder
 public class ExtensionSettings {
     private boolean enabled;
-    private int pauseIntervalMinutes;
+    private int pauseIntervalSeconds;
     private String gardenUrl;
     private String backendUrl;
     private List<String> monitoredDomains;

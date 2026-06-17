@@ -10,8 +10,8 @@ import java.util.List;
 public class ExtensionSettingsResponse {
     private boolean enabled;
     
-    @JsonProperty("pauseIntervalMinutes")
-    private int pauseIntervalMinutes;
+    @JsonProperty("pauseIntervalSeconds")
+    private int pauseIntervalSeconds;
     
     @JsonProperty("gardenUrl")
     private String gardenUrl;

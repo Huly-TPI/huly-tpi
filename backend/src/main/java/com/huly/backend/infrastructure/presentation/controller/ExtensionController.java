@@ -51,7 +51,7 @@ public class ExtensionController {
         Long userId = getUserId(principal);
         ExtensionSettings settings = ExtensionSettings.builder()
                 .enabled(request.isEnabled())
-                .pauseIntervalMinutes(request.getPauseIntervalMinutes())
+                .pauseIntervalSeconds(request.getPauseIntervalSeconds())
                 .monitoredDomains(request.getMonitoredDomains())
                 .dataSharingConsent(request.isDataSharingConsent())
                 .build();
@@ -82,7 +82,7 @@ public class ExtensionController {
     private ExtensionSettingsResponse toResponse(ExtensionSettings settings, String userName, String termsAndConditions) {
         return ExtensionSettingsResponse.builder()
                 .enabled(settings.isEnabled())
-                .pauseIntervalMinutes(settings.getPauseIntervalMinutes())
+                .pauseIntervalSeconds(settings.getPauseIntervalSeconds())
                 .gardenUrl(settings.getGardenUrl())
                 .backendUrl(settings.getBackendUrl())
                 .monitoredDomains(settings.getMonitoredDomains())

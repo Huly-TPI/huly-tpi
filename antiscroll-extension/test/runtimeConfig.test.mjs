@@ -41,11 +41,22 @@ test('buildAppOrigins returns unique origins in stable order', () => {
     runtimeConfig.buildAppOrigins(
       'https://huly-tpi-frontend.onrender.com',
       ['https://huly-tpi-frontend.onrender.com', 'http://localhost:5173'],
-      'http://localhost:5173',
-      'https://huly-tpi-frontend.onrender.com',
     ),
-    ['http://localhost:5173', 'https://huly-tpi-frontend.onrender.com'],
+    ['https://huly-tpi-frontend.onrender.com', 'http://localhost:5173'],
   )
+})
+
+test('resolveExtensionEnvironment uses known extension ids', () => {
+  assert.equal(
+    runtimeConfig.resolveExtensionEnvironment('opafcmdcpkhcfnbfmfipdninpkkpamgh', false),
+    'prod',
+  )
+  assert.equal(
+    runtimeConfig.resolveExtensionEnvironment('kmkblhmalfkbnkipaohgfllbecajkpom', true),
+    'local',
+  )
+  assert.equal(runtimeConfig.resolveExtensionEnvironment(undefined, true), 'prod')
+  assert.equal(runtimeConfig.resolveExtensionEnvironment(undefined, false), 'local')
 })
 
 test('normalizeLegacyUrls migrates legacy localhost values', () => {

@@ -30,7 +30,7 @@ class GetExtensionSettingsUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        org.mockito.Mockito.lenient().when(antiScrollConfigRepository.findFirst()).thenReturn(java.util.Optional.empty());
+        org.mockito.Mockito.lenient().when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.empty());
         ReflectionTestUtils.setField(getExtensionSettingsUseCase, "frontendUrl", "http://localhost:5173");
         ReflectionTestUtils.setField(getExtensionSettingsUseCase, "backendUrl", "http://localhost:8080");
     }
@@ -39,8 +39,8 @@ class GetExtensionSettingsUseCaseTest {
     void execute_shouldReturnSettingsFromRepository_whenSettingsExist() {
         ExtensionSettings existingSettings = ExtensionSettings.builder()
                 .enabled(false)
-                .pauseIntervalMinutes(30)
-                .gardenUrl("http://localhost:5173/garden")
+                .pauseIntervalSeconds(30)
+                .gardenUrl("http://localhost:5173/")
                 .backendUrl("http://localhost:8080")
                 .monitoredDomains(List.of("twitter.com"))
                 .dataSharingConsent(true)
@@ -52,7 +52,7 @@ class GetExtensionSettingsUseCaseTest {
 
         assertThat(result).isNotNull();
         assertThat(result.isEnabled()).isFalse();
-        assertThat(result.getPauseIntervalMinutes()).isEqualTo(30);
+        assertThat(result.getPauseIntervalSeconds()).isEqualTo(30);
         assertThat(result.isDataSharingConsent()).isTrue();
         assertThat(result.getMonitoredDomains()).containsExactly("twitter.com");
     }
@@ -65,9 +65,9 @@ class GetExtensionSettingsUseCaseTest {
 
         assertThat(result).isNotNull();
         assertThat(result.isEnabled()).isTrue();
-        assertThat(result.getPauseIntervalMinutes()).isEqualTo(20);
+        assertThat(result.getPauseIntervalSeconds()).isEqualTo(1200);
         assertThat(result.isDataSharingConsent()).isFalse();
-        assertThat(result.getGardenUrl()).isEqualTo("http://localhost:5173/garden");
+        assertThat(result.getGardenUrl()).isEqualTo("http://localhost:5173/");
         assertThat(result.getBackendUrl()).isEqualTo("http://localhost:8080");
         assertThat(result.getMonitoredDomains()).contains("twitter.com", "x.com", "instagram.com");
     }
@@ -84,6 +84,6 @@ class GetExtensionSettingsUseCaseTest {
         ExtensionSettings result = getExtensionSettingsUseCase.execute(3L);
 
         assertThat(result).isNotNull();
-        assertThat(result.getPauseIntervalMinutes()).isEqualTo(35);
+        assertThat(result.getPauseIntervalSeconds()).isEqualTo(2100);
     }
 }

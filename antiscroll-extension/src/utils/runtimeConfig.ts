@@ -5,18 +5,32 @@ export interface RuntimeConfigDetail {
   gardenUrl?: string;
 }
 
+export const PROD_EXTENSION_ID = 'opafcmdcpkhcfnbfmfipdninpkkpamgh';
+export const DEV_EXTENSION_ID = 'kmkblhmalfkbnkipaohgfllbecajkpom';
+
 export const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+export const resolveExtensionEnvironment = (
+  runtimeId: string | undefined,
+  isProdBuild: boolean,
+): 'prod' | 'local' => {
+  if (runtimeId === PROD_EXTENSION_ID) {
+    return 'prod';
+  }
+
+  if (runtimeId === DEV_EXTENSION_ID) {
+    return 'local';
+  }
+
+  return isProdBuild ? 'prod' : 'local';
+};
 
 export const buildAppOrigins = (
   defaultFrontendUrl: string,
   configuredOrigins: string[],
-  legacyLocalFrontendUrl: string,
-  prodFrontendUrl: string,
 ): string[] =>
   Array.from(
     new Set([
-      legacyLocalFrontendUrl,
-      prodFrontendUrl,
       defaultFrontendUrl,
       ...configuredOrigins,
     ]),

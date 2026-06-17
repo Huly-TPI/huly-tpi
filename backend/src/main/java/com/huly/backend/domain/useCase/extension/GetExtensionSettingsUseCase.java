@@ -7,6 +7,8 @@ import com.huly.backend.domain.repository.extension.AntiScrollConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 public class GetExtensionSettingsUseCase {
     private final ExtensionSettingsRepository settingsRepository;
@@ -26,10 +28,10 @@ public class GetExtensionSettingsUseCase {
         return settingsRepository.findByUserId(userId)
                 .orElse(ExtensionSettings.builder()
                         .enabled(true)
-                        .pauseIntervalMinutes(defaultInterval)
-                        .gardenUrl(frontendUrl + "/garden")
+                        .pauseIntervalSeconds(defaultInterval * 60)
+                        .gardenUrl(frontendUrl + "/")
                         .backendUrl(backendUrl)
-                        .monitoredDomains(java.util.List.of("twitter.com", "x.com", "instagram.com", "tiktok.com", "youtube.com", "facebook.com"))
+                        .monitoredDomains(List.of("twitter.com", "x.com", "instagram.com", "tiktok.com", "youtube.com", "facebook.com"))
                         .build());
     }
 }

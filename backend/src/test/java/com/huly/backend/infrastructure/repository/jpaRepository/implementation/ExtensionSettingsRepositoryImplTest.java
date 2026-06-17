@@ -44,7 +44,7 @@ class ExtensionSettingsRepositoryImplTest {
         Long userId = 1L;
         UserSettingEntity entity = UserSettingEntity.builder()
                 .antiScrollEnabled(true)
-                .pauseIntervalMinutes(30)
+                .pauseIntervalSeconds(30)
                 .monitoredDomains("youtube.com, tiktok.com, , x.com")
                 .dataSharingConsent(true)
                 .build();
@@ -56,8 +56,8 @@ class ExtensionSettingsRepositoryImplTest {
         assertThat(result).isPresent();
         ExtensionSettings settings = result.get();
         assertThat(settings.isEnabled()).isTrue();
-        assertThat(settings.getPauseIntervalMinutes()).isEqualTo(30);
-        assertThat(settings.getGardenUrl()).isEqualTo("http://frontend.com/garden");
+        assertThat(settings.getPauseIntervalSeconds()).isEqualTo(30);
+        assertThat(settings.getGardenUrl()).isEqualTo("http://frontend.com/");
         assertThat(settings.getBackendUrl()).isEqualTo("http://backend.com");
         assertThat(settings.getMonitoredDomains()).containsExactly("youtube.com", "tiktok.com", "x.com");
         assertThat(settings.isDataSharingConsent()).isTrue();
@@ -69,6 +69,7 @@ class ExtensionSettingsRepositoryImplTest {
         UserSettingEntity entity = UserSettingEntity.builder()
                 .antiScrollEnabled(null)
                 .pauseIntervalMinutes(null)
+                .pauseIntervalSeconds(null)
                 .monitoredDomains(null)
                 .dataSharingConsent(null)
                 .build();
@@ -80,9 +81,25 @@ class ExtensionSettingsRepositoryImplTest {
         assertThat(result).isPresent();
         ExtensionSettings settings = result.get();
         assertThat(settings.isEnabled()).isTrue(); // Default value fallback
-        assertThat(settings.getPauseIntervalMinutes()).isEqualTo(20); // Default value fallback
+        assertThat(settings.getPauseIntervalSeconds()).isEqualTo(1200); // Default value fallback
         assertThat(settings.getMonitoredDomains()).hasSize(6); // Default list fallback
         assertThat(settings.isDataSharingConsent()).isFalse(); // Default value fallback
+    }
+
+    @Test
+    void findByUserId_shouldFallbackToLegacyMinutes_whenSecondsColumnIsNull() {
+        Long userId = 1L;
+        UserSettingEntity entity = UserSettingEntity.builder()
+                .pauseIntervalMinutes(12)
+                .pauseIntervalSeconds(null)
+                .build();
+
+        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
+
+        Optional<ExtensionSettings> result = repository.findByUserId(userId);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getPauseIntervalSeconds()).isEqualTo(720);
     }
 
     @Test
@@ -115,6 +132,7 @@ class ExtensionSettingsRepositoryImplTest {
         UserSettingEntity existingEntity = spy(UserSettingEntity.builder()
                 .antiScrollEnabled(false)
                 .pauseIntervalMinutes(15)
+                .pauseIntervalSeconds(900)
                 .monitoredDomains("instagram.com")
                 .dataSharingConsent(false)
                 .build());
@@ -123,7 +141,7 @@ class ExtensionSettingsRepositoryImplTest {
 
         ExtensionSettings settingsToSave = ExtensionSettings.builder()
                 .enabled(true)
-                .pauseIntervalMinutes(45)
+                .pauseIntervalSeconds(45)
                 .monitoredDomains(List.of("twitter.com", "reddit.com"))
                 .dataSharingConsent(true)
                 .build();
@@ -131,7 +149,8 @@ class ExtensionSettingsRepositoryImplTest {
         repository.save(userId, settingsToSave);
 
         verify(existingEntity).setAntiScrollEnabled(true);
-        verify(existingEntity).setPauseIntervalMinutes(45);
+        verify(existingEntity).setPauseIntervalSeconds(45);
+        verify(existingEntity).setPauseIntervalMinutes(0);
         verify(existingEntity).setDataSharingConsent(true);
         verify(existingEntity).setMonitoredDomains("twitter.com,reddit.com");
         verify(userSettingJpaRepository).save(existingEntity);
@@ -146,7 +165,7 @@ class ExtensionSettingsRepositoryImplTest {
 
         ExtensionSettings settingsToSave = ExtensionSettings.builder()
                 .enabled(true)
-                .pauseIntervalMinutes(35)
+                .pauseIntervalSeconds(35)
                 .monitoredDomains(null)
                 .dataSharingConsent(false)
                 .build();
@@ -159,7 +178,8 @@ class ExtensionSettingsRepositoryImplTest {
         UserSettingEntity saved = captor.getValue();
         assertThat(saved.getAppUser()).isEqualTo(mockUser);
         assertThat(saved.getAntiScrollEnabled()).isTrue();
-        assertThat(saved.getPauseIntervalMinutes()).isEqualTo(35);
+        assertThat(saved.getPauseIntervalSeconds()).isEqualTo(35);
+        assertThat(saved.getPauseIntervalMinutes()).isEqualTo(0);
         assertThat(saved.getMonitoredDomains()).isNull();
         assertThat(saved.getDataSharingConsent()).isFalse();
     }
