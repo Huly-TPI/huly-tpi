@@ -137,6 +137,5 @@ skills-lock.json
 # ========================
 # CONFIGURATION
 # ========================
-docker-compose.yml
 #Node
 node_modules

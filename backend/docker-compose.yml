@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: huly-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: huly
+      POSTGRES_USER: huly_user
+      POSTGRES_PASSWORD: huly_pass
+    volumes:
+      - huly-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U huly_user -d huly"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend-tests:
+    image: maven:3.9-eclipse-temurin-17
+    container_name: huly-backend-tests
+    volumes:
+      - .:/app
+      - ~/.m2:/root/.m2
+    working_dir: /app
+    environment:
+      - SPRING_PROFILES_ACTIVE=coverage-test
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/huly
+      - SPRING_DATASOURCE_USERNAME=huly_user
+      - SPRING_DATASOURCE_PASSWORD=huly_pass
+      - JWT_SECRET=MiClaveSecreta_minimo32chars_ok!
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: mvn clean test
+
+volumes:
+  huly-pgdata:
