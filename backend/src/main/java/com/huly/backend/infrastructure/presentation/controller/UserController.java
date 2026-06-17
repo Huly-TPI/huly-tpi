@@ -51,6 +51,7 @@ public class UserController {
                 .role(profile.user().getRole())
                 .onBoardingCompleted(profile.onBoardingCompleted())
                 .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
+                .profileOnboardingTutorialCompleted(profile.profileOnboardingTutorialCompleted())
                 .themePreference(themePreference)
                 .build());
     }
