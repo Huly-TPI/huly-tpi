@@ -68,8 +68,6 @@ class ChatServiceTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any()))
-                .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
         lenient().when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
         lenient().when(chatIntentDetectionService.detect(any())).thenReturn(ChatUserIntent.NONE);

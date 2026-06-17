@@ -1,21 +1,23 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ChatbotComposer from '../../components/Chatbot/ChatbotComposer'
 
 describe('ChatbotComposer', () => {
-  it('renders input and send button', () => {
+  it('renders input, send button, and reset button', () => {
     render(
       <ChatbotComposer
         input=""
         isSending={false}
         onInputChange={vi.fn()}
         onSend={vi.fn()}
+        onReset={vi.fn()}
       />,
     )
 
     expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Enviar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Limpiar chat' })).toBeInTheDocument()
   })
 
   it('calls onInputChange when typing', async () => {
@@ -28,6 +30,7 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={onInputChange}
         onSend={vi.fn()}
+        onReset={vi.fn()}
       />,
     )
 
@@ -45,6 +48,7 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={vi.fn()}
         onSend={onSend}
+        onReset={vi.fn()}
       />,
     )
 
@@ -53,6 +57,40 @@ describe('ChatbotComposer', () => {
 
     await user.type(screen.getByPlaceholderText('Escribí tu mensaje...'), '{enter}')
     expect(onSend).toHaveBeenCalledTimes(2)
+  })
+
+  it('autofocuses the textarea on mount', async () => {
+    render(
+      <ChatbotComposer
+        input=""
+        isSending={false}
+        onInputChange={vi.fn()}
+        onSend={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toHaveFocus()
+    })
+  })
+
+  it('calls onReset when trash button is clicked', async () => {
+    const user = userEvent.setup()
+    const onReset = vi.fn()
+
+    render(
+      <ChatbotComposer
+        input=""
+        isSending={false}
+        onInputChange={vi.fn()}
+        onSend={vi.fn()}
+        onReset={onReset}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar chat' }))
+    expect(onReset).toHaveBeenCalledTimes(1)
   })
 })
 

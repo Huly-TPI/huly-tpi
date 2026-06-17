@@ -35,6 +35,8 @@ export interface BotConfigResponse {
 export interface UpdateBotConfigRequest {
   riskDetectionEnabled: boolean
   systemPrompt: string
+  preferredNameQuestionEnabled?: boolean
+  communicationStyleQuestionEnabled?: boolean
 }
 
 export type EmotionSeverityLabel = 'ALTA' | 'MEDIA' | 'BAJA'

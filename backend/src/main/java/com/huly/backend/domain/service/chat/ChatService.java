@@ -15,6 +15,8 @@ import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
@@ -32,10 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class ChatService {
-
-    private static final String STYLE_QUESTION =
-            "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
-                    + "formal, directa, indirecta, cercana o como un amigo.";
 
     private final LLMChatPort llmChatPort;
     private final ChatMemoryPort chatMemoryPort;
@@ -59,21 +57,17 @@ public class ChatService {
             Long userId,
             boolean offerCommunicationStyleWhenSafe) {
         chatQuotaService.assertWithinLimit(userId);
-        ChatContext context = buildBlockingContext(message, conversationId, userId);
+        ChatContext context = loadChatContext(message, conversationId, userId);
         ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
         ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
                 message,
                 userId,
                 context,
                 userIntent);
-        var suggestedAction = recommendationOutcome != null ? recommendationOutcome.suggestedAction() : null;
-        context = context.withSystemPrompt(promptBuilderService.buildEnrichedPrompt(
-                context.basePrompt(),
-                context.riskWords(),
-                context.memories(),
-                suggestedAction,
-                userIntent,
-                context.personalization()));
+        SuggestedChatAction suggestedAction = recommendationOutcome != null
+                ? recommendationOutcome.suggestedAction()
+                : null;
+        context = context.withSystemPrompt(buildSystemPrompt(context, suggestedAction, userIntent));
 
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
         reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
@@ -82,8 +76,7 @@ public class ChatService {
                 finalReply,
                 userId,
                 offerCommunicationStyleWhenSafe);
-        saveUserMessage(conversationId, message, finalReply, userId);
-        saveAssistantMessage(conversationId, finalReply.content(), userId);
+        saveConversationExchange(conversationId, message, finalReply, userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
 
         return finalReply;
@@ -107,13 +100,26 @@ public class ChatService {
                 userIntent == ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
     }
 
-    private ChatContext buildBlockingContext(String message, String conversationId, Long userId) {
+    private ChatContext loadChatContext(String message, String conversationId, Long userId) {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
         List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
         ChatPersonalizationContext personalization = loadPersonalizationContext(userId);
         return new ChatContext(basePrompt, null, riskWords, memories, history, personalization);
+    }
+
+    private String buildSystemPrompt(
+            ChatContext context,
+            SuggestedChatAction suggestedAction,
+            ChatUserIntent userIntent) {
+        return promptBuilderService.buildEnrichedPrompt(
+                context.basePrompt(),
+                context.riskWords(),
+                context.memories(),
+                suggestedAction,
+                userIntent,
+                context.personalization());
     }
 
     private ChatPersonalizationContext loadPersonalizationContext(Long userId) {
@@ -156,8 +162,8 @@ public class ChatService {
                 pendingPreference.markCommunicationStyleAsked(Instant.now()));
 
         String content = reply.content() == null || reply.content().isBlank()
-                ? STYLE_QUESTION
-                : reply.content().trim() + "\n\n" + STYLE_QUESTION;
+                ? CommunicationStyle.QUESTION_TEXT
+                : reply.content().trim() + "\n\n" + CommunicationStyle.QUESTION_TEXT;
         return new ChatReply(
                 content,
                 reply.detectedEmotion(),
@@ -198,7 +204,7 @@ public class ChatService {
     private ChatReply ensureRequestedChallenge(
             ChatReply reply,
             ChatUserIntent userIntent,
-            Object suggestedAction) {
+            SuggestedChatAction suggestedAction) {
         if (userIntent != ChatUserIntent.CHALLENGE_REQUEST
                 || suggestedAction != null
                 || reply.generatedChallenge() != null) {
@@ -231,6 +237,11 @@ public class ChatService {
 
     private Integer toChatIntensity(double intensity) {
         return (int) Math.round(Math.max(0.0, Math.min(1.0, intensity)) * 10.0);
+    }
+
+    private void saveConversationExchange(String conversationId, String message, ChatReply reply, Long userId) {
+        saveUserMessage(conversationId, message, reply, userId);
+        saveAssistantMessage(conversationId, reply.content(), userId);
     }
 
     private void saveUserMessage(String conversationId, String message, ChatReply reply, Long userId) {

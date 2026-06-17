@@ -23,16 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Optional;
 
-/**
- * Handles optional conversational onboarding and explicit preference changes.
- */
 @Service
 @RequiredArgsConstructor
 public class HandleChatPreferencesUseCase {
-
-    private static final String STYLE_QUESTION =
-            "¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, informal, "
-                    + "formal, directa, indirecta, cercana o como un amigo.";
 
     private final ChatConversationPreferenceRepository preferenceRepository;
     private final ChatPreferenceResolutionService resolutionService;
@@ -61,17 +54,17 @@ public class HandleChatPreferencesUseCase {
         ChatConversationPreference preference = storedPreference.get();
         return switch (preference.getOnboardingStatus()) {
             case ASKED_PREFERRED_NAME ->
-                    handleExpectedName(preference, conversationId, message);
+                    handleAskedPreferredName(preference, conversationId, message);
             case PENDING_COMMUNICATION_STYLE ->
-                    handlePendingStyle(preference, conversationId, message);
+                    handlePendingCommunicationStyle(preference, conversationId, message);
             case ASKED_COMMUNICATION_STYLE ->
-                    handleExpectedStyle(preference, conversationId, message);
+                    handleAskedCommunicationStyle(preference, conversationId, message);
             case COMPLETED ->
                     handleCompletedPreferenceChange(preference, conversationId, message);
         };
     }
 
-    private ChatPreferenceHandlingResult handleExpectedName(
+    private ChatPreferenceHandlingResult handleAskedPreferredName(
             ChatConversationPreference preference,
             String conversationId,
             String message) {
@@ -85,29 +78,34 @@ public class HandleChatPreferencesUseCase {
 
         Instant now = Instant.now();
         ChatConversationPreference updated = preference;
-        if (detection.preferredName() != null) {
+        boolean hasPreferredName = detection.preferredName() != null;
+        boolean hasCommunicationStyle = detection.communicationStyle() != null;
+        boolean mixedMessage = detection.messageType() == ChatPreferenceMessageType.MIXED;
+        boolean preferenceOnlyMessage = detection.messageType() == ChatPreferenceMessageType.PREFERENCE_ONLY;
+
+        if (hasPreferredName) {
             updated = updated.withPreferredNamePendingStyle(detection.preferredName(), now);
         }
-        if (detection.communicationStyle() != null) {
+        if (hasCommunicationStyle) {
             updated = updated.withCommunicationStyle(detection.communicationStyle(), now);
         } else if (!communicationStyleQuestionEnabled()) {
             updated = updated.complete(now);
-        } else if (detection.messageType() == ChatPreferenceMessageType.PREFERENCE_ONLY) {
+        } else if (preferenceOnlyMessage) {
             updated = updated.markCommunicationStyleAsked(now);
         }
         preferenceRepository.save(updated);
 
-        if (detection.messageType() == ChatPreferenceMessageType.MIXED) {
+        if (mixedMessage) {
             return updated.getOnboardingStatus() == ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE
                     ? ChatPreferenceHandlingResult.continueChatAndOfferStyle()
                     : ChatPreferenceHandlingResult.continueChat();
         }
 
-        String response = buildNameResponse(detection, updated);
+        String response = buildPreferredNameResponse(detection, updated);
         return directReply(preference.getUserId(), conversationId, message, response);
     }
 
-    private ChatPreferenceHandlingResult handlePendingStyle(
+    private ChatPreferenceHandlingResult handlePendingCommunicationStyle(
             ChatConversationPreference preference,
             String conversationId,
             String message) {
@@ -117,10 +115,10 @@ public class HandleChatPreferencesUseCase {
         if (detection.communicationStyle() == null) {
             return ChatPreferenceHandlingResult.continueChatAndOfferStyle();
         }
-        return saveStyleChange(preference, conversationId, message, detection);
+        return handleDetectedCommunicationStyle(preference, conversationId, message, detection);
     }
 
-    private ChatPreferenceHandlingResult handleExpectedStyle(
+    private ChatPreferenceHandlingResult handleAskedCommunicationStyle(
             ChatConversationPreference preference,
             String conversationId,
             String message) {
@@ -131,10 +129,10 @@ public class HandleChatPreferencesUseCase {
             preferenceRepository.save(preference.complete(Instant.now()));
             return ChatPreferenceHandlingResult.continueChat();
         }
-        return saveStyleChange(preference, conversationId, message, detection);
+        return handleDetectedCommunicationStyle(preference, conversationId, message, detection);
     }
 
-    private ChatPreferenceHandlingResult saveStyleChange(
+    private ChatPreferenceHandlingResult handleDetectedCommunicationStyle(
             ChatConversationPreference preference,
             String conversationId,
             String message,
@@ -163,22 +161,26 @@ public class HandleChatPreferencesUseCase {
 
         ChatConversationPreference updated = preference;
         Instant now = Instant.now();
-        if (detection.preferredName() != null) {
+        boolean hasPreferredName = detection.preferredName() != null;
+        boolean hasCommunicationStyle = detection.communicationStyle() != null;
+        boolean mixedMessage = detection.messageType() == ChatPreferenceMessageType.MIXED;
+
+        if (hasPreferredName) {
             updated = updated.updatePreferredName(detection.preferredName(), now);
         }
-        if (detection.communicationStyle() != null) {
+        if (hasCommunicationStyle) {
             updated = updated.updateCommunicationStyle(detection.communicationStyle(), now);
         }
         preferenceRepository.save(updated);
 
-        if (detection.messageType() == ChatPreferenceMessageType.MIXED) {
+        if (mixedMessage) {
             return ChatPreferenceHandlingResult.continueChat();
         }
         return directReply(
                 preference.getUserId(),
                 conversationId,
                 message,
-                buildCompletedChangeResponse(detection));
+                buildPreferenceChangeResponse(detection));
     }
 
     private ChatPreferenceHandlingResult directReply(
@@ -191,7 +193,7 @@ public class HandleChatPreferencesUseCase {
         return ChatPreferenceHandlingResult.handled(ChatReply.of(assistantMessage));
     }
 
-    private String buildNameResponse(
+    private String buildPreferredNameResponse(
             ChatPreferenceDetectionResult detection,
             ChatConversationPreference preference) {
         if (detection.preferredName() == null) {
@@ -204,12 +206,12 @@ public class HandleChatPreferencesUseCase {
                     + detection.communicationStyle().displayName() + ".";
         }
         if (preference.getOnboardingStatus() == ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE) {
-            return prefix + " " + STYLE_QUESTION;
+            return prefix + " " + CommunicationStyle.QUESTION_TEXT;
         }
         return prefix;
     }
 
-    private String buildCompletedChangeResponse(ChatPreferenceDetectionResult detection) {
+    private String buildPreferenceChangeResponse(ChatPreferenceDetectionResult detection) {
         if (detection.preferredName() != null && detection.communicationStyle() != null) {
             return "Listo, de ahora en adelante te voy a decir " + detection.preferredName()
                     + " y voy a hablarte con un estilo "
