@@ -1,13 +1,13 @@
 package com.huly.backend.infrastructure.repository.mapper;
 
-import com.huly.backend.domain.model.extension.AntiScrollConfig;
+import com.huly.backend.domain.model.extension.AntiScrollGlobalConfig;
 import com.huly.backend.infrastructure.repository.entity.AntiScrollConfigEntity;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AntiScrollConfigMapper {
+public class AntiScrollGlobalConfigMapper {
 
-    public AntiScrollConfigEntity toEntity(AntiScrollConfig config) {
+    public AntiScrollConfigEntity toEntity(AntiScrollGlobalConfig config) {
         if (config == null) return null;
         return AntiScrollConfigEntity.builder()
                 .id(config.getId())
@@ -16,9 +16,9 @@ public class AntiScrollConfigMapper {
                 .build();
     }
 
-    public AntiScrollConfig toDomain(AntiScrollConfigEntity entity) {
+    public AntiScrollGlobalConfig toDomain(AntiScrollConfigEntity entity) {
         if (entity == null) return null;
-        return AntiScrollConfig.builder()
+        return AntiScrollGlobalConfig.builder()
                 .id(entity.getId())
                 .defaultPauseIntervalMinutes(entity.getDefaultPauseIntervalMinutes())
                 .termsAndConditions(entity.getTermsAndConditions())

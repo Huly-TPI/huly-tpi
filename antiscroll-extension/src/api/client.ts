@@ -89,7 +89,7 @@ export const fetchRemoteSettings = async (): Promise<Partial<ExtensionSettings> 
     const data = await response.json();
     return {
       enabled: data.enabled,
-      pauseIntervalSeconds: data.pauseIntervalMinutes * 60,
+      pauseIntervalSeconds: data.pauseIntervalSeconds,
       gardenUrl: data.gardenUrl,
       backendUrl: data.backendUrl,
       monitoredDomains: data.monitoredDomains,
@@ -120,7 +120,7 @@ export const pushRemoteSettings = async (settings: Partial<ExtensionSettings>): 
       headers,
       body: JSON.stringify({
         enabled: merged.enabled,
-        pauseIntervalMinutes: Math.floor(merged.pauseIntervalSeconds / 60),
+        pauseIntervalSeconds: merged.pauseIntervalSeconds,
         monitoredDomains: merged.monitoredDomains,
         dataSharingConsent: merged.dataSharingConsent,
       }),
@@ -138,7 +138,7 @@ export const pushRemoteSettings = async (settings: Partial<ExtensionSettings>): 
           headers: retryHeaders,
           body: JSON.stringify({
             enabled: merged.enabled,
-            pauseIntervalMinutes: Math.floor(merged.pauseIntervalSeconds / 60),
+            pauseIntervalSeconds: merged.pauseIntervalSeconds,
             monitoredDomains: merged.monitoredDomains,
             dataSharingConsent: merged.dataSharingConsent,
           }),

@@ -7,11 +7,11 @@ import java.util.List;
 
 @Getter
 @Setter
-public class ExtensionSettingsRequest {
+public class AntiScrollSettingsRequest {
     private boolean enabled;
     
-    @JsonProperty("pauseIntervalMinutes")
-    private int pauseIntervalMinutes;
+    @JsonProperty("pauseIntervalSeconds")
+    private int pauseIntervalSeconds;
     
     @JsonProperty("monitoredDomains")
     private List<String> monitoredDomains;

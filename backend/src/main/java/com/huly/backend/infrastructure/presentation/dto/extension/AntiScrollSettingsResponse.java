@@ -7,11 +7,11 @@ import java.util.List;
 
 @Getter
 @Builder
-public class ExtensionSettingsResponse {
+public class AntiScrollSettingsResponse {
     private boolean enabled;
     
-    @JsonProperty("pauseIntervalMinutes")
-    private int pauseIntervalMinutes;
+    @JsonProperty("pauseIntervalSeconds")
+    private int pauseIntervalSeconds;
     
     @JsonProperty("gardenUrl")
     private String gardenUrl;

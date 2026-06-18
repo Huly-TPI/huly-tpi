@@ -105,10 +105,22 @@ export const setAccumulatedScrollTime = async (value: number) => {
 
 export const switchActiveUser = async (userId: string) => {
   const userScrollTimes = await getUserScrollTimes();
-  const nextAccumulated = userScrollTimes[userId] || 0;
+  const currentAccumulated = await getAccumulatedScrollTime();
+  const hasStoredTime = Object.prototype.hasOwnProperty.call(userScrollTimes, userId);
+  const nextAccumulated = hasStoredTime ? userScrollTimes[userId] : currentAccumulated;
 
   await browser.storage.local.set({
     [STORAGE_KEYS.ACTIVE_USER_ID]: userId,
     [STORAGE_KEYS.ACCUMULATED_SCROLL_TIME]: nextAccumulated,
+    [STORAGE_KEYS.USER_SCROLL_TIMES]: {
+      ...userScrollTimes,
+      [userId]: nextAccumulated,
+    },
+  });
+};
+
+export const resetAccumulatedScrollTime = async () => {
+  await browser.storage.local.set({
+    [STORAGE_KEYS.ACCUMULATED_SCROLL_TIME]: 0,
   });
 };
