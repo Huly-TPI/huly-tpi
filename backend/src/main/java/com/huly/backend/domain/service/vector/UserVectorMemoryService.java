@@ -15,7 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,7 +29,6 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserVectorMemoryService {
 
     private static final List<VectorMemorySource> ALL_USER_MEMORY_SOURCES = List.of(
@@ -48,11 +48,29 @@ public class UserVectorMemoryService {
     private static final String GENERATED_CHALLENGE = "GENERATED_CHALLENGE";
     private static final String CHALLENGE_DECISION = "CHALLENGE_DECISION";
 
+    record PersonalitySummaryDto(String summary, String accepted, String rejected) {}
+
     private final VectorMemoryService vectorMemoryService;
     private final VectorMemoryProperties vectorMemoryProperties;
     private final UserProfileFactExtractor userProfileFactExtractor;
-    private final ObjectProvider<ChatModel> chatModelProvider;
+    private final ObjectProvider<ChatClient> chatClientProvider;
     private final JdbcTemplate jdbcTemplate;
+    private final org.springframework.core.io.Resource personalitySummaryPrompt;
+
+    public UserVectorMemoryService(
+            VectorMemoryService vectorMemoryService,
+            VectorMemoryProperties vectorMemoryProperties,
+            UserProfileFactExtractor userProfileFactExtractor,
+            ObjectProvider<ChatClient> chatClientProvider,
+            JdbcTemplate jdbcTemplate,
+            @Value("classpath:/prompts/personality-summary.st") org.springframework.core.io.Resource personalitySummaryPrompt) {
+        this.vectorMemoryService = vectorMemoryService;
+        this.vectorMemoryProperties = vectorMemoryProperties;
+        this.userProfileFactExtractor = userProfileFactExtractor;
+        this.chatClientProvider = chatClientProvider;
+        this.jdbcTemplate = jdbcTemplate;
+        this.personalitySummaryPrompt = personalitySummaryPrompt;
+    }
 
     public List<VectorMemory> findRelevantUserMemories(Long userId, String query) {
         return findRelevantUserMemoriesBySources(userId, ALL_USER_MEMORY_SOURCES, query);
@@ -439,49 +457,40 @@ public class UserVectorMemoryService {
                 memoriesJoined = memoriesJoined.substring(0, 4000) + "...";
             }
 
-            String systemPrompt = """
-                Eres un psicólogo clínico experto analizando el comportamiento de un usuario en base a sus registros de interacción con un asistente de bienestar.
-                Tu tarea es generar un análisis del perfil psicológico/conductual y receptividades del usuario en formato JSON.
-                
-                Debes responder estrictamente con un objeto JSON válido estructurado con las siguientes claves (no agregues introducciones, explicaciones ni formato adicional, solo el JSON puro):
-                {
-                  "summary": "Un párrafo corto (de 3 a 4 oraciones como máximo) en español sobre el perfil psicológico y conductual del usuario. Sé empático, profesional y constructivo. IMPORTANTE: No comiences el texto con títulos, negritas ni asteriscos (no uses '**Perfil Psicológico y Conductual**' ni similar). Tampoco menciones términos técnicos (como 'logs', 'memoria', 'vectores', etc.).",
-                  "accepted": "Una frase muy corta y concisa de 3 a 5 palabras en español que generalice lo que el usuario suele aceptar (ej. 'actividades relajantes', 'retos sencillos al aire libre').",
-                  "rejected": "Una frase muy corta y concisa de 3 a 5 palabras en español que generalice lo que el usuario suele rechazar o ignorar (ej. 'ejercicios físicos exigentes', 'interacciones sociales')."
-                }
-                """;
-
             String userMessage = "Analiza las siguientes memorias del usuario para estructurar el JSON:\n\n- " + memoriesJoined;
 
-            ChatModel chat = chatModelProvider.getIfAvailable();
-            if (chat == null) {
-                log.warn("ChatModel no disponible. No se puede generar perfil de personalidad.");
+            ChatClient chatClient = chatClientProvider.getIfAvailable();
+            if (chatClient == null) {
+                log.warn("ChatClient no disponible. No se puede generar perfil de personalidad.");
                 return;
             }
 
-            org.springframework.ai.chat.model.ChatResponse response = chat.call(new org.springframework.ai.chat.prompt.Prompt(List.of(
-                new org.springframework.ai.chat.messages.SystemMessage(systemPrompt),
-                new org.springframework.ai.chat.messages.UserMessage(userMessage)
-            )));
+            PersonalitySummaryDto dto = chatClient.prompt()
+                    .system(personalitySummaryPrompt)
+                    .user(userMessage)
+                    .call()
+                    .entity(PersonalitySummaryDto.class);
 
-            if (response != null && response.getResult() != null && response.getResult().getOutput() != null) {
-                String summary = response.getResult().getOutput().getText();
-                if (summary != null && !summary.isBlank()) {
-                    deletePersonalitySummary(userId);
+            if (dto != null && dto.summary() != null && !dto.summary().isBlank()) {
+                deletePersonalitySummary(userId);
 
-                    saveMemory(new SaveVectorMemoryCommand(
-                            userId,
-                            VectorMemorySource.CHATBOT,
-                            "personality-summary",
-                            "PERSONALITY_SUMMARY",
-                            "PERSONALITY_SUMMARY",
-                            summary.trim(),
-                            null,
-                            null,
-                            Map.of("contentType", "PERSONALITY_SUMMARY", "feature", "PERSONALITY_SUMMARY")
-                    ));
-                    log.info("Perfil de personalidad generado e insertado para userId={}", userId);
-                }
+                String finalSummary = String.format("%s\n\nAcepta: %s\nRechaza: %s",
+                        dto.summary().trim(),
+                        valueOrDefault(dto.accepted(), "N/A"),
+                        valueOrDefault(dto.rejected(), "N/A"));
+
+                saveMemory(new SaveVectorMemoryCommand(
+                        userId,
+                        VectorMemorySource.CHATBOT,
+                        "personality-summary",
+                        "PERSONALITY_SUMMARY",
+                        "PERSONALITY_SUMMARY",
+                        finalSummary,
+                        null,
+                        null,
+                        Map.of("contentType", "PERSONALITY_SUMMARY", "feature", "PERSONALITY_SUMMARY")
+                ));
+                log.info("Perfil de personalidad generado e insertado para userId={}", userId);
             }
         } catch (Exception e) {
             log.warn("Error generando perfil de personalidad para userId={}", userId, e);
