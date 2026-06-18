@@ -1,5 +1,7 @@
 type ValidationRule = (value: string, allValues: Record<string, string>) => string | undefined
 
+const REGISTER_NAME_PATTERN = /^(?=(?:.*\p{L}){3,})[\p{L}]+(?:\s+[\p{L}]+)*$/u
+
 const required = (message = 'Campo requerido'): ValidationRule =>
   (value) => (value.trim() ? undefined : message)
 
@@ -48,6 +50,14 @@ const safeText: ValidationRule =
     return xss || sql ? 'El texto contiene caracteres no permitidos' : undefined
   }
 
+const validRegisterName = (
+  message = 'El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios',
+): ValidationRule =>
+  (value) => {
+    const normalizedValue = value.trim()
+    return REGISTER_NAME_PATTERN.test(normalizedValue) ? undefined : message
+  }
+
 function validate(
   value: string,
   rules: ValidationRule[],
@@ -60,5 +70,5 @@ function validate(
   return undefined
 }
 
-export { required, minLength, maxLength, validEmail, matchesField, minAge, noHtml, safeText, validate }
+export { required, minLength, maxLength, validEmail, matchesField, minAge, noHtml, safeText, validRegisterName, validate }
 export type { ValidationRule }
