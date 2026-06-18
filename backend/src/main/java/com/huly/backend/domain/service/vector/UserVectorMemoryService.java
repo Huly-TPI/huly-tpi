@@ -28,14 +28,14 @@ public class UserVectorMemoryService {
 
     private static final List<VectorMemorySource> ALL_USER_MEMORY_SOURCES = List.of(
             VectorMemorySource.CHATBOT,
-            VectorMemorySource.GUIDED_CLOUDS,
+            VectorMemorySource.GUIDED_LANTERNS,
             VectorMemorySource.EMOTIONAL_JOURNAL,
             VectorMemorySource.ONBOARDING
     );
 
     private static final String CREATED_FROM_USER_MESSAGE = "USER_MESSAGE";
     private static final String USER_CHAT_MESSAGE = "USER_CHAT_MESSAGE";
-    private static final String GUIDED_CLOUD_INPUT = "GUIDED_CLOUD_INPUT";
+    private static final String GUIDED_LANTERN_INPUT = "GUIDED_LANTERN_INPUT";
     private static final String EMOTIONAL_JOURNAL_ENTRY = "EMOTIONAL_JOURNAL_ENTRY";
     private static final String USER_PROFILE_FACTS = "USER_PROFILE_FACTS";
     private static final String RECOMMENDED_ACTIVITY = "RECOMMENDED_ACTIVITY";
@@ -262,17 +262,17 @@ public class UserVectorMemoryService {
         ));
     }
 
-    public void rememberGuidedCloudInput(Long userId, String cloudSessionId, String content) {
+    public void rememberGuidedLanternInput(Long userId, String lanternSessionId, String content) {
         saveMemory(new SaveVectorMemoryCommand(
                 userId,
-                VectorMemorySource.GUIDED_CLOUDS,
-                cloudSessionId,
-                GUIDED_CLOUD_INPUT,
-                "GUIDED_CLOUD_INPUT",
+                VectorMemorySource.GUIDED_LANTERNS,
+                lanternSessionId,
+                GUIDED_LANTERN_INPUT,
+                "GUIDED_LANTERN_INPUT",
                 content,
                 null,
                 null,
-                metadata("GUIDED_CLOUDS")
+                metadata("GUIDED_LANTERNS")
         ));
     }
 

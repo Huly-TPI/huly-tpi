@@ -39,7 +39,7 @@ const BG_POSITIONS = [
 
 const ACTIVITY_LABELS: Record<string, string> = {
   diary: 'al diario',
-  clouds: 'a las nubes',
+  lanterns: 'a los faroles',
   breathing: 'a respiración guiada',
   bubbles: 'a las burbujas',
 }
@@ -120,7 +120,7 @@ export default function LanternsActivity() {
     if (!selectedLantern) return
     setLoading(true)
     try {
-      const rec = await api.post<RecommendationResponse>('/clouds/recommendation', { thoughts: [selectedLantern.text] })
+      const rec = await api.post<RecommendationResponse>('/lanterns/recommendation', { thoughts: [selectedLantern.text] })
       setRecommendation(rec)
       if (!selectedLantern.workedOn) {
         lanternsApi.markWorkedOn(selectedLantern.id).catch(() => {})

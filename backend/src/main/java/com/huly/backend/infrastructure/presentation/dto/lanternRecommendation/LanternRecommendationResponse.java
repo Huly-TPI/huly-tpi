@@ -1,8 +1,8 @@
-package com.huly.backend.infrastructure.presentation.dto.cloudRecommendation;
+package com.huly.backend.infrastructure.presentation.dto.lanternRecommendation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record CloudRecommendationResponse(
+public record LanternRecommendationResponse(
         @JsonProperty("activity_type")
         String activityType,
 

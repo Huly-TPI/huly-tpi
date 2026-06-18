@@ -22,7 +22,7 @@ function getSuggestedActionRoute(type: string, actionUrl: string) {
     case 'DIARIO':
       return '/diary'
     case 'NUBE':
-      return '/clouds'
+      return '/lanterns'
     case 'BURBUJA':
       return '/bubbles'
     default:

@@ -1,6 +1,6 @@
-package com.huly.backend.domain.useCase.cloudRecommendation;
+package com.huly.backend.domain.useCase.lanternRecommendation;
 
-import com.huly.backend.domain.model.CloudRecommendation;
+import com.huly.backend.domain.model.LanternRecommendation;
 import com.huly.backend.domain.model.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
@@ -19,11 +19,11 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GetCloudRecommendationUseCase {
+public class GetLanternRecommendationUseCase {
 
-    private static final String CLOUD_ANALYSIS_CONTEXT = """
+    private static final String LANTERN_ANALYSIS_CONTEXT = """
             Eres Huly, un asistente de bienestar mental.
-            El usuario acaba de completar el ejercicio de nubes emocionales y escribio pensamientos o emociones que queria soltar.
+            El usuario acaba de completar el ejercicio de faroles y escribio pensamientos o emociones que queria soltar.
             Analiza esos pensamientos para decidir una actividad de bienestar con el motor comun de recomendaciones.
             """;
 
@@ -32,11 +32,11 @@ public class GetCloudRecommendationUseCase {
     private final ChatEmotionalRecommendationPolicy recommendationPolicy;
     private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
 
-    public CloudRecommendation execute(List<String> thoughts) {
+    public LanternRecommendation execute(List<String> thoughts) {
         return execute(thoughts, null);
     }
 
-    public CloudRecommendation execute(List<String> thoughts, Long userId) {
+    public LanternRecommendation execute(List<String> thoughts, Long userId) {
         String userMessage = String.join("\n", thoughts);
         try {
             EmotionalAnalysisResult analysis = analyze(userMessage);
@@ -52,7 +52,7 @@ public class GetCloudRecommendationUseCase {
                 return fallback();
             }
 
-            return toCloudRecommendation(result.recommendations().get(0));
+            return toLanternRecommendation(result.recommendations().get(0));
         } catch (Exception e) {
             log.warn("Error al procesar recomendación, usando fallback.", e);
             return fallback();
@@ -60,7 +60,7 @@ public class GetCloudRecommendationUseCase {
     }
 
     private EmotionalAnalysisResult analyze(String userMessage) {
-        String prompt = promptBuilderService.buildEmotionalAnalysisPrompt(CLOUD_ANALYSIS_CONTEXT, List.of());
+        String prompt = promptBuilderService.buildEmotionalAnalysisPrompt(LANTERN_ANALYSIS_CONTEXT, List.of());
         EmotionalAnalysisResult result = emotionalAnalysisPort.analyze(prompt, userMessage, List.of());
         return result == null ? EmotionalAnalysisResult.neutral() : result;
     }
@@ -74,10 +74,10 @@ public class GetCloudRecommendationUseCase {
         );
     }
 
-    private CloudRecommendation toCloudRecommendation(EmotionalRecommendationItem recommendation) {
+    private LanternRecommendation toLanternRecommendation(EmotionalRecommendationItem recommendation) {
         ActivityType type = recommendation.type();
         String activityType = toPublicActivityType(type);
-        return new CloudRecommendation(
+        return new LanternRecommendation(
                 activityType,
                 activityType,
                 recommendation.title(),
@@ -91,7 +91,7 @@ public class GetCloudRecommendationUseCase {
             return "breathing";
         }
         if (type == ActivityType.NUBE) {
-            return "clouds";
+            return "lanterns";
         }
         if (type == ActivityType.BURBUJA) {
             return "bubbles";
@@ -104,7 +104,7 @@ public class GetCloudRecommendationUseCase {
             return "/guided-breathing";
         }
         if (type == ActivityType.NUBE) {
-            return "/clouds";
+            return "/lanterns";
         }
         if (type == ActivityType.BURBUJA) {
             return "/bubbles";
@@ -112,8 +112,8 @@ public class GetCloudRecommendationUseCase {
         return "/diary";
     }
 
-    private CloudRecommendation fallback() {
-        return new CloudRecommendation(
+    private LanternRecommendation fallback() {
+        return new LanternRecommendation(
                 "diary",
                 "diary",
                 "Escribí en tu diario",

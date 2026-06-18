@@ -15,7 +15,7 @@ class VectorMemoryPolicyTest {
     private final VectorMemoryProperties properties = new VectorMemoryProperties();
     private final VectorMemoryPolicy policy = new VectorMemoryPolicy(
             properties,
-            List.of(new ChatbotVectorMemoryPolicy(), new GuidedCloudsVectorMemoryPolicy()),
+            List.of(new ChatbotVectorMemoryPolicy(), new GuidedLanternsVectorMemoryPolicy()),
             new DefaultVectorMemorySourcePolicy()
     );
 
@@ -95,10 +95,10 @@ class VectorMemoryPolicyTest {
     }
 
     @Test
-    void shouldRemember_shouldAcceptShortMessageAtGuidedCloudsMinimum() {
+    void shouldRemember_shouldAcceptShortMessageAtGuidedLanternsMinimum() {
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
                 null,
                 null,
                 null,
@@ -112,10 +112,10 @@ class VectorMemoryPolicyTest {
     }
 
     @Test
-    void shouldRemember_shouldRejectMessageBelowGuidedCloudsMinimum() {
+    void shouldRemember_shouldRejectMessageBelowGuidedLanternsMinimum() {
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
                 null,
                 null,
                 null,

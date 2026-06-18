@@ -1,6 +1,6 @@
 package com.huly.backend.domain.model;
 
-public record CloudRecommendation(
+public record LanternRecommendation(
         String activityType,
         String actionId,
         String title,

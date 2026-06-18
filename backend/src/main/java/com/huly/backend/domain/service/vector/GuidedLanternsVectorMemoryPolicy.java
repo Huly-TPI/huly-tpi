@@ -4,11 +4,11 @@ import com.huly.backend.domain.model.vector.VectorMemorySource;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GuidedCloudsVectorMemoryPolicy implements VectorMemorySourcePolicy {
+public class GuidedLanternsVectorMemoryPolicy implements VectorMemorySourcePolicy {
 
     @Override
     public VectorMemorySource sourceType() {
-        return VectorMemorySource.GUIDED_CLOUDS;
+        return VectorMemorySource.GUIDED_LANTERNS;
     }
 
     @Override

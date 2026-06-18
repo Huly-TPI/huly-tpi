@@ -11,7 +11,6 @@ import BackofficeNotFound from './pages/Backoffice/BackofficeNotFound'
 import Breathing from './pages/Breathing/Breathing'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Challenges from './pages/Challenges/Challenges'
-import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
 import Diary from './pages/Diary/Diary.tsx'
 import Home from './pages/Home'
 import Login from './pages/Login/Login'
@@ -53,7 +52,6 @@ const App = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/guided-breathing" element={<Breathing />} />
-          <Route path="/clouds" element={<CloudsActivity />} />
           <Route path="/lanterns" element={<LanternActivity />} />
           <Route path="/bubbles" element={<BubblesActivity />} />
           <Route path="/zen-sand-garden" element={<SandZenGarden />} />

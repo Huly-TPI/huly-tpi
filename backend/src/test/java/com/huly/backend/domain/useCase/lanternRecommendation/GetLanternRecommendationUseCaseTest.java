@@ -1,6 +1,6 @@
-package com.huly.backend.domain.useCase.cloudsRecommendation;
+package com.huly.backend.domain.useCase.lanternRecommendation;
 
-import com.huly.backend.domain.model.CloudRecommendation;
+import com.huly.backend.domain.model.LanternRecommendation;
 import com.huly.backend.domain.model.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
@@ -11,7 +11,6 @@ import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.provider.EmotionalAnalysisPort;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
-import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,17 +19,17 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class GetCloudRecommendationUseCaseTest {
+class GetLanternRecommendationUseCaseTest {
 
     private CapturingEmotionalAnalysisPort emotionalAnalysisPort;
     private CapturingRecommendationsUseCase recommendationsUseCase;
-    private GetCloudRecommendationUseCase useCase;
+    private GetLanternRecommendationUseCase useCase;
 
     @BeforeEach
     void setUp() {
         emotionalAnalysisPort = new CapturingEmotionalAnalysisPort();
         recommendationsUseCase = new CapturingRecommendationsUseCase();
-        useCase = new GetCloudRecommendationUseCase(
+        useCase = new GetLanternRecommendationUseCase(
                 emotionalAnalysisPort,
                 new PromptBuilderService(),
                 new ChatEmotionalRecommendationPolicy(),
@@ -41,18 +40,12 @@ class GetCloudRecommendationUseCaseTest {
     @Test
     void execute_shouldAnalyzeThoughtsAndDelegateToCommonRecommendationUseCase() {
         EmotionalAnalysisResult analysis = analysis(
-                true,
-                EmotionType.ANXIETY,
-                -0.75,
-                0.85,
-                -0.70,
-                0.90,
-                "calmarme y bajar la ansiedad"
+                true, EmotionType.ANXIETY, -0.75, 0.85, -0.70, 0.90, "calmarme y bajar la ansiedad"
         );
         emotionalAnalysisPort.result = analysis;
         recommendationsUseCase.result = result(item(ActivityType.RESPIRACION, "Respiracion guiada"));
 
-        CloudRecommendation result = useCase.execute(List.of("me siento muy ansioso", "no puedo parar"));
+        LanternRecommendation result = useCase.execute(List.of("me siento muy ansioso", "no puedo parar"));
 
         assertThat(result.activityType()).isEqualTo("breathing");
         assertThat(result.actionId()).isEqualTo("breathing");
@@ -71,7 +64,7 @@ class GetCloudRecommendationUseCaseTest {
     void execute_shouldPassUserIdToCommonRecommendationUseCase_whenUserIdIsAvailable() {
         emotionalAnalysisPort.result =
                 analysis(true, EmotionType.SADNESS, -0.7, 0.2, -0.5, 0.8, "soltar pensamientos");
-        recommendationsUseCase.result = result(item(ActivityType.NUBE, "Nubes emocionales"));
+        recommendationsUseCase.result = result(item(ActivityType.NUBE, "Faroles emocionales"));
 
         useCase.execute(List.of("quiero soltar esto"), 9L);
 
@@ -80,19 +73,11 @@ class GetCloudRecommendationUseCaseTest {
 
     @Test
     void execute_shouldForceRecommendationWithChatPolicy_whenAnalysisDoesNotRecommend() {
-        EmotionalAnalysisResult neutral = analysis(
-                false,
-                EmotionType.NEUTRAL,
-                0.0,
-                0.0,
-                0.0,
-                0.1,
-                null
-        );
+        EmotionalAnalysisResult neutral = analysis(false, EmotionType.NEUTRAL, 0.0, 0.0, 0.0, 0.1, null);
         emotionalAnalysisPort.result = neutral;
         recommendationsUseCase.result = result(item(ActivityType.DIARIO, "Diario emocional"));
 
-        CloudRecommendation result = useCase.execute(List.of("pensamiento suelto"));
+        LanternRecommendation result = useCase.execute(List.of("pensamiento suelto"));
 
         assertThat(result.activityType()).isEqualTo("diary");
         assertThat(recommendationsUseCase.query.intensity()).isEqualTo(0.35);
@@ -100,26 +85,26 @@ class GetCloudRecommendationUseCaseTest {
     }
 
     @Test
-    void execute_shouldMapCommonCloudRecommendationToExistingCloudContract() {
+    void execute_shouldMapNubeRecommendationToLanternContract() {
         emotionalAnalysisPort.result =
                 analysis(true, EmotionType.SADNESS, -0.7, 0.2, -0.5, 0.8, "soltar pensamientos");
-        recommendationsUseCase.result = result(item(ActivityType.NUBE, "Nubes emocionales"));
+        recommendationsUseCase.result = result(item(ActivityType.NUBE, "Faroles emocionales"));
 
-        CloudRecommendation result = useCase.execute(List.of("quiero soltar esto"));
+        LanternRecommendation result = useCase.execute(List.of("quiero soltar esto"));
 
-        assertThat(result.activityType()).isEqualTo("clouds");
-        assertThat(result.actionId()).isEqualTo("clouds");
-        assertThat(result.title()).isEqualTo("Nubes emocionales");
-        assertThat(result.redirectUrl()).isEqualTo("/clouds");
+        assertThat(result.activityType()).isEqualTo("lanterns");
+        assertThat(result.actionId()).isEqualTo("lanterns");
+        assertThat(result.title()).isEqualTo("Faroles emocionales");
+        assertThat(result.redirectUrl()).isEqualTo("/lanterns");
     }
 
     @Test
-    void execute_shouldMapCommonBubbleRecommendationToExistingCloudContract() {
+    void execute_shouldMapBubbleRecommendationToLanternContract() {
         emotionalAnalysisPort.result =
                 analysis(true, EmotionType.STRESS, -0.4, 0.5, -0.3, 0.7, "distraerme");
         recommendationsUseCase.result = result(item(ActivityType.BURBUJA, "Burbujas"));
 
-        CloudRecommendation result = useCase.execute(List.of("tengo tension acumulada"));
+        LanternRecommendation result = useCase.execute(List.of("tengo tension acumulada"));
 
         assertThat(result.activityType()).isEqualTo("bubbles");
         assertThat(result.actionId()).isEqualTo("bubbles");
@@ -132,7 +117,7 @@ class GetCloudRecommendationUseCaseTest {
                 analysis(true, EmotionType.SADNESS, -0.5, 0.3, -0.4, 0.7, "procesar");
         recommendationsUseCase.result = new EmotionalRecommendationResult(List.of(), false);
 
-        CloudRecommendation result = useCase.execute(List.of("pensamiento"));
+        LanternRecommendation result = useCase.execute(List.of("pensamiento"));
 
         assertThat(result.activityType()).isEqualTo("diary");
         assertThat(result.actionId()).isEqualTo("diary");
@@ -144,7 +129,7 @@ class GetCloudRecommendationUseCaseTest {
     void execute_shouldReturnFallback_whenAnalysisFails() {
         emotionalAnalysisPort.exception = new RuntimeException("Proveedor IA no disponible");
 
-        CloudRecommendation result = useCase.execute(List.of("pensamiento"));
+        LanternRecommendation result = useCase.execute(List.of("pensamiento"));
 
         assertThat(result.activityType()).isEqualTo("diary");
         assertThat(result.actionId()).isEqualTo("diary");
@@ -153,24 +138,11 @@ class GetCloudRecommendationUseCaseTest {
     }
 
     private EmotionalAnalysisResult analysis(
-            boolean shouldRecommend,
-            EmotionType emotion,
-            double valence,
-            double arousal,
-            double dominance,
-            double intensity,
-            String userGoal
+            boolean shouldRecommend, EmotionType emotion,
+            double valence, double arousal, double dominance, double intensity, String userGoal
     ) {
         return new EmotionalAnalysisResult(
-                shouldRecommend,
-                emotion,
-                0.9,
-                valence,
-                arousal,
-                dominance,
-                intensity,
-                userGoal,
-                "analisis"
+                shouldRecommend, emotion, 0.9, valence, arousal, dominance, intensity, userGoal, "analisis"
         );
     }
 
@@ -179,38 +151,23 @@ class GetCloudRecommendationUseCaseTest {
     }
 
     private EmotionalRecommendationItem item(ActivityType type, String title) {
-        return new EmotionalRecommendationItem(
-                10L,
-                type,
-                title,
-                "Descripcion comun",
-                0.9,
-                "Razon comun"
-        );
+        return new EmotionalRecommendationItem(10L, type, title, "Descripcion comun", 0.9, "Razon comun");
     }
 
     private static class CapturingEmotionalAnalysisPort implements EmotionalAnalysisPort {
-
         private EmotionalAnalysisResult result = EmotionalAnalysisResult.neutral();
         private RuntimeException exception;
         private String userMessage;
 
         @Override
-        public EmotionalAnalysisResult analyze(
-                String systemPrompt,
-                String userMessage,
-                List<ConversationMessage> history
-        ) {
-            if (exception != null) {
-                throw exception;
-            }
+        public EmotionalAnalysisResult analyze(String systemPrompt, String userMessage, List<ConversationMessage> history) {
+            if (exception != null) throw exception;
             this.userMessage = userMessage;
             return result;
         }
     }
 
     private static class CapturingRecommendationsUseCase extends GetEmotionalRecommendationsUseCase {
-
         private EmotionalRecommendationQuery query;
         private EmotionalRecommendationResult result = new EmotionalRecommendationResult(List.of(), false);
 

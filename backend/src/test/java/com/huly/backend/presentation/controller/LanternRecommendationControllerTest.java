@@ -1,10 +1,9 @@
 package com.huly.backend.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.CloudRecommendation;
-import com.huly.backend.domain.service.vector.UserVectorMemoryService;
-import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
-import com.huly.backend.infrastructure.presentation.controller.CloudController;
+import com.huly.backend.domain.model.LanternRecommendation;
+import com.huly.backend.domain.useCase.lanternRecommendation.GetLanternRecommendationUseCase;
+import com.huly.backend.infrastructure.presentation.controller.LanternRecommendationController;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,26 +30,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class CloudControllerTest {
+class LanternRecommendationControllerTest {
 
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private GetCloudRecommendationUseCase getCloudRecommendationUseCase;
-    private UserVectorMemoryService userVectorMemoryService;
+    private GetLanternRecommendationUseCase getLanternRecommendationUseCase;
 
     private static final Long USER_ID = 1L;
 
     @BeforeEach
     void setUp() {
-        getCloudRecommendationUseCase = mock(GetCloudRecommendationUseCase.class);
-        userVectorMemoryService = mock(UserVectorMemoryService.class);
+        getLanternRecommendationUseCase = mock(GetLanternRecommendationUseCase.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken(userDetails, null));
 
-        CloudController controller = new CloudController(
-                getCloudRecommendationUseCase, userVectorMemoryService);
+        LanternRecommendationController controller = new LanternRecommendationController(getLanternRecommendationUseCase);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
@@ -64,17 +59,15 @@ class CloudControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    // ── /recommendation ──────────────────────────────────────────────────────
-
     @Test
     void getRecommendation_shouldReturn200WithDiaryRecommendation_whenRequestIsValid() throws Exception {
-        CloudRecommendation recommendation = new CloudRecommendation(
+        LanternRecommendation recommendation = new LanternRecommendation(
                 "diary", "diary", "Escribí en tu diario",
                 "Plasmar tus emociones puede ayudarte.", "/diary"
         );
-        when(getCloudRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(recommendation);
+        when(getLanternRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(recommendation);
 
-        mockMvc.perform(post("/api/clouds/recommendation")
+        mockMvc.perform(post("/api/lanterns/recommendation")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of("me siento muy triste")))))
                 .andExpect(status().isOk())
@@ -86,8 +79,24 @@ class CloudControllerTest {
     }
 
     @Test
+    void getRecommendation_shouldReturn200WithLanternsRecommendation_whenNubeActivityReturned() throws Exception {
+        LanternRecommendation recommendation = new LanternRecommendation(
+                "lanterns", "lanterns", "Faroles emocionales",
+                "Soltá tus pensamientos en un farolito.", "/lanterns"
+        );
+        when(getLanternRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(recommendation);
+
+        mockMvc.perform(post("/api/lanterns/recommendation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of("quiero soltar esto")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activity_type").value("lanterns"))
+                .andExpect(jsonPath("$.redirect_url").value("/lanterns"));
+    }
+
+    @Test
     void getRecommendation_shouldReturn400_whenThoughtsIsEmpty() throws Exception {
-        mockMvc.perform(post("/api/clouds/recommendation")
+        mockMvc.perform(post("/api/lanterns/recommendation")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of()))))
                 .andExpect(status().isBadRequest());
@@ -95,7 +104,7 @@ class CloudControllerTest {
 
     @Test
     void getRecommendation_shouldReturn400_whenThoughtsFieldIsMissing() throws Exception {
-        mockMvc.perform(post("/api/clouds/recommendation")
+        mockMvc.perform(post("/api/lanterns/recommendation")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
@@ -103,50 +112,14 @@ class CloudControllerTest {
 
     @Test
     void getRecommendation_shouldDelegateThoughtsToUseCase() throws Exception {
-        when(getCloudRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(
-                new CloudRecommendation("diary", "diary", "Título", "Desc.", "/diary"));
+        when(getLanternRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(
+                new LanternRecommendation("diary", "diary", "Título", "Desc.", "/diary"));
 
-        mockMvc.perform(post("/api/clouds/recommendation")
+        mockMvc.perform(post("/api/lanterns/recommendation")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of("no puedo dejar de pensar")))))
                 .andExpect(status().isOk());
 
-        verify(getCloudRecommendationUseCase).execute(List.of("no puedo dejar de pensar"), USER_ID);
-    }
-
-    // ── /thought ─────────────────────────────────────────────────────────────
-
-    @Test
-    void saveThought_shouldReturn204_whenThoughtIsValid() throws Exception {
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thought", "me siento ansioso"))))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void saveThought_shouldCallRememberGuidedCloudInput_withUserId() throws Exception {
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thought", "me siento ansioso"))))
-                .andExpect(status().isNoContent());
-
-        verify(userVectorMemoryService).rememberGuidedCloudInput(eq(USER_ID), anyString(), eq("me siento ansioso"));
-    }
-
-    @Test
-    void saveThought_shouldReturn400_whenThoughtIsBlank() throws Exception {
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thought", ""))))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void saveThought_shouldReturn400_whenThoughtFieldIsMissing() throws Exception {
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest());
+        verify(getLanternRecommendationUseCase).execute(List.of("no puedo dejar de pensar"), USER_ID);
     }
 }

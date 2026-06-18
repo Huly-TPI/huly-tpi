@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class GuidedCloudsVectorMemoryPolicyTest {
+class GuidedLanternsVectorMemoryPolicyTest {
 
-    private final GuidedCloudsVectorMemoryPolicy policy = new GuidedCloudsVectorMemoryPolicy();
+    private final GuidedLanternsVectorMemoryPolicy policy = new GuidedLanternsVectorMemoryPolicy();
 
     @Test
-    void sourceType_shouldReturnGuidedClouds() {
-        assertThat(policy.sourceType()).isEqualTo(VectorMemorySource.GUIDED_CLOUDS);
+    void sourceType_shouldReturnGuidedLanterns() {
+        assertThat(policy.sourceType()).isEqualTo(VectorMemorySource.GUIDED_LANTERNS);
     }
 
     @Test

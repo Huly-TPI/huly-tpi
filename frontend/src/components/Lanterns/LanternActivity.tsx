@@ -2,10 +2,6 @@ import { useCallback, useRef, useState } from 'react'
 import Lantern, { type LanternData } from './Lantern'
 import './LanternActivity.css'
 
-/* ─────────────────────────────────────────────
-   Props — same contract as EmotionalCloudsActivity
-   so the parent CloudsActivity wrapper can swap it in
-───────────────────────────────────────────── */
 export interface LanternActivityProps {
     onThoughtAdded?: (thought: string) => void
     onFinish?: (thoughts: string[]) => void
