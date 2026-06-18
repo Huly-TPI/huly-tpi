@@ -92,6 +92,7 @@ public class PromptBuilderService {
 
     private void appendResponseInstructions(StringBuilder sb) {
         sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA ===");
+        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno para guiar tu respuesta, pero NO los menciones ni hagas referencia a ellos en huly_reply.");
         sb.append("\nRespondé SIEMPRE con un JSON válido con exactamente este formato (sin texto fuera del JSON):");
         sb.append("\n{");
         sb.append("\n  \"huly_reply\": \"<tu respuesta empática>\",");
@@ -145,6 +146,7 @@ public class PromptBuilderService {
         sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA EN STREAMING ===");
         sb.append("\nRespondé en texto natural, cálido y directo. No devuelvas JSON ni markdown técnico.");
         sb.append("\nLa metadata emocional y de riesgo se calculará después; durante el stream solo escribí la respuesta para el usuario.");
+        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno, pero NO los menciones en tu respuesta.");
     }
 
     private void appendMetadataInstructions(StringBuilder sb) {

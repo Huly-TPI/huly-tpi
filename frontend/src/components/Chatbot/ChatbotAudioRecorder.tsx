@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { MicrophoneIcon, PaperAirplaneIcon, StopIcon, TrashIcon } from '@heroicons/react/24/outline'
+import AudioMessagePlayer from './AudioMessagePlayer'
 
 type RecorderState = 'idle' | 'recording' | 'recorded'
 
@@ -120,7 +121,9 @@ export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange 
 
   return (
     <div className="flex flex-1 items-center gap-2">
-      <audio src={audioUrl ?? undefined} controls className="h-8 min-w-0 flex-1" />
+      <div className="min-w-0 flex-1 rounded-xl bg-violeta px-3 py-2">
+        <AudioMessagePlayer audioUrl={audioUrl ?? undefined} />
+      </div>
       <button
         type="button"
         onClick={discardRecording}

@@ -87,7 +87,7 @@ async function request<T>(
   return (text ? JSON.parse(text) : null) as T
 }
 
-async function requestMultipart<T>(path: string, formData: FormData, retry = true): Promise<T> {
+async function requestMultipart<T>(path: string, formData: FormData, retry = true, signal?: AbortSignal): Promise<T> {
   const token = getToken()
 
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -97,12 +97,13 @@ async function requestMultipart<T>(path: string, formData: FormData, retry = tru
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: formData,
+    signal,
   })
 
   if (response.status === 401 && retry && path !== '/auth/refresh') {
     const newToken = await refreshAccessToken()
     if (newToken) {
-      return requestMultipart<T>(path, formData, false)
+      return requestMultipart<T>(path, formData, false, signal)
     }
     clearToken()
     window.dispatchEvent(new CustomEvent('auth:expired'))
@@ -123,8 +124,8 @@ export const api = {
     request<T>(path, { ...options, method: 'GET' }),
   post: <T>(path: string, body: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'POST', body }),
-  postMultipart: <T>(path: string, formData: FormData) =>
-    requestMultipart<T>(path, formData),
+  postMultipart: <T>(path: string, formData: FormData, signal?: AbortSignal) =>
+    requestMultipart<T>(path, formData, true, signal),
   put: <T>(path: string, body: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'PUT', body }),
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>

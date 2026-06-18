@@ -8,15 +8,66 @@ import { emotionalEventsApi } from '../api/emotionalEvents'
 import { userGoalsApi } from '../api/userGoals'
 import { type ChatbotMessage } from '../components/Chatbot/chatbotTypes'
 import { useAuth } from '../context/auth'
+import { deleteAudioBlob, getAudioBlob, saveAudioBlob } from '../utils/audioCache'
 
 const CHAT_CONVERSATION_STORAGE_KEY = 'hulyChatConversationId'
+const AUDIO_KEYS_PREFIX = 'hulyAudioKeys:'
 
 function randomConversationId() {
   return `chat-${Math.random().toString(36).slice(2, 10)}`
 }
 
-function mapHistoryMessage(message: ChatHistoryMessageDto): ChatbotMessage {
+function getAudioKeysStorageKey(conversationId: string) {
+  return `${AUDIO_KEYS_PREFIX}${conversationId}`
+}
+
+function getStoredAudioKeys(conversationId: string): string[] {
+  try {
+    const raw = localStorage.getItem(getAudioKeysStorageKey(conversationId))
+    return raw ? (JSON.parse(raw) as string[]) : []
+  } catch {
+    return []
+  }
+}
+
+function pushAudioKey(conversationId: string, uuid: string) {
+  const keys = getStoredAudioKeys(conversationId)
+  keys.push(uuid)
+  localStorage.setItem(getAudioKeysStorageKey(conversationId), JSON.stringify(keys))
+}
+
+function removeAudioKey(conversationId: string, uuid: string) {
+  const keys = getStoredAudioKeys(conversationId).filter(k => k !== uuid)
+  localStorage.setItem(getAudioKeysStorageKey(conversationId), JSON.stringify(keys))
+}
+
+async function mapHistoryMessage(
+  message: ChatHistoryMessageDto,
+  conversationId: string,
+  audioKeyIterator: { index: number; keys: string[] },
+): Promise<ChatbotMessage> {
   if (message.role === 'USER') {
+    const isVoiceMessage = message.content.startsWith('[Mensaje de voz transcrito]')
+    if (isVoiceMessage) {
+      const uuid = audioKeyIterator.keys[audioKeyIterator.index] ?? null
+      audioKeyIterator.index++
+
+      if (uuid) {
+        const cacheKey = `${conversationId}:${uuid}`
+        const blob = await getAudioBlob(cacheKey).catch(() => null)
+        if (blob) {
+          return {
+            role: 'user',
+            content: message.content,
+            audioBlob: blob,
+            audioUrl: URL.createObjectURL(blob),
+            audioKey: uuid,
+          }
+        }
+      }
+      // Blob not found — show placeholder
+      return { role: 'user', content: message.content, audioKey: uuid ?? undefined }
+    }
     return { role: 'user', content: message.content }
   }
 
@@ -59,6 +110,7 @@ export function useChatbot() {
   )
   const bottomRef = useRef<HTMLDivElement>(null)
   const sendingRef = useRef(false)
+  const audioAbortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     setConversationId(getOrCreateConversationId(conversationStorageKey))
@@ -76,7 +128,12 @@ export function useChatbot() {
 
       try {
         const history = await chatApi.getHistory(conversationId)
-        setMessages(history.content.map(mapHistoryMessage))
+        const audioKeys = getStoredAudioKeys(conversationId)
+        const iterator = { index: 0, keys: audioKeys }
+        const mapped = await Promise.all(
+          history.content.map(msg => mapHistoryMessage(msg, conversationId, iterator)),
+        )
+        setMessages(mapped)
       } catch {
         setMessages([])
       } finally {
@@ -136,13 +193,25 @@ export function useChatbot() {
     if (sendingRef.current) return
     sendingRef.current = true
 
+    const uuid = crypto.randomUUID()
+    const cacheKey = `${conversationId}:${uuid}`
+
+    await saveAudioBlob(cacheKey, blob).catch(() => null)
+    pushAudioKey(conversationId, uuid)
+
     const audioUrl = URL.createObjectURL(blob)
-    setMessages(prev => [...prev, { role: 'user', content: '', audioBlob: blob, audioUrl }])
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: '', audioBlob: blob, audioUrl, audioKey: uuid },
+    ])
     setIsSending(true)
     setError('')
 
+    const controller = new AbortController()
+    audioAbortRef.current = controller
+
     try {
-      const response = await chatApi.sendAudioMessage(blob, conversationId)
+      const response = await chatApi.sendAudioMessage(blob, conversationId, controller.signal)
       setMessages(prev => [
         ...prev,
         {
@@ -155,13 +224,41 @@ export function useChatbot() {
         },
       ])
     } catch (requestError) {
-      if (requestError instanceof Error) {
+      if (requestError instanceof Error && requestError.name !== 'AbortError') {
         setError(requestError.message)
       }
     } finally {
+      audioAbortRef.current = null
       sendingRef.current = false
       setIsSending(false)
     }
+  }
+
+  const deleteAudioMessage = async (index: number) => {
+    const message = messages[index]
+    if (!message || message.role !== 'user' || !('audioKey' in message)) return
+
+    // Cancel in-flight request if we're still waiting for a response
+    if (isSending && audioAbortRef.current) {
+      audioAbortRef.current.abort()
+      audioAbortRef.current = null
+      sendingRef.current = false
+      setIsSending(false)
+    }
+
+    // Revoke ObjectURL to free memory
+    if ('audioUrl' in message && message.audioUrl) {
+      URL.revokeObjectURL(message.audioUrl)
+    }
+
+    // Clean up IndexedDB and localStorage
+    if (message.audioKey) {
+      const cacheKey = `${conversationId}:${message.audioKey}`
+      await deleteAudioBlob(cacheKey).catch(() => null)
+      removeAudioKey(conversationId, message.audioKey)
+    }
+
+    setMessages(prev => prev.filter((_, i) => i !== index))
   }
 
   const decideChallenge = async (index: number, decision: 'accepted' | 'rejected') => {
@@ -284,6 +381,7 @@ export function useChatbot() {
     bottomRef,
     sendMessage,
     sendAudioMessage,
+    deleteAudioMessage,
     decideChallenge,
     decideSuggestedAction,
   }

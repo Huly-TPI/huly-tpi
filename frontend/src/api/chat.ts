@@ -62,11 +62,11 @@ export interface ChatHistoryPageResponseDto {
 export const chatApi = {
   sendMessage: (data: ChatRequestDto) =>
     api.post<ChatResponseDto>('/chat', data),
-  sendAudioMessage: (audio: Blob, conversationId: string) => {
+  sendAudioMessage: (audio: Blob, conversationId: string, signal?: AbortSignal) => {
     const formData = new FormData()
     formData.append('audio', audio, 'recording.webm')
     formData.append('conversationId', conversationId)
-    return api.postMultipart<ChatResponseDto>('/chat/audio', formData)
+    return api.postMultipart<ChatResponseDto>('/chat/audio', formData, signal)
   },
   saveChallengeDecision: (data: ChatChallengeDecisionRequestDto) =>
     api.post<void>('/chat/challenge-decision', data),

@@ -47,15 +47,15 @@ public class AudioChatUseCase {
         if (vad != null) {
             // Solo arousal: es un feature acústico puro (energía, ritmo, intensidad)
             // independiente del idioma. Valence y dominance son poco fiables en español.
-            int arousalPct = (int) Math.round(vad.arousal() * 100);
-            String arousalLabel = arousalPct >= 67 ? "muy activada/agitada"
-                                : arousalPct >= 34 ? "moderadamente activada"
-                                :                    "calmada";
+            double arousal = vad.arousal();
+            String arousalLabel = arousal >= 0.67 ? "muy activada/agitada"
+                                : arousal >= 0.34 ? "moderadamente activada"
+                                :                   "calmada";
             return String.format(
                     "[Mensaje de voz transcrito]\n" +
                     "Transcripción: %s\n" +
-                    "Activación vocal detectada: %d%% (%s)",
-                    transcription, arousalPct, arousalLabel
+                    "Tono de voz: %s",
+                    transcription, arousalLabel
             );
         }
 
