@@ -45,8 +45,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import org.springframework.mock.web.MockMultipartFile;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -320,6 +322,54 @@ class ChatControllerTest {
                 .andExpect(status().isOk());
 
         verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
+    }
+
+    @Test
+    void sendAudioMessage_shouldReturn200_whenAudioAndConversationIdAreValid() throws Exception {
+        ChatReply reply = new ChatReply("entendí tu mensaje de voz", null, null, false, null);
+        when(audioChatUseCase.execute(any(), eq("conv-1"), eq(USER_ID))).thenReturn(reply);
+        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
+
+        mockMvc.perform(multipart("/api/chat/audio")
+                        .file(audio)
+                        .param("conversationId", "conv-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.huly_reply").value("entendí tu mensaje de voz"));
+    }
+
+    @Test
+    void sendAudioMessage_shouldDelegateToAudioChatUseCase_withAuthenticatedUserId() throws Exception {
+        when(audioChatUseCase.execute(any(), eq("conv-1"), eq(USER_ID))).thenReturn(ChatReply.of("ok"));
+        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
+
+        mockMvc.perform(multipart("/api/chat/audio")
+                        .file(audio)
+                        .param("conversationId", "conv-1"))
+                .andExpect(status().isOk());
+
+        verify(audioChatUseCase).execute(any(), eq("conv-1"), eq(USER_ID));
+    }
+
+    @Test
+    void sendAudioMessage_shouldReturn404_whenUserNotFound() throws Exception {
+        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
+        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
+
+        mockMvc.perform(multipart("/api/chat/audio")
+                        .file(audio)
+                        .param("conversationId", "conv-1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void sendAudioMessage_shouldReturn500_whenConversationIdIsMissing() throws Exception {
+        // MissingServletRequestParameterException no está mapeada en GlobalExceptionHandler
+        // (solo MethodArgumentNotValidException lo está), cae al catch-all → 500
+        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
+
+        mockMvc.perform(multipart("/api/chat/audio")
+                        .file(audio))
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
