@@ -4,7 +4,7 @@ import { register } from '../../api/auth'
 import { useAuth } from '../../context/auth'
 import { ApiError } from '../../api/apiError'
 import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, validEmail, minLength, maxLength, matchesField, minAge, safeText } from '../../utils/validation'
+import { required, validEmail, minLength, maxLength, matchesField, minAge, safeText, validRegisterName } from '../../utils/validation'
 import AuthPageLayout from '../../layouts/AuthPageLayout/AuthPageLayout'
 import hulyGreeting from '../../assets/register/huly-greeting.webp'
 import AuthForm from '../../components/AuthForm/AuthForm'
@@ -27,7 +27,7 @@ const INITIAL_VALUES = {
 }
 
 const VALIDATION_RULES = {
-  name: [required(), maxLength(50), safeText],
+  name: [required(), maxLength(50), safeText, validRegisterName()],
   birthDate: [required('La fecha de nacimiento es requerida'), minAge(13)],
   email: [required(), validEmail(), maxLength(100)],
   password: [required(), minLength(6), maxLength(72)],
