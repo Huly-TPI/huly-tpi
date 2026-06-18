@@ -42,23 +42,22 @@ public class ChatService {
     private final PromptBuilderService promptBuilderService;
     private final UserVectorMemoryService userVectorMemoryService;
     private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
-    private final ChatIntentDetectionService chatIntentDetectionService;
     private final ChatQuotaService chatQuotaService;
     private final UserRepository userRepository;
     private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
-        return processMessage(message, conversationId, userId, false);
+        return processMessage(message, conversationId, userId, false, ChatUserIntent.NONE);
     }
 
     public ChatReply processMessage(
             String message,
             String conversationId,
             Long userId,
-            boolean offerCommunicationStyleWhenSafe) {
+            boolean offerCommunicationStyleWhenSafe,
+            ChatUserIntent userIntent) {
         chatQuotaService.assertWithinLimit(userId);
         ChatContext context = loadChatContext(message, conversationId, userId);
-        ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
         ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
                 message,
                 userId,

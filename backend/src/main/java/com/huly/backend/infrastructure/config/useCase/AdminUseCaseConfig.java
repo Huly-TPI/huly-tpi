@@ -6,10 +6,13 @@ import com.huly.backend.domain.repository.EmotionalEventRepository;
 import com.huly.backend.domain.repository.PaymentEventRepository;
 import com.huly.backend.domain.repository.ProductRepository;
 import com.huly.backend.domain.repository.VectorMemoryRepository;
+import com.huly.backend.domain.repository.extension.AntiScrollGlobalConfigRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsUseCase;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUseCase;
@@ -27,7 +30,7 @@ public class AdminUseCaseConfig {
     @Bean
     public ListBackofficeUsersUseCase listBackofficeUsersUseCase(
             UserRepository userRepository,
-            ExtensionSettingsRepository settingsRepository,
+            UserAntiScrollSettingsRepository settingsRepository,
             ExtensionMetricsRepository metricsRepository,
             UserPlanRepository userPlanRepository,
             EmotionalEventRepository emotionalEventRepository
@@ -38,7 +41,7 @@ public class AdminUseCaseConfig {
     @Bean
     public GetAntiScrollDashboardUseCase getAntiScrollDashboardUseCase(
             UserRepository userRepository,
-            ExtensionSettingsRepository settingsRepository,
+            UserAntiScrollSettingsRepository settingsRepository,
             ExtensionMetricsRepository metricsRepository
     ) {
         return new GetAntiScrollDashboardUseCase(userRepository, settingsRepository, metricsRepository);
@@ -47,7 +50,7 @@ public class AdminUseCaseConfig {
     @Bean
     public GetUserAntiScrollStatsUseCase getUserAntiScrollStatsUseCase(
             UserRepository userRepository,
-            ExtensionSettingsRepository settingsRepository,
+            UserAntiScrollSettingsRepository settingsRepository,
             ExtensionMetricsRepository metricsRepository
     ) {
         return new GetUserAntiScrollStatsUseCase(userRepository, settingsRepository, metricsRepository);
@@ -78,5 +81,19 @@ public class AdminUseCaseConfig {
             ProductRepository productRepository
     ) {
         return new GetUserFinancialsUseCase(userRepository, paymentEventRepository, productRepository);
+    }
+
+    @Bean
+    public GetAntiScrollGlobalConfigUseCase getAntiScrollGlobalConfigUseCase(
+            AntiScrollGlobalConfigRepository antiScrollConfigRepository
+    ) {
+        return new GetAntiScrollGlobalConfigUseCase(antiScrollConfigRepository);
+    }
+
+    @Bean
+    public UpdateAntiScrollGlobalConfigUseCase updateAntiScrollGlobalConfigUseCase(
+            AntiScrollGlobalConfigRepository antiScrollConfigRepository
+    ) {
+        return new UpdateAntiScrollGlobalConfigUseCase(antiScrollConfigRepository);
     }
 }

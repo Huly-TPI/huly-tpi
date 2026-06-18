@@ -4,10 +4,10 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.admin.BackofficeUserSummary;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import com.huly.backend.domain.repository.UserPlanRepository;
 import com.huly.backend.domain.dto.payment.UserPlan;
 import com.huly.backend.domain.repository.EmotionalEventRepository;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ListBackofficeUsersUseCase {
 
     private final UserRepository userRepository;
-    private final ExtensionSettingsRepository settingsRepository;
+    private final UserAntiScrollSettingsRepository settingsRepository;
     private final ExtensionMetricsRepository metricsRepository;
     private final UserPlanRepository userPlanRepository;
     private final EmotionalEventRepository emotionalEventRepository;
@@ -43,9 +43,9 @@ public class ListBackofficeUsersUseCase {
         List<BackofficeUserSummary> summaries = new ArrayList<>();
 
         for (AppUser user : users) {
-            Optional<ExtensionSettings> settingsOpt = settingsRepository.findByUserId(user.getId());
-            boolean antiScrollEnabled = settingsOpt.map(ExtensionSettings::isEnabled).orElse(false);
-            boolean consent = settingsOpt.map(ExtensionSettings::isDataSharingConsent).orElse(false);
+            Optional<UserAntiScrollSettings> settingsOpt = settingsRepository.findByUserId(user.getId());
+            boolean antiScrollEnabled = settingsOpt.map(UserAntiScrollSettings::isEnabled).orElse(false);
+            boolean consent = settingsOpt.map(UserAntiScrollSettings::isDataSharingConsent).orElse(false);
 
             int coins = userRepository.getCoins(user.getId());
             String plan = userPlanRepository.findByUser(user.getId())

@@ -145,7 +145,7 @@ export function useUsers() {
     if (selectedUserId && activeTab === 'antiscroll') {
       setAntiscrollLoading(true)
       setAntiscrollError(null)
-      getUserAntiScroll(selectedUserId)
+      getUserAntiScroll(selectedUserId, selectedWeek as 'current' | 'previous', selectedDay)
         .then((data) => {
           setAntiscrollStats(data)
         })
@@ -157,7 +157,7 @@ export function useUsers() {
           setAntiscrollLoading(false)
         })
     }
-  }, [selectedUserId, activeTab])
+  }, [selectedUserId, activeTab, selectedWeek, selectedDay])
 
   const filteredUsers = users
 
@@ -167,43 +167,23 @@ export function useUsers() {
     return antiscrollStats.dailyScrollTimeSeconds[key] || 0
   }
 
-  const currentWeekTotal = DAYS.reduce((sum, day) => sum + (antiscrollStats?.dailyScrollTimeSeconds?.[`current_${day.key}`] || 0), 0)
-  const previousWeekTotal = DAYS.reduce((sum, day) => sum + (antiscrollStats?.dailyScrollTimeSeconds?.[`previous_${day.key}`] || 0), 0)
-  
-  const selectedWeekTotal = selectedWeek === 'current' ? currentWeekTotal : previousWeekTotal
-
-  const weekFactor = antiscrollStats && antiscrollStats.totalScrollTimeSeconds > 0
-    ? selectedWeekTotal / antiscrollStats.totalScrollTimeSeconds
-    : 0
-
-  let activeFactor = 1.0
-  if (selectedDay !== 'all') {
-    activeFactor = selectedWeekTotal > 0
-      ? getDailyTime(selectedDay) / selectedWeekTotal
-      : 0
-  }
-
-  const filteredTotalTime = antiscrollStats
-    ? (selectedDay === 'all' ? selectedWeekTotal : getDailyTime(selectedDay))
-    : 0
+  const filteredTotalTime = antiscrollStats?.totalScrollTimeSeconds || 0
 
   const domainList: { domain: string; seconds: number }[] = []
   if (antiscrollStats) {
     if (antiscrollStats.topApps && antiscrollStats.topApps.length > 0) {
       antiscrollStats.topApps.forEach((app) => {
-        const scaledSeconds = Math.round(app.totalActiveSeconds * weekFactor * activeFactor)
-        if (scaledSeconds > 0) {
+        if (app.totalActiveSeconds > 0) {
           domainList.push({
             domain: app.domain,
-            seconds: scaledSeconds,
+            seconds: app.totalActiveSeconds,
           })
         }
       })
     } else if (antiscrollStats.mostUsedApp) {
-      const app1Seconds = Math.round(antiscrollStats.mostUsedAppActiveSeconds * weekFactor * activeFactor)
       domainList.push({
         domain: antiscrollStats.mostUsedApp,
-        seconds: app1Seconds,
+        seconds: antiscrollStats.mostUsedAppActiveSeconds,
       })
     }
 

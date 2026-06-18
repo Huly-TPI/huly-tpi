@@ -138,7 +138,7 @@ export default function ZenSandCanvas() {
     <section className="zen-sand" aria-labelledby="zen-sand-title">
       <div className="zen-sand__header">
         <Button
-          variant="secondary"
+          variant="alert"
           size="sm"
           onClick={handleClear}
           aria-label="Limpiar arena y borrar todos los trazos"
@@ -161,9 +161,6 @@ export default function ZenSandCanvas() {
         />
       </div>
 
-      <p className="zen-sand__hint">
-        El sonido se activa solamente mientras dibujás.
-      </p>
     </section>
   )
 }
