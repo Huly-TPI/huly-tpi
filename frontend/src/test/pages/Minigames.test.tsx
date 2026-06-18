@@ -51,7 +51,7 @@ describe('Minigames', () => {
       </ThemeProvider>,
     )
 
-    await user.click(screen.getByRole('button', { name: /volver/i }))
+    await user.click(screen.getByRole('link', { name: /volver/i }))
     expect(await screen.findByRole('heading', { name: 'Vista Garden' })).toBeInTheDocument()
   })
 
