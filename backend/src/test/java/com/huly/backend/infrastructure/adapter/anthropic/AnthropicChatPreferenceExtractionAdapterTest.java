@@ -22,7 +22,7 @@ class AnthropicChatPreferenceExtractionAdapterTest {
     @BeforeEach
     void setUp() {
         chatClient = mock(ChatClient.class, RETURNS_DEEP_STUBS);
-        adapter = new AnthropicChatPreferenceExtractionAdapter(chatClient);
+        adapter = new AnthropicChatPreferenceExtractionAdapter(new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()), chatClient);
     }
 
     @Test
@@ -33,7 +33,7 @@ class AnthropicChatPreferenceExtractionAdapterTest {
                 ChatPreferenceMessageType.PREFERENCE_ONLY,
                 0.9
         );
-        when(chatClient.prompt().system(anyString()).user(anyString()).call().entity(ChatPreferenceDetectionResult.class))
+        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(ChatPreferenceDetectionResult.class))
                 .thenReturn(mockResult);
 
         ChatPreferenceDetectionResult result = adapter.extract("Llámame Juan", ChatPreferenceExpectedField.PREFERRED_NAME);
@@ -43,7 +43,7 @@ class AnthropicChatPreferenceExtractionAdapterTest {
 
     @Test
     void extract_shouldReturnUnrelated_onException() {
-        when(chatClient.prompt().system(anyString()).user(anyString()).call().entity(ChatPreferenceDetectionResult.class))
+        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(ChatPreferenceDetectionResult.class))
                 .thenThrow(new RuntimeException("Error"));
 
         ChatPreferenceDetectionResult result = adapter.extract("hola", ChatPreferenceExpectedField.PREFERRED_NAME);

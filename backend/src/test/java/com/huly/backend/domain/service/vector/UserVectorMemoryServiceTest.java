@@ -32,7 +32,7 @@ class UserVectorMemoryServiceTest {
         vectorMemoryService = new RecordingVectorMemoryService();
         chatClientProvider = org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class);
         jdbcTemplate = org.mockito.Mockito.mock(org.springframework.jdbc.core.JdbcTemplate.class);
-        service = new UserVectorMemoryService(vectorMemoryService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate);
+        service = new UserVectorMemoryService(vectorMemoryService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
     }
 
     @Test
@@ -332,7 +332,7 @@ class UserVectorMemoryServiceTest {
         org.springframework.ai.chat.client.ChatClient chatClient = mock(org.springframework.ai.chat.client.ChatClient.class, RETURNS_DEEP_STUBS);
         when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
         
-        when(chatClient.prompt().system(anyString()).user(anyString()).call().entity(any(Class.class)))
+        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
                 .thenReturn(new UserVectorMemoryService.PersonalitySummaryDto("Test profile summary", "activity", "none"));
 
         when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
@@ -399,7 +399,7 @@ class UserVectorMemoryServiceTest {
         VectorMemoryService throwingService = mock(VectorMemoryService.class);
         doThrow(new RuntimeException("Delete failed")).when(throwingService).deleteMemories(any());
         
-        UserVectorMemoryService testService = new UserVectorMemoryService(throwingService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate);
+        UserVectorMemoryService testService = new UserVectorMemoryService(throwingService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
         
         assertThatCode(() -> testService.deletePersonalitySummary(1L))
                 .doesNotThrowAnyException();
@@ -420,7 +420,7 @@ class UserVectorMemoryServiceTest {
         when(mockService.findRelevantMemories(any(SearchVectorMemoryQuery.class)))
                 .thenThrow(new RuntimeException("Search failed"));
         UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                mockService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate);
+                mockService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
         
         List<VectorMemory> result = serviceWithMock.findRelevantUserMemories(1L, VectorMemorySource.CHATBOT, "query");
         assertThat(result).isEmpty();
@@ -432,7 +432,7 @@ class UserVectorMemoryServiceTest {
         when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class)))
                 .thenThrow(new RuntimeException("Search failed"));
         UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                mockService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate);
+                mockService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
         
         List<VectorMemory> result = serviceWithMock.findRelevantUserMemoriesBySources(1L, List.of(VectorMemorySource.CHATBOT), "query");
         assertThat(result).isEmpty();
@@ -445,7 +445,7 @@ class UserVectorMemoryServiceTest {
         when(mockExtractor.buildProfileRecallQuery(anyString())).thenReturn("equalQuery");
         
         UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                vectorMemoryService, properties, mockExtractor, chatClientProvider, jdbcTemplate);
+                vectorMemoryService, properties, mockExtractor, chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
         
         serviceWithMock.findRelevantUserMemories(1L, "equalQuery");
     }
@@ -464,7 +464,7 @@ class UserVectorMemoryServiceTest {
         when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class))).thenReturn(listWithNull);
         
         UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                mockService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate);
+                mockService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
         List<VectorMemory> result = serviceWithMock.findRelevantUserMemories(1L, "query");
         assertThat(result).isEmpty();
     }
@@ -486,7 +486,7 @@ class UserVectorMemoryServiceTest {
     void generatePersonalitySummary_shouldHandleException() {
         org.springframework.ai.chat.client.ChatClient chatClient = mock(org.springframework.ai.chat.client.ChatClient.class, RETURNS_DEEP_STUBS);
         when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
-        when(chatClient.prompt().system(anyString()).user(anyString()).call().entity(any(Class.class)))
+        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
                 .thenThrow(new RuntimeException("ChatClient error"));
 
         when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
@@ -558,7 +558,7 @@ class UserVectorMemoryServiceTest {
         org.springframework.ai.chat.client.ChatClient chatClient = mock(org.springframework.ai.chat.client.ChatClient.class, RETURNS_DEEP_STUBS);
         when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
         
-        when(chatClient.prompt().system(anyString()).user(anyString()).call().entity(any(Class.class)))
+        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
                 .thenReturn(new UserVectorMemoryService.PersonalitySummaryDto("Truncated summary", "activity", "none"));
 
         when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
