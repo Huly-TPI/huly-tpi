@@ -15,8 +15,8 @@ const mockedSaveSettings = vi.mocked(extensionApi.saveExtensionSettings)
 describe('AntiScrollConsentModal', () => {
   const defaultSettings = {
     enabled: true,
-    pauseIntervalMinutes: 20,
-    gardenUrl: 'http://localhost:5173/garden',
+    pauseIntervalSeconds: 20,
+    gardenUrl: 'http://localhost:5173/',
     backendUrl: 'http://localhost:8080',
     monitoredDomains: ['twitter.com'],
     dataSharingConsent: false,

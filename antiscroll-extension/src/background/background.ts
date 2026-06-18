@@ -2,6 +2,7 @@ import browser from 'webextension-polyfill';
 import {
   getAccumulatedScrollTime,
   getSettings,
+  resetAccumulatedScrollTime,
   setAccumulatedScrollTime,
   setSettings,
   getMetrics,
@@ -125,7 +126,7 @@ browser.runtime.onMessage.addListener(async (message) => {
       await syncMetricsNow();
       break;
     case 'RESET_TIMER':
-      await setAccumulatedScrollTime(0);
+      await resetAccumulatedScrollTime();
       await syncMetricsNow();
       break;
     case 'SET_TOKEN':

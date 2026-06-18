@@ -15,8 +15,8 @@ const mockedPost = vi.mocked(api.post)
 
 const sampleSettings: ExtensionSettings = {
   enabled: true,
-  pauseIntervalMinutes: 20,
-  gardenUrl: 'http://localhost:5173/garden',
+  pauseIntervalSeconds: 20,
+  gardenUrl: 'http://localhost:5173/',
   backendUrl: 'http://localhost:8080',
   monitoredDomains: ['twitter.com'],
   dataSharingConsent: true,
