@@ -253,7 +253,7 @@ describe('Register', () => {
         await user.click(screen.getByRole('checkbox'))
         await user.click(getSubmitButton())
 
-        expect(screen.getByText('El nombre debe tener al menos 3 letras y solo puede contener letras y espacios')).toBeInTheDocument()
+        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
         expect(mockedRegister).not.toHaveBeenCalled()
     })
 
@@ -264,7 +264,7 @@ describe('Register', () => {
         await user.click(screen.getByRole('checkbox'))
         await user.click(getSubmitButton())
 
-        expect(screen.getByText('El nombre debe tener al menos 3 letras y solo puede contener letras y espacios')).toBeInTheDocument()
+        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
         expect(mockedRegister).not.toHaveBeenCalled()
     })
 
@@ -275,7 +275,7 @@ describe('Register', () => {
         await user.click(screen.getByRole('checkbox'))
         await user.click(getSubmitButton())
 
-        expect(screen.getByText('El nombre debe tener al menos 3 letras y solo puede contener letras y espacios')).toBeInTheDocument()
+        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
         expect(mockedRegister).not.toHaveBeenCalled()
     })
 
