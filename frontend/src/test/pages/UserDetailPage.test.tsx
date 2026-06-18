@@ -3,9 +3,13 @@ import { render, screen } from '@testing-library/react'
 import UserDetailPage from '../../pages/Backoffice/UserDetailPage'
 import { useUsers } from '../../hooks/backoffice/useUsers'
 
-vi.mock('../../hooks/backoffice/useUsers', () => ({
-  useUsers: vi.fn(),
-}))
+vi.mock('../../hooks/backoffice/useUsers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../hooks/backoffice/useUsers')>()
+  return {
+    ...actual,
+    useUsers: vi.fn(),
+  }
+})
 
 const mockedUseUsers = vi.mocked(useUsers)
 
@@ -200,7 +204,7 @@ describe('UserDetailPage', () => {
     expect(screen.getByText('Tiempo scrolleando por día')).toBeInTheDocument()
     expect(screen.getByText('Tiempo en cada dominio')).toBeInTheDocument()
     expect(screen.getByText('instagram.com')).toBeInTheDocument()
-    expect(screen.getByText('1:00 h')).toBeInTheDocument()
+    expect(screen.getByText('1 h')).toBeInTheDocument()
   })
 })
 

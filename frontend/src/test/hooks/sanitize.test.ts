@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeInput, sanitizeForSubmit } from '../../utils/sanitize'
+import { sanitizeInput, sanitizeForSubmit } from '../../hooks/useForm'
 
 describe('sanitizeInput', () => {
     it('normaliza Unicode a NFC', () => {

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getGreeting } from '../../utils/greeting'
-
+import { getGreeting } from '../../hooks/useGreeting'
 
 describe('getGreeting', () => {
   it('devuelve "Buenos días" entre las 6 y las 11', () => {

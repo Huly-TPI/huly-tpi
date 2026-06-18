@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import 'fake-indexeddb/auto'
-import { saveAudioBlob, getAudioBlob, deleteAudioBlob } from '../../utils/audioCache'
+import { saveAudioBlob, getAudioBlob, deleteAudioBlob } from '../../hooks/useAudioCache'
 
 // fake-indexeddb/auto replaces the global indexedDB with an in-memory implementation.
 // Each test gets a fresh database because the module re-opens a connection per call.
