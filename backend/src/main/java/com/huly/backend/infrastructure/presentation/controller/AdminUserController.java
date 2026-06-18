@@ -66,8 +66,12 @@ public class AdminUserController {
     }
 
     @GetMapping("/{id}/statistics/antiscroll")
-    public ResponseEntity<UserAntiScrollResponse> getUserAntiScrollStats(@PathVariable Long id) {
-        var result = getUserAntiScrollStatsUseCase.execute(new GetUserAntiScrollStatsRequest(id));
+    public ResponseEntity<UserAntiScrollResponse> getUserAntiScrollStats(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "current") String week,
+            @RequestParam(required = false, defaultValue = "all") String day
+    ) {
+        var result = getUserAntiScrollStatsUseCase.execute(new GetUserAntiScrollStatsRequest(id, week, day));
         return ResponseEntity.ok(adminPresentationMapper.toUserAntiScrollResponse(result));
     }
 

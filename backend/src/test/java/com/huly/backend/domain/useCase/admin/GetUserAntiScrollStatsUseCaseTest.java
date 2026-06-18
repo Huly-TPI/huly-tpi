@@ -10,7 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,7 +39,7 @@ class GetUserAntiScrollStatsUseCaseTest {
     void execute_shouldThrowException_whenUserNotFound() {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.execute(new GetUserAntiScrollStatsRequest(1L)))
+        assertThatThrownBy(() -> useCase.execute(new GetUserAntiScrollStatsRequest(1L, "current", "all")))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Usuario no encontrado");
     }
@@ -50,12 +51,13 @@ class GetUserAntiScrollStatsUseCaseTest {
         UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(false)
+                .monitoredDomains(List.of("facebook.com", "reddit.com"))
                 .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
 
-        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
+        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId, "current", "all"));
 
         assertThat(response.antiScrollEnabled()).isTrue();
         assertThat(response.dataSharingConsent()).isFalse();
@@ -66,17 +68,18 @@ class GetUserAntiScrollStatsUseCaseTest {
     }
 
     @Test
-    void execute_shouldReturnCalculatedMetrics_whenConsentIsTrue() {
+    void execute_shouldNormalizeDomainsAndFilterByMonitoredDomains() {
         Long userId = 1L;
         AppUser user = AppUser.builder().id(userId).build();
         UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(true)
+                .monitoredDomains(List.of("youtube.com", "instagram.com"))
                 .build();
 
         Instant now = Instant.now();
         ExtensionMetric metric1 = ExtensionMetric.builder()
-                .domain("youtube.com")
+                .domain("music.youtube.com")
                 .activeSeconds(120)
                 .createdAt(now)
                 .build();
@@ -88,22 +91,19 @@ class GetUserAntiScrollStatsUseCaseTest {
                 .build();
 
         ExtensionMetric metric3 = ExtensionMetric.builder()
-                .domain("youtube.com")
+                .domain("www.reddit.com")
                 .activeSeconds(60)
-                .createdAt(now.minus(7, ChronoUnit.DAYS))
+                .createdAt(now)
                 .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
         when(metricsRepository.findByUserId(userId)).thenReturn(List.of(metric1, metric2, metric3));
 
-        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
+        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId, "current", "all"));
 
-        assertThat(response.antiScrollEnabled()).isTrue();
-        assertThat(response.dataSharingConsent()).isTrue();
-        assertThat(response.totalScrollTimeSeconds()).isEqualTo(480);
+        assertThat(response.totalScrollTimeSeconds()).isEqualTo(420);
         assertThat(response.mostUsedApp()).isEqualTo("instagram.com");
-        assertThat(response.mostUsedAppActiveSeconds()).isEqualTo(300);
         assertThat(response.topApps()).hasSize(2);
         assertThat(response.topApps().get(0).getDomain()).isEqualTo("instagram.com");
         assertThat(response.topApps().get(1).getDomain()).isEqualTo("youtube.com");
@@ -116,17 +116,18 @@ class GetUserAntiScrollStatsUseCaseTest {
         UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(true)
+                .monitoredDomains(List.of("youtube.com"))
                 .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
         when(metricsRepository.findByUserId(userId)).thenReturn(null);
 
-        GetUserAntiScrollStatsResponse responseNull = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
+        GetUserAntiScrollStatsResponse responseNull = useCase.execute(new GetUserAntiScrollStatsRequest(userId, "current", "all"));
         assertThat(responseNull.mostUsedApp()).isNull();
 
         when(metricsRepository.findByUserId(userId)).thenReturn(List.of());
-        GetUserAntiScrollStatsResponse responseEmpty = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
+        GetUserAntiScrollStatsResponse responseEmpty = useCase.execute(new GetUserAntiScrollStatsRequest(userId, "current", "all"));
         assertThat(responseEmpty.mostUsedApp()).isNull();
     }
 
@@ -137,6 +138,7 @@ class GetUserAntiScrollStatsUseCaseTest {
         UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .enabled(true)
                 .dataSharingConsent(true)
+                .monitoredDomains(List.of("youtube.com"))
                 .build();
 
         ExtensionMetric metricNullDate = ExtensionMetric.builder()
@@ -149,7 +151,52 @@ class GetUserAntiScrollStatsUseCaseTest {
         when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
         when(metricsRepository.findByUserId(userId)).thenReturn(List.of(metricNullDate));
 
-        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId));
-        assertThat(response.totalScrollTimeSeconds()).isEqualTo(120);
+        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId, "current", "all"));
+        assertThat(response.totalScrollTimeSeconds()).isEqualTo(0);
+    }
+
+    @Test
+    void execute_shouldFilterByRequestedWeekAndDay() {
+        Long userId = 1L;
+        AppUser user = AppUser.builder().id(userId).build();
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
+                .enabled(true)
+                .dataSharingConsent(true)
+                .monitoredDomains(List.of("facebook.com", "reddit.com"))
+                .build();
+
+        ZonedDateTime startOfWeek = ZonedDateTime.now()
+                .with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                .truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+        Instant tuesday = startOfWeek.plusDays(1).plusHours(1).toInstant();
+        Instant thursday = startOfWeek.plusDays(3).plusHours(1).toInstant();
+
+        ExtensionMetric currentFacebook = ExtensionMetric.builder()
+                .domain("www.facebook.com")
+                .activeSeconds(10)
+                .createdAt(tuesday)
+                .build();
+        ExtensionMetric currentReddit = ExtensionMetric.builder()
+                .domain("www.reddit.com")
+                .activeSeconds(20)
+                .createdAt(tuesday)
+                .build();
+        ExtensionMetric currentThursday = ExtensionMetric.builder()
+                .domain("www.reddit.com")
+                .activeSeconds(50)
+                .createdAt(thursday)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+        when(metricsRepository.findByUserId(userId)).thenReturn(List.of(currentFacebook, currentReddit, currentThursday));
+
+        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId, "current", "1"));
+
+        assertThat(response.totalScrollTimeSeconds()).isEqualTo(30);
+        assertThat(response.topApps()).extracting("domain").containsExactly("reddit.com", "facebook.com");
+        assertThat(response.topApps()).extracting("totalActiveSeconds").containsExactly(20, 10);
+        assertThat(response.dailyScrollTimeSeconds().get("current_1")).isEqualTo(30);
+        assertThat(response.dailyScrollTimeSeconds().get("current_3")).isEqualTo(50);
     }
 }
