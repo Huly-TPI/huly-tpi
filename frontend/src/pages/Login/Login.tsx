@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/apiError'
 import { useAuth } from '../../context/auth'
-import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, validEmail } from '../../utils/validation'
+import { useForm, required, validEmail } from '../../hooks/useForm'
 import AuthPageLayout from '../../layouts/AuthPageLayout/AuthPageLayout'
 import AuthForm from '../../components/AuthForm/AuthForm'
 import type { AuthFormField } from '../../components/AuthForm/AuthForm'
@@ -26,7 +25,7 @@ const VALIDATION_RULES = {
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const { values, errors, handleChange, validateAll, setFieldErrors } = useAuthForm(
+  const { values, errors, handleChange, validateAll, setFieldErrors } = useForm(
     INITIAL_VALUES,
     VALIDATION_RULES,
   )

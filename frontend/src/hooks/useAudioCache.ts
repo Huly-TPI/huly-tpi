@@ -28,7 +28,14 @@ export async function getAudioBlob(key: string): Promise<Blob | null> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly')
     const request = tx.objectStore(STORE_NAME).get(key)
-    request.onsuccess = () => resolve((request.result as Blob | undefined) ?? null)
+    request.onsuccess = () => {
+      const result = request.result as Blob | undefined
+      if (result) {
+        resolve(result)
+      } else {
+        resolve(null)
+      }
+    }
     request.onerror = () => reject(request.error)
   })
 }

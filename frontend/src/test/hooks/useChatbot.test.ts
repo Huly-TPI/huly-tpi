@@ -3,7 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { useChatbot } from '../../hooks/useChatbot'
 import { chatApi } from '../../api/chat'
 import { emotionalEventsApi } from '../../api/emotionalEvents'
-import { saveAudioBlob } from '../../utils/audioCache'
+import { saveAudioBlob } from '../../hooks/useAudioCache'
 
 vi.mock('../../api/chat', () => ({
   chatApi: {
@@ -14,7 +14,7 @@ vi.mock('../../api/chat', () => ({
   },
 }))
 
-vi.mock('../../utils/audioCache', () => ({
+vi.mock('../../hooks/useAudioCache', () => ({
   saveAudioBlob: vi.fn().mockResolvedValue(undefined),
   getAudioBlob: vi.fn().mockResolvedValue(null),
   deleteAudioBlob: vi.fn().mockResolvedValue(undefined),

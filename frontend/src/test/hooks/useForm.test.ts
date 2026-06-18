@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, minLength, matchesField } from '../../utils/validation'
+import { useForm } from '../../hooks/useForm'
+import { required, minLength, matchesField } from '../../hooks/useForm'
 
 const INITIAL_VALUES = {
     email: '',
@@ -15,16 +15,16 @@ const RULES = {
     confirmPassword: [required(), matchesField('password')],
 }
 
-describe('useAuthForm', () => {
+describe('useForm', () => {
     it('inicializa con los valores dados', () => {
-        const { result } = renderHook(() => useAuthForm(INITIAL_VALUES, RULES))
+        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
 
         expect(result.current.values).toEqual(INITIAL_VALUES)
         expect(result.current.errors).toEqual({})
     })
 
     it('actualiza un campo con handleChange', () => {
-        const { result } = renderHook(() => useAuthForm(INITIAL_VALUES, RULES))
+        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
 
         act(() => {
             result.current.handleChange('email', 'user@mail.com')
@@ -34,7 +34,7 @@ describe('useAuthForm', () => {
     })
 
     it('limpia el error del campo al escribir', () => {
-        const { result } = renderHook(() => useAuthForm(INITIAL_VALUES, RULES))
+        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
 
         act(() => {
             result.current.validateAll()
@@ -50,7 +50,7 @@ describe('useAuthForm', () => {
     })
 
     it('validateAll retorna false con campos inválidos', () => {
-        const { result } = renderHook(() => useAuthForm(INITIAL_VALUES, RULES))
+        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
 
         let isValid = false
         act(() => {
@@ -63,7 +63,7 @@ describe('useAuthForm', () => {
     })
 
     it('validateAll retorna true con campos válidos', () => {
-        const { result } = renderHook(() => useAuthForm(INITIAL_VALUES, RULES))
+        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
 
         act(() => {
             result.current.handleChange('email', 'user@mail.com')
@@ -81,7 +81,7 @@ describe('useAuthForm', () => {
     })
 
     it('detecta contraseñas que no coinciden', () => {
-        const { result } = renderHook(() => useAuthForm(INITIAL_VALUES, RULES))
+        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
 
         act(() => {
             result.current.handleChange('email', 'user@mail.com')
@@ -97,7 +97,7 @@ describe('useAuthForm', () => {
     })
 
     it('reset vuelve a los valores iniciales', () => {
-        const { result } = renderHook(() => useAuthForm(INITIAL_VALUES, RULES))
+        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
 
         act(() => {
             result.current.handleChange('email', 'user@mail.com')

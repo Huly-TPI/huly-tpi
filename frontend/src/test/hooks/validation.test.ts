@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { required, minLength, maxLength, validEmail, matchesField, minAge, noHtml, safeText, validate } from '../../utils/validation'
+import { required, minLength, maxLength, validEmail, matchesField, noHtml, safeText, validate } from '../../hooks/useForm'
+import { minAge } from '../../pages/Register/Register'
 
 const emptyValues = { email: '', password: '' }
 
