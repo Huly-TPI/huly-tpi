@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,8 +31,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.Flux;
-
 import java.util.List;
 
 @RestController
@@ -53,22 +52,12 @@ public class ChatController {
         return ResponseEntity.ok(toResponse(reply));
     }
 
-    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<ChatStreamEventResponse>> stream(@RequestBody ChatRequest request) {
-        if (request == null || isBlank(request.message()) || isBlank(request.conversationId())) {
-            return Flux.just(toServerSentEvent(ChatStreamEvent.error("message y conversationId son obligatorios.")));
-        }
-
-        Long userId = currentUserId();
-        return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
-                .map(this::toServerSentEvent);
-    }
-
     @PostMapping(value = "/audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ChatResponse> sendAudioMessage(
+            @AuthenticationPrincipal UserDetails principal,
             @RequestPart("audio") MultipartFile audio,
             @RequestParam("conversationId") String conversationId) {
-        Long userId = currentUserId();
+        Long userId = getUserId(principal);
         ChatReply reply = audioChatUseCase.execute(audio, conversationId, userId);
         return ResponseEntity.ok(toResponse(reply));
     }
