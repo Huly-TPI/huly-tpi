@@ -5,8 +5,6 @@ import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
-import com.huly.backend.domain.service.vector.ChatbotVectorMemoryPolicy;
-import com.huly.backend.domain.service.vector.DefaultVectorMemorySourcePolicy;
 import com.huly.backend.domain.service.vector.VectorMemoryPolicy;
 import com.huly.backend.domain.service.vector.VectorMemoryProperties;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,11 +37,7 @@ class SpringAiVectorMemoryServiceTest {
     @BeforeEach
     void setUp() {
         VectorMemoryProperties properties = new VectorMemoryProperties();
-        VectorMemoryPolicy policy = new VectorMemoryPolicy(
-                properties,
-                List.of(new ChatbotVectorMemoryPolicy()),
-                new DefaultVectorMemorySourcePolicy()
-        );
+        VectorMemoryPolicy policy = new VectorMemoryPolicy(properties);
 
         this.jdbcTemplate = new RecordingJdbcTemplate();
         this.embeddingModel = new FakeEmbeddingModel(DIMENSIONS);

@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.concurrent.CompletableFuture;
 
@@ -48,10 +48,12 @@ public class UserVectorMemoryService {
     private static final String GENERATED_CHALLENGE = "GENERATED_CHALLENGE";
     private static final String CHALLENGE_DECISION = "CHALLENGE_DECISION";
 
+    record PersonalitySummaryDto(String summary, String accepted, String rejected) {}
+
     private final VectorMemoryService vectorMemoryService;
     private final VectorMemoryProperties vectorMemoryProperties;
     private final UserProfileFactExtractor userProfileFactExtractor;
-    private final ObjectProvider<ChatModel> chatModelProvider;
+    private final ObjectProvider<ChatClient> chatClientProvider;
     private final JdbcTemplate jdbcTemplate;
 
     public List<VectorMemory> findRelevantUserMemories(Long userId, String query) {
@@ -453,35 +455,38 @@ public class UserVectorMemoryService {
 
             String userMessage = "Analiza las siguientes memorias del usuario para estructurar el JSON:\n\n- " + memoriesJoined;
 
-            ChatModel chat = chatModelProvider.getIfAvailable();
-            if (chat == null) {
-                log.warn("ChatModel no disponible. No se puede generar perfil de personalidad.");
+            ChatClient chatClient = chatClientProvider.getIfAvailable();
+            if (chatClient == null) {
+                log.warn("ChatClient no disponible. No se puede generar perfil de personalidad.");
                 return;
             }
 
-            org.springframework.ai.chat.model.ChatResponse response = chat.call(new org.springframework.ai.chat.prompt.Prompt(List.of(
-                new org.springframework.ai.chat.messages.SystemMessage(systemPrompt),
-                new org.springframework.ai.chat.messages.UserMessage(userMessage)
-            )));
+            PersonalitySummaryDto dto = chatClient.prompt()
+                    .system(systemPrompt)
+                    .user(userMessage)
+                    .call()
+                    .entity(PersonalitySummaryDto.class);
 
-            if (response != null && response.getResult() != null && response.getResult().getOutput() != null) {
-                String summary = response.getResult().getOutput().getText();
-                if (summary != null && !summary.isBlank()) {
-                    deletePersonalitySummary(userId);
+            if (dto != null && dto.summary() != null && !dto.summary().isBlank()) {
+                deletePersonalitySummary(userId);
 
-                    saveMemory(new SaveVectorMemoryCommand(
-                            userId,
-                            VectorMemorySource.CHATBOT,
-                            "personality-summary",
-                            "PERSONALITY_SUMMARY",
-                            "PERSONALITY_SUMMARY",
-                            summary.trim(),
-                            null,
-                            null,
-                            Map.of("contentType", "PERSONALITY_SUMMARY", "feature", "PERSONALITY_SUMMARY")
-                    ));
-                    log.info("Perfil de personalidad generado e insertado para userId={}", userId);
-                }
+                String finalSummary = String.format("%s\n\nAcepta: %s\nRechaza: %s",
+                        dto.summary().trim(),
+                        valueOrDefault(dto.accepted(), "N/A"),
+                        valueOrDefault(dto.rejected(), "N/A"));
+
+                saveMemory(new SaveVectorMemoryCommand(
+                        userId,
+                        VectorMemorySource.CHATBOT,
+                        "personality-summary",
+                        "PERSONALITY_SUMMARY",
+                        "PERSONALITY_SUMMARY",
+                        finalSummary,
+                        null,
+                        null,
+                        Map.of("contentType", "PERSONALITY_SUMMARY", "feature", "PERSONALITY_SUMMARY")
+                ));
+                log.info("Perfil de personalidad generado e insertado para userId={}", userId);
             }
         } catch (Exception e) {
             log.warn("Error generando perfil de personalidad para userId={}", userId, e);

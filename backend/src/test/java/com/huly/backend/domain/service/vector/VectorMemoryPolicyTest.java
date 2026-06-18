@@ -5,19 +5,13 @@ import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class VectorMemoryPolicyTest {
 
     private final VectorMemoryProperties properties = new VectorMemoryProperties();
-    private final VectorMemoryPolicy policy = new VectorMemoryPolicy(
-            properties,
-            List.of(new ChatbotVectorMemoryPolicy(), new GuidedCloudsVectorMemoryPolicy()),
-            new DefaultVectorMemorySourcePolicy()
-    );
+    private final VectorMemoryPolicy policy = new VectorMemoryPolicy(properties);
 
     @Test
     void normalizeContent_shouldTrimAndCollapseSpaces() {
@@ -95,7 +89,8 @@ class VectorMemoryPolicyTest {
     }
 
     @Test
-    void shouldRemember_shouldAcceptShortMessageAtGuidedCloudsMinimum() {
+    void shouldRemember_shouldAcceptShortMessageIfWeBypassLengthCheck() {
+        properties.setMinContentLength(2);
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
                 VectorMemorySource.GUIDED_CLOUDS,
@@ -109,23 +104,7 @@ class VectorMemoryPolicyTest {
         );
 
         assertThat(policy.shouldRemember(command, "ab")).isTrue();
-    }
-
-    @Test
-    void shouldRemember_shouldRejectMessageBelowGuidedCloudsMinimum() {
-        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
-                1L,
-                VectorMemorySource.GUIDED_CLOUDS,
-                null,
-                null,
-                null,
-                "a",
-                null,
-                null,
-                null
-        );
-
-        assertThat(policy.shouldRemember(command, "a")).isFalse();
+        properties.setMinContentLength(12);
     }
 
     @Test
@@ -245,20 +224,4 @@ class VectorMemoryPolicyTest {
                 .hasMessageContaining("similarityThreshold must be between");
     }
 
-    @Test
-    void shouldRemember_shouldUseDefaultPolicy_whenSourcePolicyIsMissing() {
-        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
-                1L,
-                VectorMemorySource.ONBOARDING,
-                null,
-                null,
-                null,
-                "a",
-                null,
-                null,
-                null
-        );
-
-        assertThat(policy.shouldRemember(command, "a")).isFalse();
-    }
 }
