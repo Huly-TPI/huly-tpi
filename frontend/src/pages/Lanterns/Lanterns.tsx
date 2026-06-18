@@ -8,6 +8,7 @@ import darkLanternImage from '../../assets/lanterns/dark-theme/Lantern-Dark.webp
 import paperImage from '../../assets/lanterns/paper.webp'
 
 import { useTheme } from '../../context/theme'
+import { useAuthGate } from '../../context/authGate'
 import { api } from '../../api/client'
 import { lanternsApi } from '../../api/lanterns'
 import Button from '../../components/Buttons/Button/Button'
@@ -48,6 +49,7 @@ export default function LanternsActivity() {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
+  const { requireAuth } = useAuthGate()
 
   const [lanterns, setLanterns] = useState<Lantern[]>([])
   const [inputText, setInputText] = useState('')
@@ -78,20 +80,22 @@ export default function LanternsActivity() {
     setSelectedIndex(prev => (prev < lanterns.length - 1 ? prev + 1 : 0))
   }, [lanterns.length])
 
-  const handleRelease = useCallback(async () => {
+  const handleRelease = useCallback(() => {
     const trimmed = inputText.trim()
     if (!trimmed || lanterns.length >= MAX_LANTERNS) return
-    setInputText('')
-    try {
-      const created = await lanternsApi.create(trimmed)
-      setAnimatingId(created.id)
-      setLanterns(prev => [created, ...prev].slice(0, MAX_LANTERNS))
-      setSelectedIndex(0)
-      setTimeout(() => setAnimatingId(null), 800)
-    } catch {
-      setInputText(trimmed)
-    }
-  }, [inputText, lanterns.length])
+    requireAuth(async () => {
+      setInputText('')
+      try {
+        const created = await lanternsApi.create(trimmed)
+        setAnimatingId(created.id)
+        setLanterns(prev => [created, ...prev].slice(0, MAX_LANTERNS))
+        setSelectedIndex(0)
+        setTimeout(() => setAnimatingId(null), 800)
+      } catch {
+        setInputText(trimmed)
+      }
+    })
+  }, [inputText, lanterns.length, requireAuth])
 
   const removeLantern = useCallback((idToRemove: number) => {
     setLanterns(prev => prev.filter(l => l.id !== idToRemove))
