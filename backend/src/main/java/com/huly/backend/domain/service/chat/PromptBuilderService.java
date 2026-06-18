@@ -91,6 +91,7 @@ public class PromptBuilderService {
 
     private void appendResponseInstructions(StringBuilder sb) {
         sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA ===");
+        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno para guiar tu respuesta, pero NO los menciones ni hagas referencia a ellos en huly_reply.");
         sb.append("\nRespondé SIEMPRE con un JSON válido con exactamente este formato (sin texto fuera del JSON):");
         sb.append("\n{");
         sb.append("\n  \"huly_reply\": \"<tu respuesta empática>\",");
@@ -138,6 +139,31 @@ public class PromptBuilderService {
 
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    private void appendStreamingInstructions(StringBuilder sb) {
+        sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA EN STREAMING ===");
+        sb.append("\nRespondé en texto natural, cálido y directo. No devuelvas JSON ni markdown técnico.");
+        sb.append("\nLa metadata emocional y de riesgo se calculará después; durante el stream solo escribí la respuesta para el usuario.");
+        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno, pero NO los menciones en tu respuesta.");
+    }
+
+    private void appendMetadataInstructions(StringBuilder sb) {
+        sb.append("\n\n=== INSTRUCCIONES DE ANALISIS ===");
+        sb.append("\nAnalizá el mensaje del usuario y respondé únicamente con un JSON válido con exactamente este formato:");
+        sb.append("\n{");
+        sb.append("\n  \"huly_reply\": \"\",");
+        sb.append("\n  \"detected_emotion\": \"<").append(buildEmotionList()).append(">\",");
+        sb.append("\n  \"intensity\": <número del 1 al 10>,");
+        sb.append("\n  \"risk_detected\": <true|false>,");
+        sb.append("\n  \"matched_word\": \"<frase de riesgo detectada, o null>\",");
+        sb.append("\n  \"generated_challenge\": <objeto con title y description, o null>");
+        sb.append("\n}");
+        sb.append("\n");
+        sb.append("\nReglas para generated_challenge:");
+        sb.append("\n- Incluilo SOLO cuando el contexto lo justifique: emoción negativa de intensidad >= 5 o situación concreta que se beneficiaría de un reto personal.");
+        sb.append("\n- Si no corresponde, devolvé null.");
+        sb.append("\n- Formato cuando corresponde: { \"title\": \"<título corto>\", \"description\": \"<descripción accionable en 1-2 oraciones>\" }");
     }
 
     private void appendEmotionalAnalysisInstructions(StringBuilder sb) {
