@@ -123,11 +123,13 @@ La aplicación estará disponible en: `http://localhost:8080`
 
 ### 5. Verificar que levantó correctamente
 
-```bash
-curl http://localhost:8080/api/examples/test
+Abrí la documentación de la API (Swagger UI) en el navegador:
+
+```
+http://localhost:8080/swagger-ui.html
 ```
 
-Deberías ver una página HTML con el mensaje `Server is running!`.
+Deberías ver la interfaz de Swagger con los endpoints disponibles (habilitada en los perfiles `dev` y `qa`).
 
 ---
 
