@@ -22,19 +22,30 @@ describe('Minigames', () => {
     expect(screen.getByAltText('Fondo de minijuegos para celular')).toBeInTheDocument()
   })
 
+  it('renderiza las nubes como elementos decorativos sin links', () => {
+    renderWithRouter()
+    const clouds = screen.getAllByAltText('Nube decorativa')
+    expect(clouds).toHaveLength(3)
+    clouds.forEach(cloud => {
+      expect(cloud.closest('a')).toBeNull()
+    })
+  })
+
+  it('renderiza los faroles navegables hacia la actividad de farolitos', () => {
+    renderWithRouter()
+    const lanternLinks = screen.getAllByLabelText('Farolitos que vuelan')
+    expect(lanternLinks).toHaveLength(4)
+    lanternLinks.forEach(lantern => {
+      expect(lantern.closest('a')).toHaveAttribute('href', '/lanterns')
+    })
+  })
+
   it('renderiza los hotspots de cada minijuego con su ruta', () => {
     renderWithRouter()
     expect(screen.getByLabelText('Burbujas').closest('a')).toHaveAttribute('href', '/bubbles')
     expect(screen.getByLabelText('Piedras del lago').closest('a')).toHaveAttribute('href', '/stones')
     expect(screen.getByLabelText('Colorear mandalas').closest('a')).toHaveAttribute('href', '/mandalas')
     expect(screen.getByLabelText('Arena zen').closest('a')).toHaveAttribute('href', '/zen-sand-garden')
-  })
-
-  it('renderiza las nubes navegables hacia la actividad de nubes', () => {
-    renderWithRouter()
-    const cloudLinks = screen.getAllByLabelText('Nubes que pasan')
-    expect(cloudLinks.length).toBe(3)
-    expect(cloudLinks[0].closest('a')).toHaveAttribute('href', '/clouds')
   })
 
   it('el botón volver navega a /', async () => {
@@ -71,5 +82,23 @@ describe('Minigames', () => {
 
     await user.click(screen.getByLabelText('Burbujas'))
     expect(screen.getByRole('heading', { name: 'Vista Burbujas' })).toBeInTheDocument()
+  })
+
+  it('redirige a farolitos al hacer click en un farol', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/minigames']}>
+          <Routes>
+            <Route path="/minigames" element={<Minigames />} />
+            <Route path="/lanterns" element={<h1>Vista Farolitos</h1>} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>,
+    )
+
+    await user.click(screen.getAllByLabelText('Farolitos que vuelan')[0])
+    expect(screen.getByRole('heading', { name: 'Vista Farolitos' })).toBeInTheDocument()
   })
 })
