@@ -81,11 +81,5 @@ public class AnthropicChatAdapter implements LLMChatPort {
             log.warn("Error generando o parseando respuesta del LLM: {}", e.getMessage());
             return ChatReply.of("Disculpa, estoy teniendo problemas. ¿Podemos intentarlo de nuevo?");
         }
-
-        messages.add(new UserMessage(userMessage
-                + "\n\n[FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el objeto JSON válido. "
-                + "Sin texto introductorio, sin explicaciones, sin markdown. "
-                + "Comienza directamente con { y termina con }.]"));
-        return messages;
     }
 }
