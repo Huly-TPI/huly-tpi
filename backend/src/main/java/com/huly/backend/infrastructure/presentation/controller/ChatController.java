@@ -2,31 +2,25 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
-import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
-import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
-import com.huly.backend.infrastructure.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest;
+import com.huly.backend.infrastructure.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatMessageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatRequest;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatResponse;
-import com.huly.backend.infrastructure.presentation.dto.chat.ChatStreamEventResponse;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
-import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -49,13 +42,13 @@ public class ChatController {
     private final ChatUseCase chatUseCase;
     private final AudioChatUseCase audioChatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
-    private final StreamChatUseCase streamChatUseCase;
-    private final AppUserRepository appUserRepository;
     private final UserVectorMemoryService userVectorMemoryService;
 
     @PostMapping
-    public ResponseEntity<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        Long userId = currentUserId();
+    public ResponseEntity<ChatResponse> chat(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid ChatRequest request) {
+        Long userId = getUserId(principal);
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         return ResponseEntity.ok(toResponse(reply));
     }
@@ -81,8 +74,10 @@ public class ChatController {
     }
 
     @PostMapping("/challenge-decision")
-    public ResponseEntity<Void> challengeDecision(@RequestBody @Valid ChatChallengeDecisionRequest request) {
-        Long userId = currentUserId();
+    public ResponseEntity<Void> challengeDecision(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid ChatChallengeDecisionRequest request) {
+        Long userId = getUserId(principal);
         userVectorMemoryService.rememberChallengeDecision(
                 userId,
                 request.conversationId(),
@@ -94,54 +89,21 @@ public class ChatController {
 
     @GetMapping("/{conversationId}/messages")
     public ResponseEntity<ChatHistoryPageResponse> getHistory(
+            @AuthenticationPrincipal UserDetails principal,
             @PathVariable String conversationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Long userId = currentUserId();
+        Long userId = getUserId(principal);
         Page<ChatMessage> result = listChatHistoryUseCase.execute(
                 conversationId, userId, PageRequest.of(page, size, Sort.by("createdAt").ascending()));
         return ResponseEntity.ok(toPageResponse(result));
     }
 
-    private Long currentUserId() {
-        // TODO: Temporalmente hasta arreglarlo bien
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUserEntity user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-        return user.getId();
-    }
-
-    private Boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
-
-    private ServerSentEvent<ChatStreamEventResponse> toServerSentEvent(ChatStreamEvent event) {
-        String eventName = event.type().name().toLowerCase(Locale.ROOT);
-        return ServerSentEvent.<ChatStreamEventResponse>builder(toStreamResponse(event))
-                .event(eventName)
-                .build();
-    }
-
-    private ChatStreamEventResponse toStreamResponse(ChatStreamEvent event) {
-        ChatReply reply = event.reply();
-        String emotion = reply != null && reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
-        ChatResponse.Metadata metadata = reply != null && reply.riskDetected() != null
-                ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
-                : null;
-        ChatResponse.GeneratedChallenge challenge = reply != null && reply.generatedChallenge() != null
-                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
-                : null;
-
-        return new ChatStreamEventResponse(
-                event.type().name().toLowerCase(Locale.ROOT),
-                event.delta(),
-                reply != null ? reply.content() : null,
-                emotion,
-                reply != null ? reply.intensity() : null,
-                metadata,
-                challenge,
-                event.error()
-        );
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 
     private ChatResponse toResponse(ChatReply reply) {

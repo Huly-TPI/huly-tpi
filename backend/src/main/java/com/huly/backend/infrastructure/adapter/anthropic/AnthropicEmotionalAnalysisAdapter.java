@@ -2,6 +2,7 @@ package com.huly.backend.infrastructure.adapter.anthropic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.model.Vad;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.EmotionType;
@@ -78,9 +79,9 @@ public class AnthropicEmotionalAnalysisAdapter implements EmotionalAnalysisPort 
                 node.path("shouldRecommend").asBoolean(false),
                 parseEmotion(node.path("detectedEmotion").asText(null)),
                 clamp(node.path("confidence").asDouble(0.0), 0.0, 1.0),
-                clamp(node.path("valence").asDouble(0.0), -1.0, 1.0),
-                clamp(node.path("arousal").asDouble(0.0), -1.0, 1.0),
-                clamp(node.path("dominance").asDouble(0.0), -1.0, 1.0),
+                Vad.clampDimension(node.path("valence").asDouble(0.0)),
+                Vad.clampDimension(node.path("arousal").asDouble(0.0)),
+                Vad.clampDimension(node.path("dominance").asDouble(0.0)),
                 clamp(node.path("intensity").asDouble(0.0), 0.0, 1.0),
                 textOrNull(node, "userGoal"),
                 textOrNull(node, "shortReason")

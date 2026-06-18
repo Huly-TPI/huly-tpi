@@ -321,4 +321,37 @@ describe('useChatbot', () => {
     expect(result.current.isSending).toBe(false)
     expect(result.current.error).toBe('red caída')
   })
+
+  it('resetConversation generates a new conversationId and clears messages', async () => {
+    mockedGetHistory.mockResolvedValue({
+      content: [],
+      page_number: 0,
+      page_size: 20,
+      total_elements: 0,
+      total_pages: 0,
+      first: true,
+      last: true,
+    } as never)
+
+    localStorage.setItem('hulyChatConversationId:1', 'old-conv-id')
+
+    const { result } = renderHook(() => useChatbot())
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    expect(mockedGetHistory).toHaveBeenLastCalledWith('old-conv-id')
+
+    act(() => {
+      result.current.resetConversation()
+    })
+
+    await waitFor(() => {
+      expect(mockedGetHistory).toHaveBeenCalledTimes(2)
+    })
+
+    const newConvId = localStorage.getItem('hulyChatConversationId:1')
+    expect(newConvId).not.toBe('old-conv-id')
+    expect(newConvId).not.toBeNull()
+    expect(result.current.messages).toEqual([])
+  })
 })
+

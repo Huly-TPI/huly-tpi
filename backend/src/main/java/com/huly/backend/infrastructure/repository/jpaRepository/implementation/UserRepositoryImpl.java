@@ -1,6 +1,8 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -35,6 +37,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<AppUser> findById(Long id) {
+        return jpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
     public AppUser save(AppUser user) {
         AppUserEntity saved = jpaRepository.save(toEntity(user));
 
@@ -45,11 +52,30 @@ public class UserRepositoryImpl implements UserRepository {
                     .birth(user.getBirthDate())
                     .createdAt(Instant.now())
                     .onboardingTutorialCompleted(false)
+                    .profileOnboardingTutorialCompleted(false)
                     .themePreference(ThemePreference.LIGHT)
                     .build());
         }
 
         return toDomain(saved);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void addCoins(Long userId, int amount) {
+        jpaRepository.addCoins(userId, amount);
+    }
+
+    @Override
+    public int getCoins(Long userId) {
+        return jpaRepository.findCoinsById(userId).orElse(0);
+    }
+
+    @Override
+    public List<AppUser> findAllNonAdmins() {
+        return jpaRepository.findByRoleNot(com.huly.backend.domain.model.enums.UserRole.ADMIN).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override
@@ -60,6 +86,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .sourceAction(sourceAction)
                 .createdAt(Instant.now())
                 .onboardingTutorialCompleted(false)
+                .profileOnboardingTutorialCompleted(false)
                 .themePreference(ThemePreference.LIGHT)
                 .build());
     }
@@ -73,6 +100,14 @@ public class UserRepositoryImpl implements UserRepository {
                         .orElse(null)
                 : null;
 
+        LocalDate birth = entity.getUserDetails() != null
+                ? entity.getUserDetails().stream()
+                        .map(UserDetailEntity::getBirth)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null)
+                : null;
+
         return AppUser.builder()
                 .id(entity.getId())
                 .name(name)
@@ -80,8 +115,8 @@ public class UserRepositoryImpl implements UserRepository {
                 .password(entity.getPassword())
                 .role(entity.getRole())
                 .status(entity.getStatus())
+                .birthDate(birth)
                 .build();
-
     }
 
     private AppUserEntity toEntity(AppUser domain) {

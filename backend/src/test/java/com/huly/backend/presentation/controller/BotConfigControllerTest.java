@@ -38,14 +38,16 @@ class BotConfigControllerTest {
 
     @Test
     void getConfig_shouldReturn200WithCurrentConfig() throws Exception {
-        ChatConfig config = ChatConfig.builder().id(1L).riskDetectionEnabled(true).systemPrompt("mi prompt").build();
+        ChatConfig config = new ChatConfig(1L, true, "mi prompt", true, false);
         when(getBotConfigUseCase.execute()).thenReturn(config);
 
         mockMvc.perform(get("/api/admin/chat/config"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.risk_detection_enabled").value(true))
-                .andExpect(jsonPath("$.system_prompt").value("mi prompt"));
+                .andExpect(jsonPath("$.system_prompt").value("mi prompt"))
+                .andExpect(jsonPath("$.preferred_name_question_enabled").value(true))
+                .andExpect(jsonPath("$.communication_style_question_enabled").value(false));
     }
 
     @Test
@@ -61,10 +63,10 @@ class BotConfigControllerTest {
 
     @Test
     void updateConfig_shouldReturn200WithUpdatedConfig_whenRequestIsValid() throws Exception {
-        ChatConfig updated = ChatConfig.builder().id(1L).riskDetectionEnabled(false).systemPrompt("nuevo").build();
+        ChatConfig updated = new ChatConfig(1L, false, "nuevo", false, true);
         when(updateBotConfigUseCase.execute(any())).thenReturn(updated);
 
-        UpdateBotConfigRequest request = new UpdateBotConfigRequest(false, "nuevo");
+        UpdateBotConfigRequest request = new UpdateBotConfigRequest(false, "nuevo", false, true);
 
         mockMvc.perform(put("/api/admin/chat/config")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -72,7 +74,9 @@ class BotConfigControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.risk_detection_enabled").value(false))
-                .andExpect(jsonPath("$.system_prompt").value("nuevo"));
+                .andExpect(jsonPath("$.system_prompt").value("nuevo"))
+                .andExpect(jsonPath("$.preferred_name_question_enabled").value(false))
+                .andExpect(jsonPath("$.communication_style_question_enabled").value(true));
     }
 
     @Test

@@ -1,27 +1,50 @@
 import { ApiError } from './apiError'
 
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
-const TOKEN_KEY = 'huly:access-token'
 
-type RequestOptions = Omit<RequestInit, 'body'> & {
+export const getBackendOrigin = (): string => {
+  const rawApiUrl = import.meta.env.VITE_API_URL?.trim()
+
+  if (!rawApiUrl) 
+    return window.location.origin
+  
+  return new URL(rawApiUrl, window.location.origin).origin
+}
+
+export type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
   skipAuthRedirect?: boolean
 }
 
-export const getToken = (): string | null =>
-  window.localStorage.getItem(TOKEN_KEY)
+export class SessionExpiredError extends Error {
+  constructor() {
+    super('Session expired')
+    this.name = 'SessionExpiredError'
+  }
+}
 
-export const setToken = (token: string): void =>
-  window.localStorage.setItem(TOKEN_KEY, token)
+let accessToken: string | null = null
+let inFlightRefresh: Promise<string | null> | null = null
 
-export const clearToken = (): void =>
-  window.localStorage.removeItem(TOKEN_KEY)
+export const getToken = (): string | null => accessToken
+
+export const setToken = (token: string): void => {
+  accessToken = token
+  sessionStorage.setItem('huly:token', token)
+  window.dispatchEvent(new CustomEvent('huly:session', { detail: { token } }))
+}
+
+export const clearToken = (): void => {
+  accessToken = null
+  sessionStorage.removeItem('huly:token')
+  window.dispatchEvent(new CustomEvent('huly:session', { detail: { token: null } }))
+}
 
 interface RefreshResponse {
   accessToken?: string
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+async function performRefresh(): Promise<string | null> {
   try {
     const response = await fetch(`${BASE_URL}/auth/refresh`, {
       method: 'POST',
@@ -40,6 +63,19 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+function refreshAccessToken(): Promise<string | null> {
+  if (inFlightRefresh) {
+    return inFlightRefresh
+  }
+  inFlightRefresh = performRefresh().finally(() => {
+    inFlightRefresh = null
+  })
+  return inFlightRefresh
+}
+
+export const tryRehydrateSession = (): Promise<string | null> =>
+  refreshAccessToken()
+
 async function request<T>(
   path: string,
   options: RequestOptions = {},
@@ -47,17 +83,18 @@ async function request<T>(
 ): Promise<T> {
   const { body, headers, skipAuthRedirect, ...rest } = options
   const token = getToken()
+  const isFormData = body instanceof FormData
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
-
+    cache: 'no-store',
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
   })
 
   if (
@@ -72,6 +109,7 @@ async function request<T>(
     }
     clearToken()
     window.dispatchEvent(new CustomEvent('auth:expired'))
+    throw new SessionExpiredError()
   }
 
   if (!response.ok) {

@@ -35,9 +35,11 @@ export default function Navbar() {
   return (
     <nav
       ref={navRef}
-      className={`relative z-50 shrink-0 shadow-md ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}
+      className={`relative z-[300] shrink-0 shadow-md ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}
     >
-      <div className="grid h-16 w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 md:px-8 xl:px-12 2xl:px-16">
+      {/* Barra principal */}
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
+        {/* Logo desde assets */}
         <Link to="/" onClick={closeMenu} className="flex items-center">
           <img
             src={logo}
@@ -46,7 +48,8 @@ export default function Navbar() {
           />
         </Link>
 
-        <div className="hidden items-center justify-center gap-8 lg:flex xl:gap-10">
+        {/* Links — visible solo en desktop */}
+        <div className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map(link => (
             <Link
               key={link.to}
@@ -58,7 +61,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-3">
           {isAuthenticated && user ? (
             <UserMenu name={user.name} />
           ) : (
@@ -102,7 +105,7 @@ export default function Navbar() {
           </div>
 
           {!isAuthenticated && (
-            <div className="-mx-4 mt-3 flex flex-col gap-2 border-t border-white/10 px-4 pt-3">
+            <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               <Link
                 to="/login"
                 onClick={closeMenu}
@@ -124,6 +127,15 @@ export default function Navbar() {
     </nav>
   )
 }
+
+// function AuthSlotPlaceholder() {
+//   return (
+//     <div
+//       className="hidden h-9 w-36 animate-pulse rounded-full bg-white/10 md:block"
+//       aria-hidden="true"
+//     />
+//   )
+// }
 
 function UserMenu({ name }: { name: string }) {
   const [open, setOpen] = useState(false)
@@ -172,6 +184,14 @@ function UserMenu({ name }: { name: string }) {
             onClick={() => setOpen(false)}
           >
             Mi perfil
+          </Link>
+          <Link
+            to="/privacy"
+            role="menuitem"
+            className="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+            onClick={() => setOpen(false)}
+          >
+            Centro de privacidad
           </Link>
           <button
             type="button"

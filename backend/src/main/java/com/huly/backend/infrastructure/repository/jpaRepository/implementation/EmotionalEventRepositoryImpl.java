@@ -9,8 +9,10 @@ import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUs
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IActivityJpaRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IEmotionalEventJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -30,6 +32,36 @@ public class EmotionalEventRepositoryImpl implements EmotionalEventRepository {
     @Override
     public Optional<EmotionalEvent> findById(Long id) {
         return emotionalEventJpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
+    public List<EmotionalEvent> findRecentRecommendationHistoryByUserId(Long userId, int limit) {
+        if (userId == null || limit <= 0) {
+            return List.of();
+        }
+        return emotionalEventJpaRepository.findRecommendationHistoryByUserId(userId, PageRequest.of(0, limit)).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<EmotionalEvent> findByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return emotionalEventJpaRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<EmotionalEvent> findRecommendationEventsByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return emotionalEventJpaRepository.findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(userId).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     private EmotionalEventEntity toEntity(EmotionalEvent event) {

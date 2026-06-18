@@ -5,9 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "user_goals")
@@ -43,5 +40,14 @@ public class UserGoalsEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "activity_id", nullable = true)
     private ActivityEntity activity;
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    @Column(name = "coins_reward", nullable = false)
+    private Integer coinsReward = 10;
+
+    @Column(name = "coins_reward_with_image", nullable = false)
+    private Integer coinsRewardWithImage = 25;
 
 }

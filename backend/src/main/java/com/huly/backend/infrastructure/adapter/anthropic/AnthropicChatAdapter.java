@@ -6,7 +6,6 @@ import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -18,7 +17,6 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +25,7 @@ import java.util.List;
 @Primary
 @Component
 @ConditionalOnProperty(name = "app.ai.provider", havingValue = "anthropic")
-public class AnthropicChatAdapter implements LLMChatPort, StreamingLLMChatPort {
+public class AnthropicChatAdapter implements LLMChatPort {
 
     private final ChatModel chatModel;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -41,14 +39,6 @@ public class AnthropicChatAdapter implements LLMChatPort, StreamingLLMChatPort {
         List<Message> messages = buildMessages(systemPrompt, userMessage, history);
         String raw = extractText(chatModel.call(new Prompt(messages)));
         return parseResponse(raw);
-    }
-
-    @Override
-    public Flux<String> stream(String systemPrompt, String userMessage, List<ConversationMessage> history) {
-        List<Message> messages = buildMessages(systemPrompt, userMessage, history);
-        return chatModel.stream(new Prompt(messages))
-                .map(this::extractText)
-                .filter(text -> text != null && !text.isBlank());
     }
 
     private ChatReply parseResponse(String raw) {

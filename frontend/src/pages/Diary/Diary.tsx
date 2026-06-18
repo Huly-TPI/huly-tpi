@@ -11,6 +11,9 @@ import BackButton from '../../components/Buttons/BackButton/BackButton.tsx'
 import DiaryConsentModal from '../../components/DiaryConsentModal.tsx'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground.tsx'
 import { useTheme } from '../../context/theme.tsx'
+import { useAuthGate } from '../../context/authGate.tsx'
+import { ActivityType } from '../../api/activities'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
 function getDiaryConsentKey(userId: number): string {
   return `diaryTextConsent_${userId}`
@@ -67,7 +70,7 @@ export default function Diary() {
   const { user } = useAuth()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-
+  const { requireAuth } = useAuthGate()
   const diaryPalette = isDark
     ? {
         cardBackground: '#22324d',
@@ -125,6 +128,17 @@ export default function Diary() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showConsentModal, setShowConsentModal] = useState(false)
+
+  const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(
+    ActivityType.DIARIO
+  )
+
+  useEffect(() => {
+    if (adentro.trim() || pensamiento.trim() || bien.trim() || manana.trim() || selectedMood !== null) {
+      startSession()
+      markConditionMet()
+    }
+  }, [adentro, pensamiento, bien, manana, selectedMood, startSession, markConditionMet])
 
   useEffect(() => {
     if (window.innerWidth < 768) return
@@ -209,6 +223,10 @@ export default function Diary() {
       })
       const useTextForAI = user ? localStorage.getItem(getDiaryConsentKey(user.id)) === 'true' : false
       const newEntry = await journalApi.create({ content: contentJson, mood: selectedMood, useTextForAI })
+      
+      await saveSession()
+      stopSession()
+
       setEntries((prev) => [newEntry, ...prev])
       setAdentro('')
       setPensamiento('')
@@ -329,7 +347,7 @@ export default function Diary() {
                     type="button"
                     disabled={!isNewEntry}
                     onClick={() =>
-                      setSelectedMood(selectedMood === mood.value ? null : mood.value)
+                      requireAuth(() => setSelectedMood(selectedMood === mood.value ? null : mood.value))
                     }
                     className="flex flex-col items-center gap-1 group"
                   >
@@ -369,7 +387,8 @@ export default function Diary() {
             <textarea
               value={displayAdentro}
               onChange={(e) => isNewEntry && setAdentro(e.target.value)}
-              readOnly={!isNewEntry}
+              readOnly={!isNewEntry || !user}
+              onFocus={() => !user && requireAuth(() => {})}
               placeholder="Hoy me pasó..."
               className="flex-1 w-full resize-none border-none outline-none text-sm leading-8 min-h-[180px] rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
               style={{ backgroundColor: diaryPalette.accentSurface, color: diaryPalette.cardText }}
@@ -393,7 +412,8 @@ export default function Diary() {
               <textarea
                 value={displayPensamiento}
                 onChange={(e) => isNewEntry && setPensamiento(e.target.value)}
-                readOnly={!isNewEntry}
+                readOnly={!isNewEntry || !user}
+                onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Lo que ya no quiero cargar..."
                 rows={4}
                 className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
@@ -408,7 +428,8 @@ export default function Diary() {
               <textarea
                 value={displayBien}
                 onChange={(e) => isNewEntry && setBien(e.target.value)}
-                readOnly={!isNewEntry}
+                readOnly={!isNewEntry || !user}
+                onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Hoy logré..."
                 rows={4}
                 className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(100,153,89,0.7)]"
@@ -423,7 +444,8 @@ export default function Diary() {
               <textarea
                 value={displayManana}
                 onChange={(e) => isNewEntry && setManana(e.target.value)}
-                readOnly={!isNewEntry}
+                readOnly={!isNewEntry || !user}
+                onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Mañana quiero..."
                 rows={4}
                 className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[#F2C57C]"

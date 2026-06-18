@@ -1,10 +1,14 @@
 package com.huly.backend.infrastructure.presentation.exception;
 
+import com.huly.backend.domain.exception.AccountNotActiveException;
 import com.huly.backend.domain.exception.BusinessRuleException;
+import com.huly.backend.domain.exception.DailyRewardAlreadyClaimedException;
 import com.huly.backend.domain.exception.DuplicateResourceException;
+import com.huly.backend.domain.exception.ImageValidationUnavailableException;
 import com.huly.backend.domain.exception.InfrastructureException;
 import com.huly.backend.domain.exception.InsufficientPermissionsException;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
+import com.huly.backend.domain.exception.InvalidGoalImageException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +18,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -60,15 +65,44 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, e, request, null);
     }
 
+    @ExceptionHandler(DailyRewardAlreadyClaimedException.class)
+    public ResponseEntity<ErrorResponse> handleDailyRewardAlreadyClaimedException(DailyRewardAlreadyClaimedException e, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, e, request, null);
+    }
+
     @ExceptionHandler(InsufficientPermissionsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientPermissionsException(InsufficientPermissionsException e, HttpServletRequest request) {
         return buildResponse(HttpStatus.FORBIDDEN, e, request, null);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request) {
+        return buildResponse(HttpStatus.PAYLOAD_TOO_LARGE, new Exception("La imagen no puede superar los 5 MB."), request, null);
+    }
+
+    @ExceptionHandler(InvalidGoalImageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidGoalImageException(InvalidGoalImageException e, HttpServletRequest request) {
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, e, request, null);
+    }
+
+    @ExceptionHandler(ImageValidationUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleImageValidationUnavailableException(ImageValidationUnavailableException e, HttpServletRequest request) {
+        log.error("Image validation service unavailable: {}", e.getMessage(), e);
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, new Exception("El servicio de validación de imágenes no está disponible. Intentá de nuevo más tarde."), request, null);
     }
 
     @ExceptionHandler(InfrastructureException.class)
     public ResponseEntity<ErrorResponse> handleInfrastructureException(InfrastructureException e, HttpServletRequest request) {
         log.error("Infrastructure error: {}", e.getMessage(), e);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, new Exception("Ocurrió un error interno en el servidor"), request, null);
+    }
+
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotActiveException(
+            AccountNotActiveException e,
+            HttpServletRequest request) {
+
+        return buildResponse(HttpStatus.UNAUTHORIZED, e, request, null);
     }
 
     // --- Infrastructure/presentation exceptions ---

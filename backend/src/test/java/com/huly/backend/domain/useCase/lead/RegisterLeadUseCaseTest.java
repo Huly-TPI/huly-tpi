@@ -4,9 +4,9 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
+import com.huly.backend.domain.exception.DuplicateResourceException;
 import com.huly.backend.domain.port.EmailPort;
 import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.infrastructure.presentation.exception.ConflictException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -69,8 +69,8 @@ class RegisterLeadUseCaseTest {
         when(userRepository.existsByEmail("existing@huly.com")).thenReturn(true);
 
         assertThatThrownBy(() -> registerLeadUseCase.execute("existing@huly.com", "hulyuser", SourceAction.LANDING))
-                .isInstanceOf(ConflictException.class)
-                .hasMessageContaining("Ya existe en lead con email");
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("Ya existe un lead con email");
     }
 
     @Test
@@ -78,7 +78,7 @@ class RegisterLeadUseCaseTest {
         when(userRepository.existsByEmail("existing@huly.com")).thenReturn(true);
 
         assertThatThrownBy(() -> registerLeadUseCase.execute("existing@huly.com", "hulyuser", SourceAction.LANDING))
-                .isInstanceOf(ConflictException.class);
+                .isInstanceOf(DuplicateResourceException.class);
 
         verify(userRepository, never()).save(any());
         verify(userRepository, never()).saveLeadDetail(any(), any(), any());

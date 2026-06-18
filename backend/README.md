@@ -1,4 +1,4 @@
-<div align="center">
+/<div align="center">
 
 # Huly TPI — Backend
 
@@ -42,7 +42,7 @@ API REST del proyecto Huly TPI construida con arquitectura limpia sobre Spring B
 | Spring WebSocket | — | Comunicación en tiempo real |
 | Spring AI | 2.0.0-M4 | Chat memory con JDBC |
 | PostgreSQL | 16 | Base de datos principal |
-| H2 | — | Base de datos en memoria (dev) |
+| H2 | — | Base de datos en memoria para tests |
 | Flyway | — | Migraciones de base de datos |
 | SpringDoc OpenAPI | 3.0.2 | Documentación Swagger |
 | Lombok | — | Reducción de boilerplate |
@@ -70,7 +70,7 @@ Antes de comenzar verificá que tenés instalado:
 
 - **Java 17** — [Descargar](https://adoptium.net/)
 - **Maven 3.9+** — [Descargar](https://maven.apache.org/download.cgi) _(o usar el wrapper `./mvnw` incluido)_
-- **PostgreSQL 16** — solo para perfiles `qa` y `prod`
+- **Docker con Docker Compose** — PostgreSQL 16 + pgvector para desarrollo local
 - **Git**
 
 Verificar instalaciones:
@@ -97,9 +97,17 @@ cd huly-tpi/backend
 ./mvnw clean install -DskipTests
 ```
 
-### 3. Ejecutar en modo desarrollo
+### 3. Levantar PostgreSQL para desarrollo
 
-En **dev** no necesitás PostgreSQL — usa H2 en memoria automáticamente.
+Desde la raíz del repositorio:
+
+```bash
+docker compose up -d
+```
+
+El contenedor expone PostgreSQL en `localhost:5433`.
+
+### 4. Ejecutar en modo desarrollo
 
 ```bash
 ./mvnw spring-boot:run
@@ -113,7 +121,7 @@ O con el perfil explícito:
 
 La aplicación estará disponible en: `http://localhost:8080`
 
-### 4. Verificar que levantó correctamente
+### 5. Verificar que levantó correctamente
 
 ```bash
 curl http://localhost:8080/api/examples/test
@@ -129,7 +137,7 @@ El proyecto tiene tres perfiles. Se activa mediante la variable `SPRING_PROFILES
 
 | Perfil | Base de datos | Flyway | Swagger | Uso |
 |--------|--------------|--------|---------|-----|
-| `dev` | H2 en memoria | Deshabilitado | ✅ Habilitado | Desarrollo local |
+| `dev` | PostgreSQL + pgvector | Habilitado | ✅ Habilitado | Desarrollo local |
 | `qa` | PostgreSQL | Habilitado | ✅ Habilitado | Testing y QA |
 | `prod` | PostgreSQL | Habilitado | ❌ Deshabilitado | Producción |
 
@@ -156,9 +164,10 @@ cp src/main/resources/application-huly-secrets.properties.example \
 |----------|-------------|---------|
 | `PORT` | Puerto del servidor | `8080` |
 | `FRONTEND_URL` | URL del frontend (CORS) | `http://localhost:5173` |
-| `SPRING_DATASOURCE_URL` | URL de conexión a PostgreSQL | `jdbc:postgresql://localhost:5432/huly` |
-| `SPRING_DATASOURCE_USERNAME` | Usuario de la base de datos | `postgres` |
-| `SPRING_DATASOURCE_PASSWORD` | Contraseña de la base de datos | `secret` |
+| `LANDING_URL` | URL de la landing page (CORS) | `http://localhost:3000` |
+| `SPRING_DATASOURCE_URL` | URL de conexión a PostgreSQL | `jdbc:postgresql://localhost:5433/huly` |
+| `SPRING_DATASOURCE_USERNAME` | Usuario de la base de datos | `huly_user` |
+| `SPRING_DATASOURCE_PASSWORD` | Contraseña de la base de datos | `huly_pass` |
 | `SSL_KEY_STORE_PASSWORD` | Contraseña del keystore SSL (solo si `ssl.enabled=true`) | `secret123` |
 | `JWT_SECRET` | Clave secreta para firmar JWTs — **mínimo 32 caracteres** | `MiClaveSecreta_minimo32chars_ok!` |
 

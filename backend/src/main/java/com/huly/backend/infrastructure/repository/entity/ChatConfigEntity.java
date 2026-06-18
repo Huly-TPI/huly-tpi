@@ -3,9 +3,6 @@ package com.huly.backend.infrastructure.repository.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "chat_config")
@@ -27,4 +24,9 @@ public class ChatConfigEntity {
     @Column(name = "system_prompt")
     private String systemPrompt;
 
+    @Column(name = "preferred_name_question_enabled", nullable = false)
+    private Boolean preferredNameQuestionEnabled;
+
+    @Column(name = "communication_style_question_enabled", nullable = false)
+    private Boolean communicationStyleQuestionEnabled;
 }

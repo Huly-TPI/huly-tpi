@@ -145,3 +145,8 @@ sensevoice-service/venv/
 *.egg-info/
 dist/
 *.egg
+
+# EXTENSION
+# ========================
+antiscroll-extension/node_modules/
+antiscroll-extension/dist/

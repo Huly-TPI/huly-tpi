@@ -78,6 +78,23 @@ class AuthControllerTest {
     }
 
     @Test
+    void login_shouldIssueSecureSameSiteNoneCookie_whenCookieSecureEnabled() throws Exception {
+        when(tokenProvider.isCookieSecure()).thenReturn(true);
+        AuthTokens tokens = AuthTokens.builder()
+                .accessToken("theAccessToken").refreshToken("theRefreshToken")
+                .role(UserRole.USER).build();
+        when(loginUseCase.execute("user@huly.com", "password123")).thenReturn(tokens);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "user@huly.com", "password", "password123"))))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")));
+    }
+
+    @Test
     void login_shouldReturn400_whenEmailIsInvalid() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -171,6 +188,28 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(
                                 Map.of("name", "Juan", "email", "user@huly.com", "password", "abc"))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_shouldReturn400_whenNameContainsNumbers() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("name", "Juan123", "email", "user@huly.com", "password", "password123", "birthDate", "2000-01-01"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.name")
+                        .value("El nombre debe tener al menos 3 letras y solo puede contener letras y espacios"));
+    }
+
+    @Test
+    void register_shouldReturn400_whenNameIsOnlyAPoint() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("name", ".", "email", "user@huly.com", "password", "password123", "birthDate", "2000-01-01"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.name")
+                        .value("El nombre debe tener al menos 3 letras y solo puede contener letras y espacios"));
     }
 
     @Test

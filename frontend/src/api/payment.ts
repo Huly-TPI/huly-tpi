@@ -5,6 +5,16 @@ export interface Product {
   name: string
   description: string
   price: number
+  coinsAmount: number
+}
+
+export interface Plan {
+  id: string
+  name: string
+  description: string
+  price: number
+  coinsAmount: number
+  planCode: string
 }
 
 export interface CreatePreferenceResponse {
@@ -13,6 +23,8 @@ export interface CreatePreferenceResponse {
 }
 
 export const getProducts = () => api.get<Product[]>('/payment/products')
+
+export const getPlans = () => api.get<Plan[]>('/payment/plans')
 
 export const createPreference = (productId: string) =>
   api.post<CreatePreferenceResponse>(`/payment/preference/${productId}`, {})

@@ -4,14 +4,12 @@ import com.huly.backend.domain.model.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.service.RiskWordService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 /**
  * Caso de uso para la actualización de una palabra de riesgo existente.
  * Construye el objeto de dominio con los nuevos valores y delega
  * la lógica de negocio al {@link RiskWordService}.
  */
-@Service
 @RequiredArgsConstructor
 public class UpdateRiskWordUseCase {
 

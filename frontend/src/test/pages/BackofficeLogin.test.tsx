@@ -9,8 +9,29 @@ vi.mock('../../api/auth', () => ({
     backofficeLogin: vi.fn(),
 }))
 
+const mockLoginWithToken = vi.fn().mockResolvedValue(undefined)
+vi.mock('../../context/auth', () => ({
+    useAuth: () => ({
+        loginWithToken: mockLoginWithToken,
+    }),
+}))
+
+const mockSetToken = vi.fn()
+vi.mock('../../api/client', () => ({
+    setToken: (t: string) => mockSetToken(t),
+    getToken: vi.fn(),
+    clearToken: vi.fn(),
+    tryRehydrateSession: vi.fn(),
+    api: {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        patch: vi.fn(),
+        delete: vi.fn(),
+    },
+}))
+
 vi.mock('../../assets/brand/color-logo.webp', () => ({ default: 'color-logo.webp' }))
-vi.mock('../../assets/backoffice/hojita.webp', () => ({ default: 'hojita.webp' }))
 
 import { backofficeLogin } from '../../api/auth'
 
@@ -89,7 +110,7 @@ describe('BackofficeLogin', () => {
         })
     })
 
-    it('guarda token y role ADMIN en localStorage al iniciar sesión', async () => {
+    it('guarda el token en memoria y el role en localStorage al iniciar sesión', async () => {
         mockedBackofficeLogin.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
         const { user } = renderWithRouter()
 
@@ -97,7 +118,7 @@ describe('BackofficeLogin', () => {
         await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
         await waitFor(() => {
-            expect(localStorage.getItem('huly:access-token')).toBe('token-123')
+            expect(mockLoginWithToken).toHaveBeenCalledWith('token-123')
             expect(localStorage.getItem('role')).toBe('ADMIN')
         })
     })
@@ -134,5 +155,35 @@ describe('BackofficeLogin', () => {
         await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
         expect(screen.getByRole('button', { name: 'Ingresando...' })).toBeDisabled()
+    })
+
+    it('redirige al backoffice si ya tiene el rol ADMIN en localStorage', () => {
+        localStorage.setItem('role', 'ADMIN')
+        render(
+            <MemoryRouter initialEntries={['/backoffice/login']}>
+                <Routes>
+                    <Route path="/backoffice/login" element={<BackofficeLogin />} />
+                    <Route path="/backoffice" element={<h1>Backoffice</h1>} />
+                </Routes>
+            </MemoryRouter>
+        )
+        expect(screen.getByText('Backoffice')).toBeInTheDocument()
+        expect(screen.queryByPlaceholderText('Correo electrónico')).not.toBeInTheDocument()
+    })
+
+    it('alterna la visibilidad de la contraseña al hacer clic en el ojo', async () => {
+        const { user } = renderWithRouter()
+        const passwordInput = screen.getByPlaceholderText('••••••••') as HTMLInputElement
+
+        expect(passwordInput.type).toBe('password')
+
+        const toggleButton = screen.getByLabelText('Mostrar contraseña')
+        await user.click(toggleButton)
+
+        expect(passwordInput.type).toBe('text')
+        expect(screen.getByLabelText('Ocultar contraseña')).toBeInTheDocument()
+
+        await user.click(toggleButton)
+        expect(passwordInput.type).toBe('password')
     })
 })

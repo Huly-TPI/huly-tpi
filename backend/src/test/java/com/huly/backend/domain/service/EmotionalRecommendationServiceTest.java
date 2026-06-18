@@ -1,12 +1,15 @@
 package com.huly.backend.domain.service;
 
 import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.Vad;
 import com.huly.backend.domain.model.enums.ActivityType;
-import com.huly.backend.domain.model.enums.EmotionalEventSource;
+import com.huly.backend.domain.model.enums.RecommendationDecision;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,6 +80,114 @@ class EmotionalRecommendationServiceTest {
         assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.DIARIO);
     }
 
+    @Test
+    void recommend_shouldKeepVadRanking_whenUserHistoryIsEmpty() {
+        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        List<Activity> activities = defaultActivities();
+
+        EmotionalRecommendationResult withoutHistory = service.recommend(query, activities);
+        EmotionalRecommendationResult withEmptyHistory = service.recommend(query, activities, List.of());
+
+        assertThat(withEmptyHistory.recommendations())
+                .extracting("type", ActivityType.class)
+                .containsExactlyElementsOf(withoutHistory.recommendations().stream()
+                        .map(recommendation -> recommendation.type())
+                        .toList());
+        assertThat(withEmptyHistory.recommendations())
+                .extracting("score", Double.class)
+                .containsExactlyElementsOf(withoutHistory.recommendations().stream()
+                        .map(recommendation -> recommendation.score())
+                        .toList());
+    }
+
+    @Test
+    void recommend_shouldRaiseActivityWithPositiveAcceptedHistory() {
+        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        List<Activity> activities = defaultActivities();
+
+        double baseScore = scoreFor(service.recommend(query, activities), ActivityType.DIARIO);
+        EmotionalRecommendationResult result = service.recommend(
+                query,
+                activities,
+                List.of(event(RecommendationDecision.ACCEPTED, 2L, 2L, null))
+        );
+
+        assertThat(scoreFor(result, ActivityType.DIARIO)).isGreaterThan(baseScore);
+    }
+
+    @Test
+    void recommend_shouldLowerActivityWithIgnoredHistory() {
+        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        List<Activity> activities = defaultActivities();
+
+        double baseScore = scoreFor(service.recommend(query, activities), ActivityType.RESPIRACION);
+        EmotionalRecommendationResult result = service.recommend(
+                query,
+                activities,
+                List.of(event(RecommendationDecision.IGNORED, 1L, null, null))
+        );
+
+        assertThat(scoreFor(result, ActivityType.RESPIRACION)).isLessThan(baseScore);
+    }
+
+    @Test
+    void recommend_shouldUseChosenActivityAsPositiveSignal_whenUserChoseOther() {
+        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        List<Activity> activities = defaultActivities();
+
+        EmotionalRecommendationResult result = service.recommend(
+                query,
+                activities,
+                List.of(event(RecommendationDecision.CHOSE_OTHER, 1L, 2L, null))
+        );
+
+        assertThat(scoreFor(result, ActivityType.DIARIO))
+                .isGreaterThan(scoreFor(service.recommend(query, activities), ActivityType.DIARIO));
+        assertThat(scoreFor(result, ActivityType.RESPIRACION))
+                .isLessThan(scoreFor(service.recommend(query, activities), ActivityType.RESPIRACION));
+    }
+
+    @Test
+    void recommend_shouldRaiseHighFeedbackAndLowerLowFeedback() {
+        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        List<Activity> activities = defaultActivities();
+        EmotionalRecommendationResult base = service.recommend(query, activities);
+
+        EmotionalRecommendationResult highFeedback = service.recommend(
+                query,
+                activities,
+                List.of(event(null, 2L, null, 5))
+        );
+        EmotionalRecommendationResult lowFeedback = service.recommend(
+                query,
+                activities,
+                List.of(event(null, 2L, null, 1))
+        );
+
+        assertThat(scoreFor(highFeedback, ActivityType.DIARIO)).isGreaterThan(scoreFor(base, ActivityType.DIARIO));
+        assertThat(scoreFor(lowFeedback, ActivityType.DIARIO)).isLessThan(scoreFor(base, ActivityType.DIARIO));
+    }
+
+    @Test
+    void recommend_shouldKeepTrendAdjustmentBoundedSoVadStillMatters() {
+        EmotionalRecommendationQuery query = query(-0.8, 0.9, -0.7, 0.85, "calmarme para dormir");
+        List<Activity> activities = defaultActivities();
+
+        EmotionalRecommendationResult result = service.recommend(
+                query,
+                activities,
+                List.of(
+                        event(RecommendationDecision.ACCEPTED, 2L, 2L, 5),
+                        event(RecommendationDecision.ACCEPTED, 2L, 2L, 5),
+                        event(RecommendationDecision.ACCEPTED, 2L, 2L, 5)
+                )
+        );
+
+        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(scoreFor(result, ActivityType.DIARIO) - scoreFor(service.recommend(query, activities), ActivityType.DIARIO))
+                .isLessThanOrEqualTo(0.15);
+    }
+
     private EmotionalRecommendationQuery query(
             double valence,
             double arousal,
@@ -85,17 +196,34 @@ class EmotionalRecommendationServiceTest {
             String userGoal
     ) {
         return new EmotionalRecommendationQuery(
-                1L,
-                EmotionalEventSource.CHATBOT,
-                "texto",
-                "ANSIEDAD",
-                0.9,
-                valence,
-                arousal,
-                dominance,
+                new Vad(valence, arousal, dominance),
                 intensity,
                 userGoal
         );
+    }
+
+    private double scoreFor(EmotionalRecommendationResult result, ActivityType type) {
+        return result.recommendations().stream()
+                .filter(recommendation -> recommendation.type() == type)
+                .findFirst()
+                .orElseThrow()
+                .score();
+    }
+
+    private EmotionalEvent event(
+            RecommendationDecision decision,
+            Long recommendedActivityId,
+            Long chosenActivityId,
+            Integer feedbackScore
+    ) {
+        return EmotionalEvent.builder()
+                .userId(1L)
+                .recommendedActivityId(recommendedActivityId)
+                .chosenActivityId(chosenActivityId)
+                .recommendationDecision(decision)
+                .feedbackScore(feedbackScore)
+                .createdAt(Instant.now())
+                .build();
     }
 
     private List<Activity> defaultActivities() {

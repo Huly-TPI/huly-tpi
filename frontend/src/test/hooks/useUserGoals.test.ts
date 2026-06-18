@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import { userGoalsApi } from '../../api/userGoals'
+import { SessionExpiredError } from '../../api/client'
 
 vi.mock('../../api/userGoals', () => ({
   userGoalsApi: {
@@ -77,13 +78,22 @@ describe('useUserGoals', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
   })
 
-  it('setea error si el fetch falla', async () => {
+  it('setea error genérico si el fetch falla', async () => {
     mockedGetForCurrentUser.mockRejectedValueOnce(new Error('Error de red'))
 
     const { result } = renderHook(() => useUserGoals())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(result.current.error).toBe('Error de red')
+    expect(result.current.error).toBe('No pudimos cargar tus retos. Intentá de nuevo más tarde.')
+  })
+
+  it('setea mensaje de sesión si el fetch lanza SessionExpiredError', async () => {
+    mockedGetForCurrentUser.mockRejectedValueOnce(new SessionExpiredError())
+
+    const { result } = renderHook(() => useUserGoals())
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.error).toBe('Debés iniciar sesión para ver tus retos')
   })
 
   it('createGoal llama a la API y refresca los datos', async () => {
@@ -150,7 +160,7 @@ describe('useUserGoals', () => {
     })
 
     expect(result.current.pendientes?.content).toHaveLength(0)
-    expect(mockedComplete).toHaveBeenCalledWith(5)
+    expect(mockedComplete).toHaveBeenCalledWith(5, undefined)
   })
 
   it('completeGoal refresca silenciosamente tras el error y relanza la excepción', async () => {
