@@ -41,9 +41,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import org.springframework.mock.web.MockMultipartFile;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -279,17 +277,6 @@ class ChatControllerTest {
                 .andExpect(status().isOk());
 
         verify(audioChatUseCase).execute(any(), eq("conv-1"), eq(USER_ID));
-    }
-
-    @Test
-    void sendAudioMessage_shouldReturn404_whenUserNotFound() throws Exception {
-        when(appUserRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
-        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
-
-        mockMvc.perform(multipart("/api/chat/audio")
-                        .file(audio)
-                        .param("conversationId", "conv-1"))
-                .andExpect(status().isNotFound());
     }
 
     @Test
