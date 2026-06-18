@@ -12,6 +12,7 @@ describe('ChatbotComposer', () => {
         onInputChange={vi.fn()}
         onSend={vi.fn()}
         onReset={vi.fn()}
+        onSendAudio={vi.fn()}
       />,
     )
 
@@ -31,6 +32,7 @@ describe('ChatbotComposer', () => {
         onInputChange={onInputChange}
         onSend={vi.fn()}
         onReset={vi.fn()}
+        onSendAudio={vi.fn()}
       />,
     )
 
@@ -49,6 +51,7 @@ describe('ChatbotComposer', () => {
         onInputChange={vi.fn()}
         onSend={onSend}
         onReset={vi.fn()}
+        onSendAudio={vi.fn()}
       />,
     )
 
@@ -67,6 +70,7 @@ describe('ChatbotComposer', () => {
         onInputChange={vi.fn()}
         onSend={vi.fn()}
         onReset={vi.fn()}
+        onSendAudio={vi.fn()}
       />,
     )
 
@@ -86,6 +90,7 @@ describe('ChatbotComposer', () => {
         onInputChange={vi.fn()}
         onSend={vi.fn()}
         onReset={onReset}
+        onSendAudio={vi.fn()}
       />,
     )
 

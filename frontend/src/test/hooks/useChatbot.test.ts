@@ -3,12 +3,21 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { useChatbot } from '../../hooks/useChatbot'
 import { chatApi } from '../../api/chat'
 import { emotionalEventsApi } from '../../api/emotionalEvents'
+import { saveAudioBlob } from '../../utils/audioCache'
 
 vi.mock('../../api/chat', () => ({
   chatApi: {
     sendMessage: vi.fn(),
     getHistory: vi.fn(),
+    sendAudioMessage: vi.fn(),
+    saveChallengeDecision: vi.fn(),
   },
+}))
+
+vi.mock('../../utils/audioCache', () => ({
+  saveAudioBlob: vi.fn().mockResolvedValue(undefined),
+  getAudioBlob: vi.fn().mockResolvedValue(null),
+  deleteAudioBlob: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../context/auth', () => ({
@@ -25,12 +34,16 @@ vi.mock('../../api/emotionalEvents', () => ({
 
 const mockedSendMessage = vi.mocked(chatApi.sendMessage)
 const mockedGetHistory = vi.mocked(chatApi.getHistory)
+const mockedSendAudioMessage = vi.mocked(chatApi.sendAudioMessage)
 const mockedUpdateDecision = vi.mocked(emotionalEventsApi.updateDecision)
+const mockedSaveAudioBlob = vi.mocked(saveAudioBlob)
 
 describe('useChatbot', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
+    global.URL.createObjectURL = vi.fn().mockReturnValue('blob:fake-url')
+    global.URL.revokeObjectURL = vi.fn()
   })
 
   it('loads history on mount using persisted conversationId', async () => {
@@ -210,6 +223,103 @@ describe('useChatbot', () => {
       role: 'assistant',
       suggestedActionDecision: 'rejected',
     })
+  })
+
+  it('sendAudioMessage appends audio user message and assistant reply', async () => {
+    mockedGetHistory.mockResolvedValueOnce({
+      content: [],
+      page_number: 0,
+      page_size: 20,
+      total_elements: 0,
+      total_pages: 0,
+      first: true,
+      last: true,
+    } as never)
+    mockedSendAudioMessage.mockResolvedValueOnce({
+      huly_reply: 'entendí tu mensaje de voz',
+      detected_emotion: 'neutral',
+      intensity: 3,
+      suggested_action: null,
+      generated_challenge: null,
+      metadata: null,
+    } as never)
+
+    const { result } = renderHook(() => useChatbot())
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    const blob = new Blob(['audio'], { type: 'audio/webm' })
+    await act(async () => {
+      await result.current.sendAudioMessage(blob)
+    })
+
+    expect(result.current.messages[0]).toMatchObject({
+      role: 'user',
+      audioBlob: blob,
+      audioUrl: 'blob:fake-url',
+    })
+    expect(result.current.messages[1]).toMatchObject({
+      role: 'assistant',
+      content: 'entendí tu mensaje de voz',
+    })
+  })
+
+  it('sendAudioMessage saves blob to cache and tracks audio key in localStorage', async () => {
+    mockedGetHistory.mockResolvedValueOnce({
+      content: [],
+      page_number: 0,
+      page_size: 20,
+      total_elements: 0,
+      total_pages: 0,
+      first: true,
+      last: true,
+    } as never)
+    mockedSendAudioMessage.mockResolvedValueOnce({
+      huly_reply: 'ok',
+      detected_emotion: null,
+      intensity: null,
+      suggested_action: null,
+      generated_challenge: null,
+      metadata: null,
+    } as never)
+
+    const { result } = renderHook(() => useChatbot())
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    const blob = new Blob(['audio'], { type: 'audio/webm' })
+    await act(async () => {
+      await result.current.sendAudioMessage(blob)
+    })
+
+    expect(mockedSaveAudioBlob).toHaveBeenCalledWith(
+      expect.stringContaining(':'),
+      blob,
+    )
+    const storedKeys = Object.keys(localStorage).find(k => k.startsWith('hulyAudioKeys:'))
+    expect(storedKeys).toBeDefined()
+  })
+
+  it('sendAudioMessage handles API error without crashing', async () => {
+    mockedGetHistory.mockResolvedValueOnce({
+      content: [],
+      page_number: 0,
+      page_size: 20,
+      total_elements: 0,
+      total_pages: 0,
+      first: true,
+      last: true,
+    } as never)
+    mockedSendAudioMessage.mockRejectedValueOnce(new Error('red caída'))
+
+    const { result } = renderHook(() => useChatbot())
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    const blob = new Blob(['audio'], { type: 'audio/webm' })
+    await act(async () => {
+      await result.current.sendAudioMessage(blob)
+    })
+
+    expect(result.current.isSending).toBe(false)
+    expect(result.current.error).toBe('red caída')
   })
 
   it('resetConversation generates a new conversationId and clears messages', async () => {

@@ -16,6 +16,7 @@ describe('ChatbotMessages', () => {
           onClose={vi.fn()}
           onChallengeDecision={vi.fn()}
           onSuggestedActionDecision={vi.fn()}
+          onDeleteAudioMessage={vi.fn()}
           bottomRef={{ current: null }}
         />
       </MemoryRouter>,
@@ -47,6 +48,7 @@ describe('ChatbotMessages', () => {
           onClose={vi.fn()}
           onChallengeDecision={onChallengeDecision}
           onSuggestedActionDecision={vi.fn()}
+          onDeleteAudioMessage={vi.fn()}
           bottomRef={{ current: null }}
         />
       </MemoryRouter>,
@@ -85,6 +87,7 @@ describe('ChatbotMessages', () => {
           onClose={vi.fn()}
           onChallengeDecision={vi.fn()}
           onSuggestedActionDecision={onSuggestedActionDecision}
+          onDeleteAudioMessage={vi.fn()}
           bottomRef={{ current: null }}
         />
       </MemoryRouter>,

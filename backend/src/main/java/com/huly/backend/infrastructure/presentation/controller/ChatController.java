@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,8 +28,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
@@ -36,6 +39,7 @@ import java.util.List;
 public class ChatController {
 
     private final ChatUseCase chatUseCase;
+    private final AudioChatUseCase audioChatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
     private final UserVectorMemoryService userVectorMemoryService;
 
@@ -45,6 +49,16 @@ public class ChatController {
             @RequestBody @Valid ChatRequest request) {
         Long userId = getUserId(principal);
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
+        return ResponseEntity.ok(toResponse(reply));
+    }
+
+    @PostMapping(value = "/audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ChatResponse> sendAudioMessage(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestPart("audio") MultipartFile audio,
+            @RequestParam("conversationId") String conversationId) {
+        Long userId = getUserId(principal);
+        ChatReply reply = audioChatUseCase.execute(audio, conversationId, userId);
         return ResponseEntity.ok(toResponse(reply));
     }
 
