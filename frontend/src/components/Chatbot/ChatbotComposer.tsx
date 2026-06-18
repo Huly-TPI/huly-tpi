@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useState } from 'react'
 import Button from '../Buttons/Button/Button'
+import ChatbotAudioRecorder from './ChatbotAudioRecorder'
+import { useEffect, useRef } from 'react'
 import { FiTrash2 } from 'react-icons/fi'
 
 interface ChatbotComposerProps {
@@ -8,6 +10,7 @@ interface ChatbotComposerProps {
   onInputChange: (value: string) => void
   onSend: () => void
   onReset: () => void
+  onSendAudio: (blob: Blob) => void
 }
 
 export default function ChatbotComposer({
@@ -16,7 +19,9 @@ export default function ChatbotComposer({
   onInputChange,
   onSend,
   onReset,
+  onSendAudio
 }: ChatbotComposerProps) {
+  const [isRecorderActive, setIsRecorderActive] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -29,20 +34,39 @@ export default function ChatbotComposer({
   return (
     <footer className="border-t border-[var(--border-soft)] px-5 py-5">
       <div className="flex items-end gap-2">
-        <textarea
-          ref={textareaRef}
-          rows={2}
-          value={input}
-          onChange={event => onInputChange(event.target.value)}
-          placeholder="Escribí tu mensaje..."
-          onKeyDown={event => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              onSend()
-            }
-          }}
+        {!isRecorderActive && (
+          <>
+            <textarea
+              ref={textareaRef}
+              rows={2}
+              value={input}
+              onChange={event => onInputChange(event.target.value)}
+              placeholder="Escribí tu mensaje..."
+              onKeyDown={event => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  onSend()
+                }
+              }}
+              disabled={isSending}
+              className="min-h-[44px] w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta md:min-h-[52px]"
+            />
+            <Button
+              type="button"
+              onClick={onSend}
+              disabled={isSending || !input.trim()}
+              variant="primary"
+              size="sm"
+              className="shrink-0 !w-auto !min-w-0"
+            >
+              Enviar
+            </Button>
+          </>
+        )}
+        <ChatbotAudioRecorder
+          onSend={onSendAudio}
           disabled={isSending}
-          className="min-h-[44px] w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta md:min-h-[52px]"
+          onActiveChange={setIsRecorderActive}
         />
         <button
           type="button"
