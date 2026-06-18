@@ -3,6 +3,7 @@ package com.huly.backend.domain.useCase.chat;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ChatPreferenceHandlingResult;
 import com.huly.backend.domain.model.enums.EmotionType;
+import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.service.chat.ChatService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,12 +37,12 @@ class ChatUseCaseTest {
 
         when(handleChatPreferencesUseCase.execute(userId, conversationId, message))
                 .thenReturn(ChatPreferenceHandlingResult.continueChat());
-        when(chatService.processMessage(message, conversationId, userId, false)).thenReturn(expected);
+        when(chatService.processMessage(message, conversationId, userId, false, ChatUserIntent.NONE)).thenReturn(expected);
 
         ChatReply result = chatUseCase.execute(message, conversationId, userId);
 
         assertThat(result).isEqualTo(expected);
-        verify(chatService).processMessage(message, conversationId, userId, false);
+        verify(chatService).processMessage(message, conversationId, userId, false, ChatUserIntent.NONE);
     }
 
     @Test
@@ -61,7 +62,7 @@ class ChatUseCaseTest {
     void execute_shouldPropagateExceptionFromService() {
         when(handleChatPreferencesUseCase.execute(1L, "conv-2", "msg"))
                 .thenReturn(ChatPreferenceHandlingResult.continueChat());
-        when(chatService.processMessage("msg", "conv-2", 1L, false))
+        when(chatService.processMessage("msg", "conv-2", 1L, false, ChatUserIntent.NONE))
                 .thenThrow(new RuntimeException("error de servicio"));
 
         assertThatThrownBy(() -> chatUseCase.execute("msg", "conv-2", 1L))
@@ -78,7 +79,8 @@ class ChatUseCaseTest {
                 "Llamame crack y estoy triste",
                 "conv-1",
                 1L,
-                true)).thenReturn(expected);
+                true,
+                ChatUserIntent.NONE)).thenReturn(expected);
 
         ChatReply result = chatUseCase.execute(
                 "Llamame crack y estoy triste",
@@ -90,6 +92,7 @@ class ChatUseCaseTest {
                 "Llamame crack y estoy triste",
                 "conv-1",
                 1L,
-                true);
+                true,
+                ChatUserIntent.NONE);
     }
 }

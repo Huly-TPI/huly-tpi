@@ -30,7 +30,7 @@ class GetCloudRecommendationUseCaseTest {
     void setUp() {
         emotionalAnalysisPort = new CapturingEmotionalAnalysisPort();
         recommendationsUseCase = new CapturingRecommendationsUseCase();
-        useCase = new GetCloudRecommendationUseCase(
+        useCase = new GetCloudRecommendationUseCase(new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()), 
                 emotionalAnalysisPort,
                 new PromptBuilderService(),
                 new ChatEmotionalRecommendationPolicy(),
