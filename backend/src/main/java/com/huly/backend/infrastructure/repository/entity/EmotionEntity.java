@@ -4,10 +4,6 @@ import com.huly.backend.domain.model.enums.EmotionType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
-
 @Entity
 @Table(name = "emotion")
 @Getter

@@ -105,12 +105,13 @@ public class AuthController {
     ) {
         logoutUseCase.execute(refreshToken);
 
+        boolean secure = tokenProvider.isCookieSecure();
         ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(tokenProvider.isCookieSecure())
+                .secure(secure)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(sameSitePolicy(secure))
                 .build();
 
         return ResponseEntity.noContent()
@@ -119,12 +120,23 @@ public class AuthController {
     }
 
     private ResponseCookie buildRefreshCookie(String token) {
+        boolean secure = tokenProvider.isCookieSecure();
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
-                .secure(tokenProvider.isCookieSecure())
+                .secure(secure)
                 .path("/")
                 .maxAge(tokenProvider.getRefreshTokenMaxAgeSecs())
-                .sameSite("Lax")
+                .sameSite(sameSitePolicy(secure))
                 .build();
+    }
+
+    /**
+     * SameSite=None exige Secure; los navegadores rechazan una cookie None sin Secure.
+     * En dev (http, secure=false) usamos Lax —válido en localhost aunque front y back
+     * estén en puertos distintos (mismo site)— para que la cookie sobreviva al reload.
+     * En qa/prod (https, secure=true) mantenemos None para soportar cross-site.
+     */
+    private String sameSitePolicy(boolean secure) {
+        return secure ? "None" : "Lax";
     }
 }

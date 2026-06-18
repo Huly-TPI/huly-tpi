@@ -21,12 +21,15 @@ public class CorsFilter extends OncePerRequestFilter {
 
     private final String frontendUrl;
     private final String landingUrl;
+    private final String extensionUrl;
 
     public CorsFilter(
             @Value("${frontend.url}") String frontendUrl,
-            @Value("${landing.url}") String landingUrl) {
+            @Value("${landing.url}") String landingUrl,
+            @Value("${extension.url}") String extensionUrl) {
         this.frontendUrl = frontendUrl;
         this.landingUrl = landingUrl;
+        this.extensionUrl = extensionUrl;
     }
 
     @Override
@@ -42,13 +45,16 @@ public class CorsFilter extends OncePerRequestFilter {
 
         String origin = httpRequest.getHeader("Origin");
 
-        // Sin Origin → no es un request de browser, dejar pasar
         if (origin == null) {
             chain.doFilter(httpRequest, httpResponse);
             return;
         }
-        // Con Origin pero no coincide → bloquear
-        if (!origin.equals(frontendUrl) && !origin.equals(landingUrl)) {
+
+        boolean isAllowedOrigin = origin.equals(frontendUrl)
+                || origin.equals(landingUrl)
+                || origin.equals(extensionUrl);
+
+        if (!isAllowedOrigin) {
             log.warn("CORS bloqueado para origin: {}", origin);
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return;

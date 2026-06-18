@@ -1,12 +1,10 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.repository.UserGoalRepository;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class UpdateUserGoalUseCase {
 
@@ -14,7 +12,7 @@ public class UpdateUserGoalUseCase {
 
     public UserGoal execute(Long id, String title, String description, Long activityId) {
         UserGoal existing = userGoalRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("UserGoal", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("UserGoal", "id", id));
         existing.setTitle(title);
         existing.setDescription(description);
         existing.setActivityId(activityId);

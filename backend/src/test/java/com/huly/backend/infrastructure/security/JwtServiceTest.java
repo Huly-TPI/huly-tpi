@@ -18,11 +18,7 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
-        ReflectionTestUtils.setField(jwtService, "secret", SECRET);
-        ReflectionTestUtils.setField(jwtService, "accessTokenExpirationMs", ACCESS_MS);
-        ReflectionTestUtils.setField(jwtService, "refreshTokenExpirationMs", REFRESH_MS);
-        ReflectionTestUtils.setField(jwtService, "cookieSecure", false);
+        jwtService = buildJwtService(SECRET, ACCESS_MS, REFRESH_MS, false);
     }
 
     @Test
@@ -46,6 +42,34 @@ class JwtServiceTest {
     }
 
     @Test
+    void isAccessToken_shouldReturnTrue_forAccessTokenOnly() {
+        String accessToken = jwtService.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
+        String refreshToken = jwtService.generateRefreshToken(1L, "user@test.com");
+
+        assertThat(jwtService.isAccessToken(accessToken)).isTrue();
+        assertThat(jwtService.isAccessToken(refreshToken)).isFalse();
+    }
+
+    @Test
+    void isRefreshToken_shouldReturnTrue_forRefreshTokenOnly() {
+        String accessToken = jwtService.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
+        String refreshToken = jwtService.generateRefreshToken(1L, "user@test.com");
+
+        assertThat(jwtService.isRefreshToken(refreshToken)).isTrue();
+        assertThat(jwtService.isRefreshToken(accessToken)).isFalse();
+    }
+
+    @Test
+    void isAccessToken_shouldReturnFalse_forMalformedToken() {
+        assertThat(jwtService.isAccessToken("not.a.valid.token")).isFalse();
+    }
+
+    @Test
+    void isRefreshToken_shouldReturnFalse_forMalformedToken() {
+        assertThat(jwtService.isRefreshToken("not.a.valid.token")).isFalse();
+    }
+
+    @Test
     void isTokenValid_shouldReturnTrue_forFreshToken() {
         String token = jwtService.generateAccessToken(1L, "user@test.com", UserRole.ADMIN, UserStatus.ACTIVE);
 
@@ -59,10 +83,10 @@ class JwtServiceTest {
 
     @Test
     void isTokenValid_shouldReturnFalse_forExpiredToken() {
-        ReflectionTestUtils.setField(jwtService, "accessTokenExpirationMs", -1000L);
-        String token = jwtService.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
+        JwtService shortLived = buildJwtService(SECRET, -1000L, REFRESH_MS, false);
+        String token = shortLived.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
 
-        assertThat(jwtService.isTokenValid(token)).isFalse();
+        assertThat(shortLived.isTokenValid(token)).isFalse();
     }
 
     @Test
@@ -74,7 +98,32 @@ class JwtServiceTest {
     void isCookieSecure_shouldReturnConfiguredValue() {
         assertThat(jwtService.isCookieSecure()).isFalse();
 
-        ReflectionTestUtils.setField(jwtService, "cookieSecure", true);
-        assertThat(jwtService.isCookieSecure()).isTrue();
+        JwtService secureInstance = buildJwtService(SECRET, ACCESS_MS, REFRESH_MS, true);
+        assertThat(secureInstance.isCookieSecure()).isTrue();
+    }
+
+    @Test
+    void generateAccessToken_shouldProduceUniqueTokens_whenCalledInSuccession() {
+        String first = jwtService.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
+        String second = jwtService.generateAccessToken(1L, "user@test.com", UserRole.USER, UserStatus.ACTIVE);
+
+        assertThat(first).isNotEqualTo(second);
+    }
+
+    @Test
+    void generateRefreshToken_shouldProduceUniqueTokens_whenCalledInSuccession() {
+        String first = jwtService.generateRefreshToken(1L, "user@test.com");
+        String second = jwtService.generateRefreshToken(1L, "user@test.com");
+
+        assertThat(first).isNotEqualTo(second);
+    }
+
+    private JwtService buildJwtService(String secret, long accessMs, long refreshMs, boolean secure) {
+        JwtService instance = new JwtService();
+        ReflectionTestUtils.setField(instance, "secret", secret);
+        ReflectionTestUtils.setField(instance, "accessTokenExpirationMs", accessMs);
+        ReflectionTestUtils.setField(instance, "refreshTokenExpirationMs", refreshMs);
+        ReflectionTestUtils.setField(instance, "cookieSecure", secure);
+        return instance;
     }
 }

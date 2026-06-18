@@ -5,13 +5,11 @@ import com.huly.backend.domain.service.RiskWordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
 /**
  * Caso de uso para la consulta paginada y filtrada de palabras de riesgo.
  * Delega la validación de parámetros y la consulta al {@link RiskWordService}.
  */
-@Service
 @RequiredArgsConstructor
 public class ListRiskWordsUseCase {
 

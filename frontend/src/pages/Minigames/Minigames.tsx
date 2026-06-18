@@ -1,26 +1,27 @@
 import { useEffect } from 'react'
-import backgroundImage from '../../assets/minigames/light-theme/background/Background-minigames.webp'
-import mobileBackgroundImage from '../../assets/minigames/light-theme/background/mobile/background-minigames-mobile.webp'
 import darkBackgroundImage from '../../assets/minigames/dark-theme/background/Background-minigames.webp'
 import darkMobileBackgroundImage from '../../assets/minigames/dark-theme/background/mobile/background-minigames-mobile.webp'
+import backgroundImage from '../../assets/minigames/light-theme/background/Background-minigames.webp'
+import mobileBackgroundImage from '../../assets/minigames/light-theme/background/mobile/background-minigames-mobile.webp'
 
-import fishImage from '../../assets/minigames/light-theme/fish.webp'
-import easelImage from '../../assets/minigames/light-theme/paddle.webp'
-import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
-import sandImage from '../../assets/minigames/light-theme/sand.webp'
+import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
+import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
+import cloudImage from '../../assets/garden/light-theme/cloud.webp'
+import treeImage from '../../assets/garden/light-theme/tree.webp'
 import darkFishImage from '../../assets/minigames/dark-theme/fish.webp'
 import darkEaselImage from '../../assets/minigames/dark-theme/paddle.webp'
 import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
 import darkSandImage from '../../assets/minigames/dark-theme/sand.webp'
-import cloudImage from '../../assets/garden/light-theme/cloud.webp'
-import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
+import fishImage from '../../assets/minigames/light-theme/fish.webp'
+import easelImage from '../../assets/minigames/light-theme/paddle.webp'
+import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
+import sandImage from '../../assets/minigames/light-theme/sand.webp'
 
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
-import './Minigames.css'
-import BackButton from '../../components/Buttons/BackButton/BackButton'
 import { useTheme } from '../../context/theme'
+import './Minigames.css'
 
 const FULL_WIDTH = 'w-full'
 const DEFAULT_HOTSPOT = 'left-[2%] top-[4%] h-[92%] w-[96%]'
@@ -81,7 +82,7 @@ const minigameElements: SceneElementDefinition[] = [
         title: 'Colorear mandalas',
         imageAlt: 'Atril para pintar mandalas',
         image: { light: easelImage, dark: darkEaselImage },
-        placementClassName: 'left-[43%] top-[47%] z-20 w-[34%] md:left-[53%] md:top-[38%] md:w-[11%]',
+        placementClassName: 'left-[33%] top-[47%] z-20 w-[34%] md:left-[53%] md:top-[38%] md:w-[11%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
         clipPath: RECT_CLIP_PATH,
@@ -89,7 +90,7 @@ const minigameElements: SceneElementDefinition[] = [
         to: '/mandalas',
     },
     {
-        id: 'free-draw',
+        id: 'zen-sand-garden',
         title: 'Arena zen',
         imageAlt: 'Tablero de arena para dibujar libremente',
         image: { light: sandImage, dark: darkSandImage },
@@ -98,14 +99,25 @@ const minigameElements: SceneElementDefinition[] = [
         hotspotClassName: DEFAULT_HOTSPOT,
         clipPath: RECT_CLIP_PATH,
         tooltipClassName: 'bottom-full mb-2',
-        to: '/free-draw',
+        to: '/zen-sand-garden',
     },
 ]
 
-const sceneElements = [...cloudElements, ...minigameElements]
-
 export default function Minigames() {
     const { theme } = useTheme()
+    const homeReturnElement: SceneElementDefinition = {
+        id: 'home-return-tree',
+        title: 'Volver al jardin',
+        imageAlt: 'Fragmento del arbol del jardin',
+        image: { light: treeImage, dark: darkTreeImage },
+        placementClassName: 'minigames-home-return',
+        imageClassName: 'minigames-home-return__image',
+        hotspotClassName: 'minigames-home-return__hotspot',
+        clipPath: 'polygon(8% 14%, 24% 2%, 70% 2%, 92% 10%, 100% 24%, 100% 100%, 18% 100%, 8% 64%)',
+        tooltipClassName: 'left-[24%] top-[14%] -translate-x-1/2',
+        to: '/',
+    }
+    const sceneElements = [...cloudElements, ...minigameElements, homeReturnElement]
 
     useEffect(() => {
         const sources = new Set<string>([backgroundImage, mobileBackgroundImage, darkBackgroundImage, darkMobileBackgroundImage])
@@ -122,7 +134,6 @@ export default function Minigames() {
     return (
         <main className={`minigames-page ${theme === 'dark' ? 'minigames-page--dark' : ''}`}>
             <section className="minigames-scene">
-                <BackButton to="/" />
                 <ThemeBackground
                     lightSrc={backgroundImage}
                     lightMobileSrc={mobileBackgroundImage}

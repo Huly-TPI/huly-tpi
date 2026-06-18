@@ -1,14 +1,11 @@
 import { api } from './client'
 
-export type GenerateOptionsResponse = {
-    options: string[]
-}
-
-export const generateOnboardingOptions = (step: number, previousAnswer: string) =>
-    api.post<GenerateOptionsResponse>('/onboarding/generate-options', { step, previousAnswer })
 
 export const completeOnboarding = (answer1: string, answer2: string, answer3: string) =>
     api.post<void>('/onboarding/complete', { answer1, answer2, answer3 })
 
 export const completeTutorial = () =>
     api.post<void>('/onboarding/tutorial/complete', null)
+
+export const completeProfileTutorial = () =>
+    api.post<void>('/onboarding/profile-onboarding-tutorial/complete', null)

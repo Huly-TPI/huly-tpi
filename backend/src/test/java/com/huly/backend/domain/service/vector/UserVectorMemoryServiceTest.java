@@ -14,18 +14,25 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 
 class UserVectorMemoryServiceTest {
 
     private VectorMemoryProperties properties;
     private RecordingVectorMemoryService vectorMemoryService;
     private UserVectorMemoryService service;
+    private org.springframework.beans.factory.ObjectProvider<org.springframework.ai.chat.model.ChatModel> chatModelProvider;
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setUp() {
         properties = new VectorMemoryProperties();
         vectorMemoryService = new RecordingVectorMemoryService();
-        service = new UserVectorMemoryService(vectorMemoryService, properties, new UserProfileFactExtractor());
+        chatModelProvider = org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class);
+        jdbcTemplate = org.mockito.Mockito.mock(org.springframework.jdbc.core.JdbcTemplate.class);
+        service = new UserVectorMemoryService(vectorMemoryService, properties, new UserProfileFactExtractor(), chatModelProvider, jdbcTemplate);
     }
 
     @Test
@@ -214,12 +221,380 @@ class UserVectorMemoryServiceTest {
                 .doesNotThrowAnyException();
     }
 
+    @Test
+    void rememberRecommendedActivity_shouldSaveActivityMemory() {
+        com.huly.backend.domain.model.chat.SuggestedChatAction action = new com.huly.backend.domain.model.chat.SuggestedChatAction(
+                com.huly.backend.domain.model.enums.ActivityType.RESPIRACION,
+                100L,
+                "Respira hondo",
+                "Inhala y exhala",
+                null,
+                null
+        );
+
+        service.rememberRecommendedActivity(1L, "conv-123", 200L, action);
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+        SaveVectorMemoryCommand cmd = vectorMemoryService.savedCommands.get(0);
+        assertThat(cmd.userId()).isEqualTo(1L);
+        assertThat(cmd.sourceType()).isEqualTo(VectorMemorySource.CHATBOT);
+        assertThat(cmd.sourceId()).isEqualTo("200");
+        assertThat(cmd.conversationId()).isEqualTo("conv-123");
+        assertThat(cmd.source()).isEqualTo("RECOMMENDED_ACTIVITY");
+        assertThat(cmd.contentType()).isEqualTo("RECOMMENDED_ACTIVITY");
+        assertThat(cmd.content()).contains("Huly recomendo la actividad: Respira hondo");
+        assertThat(cmd.metadata()).containsEntry("feature", "CHATBOT_ACTIVITY_RECOMMENDATION");
+    }
+
+    @Test
+    void rememberActivityRecommendationDecision_shouldSaveDecisionMemory() {
+        com.huly.backend.domain.model.EmotionalEvent event = com.huly.backend.domain.model.EmotionalEvent.builder()
+                .id(300L)
+                .userId(1L)
+                .recommendationDecision(com.huly.backend.domain.model.enums.RecommendationDecision.ACCEPTED)
+                .recommendedActivityId(100L)
+                .chosenActivityId(100L)
+                .generatedRecommendation("Respira hondo")
+                .build();
+
+        service.rememberActivityRecommendationDecision(event);
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+        SaveVectorMemoryCommand cmd = vectorMemoryService.savedCommands.get(0);
+        assertThat(cmd.userId()).isEqualTo(1L);
+        assertThat(cmd.sourceType()).isEqualTo(VectorMemorySource.CHATBOT);
+        assertThat(cmd.sourceId()).isEqualTo("300");
+        assertThat(cmd.source()).isEqualTo("ACTIVITY_RECOMMENDATION_DECISION");
+        assertThat(cmd.content()).contains("El usuario acepto la recomendacion");
+        assertThat(cmd.metadata()).containsEntry("feature", "CHATBOT_ACTIVITY_DECISION");
+    }
+
+    @Test
+    void rememberGeneratedChallenge_shouldSaveChallengeMemory() {
+        com.huly.backend.domain.model.chat.ChatReply.GeneratedChallenge challenge = new com.huly.backend.domain.model.chat.ChatReply.GeneratedChallenge(
+                "Estiramiento",
+                "Estira tus musculos por 5 minutos"
+        );
+
+        service.rememberGeneratedChallenge(1L, "conv-1", challenge);
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+        SaveVectorMemoryCommand cmd = vectorMemoryService.savedCommands.get(0);
+        assertThat(cmd.userId()).isEqualTo(1L);
+        assertThat(cmd.sourceType()).isEqualTo(VectorMemorySource.CHATBOT);
+        assertThat(cmd.content()).contains("Huly sugirio el reto: Estiramiento");
+        assertThat(cmd.metadata()).containsEntry("feature", "CHATBOT_CHALLENGE");
+    }
+
+    @Test
+    void rememberChallengeDecision_shouldSaveChallengeDecisionMemory() {
+        service.rememberChallengeDecision(1L, "conv-1", "Estiramiento", "Estira tus musculos", "ACCEPTED");
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+        SaveVectorMemoryCommand cmd = vectorMemoryService.savedCommands.get(0);
+        assertThat(cmd.userId()).isEqualTo(1L);
+        assertThat(cmd.sourceType()).isEqualTo(VectorMemorySource.CHATBOT);
+        assertThat(cmd.content()).contains("El usuario acepto el reto: Estiramiento");
+        assertThat(cmd.metadata()).containsEntry("feature", "CHATBOT_CHALLENGE_DECISION");
+    }
+
+    @Test
+    void deletePersonalitySummary_shouldDeleteMemory() {
+        service.deletePersonalitySummary(1L);
+        assertThat(vectorMemoryService.deletedCommand).isNotNull();
+        assertThat(vectorMemoryService.deletedCommand.userId()).isEqualTo(1L);
+        assertThat(vectorMemoryService.deletedCommand.sourceType()).isEqualTo(VectorMemorySource.CHATBOT);
+        assertThat(vectorMemoryService.deletedCommand.sourceId()).isEqualTo("personality-summary");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getAllMemoryContents_shouldReturnContentsAndFilterPersonalitySummary() throws Exception {
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenAnswer(invocation -> {
+                    org.springframework.jdbc.core.RowMapper<String> mapper = invocation.getArgument(1);
+                    java.sql.ResultSet rs1 = org.mockito.Mockito.mock(java.sql.ResultSet.class);
+                    when(rs1.getString("content")).thenReturn("Me siento feliz");
+                    when(rs1.getString("metadata")).thenReturn("{\"userId\": 1, \"contentType\": \"TEXT_MEMORY\"}");
+                    String res1 = mapper.mapRow(rs1, 0);
+
+                    List<String> list = new ArrayList<>();
+                    if (res1 != null) list.add(res1);
+                    return list;
+                });
+
+        List<String> contents = service.getAllMemoryContents(1L);
+        assertThat(contents).containsExactly("Me siento feliz");
+    }
+
+    @Test
+    void rememberOnboardingGoals_shouldTriggerAsyncPersonalitySummaryGeneration() {
+        org.springframework.ai.chat.model.ChatModel chatModel = mock(org.springframework.ai.chat.model.ChatModel.class);
+        when(chatModelProvider.getIfAvailable()).thenReturn(chatModel);
+        
+        org.springframework.ai.chat.model.ChatResponse chatResponse = mock(org.springframework.ai.chat.model.ChatResponse.class);
+        org.springframework.ai.chat.model.Generation generation = mock(org.springframework.ai.chat.model.Generation.class);
+        org.springframework.ai.chat.messages.AssistantMessage assistantMessage = mock(org.springframework.ai.chat.messages.AssistantMessage.class);
+        
+        when(chatModel.call(any(org.springframework.ai.chat.prompt.Prompt.class))).thenReturn(chatResponse);
+        when(chatResponse.getResult()).thenReturn(generation);
+        when(generation.getOutput()).thenReturn(assistantMessage);
+        when(assistantMessage.getText()).thenReturn("{\"summary\": \"Test profile summary\", \"accepted\": \"activity\", \"rejected\": \"none\"}");
+
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenReturn(List.of("Memory content 1", "Memory content 2"));
+
+        service.rememberOnboardingGoals(1L, "Goal1", "Goal2", "Goal3");
+
+        assertThat(vectorMemoryService.savedCommands).isNotEmpty();
+        
+        long start = System.currentTimeMillis();
+        while (vectorMemoryService.savedCommands.size() < 2 && (System.currentTimeMillis() - start) < 3000) {
+            try { Thread.sleep(50); } catch (InterruptedException e) {}
+        }
+        
+        assertThat(vectorMemoryService.savedCommands).hasSize(2);
+        SaveVectorMemoryCommand personalityCommand = vectorMemoryService.savedCommands.get(1);
+        assertThat(personalityCommand.contentType()).isEqualTo("PERSONALITY_SUMMARY");
+        assertThat(personalityCommand.content()).contains("Test profile summary");
+    }
+
+    @Test
+    void generatePersonalitySummary_shouldHandleNullChatModelAndEmptyMemories() {
+        when(chatModelProvider.getIfAvailable()).thenReturn(null);
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenReturn(List.of());
+
+        service.rememberOnboardingGoals(1L, "Goal1", "Goal2", "Goal3");
+
+        try { Thread.sleep(200); } catch (InterruptedException e) {}
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+    }
+
+    @Test
+    void rememberRecommendedActivity_shouldDoNothing_whenActionIsNull() {
+        service.rememberRecommendedActivity(1L, "conv-1", 100L, null);
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void rememberActivityRecommendationDecision_shouldDoNothing_whenParametersAreInvalid() {
+        service.rememberActivityRecommendationDecision(null);
+        service.rememberActivityRecommendationDecision(com.huly.backend.domain.model.EmotionalEvent.builder().build());
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void rememberGeneratedChallenge_shouldDoNothing_whenChallengeIsNullOrTitleIsBlank() {
+        service.rememberGeneratedChallenge(1L, "conv-1", null);
+        service.rememberGeneratedChallenge(1L, "conv-1", new com.huly.backend.domain.model.chat.ChatReply.GeneratedChallenge("", "desc"));
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void rememberChallengeDecision_shouldDoNothing_whenParametersAreInvalid() {
+        service.rememberChallengeDecision(null, "conv-1", "title", "desc", "ACCEPTED");
+        service.rememberChallengeDecision(1L, "conv-1", "", "desc", "ACCEPTED");
+        service.rememberChallengeDecision(1L, "conv-1", "title", "desc", "");
+        assertThat(vectorMemoryService.savedCommands).isEmpty();
+    }
+
+    @Test
+    void deletePersonalitySummary_shouldLogWarning_whenVectorStoreFails() {
+        VectorMemoryService throwingService = mock(VectorMemoryService.class);
+        doThrow(new RuntimeException("Delete failed")).when(throwingService).deleteMemories(any());
+        
+        UserVectorMemoryService testService = new UserVectorMemoryService(throwingService, properties, new UserProfileFactExtractor(), chatModelProvider, jdbcTemplate);
+        
+        assertThatCode(() -> testService.deletePersonalitySummary(1L))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void getAllMemoryContents_shouldReturnEmptyList_whenJdbcThrowsException() {
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenThrow(new RuntimeException("JDBC error"));
+
+        List<String> contents = service.getAllMemoryContents(1L);
+        assertThat(contents).isEmpty();
+    }
+
+    @Test
+    void findRelevantUserMemories_shouldReturnEmpty_onSearchException() {
+        VectorMemoryService mockService = mock(VectorMemoryService.class);
+        when(mockService.findRelevantMemories(any(SearchVectorMemoryQuery.class)))
+                .thenThrow(new RuntimeException("Search failed"));
+        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
+                mockService, properties, new UserProfileFactExtractor(), chatModelProvider, jdbcTemplate);
+        
+        List<VectorMemory> result = serviceWithMock.findRelevantUserMemories(1L, VectorMemorySource.CHATBOT, "query");
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findRelevantUserMemoriesBySources_shouldReturnEmpty_onSearchException() {
+        VectorMemoryService mockService = mock(VectorMemoryService.class);
+        when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class)))
+                .thenThrow(new RuntimeException("Search failed"));
+        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
+                mockService, properties, new UserProfileFactExtractor(), chatModelProvider, jdbcTemplate);
+        
+        List<VectorMemory> result = serviceWithMock.findRelevantUserMemoriesBySources(1L, List.of(VectorMemorySource.CHATBOT), "query");
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void buildRecallQueries_shouldHandleWhenProfileRecallQueryEqualsQuery() {
+        UserProfileFactExtractor mockExtractor = mock(UserProfileFactExtractor.class);
+        when(mockExtractor.asksForProfileFact(anyString())).thenReturn(true);
+        when(mockExtractor.buildProfileRecallQuery(anyString())).thenReturn("equalQuery");
+        
+        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
+                vectorMemoryService, properties, mockExtractor, chatModelProvider, jdbcTemplate);
+        
+        serviceWithMock.findRelevantUserMemories(1L, "equalQuery");
+    }
+
+    @Test
+    void recallLimit_shouldHandleNullMaxLimit() {
+        properties.setMaxLimit(null);
+        service.findRelevantUserMemories(1L, "edad");
+    }
+
+    @Test
+    void uniqueRankedAndLimited_shouldIgnoreNullMemories() {
+        VectorMemoryService mockService = mock(VectorMemoryService.class);
+        List<VectorMemory> listWithNull = new ArrayList<>();
+        listWithNull.add(null);
+        when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class))).thenReturn(listWithNull);
+        
+        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
+                mockService, properties, new UserProfileFactExtractor(), chatModelProvider, jdbcTemplate);
+        List<VectorMemory> result = serviceWithMock.findRelevantUserMemories(1L, "query");
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void generatePersonalitySummary_shouldReturnEarly_whenChatModelIsNull() {
+        when(chatModelProvider.getIfAvailable()).thenReturn(null);
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenReturn(List.of("Memory 1"));
+
+        service.rememberOnboardingGoals(1L, "Goal1", "Goal2", "Goal3");
+
+        try { Thread.sleep(200); } catch (InterruptedException e) {}
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+    }
+
+    @Test
+    void generatePersonalitySummary_shouldHandleException() {
+        org.springframework.ai.chat.model.ChatModel chatModel = mock(org.springframework.ai.chat.model.ChatModel.class);
+        when(chatModelProvider.getIfAvailable()).thenReturn(chatModel);
+        when(chatModel.call(any(org.springframework.ai.chat.prompt.Prompt.class)))
+                .thenThrow(new RuntimeException("ChatModel error"));
+
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenReturn(List.of("Memory 1"));
+
+        service.rememberOnboardingGoals(1L, "Goal1", "Goal2", "Goal3");
+
+        try { Thread.sleep(200); } catch (InterruptedException e) {}
+
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+    }
+
+    @Test
+    void saveMemory_shouldLogWarningWithNullUserId_whenSaveFails() {
+        vectorMemoryService.failOnSave = true;
+        assertThatCode(() -> service.rememberChatMessage(null, "conv-1", "msg"))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void rememberActivityRecommendationDecision_shouldHandleIgnoredAndChoseOther() {
+        com.huly.backend.domain.model.EmotionalEvent eventIgnored = com.huly.backend.domain.model.EmotionalEvent.builder()
+                .id(301L)
+                .userId(1L)
+                .recommendationDecision(com.huly.backend.domain.model.enums.RecommendationDecision.IGNORED)
+                .build();
+        service.rememberActivityRecommendationDecision(eventIgnored);
+        assertThat(vectorMemoryService.savedCommands.get(0).content()).contains("El usuario rechazo la recomendacion");
+
+        vectorMemoryService.savedCommands.clear();
+
+        com.huly.backend.domain.model.EmotionalEvent eventChoseOther = com.huly.backend.domain.model.EmotionalEvent.builder()
+                .id(302L)
+                .userId(1L)
+                .recommendationDecision(com.huly.backend.domain.model.enums.RecommendationDecision.CHOSE_OTHER)
+                .build();
+        service.rememberActivityRecommendationDecision(eventChoseOther);
+        assertThat(vectorMemoryService.savedCommands.get(0).content()).contains("El usuario eligio otra actividad para la recomendacion");
+    }
+
+    @Test
+    void rememberRecommendedActivity_shouldHandleNullActionTypeAndNullEmotionalEventId() {
+        com.huly.backend.domain.model.chat.SuggestedChatAction actionNullType = new com.huly.backend.domain.model.chat.SuggestedChatAction(
+                null,
+                100L,
+                "Title",
+                "Description",
+                null,
+                null
+        );
+        service.rememberRecommendedActivity(1L, "conv-123", null, actionNullType);
+        
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+        SaveVectorMemoryCommand cmd = vectorMemoryService.savedCommands.get(0);
+        assertThat(cmd.sourceId()).isEqualTo("1");
+        assertThat(cmd.content()).contains("Tipo: UNKNOWN");
+    }
+
+    @Test
+    void rememberJournalEntry_shouldHandleNullJournalEntryId() {
+        service.rememberJournalEntry(1L, null, "content");
+        assertThat(vectorMemoryService.savedCommands).hasSize(1);
+        SaveVectorMemoryCommand cmd = vectorMemoryService.savedCommands.get(0);
+        assertThat(cmd.sourceId()).isNull();
+    }
+
+    @Test
+    void generatePersonalitySummary_shouldTruncateLongMemories() {
+        org.springframework.ai.chat.model.ChatModel chatModel = mock(org.springframework.ai.chat.model.ChatModel.class);
+        when(chatModelProvider.getIfAvailable()).thenReturn(chatModel);
+        
+        org.springframework.ai.chat.model.ChatResponse chatResponse = mock(org.springframework.ai.chat.model.ChatResponse.class);
+        org.springframework.ai.chat.model.Generation generation = mock(org.springframework.ai.chat.model.Generation.class);
+        org.springframework.ai.chat.messages.AssistantMessage assistantMessage = mock(org.springframework.ai.chat.messages.AssistantMessage.class);
+        
+        when(chatModel.call(any(org.springframework.ai.chat.prompt.Prompt.class))).thenReturn(chatResponse);
+        when(chatResponse.getResult()).thenReturn(generation);
+        when(generation.getOutput()).thenReturn(assistantMessage);
+        when(assistantMessage.getText()).thenReturn("{\"summary\": \"Truncated summary\", \"accepted\": \"activity\", \"rejected\": \"none\"}");
+
+        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
+                .thenReturn(List.of("a".repeat(4005)));
+
+        service.rememberOnboardingGoals(1L, "Goal1", "Goal2", "Goal3");
+
+        long start = System.currentTimeMillis();
+        while (vectorMemoryService.savedCommands.size() < 2 && (System.currentTimeMillis() - start) < 3000) {
+            try { Thread.sleep(50); } catch (InterruptedException e) {}
+        }
+        
+        assertThat(vectorMemoryService.savedCommands).hasSize(2);
+        SaveVectorMemoryCommand personalityCommand = vectorMemoryService.savedCommands.get(1);
+        assertThat(personalityCommand.content()).contains("Truncated summary");
+    }
+
     private static final class RecordingVectorMemoryService implements VectorMemoryService {
 
         private final List<SaveVectorMemoryCommand> savedCommands = new ArrayList<>();
         private final List<VectorMemory> memories = new ArrayList<>();
         private SearchVectorMemoryQuery lastSingleSourceQuery;
         private SearchVectorMemoriesQuery lastMultiSourceQuery;
+        private com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand deletedCommand;
         private boolean failOnSave;
 
         @Override
@@ -247,7 +622,7 @@ class UserVectorMemoryServiceTest {
 
         @Override
         public void deleteMemories(com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand command) {
-            // No se usa en este test.
+            this.deletedCommand = command;
         }
     }
 }

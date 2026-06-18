@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -150,5 +149,19 @@ class ChatMessageRepositoryImplTest {
         Page<ChatMessage> result = repository.findByConversationIdAndUserId("conv-1", 10L, pageable);
 
         assertThat(result.getContent().get(0).detectedEmotion()).isNull();
+    }
+
+    // ── countUserMessagesSince ───────────────────────────────────────────────
+
+    @Test
+    void countUserMessagesSince_shouldDelegateToJpaCountingUserRole() {
+        Instant since = Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS);
+        when(jpa.countByChatSessionAppUserIdAndRoleAndCreatedAtAfter(10L, MessageRole.USER, since))
+                .thenReturn(7L);
+
+        long result = repository.countUserMessagesSince(10L, since);
+
+        assertThat(result).isEqualTo(7L);
+        verify(jpa).countByChatSessionAppUserIdAndRoleAndCreatedAtAfter(10L, MessageRole.USER, since);
     }
 }

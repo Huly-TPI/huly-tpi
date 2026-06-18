@@ -1,6 +1,7 @@
 package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.EmotionType;
@@ -9,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,51 +17,20 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PromptBuilderService {
 
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords) {
-        return buildEnrichedPrompt(basePrompt, riskWords, Collections.emptyList());
-    }
-
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, null);
-    }
-
-    public String buildEnrichedPrompt(
-            String basePrompt,
-            List<RiskWord> riskWords,
-            List<VectorMemory> memories,
-            SuggestedChatAction suggestedAction
-    ) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, suggestedAction, ChatUserIntent.NONE);
-    }
-
     public String buildEnrichedPrompt(
             String basePrompt,
             List<RiskWord> riskWords,
             List<VectorMemory> memories,
             SuggestedChatAction suggestedAction,
-            ChatUserIntent userIntent
+            ChatUserIntent userIntent,
+            ChatPersonalizationContext personalization
     ) {
         StringBuilder sb = basePromptBuilder(basePrompt);
+        appendConversationPreferences(sb, personalization);
         appendVectorMemories(sb, memories);
         appendSuggestedActionContext(sb, suggestedAction);
         appendUserIntentContext(sb, userIntent);
         appendResponseInstructions(sb);
-        appendRiskWords(sb, riskWords);
-        return sb.toString();
-    }
-
-    public String buildStreamingPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        StringBuilder sb = basePromptBuilder(basePrompt);
-        appendVectorMemories(sb, memories);
-        appendStreamingInstructions(sb);
-        appendRiskWords(sb, riskWords);
-        return sb.toString();
-    }
-
-    public String buildMetadataPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        StringBuilder sb = basePromptBuilder(basePrompt);
-        appendVectorMemories(sb, memories);
-        appendMetadataInstructions(sb);
         appendRiskWords(sb, riskWords);
         return sb.toString();
     }
@@ -75,6 +44,36 @@ public class PromptBuilderService {
 
     private StringBuilder basePromptBuilder(String basePrompt) {
         return new StringBuilder(basePrompt == null ? "" : basePrompt);
+    }
+
+    private void appendConversationPreferences(
+            StringBuilder sb,
+            ChatPersonalizationContext personalization) {
+        if (personalization == null) {
+            return;
+        }
+
+        sb.append("\n\n=== PREFERENCIAS CONVERSACIONALES DEL USUARIO ===");
+        appendTrustedValue(sb, "Nombre real registrado", personalization.registeredName());
+        appendTrustedValue(sb, "Nombre preferido", personalization.preferredName());
+        if (personalization.communicationStyle() != null) {
+            sb.append("\nEstilo preferido: ")
+                    .append(personalization.communicationStyle().displayName());
+            sb.append("\nInstrucción de estilo: ")
+                    .append(personalization.communicationStyle().promptInstruction());
+        }
+        sb.append("\nEstas preferencias provienen de datos estructurados del sistema.");
+        sb.append("\nUsá el nombre preferido para dirigirte al usuario cuando resulte natural; si no existe, usá el nombre registrado.");
+        sb.append("\nRespetá siempre el estilo preferido, sin perder empatía, seguridad ni claridad.");
+        sb.append("\nSi el usuario pide explícitamente cambiar su nombre o el estilo, reconocé su pedido y actuá de acuerdo con la preferencia más reciente.");
+    }
+
+    private void appendTrustedValue(StringBuilder sb, String label, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        String safeValue = value.replaceAll("[\\r\\n\\t]+", " ").trim();
+        sb.append("\n").append(label).append(": ").append(safeValue);
     }
 
     private void appendVectorMemories(StringBuilder sb, List<VectorMemory> memories) {

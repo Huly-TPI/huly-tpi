@@ -33,7 +33,9 @@ public class BotConfigController {
     public ResponseEntity<BotConfigResponse> updateConfig(@RequestBody @Valid UpdateBotConfigRequest request) {
         UpdateBotConfigCommand command = new UpdateBotConfigCommand(
                 request.riskDetectionEnabled(),
-                request.systemPrompt()
+                request.systemPrompt(),
+                request.preferredNameQuestionEnabled(),
+                request.communicationStyleQuestionEnabled()
         );
         ChatConfig updated = updateBotConfigUseCase.execute(command);
         return ResponseEntity.ok(toResponse(updated));
@@ -43,7 +45,9 @@ public class BotConfigController {
         return new BotConfigResponse(
                 config.getId(),
                 config.getRiskDetectionEnabled(),
-                config.getSystemPrompt()
+                config.getSystemPrompt(),
+                config.getPreferredNameQuestionEnabled(),
+                config.getCommunicationStyleQuestionEnabled()
         );
     }
 }

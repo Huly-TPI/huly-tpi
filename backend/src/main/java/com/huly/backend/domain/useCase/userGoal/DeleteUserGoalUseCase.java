@@ -1,13 +1,11 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.repository.UserGoalRepository;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class DeleteUserGoalUseCase {
 
@@ -15,7 +13,7 @@ public class DeleteUserGoalUseCase {
 
     public void execute(Long id) {
         UserGoal goal = userGoalRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("UserGoal", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("UserGoal", "id", id));
         goal.setStatus(GoalStatus.CANCELLED);
         userGoalRepository.save(goal);
     }

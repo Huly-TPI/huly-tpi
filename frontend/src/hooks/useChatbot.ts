@@ -371,6 +371,13 @@ export function useChatbot() {
     }
   }
 
+  const resetConversation = () => {
+    const newConversationId = randomConversationId()
+    localStorage.setItem(conversationStorageKey, newConversationId)
+    setConversationId(newConversationId)
+    setMessages([])
+  }
+
   return {
     messages,
     input,
@@ -384,5 +391,6 @@ export function useChatbot() {
     deleteAudioMessage,
     decideChallenge,
     decideSuggestedAction,
+    resetConversation,
   }
 }

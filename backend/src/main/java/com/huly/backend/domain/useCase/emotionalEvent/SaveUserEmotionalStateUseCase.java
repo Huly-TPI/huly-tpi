@@ -3,11 +3,9 @@ package com.huly.backend.domain.useCase.emotionalEvent;
 import com.huly.backend.domain.model.UserEmotionalState;
 import com.huly.backend.domain.repository.UserEmotionalStateRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
-@Service
 @RequiredArgsConstructor
 public class SaveUserEmotionalStateUseCase {
     private final UserEmotionalStateRepository userEmotionalStateRepository;

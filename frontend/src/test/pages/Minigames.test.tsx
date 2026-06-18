@@ -27,7 +27,7 @@ describe('Minigames', () => {
     expect(screen.getByLabelText('Burbujas').closest('a')).toHaveAttribute('href', '/bubbles')
     expect(screen.getByLabelText('Piedras del lago').closest('a')).toHaveAttribute('href', '/stones')
     expect(screen.getByLabelText('Colorear mandalas').closest('a')).toHaveAttribute('href', '/mandalas')
-    expect(screen.getByLabelText('Arena zen').closest('a')).toHaveAttribute('href', '/free-draw')
+    expect(screen.getByLabelText('Arena zen').closest('a')).toHaveAttribute('href', '/zen-sand-garden')
   })
 
   it('renderiza las nubes navegables hacia la actividad de nubes', () => {
@@ -52,7 +52,7 @@ describe('Minigames', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /volver/i }))
-    expect(screen.getByRole('heading', { name: 'Vista Garden' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Vista Garden' })).toBeInTheDocument()
   })
 
   it('redirige a burbujas al hacer click en el hotspot del pez', async () => {

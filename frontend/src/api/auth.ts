@@ -24,6 +24,7 @@ export interface UserProfile {
   role: string
   onBoardingCompleted?: boolean
   onboardingTutorialCompleted?: boolean
+  profileOnboardingTutorialCompleted?: boolean
   themePreference: 'LIGHT' | 'DARK'
 }
 
@@ -50,3 +51,16 @@ export const logout = () => {
 export const updateThemePreference = (themePreference: UserProfile['themePreference']) => {
   return api.put<void>('/users/me/theme', { themePreference })
 }
+
+export const getUserCoins = () =>
+  api.get<{ coins: number }>('/users/me/coins')
+
+export interface Membership {
+  active: boolean
+  planCode: string | null
+  productId: string | null
+  expiresAt: string | null
+}
+
+export const getMyMembership = () =>
+  api.get<Membership>('/users/me/membership')

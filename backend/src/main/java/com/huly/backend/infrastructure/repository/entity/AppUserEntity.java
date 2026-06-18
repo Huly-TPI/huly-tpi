@@ -4,9 +4,6 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity

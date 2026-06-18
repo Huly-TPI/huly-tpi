@@ -1,12 +1,16 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
+import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
+import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
+import com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse;
+import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
+import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
-import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
-import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
-import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +29,8 @@ public class UserController {
 
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final UserDetailDomainRepository userDetailDomainRepository;
+    private final GetUserCoinsUseCase getUserCoinsUseCase;
+    private final GetCurrentMembershipUseCase getCurrentMembershipUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -34,20 +40,44 @@ public class UserController {
             throw new UnauthorizedException("Not authenticated");
         }
 
-        AppUser user = getCurrentUserUseCase.execute(principal.getUsername());
-        Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
-        Boolean onboardingTutorialCompleted = userDetailDomainRepository.findOnboardingTutorialCompleted(user.getId()).orElse(false);
-        ThemePreference themePreference = userDetailDomainRepository.findThemePreference(user.getId());
+        Long userId = currentUserId(principal);
+        UserProfile profile = getCurrentUserUseCase.execute(userId);
+        ThemePreference themePreference = userDetailDomainRepository.findThemePreference(userId);
 
         return ResponseEntity.ok(UserProfileResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .onBoardingCompleted(onBoardingCompleted)
-                .onboardingTutorialCompleted(onboardingTutorialCompleted)
+                .id(profile.user().getId())
+                .name(profile.user().getName())
+                .email(profile.user().getEmail())
+                .role(profile.user().getRole())
+                .onBoardingCompleted(profile.onBoardingCompleted())
+                .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
+                .profileOnboardingTutorialCompleted(profile.profileOnboardingTutorialCompleted())
                 .themePreference(themePreference)
                 .build());
+    }
+
+    @GetMapping("/me/coins")
+    public ResponseEntity<CoinsResponse> getMyCoins(
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        Long userId = currentUserId(principal);
+        int coins = getUserCoinsUseCase.execute(userId);
+        return ResponseEntity.ok(new CoinsResponse(coins));
+    }
+
+    @GetMapping("/me/membership")
+    public ResponseEntity<MembershipResponse> getMyMembership(
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        Long userId = currentUserId(principal);
+        MembershipResponse response = getCurrentMembershipUseCase.execute(userId)
+                .map(p -> new MembershipResponse(
+                        true,
+                        p.getPlanCode(),
+                        p.getProductId() != null ? p.getProductId().toString() : null,
+                        p.getExpiresAt()))
+                .orElseGet(MembershipResponse::inactive);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/me/theme")
@@ -55,12 +85,15 @@ public class UserController {
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody UpdateThemePreferenceRequest request
     ) {
+        Long userId = currentUserId(principal);
+        userDetailDomainRepository.updateThemePreference(userId, request.themePreference());
+        return ResponseEntity.noContent().build();
+    }
+
+    private Long currentUserId(UserDetails principal) {
         if (principal == null) {
             throw new UnauthorizedException("Not authenticated");
         }
-
-        AppUser user = getCurrentUserUseCase.execute(principal.getUsername());
-        userDetailDomainRepository.updateThemePreference(user.getId(), request.themePreference());
-        return ResponseEntity.noContent().build();
+        return Long.parseLong(principal.getUsername());
     }
 }

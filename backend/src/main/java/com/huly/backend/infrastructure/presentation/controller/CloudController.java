@@ -3,16 +3,15 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.CloudRecommendation;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
-import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
-import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
-import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationRequest;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationResponse;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudThoughtRequest;
+import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,23 +26,26 @@ public class CloudController {
 
     private final GetCloudRecommendationUseCase getCloudRecommendationUseCase;
     private final UserVectorMemoryService userVectorMemoryService;
-    private final AppUserRepository appUserRepository;
 
     @PostMapping("/thought")
-    public ResponseEntity<Void> saveThought(@RequestBody @Valid CloudThoughtRequest request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUserEntity user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-
-        userVectorMemoryService.rememberGuidedCloudInput(user.getId(), UUID.randomUUID().toString(), request.thought());
+    public ResponseEntity<Void> saveThought(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid CloudThoughtRequest request
+    ) {
+        Long userId = getUserId(principal);
+        userVectorMemoryService.rememberGuidedCloudInput(userId, UUID.randomUUID().toString(), request.thought());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/recommendation")
     public ResponseEntity<CloudRecommendationResponse> getRecommendation(
+            @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid CloudRecommendationRequest request
     ) {
-        CloudRecommendation recommendation = getCloudRecommendationUseCase.execute(request.thoughts());
+        CloudRecommendation recommendation = getCloudRecommendationUseCase.execute(
+                request.thoughts(),
+                getUserId(principal)
+        );
         return ResponseEntity.ok(new CloudRecommendationResponse(
                 recommendation.activityType(),
                 recommendation.actionId(),
@@ -51,5 +53,12 @@ public class CloudController {
                 recommendation.description(),
                 recommendation.redirectUrl()
         ));
+    }
+
+    private Long getUserId(UserDetails principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        return Long.parseLong(principal.getUsername());
     }
 }

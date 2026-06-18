@@ -1,30 +1,87 @@
 package com.huly.backend.presentation.controller;
 import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.ActivityType;
+import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
+import com.huly.backend.domain.useCase.activities.RegisterActivitySessionUseCase;
 import com.huly.backend.infrastructure.presentation.controller.ActivityController;
+import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 class ActivityControllerTest {
     private MockMvc mockMvc;
     private ListActivitiesUseCase listActivitiesUseCase;
+    private RegisterActivitySessionUseCase registerActivitySessionUseCase;
+    private static final Long USER_ID = 1L;
 
     @BeforeEach
     void setUp() {
         listActivitiesUseCase = mock(ListActivitiesUseCase.class);
-        ActivityController activityController = new ActivityController(listActivitiesUseCase);
-        mockMvc = MockMvcBuilders.standaloneSetup(activityController).build();
+        registerActivitySessionUseCase = mock(RegisterActivitySessionUseCase.class);
+
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken(userDetails, null));
+
+        ActivityController activityController = new ActivityController(listActivitiesUseCase, registerActivitySessionUseCase);
+        mockMvc = MockMvcBuilders.standaloneSetup(activityController)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void registerSession_shouldReturn200() throws Exception {
+        String json = """
+                {
+                    "activityType": "RESPIRACION"
+                }
+                """;
+
+        mockMvc.perform(post("/api/activities/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void registerChallengeSession_shouldReturn200() throws Exception {
+        String json = """
+                {
+                    "activityType": "RETO"
+                }
+                """;
+
+        mockMvc.perform(post("/api/activities/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
     }
 
     @Test

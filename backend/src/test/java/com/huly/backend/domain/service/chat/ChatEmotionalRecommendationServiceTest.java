@@ -16,7 +16,7 @@ import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.EmotionalAnalysisPort;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
-import com.huly.backend.domain.useCase.emotionalEvent.GetEmotionalRecommendationsUseCase;
+import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -48,6 +48,7 @@ class ChatEmotionalRecommendationServiceTest {
         service = new ChatEmotionalRecommendationService(
                 emotionalAnalysisPort,
                 promptBuilderService,
+                new ChatEmotionalRecommendationPolicy(),
                 recommendationsUseCase,
                 createEmotionalEventUseCase
         );
@@ -61,7 +62,7 @@ class ChatEmotionalRecommendationServiceTest {
         when(emotionalAnalysisPort.analyze("analysis prompt", "hola", history))
                 .thenReturn(new EmotionalAnalysisResult(false, EmotionType.NEUTRAL, 0.8, 0.0, 0.0, 0.0, 0.1, null, null));
 
-        ChatRecommendationOutcome outcome = service.evaluate("hola", 1L, "base", memories, history);
+        ChatRecommendationOutcome outcome = service.evaluate("hola", 1L, "base", memories, history, null, false);
 
         assertThat(outcome.suggestedAction()).isNull();
         assertThat(outcome.analysis().shouldRecommend()).isFalse();
@@ -110,7 +111,9 @@ class ChatEmotionalRecommendationServiceTest {
                 3L,
                 "base",
                 List.of(),
-                List.of()
+                List.of(),
+                null,
+                false
         );
 
         assertThat(outcome.suggestedAction()).isNotNull();
@@ -120,9 +123,10 @@ class ChatEmotionalRecommendationServiceTest {
         ArgumentCaptor<EmotionalRecommendationQuery> queryCaptor =
                 ArgumentCaptor.forClass(EmotionalRecommendationQuery.class);
         verify(recommendationsUseCase).execute(queryCaptor.capture());
-        assertThat(queryCaptor.getValue().source()).isEqualTo(EmotionalEventSource.CHATBOT);
-        assertThat(queryCaptor.getValue().detectedEmotion()).isEqualTo("GRIEF");
-        assertThat(queryCaptor.getValue().valence()).isEqualTo(-0.85);
+        assertThat(queryCaptor.getValue().userId()).isEqualTo(3L);
+        assertThat(queryCaptor.getValue().vad().valence()).isEqualTo(-0.85);
+        assertThat(queryCaptor.getValue().vad().arousal()).isEqualTo(0.35);
+        assertThat(queryCaptor.getValue().vad().dominance()).isEqualTo(-0.75);
 
         ArgumentCaptor<CreateEmotionalEventCommand> commandCaptor =
                 ArgumentCaptor.forClass(CreateEmotionalEventCommand.class);
@@ -188,7 +192,8 @@ class ChatEmotionalRecommendationServiceTest {
                 "base",
                 List.of(),
                 List.of(),
-                conversationalReply
+                conversationalReply,
+                false
         );
 
         assertThat(outcome.suggestedAction()).isNotNull();
@@ -222,7 +227,14 @@ class ChatEmotionalRecommendationServiceTest {
         when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
                 .thenReturn(new EmotionalRecommendationResult(List.of(), false));
 
-        ChatRecommendationOutcome outcome = service.evaluate("estoy muy estresado", 1L, "base", List.of(), List.of());
+        ChatRecommendationOutcome outcome = service.evaluate(
+                "estoy muy estresado",
+                1L,
+                "base",
+                List.of(),
+                List.of(),
+                null,
+                false);
 
         assertThat(outcome.suggestedAction()).isNull();
         verify(createEmotionalEventUseCase, never()).execute(any());

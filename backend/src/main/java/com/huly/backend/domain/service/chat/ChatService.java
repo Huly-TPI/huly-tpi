@@ -1,40 +1,41 @@
 package com.huly.backend.domain.service.chat;
 
 import java.util.List;
+import java.time.Instant;
 
 import org.springframework.stereotype.Service;
 
 import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.chat.ChatConfig;
+import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.provider.ChatMemoryPort;
 import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.provider.StreamingLLMChatPort;
 import com.huly.backend.domain.repository.RiskWordRepository;
+import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
-    private static final String STREAM_ERROR_MESSAGE = "No se pudo completar la respuesta del asistente.";
-
     private final LLMChatPort llmChatPort;
-    private final StreamingLLMChatPort streamingLLMChatPort;
     private final ChatMemoryPort chatMemoryPort;
     private final ChatConfigRepository chatConfigRepository;
     private final RiskWordRepository riskWordRepository;
@@ -42,28 +43,40 @@ public class ChatService {
     private final UserVectorMemoryService userVectorMemoryService;
     private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
     private final ChatIntentDetectionService chatIntentDetectionService;
+    private final ChatQuotaService chatQuotaService;
+    private final UserRepository userRepository;
+    private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
-        ChatContext context = buildBlockingContext(message, conversationId, userId);
+        return processMessage(message, conversationId, userId, false);
+    }
+
+    public ChatReply processMessage(
+            String message,
+            String conversationId,
+            Long userId,
+            boolean offerCommunicationStyleWhenSafe) {
+        chatQuotaService.assertWithinLimit(userId);
+        ChatContext context = loadChatContext(message, conversationId, userId);
         ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
         ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
                 message,
                 userId,
                 context,
                 userIntent);
-        var suggestedAction = recommendationOutcome != null ? recommendationOutcome.suggestedAction() : null;
-        context = context.withSystemPrompt(promptBuilderService.buildEnrichedPrompt(
-                context.basePrompt(),
-                context.riskWords(),
-                context.memories(),
-                suggestedAction,
-                userIntent));
+        SuggestedChatAction suggestedAction = recommendationOutcome != null
+                ? recommendationOutcome.suggestedAction()
+                : null;
+        context = context.withSystemPrompt(buildSystemPrompt(context, suggestedAction, userIntent));
 
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
         reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
         ChatReply finalReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
-        saveUserMessage(conversationId, message, finalReply, userId);
-        saveAssistantMessage(conversationId, finalReply.content(), userId);
+        finalReply = appendCommunicationStyleQuestionIfSafe(
+                finalReply,
+                userId,
+                offerCommunicationStyleWhenSafe);
+        saveConversationExchange(conversationId, message, finalReply, userId);
         userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
 
         return finalReply;
@@ -87,51 +100,38 @@ public class ChatService {
                 userIntent == ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
     }
 
-    public Flux<ChatStreamEvent> streamMessage(String message, String conversationId, Long userId) {
-        return Flux.defer(() -> {
-            ChatContext context = buildStreamingContext(message, conversationId, userId);
-            saveUserMessage(conversationId, message, ChatReply.of(""), userId);
-
-            StringBuilder assistantContent = new StringBuilder();
-
-            return streamingLLMChatPort.stream(context.systemPrompt(), message, context.history())
-                    .filter(delta -> delta != null && !delta.isBlank())
-                    .map(delta -> {
-                        assistantContent.append(delta);
-                        return ChatStreamEvent.delta(delta);
-                    })
-                    .concatWith(Mono.fromCallable(() -> completeStream(
-                            message,
-                            conversationId,
-                            userId,
-                            context,
-                            assistantContent.toString()))
-                            .flatMapMany(reply -> Flux.just(
-                                    ChatStreamEvent.metadata(reply),
-                                    ChatStreamEvent.done(reply))))
-                    .doOnCancel(() -> log.info("Stream de chat cancelado userId={} conversationId={}",
-                            userId, conversationId));
-        }).onErrorResume(e -> {
-            log.warn("Error durante stream de chat userId={} conversationId={}", userId, conversationId, e);
-            return Flux.just(ChatStreamEvent.error(STREAM_ERROR_MESSAGE));
-        });
-    }
-
-    private ChatContext buildBlockingContext(String message, String conversationId, Long userId) {
+    private ChatContext loadChatContext(String message, String conversationId, Long userId) {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
         List<RiskWord> riskWords = riskWordRepository.findAllActive();
         List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
-        return new ChatContext(basePrompt, null, riskWords, memories, history);
+        ChatPersonalizationContext personalization = loadPersonalizationContext(userId);
+        return new ChatContext(basePrompt, null, riskWords, memories, history, personalization);
     }
 
-    private ChatContext buildStreamingContext(String message, String conversationId, Long userId) {
-        String basePrompt = basePrompt();
-        List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
-        List<RiskWord> riskWords = riskWordRepository.findAllActive();
-        String systemPrompt = promptBuilderService.buildStreamingPrompt(basePrompt, riskWords, memories);
-        List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
-        return new ChatContext(basePrompt, systemPrompt, riskWords, memories, history);
+    private String buildSystemPrompt(
+            ChatContext context,
+            SuggestedChatAction suggestedAction,
+            ChatUserIntent userIntent) {
+        return promptBuilderService.buildEnrichedPrompt(
+                context.basePrompt(),
+                context.riskWords(),
+                context.memories(),
+                suggestedAction,
+                userIntent,
+                context.personalization());
+    }
+
+    private ChatPersonalizationContext loadPersonalizationContext(Long userId) {
+        String registeredName = userRepository.findById(userId)
+                .map(AppUser::getName)
+                .orElse(null);
+        ChatConversationPreference preference =
+                chatConversationPreferenceRepository.findByUserId(userId).orElse(null);
+        return new ChatPersonalizationContext(
+                registeredName,
+                preference != null ? preference.getPreferredName() : null,
+                preference != null ? preference.getCommunicationStyle() : null);
     }
 
     private String basePrompt() {
@@ -140,36 +140,38 @@ public class ChatService {
                 .orElse("");
     }
 
-    private ChatReply completeStream(
-            String message,
-            String conversationId,
+    private ChatReply appendCommunicationStyleQuestionIfSafe(
+            ChatReply reply,
             Long userId,
-            ChatContext context,
-            String assistantContent) {
-        ChatReply metadata = extractMetadata(message, context);
-        ChatReply finalReply = new ChatReply(
-                assistantContent,
-                metadata.detectedEmotion(),
-                metadata.intensity(),
-                metadata.riskDetected(),
-                metadata.matchedWord());
-
-        saveAssistantMessage(conversationId, assistantContent, userId);
-        userVectorMemoryService.rememberChatMessage(userId, conversationId, message);
-        return finalReply;
-    }
-
-    private ChatReply extractMetadata(String message, ChatContext context) {
-        try {
-            String metadataPrompt = promptBuilderService.buildMetadataPrompt(
-                    context.basePrompt(),
-                    context.riskWords(),
-                    context.memories());
-            return llmChatPort.chat(metadataPrompt, message, context.history());
-        } catch (Exception e) {
-            log.warn("No se pudo extraer metadata de chat en streaming", e);
-            return ChatReply.of("");
+            boolean offerCommunicationStyleWhenSafe) {
+        if (!offerCommunicationStyleWhenSafe
+                || Boolean.TRUE.equals(reply.riskDetected())
+                || (reply.intensity() != null && reply.intensity() >= 7)
+                || reply.suggestedAction() != null) {
+            return reply;
         }
+
+        ChatConversationPreference pendingPreference = chatConversationPreferenceRepository.findByUserId(userId)
+                .filter(preference -> preference.getOnboardingStatus()
+                        == com.huly.backend.domain.model.enums.ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
+                .orElse(null);
+        if (pendingPreference == null) {
+            return reply;
+        }
+        chatConversationPreferenceRepository.save(
+                pendingPreference.markCommunicationStyleAsked(Instant.now()));
+
+        String content = reply.content() == null || reply.content().isBlank()
+                ? CommunicationStyle.QUESTION_TEXT
+                : reply.content().trim() + "\n\n" + CommunicationStyle.QUESTION_TEXT;
+        return new ChatReply(
+                content,
+                reply.detectedEmotion(),
+                reply.intensity(),
+                reply.riskDetected(),
+                reply.matchedWord(),
+                reply.suggestedAction(),
+                reply.generatedChallenge());
     }
 
     private ChatReply applyRecommendationOutcome(
@@ -202,7 +204,7 @@ public class ChatService {
     private ChatReply ensureRequestedChallenge(
             ChatReply reply,
             ChatUserIntent userIntent,
-            Object suggestedAction) {
+            SuggestedChatAction suggestedAction) {
         if (userIntent != ChatUserIntent.CHALLENGE_REQUEST
                 || suggestedAction != null
                 || reply.generatedChallenge() != null) {
@@ -237,6 +239,11 @@ public class ChatService {
         return (int) Math.round(Math.max(0.0, Math.min(1.0, intensity)) * 10.0);
     }
 
+    private void saveConversationExchange(String conversationId, String message, ChatReply reply, Long userId) {
+        saveUserMessage(conversationId, message, reply, userId);
+        saveAssistantMessage(conversationId, reply.content(), userId);
+    }
+
     private void saveUserMessage(String conversationId, String message, ChatReply reply, Long userId) {
         try {
             chatMemoryPort.addMessage(conversationId, new ConversationMessage(
@@ -263,9 +270,16 @@ public class ChatService {
             String systemPrompt,
             List<RiskWord> riskWords,
             List<VectorMemory> memories,
-            List<ConversationMessage> history) {
+            List<ConversationMessage> history,
+            ChatPersonalizationContext personalization) {
         private ChatContext withSystemPrompt(String nextSystemPrompt) {
-            return new ChatContext(basePrompt, nextSystemPrompt, riskWords, memories, history);
+            return new ChatContext(
+                    basePrompt,
+                    nextSystemPrompt,
+                    riskWords,
+                    memories,
+                    history,
+                    personalization);
         }
     }
 }

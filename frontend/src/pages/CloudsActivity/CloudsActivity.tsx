@@ -4,6 +4,8 @@ import { EmotionalCloudsActivity } from '../../components/EmotionalClouds'
 import { api } from '../../api/client'
 import Button from '../../components/Buttons/Button/Button'
 import BackButton from '../../components/Buttons/BackButton/BackButton'
+import { ActivityType } from '../../api/activities'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
 interface CloudRecommendationResponse {
     activity_type: string
@@ -25,9 +27,15 @@ const CloudsActivity = () => {
     const [recommendation, setRecommendation] = useState<CloudRecommendationResponse | null>(null)
     const [loading, setLoading] = useState(false)
 
+    const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.NUBE, {
+        autoStart: true,
+    })
+
     const handleThoughtAdded = useCallback((thought: string) => {
-        api.post('/clouds/thought', { thought }).catch(() => {})
-    }, [])
+        api.post('/clouds/thought', { thought })
+            .then(() => markConditionMet())
+            .catch(() => {})
+    }, [markConditionMet])
 
     const handleFinish = useCallback(async (thoughts: string[]) => {
         if (thoughts.length === 0) return
@@ -42,16 +50,17 @@ const CloudsActivity = () => {
         }
     }, [])
 
-    const handleNavigate = useCallback(() => {
+    const handleNavigate = useCallback(async () => {
         if (recommendation) {
+            await saveSession()
             navigate(recommendation.redirect_url)
             setRecommendation(null)
         }
-    }, [recommendation, navigate])
+    }, [recommendation, navigate, saveSession])
 
     return (
         <div className="h-full max-h-full w-full overflow-hidden flex flex-col select-none relative">
-            <BackButton to="/minigames" />
+            <BackButton to="/minigames" onBeforeNavigate={() => saveSession()} />
 
             <main className="w-full flex-1 min-h-0 flex flex-col relative z-10 overflow-hidden">
                 <EmotionalCloudsActivity
