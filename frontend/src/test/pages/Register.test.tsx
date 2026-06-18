@@ -246,6 +246,64 @@ describe('Register', () => {
         })
     })
 
+    it('bloquea nombre compuesto solo por un punto', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), '.')
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(getSubmitButton())
+
+        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
+        expect(mockedRegister).not.toHaveBeenCalled()
+    })
+
+    it('bloquea nombre con nÃºmeros', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), 'Mili123')
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(getSubmitButton())
+
+        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
+        expect(mockedRegister).not.toHaveBeenCalled()
+    })
+
+    it('bloquea nombre con menos de 3 letras', async () => {
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), 'Lu')
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(getSubmitButton())
+
+        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
+        expect(mockedRegister).not.toHaveBeenCalled()
+    })
+
+    it('permite nombre con varias palabras si solo contiene letras', async () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Ana Maria', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
+        const { user } = renderWithRouter()
+
+        await user.type(screen.getByPlaceholderText('Nombre'), 'Ana Maria')
+        await user.type(screen.getByPlaceholderText('Email'), 'mili@mail.com')
+
+        const passwordFields = screen.getAllByPlaceholderText(/contraseña/i)
+        await user.type(passwordFields[0], '123456')
+        await user.type(passwordFields[1], '123456')
+
+        await fillDate(user, '2000-01-15')
+        await user.click(screen.getByRole('checkbox'))
+        await user.click(getSubmitButton())
+
+        await waitFor(() => {
+            expect(mockedRegister).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    name: 'Ana Maria',
+                }),
+            )
+        })
+    })
+
     it('redirige al /onboarding cuando onBoardingCompleted es false', async () => {
         mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER', onBoardingCompleted: false })
          mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: false })

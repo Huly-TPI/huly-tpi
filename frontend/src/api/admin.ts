@@ -155,7 +155,11 @@ export interface UserAntiScrollResponse {
   topApps: TopAppResponse[]
 }
 
-export const getUserAntiScroll = async (userId: number): Promise<UserAntiScrollResponse> => {
-  return api.get<UserAntiScrollResponse>(`/admin/users/${userId}/statistics/antiscroll`)
+export const getUserAntiScroll = async (
+  userId: number,
+  week: 'current' | 'previous' = 'current',
+  day: string = 'all',
+): Promise<UserAntiScrollResponse> => {
+  return api.get<UserAntiScrollResponse>(`/admin/users/${userId}/statistics/antiscroll?week=${week}&day=${day}`)
 }
 

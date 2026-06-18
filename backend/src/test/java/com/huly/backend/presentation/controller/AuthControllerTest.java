@@ -191,6 +191,28 @@ class AuthControllerTest {
     }
 
     @Test
+    void register_shouldReturn400_whenNameContainsNumbers() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("name", "Juan123", "email", "user@huly.com", "password", "password123", "birthDate", "2000-01-01"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.name")
+                        .value("El nombre debe tener al menos 3 letras y solo puede contener letras y espacios"));
+    }
+
+    @Test
+    void register_shouldReturn400_whenNameIsOnlyAPoint() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("name", ".", "email", "user@huly.com", "password", "password123", "birthDate", "2000-01-01"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.name")
+                        .value("El nombre debe tener al menos 3 letras y solo puede contener letras y espacios"));
+    }
+
+    @Test
     void refresh_shouldReturn200WithNewTokensAndCookie_whenCookieIsPresent() throws Exception {
         AuthTokens tokens = AuthTokens.builder()
                 .accessToken("newAccessToken").refreshToken("newRefreshToken").build();

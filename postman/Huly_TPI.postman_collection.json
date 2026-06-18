@@ -2,148 +2,65 @@
   "info": {
     "name": "Huly TPI",
     "_postman_id": "huly-tpi-collection",
-    "description": "Colección general del proyecto Huly TPI.\n\nVariable de entorno:\n- baseUrl: ajustar según el puerto definido en application-huly-secrets.properties (por defecto: http://localhost:8080)\n\nSeveridades de riesgo: LOW | MEDIUM | HIGH",
+    "description": "Colección completa del backend Huly TPI (Spring Boot).\n\n## Autenticación\n- La colección usa **Bearer Token** a nivel colección con la variable `{{accessToken}}`.\n- Al ejecutar **Auth > Login** (o **Backoffice Login**) el script guarda el `accessToken` automáticamente.\n- El `refreshToken` viaja como cookie HTTP-only (Postman la gestiona solo).\n- Endpoints **públicos** (sin token): todo `/api/auth/**`, `POST /api/leads`, `GET /api/breathing/techniques`, `POST /api/webhook/mercadopago` y Swagger. En esos requests el auth está en `No Auth`.\n\n## Variables\n- `baseUrl`: URL del backend (default `http://localhost:8080`).\n- `accessToken`: JWT, se setea solo al loguear.\n- `userGoalId`, `riskWordId`, `conversationId`, `productId`, `adminUserId`, `emotionalEventId`, `imageFilename`: ids de ejemplo para rutas con path variable.\n\nSeveridades de riesgo: LOW | MEDIUM | HIGH",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:8080",
-      "type": "string",
-      "description": "URL base del backend. Cambiar según entorno (dev/qa/prod)."
-    },
-    {
-      "key": "accessToken",
-      "value": "",
-      "type": "string",
-      "description": "JWT de acceso. Se guarda automáticamente al hacer login."
-    },
-    {
-      "key": "riskWordId",
-      "value": "1",
-      "type": "string",
-      "description": "ID de palabra de riesgo. Actualizar después de crear una."
-    }
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string", "description": "URL base del backend. Cambiar según entorno (dev/qa/prod)." },
+    { "key": "accessToken", "value": "", "type": "string", "description": "JWT de acceso. Se guarda automáticamente al hacer login." },
+    { "key": "userGoalId", "value": "1", "type": "string", "description": "ID de reto de usuario." },
+    { "key": "riskWordId", "value": "1", "type": "string", "description": "ID de palabra de riesgo." },
+    { "key": "conversationId", "value": "conv-123", "type": "string", "description": "ID de conversación del chat." },
+    { "key": "productId", "value": "1", "type": "string", "description": "ID de producto/plan para crear preferencia de pago." },
+    { "key": "adminUserId", "value": "1", "type": "string", "description": "ID de usuario para estadísticas de backoffice." },
+    { "key": "emotionalEventId", "value": "1", "type": "string", "description": "ID de evento emocional." },
+    { "key": "imageFilename", "value": "example.jpg", "type": "string", "description": "Nombre de archivo de imagen de un reto completado." }
   ],
   "item": [
     {
       "name": "Auth",
-      "description": "Flujo de autenticación: registro, login, renovación de token y logout.\n\nEl refresh token se maneja como cookie HTTP-only (el navegador/Postman lo gestiona automáticamente).\nEl access token se guarda en la variable `accessToken` al hacer login y se usa como Bearer token en los demás requests.",
+      "description": "Flujo de autenticación: registro, login (app y backoffice), renovación de token y logout. Todos los endpoints son públicos.\n\nEl refresh token se maneja como cookie HTTP-only. El access token se guarda en `accessToken` al loguear.",
       "item": [
         {
           "name": "Register",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "register"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Registra un nuevo usuario con rol USER y estado ACTIVE.\n\n**Respuesta exitosa:** 201 Created\n**Errores posibles:**\n- 400 si name en blanco, email inválido o password menor a 6 caracteres\n- 409 si el email ya está registrado"
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Juan Perez\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\",\n  \"birthDate\": \"2000-05-20\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Registra un nuevo usuario (rol USER). Devuelve access token + cookie refresh.\n\n**201 Created**\nErrores: 400 (validación: email inválido, password < 6, nombre inválido, edad mínima 13 años), 409 (email ya registrado)."
           },
-          "response": [
-            {
-              "name": "201 - Registrado correctamente",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/auth/register" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}"
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [{ "key": "Content-Type", "value": "text/plain" }],
-              "body": "Usuario registrado correctamente"
-            },
-            {
-              "name": "400 - Password muy corta",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/auth/register" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"123\"\n}"
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación en los datos enviados\",\n  \"path\": \"/api/auth/register\",\n  \"errors\": {\n    \"password\": \"La contraseña debe tener al menos 6 caracteres\"\n  }\n}"
-            },
-            {
-              "name": "409 - Email ya registrado",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/auth/register" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}"
-                }
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 409,\n  \"error\": \"Conflict\",\n  \"message\": \"Email already in use\",\n  \"path\": \"/api/auth/register\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Login",
           "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.accessToken) {",
-                  "    pm.collectionVariables.set('accessToken', res.accessToken);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
+            { "listen": "test", "script": { "type": "text/javascript", "exec": [
+              "const res = pm.response.json();",
+              "if (res.accessToken) { pm.collectionVariables.set('accessToken', res.accessToken); }"
+            ] } }
           ],
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@huly.com\",\n  \"password\": \"admin123\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Autentica al usuario. Devuelve el access token en el body y guarda el refresh token en una cookie HTTP-only.\n\nEl script de test guarda el `accessToken` automáticamente en la variable de colección.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 401 si credenciales incorrectas o cuenta inactiva"
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Autentica al usuario. Devuelve `{ accessToken, role, onBoardingCompleted }` y setea la cookie refresh.\nEl script de test guarda el `accessToken` automáticamente.\n\n**200 OK**\nErrores: 401 (credenciales inválidas o cuenta inactiva)."
           },
           "response": [
             {
-              "name": "200 - Login exitoso (admin)",
+              "name": "200 - Login exitoso",
               "originalRequest": {
                 "method": "POST",
                 "header": [{ "key": "Content-Type", "value": "application/json" }],
                 "url": { "raw": "{{baseUrl}}/api/auth/login" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"admin@huly.com\",\n  \"password\": \"admin123\"\n}"
-                }
+                "body": { "mode": "raw", "raw": "{\n  \"email\": \"usuario@huly.com\",\n  \"password\": \"password123\"\n}" }
               },
               "status": "OK",
               "code": 200,
@@ -151,454 +68,551 @@
                 { "key": "Content-Type", "value": "application/json" },
                 { "key": "Set-Cookie", "value": "refreshToken=<jwt>; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax" }
               ],
-              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiJ9...\",\n  \"role\": \"ADMIN\"\n}"
-            },
-            {
-              "name": "401 - Credenciales inválidas",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/auth/login" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"admin@huly.com\",\n  \"password\": \"wrongpass\"\n}"
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Invalid credentials\",\n  \"path\": \"/api/auth/login\"\n}"
-            },
-            {
-              "name": "401 - Cuenta inactiva",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/auth/login" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"bloqueado@huly.com\",\n  \"password\": \"password123\"\n}"
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Account is not active\",\n  \"path\": \"/api/auth/login\"\n}"
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiJ9...\",\n  \"role\": \"USER\",\n  \"onBoardingCompleted\": false\n}"
             }
           ]
+        },
+        {
+          "name": "Backoffice Login",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": [
+              "const res = pm.response.json();",
+              "if (res.accessToken) { pm.collectionVariables.set('accessToken', res.accessToken); }"
+            ] } }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/backoffice/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "backoffice", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@huly.com\",\n  \"password\": \"admin123\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Login del backoffice (valida que el usuario tenga rol ADMIN). Devuelve `{ accessToken, role }` + cookie refresh.\n\n**200 OK**\nErrores: 401 (credenciales inválidas, cuenta inactiva o sin rol ADMIN)."
+          },
+          "response": []
         },
         {
           "name": "Refresh Token",
           "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.accessToken) {",
-                  "    pm.collectionVariables.set('accessToken', res.accessToken);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
+            { "listen": "test", "script": { "type": "text/javascript", "exec": [
+              "const res = pm.response.json();",
+              "if (res.accessToken) { pm.collectionVariables.set('accessToken', res.accessToken); }"
+            ] } }
           ],
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/refresh",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "refresh"]
-            },
-            "description": "Renueva el access token usando el refresh token de la cookie.\nRota el refresh token (emite uno nuevo en cookie, invalida el anterior).\n\nRequiere que Postman tenga habilitado 'Automatically follow redirects' y el manejo de cookies activo.\n\n**Respuesta exitosa:** 200 OK con nuevo accessToken en body y nuevo refreshToken en cookie\n**Errores posibles:**\n- 401 si la cookie no existe, el token expiró o ya fue usado"
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] },
+            "description": "Renueva el access token usando la cookie refreshToken. Rota el refresh token.\n\n**200 OK** (`{ accessToken }` + nueva cookie)\nErrores: 401 (cookie ausente, token expirado o ya usado)."
           },
-          "response": [
-            {
-              "name": "200 - Token renovado",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/auth/refresh" }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                { "key": "Content-Type", "value": "application/json" },
-                { "key": "Set-Cookie", "value": "refreshToken=<new_jwt>; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax" }
-              ],
-              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiJ9...\"\n}"
-            },
-            {
-              "name": "401 - Refresh token inválido o expirado",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/auth/refresh" }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Invalid or expired refresh token\",\n  \"path\": \"/api/auth/refresh\"\n}"
-            },
-            {
-              "name": "401 - Cookie no presente",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/auth/refresh" }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Refresh token not found\",\n  \"path\": \"/api/auth/refresh\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Logout",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "logout"]
-            },
-            "description": "Cierra la sesión: invalida el refresh token en la base de datos y limpia la cookie.\n\n**Respuesta exitosa:** 204 No Content\n\nSi no hay cookie presente igual devuelve 204 (idempotente)."
+            "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] },
+            "description": "Invalida el refresh token en la base de datos y limpia la cookie. Idempotente.\n\n**204 No Content**"
           },
-          "response": [
-            {
-              "name": "204 - Logout exitoso",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/auth/logout" }
-              },
-              "status": "No Content",
-              "code": 204,
-              "header": [
-                { "key": "Set-Cookie", "value": "refreshToken=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax" }
-              ],
-              "body": ""
-            }
-          ]
+          "response": []
         }
       ]
     },
     {
-      "name": "Examples",
-      "description": "Endpoints de ejemplo para verificar el funcionamiento del servidor y el flujo básico de CRUD.",
+      "name": "Users",
+      "description": "Perfil del usuario autenticado, monedas, membresía y preferencia de tema. Requiere Bearer token.",
       "item": [
         {
-          "name": "Crear ejemplo",
+          "name": "Mi perfil",
           "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/examples",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "examples"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Mi ejemplo\",\n  \"description\": \"Descripción del ejemplo\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Crea un registro de ejemplo.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si name está en blanco o supera 100 caracteres"
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] },
+            "description": "Devuelve el perfil del usuario autenticado (id, name, email, role, flags de onboarding, themePreference).\n\n**200 OK** · 401 si no autenticado."
           },
-          "response": [
-            {
-              "name": "200 - Creado exitosamente",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/examples" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"Mi ejemplo\",\n  \"description\": \"Descripción del ejemplo\"\n}"
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"id\": 1,\n  \"name\": \"Mi ejemplo\",\n  \"description\": \"Descripción del ejemplo\"\n}"
-            },
-            {
-              "name": "400 - Name en blanco",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/examples" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"Descripción\"\n}"
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": \"El nombre es obligatorio\"\n  }\n}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Test del servidor",
+          "name": "Mis monedas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/me/coins", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "coins"] },
+            "description": "Devuelve la cantidad de monedas del usuario: `{ coins }`.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Mi membresía",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/me/membership", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "membership"] },
+            "description": "Estado de membresía/plan del usuario: `{ active, planCode, productId, expiresAt }`.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar tema",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/me/theme", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "theme"] },
+            "body": { "mode": "raw", "raw": "{\n  \"themePreference\": \"DARK\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Actualiza la preferencia de tema. Valores: `LIGHT` | `DARK`.\n\n**204 No Content** · 400 si themePreference es null/ inválido."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "description": "Generación de opciones de onboarding y marcado de tutoriales completados. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Generar opciones",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/onboarding/generate-options", "host": ["{{baseUrl}}"], "path": ["api", "onboarding", "generate-options"] },
+            "body": { "mode": "raw", "raw": "{\n  \"step\": 2,\n  \"previousAnswer\": \"Quiero mejorar mi bienestar mental\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Genera opciones de respuesta para un paso del onboarding (IA). `step` entre 2 y 3.\n\n**200 OK** (`{ options: [...] }`) · 400 si step fuera de rango o previousAnswer en blanco."
+          },
+          "response": []
+        },
+        {
+          "name": "Completar onboarding",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/onboarding/complete", "host": ["{{baseUrl}}"], "path": ["api", "onboarding", "complete"] },
+            "body": { "mode": "raw", "raw": "{\n  \"answer1\": \"Mi objetivo principal\",\n  \"answer2\": \"Prefiero un tono cercano\",\n  \"answer3\": \"Quiero recomendaciones diarias\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Guarda las respuestas del onboarding del usuario autenticado.\n\n**204 No Content** · 400 si alguna respuesta está en blanco."
+          },
+          "response": []
+        },
+        {
+          "name": "Completar tutorial",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/onboarding/tutorial/complete", "host": ["{{baseUrl}}"], "path": ["api", "onboarding", "tutorial", "complete"] },
+            "description": "Marca el tutorial principal como completado para el usuario autenticado.\n\n**204 No Content**"
+          },
+          "response": []
+        },
+        {
+          "name": "Completar tutorial de perfil",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/onboarding/profile-onboarding-tutorial/complete", "host": ["{{baseUrl}}"], "path": ["api", "onboarding", "profile-onboarding-tutorial", "complete"] },
+            "description": "Marca el tutorial de onboarding del perfil como completado.\n\n**204 No Content**"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "description": "Chatbot emocional con IA: enviar mensajes, decidir sobre retos sugeridos y consultar historial. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Enviar mensaje",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/chat", "host": ["{{baseUrl}}"], "path": ["api", "chat"] },
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Hoy me siento un poco agobiado\",\n  \"conversationId\": \"{{conversationId}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Envía un mensaje al chatbot. Devuelve la respuesta del bot, emoción detectada, intensidad, acción sugerida, reto generado y metadata de riesgo.\n\n**200 OK** · 400 si message/conversationId en blanco."
+          },
+          "response": []
+        },
+        {
+          "name": "Decisión sobre reto sugerido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/chat/challenge-decision", "host": ["{{baseUrl}}"], "path": ["api", "chat", "challenge-decision"] },
+            "body": { "mode": "raw", "raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"title\": \"Reto de respiración\",\n  \"description\": \"Practicar respiración diafragmática 5 minutos\",\n  \"decision\": \"ACCEPTED\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Registra en la memoria vectorial la decisión del usuario sobre un reto sugerido por el chat.\n\n**204 No Content** · 400 si campos obligatorios en blanco."
+          },
+          "response": []
+        },
+        {
+          "name": "Historial de conversación",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/examples/test",
+              "raw": "{{baseUrl}}/api/chat/{{conversationId}}/messages?page=0&size=20",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "examples", "test"]
+              "path": ["api", "chat", "{{conversationId}}", "messages"],
+              "query": [
+                { "key": "page", "value": "0", "description": "Número de página (default 0)" },
+                { "key": "size", "value": "20", "description": "Elementos por página (default 20)" }
+              ]
             },
-            "description": "Verifica que el servidor esté en funcionamiento. Retorna una página HTML simple.\n\n**Respuesta exitosa:** 200 OK (Content-Type: text/html)"
+            "description": "Lista paginada de mensajes de una conversación, ordenados por fecha ascendente.\n\n**200 OK**"
           },
-          "response": [
-            {
-              "name": "200 - Servidor activo",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/examples/test" }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "text/html" }],
-              "body": "<!DOCTYPE html><html><body><h1>Server is running!</h1></body></html>"
-            }
-          ]
+          "response": []
         }
       ]
     },
     {
-      "name": "Math",
-      "description": "Endpoints de operaciones matemáticas.",
+      "name": "Clouds",
+      "description": "Funcionalidad de \"nubes\" (pensamientos guiados) con recomendación por IA. Requiere Bearer token.",
       "item": [
         {
-          "name": "Sumar dos números",
+          "name": "Guardar pensamiento",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/math/sum",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "math", "sum"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"a\": 5,\n  \"b\": 3\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Suma dos enteros y retorna el resultado.\nSi no se envía un campo, su valor por defecto es 0.\n\n**Respuesta exitosa:** 200 OK"
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/clouds/thought", "host": ["{{baseUrl}}"], "path": ["api", "clouds", "thought"] },
+            "body": { "mode": "raw", "raw": "{\n  \"thought\": \"Me preocupa mi presentación de mañana\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Guarda un pensamiento del usuario en la memoria vectorial.\n\n**204 No Content** · 400 si thought en blanco."
           },
-          "response": [
-            {
-              "name": "200 - Resultado de la suma",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/math/sum" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"a\": 5,\n  \"b\": 3\n}"
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"result\": 8\n}"
-            }
-          ]
+          "response": []
+        },
+        {
+          "name": "Obtener recomendación",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/clouds/recommendation", "host": ["{{baseUrl}}"], "path": ["api", "clouds", "recommendation"] },
+            "body": { "mode": "raw", "raw": "{\n  \"thoughts\": [\n    \"Me siento ansioso\",\n    \"Mi presentación es en 2 horas\"\n  ]\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Genera una recomendación de actividad a partir de una lista de pensamientos.\n\n**200 OK** (`{ activityType, actionId, title, description, redirectUrl }`) · 400 si thoughts vacío."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Journal",
+      "description": "Diario emocional del usuario. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Listar entradas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/journal", "host": ["{{baseUrl}}"], "path": ["api", "journal"] },
+            "description": "Lista las entradas del diario del usuario autenticado.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear entrada",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/journal", "host": ["{{baseUrl}}"], "path": ["api", "journal"] },
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Hoy fue un día difícil en el trabajo, me sentí abrumado\",\n  \"mood\": \"STRESSED\",\n  \"useTextForAI\": true\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Crea una entrada de diario. `mood` (opcional): HAPPY | SAD | ANXIOUS | CALM | STRESSED | ANGRY | EXCITED | TIRED | MOTIVATED | NEUTRAL. `useTextForAI` default true.\n\n**201 Created** · 400 si content en blanco o mood inválido."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Emotional Events",
+      "description": "Eventos emocionales: creación y actualización de decisión/feedback de recomendación. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Crear evento emocional",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/emotional-events", "host": ["{{baseUrl}}"], "path": ["api", "emotional-events"] },
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": 1,\n  \"source\": \"CHATBOT\",\n  \"inputText\": \"Me siento triste y solo hoy\",\n  \"detectedEmotion\": \"sadness\",\n  \"confidence\": 0.95,\n  \"valence\": -0.8,\n  \"arousal\": -0.3,\n  \"dominance\": -0.5,\n  \"intensity\": 0.75,\n  \"userGoal\": \"Mejorar mi ánimo\",\n  \"generatedRecommendation\": \"Probá un ejercicio de respiración\",\n  \"recommendedActivityId\": 1,\n  \"chosenActivityId\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Crea un evento emocional. `source`: CHATBOT | DIARY | JOURNAL | CLOUD | NUBE | OTHER. valence/arousal/dominance en [-1,1]; confidence/intensity en [0,1].\n\n**201 Created** · 400 si validación falla."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar decisión",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/emotional-events/{{emotionalEventId}}/decision", "host": ["{{baseUrl}}"], "path": ["api", "emotional-events", "{{emotionalEventId}}", "decision"] },
+            "body": { "mode": "raw", "raw": "{\n  \"decision\": \"ACCEPTED\",\n  \"chosenActivityId\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Actualiza la decisión sobre la recomendación de un evento. `decision`: ACCEPTED | IGNORED | CHOSE_OTHER.\n\n**200 OK** · 400/404 según corresponda."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar feedback",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/emotional-events/{{emotionalEventId}}/feedback", "host": ["{{baseUrl}}"], "path": ["api", "emotional-events", "{{emotionalEventId}}", "feedback"] },
+            "body": { "mode": "raw", "raw": "{\n  \"feedbackScore\": 4,\n  \"feedbackText\": \"La recomendación fue útil\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Registra feedback del usuario sobre la recomendación. `feedbackScore` entre 1 y 5.\n\n**200 OK** · 400/404 según corresponda."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Emotional Recommendations",
+      "description": "Recomendaciones emocionales basadas en estado VAD. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Obtener recomendaciones",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/emotional-recommendations", "host": ["{{baseUrl}}"], "path": ["api", "emotional-recommendations"] },
+            "body": { "mode": "raw", "raw": "{\n  \"detectedEmotion\": \"anxiety\",\n  \"confidence\": 0.85,\n  \"valence\": -0.6,\n  \"arousal\": 0.7,\n  \"dominance\": -0.3,\n  \"intensity\": 0.8,\n  \"userGoal\": \"Manejar el estrés\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Devuelve recomendaciones de actividades según el estado emocional (VAD). valence/arousal/dominance y intensity son obligatorios.\n\n**200 OK** · 400 si faltan valores obligatorios."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Emotional States",
+      "description": "Persistencia del estado emocional del usuario. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Guardar estado emocional",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/emotional-states", "host": ["{{baseUrl}}"], "path": ["api", "emotional-states"] },
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": 1,\n  \"valence\": -0.5,\n  \"arousal\": 0.3,\n  \"dominance\": -0.2,\n  \"intensity\": 0.6,\n  \"source\": \"CHATBOT\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Guarda un estado emocional (VAD) del usuario. Todos los campos son obligatorios.\n\n**201 Created** · 400 si validación falla."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Activities",
+      "description": "Catálogo de actividades y registro de sesiones realizadas. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Listar actividades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/activities", "host": ["{{baseUrl}}"], "path": ["api", "activities"] },
+            "description": "Lista todas las actividades disponibles.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar sesión de actividad",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/activities/sessions", "host": ["{{baseUrl}}"], "path": ["api", "activities", "sessions"] },
+            "body": { "mode": "raw", "raw": "{\n  \"activityType\": \"RESPIRACION\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Registra una sesión de actividad del usuario. `activityType`: RESPIRACION | DIARIO | NUBE | BURBUJA | RETO.\n\n**200 OK** · 401 si no autenticado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Breathing",
+      "description": "Técnicas de respiración guiada. Endpoint público.",
+      "item": [
+        {
+          "name": "Listar técnicas de respiración",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/breathing/techniques", "host": ["{{baseUrl}}"], "path": ["api", "breathing", "techniques"] },
+            "description": "Lista las técnicas de respiración (tiempos de inhalar/sostener/exhalar, rondas). Público.\n\n**200 OK**"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Badges",
+      "description": "Insignias del sistema y las obtenidas por el usuario. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Listar todas las insignias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/badges", "host": ["{{baseUrl}}"], "path": ["api", "badges"] },
+            "description": "Lista el catálogo completo de insignias.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Mis insignias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/badges/my", "host": ["{{baseUrl}}"], "path": ["api", "badges", "my"] },
+            "description": "Lista las insignias obtenidas por el usuario autenticado.\n\n**200 OK**"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Daily Rewards",
+      "description": "Recompensa diaria (racha de días). Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Estado de recompensa diaria",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/daily-rewards/status", "host": ["{{baseUrl}}"], "path": ["api", "daily-rewards", "status"] },
+            "description": "Devuelve el estado de la recompensa diaria: días, racha actual, días completados, si puede reclamar hoy y el próximo día.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Reclamar recompensa diaria",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/daily-rewards/claim", "host": ["{{baseUrl}}"], "path": ["api", "daily-rewards", "claim"] },
+            "description": "Reclama la recompensa del día. Devuelve `{ coins, dayNumber, newStreak }`.\n\n**200 OK**"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Goals",
+      "description": "Retos (goals) del usuario: aceptar retos sugeridos, crear, listar, editar, completar (con imagen) y eliminar. Requiere Bearer token.",
+      "item": [
+        {
+          "name": "Aceptar reto sugerido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/user-goals/accept", "host": ["{{baseUrl}}"], "path": ["api", "user-goals", "accept"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Reto de meditación\",\n  \"description\": \"30 minutos de meditación diaria\",\n  \"activityId\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Acepta un reto sugerido (por el chat). `activityId` opcional.\n\n**201 Created** · 400 si title en blanco."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear reto",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/user-goals", "host": ["{{baseUrl}}"], "path": ["api", "user-goals"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Reducir la ansiedad\",\n  \"description\": \"Practicar respiración a diario\",\n  \"activityId\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Crea un reto para el usuario autenticado (estado PENDING). `activityId` opcional.\n\n**201 Created** · 400 si title en blanco."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar mis retos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-goals/me?page=0&size=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-goals", "me"],
+              "query": [
+                { "key": "page", "value": "0", "description": "Número de página (default 0)" },
+                { "key": "size", "value": "5", "description": "Elementos por página (default 5)" }
+              ]
+            },
+            "description": "Retorna los retos del usuario separados en `completados` y `pendientes`, cada lista paginada y ordenada por fecha descendente.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Editar reto",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/user-goals/{{userGoalId}}", "host": ["{{baseUrl}}"], "path": ["api", "user-goals", "{{userGoalId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Mejorar mi salud mental\",\n  \"description\": \"Journaling y meditación diaria\",\n  \"activityId\": 2\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Actualiza título, descripción y actividad de un reto.\n\n**200 OK** · 400 si title en blanco · 404 si el id no existe."
+          },
+          "response": []
+        },
+        {
+          "name": "Completar reto (con imagen)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user-goals/{{userGoalId}}/complete", "host": ["{{baseUrl}}"], "path": ["api", "user-goals", "{{userGoalId}}", "complete"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image", "type": "file", "src": [], "description": "Imagen opcional de evidencia (jpg/png/gif). Otorga monedas extra." }
+              ]
+            },
+            "description": "Marca un reto como completado. Acepta una imagen opcional (multipart/form-data, campo `image`).\n\n**200 OK** · 404 si el id no existe."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar reto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user-goals/{{userGoalId}}", "host": ["{{baseUrl}}"], "path": ["api", "user-goals", "{{userGoalId}}"] },
+            "description": "Elimina físicamente un reto por su id.\n\n**204 No Content** · 404 si el id no existe."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener imagen de reto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user-goals/images/{{imageFilename}}", "host": ["{{baseUrl}}"], "path": ["api", "user-goals", "images", "{{imageFilename}}"] },
+            "description": "Descarga la imagen de evidencia de un reto completado.\n\n**200 OK** (image/jpeg|png|gif) · 404 si el archivo no existe."
+          },
+          "response": []
         }
       ]
     },
     {
       "name": "Risk Words",
-      "description": "Gestión de palabras de riesgo emocional utilizadas como contexto para el análisis de IA.\n\nSeveridades válidas: LOW | MEDIUM | HIGH",
+      "description": "Gestión de palabras de riesgo emocional (contexto para el análisis de IA). Requiere Bearer token. Severidades: LOW | MEDIUM | HIGH.",
       "item": [
         {
           "name": "Crear palabra de riesgo",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/risk-words",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "risk-words"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"word\": \"suicidio\",\n  \"description\": \"Indicador directo de ideación suicida\",\n  \"severity\": \"HIGH\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Crea una nueva palabra de riesgo emocional.\n\n**Respuesta exitosa:** 201 Created\n**Errores posibles:**\n- 400 si falta word o severity, o superan el largo máximo\n- 409 si la palabra ya existe"
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/risk-words", "host": ["{{baseUrl}}"], "path": ["api", "risk-words"] },
+            "body": { "mode": "raw", "raw": "{\n  \"word\": \"suicidio\",\n  \"description\": \"Indicador directo de ideación suicida\",\n  \"severity\": \"HIGH\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Crea una palabra de riesgo.\n\n**201 Created** · 400 (validación) · 409 (palabra duplicada)."
           },
-          "response": [
-            {
-              "name": "201 - Creada exitosamente",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/risk-words" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"word\": \"suicidio\",\n  \"description\": \"Indicador directo de ideación suicida\",\n  \"severity\": \"HIGH\"\n}"
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"id\": 1,\n  \"word\": \"suicidio\",\n  \"description\": \"Indicador directo de ideación suicida\",\n  \"severity\": \"HIGH\",\n  \"active\": true\n}"
-            },
-            {
-              "name": "400 - Validación fallida",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/risk-words" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"word\": \"\",\n  \"severity\": \"HIGH\"\n}"
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"word\": \"La palabra es obligatoria\"\n  }\n}"
-            },
-            {
-              "name": "409 - Palabra duplicada",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/risk-words" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"word\": \"suicidio\",\n  \"severity\": \"HIGH\"\n}"
-                }
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 409,\n  \"error\": \"Conflict\",\n  \"message\": \"Ya existe una palabra de riesgo con el valor: suicidio\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Actualizar palabra de riesgo",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/risk-words/{{riskWordId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "risk-words", "{{riskWordId}}"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"word\": \"autolesión\",\n  \"description\": \"Indicador de conducta autolesiva\",\n  \"severity\": \"HIGH\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Actualiza todos los campos de una palabra de riesgo existente.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si falta word o severity\n- 404 si el id no existe\n- 409 si el nuevo valor ya pertenece a otro registro"
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/risk-words/{{riskWordId}}", "host": ["{{baseUrl}}"], "path": ["api", "risk-words", "{{riskWordId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"word\": \"autolesión\",\n  \"description\": \"Indicador de conducta autolesiva\",\n  \"severity\": \"HIGH\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Actualiza una palabra de riesgo existente.\n\n**200 OK** · 400 · 404 (no encontrada) · 409 (valor ya usado)."
           },
-          "response": [
-            {
-              "name": "200 - Actualizada exitosamente",
-              "originalRequest": {
-                "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/risk-words/1" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"word\": \"autolesión\",\n  \"description\": \"Indicador de conducta autolesiva\",\n  \"severity\": \"HIGH\"\n}"
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"id\": 1,\n  \"word\": \"autolesión\",\n  \"description\": \"Indicador de conducta autolesiva\",\n  \"severity\": \"HIGH\",\n  \"active\": true\n}"
-            },
-            {
-              "name": "404 - No encontrada",
-              "originalRequest": {
-                "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/risk-words/999" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"word\": \"autolesión\",\n  \"severity\": \"HIGH\"\n}"
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"Palabra de riesgo no encontrada con id: 999\"\n}"
-            },
-            {
-              "name": "409 - Conflicto con otro registro",
-              "originalRequest": {
-                "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/risk-words/1" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"word\": \"ansiedad\",\n  \"severity\": \"LOW\"\n}"
-                }
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 409,\n  \"error\": \"Conflict\",\n  \"message\": \"Ya existe una palabra de riesgo con el valor: ansiedad\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Eliminar palabra de riesgo",
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/risk-words/{{riskWordId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "risk-words", "{{riskWordId}}"]
-            },
-            "description": "Elimina físicamente una palabra de riesgo por su id.\n\n**Respuesta exitosa:** 204 No Content\n**Errores posibles:**\n- 404 si el id no existe"
+            "url": { "raw": "{{baseUrl}}/api/risk-words/{{riskWordId}}", "host": ["{{baseUrl}}"], "path": ["api", "risk-words", "{{riskWordId}}"] },
+            "description": "Elimina físicamente una palabra de riesgo.\n\n**204 No Content** · 404 si el id no existe."
           },
-          "response": [
-            {
-              "name": "204 - Eliminada exitosamente",
-              "originalRequest": {
-                "method": "DELETE",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/risk-words/1" }
-              },
-              "status": "No Content",
-              "code": 204,
-              "header": [],
-              "body": ""
-            },
-            {
-              "name": "404 - No encontrada",
-              "originalRequest": {
-                "method": "DELETE",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/risk-words/999" }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"Palabra de riesgo no encontrada con id: 999\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Listar palabras de riesgo",
@@ -610,241 +624,313 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "risk-words"],
               "query": [
-                {
-                  "key": "word",
-                  "value": "",
-                  "description": "Fragmento para filtrar por contenido (búsqueda parcial)",
-                  "disabled": true
-                },
-                {
-                  "key": "active",
-                  "value": "true",
-                  "description": "Filtrar por estado: true (activas) | false (inactivas)",
-                  "disabled": true
-                },
-                {
-                  "key": "severity",
-                  "value": "HIGH",
-                  "description": "Filtrar por severidad: LOW | MEDIUM | HIGH",
-                  "disabled": true
-                },
-                {
-                  "key": "page",
-                  "value": "0",
-                  "description": "Número de página (comienza en 0)"
-                },
-                {
-                  "key": "size",
-                  "value": "20",
-                  "description": "Cantidad de elementos por página"
-                }
+                { "key": "word", "value": "", "description": "Búsqueda parcial por contenido", "disabled": true },
+                { "key": "active", "value": "true", "description": "Filtrar por estado: true | false", "disabled": true },
+                { "key": "severity", "value": "HIGH", "description": "Filtrar por severidad: LOW | MEDIUM | HIGH", "disabled": true },
+                { "key": "page", "value": "0", "description": "Número de página (default 0)" },
+                { "key": "size", "value": "20", "description": "Elementos por página (default 20)" }
               ]
             },
-            "description": "Lista palabras de riesgo con paginación y filtros opcionales.\n\n**Filtros disponibles:**\n- `word`: búsqueda parcial insensible a mayúsculas\n- `active`: `true` o `false`\n- `severity`: `LOW`, `MEDIUM` o `HIGH`\n- `page`: número de página (default 0)\n- `size`: elementos por página (default 20)\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si severity no es un valor válido"
+            "description": "Lista palabras de riesgo con paginación y filtros opcionales (`word`, `active`, `severity`).\n\n**200 OK** · 400 si severity inválida."
           },
-          "response": [
-            {
-              "name": "200 - Lista sin filtros",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/risk-words?page=0&size=20" }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"content\": [\n    {\n      \"id\": 1,\n      \"word\": \"suicidio\",\n      \"description\": \"Indicador directo de ideación suicida\",\n      \"severity\": \"HIGH\",\n      \"active\": true\n    }\n  ],\n  \"totalElements\": 1,\n  \"totalPages\": 1,\n  \"last\": true,\n  \"first\": true\n}"
-            },
-            {
-              "name": "400 - Severidad inválida",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/risk-words?severity=INVALIDA" }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Severidad inválida. Valores aceptados: LOW, MEDIUM, HIGH\"\n}"
-            }
-          ]
+          "response": []
         }
       ]
     },
     {
-      "name": "User Goals",
-      "description": "Gestión de retos (goals) de usuario. Permite crear, listar (separado en completados y pendientes), editar y eliminar retos.",
+      "name": "Extension",
+      "description": "Extensión anti-scroll: configuración del usuario y envío de métricas. Requiere Bearer token.",
       "item": [
         {
-          "name": "Crear reto de usuario",
+          "name": "Obtener configuración",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/extension/settings", "host": ["{{baseUrl}}"], "path": ["api", "extension", "settings"] },
+            "description": "Devuelve la configuración anti-scroll del usuario (enabled, intervalo de pausa, dominios monitoreados, consentimiento, URLs, T&C).\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Guardar configuración",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/user-goals",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "user-goals"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"activityId\": 1\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Crea un nuevo reto para el usuario con estado PENDING. `activityId` es opcional.\n\n**Respuesta exitosa:** 201 Created\n**Errores posibles:**\n- 400 si userId o title están ausentes o inválidos"
+            "url": { "raw": "{{baseUrl}}/api/extension/settings", "host": ["{{baseUrl}}"], "path": ["api", "extension", "settings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"enabled\": true,\n  \"pauseIntervalSeconds\": 300,\n  \"monitoredDomains\": [\"youtube.com\", \"instagram.com\"],\n  \"dataSharingConsent\": true\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Guarda la configuración anti-scroll del usuario.\n\n**200 OK**"
           },
-          "response": [
-            {
-              "name": "201 - Creado exitosamente",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/user-goals" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"activityId\": 1\n}"
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"title\": \"Practicar respiración\",\n  \"description\": \"Realizar ejercicio de respiración diafragmática\",\n  \"status\": \"PENDING\",\n  \"createdAt\": \"2025-01-01T00:00:00Z\",\n  \"activityId\": 1\n}"
-            },
-            {
-              "name": "400 - Validación fallida",
-              "originalRequest": {
-                "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/user-goals" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"title\": \"Sin userId\"\n}"
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"userId\": \"El id de usuario es obligatorio\"\n  }\n}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Listar retos por usuario",
+          "name": "Enviar métricas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/extension/metrics", "host": ["{{baseUrl}}"], "path": ["api", "extension", "metrics"] },
+            "body": { "mode": "raw", "raw": "[\n  {\n    \"domain\": \"youtube.com\",\n    \"activeSeconds\": 3600,\n    \"scrollCount\": 45,\n    \"modalsShown\": 2,\n    \"redirects\": 1\n  }\n]", "options": { "raw": { "language": "json" } } },
+            "description": "Envía un lote de métricas de uso por dominio (array).\n\n**200 OK** · 400 si algún `domain` está en blanco."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "description": "Productos, planes y creación de preferencia de pago (MercadoPago). Requiere Bearer token (salvo el webhook).",
+      "item": [
+        {
+          "name": "Listar productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/payment/products", "host": ["{{baseUrl}}"], "path": ["api", "payment", "products"] },
+            "description": "Lista los productos disponibles (paquetes de monedas).\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar planes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/payment/plans", "host": ["{{baseUrl}}"], "path": ["api", "payment", "plans"] },
+            "description": "Lista los planes de membresía disponibles.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear preferencia de pago",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/payment/preference/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "payment", "preference", "{{productId}}"] },
+            "description": "Crea una preferencia de pago de MercadoPago para el producto indicado. Devuelve `{ id, initPoint }`.\n\n**200 OK**"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "description": "Webhook de notificaciones de MercadoPago. Endpoint público (validado por firma).",
+      "item": [
+        {
+          "name": "MercadoPago - Notificación",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-signature", "value": "", "description": "Firma HMAC de MercadoPago (validada si está activada)" },
+              { "key": "x-request-id", "value": "" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/mercadopago?data.id=123456",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "mercadopago"],
+              "query": [{ "key": "data.id", "value": "123456", "description": "ID del recurso notificado" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"id\": 12345,\n  \"live_mode\": false,\n  \"type\": \"payment\",\n  \"date_created\": \"2026-06-18T10:30:00Z\",\n  \"user_id\": \"user-123\",\n  \"api_version\": \"v1\",\n  \"action\": \"payment.created\",\n  \"data\": { \"id\": \"123456\" }\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Recibe notificaciones de pago de MercadoPago. Si la firma no es válida devuelve 401; si no es de tipo `payment` devuelve 200 sin procesar.\n\n**200 OK** · 401 (firma inválida) · 400 (id de pago inválido)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Leads",
+      "description": "Registro de leads desde la landing. Endpoint público.",
+      "item": [
+        {
+          "name": "Registrar lead",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/leads", "host": ["{{baseUrl}}"], "path": ["api", "leads"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"nuevo@huly.com\",\n  \"nickname\": \"juanp\",\n  \"sourceAction\": \"LANDING\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Registra un lead y envía email de bienvenida. `nickname` 3-50 chars. `sourceAction` (opcional): LANDING | JOURNAL | GOALS | BREATHING | MINIGAMES | CHATBOT.\n\n**201 Created** · 400 si email/nickname inválidos."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users",
+      "description": "Backoffice: listado de usuarios, estadísticas por usuario y configuración global anti-scroll. Requiere Bearer token (usuario ADMIN).",
+      "item": [
+        {
+          "name": "Listar usuarios (backoffice)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/user-goals/user/1?page=0&size=5",
+              "raw": "{{baseUrl}}/api/admin/users?search=",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "user-goals", "user", "1"],
-              "query": [
-                { "key": "page", "value": "0", "description": "Número de página (comienza en 0)" },
-                { "key": "size", "value": "5", "description": "Cantidad de elementos por página (default 5)" }
-              ]
+              "path": ["api", "admin", "users"],
+              "query": [{ "key": "search", "value": "", "description": "Búsqueda por nombre/email (opcional)" }]
             },
-            "description": "Retorna los retos del usuario separados en `completados` (COMPLETED) y `pendientes` (PENDING), cada lista paginada y ordenada por `createdAt` descendente.\n\n**Respuesta exitosa:** 200 OK"
+            "description": "Lista usuarios para el backoffice, con búsqueda opcional.\n\n**200 OK**"
           },
-          "response": [
-            {
-              "name": "200 - Lista paginada",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/user-goals/user/1?page=0&size=5" }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"completados\": {\n    \"content\": [],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"first\": true,\n    \"last\": true\n  },\n  \"pendientes\": {\n    \"content\": [\n      {\n        \"id\": 1,\n        \"userId\": 1,\n        \"title\": \"Practicar respiración\",\n        \"status\": \"PENDING\",\n        \"createdAt\": \"2025-01-01T00:00:00Z\"\n      }\n    ],\n    \"pageNumber\": 0,\n    \"pageSize\": 5,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"first\": true,\n    \"last\": true\n  }\n}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Editar reto de usuario",
+          "name": "Estadísticas de actividades de usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{adminUserId}}/statistics/activities?timeframe=total",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{adminUserId}}", "statistics", "activities"],
+              "query": [{ "key": "timeframe", "value": "total", "description": "Rango: total | week | month (default total)" }]
+            },
+            "description": "Estadísticas de actividades de un usuario.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Diagnósticos de IA de usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/{{adminUserId}}/statistics/ai", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "{{adminUserId}}", "statistics", "ai"] },
+            "description": "Diagnósticos de IA (emociones detectadas, etc.) de un usuario.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Finanzas de usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/{{adminUserId}}/statistics/finance", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "{{adminUserId}}", "statistics", "finance"] },
+            "description": "Resumen financiero (pagos, monedas) de un usuario.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Estadísticas anti-scroll de usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{adminUserId}}/statistics/antiscroll?week=current&day=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{adminUserId}}", "statistics", "antiscroll"],
+              "query": [
+                { "key": "week", "value": "current", "description": "Semana (default current)" },
+                { "key": "day", "value": "all", "description": "Día (default all)" }
+              ]
+            },
+            "description": "Métricas anti-scroll de un usuario para una semana/día.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Dashboard anti-scroll",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/antiscroll/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "antiscroll", "dashboard"] },
+            "description": "Estadísticas globales del dashboard anti-scroll.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener config global anti-scroll",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/antiscroll/config", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "antiscroll", "config"] },
+            "description": "Devuelve la configuración global anti-scroll (intervalo por defecto, T&C).\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar config global anti-scroll",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/antiscroll/config", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "antiscroll", "config"] },
+            "body": { "mode": "raw", "raw": "{\n  \"defaultPauseIntervalMinutes\": 5,\n  \"termsAndConditions\": \"Al aceptar, estás de acuerdo con los términos\"\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Actualiza la configuración global anti-scroll. `defaultPauseIntervalMinutes` mínimo 1.\n\n**200 OK** · 400 si validación falla."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Bot Config",
+      "description": "Configuración del chatbot (riesgo, system prompt, preguntas de personalización). Requiere Bearer token (ADMIN).",
+      "item": [
+        {
+          "name": "Obtener configuración del bot",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/chat/config", "host": ["{{baseUrl}}"], "path": ["api", "admin", "chat", "config"] },
+            "description": "Devuelve la configuración actual del chatbot.\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar configuración del bot",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/user-goals/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "user-goals", "1"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"activityId\": 2\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Actualiza título, descripción y actividad de un reto existente.\n\n**Respuesta exitosa:** 200 OK\n**Errores posibles:**\n- 400 si title está en blanco\n- 404 si el id no existe"
+            "url": { "raw": "{{baseUrl}}/api/admin/chat/config", "host": ["{{baseUrl}}"], "path": ["api", "admin", "chat", "config"] },
+            "body": { "mode": "raw", "raw": "{\n  \"riskDetectionEnabled\": true,\n  \"systemPrompt\": \"Sos un asistente empático de bienestar emocional\",\n  \"preferredNameQuestionEnabled\": false,\n  \"communicationStyleQuestionEnabled\": true\n}", "options": { "raw": { "language": "json" } } },
+            "description": "Actualiza la configuración del chatbot. `systemPrompt` obligatorio.\n\n**200 OK** · 400 si systemPrompt en blanco."
           },
-          "response": [
-            {
-              "name": "200 - Editado exitosamente",
-              "originalRequest": {
-                "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/user-goals/1" },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"activityId\": 2\n}"
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"title\": \"Respiración actualizada\",\n  \"description\": \"Nueva descripción\",\n  \"status\": \"PENDING\",\n  \"createdAt\": \"2025-01-01T00:00:00Z\",\n  \"activityId\": 2\n}"
-            },
-            {
-              "name": "404 - No encontrado",
-              "originalRequest": {
-                "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "url": { "raw": "{{baseUrl}}/api/user-goals/999" },
-                "body": { "mode": "raw", "raw": "{\n  \"title\": \"Título\"\n}" }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"No se encontro un UserGoal con id 999\"\n}"
-            }
-          ]
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Chatbot Dashboard",
+      "description": "Datos para el dashboard del chatbot. Actualmente devuelve datos de ejemplo (mock). Requiere Bearer token (ADMIN).",
+      "item": [
+        {
+          "name": "Categorías emocionales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/chatbot/emotional-categories", "host": ["{{baseUrl}}"], "path": ["api", "admin", "chatbot", "emotional-categories"] },
+            "description": "Distribución por categorías emocionales (mock).\n\n**200 OK**"
+          },
+          "response": []
         },
         {
-          "name": "Eliminar reto de usuario",
+          "name": "Actividades más usadas",
           "request": {
-            "method": "DELETE",
+            "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/user-goals/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "user-goals", "1"]
-            },
-            "description": "Elimina físicamente un reto por su id.\n\n**Respuesta exitosa:** 204 No Content\n**Errores posibles:**\n- 404 si el id no existe"
+            "url": { "raw": "{{baseUrl}}/api/admin/chatbot/activities", "host": ["{{baseUrl}}"], "path": ["api", "admin", "chatbot", "activities"] },
+            "description": "Ranking de actividades (mock).\n\n**200 OK**"
           },
-          "response": [
-            {
-              "name": "204 - Eliminado exitosamente",
-              "originalRequest": {
-                "method": "DELETE",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/user-goals/1" }
-              },
-              "status": "No Content",
-              "code": 204,
-              "header": [],
-              "body": ""
-            },
-            {
-              "name": "404 - No encontrado",
-              "originalRequest": {
-                "method": "DELETE",
-                "header": [],
-                "url": { "raw": "{{baseUrl}}/api/user-goals/999" }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"timestamp\": \"2025-01-01T00:00:00\",\n  \"status\": 404,\n  \"error\": \"Not Found\",\n  \"message\": \"No se encontro un UserGoal con id 999\"\n}"
-            }
-          ]
+          "response": []
+        },
+        {
+          "name": "Bienestar semanal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/chatbot/wellbeing", "host": ["{{baseUrl}}"], "path": ["api", "admin", "chatbot", "wellbeing"] },
+            "description": "Serie semanal de bienestar (mock).\n\n**200 OK**"
+          },
+          "response": []
+        },
+        {
+          "name": "Logs de entrenamiento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/chatbot/training-logs", "host": ["{{baseUrl}}"], "path": ["api", "admin", "chatbot", "training-logs"] },
+            "description": "Registros de entrenamiento/conversaciones clasificadas (mock).\n\n**200 OK**"
+          },
+          "response": []
         }
       ]
     }

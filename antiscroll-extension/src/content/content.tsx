@@ -12,6 +12,7 @@ import { setupActivityTracker } from './activityTracker';
 import { getSettings, setSettings } from '../utils/storage';
 import { STORAGE_KEYS } from '../utils/constants';
 import { ExtensionSettings } from '../utils/types';
+import { normalizeDomain } from '../utils/domain';
 
 declare global {
   interface Window {
@@ -19,7 +20,7 @@ declare global {
   }
 }
 
-const DOMAIN = window.location.hostname;
+const DOMAIN = normalizeDomain(window.location.hostname);
 
 let settings: ExtensionSettings | null = null;
 

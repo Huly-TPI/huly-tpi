@@ -13,12 +13,14 @@ public class CloudRecommendationUseCaseConfig {
 
     @Bean
     public GetCloudRecommendationUseCase getCloudRecommendationUseCase(
+            @org.springframework.beans.factory.annotation.Value("classpath:/prompts/cloud-analysis.st") org.springframework.core.io.Resource cloudAnalysisPrompt,
             EmotionalAnalysisPort emotionalAnalysisPort,
             PromptBuilderService promptBuilderService,
             ChatEmotionalRecommendationPolicy recommendationPolicy,
             GetEmotionalRecommendationsUseCase recommendationsUseCase
     ) {
         return new GetCloudRecommendationUseCase(
+                cloudAnalysisPrompt,
                 emotionalAnalysisPort,
                 promptBuilderService,
                 recommendationPolicy,

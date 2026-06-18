@@ -33,6 +33,9 @@ public class UserSettingEntity {
     @Column(name = "pause_interval_minutes")
     private Integer pauseIntervalMinutes;
 
+    @Column(name = "pause_interval_seconds")
+    private Integer pauseIntervalSeconds;
+
     @Column(name = "monitored_domains")
     private String monitoredDomains;
 
