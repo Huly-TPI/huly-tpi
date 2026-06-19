@@ -1,4 +1,4 @@
-package com.huly.backend.domain.service;
+package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.UpdateBotConfigCommand;

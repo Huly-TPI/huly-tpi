@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.UserPlanRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import org.springframework.context.annotation.Bean;

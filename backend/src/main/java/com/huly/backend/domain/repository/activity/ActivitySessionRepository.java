@@ -1,4 +1,4 @@
-package com.huly.backend.domain.repository;
+package com.huly.backend.domain.repository.activity;
 
 import com.huly.backend.domain.model.ActivitySession;
 

@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.user;
 
 import com.huly.backend.domain.dto.payment.UserPlan;
-import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

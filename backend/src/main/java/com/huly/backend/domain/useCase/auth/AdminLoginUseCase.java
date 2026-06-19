@@ -4,7 +4,7 @@ import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

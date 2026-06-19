@@ -1,10 +1,9 @@
 package com.huly.backend.domain.useCase.admin.userAntiScroll;
 
-import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import lombok.RequiredArgsConstructor;

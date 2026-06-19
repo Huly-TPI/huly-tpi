@@ -1,4 +1,4 @@
-package com.huly.backend.domain.repository;
+package com.huly.backend.domain.repository.user;
 
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;

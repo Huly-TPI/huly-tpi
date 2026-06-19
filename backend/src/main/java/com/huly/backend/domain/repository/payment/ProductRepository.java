@@ -1,4 +1,4 @@
-package com.huly.backend.domain.repository;
+package com.huly.backend.domain.repository.payment;
 
 import com.huly.backend.domain.dto.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;

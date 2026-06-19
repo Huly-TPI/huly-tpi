@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.BreathingSession;
 import com.huly.backend.domain.model.BreathingTechnique;
-import com.huly.backend.domain.repository.BreathingTechniqueRepository;
+import com.huly.backend.domain.repository.breathingTechnique.BreathingTechniqueRepository;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 

@@ -3,9 +3,9 @@ package com.huly.backend.domain.useCase.admin.userFinancials;
 import com.huly.backend.domain.dto.payment.PaymentEvent;
 import com.huly.backend.domain.dto.payment.Product;
 import com.huly.backend.domain.model.enums.PaymentStatus;
-import com.huly.backend.domain.repository.PaymentEventRepository;
-import com.huly.backend.domain.repository.ProductRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.payment.PaymentEventRepository;
+import com.huly.backend.domain.repository.payment.ProductRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;

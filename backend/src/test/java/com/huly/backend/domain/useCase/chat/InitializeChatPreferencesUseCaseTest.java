@@ -8,7 +8,7 @@ import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.port.ChatMemoryPort;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import org.junit.jupiter.api.Test;

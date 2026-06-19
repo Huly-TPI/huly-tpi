@@ -1,4 +1,4 @@
-package com.huly.backend.domain.repository;
+package com.huly.backend.domain.repository.chatBotConfig;
 
 import com.huly.backend.domain.model.EmotionalEvent;
 
