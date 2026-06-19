@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.adapter.ai;
 
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

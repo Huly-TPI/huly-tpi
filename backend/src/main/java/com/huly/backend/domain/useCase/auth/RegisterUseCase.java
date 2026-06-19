@@ -5,8 +5,8 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.provider.PasswordHasher;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.port.PasswordHasherPort;
+import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RegisterUseCase {
 
     private final UserRepository userRepository;
-    private final PasswordHasher passwordHasher;
+    private final PasswordHasherPort passwordHasherPort;
     private final LoginUseCase loginUseCase;
 
     @Transactional
@@ -30,7 +30,7 @@ public class RegisterUseCase {
         userRepository.save(AppUser.builder()
                 .name(name)
                 .email(email)
-                .password(passwordHasher.encode(rawPassword))
+                .password(passwordHasherPort.encode(rawPassword))
                 .birthDate(birthDate)
                 .role(UserRole.USER)
                 .status(UserStatus.ACTIVE)

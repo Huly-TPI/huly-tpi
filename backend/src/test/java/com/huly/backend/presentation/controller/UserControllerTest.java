@@ -6,7 +6,7 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.dto.payment.UserPlan;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;

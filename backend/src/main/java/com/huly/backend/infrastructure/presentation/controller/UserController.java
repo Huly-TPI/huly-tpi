@@ -9,7 +9,7 @@ import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.domain.model.enums.ThemePreference;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

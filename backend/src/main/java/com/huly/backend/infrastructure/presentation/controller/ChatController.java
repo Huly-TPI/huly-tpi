@@ -3,10 +3,10 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
-import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
+import com.huly.backend.domain.useCase.chat.SaveChallengeDecisionUseCase;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatMessageResponse;
@@ -41,7 +41,7 @@ public class ChatController {
     private final ChatUseCase chatUseCase;
     private final AudioChatUseCase audioChatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
-    private final UserVectorMemoryService userVectorMemoryService;
+    private final SaveChallengeDecisionUseCase saveChallengeDecisionUseCase;
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(
@@ -67,12 +67,13 @@ public class ChatController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid ChatChallengeDecisionRequest request) {
         Long userId = getUserId(principal);
-        userVectorMemoryService.rememberChallengeDecision(
+        saveChallengeDecisionUseCase.execute(
                 userId,
-                request.conversationId(),
                 request.title(),
+                request.decision(),
                 request.description(),
-                request.decision());
+                request.conversationId()
+        );
         return ResponseEntity.noContent().build();
     }
 

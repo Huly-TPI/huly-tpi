@@ -60,7 +60,7 @@ public class VectorMemoryPolicy {
     public Boolean shouldRemember(SaveVectorMemoryCommand command, String content) {
         String normalized = normalizeContent(content);
 
-        int effectiveMinLength = properties.getMinContentLength();
+        int effectiveMinLength = effectiveMinLength(command);
 
         if (normalized.length() < effectiveMinLength) {
             log.info("Memoria vectorial descartada por longitud insuficiente ({} < {}) userId={} sourceType={}",
@@ -87,6 +87,13 @@ public class VectorMemoryPolicy {
             return CHATBOT_MEMORY_SIGNALS.stream().anyMatch(comparable::contains);
         }
         return true;
+    }
+
+    private int effectiveMinLength(SaveVectorMemoryCommand command) {
+        if (command.sourceType() == VectorMemorySource.GUIDED_CLOUDS)
+            return properties.getGuidedCloudsMinContentLength();
+
+        return properties.getMinContentLength();
     }
 
     public void validateSaveCommand(SaveVectorMemoryCommand command) {

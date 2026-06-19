@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.DailyRewardRepository;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;

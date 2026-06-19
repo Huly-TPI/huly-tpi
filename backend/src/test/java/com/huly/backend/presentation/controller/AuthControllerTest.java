@@ -3,7 +3,7 @@ package com.huly.backend.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
-import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.port.TokenPort;
 import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
 import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
@@ -38,7 +38,7 @@ class AuthControllerTest {
     private RegisterUseCase registerUseCase;
     private RefreshTokenUseCase refreshTokenUseCase;
     private LogoutUseCase logoutUseCase;
-    private TokenProvider tokenProvider;
+    private TokenPort tokenPort;
 
     @BeforeEach
     void setUp() {
@@ -47,17 +47,17 @@ class AuthControllerTest {
         registerUseCase = mock(RegisterUseCase.class);
         refreshTokenUseCase = mock(RefreshTokenUseCase.class);
         logoutUseCase = mock(LogoutUseCase.class);
-        tokenProvider = mock(TokenProvider.class);
+        tokenPort = mock(TokenPort.class);
 
         AuthController controller = new AuthController(
-                loginUseCase, adminLoginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenProvider);
+                loginUseCase, adminLoginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenPort);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
 
-        when(tokenProvider.isCookieSecure()).thenReturn(false);
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(tokenPort.isCookieSecure()).thenReturn(false);
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
     }
 
     @Test
@@ -79,7 +79,7 @@ class AuthControllerTest {
 
     @Test
     void login_shouldIssueSecureSameSiteNoneCookie_whenCookieSecureEnabled() throws Exception {
-        when(tokenProvider.isCookieSecure()).thenReturn(true);
+        when(tokenPort.isCookieSecure()).thenReturn(true);
         AuthTokens tokens = AuthTokens.builder()
                 .accessToken("theAccessToken").refreshToken("theRefreshToken")
                 .role(UserRole.USER).build();

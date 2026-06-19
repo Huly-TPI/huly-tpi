@@ -8,17 +8,15 @@ import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
-import com.huly.backend.domain.provider.ChatMemoryPort;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.port.ChatMemoryPort;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
-@Service
 @RequiredArgsConstructor
 public class InitializeChatPreferencesUseCase {
 

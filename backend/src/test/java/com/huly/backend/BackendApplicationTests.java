@@ -1,6 +1,6 @@
 package com.huly.backend;
 
-import com.huly.backend.domain.provider.LLMChatPort;
+import com.huly.backend.domain.port.LLMChatPort;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;

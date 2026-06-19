@@ -2,7 +2,7 @@ package com.huly.backend.domain.useCase.payment;
 
 import com.huly.backend.domain.dto.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;
-import com.huly.backend.domain.repository.ProductRepository;
+import com.huly.backend.domain.repository.payment.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -11,13 +11,12 @@ import com.huly.backend.domain.model.enums.ChatPreferenceExpectedField;
 import com.huly.backend.domain.model.enums.ChatPreferenceMessageType;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.MessageRole;
-import com.huly.backend.domain.provider.ChatMemoryPort;
-import com.huly.backend.domain.provider.ChatPreferenceExtractionPort;
+import com.huly.backend.domain.port.ChatMemoryPort;
+import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
@@ -29,7 +28,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Service
 @RequiredArgsConstructor
 public class HandleChatPreferencesUseCase {
 

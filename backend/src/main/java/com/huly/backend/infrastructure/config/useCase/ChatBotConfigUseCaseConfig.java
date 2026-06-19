@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.service.BotConfigService;
+import com.huly.backend.domain.service.chat.BotConfigService;
 import com.huly.backend.domain.useCase.chatBotConfig.GetBotConfigUseCase;
 import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
 import org.springframework.context.annotation.Bean;
