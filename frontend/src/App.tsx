@@ -23,6 +23,7 @@ import Register from './pages/Register/Register'
 import SandZenGarden from './pages/SandZenGarden/SandZenGarden.tsx'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
+import Orchard from './pages/Orchard/Orchard.tsx'
 import Privacy from './pages/Privacy/Privacy'
 
 const App = () => {
@@ -48,6 +49,7 @@ const App = () => {
           <Route path="/diary" element={<Diary />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/challenges" element={<Challenges />} />
+          <Route path="/orchard" element={<Orchard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
