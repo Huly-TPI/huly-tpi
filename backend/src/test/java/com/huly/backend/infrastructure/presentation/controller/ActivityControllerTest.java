@@ -1,9 +1,9 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
+
 import com.huly.backend.domain.model.Activity;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
 import com.huly.backend.domain.useCase.activities.RegisterActivitySessionUseCase;
-import com.huly.backend.infrastructure.presentation.controller.ActivityController;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 class ActivityControllerTest {

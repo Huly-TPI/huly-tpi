@@ -1,15 +1,15 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.CloudRecommendation;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
-import com.huly.backend.infrastructure.presentation.controller.CloudController;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,17 +23,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.assertj.core.api.Assertions.assertThat;
-import org.mockito.ArgumentCaptor;
 
 class CloudControllerTest {
 

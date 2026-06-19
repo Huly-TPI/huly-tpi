@@ -1,11 +1,10 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.dailyReward.DailyReward;
 import com.huly.backend.domain.model.dailyReward.DailyRewardClaim;
 import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;
-import com.huly.backend.infrastructure.presentation.controller.DailyRewardController;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

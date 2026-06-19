@@ -1,4 +1,4 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -8,7 +8,6 @@ import com.huly.backend.domain.model.UserPlant;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.model.enums.PlantStatus;
 import com.huly.backend.domain.useCase.userGoal.*;
-import com.huly.backend.infrastructure.presentation.controller.UserGoalController;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalUpdateRequest;
 import org.junit.jupiter.api.AfterEach;

@@ -29,7 +29,7 @@ public class AnthropicChatAdapter implements LLMChatPort {
         this.chatClient = chatClient;
     }
 
-    private record ChatReplyDto(
+    record ChatReplyDto(
             @JsonProperty("huly_reply") String hulyReply,
             @JsonProperty("detected_emotion") String detectedEmotion,
             @JsonProperty("intensity") Integer intensity,

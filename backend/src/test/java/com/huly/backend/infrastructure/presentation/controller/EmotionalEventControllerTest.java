@@ -1,4 +1,4 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.CreateEmotionalEventCommand;
@@ -10,7 +10,6 @@ import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventDecisionUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventFeedbackUseCase;
-import com.huly.backend.infrastructure.presentation.controller.EmotionalEventController;
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventDecisionRequest;
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventFeedbackRequest;
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventRequest;

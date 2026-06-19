@@ -1,0 +1,179 @@
+package com.huly.backend.infrastructure.presentation.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.dto.payment.UserPlan;
+import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.enums.ThemePreference;
+import com.huly.backend.domain.model.enums.UserRole;
+import com.huly.backend.domain.model.enums.UserStatus;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
+import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
+import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
+import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
+import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.time.Instant;
+import java.util.Collections;
+import java.util.Optional;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+class UserControllerTest {
+
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private GetCurrentUserUseCase getCurrentUserUseCase;
+    private UserDetailDomainRepository userDetailDomainRepository;
+    private GetUserCoinsUseCase getUserCoinsUseCase;
+    private GetCurrentMembershipUseCase getCurrentMembershipUseCase;
+
+    private static final Long USER_ID = 1L;
+
+    @BeforeEach
+    void setUp() {
+        getCurrentUserUseCase = mock(GetCurrentUserUseCase.class);
+        userDetailDomainRepository = mock(UserDetailDomainRepository.class);
+        getUserCoinsUseCase = mock(GetUserCoinsUseCase.class);
+        getCurrentMembershipUseCase = mock(GetCurrentMembershipUseCase.class);
+
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken(userDetails, null));
+
+        UserController userController = new UserController(
+                getCurrentUserUseCase,
+                userDetailDomainRepository,
+                getUserCoinsUseCase,
+                getCurrentMembershipUseCase
+        );
+
+        mockMvc = MockMvcBuilders.standaloneSetup(userController)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void me_shouldReturnUserProfile_whenPrincipalIsValid() throws Exception {
+        AppUser user = AppUser.builder()
+                .id(USER_ID).name("Mili").email("user@huly.com")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .build();
+        UserProfile profile = new UserProfile(user, true, false, true);
+        when(getCurrentUserUseCase.execute(USER_ID)).thenReturn(profile);
+        when(userDetailDomainRepository.findThemePreference(USER_ID)).thenReturn(ThemePreference.DARK);
+
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(USER_ID))
+                .andExpect(jsonPath("$.name").value("Mili"))
+                .andExpect(jsonPath("$.email").value("user@huly.com"))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.onBoardingCompleted").value(true))
+                .andExpect(jsonPath("$.onboardingTutorialCompleted").value(false))
+                .andExpect(jsonPath("$.profileOnboardingTutorialCompleted").value(true))
+                .andExpect(jsonPath("$.themePreference").value("DARK"));
+    }
+
+    @Test
+    void me_shouldThrowUnauthorized_whenPrincipalIsNull() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateTheme_shouldPersistThemePreference_whenPrincipalIsValid() throws Exception {
+        UpdateThemePreferenceRequest req = new UpdateThemePreferenceRequest(ThemePreference.DARK);
+
+        mockMvc.perform(put("/api/users/me/theme")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isNoContent());
+
+        verify(userDetailDomainRepository).updateThemePreference(USER_ID, ThemePreference.DARK);
+    }
+
+    @Test
+    void updateTheme_shouldThrowUnauthorized_whenPrincipalIsNull() throws Exception {
+        SecurityContextHolder.clearContext();
+        UpdateThemePreferenceRequest req = new UpdateThemePreferenceRequest(ThemePreference.DARK);
+
+        mockMvc.perform(put("/api/users/me/theme")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMyCoins_shouldReturnCoins_whenPrincipalIsValid() throws Exception {
+        when(getUserCoinsUseCase.execute(USER_ID)).thenReturn(750);
+
+        mockMvc.perform(get("/api/users/me/coins"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(750));
+    }
+
+    @Test
+    void getMyCoins_shouldReturnZero_whenUserHasNoCoins() throws Exception {
+        when(getUserCoinsUseCase.execute(USER_ID)).thenReturn(0);
+
+        mockMvc.perform(get("/api/users/me/coins"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(0));
+    }
+
+    @Test
+    void getMyMembership_shouldReturnActiveMembership_whenUserHasOne() throws Exception {
+        Instant expiresAt = Instant.parse("2026-07-01T00:00:00Z");
+        UserPlan plan = UserPlan.builder()
+                .id(1L).userId(USER_ID).productId(7L).planCode("PREMIUM")
+                .grantedAt(Instant.parse("2026-06-01T00:00:00Z"))
+                .expiresAt(expiresAt)
+                .build();
+        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.of(plan));
+
+        mockMvc.perform(get("/api/users/me/membership"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(true))
+                .andExpect(jsonPath("$.planCode").value("PREMIUM"))
+                .andExpect(jsonPath("$.productId").value("7"))
+                .andExpect(jsonPath("$.expiresAt").value("2026-07-01T00:00:00Z"));
+    }
+
+    @Test
+    void getMyMembership_shouldReturnInactive_whenUserHasNoMembership() throws Exception {
+        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/users/me/membership"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false))
+                .andExpect(jsonPath("$.planCode").isEmpty())
+                .andExpect(jsonPath("$.productId").isEmpty())
+                .andExpect(jsonPath("$.expiresAt").isEmpty());
+    }
+}

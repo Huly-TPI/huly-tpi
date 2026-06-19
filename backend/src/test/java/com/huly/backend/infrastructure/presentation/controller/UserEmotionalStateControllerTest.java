@@ -1,9 +1,8 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.UserEmotionalState;
 import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
-import com.huly.backend.infrastructure.presentation.controller.UserEmotionalStateController;
 import com.huly.backend.infrastructure.presentation.dto.emotionalState.UserEmotionalStateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class UserEmotionalStateControllerTest {
 

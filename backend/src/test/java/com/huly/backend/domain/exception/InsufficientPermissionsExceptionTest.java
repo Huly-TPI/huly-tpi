@@ -1,26 +1,25 @@
 package com.huly.backend.domain.exception;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class InsufficientPermissionsExceptionTest {
 
     @Test
-    void testMessageIsSet() {
+    void messageConstructor_shouldSetMessage() {
         InsufficientPermissionsException ex = new InsufficientPermissionsException("Acceso denegado");
-        assertEquals("Acceso denegado", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("Acceso denegado");
     }
 
     @Test
-    void testExtendsDomainException() {
+    void inheritance_shouldExtendDomainException() {
         InsufficientPermissionsException ex = new InsufficientPermissionsException("test");
-        assertInstanceOf(DomainException.class, ex);
+        assertThat(ex).isInstanceOf(DomainException.class);
     }
 
     @Test
-    void testNullMessage() {
+    void messageConstructor_shouldHandleNullMessage() {
         InsufficientPermissionsException ex = new InsufficientPermissionsException(null);
-        assertNull(ex.getMessage());
+        assertThat(ex.getMessage()).isNull();
     }
 }

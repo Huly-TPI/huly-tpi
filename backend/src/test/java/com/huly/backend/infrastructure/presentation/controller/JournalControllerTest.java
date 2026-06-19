@@ -1,4 +1,4 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -7,7 +7,6 @@ import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
 import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
-import com.huly.backend.infrastructure.presentation.controller.JournalController;
 import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
@@ -26,9 +25,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
