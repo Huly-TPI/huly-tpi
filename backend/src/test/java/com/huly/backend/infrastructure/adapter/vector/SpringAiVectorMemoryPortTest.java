@@ -26,13 +26,13 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SpringAiVectorMemoryServiceTest {
+class SpringAiVectorMemoryPortTest {
 
     private static final Integer DIMENSIONS = 1024;
 
     private RecordingJdbcTemplate jdbcTemplate;
     private FakeEmbeddingModel embeddingModel;
-    private SpringAiVectorMemoryService service;
+    private SpringAiVectorMemoryPort service;
 
     @BeforeEach
     void setUp() {
@@ -41,7 +41,7 @@ class SpringAiVectorMemoryServiceTest {
 
         this.jdbcTemplate = new RecordingJdbcTemplate();
         this.embeddingModel = new FakeEmbeddingModel(DIMENSIONS);
-        this.service = new SpringAiVectorMemoryService(
+        this.service = new SpringAiVectorMemoryPort(
                 embeddingModel,
                 jdbcTemplate,
                 policy,

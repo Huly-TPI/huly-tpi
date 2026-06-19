@@ -5,7 +5,7 @@ import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
-import com.huly.backend.domain.provider.VectorMemoryService;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.service.vector.VectorMemoryPolicy;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +30,7 @@ import java.util.UUID;
 @Service
 @Primary
 @ConditionalOnProperty(name = "spring.ai.vectorstore.type", havingValue = "pgvector")
-public class SpringAiVectorMemoryService implements VectorMemoryService {
+public class SpringAiVectorMemoryPort implements VectorMemoryPort {
 
     private static final String CREATED_FROM_USER_MESSAGE = "USER_MESSAGE";
     private static final String DEFAULT_CONTENT_TYPE = "TEXT_MEMORY";
@@ -44,7 +44,7 @@ public class SpringAiVectorMemoryService implements VectorMemoryService {
     private final String tableName;
     private final Integer dimensions;
 
-    public SpringAiVectorMemoryService(
+    public SpringAiVectorMemoryPort(
             EmbeddingModel embeddingModel,
             JdbcTemplate jdbcTemplate,
             VectorMemoryPolicy policy,

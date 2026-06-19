@@ -10,8 +10,7 @@ import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand;
-import com.huly.backend.domain.provider.VectorMemoryService;
-import lombok.RequiredArgsConstructor;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.ObjectProvider;
@@ -50,7 +49,7 @@ public class UserVectorMemoryService {
 
     record PersonalitySummaryDto(String summary, String accepted, String rejected) {}
 
-    private final VectorMemoryService vectorMemoryService;
+    private final VectorMemoryPort vectorMemoryPort;
     private final VectorMemoryProperties vectorMemoryProperties;
     private final UserProfileFactExtractor userProfileFactExtractor;
     private final ObjectProvider<ChatClient> chatClientProvider;
@@ -58,13 +57,13 @@ public class UserVectorMemoryService {
     private final org.springframework.core.io.Resource personalitySummaryPrompt;
 
     public UserVectorMemoryService(
-            VectorMemoryService vectorMemoryService,
+            VectorMemoryPort vectorMemoryPort,
             VectorMemoryProperties vectorMemoryProperties,
             UserProfileFactExtractor userProfileFactExtractor,
             ObjectProvider<ChatClient> chatClientProvider,
             JdbcTemplate jdbcTemplate,
             @Value("classpath:/prompts/personality-summary.st") org.springframework.core.io.Resource personalitySummaryPrompt) {
-        this.vectorMemoryService = vectorMemoryService;
+        this.vectorMemoryPort = vectorMemoryPort;
         this.vectorMemoryProperties = vectorMemoryProperties;
         this.userProfileFactExtractor = userProfileFactExtractor;
         this.chatClientProvider = chatClientProvider;
@@ -80,7 +79,7 @@ public class UserVectorMemoryService {
         try {
             List<VectorMemory> memories = new ArrayList<>();
             for (String recallQuery : buildRecallQueries(query)) {
-                memories.addAll(vectorMemoryService.findRelevantMemories(new SearchVectorMemoryQuery(
+                memories.addAll(vectorMemoryPort.findRelevantMemories(new SearchVectorMemoryQuery(
                         userId,
                         sourceType,
                         recallQuery,
@@ -110,7 +109,7 @@ public class UserVectorMemoryService {
         try {
             List<VectorMemory> memories = new ArrayList<>();
             for (String recallQuery : buildRecallQueries(query)) {
-                memories.addAll(vectorMemoryService.findRelevantMemories(new SearchVectorMemoriesQuery(
+                memories.addAll(vectorMemoryPort.findRelevantMemories(new SearchVectorMemoriesQuery(
                         userId,
                         sourceTypes,
                         recallQuery,
@@ -385,7 +384,7 @@ public class UserVectorMemoryService {
 
     private void saveMemory(SaveVectorMemoryCommand command) {
         try {
-            vectorMemoryService.saveMemory(command);
+            vectorMemoryPort.saveMemory(command);
             if (command != null && command.userId() != null && !"PERSONALITY_SUMMARY".equals(command.contentType())) {
                 CompletableFuture.runAsync(() -> {
                     generateAndSavePersonalitySummary(command.userId());
@@ -424,7 +423,7 @@ public class UserVectorMemoryService {
 
     public void deletePersonalitySummary(Long userId) {
         try {
-            vectorMemoryService.deleteMemories(new DeleteVectorMemoryCommand(
+            vectorMemoryPort.deleteMemories(new DeleteVectorMemoryCommand(
                     userId,
                     VectorMemorySource.CHATBOT,
                     "personality-summary"

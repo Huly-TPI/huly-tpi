@@ -5,8 +5,8 @@ import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.RefreshToken;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.provider.PasswordHasher;
-import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.port.PasswordHasherPort;
+import com.huly.backend.domain.port.TokenPort;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.exception.AccountNotActiveException;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
@@ -32,8 +32,8 @@ class LoginUseCaseTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
-    @Mock private TokenProvider tokenProvider;
-    @Mock private PasswordHasher passwordHasher;
+    @Mock private TokenPort tokenPort;
+    @Mock private PasswordHasherPort passwordHasherPort;
     @Mock private UserDetailDomainRepository userDetailDomainRepository;
 
     @InjectMocks private LoginUseCase loginUseCase;
@@ -54,10 +54,10 @@ class LoginUseCaseTest {
     @Test
     void execute_shouldReturnAuthTokensWithRoleAndTokens_whenCredentialsAreValid() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
-        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
-        when(tokenProvider.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("accessToken");
-        when(tokenProvider.generateRefreshToken(1L, "user@huly.com")).thenReturn("refreshToken");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("accessToken");
+        when(tokenPort.generateRefreshToken(1L, "user@huly.com")).thenReturn("refreshToken");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
         when(refreshTokenRepository.save(any())).thenReturn(null);
 
         AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
@@ -79,7 +79,7 @@ class LoginUseCaseTest {
     @Test
     void execute_shouldThrowUnauthorized_whenPasswordDoesNotMatch() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
-        when(passwordHasher.matches("wrongPass", "encodedPass")).thenReturn(false);
+        when(passwordHasherPort.matches("wrongPass", "encodedPass")).thenReturn(false);
 
         assertThatThrownBy(() -> loginUseCase.execute("user@huly.com", "wrongPass"))
                 .isInstanceOf(InvalidCredentialsException.class)
@@ -92,7 +92,7 @@ class LoginUseCaseTest {
                 .id(2L).email("user@huly.com").password("encodedPass")
                 .role(UserRole.USER).status(UserStatus.INACTIVE).build();
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(inactiveUser));
-        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
 
         assertThatThrownBy(() -> loginUseCase.execute("user@huly.com", "rawPass"))
                 .isInstanceOf(AccountNotActiveException.class)
@@ -102,10 +102,10 @@ class LoginUseCaseTest {
     @Test
     void execute_shouldSaveRefreshTokenWithCorrectUserIdAndExpiration() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
-        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
-        when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
-        when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
 
         ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
         when(refreshTokenRepository.save(captor.capture())).thenReturn(null);
@@ -122,25 +122,25 @@ class LoginUseCaseTest {
     @Test
     void execute_shouldCallGenerateTokensWithCorrectUserData() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
-        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
-        when(tokenProvider.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("at");
-        when(tokenProvider.generateRefreshToken(1L, "user@huly.com")).thenReturn("rt");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(3600L);
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("at");
+        when(tokenPort.generateRefreshToken(1L, "user@huly.com")).thenReturn("rt");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(3600L);
         when(refreshTokenRepository.save(any())).thenReturn(null);
 
         loginUseCase.execute("user@huly.com", "rawPass");
 
-        verify(tokenProvider).generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE);
-        verify(tokenProvider).generateRefreshToken(1L, "user@huly.com");
+        verify(tokenPort).generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE);
+        verify(tokenPort).generateRefreshToken(1L, "user@huly.com");
     }
 
     @Test 
     void execute_shouldReturnOnBoardingCompletedFromUserDetailDomainRepository() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
-        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
-        when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
-        when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
         when(refreshTokenRepository.save(any())).thenReturn(null);
         when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.of(true));
 
@@ -151,10 +151,10 @@ class LoginUseCaseTest {
     @Test 
     void execute_shouldReturnFalse_whenUserDetailNotFound() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
-        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
-        when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
-        when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
         when(refreshTokenRepository.save(any())).thenReturn(null);
         when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.empty());
         AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");

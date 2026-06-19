@@ -10,9 +10,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class NoOpVectorMemoryServiceTest {
+class NoOpVectorMemoryPortTest {
 
-    private final NoOpVectorMemoryService service = new NoOpVectorMemoryService();
+    private final NoOpVectorMemoryPort service = new NoOpVectorMemoryPort();
 
     @Test
     void saveMemory_shouldDoNothing() {

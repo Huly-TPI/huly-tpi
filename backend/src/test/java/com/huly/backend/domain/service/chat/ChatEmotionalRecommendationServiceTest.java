@@ -14,7 +14,7 @@ import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;

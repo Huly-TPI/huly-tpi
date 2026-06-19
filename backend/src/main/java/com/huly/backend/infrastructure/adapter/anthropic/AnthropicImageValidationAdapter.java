@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.adapter.anthropic;
 
 import com.huly.backend.domain.exception.ImageValidationUnavailableException;
 import com.huly.backend.domain.model.ImageValidationResult;
-import com.huly.backend.domain.provider.ImageValidationPort;
+import com.huly.backend.domain.port.ImageValidationPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;

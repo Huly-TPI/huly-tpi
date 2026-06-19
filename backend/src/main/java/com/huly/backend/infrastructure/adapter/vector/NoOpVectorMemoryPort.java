@@ -4,7 +4,7 @@ import com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
-import com.huly.backend.domain.provider.VectorMemoryService;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "spring.ai.vectorstore.type", havingValue = "none", matchIfMissing = true)
-public class NoOpVectorMemoryService implements VectorMemoryService {
+public class NoOpVectorMemoryPort implements VectorMemoryPort {
 
     @Override
     public void saveMemory(SaveVectorMemoryCommand command) {

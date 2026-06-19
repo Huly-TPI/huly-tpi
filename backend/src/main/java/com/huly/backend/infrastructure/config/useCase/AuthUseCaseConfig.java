@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.provider.PasswordHasher;
-import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.port.PasswordHasherPort;
+import com.huly.backend.domain.port.TokenPort;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
@@ -18,8 +18,8 @@ import org.springframework.context.annotation.Configuration;
 public class AuthUseCaseConfig {
 
     @Bean
-    public LoginUseCase loginUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenProvider tokenProvider, PasswordHasher passwordHasher, UserDetailDomainRepository userDetailDomainRepository) {
-        return new LoginUseCase(userRepository, refreshTokenRepository, tokenProvider, passwordHasher, userDetailDomainRepository);
+    public LoginUseCase loginUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenPort tokenPort, PasswordHasherPort passwordHasherPort, UserDetailDomainRepository userDetailDomainRepository) {
+        return new LoginUseCase(userRepository, refreshTokenRepository, tokenPort, passwordHasherPort, userDetailDomainRepository);
     }
 
     @Bean
@@ -28,8 +28,8 @@ public class AuthUseCaseConfig {
     }
 
     @Bean
-    public RegisterUseCase registerUseCase(UserRepository userRepository, PasswordHasher passwordHasher, LoginUseCase loginUseCase) {
-        return new RegisterUseCase(userRepository, passwordHasher, loginUseCase);
+    public RegisterUseCase registerUseCase(UserRepository userRepository, PasswordHasherPort passwordHasherPort, LoginUseCase loginUseCase) {
+        return new RegisterUseCase(userRepository, passwordHasherPort, loginUseCase);
     }
 
     @Bean
@@ -38,8 +38,8 @@ public class AuthUseCaseConfig {
     }
 
     @Bean
-    public RefreshTokenUseCase refreshTokenUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenProvider tokenProvider) {
-        return new RefreshTokenUseCase(userRepository, refreshTokenRepository, tokenProvider);
+    public RefreshTokenUseCase refreshTokenUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenPort tokenPort) {
+        return new RefreshTokenUseCase(userRepository, refreshTokenRepository, tokenPort);
     }
 
     @Bean

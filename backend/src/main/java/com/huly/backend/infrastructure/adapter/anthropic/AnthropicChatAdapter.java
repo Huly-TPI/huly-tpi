@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.EmotionType;
-import com.huly.backend.domain.provider.LLMChatPort;
+import com.huly.backend.domain.port.LLMChatPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;

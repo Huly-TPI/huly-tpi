@@ -5,7 +5,7 @@ import com.huly.backend.domain.model.vector.SearchVectorMemoriesQuery;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
-import com.huly.backend.domain.provider.VectorMemoryService;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,12 +15,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 
-class UserVectorMemoryServiceTest {
+class UserVectorMemoryPortTest {
 
     private VectorMemoryProperties properties;
-    private RecordingVectorMemoryService vectorMemoryService;
+    private RecordingVectorMemoryPort vectorMemoryService;
     private UserVectorMemoryService service;
     private org.springframework.beans.factory.ObjectProvider<org.springframework.ai.chat.client.ChatClient> chatClientProvider;
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
@@ -29,7 +28,7 @@ class UserVectorMemoryServiceTest {
     @SuppressWarnings("unchecked")
     void setUp() {
         properties = new VectorMemoryProperties();
-        vectorMemoryService = new RecordingVectorMemoryService();
+        vectorMemoryService = new RecordingVectorMemoryPort();
         chatClientProvider = org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class);
         jdbcTemplate = org.mockito.Mockito.mock(org.springframework.jdbc.core.JdbcTemplate.class);
         service = new UserVectorMemoryService(vectorMemoryService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
@@ -396,7 +395,7 @@ class UserVectorMemoryServiceTest {
 
     @Test
     void deletePersonalitySummary_shouldLogWarning_whenVectorStoreFails() {
-        VectorMemoryService throwingService = mock(VectorMemoryService.class);
+        VectorMemoryPort throwingService = mock(VectorMemoryPort.class);
         doThrow(new RuntimeException("Delete failed")).when(throwingService).deleteMemories(any());
         
         UserVectorMemoryService testService = new UserVectorMemoryService(throwingService, properties, new UserProfileFactExtractor(), chatClientProvider, jdbcTemplate, new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()));
@@ -416,7 +415,7 @@ class UserVectorMemoryServiceTest {
 
     @Test
     void findRelevantUserMemories_shouldReturnEmpty_onSearchException() {
-        VectorMemoryService mockService = mock(VectorMemoryService.class);
+        VectorMemoryPort mockService = mock(VectorMemoryPort.class);
         when(mockService.findRelevantMemories(any(SearchVectorMemoryQuery.class)))
                 .thenThrow(new RuntimeException("Search failed"));
         UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
@@ -428,7 +427,7 @@ class UserVectorMemoryServiceTest {
 
     @Test
     void findRelevantUserMemoriesBySources_shouldReturnEmpty_onSearchException() {
-        VectorMemoryService mockService = mock(VectorMemoryService.class);
+        VectorMemoryPort mockService = mock(VectorMemoryPort.class);
         when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class)))
                 .thenThrow(new RuntimeException("Search failed"));
         UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
@@ -458,7 +457,7 @@ class UserVectorMemoryServiceTest {
 
     @Test
     void uniqueRankedAndLimited_shouldIgnoreNullMemories() {
-        VectorMemoryService mockService = mock(VectorMemoryService.class);
+        VectorMemoryPort mockService = mock(VectorMemoryPort.class);
         List<VectorMemory> listWithNull = new ArrayList<>();
         listWithNull.add(null);
         when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class))).thenReturn(listWithNull);
@@ -576,7 +575,7 @@ class UserVectorMemoryServiceTest {
         assertThat(personalityCommand.content()).contains("Truncated summary");
     }
 
-    private static final class RecordingVectorMemoryService implements VectorMemoryService {
+    private static final class RecordingVectorMemoryPort implements VectorMemoryPort {
 
         private final List<SaveVectorMemoryCommand> savedCommands = new ArrayList<>();
         private final List<VectorMemory> memories = new ArrayList<>();
@@ -605,7 +604,7 @@ class UserVectorMemoryServiceTest {
         @Override
         public List<VectorMemory> findRelevantMemories(SearchVectorMemoriesQuery query) {
             lastMultiSourceQuery = query;
-            return VectorMemoryService.super.findRelevantMemories(query);
+            return VectorMemoryPort.super.findRelevantMemories(query);
         }
 
         @Override
