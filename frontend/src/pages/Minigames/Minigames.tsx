@@ -17,7 +17,6 @@ import easelImage from '../../assets/minigames/light-theme/paddle.webp'
 import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
 import sandImage from '../../assets/minigames/light-theme/sand.webp'
 
-import BackButton from '../../components/Buttons/BackButton/BackButton'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
@@ -126,7 +125,7 @@ const minigameElements: SceneElementDefinition[] = [
         title: 'Colorear mandalas',
         imageAlt: 'Atril para pintar mandalas',
         image: { light: easelImage, dark: darkEaselImage },
-        placementClassName: 'left-[43%] top-[47%] z-20 w-[34%] md:left-[53%] md:top-[38%] md:w-[11%]',
+        placementClassName: 'left-[33%] top-[47%] z-20 w-[34%] md:left-[53%] md:top-[38%] md:w-[11%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
         clipPath: RECT_CLIP_PATH,
@@ -159,7 +158,6 @@ const allImageSources: string[] = [
 
 export default function Minigames() {
     const { theme } = useTheme()
-    const isDark = theme === 'dark'
 
     useEffect(() => {
         const sources = new Set<string>([
@@ -178,7 +176,6 @@ export default function Minigames() {
     return (
         <main className={`minigames-page ${isDark ? 'minigames-page--dark' : ''}`}>
             <section className="minigames-scene">
-                <BackButton to="/" />
                 <ThemeBackground
                     lightSrc={backgroundImage}
                     lightMobileSrc={mobileBackgroundImage}

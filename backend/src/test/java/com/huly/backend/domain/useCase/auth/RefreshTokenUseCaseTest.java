@@ -5,7 +5,7 @@ import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.RefreshToken;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.port.TokenPort;
 import com.huly.backend.domain.repository.RefreshTokenRepository;
 import com.huly.backend.domain.exception.AccountNotActiveException;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
@@ -33,7 +33,7 @@ class RefreshTokenUseCaseTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
-    @Mock private TokenProvider tokenProvider;
+    @Mock private TokenPort tokenPort;
 
     @InjectMocks private RefreshTokenUseCase refreshTokenUseCase;
 
@@ -57,11 +57,11 @@ class RefreshTokenUseCaseTest {
     void execute_shouldRotateTokenAndReturnNewPair_whenTokenIsValid() {
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(tokenPort.extractUserId("validRefreshToken")).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(activeUser));
-        when(tokenProvider.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("newAccess");
-        when(tokenProvider.generateRefreshToken(1L, "user@huly.com")).thenReturn("newRefresh");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(tokenPort.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("newAccess");
+        when(tokenPort.generateRefreshToken(1L, "user@huly.com")).thenReturn("newRefresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
 
         AuthTokens result = refreshTokenUseCase.execute("validRefreshToken");
 
@@ -72,7 +72,7 @@ class RefreshTokenUseCaseTest {
 
     @Test
     void execute_shouldThrowUnauthorized_whenJwtIsInvalid() {
-        when(tokenProvider.isTokenValid("badToken")).thenReturn(false);
+        when(tokenPort.isTokenValid("badToken")).thenReturn(false);
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("badToken"))
                 .isInstanceOf(InvalidCredentialsException.class)
@@ -81,8 +81,8 @@ class RefreshTokenUseCaseTest {
 
     @Test
     void execute_shouldThrowUnauthorized_whenTokenIsNotRefreshType() {
-        when(tokenProvider.isTokenValid("accessToken")).thenReturn(true);
-        when(tokenProvider.isRefreshToken("accessToken")).thenReturn(false);
+        when(tokenPort.isTokenValid("accessToken")).thenReturn(true);
+        when(tokenPort.isRefreshToken("accessToken")).thenReturn(false);
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("accessToken"))
                 .isInstanceOf(InvalidCredentialsException.class)
@@ -122,7 +122,7 @@ class RefreshTokenUseCaseTest {
     void execute_shouldThrowUnauthorized_whenUserIdMissingFromToken() {
         mockValidRefreshToken("noUserIdToken");
         when(refreshTokenRepository.findByToken("noUserIdToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractUserId("noUserIdToken")).thenReturn(null);
+        when(tokenPort.extractUserId("noUserIdToken")).thenReturn(null);
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("noUserIdToken"))
                 .isInstanceOf(InvalidCredentialsException.class)
@@ -133,7 +133,7 @@ class RefreshTokenUseCaseTest {
     void execute_shouldThrowUnauthorized_whenUserNotFound() {
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(999L);
+        when(tokenPort.extractUserId("validRefreshToken")).thenReturn(999L);
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
@@ -150,7 +150,7 @@ class RefreshTokenUseCaseTest {
 
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(tokenPort.extractUserId("validRefreshToken")).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(inactiveUser));
 
         assertThatThrownBy(() -> refreshTokenUseCase.execute("validRefreshToken"))
@@ -162,11 +162,11 @@ class RefreshTokenUseCaseTest {
     void execute_shouldSaveNewRefreshTokenWithCorrectData() {
         mockValidRefreshToken("validRefreshToken");
         when(refreshTokenRepository.findByToken("validRefreshToken")).thenReturn(Optional.of(storedToken));
-        when(tokenProvider.extractUserId("validRefreshToken")).thenReturn(1L);
+        when(tokenPort.extractUserId("validRefreshToken")).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(activeUser));
-        when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("newAccess");
-        when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("newRefresh");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("newAccess");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("newRefresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
 
         ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
         when(refreshTokenRepository.save(captor.capture())).thenReturn(null);
@@ -180,7 +180,7 @@ class RefreshTokenUseCaseTest {
     }
 
     private void mockValidRefreshToken(String token) {
-        when(tokenProvider.isTokenValid(token)).thenReturn(true);
-        when(tokenProvider.isRefreshToken(token)).thenReturn(true);
+        when(tokenPort.isTokenValid(token)).thenReturn(true);
+        when(tokenPort.isRefreshToken(token)).thenReturn(true);
     }
 }

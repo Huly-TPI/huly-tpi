@@ -2,18 +2,16 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
-import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatHistoryPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatMessageResponse;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatRequest;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatResponse;
-import com.huly.backend.infrastructure.presentation.dto.chat.ChatStreamEventResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,11 +28,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
-
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
-import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -43,8 +39,8 @@ import java.util.Locale;
 public class ChatController {
 
     private final ChatUseCase chatUseCase;
+    private final AudioChatUseCase audioChatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
-    private final StreamChatUseCase streamChatUseCase;
     private final UserVectorMemoryService userVectorMemoryService;
 
     @PostMapping
@@ -56,17 +52,14 @@ public class ChatController {
         return ResponseEntity.ok(toResponse(reply));
     }
 
-    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<ChatStreamEventResponse>> stream(
+    @PostMapping(value = "/audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ChatResponse> sendAudioMessage(
             @AuthenticationPrincipal UserDetails principal,
-            @RequestBody ChatRequest request) {
-        if (request == null || isBlank(request.message()) || isBlank(request.conversationId())) {
-            return Flux.just(toServerSentEvent(ChatStreamEvent.error("message y conversationId son obligatorios.")));
-        }
-
+            @RequestPart("audio") MultipartFile audio,
+            @RequestParam("conversationId") String conversationId) {
         Long userId = getUserId(principal);
-        return streamChatUseCase.execute(request.message(), request.conversationId(), userId)
-                .map(this::toServerSentEvent);
+        ChatReply reply = audioChatUseCase.execute(audio, conversationId, userId);
+        return ResponseEntity.ok(toResponse(reply));
     }
 
     @PostMapping("/challenge-decision")
@@ -100,39 +93,6 @@ public class ChatController {
             throw new UnauthorizedException("Not authenticated");
         }
         return Long.parseLong(principal.getUsername());
-    }
-
-    private Boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
-
-    private ServerSentEvent<ChatStreamEventResponse> toServerSentEvent(ChatStreamEvent event) {
-        String eventName = event.type().name().toLowerCase(Locale.ROOT);
-        return ServerSentEvent.<ChatStreamEventResponse>builder(toStreamResponse(event))
-                .event(eventName)
-                .build();
-    }
-
-    private ChatStreamEventResponse toStreamResponse(ChatStreamEvent event) {
-        ChatReply reply = event.reply();
-        String emotion = reply != null && reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
-        ChatResponse.Metadata metadata = reply != null && reply.riskDetected() != null
-                ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
-                : null;
-        ChatResponse.GeneratedChallenge challenge = reply != null && reply.generatedChallenge() != null
-                ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
-                : null;
-
-        return new ChatStreamEventResponse(
-                event.type().name().toLowerCase(Locale.ROOT),
-                event.delta(),
-                reply != null ? reply.content() : null,
-                emotion,
-                reply != null ? reply.intensity() : null,
-                metadata,
-                challenge,
-                event.error()
-        );
     }
 
     private ChatResponse toResponse(ChatReply reply) {

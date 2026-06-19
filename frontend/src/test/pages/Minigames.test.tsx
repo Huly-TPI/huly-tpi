@@ -62,8 +62,8 @@ describe('Minigames', () => {
       </ThemeProvider>,
     )
 
-    await user.click(screen.getByRole('button', { name: /volver/i }))
-    expect(screen.getByRole('heading', { name: 'Vista Garden' })).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: /volver/i }))
+    expect(await screen.findByRole('heading', { name: 'Vista Garden' })).toBeInTheDocument()
   })
 
   it('redirige a burbujas al hacer click en el hotspot del pez', async () => {

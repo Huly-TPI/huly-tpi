@@ -1,23 +1,32 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
+import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigRequest;
+import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
+import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsRequest;
+import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsUseCase;
+import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsRequest;
+import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsUseCase;
+import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsRequest;
+import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUseCase;
+import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest;
+import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollDashboardResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.BackofficeUserResponse;
-import com.huly.backend.infrastructure.presentation.dto.admin.TopAppResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.UserActivitiesResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.UserAiDiagnosticsResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.UserAntiScrollResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.UserFinancialsResponse;
+import com.huly.backend.infrastructure.presentation.mapper.AdminPresentationMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.huly.backend.domain.repository.extension.AntiScrollConfigRepository;
-import com.huly.backend.domain.model.extension.AntiScrollConfig;
-import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigResponse;
-import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest;
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -28,74 +37,69 @@ public class AdminUserController {
 
     private final ListBackofficeUsersUseCase listBackofficeUsersUseCase;
     private final GetAntiScrollDashboardUseCase getAntiScrollDashboardUseCase;
-    private final AntiScrollConfigRepository antiScrollConfigRepository;
+    private final GetAntiScrollGlobalConfigUseCase getAntiScrollGlobalConfigUseCase;
+    private final UpdateAntiScrollGlobalConfigUseCase updateAntiScrollGlobalConfigUseCase;
+    private final GetUserActivitiesUseCase getUserActivitiesUseCase;
+    private final GetUserAiDiagnosticsUseCase getUserAiDiagnosticsUseCase;
+    private final GetUserFinancialsUseCase getUserFinancialsUseCase;
+    private final GetUserAntiScrollStatsUseCase getUserAntiScrollStatsUseCase;
+    private final AdminPresentationMapper adminPresentationMapper;
+
+    @GetMapping("/{id}/statistics/activities")
+    public ResponseEntity<UserActivitiesResponse> getUserActivities(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "total") String timeframe) {
+        var result = getUserActivitiesUseCase.execute(new GetUserActivitiesRequest(id, Timeframe.fromString(timeframe)));
+        return ResponseEntity.ok(adminPresentationMapper.toUserActivitiesResponse(result));
+    }
+
+    @GetMapping("/{id}/statistics/ai")
+    public ResponseEntity<UserAiDiagnosticsResponse> getUserAiDiagnostics(@PathVariable Long id) {
+        var result = getUserAiDiagnosticsUseCase.execute(new GetUserAiDiagnosticsRequest(id));
+        return ResponseEntity.ok(adminPresentationMapper.toUserAiDiagnosticsResponse(result));
+    }
+
+    @GetMapping("/{id}/statistics/finance")
+    public ResponseEntity<UserFinancialsResponse> getUserFinancials(@PathVariable Long id) {
+        var result = getUserFinancialsUseCase.execute(new GetUserFinancialsRequest(id));
+        return ResponseEntity.ok(adminPresentationMapper.toUserFinancialsResponse(result));
+    }
+
+    @GetMapping("/{id}/statistics/antiscroll")
+    public ResponseEntity<UserAntiScrollResponse> getUserAntiScrollStats(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "current") String week,
+            @RequestParam(required = false, defaultValue = "all") String day
+    ) {
+        var result = getUserAntiScrollStatsUseCase.execute(new GetUserAntiScrollStatsRequest(id, week, day));
+        return ResponseEntity.ok(adminPresentationMapper.toUserAntiScrollResponse(result));
+    }
 
     @GetMapping
-    public ResponseEntity<List<BackofficeUserResponse>> getBackofficeUsers() {
-        List<BackofficeUserResponse> responses = listBackofficeUsersUseCase.execute().stream()
-                .map(u -> BackofficeUserResponse.builder()
-                        .id(u.getId())
-                        .name(u.getName())
-                        .email(u.getEmail())
-                        .role(u.getRole() != null ? u.getRole().name() : null)
-                        .status(u.getStatus() != null ? u.getStatus().name() : null)
-                        .birthDate(u.getBirthDate())
-                        .antiScrollEnabled(u.isAntiScrollEnabled())
-                        .dataSharingConsent(u.isDataSharingConsent())
-                        .mostUsedApp(u.getMostUsedApp())
-                        .mostUsedAppActiveSeconds(u.getMostUsedAppActiveSeconds())
-                        .totalScrollTimeSeconds(u.getTotalScrollTimeSeconds())
-                        .dailyScrollTimeSeconds(u.getDailyScrollTimeSeconds())
-                        .topApps(u.getTopApps() != null ? u.getTopApps().stream()
-                                .map(t -> new TopAppResponse(t.getDomain(), t.getTotalActiveSeconds()))
-                                .toList() : List.of())
-                        .build())
+    public ResponseEntity<List<BackofficeUserResponse>> getBackofficeUsers(@RequestParam(required = false) String search) {
+        List<BackofficeUserResponse> responses = listBackofficeUsersUseCase.execute(search).stream()
+                .map(adminPresentationMapper::toBackofficeUserResponse)
                 .toList();
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/antiscroll/dashboard")
     public ResponseEntity<AntiScrollDashboardResponse> getDashboardStats() {
-        var stats = getAntiScrollDashboardUseCase.execute();
-        List<TopAppResponse> topApps = stats.getTopUsedApps().stream()
-                .map(t -> new TopAppResponse(t.getDomain(), t.getTotalActiveSeconds()))
-                .toList();
-
-        return ResponseEntity.ok(AntiScrollDashboardResponse.builder()
-                .totalModalsShown(stats.getTotalModalsShown())
-                .totalRedirects(stats.getTotalRedirects())
-                .totalUsersCount(stats.getTotalUsersCount())
-                .activeExtensionUsersCount(stats.getActiveExtensionUsersCount())
-                .dataSharingConsentUsersCount(stats.getDataSharingConsentUsersCount())
-                .topUsedApps(topApps)
-                .build());
+        return ResponseEntity.ok(adminPresentationMapper.toAntiScrollDashboardResponse(getAntiScrollDashboardUseCase.execute()));
     }
 
     @GetMapping("/antiscroll/config")
     public ResponseEntity<AntiScrollConfigResponse> getAntiScrollConfig() {
-        AntiScrollConfig config = antiScrollConfigRepository.findFirst()
-                .orElse(AntiScrollConfig.builder()
-                        .defaultPauseIntervalMinutes(20)
-                        .termsAndConditions("El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!")
-                        .build());
-        return ResponseEntity.ok(AntiScrollConfigResponse.builder()
-                .defaultPauseIntervalMinutes(config.getDefaultPauseIntervalMinutes())
-                .termsAndConditions(config.getTermsAndConditions())
-                .build());
+        var result = getAntiScrollGlobalConfigUseCase.execute();
+        return ResponseEntity.ok(adminPresentationMapper.toAntiScrollConfigResponse(result));
     }
 
     @PostMapping("/antiscroll/config")
     public ResponseEntity<Void> updateAntiScrollConfig(@Valid @RequestBody AntiScrollConfigRequest request) {
-        AntiScrollConfig existing = antiScrollConfigRepository.findFirst()
-                .orElse(AntiScrollConfig.builder().build());
-
-        AntiScrollConfig updated = AntiScrollConfig.builder()
-                .id(existing.getId())
-                .defaultPauseIntervalMinutes(request.getDefaultPauseIntervalMinutes())
-                .termsAndConditions(request.getTermsAndConditions())
-                .build();
-
-        antiScrollConfigRepository.save(updated);
+        updateAntiScrollGlobalConfigUseCase.execute(new UpdateAntiScrollGlobalConfigRequest(
+                request.getDefaultPauseIntervalMinutes(),
+                request.getTermsAndConditions()
+        ));
         return ResponseEntity.ok().build();
     }
 }

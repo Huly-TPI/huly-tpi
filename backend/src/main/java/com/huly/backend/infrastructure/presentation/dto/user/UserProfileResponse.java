@@ -13,5 +13,6 @@ public class UserProfileResponse {
     private UserRole role;
     private Boolean onBoardingCompleted;
     private Boolean onboardingTutorialCompleted;
+    private Boolean profileOnboardingTutorialCompleted;
     private ThemePreference themePreference;
 }

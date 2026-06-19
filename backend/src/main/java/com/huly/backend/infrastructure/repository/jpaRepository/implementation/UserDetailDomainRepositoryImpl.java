@@ -32,6 +32,12 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
     }
 
     @Override
+    public Optional<Boolean> findProfileOnboardingTutorialCompleted(Long userId) {
+        return userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .map(UserDetailEntity::getProfileOnboardingTutorialCompleted);
+    }
+
+    @Override
     public ThemePreference findThemePreference(Long userId) {
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
@@ -56,6 +62,15 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
         userDetail.setOnboardingTutorialCompleted(true);
+        userDetailRepository.save(userDetail);
+    }
+
+    @Override
+    @Transactional
+    public void completeProfileTutorial(Long userId) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        userDetail.setProfileOnboardingTutorialCompleted(true);
         userDetailRepository.save(userDetail);
     }
 

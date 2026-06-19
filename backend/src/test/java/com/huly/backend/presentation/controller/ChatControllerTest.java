@@ -3,15 +3,14 @@ package com.huly.backend.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.ChatStreamEvent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
-import com.huly.backend.domain.useCase.chat.StreamChatUseCase;
 import com.huly.backend.infrastructure.presentation.controller.ChatController;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
@@ -28,27 +27,22 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import org.springframework.mock.web.MockMultipartFile;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ChatControllerTest {
@@ -57,8 +51,8 @@ class ChatControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private ChatUseCase chatUseCase;
+    private AudioChatUseCase audioChatUseCase;
     private ListChatHistoryUseCase listChatHistoryUseCase;
-    private StreamChatUseCase streamChatUseCase;
     private UserVectorMemoryService userVectorMemoryService;
 
     private static final Long USER_ID = 1L;
@@ -66,8 +60,8 @@ class ChatControllerTest {
     @BeforeEach
     void setUp() {
         chatUseCase = mock(ChatUseCase.class);
+        audioChatUseCase = mock(AudioChatUseCase.class);
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
-        streamChatUseCase = mock(StreamChatUseCase.class);
         userVectorMemoryService = mock(UserVectorMemoryService.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
@@ -76,8 +70,8 @@ class ChatControllerTest {
 
         ChatController controller = new ChatController(
                 chatUseCase,
+                audioChatUseCase,
                 listChatHistoryUseCase,
-                streamChatUseCase,
                 userVectorMemoryService
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -164,45 +158,6 @@ class ChatControllerTest {
                         .content(objectMapper.writeValueAsString(new ChatRequest("msg", "conv-1"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.metadata").doesNotExist());
-    }
-
-    @Test
-    void stream_shouldEmitSseEvents() throws Exception {
-        ChatReply reply = new ChatReply("hola mundo", EmotionType.JOY, 6, false, null);
-        when(streamChatUseCase.execute("hola", "conv-1", USER_ID)).thenReturn(Flux.just(
-                ChatStreamEvent.delta("hola "),
-                ChatStreamEvent.done(reply)
-        ));
-
-        MvcResult result = mockMvc.perform(post("/api/chat/stream")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.TEXT_EVENT_STREAM)
-                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", "conv-1"))))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("event:delta")))
-                .andExpect(content().string(containsString("event:done")))
-                .andExpect(content().string(containsString("hola mundo")));
-    }
-
-    @Test
-    void stream_shouldEmitSseError_whenConversationIdIsNull() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/chat/stream")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.TEXT_EVENT_STREAM)
-                        .content(objectMapper.writeValueAsString(new ChatRequest("hola", null))))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("event:error")))
-                .andExpect(content().string(containsString("message y conversationId son obligatorios.")));
-
-        verifyNoInteractions(streamChatUseCase);
     }
 
     @Test
@@ -296,6 +251,43 @@ class ChatControllerTest {
                 .andExpect(status().isOk());
 
         verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
+    }
+
+    @Test
+    void sendAudioMessage_shouldReturn200_whenAudioAndConversationIdAreValid() throws Exception {
+        ChatReply reply = new ChatReply("entendí tu mensaje de voz", null, null, false, null);
+        when(audioChatUseCase.execute(any(), eq("conv-1"), eq(USER_ID))).thenReturn(reply);
+        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
+
+        mockMvc.perform(multipart("/api/chat/audio")
+                        .file(audio)
+                        .param("conversationId", "conv-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.huly_reply").value("entendí tu mensaje de voz"));
+    }
+
+    @Test
+    void sendAudioMessage_shouldDelegateToAudioChatUseCase_withAuthenticatedUserId() throws Exception {
+        when(audioChatUseCase.execute(any(), eq("conv-1"), eq(USER_ID))).thenReturn(ChatReply.of("ok"));
+        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
+
+        mockMvc.perform(multipart("/api/chat/audio")
+                        .file(audio)
+                        .param("conversationId", "conv-1"))
+                .andExpect(status().isOk());
+
+        verify(audioChatUseCase).execute(any(), eq("conv-1"), eq(USER_ID));
+    }
+
+    @Test
+    void sendAudioMessage_shouldReturn500_whenConversationIdIsMissing() throws Exception {
+        // MissingServletRequestParameterException no está mapeada en GlobalExceptionHandler
+        // (solo MethodArgumentNotValidException lo está), cae al catch-all → 500
+        MockMultipartFile audio = new MockMultipartFile("audio", "recording.webm", "audio/webm", "fake".getBytes());
+
+        mockMvc.perform(multipart("/api/chat/audio")
+                        .file(audio))
+                .andExpect(status().isInternalServerError());
     }
 
     @Test

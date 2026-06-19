@@ -13,7 +13,7 @@ import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.vector.VectorMemory;
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * Coordinates emotional analysis, recommendation ranking and event persistence for chatbot messages.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,30 +40,9 @@ public class ChatEmotionalRecommendationService {
             Long userId,
             String basePrompt,
             List<VectorMemory> memories,
-            List<ConversationMessage> history
-    ) {
-        return evaluate(message, userId, basePrompt, memories, history, null);
-    }
-
-    public ChatRecommendationOutcome evaluate(
-            String message,
-            Long userId,
-            String basePrompt,
-            List<VectorMemory> memories,
-            List<ConversationMessage> history,
-            ChatReply conversationalReply
-    ) {
-        return evaluate(message, userId, basePrompt, memories, history, conversationalReply, false);
-    }
-
-    public ChatRecommendationOutcome evaluate(
-            String message,
-            Long userId,
-            String basePrompt,
-            List<VectorMemory> memories,
             List<ConversationMessage> history,
             ChatReply conversationalReply,
-            boolean forceRecommendation
+            boolean explicitActivityRequest
     ) {
         EmotionalAnalysisResult analysis = analyze(message, basePrompt, memories, history);
         logAnalysisResult(userId, analysis);
@@ -75,7 +51,7 @@ public class ChatEmotionalRecommendationService {
                 userId,
                 analysis,
                 conversationalReply,
-                forceRecommendation
+                explicitActivityRequest
         );
         if (!recommendationAnalysis.shouldRecommend()) {
             return ChatRecommendationOutcome.none(recommendationAnalysis);

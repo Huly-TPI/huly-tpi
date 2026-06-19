@@ -19,11 +19,11 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GetLanternRecommendationUseCase {
+public class GetCloudRecommendationUseCase {
 
-    private static final String LANTERN_ANALYSIS_CONTEXT = """
+    private static final String CLOUD_ANALYSIS_CONTEXT = """
             Eres Huly, un asistente de bienestar mental.
-            El usuario acaba de completar el ejercicio de faroles y escribio pensamientos o emociones que queria soltar.
+            El usuario acaba de completar el ejercicio de nubes emocionales y escribio pensamientos o emociones que queria soltar.
             Analiza esos pensamientos para decidir una actividad de bienestar con el motor comun de recomendaciones.
             """;
 
@@ -32,7 +32,7 @@ public class GetLanternRecommendationUseCase {
     private final ChatEmotionalRecommendationPolicy recommendationPolicy;
     private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
 
-    public LanternRecommendation execute(List<String> thoughts) {
+    public CloudRecommendation execute(List<String> thoughts) {
         return execute(thoughts, null);
     }
 
@@ -60,7 +60,7 @@ public class GetLanternRecommendationUseCase {
     }
 
     private EmotionalAnalysisResult analyze(String userMessage) {
-        String prompt = promptBuilderService.buildEmotionalAnalysisPrompt(LANTERN_ANALYSIS_CONTEXT, List.of());
+        String prompt = promptBuilderService.buildEmotionalAnalysisPrompt(CLOUD_ANALYSIS_CONTEXT, List.of());
         EmotionalAnalysisResult result = emotionalAnalysisPort.analyze(prompt, userMessage, List.of());
         return result == null ? EmotionalAnalysisResult.neutral() : result;
     }

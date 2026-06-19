@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -30,6 +31,20 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
     @Override
     public Optional<PaymentEvent> findByExternalReference(String externalReference) {
         return jpaRepository.findByExternalReference(externalReference).map(this::toDomain);
+    }
+
+    @Override
+    public List<PaymentEvent> findByUserId(Long userId) {
+        return jpaRepository.findByUserId(userId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<PaymentEvent> findByUserIdAndStatus(Long userId, PaymentStatus status) {
+        return jpaRepository.findByUserIdAndStatus(userId, status).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

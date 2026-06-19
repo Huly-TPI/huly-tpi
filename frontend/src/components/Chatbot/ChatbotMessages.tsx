@@ -12,6 +12,7 @@ interface ChatbotMessagesProps {
   onClose: () => void
   onChallengeDecision: (index: number, decision: 'accepted' | 'rejected') => void | Promise<void>
   onSuggestedActionDecision: (index: number, decision: 'accepted' | 'rejected') => void | Promise<void>
+  onDeleteAudioMessage: (index: number) => void | Promise<void>
   bottomRef: RefObject<HTMLDivElement>
 }
 
@@ -38,6 +39,7 @@ export default function ChatbotMessages({
   onClose,
   onChallengeDecision,
   onSuggestedActionDecision,
+  onDeleteAudioMessage,
   bottomRef,
 }: ChatbotMessagesProps) {
   return (
@@ -60,7 +62,13 @@ export default function ChatbotMessages({
 
       {messages.map((message, index) => (
         <div key={index} className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-          <ChatMessageBubble role={message.role} content={message.content} />
+          <ChatMessageBubble
+            role={message.role}
+            content={message.content}
+            audioUrl={'audioUrl' in message ? message.audioUrl : undefined}
+            isAudioMessage={'audioKey' in message}
+            onDelete={'audioKey' in message ? () => void onDeleteAudioMessage(index) : undefined}
+          />
 
           {message.role === 'assistant' && (
             <div className="ml-1 mt-2 flex w-full max-w-[85%] min-w-0 flex-col gap-2 sm:w-auto">

@@ -37,6 +37,7 @@ class GetCurrentUserUseCaseTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.of(true));
         when(userDetailDomainRepository.findOnboardingTutorialCompleted(1L)).thenReturn(Optional.of(false));
+        when(userDetailDomainRepository.findProfileOnboardingTutorialCompleted(1L)).thenReturn(Optional.of(true));
 
         UserProfile result = getCurrentUserUseCase.execute(1L);
 
@@ -46,6 +47,7 @@ class GetCurrentUserUseCaseTest {
         assertThat(result.user().getRole()).isEqualTo(UserRole.USER);
         assertThat(result.onBoardingCompleted()).isTrue();
         assertThat(result.onboardingTutorialCompleted()).isFalse();
+        assertThat(result.profileOnboardingTutorialCompleted()).isTrue();
     }
 
     @Test

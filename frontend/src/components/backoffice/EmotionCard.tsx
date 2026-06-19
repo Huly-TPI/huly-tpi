@@ -57,7 +57,7 @@ export function EmotionCard({ category, onManage }: EmotionCardProps) {
         </span>
         <button
           onClick={onManage}
-          className="text-[#A0AEC0] dark:text-gray-500 hover:text-[#8869AC] dark:hover:text-[#A78BFA] transition-colors"
+          className="text-[#A0AEC0] dark:text-gray-500 hover:text-violeta dark:hover:text-violeta-claro transition-colors"
           aria-label={`Gestionar ${category.name}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

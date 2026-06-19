@@ -409,6 +409,7 @@ footer {
 }
 .modal-submit:hover { background: #7558a0; transform: translateY(-2px); }
 .modal-microcopy { text-align: center; font-size: 0.76rem; font-weight: 400; color: #bbb; margin-top: 0.9rem; }
+.modal-error { font-size: 0.85rem; color: #e05b5b; text-align: center; margin-bottom: 0.6rem; }
 
 .reveal {
   opacity: 0;

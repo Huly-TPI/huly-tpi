@@ -7,6 +7,7 @@ import ChatbotPage from './pages/Backoffice/ChatbotPage'
 import AntiScrollPage from './pages/Backoffice/AntiScrollPage'
 import DashboardPage from './pages/Backoffice/DashboardPage'
 import UsersPage from './pages/Backoffice/UsersPage'
+import UserDetailPage from './pages/Backoffice/UserDetailPage'
 import BackofficeNotFound from './pages/Backoffice/BackofficeNotFound'
 import Breathing from './pages/Breathing/Breathing'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
@@ -36,7 +37,7 @@ const App = () => {
           <Route path="chatbot" element={<ChatbotPage />} />
           <Route path="antiscroll" element={<AntiScrollPage />} />
           <Route path="usuarios" element={<UsersPage />} />
-          <Route path="usuarios/:id" element={<UsersPage />} />
+          <Route path="usuarios/:id" element={<UserDetailPage />} />
           <Route path="*" element={<BackofficeNotFound />} />
         </Route>
 

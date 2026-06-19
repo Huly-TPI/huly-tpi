@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.lanternRecommendation.GetLanternRecommendationUseCase;

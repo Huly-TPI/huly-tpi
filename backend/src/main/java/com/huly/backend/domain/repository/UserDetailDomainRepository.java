@@ -9,9 +9,11 @@ import java.util.Optional;
 public interface UserDetailDomainRepository {
     Optional<Boolean> findOnBoardingCompleted(Long userId);
     Optional<Boolean> findOnboardingTutorialCompleted(Long userId);
+    Optional<Boolean> findProfileOnboardingTutorialCompleted(Long userId);
     ThemePreference findThemePreference(Long userId);
     void completeOnboarding(Long userId, String answer1, String answer2, String answer3);
     void completeTutorial(Long userId);
+    void completeProfileTutorial(Long userId);
     void updateThemePreference(Long userId, ThemePreference themePreference);
 
     /** Estado actual de la racha de recompensas diarias del usuario. */

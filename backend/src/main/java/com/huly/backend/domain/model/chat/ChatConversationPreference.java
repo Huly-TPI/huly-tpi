@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-/**
- * Stores deterministic conversational preferences for one user.
- */
 @Getter
 @Builder
 @NoArgsConstructor
@@ -26,44 +23,26 @@ public class ChatConversationPreference {
     private Instant createdAt;
     private Instant updatedAt;
 
-    /**
-     * Creates the initial preference state for a user.
-     *
-     * @param userId authenticated user identifier
-     * @param now creation timestamp
-     * @return initial preference state
-     */
-    public static ChatConversationPreference begin(Long userId, Instant now) {
+    public static ChatConversationPreference begin(
+            Long userId,
+            ChatOnboardingStatus initialStatus,
+            Instant now) {
         return ChatConversationPreference.builder()
                 .userId(userId)
-                .onboardingStatus(ChatOnboardingStatus.ASKED_PREFERRED_NAME)
+                .onboardingStatus(initialStatus)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
     }
 
-    /**
-     * Advances onboarding after recording the preferred name.
-     *
-     * @param name preferred name
-     * @param now update timestamp
-     * @return updated preference state
-     */
-    public ChatConversationPreference withPreferredName(String name, Instant now) {
+    public ChatConversationPreference withPreferredNamePendingStyle(String name, Instant now) {
         return toBuilder()
                 .preferredName(name)
-                .onboardingStatus(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
+                .onboardingStatus(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
                 .updatedAt(now)
                 .build();
     }
 
-    /**
-     * Completes onboarding after recording the communication style.
-     *
-     * @param style communication style
-     * @param now update timestamp
-     * @return updated preference state
-     */
     public ChatConversationPreference withCommunicationStyle(CommunicationStyle style, Instant now) {
         return toBuilder()
                 .communicationStyle(style)
@@ -72,13 +51,6 @@ public class ChatConversationPreference {
                 .build();
     }
 
-    /**
-     * Updates the preferred name without changing onboarding state.
-     *
-     * @param name new preferred name
-     * @param now update timestamp
-     * @return updated preference state
-     */
     public ChatConversationPreference updatePreferredName(String name, Instant now) {
         return toBuilder()
                 .preferredName(name)
@@ -86,16 +58,23 @@ public class ChatConversationPreference {
                 .build();
     }
 
-    /**
-     * Updates the communication style without changing onboarding state.
-     *
-     * @param style new communication style
-     * @param now update timestamp
-     * @return updated preference state
-     */
     public ChatConversationPreference updateCommunicationStyle(CommunicationStyle style, Instant now) {
         return toBuilder()
                 .communicationStyle(style)
+                .updatedAt(now)
+                .build();
+    }
+
+    public ChatConversationPreference markCommunicationStyleAsked(Instant now) {
+        return toBuilder()
+                .onboardingStatus(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
+                .updatedAt(now)
+                .build();
+    }
+
+    public ChatConversationPreference complete(Instant now) {
+        return toBuilder()
+                .onboardingStatus(ChatOnboardingStatus.COMPLETED)
                 .updatedAt(now)
                 .build();
     }

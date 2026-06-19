@@ -1,11 +1,12 @@
 import { useAntiScrollDashboard } from '../../hooks/backoffice/useAntiScrollDashboard'
+import { useTimeFormatter } from '../../hooks/useTimeFormatter'
 import { SectionCard } from '../../components/backoffice/SectionCard'
 import DomainFavicon from '../../components/backoffice/DomainFavicon'
-import { formatConsumptionTime } from '../../utils/date'
 import { RefreshCw, Monitor, Database, Link2, Settings, Clock, FileText, CheckCircle } from 'lucide-react'
 import Button from '../../components/Buttons/Button/Button'
 
 export default function AntiScrollPage() {
+  const { formatConsumptionTime } = useTimeFormatter()
   const {
     dashboard,
     loading,
@@ -44,7 +45,7 @@ export default function AntiScrollPage() {
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[30px] font-extrabold leading-tight text-[#8869AC] dark:text-[#A78BFA]">Panel antiscroll</h1>
+        <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Panel antiscroll</h1>
         <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">
           Monitoreo global de bienestar digital, retorno al jardín y estadísticas de navegación de la extensión.
         </p>
@@ -55,7 +56,7 @@ export default function AntiScrollPage() {
           <SectionCard className="bg-white dark:bg-[#172033] flex flex-col justify-between hover:shadow-md transition duration-300 p-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-[#A78BFA]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
                   <RefreshCw className="h-5 w-5" strokeWidth={1.8} />
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Tasa de retorno al jardín</h2>
@@ -81,7 +82,7 @@ export default function AntiScrollPage() {
                     cx="56"
                     cy="56"
                     r="48"
-                    className="text-[#8869AC] dark:text-[#A78BFA]"
+                    className="text-violeta dark:text-violeta-claro"
                     strokeWidth="8"
                     strokeDasharray={301.6}
                     strokeDashoffset={301.6 - (301.6 * redirectRate) / 100}
@@ -91,7 +92,7 @@ export default function AntiScrollPage() {
                   />
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl font-black text-gray-800 dark:text-gray-100">{redirectRate.toFixed(1)}%</span>
+                  <span className="text-xl font-black text-gray-800 dark:text-gray-100">{redirectRate.toFixed(1)}%</span>
                   <span className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Retorno</span>
                 </div>
               </div>
@@ -101,7 +102,7 @@ export default function AntiScrollPage() {
               <div className="grid grid-cols-2 gap-2 text-center text-xs">
                 <div className="border-r border-gray-100 dark:border-gray-855/30">
                   <span className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Regresan al jardín</span>
-                  <span className="text-sm font-extrabold text-[#8869AC] dark:text-[#A78BFA]">{totalRedirects} clicks</span>
+                  <span className="text-sm font-extrabold text-violeta dark:text-violeta-claro">{totalRedirects} clicks</span>
                 </div>
                 <div>
                   <span className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Ignoran o continúan</span>
@@ -167,7 +168,7 @@ export default function AntiScrollPage() {
           <SectionCard className="bg-white dark:bg-[#172033] hover:shadow-md transition duration-300 p-4 flex flex-col gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-[#A78BFA]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
                   <Settings className="h-5 w-5" strokeWidth={1.8} />
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Configuración de la extensión</h2>
@@ -205,7 +206,7 @@ export default function AntiScrollPage() {
                     min={1}
                     value={defaultTime}
                     onChange={(e) => setDefaultTime(parseInt(e.target.value) || 20)}
-                    className="w-full text-sm border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2 bg-gray-50 dark:bg-[#09111f] text-gray-700 dark:text-gray-200 focus:bg-white dark:focus:bg-[#172033] focus:outline-none focus:ring-2 focus:ring-[#8869AC]/30 focus:border-[#8869AC] dark:focus:border-[#A78BFA] transition duration-200"
+                    className="w-full text-sm border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2 bg-gray-50 dark:bg-[#09111f] text-gray-700 dark:text-gray-200 focus:bg-white dark:focus:bg-[#172033] focus:outline-none focus:ring-2 focus:ring-violeta/30 focus:border-violeta dark:focus:border-violeta-claro transition duration-200"
                     required
                   />
                   <span className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -222,7 +223,7 @@ export default function AntiScrollPage() {
                     id="terms-input"
                     value={terms}
                     onChange={(e) => setTerms(e.target.value)}
-                    className="w-full text-sm border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2 bg-gray-50 dark:bg-[#09111f] text-gray-700 dark:text-gray-200 focus:bg-white dark:focus:bg-[#172033] focus:outline-none focus:ring-2 focus:ring-[#8869AC]/30 focus:border-[#8869AC] dark:focus:border-[#A78BFA] transition duration-200 min-h-[120px] flex-1 resize-y font-normal leading-relaxed"
+                    className="w-full text-sm border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2 bg-gray-50 dark:bg-[#09111f] text-gray-700 dark:text-gray-200 focus:bg-white dark:focus:bg-[#172033] focus:outline-none focus:ring-2 focus:ring-violeta/30 focus:border-violeta dark:focus:border-violeta-claro transition duration-200 min-h-[120px] flex-1 resize-y font-normal leading-relaxed"
                     required
                   />
                   <span className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -246,7 +247,7 @@ export default function AntiScrollPage() {
           <SectionCard className="bg-white dark:bg-[#172033] hover:shadow-md transition duration-300 p-4 flex flex-col h-full gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-[#A78BFA]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
                   <Link2 className="h-5 w-5" strokeWidth={1.8} />
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Páginas más consumidas</h2>
@@ -274,7 +275,7 @@ export default function AntiScrollPage() {
                           />
                           <span className="font-mono text-sm font-bold text-gray-700 dark:text-gray-200 truncate">{app.domain}</span>
                         </div>
-                        <span className="text-xs font-bold text-[#8869AC] dark:text-[#A78BFA] bg-[#D1CAEF]/20 dark:bg-[#2A233C]/40 px-2.5 py-0.5 rounded-full shrink-0">
+                        <span className="text-xs font-bold text-violeta dark:text-violeta-claro bg-[#D1CAEF]/20 dark:bg-[#2A233C]/40 px-2.5 py-0.5 rounded-full shrink-0">
                           #{index + 1}
                         </span>
                       </div>
@@ -286,7 +287,7 @@ export default function AntiScrollPage() {
                         </div>
                         <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-[#8869AC] to-[#D1CAEF] rounded-full"
+                            className="h-full bg-gradient-to-r from-violeta to-violeta-claro rounded-full"
                             style={{ width: `${percentage}%` }}
                           />
                         </div>

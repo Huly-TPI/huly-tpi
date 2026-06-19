@@ -44,6 +44,26 @@ public class EmotionalEventRepositoryImpl implements EmotionalEventRepository {
                 .toList();
     }
 
+    @Override
+    public List<EmotionalEvent> findByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return emotionalEventJpaRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<EmotionalEvent> findRecommendationEventsByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return emotionalEventJpaRepository.findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(userId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private EmotionalEventEntity toEntity(EmotionalEvent event) {
         return EmotionalEventEntity.builder()
                 .id(event.getId())

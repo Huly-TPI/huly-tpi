@@ -25,4 +25,7 @@ public class BackofficeUserSummary {
     private Integer totalScrollTimeSeconds;
     private Map<String, Integer> dailyScrollTimeSeconds;
     private List<TopAppStats> topApps;
+    private Integer coins;
+    private String plan;
+    private String dominantEmotion;
 }
