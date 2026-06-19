@@ -29,10 +29,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserRepositoryImplTest {
 
-    @Mock private AppUserRepository jpaRepository;
-    @Mock private UserDetailRepository userDetailRepository;
+    @Mock
+    private AppUserRepository jpaRepository;
+    @Mock
+    private UserDetailRepository userDetailRepository;
 
-    @InjectMocks private UserRepositoryImpl userRepository;
+    @InjectMocks
+    private UserRepositoryImpl userRepository;
 
     @Test
     void findByEmail_shouldReturnMappedDomain_whenEntityExists() {
@@ -166,8 +169,7 @@ class UserRepositoryImplTest {
                 .id(1L).email("user@huly.com").password("encoded")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .userDetails(List.of(
-                        UserDetailEntity.builder().name("Mili").build()
-                ))
+                        UserDetailEntity.builder().name("Mili").build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -215,8 +217,7 @@ class UserRepositoryImplTest {
                 .userDetails(List.of(
                         UserDetailEntity.builder().name(null).build(),
                         UserDetailEntity.builder().name("Mili").build(),
-                        UserDetailEntity.builder().name("Otro").build()
-                ))
+                        UserDetailEntity.builder().name("Otro").build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -285,8 +286,7 @@ class UserRepositoryImplTest {
                 .id(1L).email("user@huly.com").password("encoded")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .userDetails(List.of(
-                        UserDetailEntity.builder().birth(LocalDate.of(1995, 5, 5)).build()
-                ))
+                        UserDetailEntity.builder().birth(LocalDate.of(1995, 5, 5)).build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -312,5 +312,15 @@ class UserRepositoryImplTest {
 
         assertThat(userRepository.findByEmail("user@huly.com").get().getBirthDate()).isNull();
         assertThat(userRepository.findByEmail("user2@huly.com").get().getBirthDate()).isNull();
+    }
+
+    @Test
+    void debitCoins_shouldDelegateToJpaAndReturnRowsAffected() {
+        when(jpaRepository.debitCoins(1L, 10)).thenReturn(1);
+
+        int result = userRepository.debitCoins(1L, 10);
+
+        assertThat(result).isEqualTo(1);
+        verify(jpaRepository).debitCoins(1L, 10);
     }
 }

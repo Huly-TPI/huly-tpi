@@ -1,4 +1,5 @@
-import { useCallback, useState, useEffect } from 'react'
+
+import { useState, useEffect, useCallback } from 'react'
 import { getUserCoins } from '../../api/auth'
 import { useAuth } from '../../context/auth'
 
@@ -6,6 +7,7 @@ export function useUserCoins() {
   const { loading: authLoading } = useAuth()
   const [coins, setCoins] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+
 
   const refresh = useCallback(() => {
     return getUserCoins()

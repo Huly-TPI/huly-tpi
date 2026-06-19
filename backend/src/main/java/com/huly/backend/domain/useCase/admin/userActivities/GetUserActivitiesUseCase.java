@@ -2,14 +2,13 @@ package com.huly.backend.domain.useCase.admin.userActivities;
 
 import com.huly.backend.domain.model.ActivitySession;
 import com.huly.backend.domain.model.enums.Timeframe;
-import com.huly.backend.domain.repository.ActivitySessionRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

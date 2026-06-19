@@ -1,11 +1,12 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.domain.repository.ActivitySessionRepository;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
-import com.huly.backend.domain.repository.PaymentEventRepository;
-import com.huly.backend.domain.repository.ProductRepository;
-import com.huly.backend.domain.repository.VectorMemoryRepository;
+import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.repository.payment.PaymentEventRepository;
+import com.huly.backend.domain.repository.payment.ProductRepository;
+import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import com.huly.backend.domain.repository.extension.AntiScrollGlobalConfigRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
@@ -22,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 
-import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 
 @Configuration
 public class AdminUseCaseConfig {
@@ -69,9 +70,16 @@ public class AdminUseCaseConfig {
             UserRepository userRepository,
             EmotionalEventRepository emotionalEventRepository,
             VectorMemoryRepository vectorMemoryRepository,
+            UserPersonalitySummaryRepository userPersonalitySummaryRepository,
             ChatConversationPreferenceRepository chatConversationPreferenceRepository
     ) {
-        return new GetUserAiDiagnosticsUseCase(userRepository, emotionalEventRepository, vectorMemoryRepository, chatConversationPreferenceRepository);
+        return new GetUserAiDiagnosticsUseCase(
+                userRepository,
+                emotionalEventRepository,
+                vectorMemoryRepository,
+                userPersonalitySummaryRepository,
+                chatConversationPreferenceRepository
+        );
     }
 
     @Bean

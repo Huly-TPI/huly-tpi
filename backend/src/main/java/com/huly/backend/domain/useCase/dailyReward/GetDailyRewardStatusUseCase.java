@@ -4,8 +4,8 @@ import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
 import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
 import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
-import com.huly.backend.domain.repository.DailyRewardRepository;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Clock;

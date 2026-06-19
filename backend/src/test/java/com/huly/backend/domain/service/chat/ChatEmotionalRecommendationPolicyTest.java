@@ -21,6 +21,34 @@ class ChatEmotionalRecommendationPolicyTest {
     }
 
     @Test
+    void resolve_shouldSuppressRecommendationWhenValenceAndDominanceArePositive() {
+        EmotionalAnalysisResult analysis = analysis(true, EmotionType.MOTIVATION, 0.6, 0.4, 0.3, 0.5);
+
+        EmotionalAnalysisResult result = policy.resolve(1L, analysis, null, false);
+
+        assertThat(result.shouldRecommend()).isFalse();
+        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.MOTIVATION);
+    }
+
+    @Test
+    void resolve_shouldSuppressRecommendationForLowIntensityMildNegativeState() {
+        EmotionalAnalysisResult analysis = analysis(true, EmotionType.NEUTRAL, -0.3, 0.3, -0.2, 0.5);
+
+        EmotionalAnalysisResult result = policy.resolve(1L, analysis, null, false);
+
+        assertThat(result.shouldRecommend()).isFalse();
+    }
+
+    @Test
+    void resolve_shouldNotSuppressRecommendationWhenDominanceIsVeryNegative() {
+        EmotionalAnalysisResult analysis = analysis(true, EmotionType.FRUSTRATION, -0.45, 0.3, -0.6, 0.65);
+
+        EmotionalAnalysisResult result = policy.resolve(1L, analysis, null, false);
+
+        assertThat(result.shouldRecommend()).isTrue();
+    }
+
+    @Test
     void resolve_shouldForceRecommendationForStructuredHighDistress() {
         EmotionalAnalysisResult analysis = analysis(false, EmotionType.SADNESS, -0.8, 0.2, -0.6, 0.4);
 

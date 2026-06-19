@@ -71,6 +71,11 @@ public class ChatEmotionalRecommendationPolicy {
                     : EmotionalAnalysisResult.neutral();
         }
         if (analysis.shouldRecommend()) {
+            if (isPositiveEmotionalState(analysis)) {
+                log.info("emotional_recommendation_suppressed userId={} reason=positive_state valence={} dominance={}",
+                        userId, analysis.valence(), analysis.dominance());
+                return suppressRecommendation(analysis);
+            }
             return analysis;
         }
         if (shouldOverrideFromAnalysis(analysis)) {
@@ -84,6 +89,28 @@ public class ChatEmotionalRecommendationPolicy {
             return fallbackFromConversation(conversationalReply);
         }
         return analysis;
+    }
+
+    private boolean isPositiveEmotionalState(EmotionalAnalysisResult analysis) {
+        if (analysis.valence() > 0 && analysis.dominance() > 0) return true;
+
+        return analysis.intensity() < 0.70
+                && analysis.valence() > -0.55
+                && analysis.dominance() > -0.40;
+    }
+
+    private EmotionalAnalysisResult suppressRecommendation(EmotionalAnalysisResult analysis) {
+        return new EmotionalAnalysisResult(
+                false,
+                analysis.detectedEmotion(),
+                analysis.confidence(),
+                analysis.valence(),
+                analysis.arousal(),
+                analysis.dominance(),
+                analysis.intensity(),
+                analysis.userGoal(),
+                analysis.shortReason()
+        );
     }
 
     private boolean shouldOverrideFromAnalysis(EmotionalAnalysisResult analysis) {

@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.service.RiskWordService;
+import com.huly.backend.domain.service.chat.RiskWordService;
 import com.huly.backend.domain.useCase.riskWord.CreateRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.DeleteRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.ListRiskWordsUseCase;

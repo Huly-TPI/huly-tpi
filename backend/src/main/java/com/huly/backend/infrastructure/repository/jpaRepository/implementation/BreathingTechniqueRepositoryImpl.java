@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import com.huly.backend.domain.model.BreathingTechnique;
-import com.huly.backend.domain.repository.BreathingTechniqueRepository;
+import com.huly.backend.domain.repository.breathingTechnique.BreathingTechniqueRepository;
 import com.huly.backend.infrastructure.repository.entity.BreathingTechniquesEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IBreathingTechniqueJpaRepository;
 import lombok.RequiredArgsConstructor;

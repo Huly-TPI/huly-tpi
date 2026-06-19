@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.adapter.anthropic;
 
 import com.huly.backend.domain.model.chat.ChatPreferenceDetectionResult;
 import com.huly.backend.domain.model.enums.ChatPreferenceExpectedField;
-import com.huly.backend.domain.provider.ChatPreferenceExtractionPort;
+import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Value;

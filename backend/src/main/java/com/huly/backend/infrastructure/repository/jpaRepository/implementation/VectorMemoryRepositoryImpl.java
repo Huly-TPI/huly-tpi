@@ -3,7 +3,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
-import com.huly.backend.domain.repository.VectorMemoryRepository;
+import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Repository
@@ -49,15 +48,4 @@ public class VectorMemoryRepositoryImpl implements VectorMemoryRepository {
         }
     }
 
-    @Override
-    public Optional<String> findPersonalitySummaryByUserId(Long userId) {
-        try {
-            String sql = "SELECT content FROM vector_store WHERE metadata ->> 'userId' = ? AND COALESCE(metadata ->> 'deleted', 'false') = 'false' AND metadata ->> 'contentType' = 'PERSONALITY_SUMMARY' LIMIT 1";
-            List<String> results = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("content"), userId.toString());
-            return results.stream().findFirst();
-        } catch (Exception e) {
-            log.warn("No se pudo consultar el resumen de personalidad para el usuario {}: {}", userId, e.getMessage());
-            return Optional.empty();
-        }
-    }
 }

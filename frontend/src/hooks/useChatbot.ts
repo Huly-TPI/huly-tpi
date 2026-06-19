@@ -8,7 +8,7 @@ import { emotionalEventsApi } from '../api/emotionalEvents'
 import { userGoalsApi } from '../api/userGoals'
 import { type ChatbotMessage } from '../components/Chatbot/chatbotTypes'
 import { useAuth } from '../context/auth'
-import { deleteAudioBlob, getAudioBlob, saveAudioBlob } from '../utils/audioCache'
+import { deleteAudioBlob, getAudioBlob, saveAudioBlob } from './useAudioCache'
 
 const CHAT_CONVERSATION_STORAGE_KEY = 'hulyChatConversationId'
 const AUDIO_KEYS_PREFIX = 'hulyAudioKeys:'
