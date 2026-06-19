@@ -3,7 +3,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
-import com.huly.backend.domain.repository.VectorMemoryRepository;
+import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;

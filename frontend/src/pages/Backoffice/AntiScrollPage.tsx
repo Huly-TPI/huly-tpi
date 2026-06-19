@@ -1,11 +1,12 @@
 import { useAntiScrollDashboard } from '../../hooks/backoffice/useAntiScrollDashboard'
+import { useTimeFormatter } from '../../hooks/useTimeFormatter'
 import { SectionCard } from '../../components/backoffice/SectionCard'
 import DomainFavicon from '../../components/backoffice/DomainFavicon'
-import { formatConsumptionTime } from '../../utils/date'
 import { RefreshCw, Monitor, Database, Link2, Settings, Clock, FileText, CheckCircle } from 'lucide-react'
 import Button from '../../components/Buttons/Button/Button'
 
 export default function AntiScrollPage() {
+  const { formatConsumptionTime } = useTimeFormatter()
   const {
     dashboard,
     loading,

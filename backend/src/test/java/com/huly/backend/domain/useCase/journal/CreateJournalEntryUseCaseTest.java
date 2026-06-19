@@ -3,7 +3,7 @@ package com.huly.backend.domain.useCase.journal;
 import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
-import com.huly.backend.domain.repository.JournalEntryRepository;
+import com.huly.backend.domain.repository.journal.JournalEntryRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -3,6 +3,7 @@ package com.huly.backend.domain.service;
 import com.huly.backend.domain.model.UpdateBotConfigCommand;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
+import com.huly.backend.domain.service.chat.BotConfigService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

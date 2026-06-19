@@ -1,15 +1,15 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.provider.ChatMemoryPort;
-import com.huly.backend.domain.provider.LLMChatPort;
 import com.huly.backend.domain.port.AudioTranscriptionPort;
-import com.huly.backend.domain.provider.ChatPreferenceExtractionPort;
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
-import com.huly.backend.domain.repository.RiskWordRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.port.ChatMemoryPort;
+import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.LLMChatPort;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
+import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;

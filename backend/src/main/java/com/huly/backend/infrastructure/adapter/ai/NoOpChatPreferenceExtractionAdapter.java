@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.adapter.ai;
 
 import com.huly.backend.domain.model.chat.ChatPreferenceDetectionResult;
 import com.huly.backend.domain.model.enums.ChatPreferenceExpectedField;
-import com.huly.backend.domain.provider.ChatPreferenceExtractionPort;
+import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
 import org.springframework.stereotype.Component;
 
 @Component

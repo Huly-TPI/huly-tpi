@@ -13,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.huly.backend.domain.model.ActivitySession;
 import com.huly.backend.domain.model.enums.ActivityType;
-import com.huly.backend.domain.repository.ActivitySessionRepository;
+import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 
 import java.time.Instant;
 

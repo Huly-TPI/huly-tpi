@@ -5,10 +5,10 @@ import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
 import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
-import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.domain.repository.VectorMemoryRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -162,7 +162,7 @@ public class GetUserAiDiagnosticsUseCase {
 
         String finalSummary = personalitySummary != null && personalitySummary.getSummary() != null
                 ? personalitySummary.getSummary()
-                : "No tiene memorias suficientes para generar una síntesis de IA.";
+                : "No tiene memorias suficientes para generar una sintesis de IA.";
         List<String> finalAccepted = acceptedActivities.stream().limit(3).toList();
         List<String> finalIgnored = ignoredActivities.stream().limit(3).toList();
 

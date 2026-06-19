@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.provider.ImageValidationPort;
-import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.port.ImageValidationPort;
+import com.huly.backend.domain.repository.user.UserGoalRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.service.userGoal.ImageStorageService;
 import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;

@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.port.EmailPort;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.lead.RegisterLeadUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
