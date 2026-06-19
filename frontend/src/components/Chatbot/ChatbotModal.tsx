@@ -41,7 +41,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         />
       }
     >
-      <ChatbotHeader onClose={onClose} />
+      <ChatbotHeader onClose={onClose} onReset={resetConversation} />
       <ChatbotMessages
         messages={messages}
         isSending={isSending}
@@ -59,7 +59,6 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         onInputChange={setInput}
         onSend={() => void sendMessage()}
         onSendAudio={(blob) => void sendAudioMessage(blob)}
-        onReset={resetConversation}
       />
     </BaseModal>
   )

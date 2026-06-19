@@ -4,21 +4,19 @@ import userEvent from '@testing-library/user-event'
 import ChatbotComposer from '../../components/Chatbot/ChatbotComposer'
 
 describe('ChatbotComposer', () => {
-  it('renders input, send button, and reset button', () => {
+  it('renders input and send button', () => {
     render(
       <ChatbotComposer
         input=""
         isSending={false}
         onInputChange={vi.fn()}
         onSend={vi.fn()}
-        onReset={vi.fn()}
         onSendAudio={vi.fn()}
       />,
     )
 
     expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Enviar' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Limpiar chat' })).toBeInTheDocument()
   })
 
   it('calls onInputChange when typing', async () => {
@@ -31,7 +29,6 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={onInputChange}
         onSend={vi.fn()}
-        onReset={vi.fn()}
         onSendAudio={vi.fn()}
       />,
     )
@@ -50,7 +47,6 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={vi.fn()}
         onSend={onSend}
-        onReset={vi.fn()}
         onSendAudio={vi.fn()}
       />,
     )
@@ -69,7 +65,6 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={vi.fn()}
         onSend={vi.fn()}
-        onReset={vi.fn()}
         onSendAudio={vi.fn()}
       />,
     )
@@ -79,23 +74,17 @@ describe('ChatbotComposer', () => {
     })
   })
 
-  it('calls onReset when trash button is clicked', async () => {
-    const user = userEvent.setup()
-    const onReset = vi.fn()
-
+  it('does not render reset button in the composer', () => {
     render(
       <ChatbotComposer
         input=""
         isSending={false}
         onInputChange={vi.fn()}
         onSend={vi.fn()}
-        onReset={onReset}
         onSendAudio={vi.fn()}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Limpiar chat' }))
-    expect(onReset).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('button', { name: 'Limpiar chat' })).not.toBeInTheDocument()
   })
 })
-
