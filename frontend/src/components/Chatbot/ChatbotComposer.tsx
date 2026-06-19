@@ -31,7 +31,7 @@ export default function ChatbotComposer({
 
   return (
     <footer className="border-t border-[var(--border-soft)] px-5 py-5">
-      <div className="flex items-end gap-2">
+      <div className="flex h-14 items-center gap-2">
         {!isRecorderActive && (
           <>
             <textarea
@@ -47,7 +47,7 @@ export default function ChatbotComposer({
                 }
               }}
               disabled={isSending}
-              className="min-h-[44px] w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta md:min-h-[52px]"
+              className="h-14 w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta"
             />
           </>
         )}
