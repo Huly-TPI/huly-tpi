@@ -1,8 +1,11 @@
 package com.huly.backend.domain.useCase.admin.userAiDiagnostics;
 
-import com.huly.backend.domain.model.chat.ChatConversationPreference;
+import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
+import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
@@ -14,8 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Set;
 
 @RequiredArgsConstructor
 public class GetUserAiDiagnosticsUseCase {
@@ -23,15 +26,16 @@ public class GetUserAiDiagnosticsUseCase {
     private final UserRepository userRepository;
     private final EmotionalEventRepository emotionalEventRepository;
     private final VectorMemoryRepository vectorMemoryRepository;
+    private final UserPersonalitySummaryRepository userPersonalitySummaryRepository;
     private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
 
     public GetUserAiDiagnosticsResponse execute(GetUserAiDiagnosticsRequest request) {
         Long userId = request.userId();
 
-        userRepository.findById(userId)
+        AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        List<VectorMemoryEntry> memories = vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(userId);
+        List<VectorMemoryEntry> memories = vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(user.getId());
         List<VectorMemoryResponse> aiMemories = memories.stream()
                 .map(memory -> new VectorMemoryResponse(
                         memory.id(),
@@ -62,27 +66,32 @@ public class GetUserAiDiagnosticsUseCase {
         Set<String> acceptedActivities = new LinkedHashSet<>();
         Set<String> ignoredActivities = new LinkedHashSet<>();
         for (EmotionalEventResponse event : recommendationEvents) {
-            if ("ACCEPTED".equals(event.recommendationDecision()))
+            if ("ACCEPTED".equals(event.recommendationDecision())) {
                 acceptedCount++;
+            }
 
-            if (event.generatedRecommendation() == null || event.generatedRecommendation().isBlank())
+            if (event.generatedRecommendation() == null || event.generatedRecommendation().isBlank()) {
                 continue;
+            }
 
             String simplifiedRecommendationName = simplifyRecommendationName(event.generatedRecommendation());
 
-            if ("ACCEPTED".equals(event.recommendationDecision()))
+            if ("ACCEPTED".equals(event.recommendationDecision())) {
                 acceptedActivities.add(simplifiedRecommendationName);
-            else
+            } else {
                 ignoredActivities.add(simplifiedRecommendationName);
+            }
         }
 
         int totalRecommendations = recommendationEvents.size();
         for (VectorMemoryEntry memory : memories) {
-            if (memory.content() == null)
+            if (memory.content() == null) {
                 continue;
+            }
 
-            if (!"CHALLENGE_DECISION".equals(memory.sourceType()) && !"CHALLENGE_DECISION".equals(memory.contentType()))
+            if (!"CHALLENGE_DECISION".equals(memory.sourceType()) && !"CHALLENGE_DECISION".equals(memory.contentType())) {
                 continue;
+            }
 
             String content = memory.content().toLowerCase();
             boolean accepted = content.contains("reto aceptado")
@@ -91,8 +100,9 @@ public class GetUserAiDiagnosticsUseCase {
             boolean rejected = content.contains("reto rechazado")
                     || content.contains("rechazo el reto")
                     || content.contains("rechazó el reto");
-            if (!accepted && !rejected)
+            if (!accepted && !rejected) {
                 continue;
+            }
 
             totalRecommendations++;
             if (accepted) {
@@ -108,18 +118,20 @@ public class GetUserAiDiagnosticsUseCase {
                 : 0;
         String receptivityLabel = "Sin recomendaciones registradas";
         if (totalRecommendations > 0) {
-            if (receptivityScore >= 75) 
+            if (receptivityScore >= 75) {
                 receptivityLabel = "Alta receptividad";
-            else if (receptivityScore >= 40) 
+            } else if (receptivityScore >= 40) {
                 receptivityLabel = "Receptividad moderada";
-            else
-                receptivityLabel = "Baja receptividad";            
+            } else {
+                receptivityLabel = "Baja receptividad";
+            }
         }
 
         StringBuilder memoryContent = new StringBuilder();
         for (VectorMemoryEntry memory : memories) {
-            if (memory.content() != null) 
-                memoryContent.append(memory.content().toLowerCase()).append(" ");           
+            if (memory.content() != null) {
+                memoryContent.append(memory.content().toLowerCase()).append(" ");
+            }
         }
 
         String normalizedContent = memoryContent.toString();
@@ -128,9 +140,10 @@ public class GetUserAiDiagnosticsUseCase {
 
         Map<String, Integer> emotionDistribution = new LinkedHashMap<>();
         for (EmotionalEventResponse event : emotionalEvents) {
-            if (event.detectedEmotion() == null) 
+            if (event.detectedEmotion() == null) {
                 continue;
-            
+            }
+
             String emotion = event.detectedEmotion().trim().toUpperCase();
             emotionDistribution.put(emotion, emotionDistribution.getOrDefault(emotion, 0) + 1);
         }
@@ -144,37 +157,24 @@ public class GetUserAiDiagnosticsUseCase {
             }
         }
 
-        String personalitySummary = vectorMemoryRepository.findPersonalitySummaryByUserId(userId)
-                .orElse("No hay resumen de perfil generado aún.");
+        UserPersonalitySummary personalitySummary = userPersonalitySummaryRepository.findByUserId(userId)
+                .orElse(null);
 
-        String finalSummary = personalitySummary;
+        String finalSummary = personalitySummary != null && personalitySummary.getSummary() != null
+                ? personalitySummary.getSummary()
+                : "No tiene memorias suficientes para generar una sintesis de IA.";
         List<String> finalAccepted = acceptedActivities.stream().limit(3).toList();
         List<String> finalIgnored = ignoredActivities.stream().limit(3).toList();
 
-        String trimmedSummary = personalitySummary.trim();
-        if (trimmedSummary.startsWith("```")) {
-            trimmedSummary = trimmedSummary.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "").trim();
-        }
-
-        if (trimmedSummary.startsWith("{")) {
-            try {
-                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(trimmedSummary);
-                if (node.has("summary")) {
-                    finalSummary = node.get("summary").asText();
-                }
-                if (node.has("accepted") && !node.get("accepted").asText().isBlank()) {
-                    finalAccepted = List.of(node.get("accepted").asText());
-                }
-                if (node.has("rejected") && !node.get("rejected").asText().isBlank()) {
-                    finalIgnored = List.of(node.get("rejected").asText());
-                }
-            } catch (Exception e) {
-                // Fallback to defaults on parsing errors
+        if (personalitySummary != null) {
+            if (personalitySummary.getAccepted() != null && !personalitySummary.getAccepted().isBlank()) {
+                finalAccepted = List.of(personalitySummary.getAccepted());
+            }
+            if (personalitySummary.getRejected() != null && !personalitySummary.getRejected().isBlank()) {
+                finalIgnored = List.of(personalitySummary.getRejected());
             }
         }
 
-        // Clean up redundant bold headers, asterisks or prefixes from old plain text or LLM outputs
         if (finalSummary != null) {
             finalSummary = finalSummary
                     .replaceAll("(?i)^\\*\\*Perfil Psicológico y Conductual\\*\\*\\s*", "")
@@ -232,8 +232,9 @@ public class GetUserAiDiagnosticsUseCase {
 
         List<String> detectedTopics = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : topics.entrySet()) {
-            if (entry.getValue().stream().anyMatch(content::contains))
+            if (entry.getValue().stream().anyMatch(content::contains)) {
                 detectedTopics.add(entry.getKey());
+            }
         }
         return detectedTopics;
     }
@@ -256,21 +257,26 @@ public class GetUserAiDiagnosticsUseCase {
 
     private String simplifyRecommendationName(String name) {
         String normalizedName = name.toLowerCase();
-        if (normalizedName.contains("respiracion") || normalizedName.contains("respiración") || normalizedName.contains("breathing"))
+        if (normalizedName.contains("respiracion") || normalizedName.contains("respiración") || normalizedName.contains("breathing")) {
             return "Respiración Guiada";
-        
-        if (normalizedName.contains("diario") || normalizedName.contains("journal")) 
+        }
+
+        if (normalizedName.contains("diario") || normalizedName.contains("journal")) {
             return "Diario Emocional";
-        
-        if (normalizedName.contains("nube") || normalizedName.contains("cloud")) 
+        }
+
+        if (normalizedName.contains("nube") || normalizedName.contains("cloud")) {
             return "Nubes de Pensamiento";
-        
-        if (normalizedName.contains("burbuja") || normalizedName.contains("bubble")) 
+        }
+
+        if (normalizedName.contains("burbuja") || normalizedName.contains("bubble")) {
             return "Reventar Burbujas";
-        
-        if (normalizedName.contains("reto") || normalizedName.contains("challenge")) 
+        }
+
+        if (normalizedName.contains("reto") || normalizedName.contains("challenge")) {
             return "Retos Diarios";
-        
+        }
+
         return name;
     }
 }

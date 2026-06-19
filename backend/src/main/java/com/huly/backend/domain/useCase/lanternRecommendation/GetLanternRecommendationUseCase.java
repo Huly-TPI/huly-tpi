@@ -1,15 +1,19 @@
 package com.huly.backend.domain.useCase.lanternRecommendation;
 
 import com.huly.backend.domain.model.LanternRecommendation;
+import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
-import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GetLanternRecommendationUseCase {
 
+    private static final int HISTORY_LIMIT = 20;
+
     private static final String CLOUD_ANALYSIS_CONTEXT = """
             Eres Huly, un asistente de bienestar mental.
             El usuario acaba de completar el ejercicio de nubes emocionales y escribio pensamientos o emociones que queria soltar.
@@ -30,7 +36,9 @@ public class GetLanternRecommendationUseCase {
     private final EmotionalAnalysisPort emotionalAnalysisPort;
     private final PromptBuilderService promptBuilderService;
     private final ChatEmotionalRecommendationPolicy recommendationPolicy;
-    private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
+    private final EmotionalRecommendationService recommendationService;
+    private final ActivityRepository activityRepository;
+    private final EmotionalEventRepository emotionalEventRepository;
 
     public LanternRecommendation execute(List<String> thoughts) {
         return execute(thoughts, null);
@@ -47,7 +55,12 @@ public class GetLanternRecommendationUseCase {
                     true
             );
 
-            EmotionalRecommendationResult result = recommendationsUseCase.execute(toQuery(recommendationAnalysis, userId));
+            EmotionalRecommendationQuery query = toQuery(recommendationAnalysis, userId);
+            EmotionalRecommendationResult result = recommendationService.recommend(
+                    query,
+                    activities(),
+                    userHistory(userId)
+            );
             if (result.recommendations().isEmpty()) {
                 return fallback();
             }
@@ -72,6 +85,17 @@ public class GetLanternRecommendationUseCase {
                 analysis.intensity(),
                 analysis.userGoal()
         );
+    }
+
+    private List<Activity> activities() {
+        return activityRepository.findAll();
+    }
+
+    private List<EmotionalEvent> userHistory(Long userId) {
+        if (userId == null)
+            return List.of();
+
+        return emotionalEventRepository.findRecentRecommendationHistoryByUserId(userId, HISTORY_LIMIT);
     }
 
     private LanternRecommendation toLanternRecommendation(EmotionalRecommendationItem recommendation) {

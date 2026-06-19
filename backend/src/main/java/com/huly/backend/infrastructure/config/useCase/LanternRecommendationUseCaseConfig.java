@@ -1,6 +1,9 @@
 package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.lanternRecommendation.GetLanternRecommendationUseCase;
@@ -16,13 +19,17 @@ public class LanternRecommendationUseCaseConfig {
             EmotionalAnalysisPort emotionalAnalysisPort,
             PromptBuilderService promptBuilderService,
             ChatEmotionalRecommendationPolicy recommendationPolicy,
-            GetEmotionalRecommendationsUseCase recommendationsUseCase
+            EmotionalRecommendationService recommendationService,
+            ActivityRepository activityRepository,
+            EmotionalEventRepository emotionalEventRepository
     ) {
         return new GetLanternRecommendationUseCase(
                 emotionalAnalysisPort,
                 promptBuilderService,
                 recommendationPolicy,
-                recommendationsUseCase
+                recommendationService,
+                activityRepository,
+                emotionalEventRepository
         );
     }
 }

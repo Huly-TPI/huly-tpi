@@ -1,6 +1,8 @@
 package com.huly.backend.domain.useCase.lanternRecommendation;
 
 import com.huly.backend.domain.model.LanternRecommendation;
+import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
@@ -9,9 +11,11 @@ import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
-import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,28 +26,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GetLanternRecommendationUseCaseTest {
 
     private CapturingEmotionalAnalysisPort emotionalAnalysisPort;
-    private CapturingRecommendationsUseCase recommendationsUseCase;
+    private CapturingRecommendationService recommendationService;
+    private StaticActivityRepository activityRepository;
+    private StaticEmotionalEventRepository emotionalEventRepository;
     private GetLanternRecommendationUseCase useCase;
 
     @BeforeEach
     void setUp() {
         emotionalAnalysisPort = new CapturingEmotionalAnalysisPort();
-        recommendationsUseCase = new CapturingRecommendationsUseCase();
+        recommendationService = new CapturingRecommendationService();
+        activityRepository = new StaticActivityRepository();
+        emotionalEventRepository = new StaticEmotionalEventRepository();
         useCase = new GetLanternRecommendationUseCase(
                 emotionalAnalysisPort,
                 new PromptBuilderService(),
                 new ChatEmotionalRecommendationPolicy(),
-                recommendationsUseCase
+                recommendationService,
+                activityRepository,
+                emotionalEventRepository
         );
     }
 
     @Test
-    void execute_shouldAnalyzeThoughtsAndDelegateToCommonRecommendationUseCase() {
+    void execute_shouldAnalyzeThoughtsAndDelegateToSharedRecommendationService() {
         EmotionalAnalysisResult analysis = analysis(
                 true, EmotionType.ANXIETY, -0.75, 0.85, -0.70, 0.90, "calmarme y bajar la ansiedad"
         );
         emotionalAnalysisPort.result = analysis;
-        recommendationsUseCase.result = result(item(ActivityType.RESPIRACION, "Respiracion guiada"));
+        recommendationService.result = result(item(ActivityType.RESPIRACION, "Respiracion guiada"));
 
         LanternRecommendation result = useCase.execute(List.of("me siento muy ansioso", "no puedo parar"));
 
@@ -52,43 +62,47 @@ class GetLanternRecommendationUseCaseTest {
         assertThat(result.redirectUrl()).isEqualTo("/guided-breathing");
         assertThat(emotionalAnalysisPort.userMessage).isEqualTo("me siento muy ansioso\nno puedo parar");
 
-        EmotionalRecommendationQuery query = recommendationsUseCase.query;
+        EmotionalRecommendationQuery query = recommendationService.query;
         assertThat(query.vad().valence()).isEqualTo(-0.75);
         assertThat(query.vad().arousal()).isEqualTo(0.85);
         assertThat(query.vad().dominance()).isEqualTo(-0.70);
         assertThat(query.intensity()).isEqualTo(0.90);
         assertThat(query.userGoal()).isEqualTo("calmarme y bajar la ansiedad");
+        assertThat(recommendationService.activities).isEqualTo(activityRepository.activities);
+        assertThat(recommendationService.userHistory).isEmpty();
     }
 
     @Test
-    void execute_shouldPassUserIdToCommonRecommendationUseCase_whenUserIdIsAvailable() {
+    void execute_shouldPassUserIdAndHistoryToSharedRecommendationService_whenUserIdIsAvailable() {
         emotionalAnalysisPort.result =
                 analysis(true, EmotionType.SADNESS, -0.7, 0.2, -0.5, 0.8, "soltar pensamientos");
-        recommendationsUseCase.result = result(item(ActivityType.NUBE, "Faroles emocionales"));
+        recommendationService.result = result(item(ActivityType.NUBE, "Faroles emocionales"));
+        emotionalEventRepository.history = List.of(EmotionalEvent.builder().userId(9L).build());
 
         useCase.execute(List.of("quiero soltar esto"), 9L);
 
-        assertThat(recommendationsUseCase.query.userId()).isEqualTo(9L);
+        assertThat(recommendationService.query.userId()).isEqualTo(9L);
+        assertThat(recommendationService.userHistory).hasSize(1);
     }
 
     @Test
     void execute_shouldForceRecommendationWithChatPolicy_whenAnalysisDoesNotRecommend() {
         EmotionalAnalysisResult neutral = analysis(false, EmotionType.NEUTRAL, 0.0, 0.0, 0.0, 0.1, null);
         emotionalAnalysisPort.result = neutral;
-        recommendationsUseCase.result = result(item(ActivityType.DIARIO, "Diario emocional"));
+        recommendationService.result = result(item(ActivityType.DIARIO, "Diario emocional"));
 
         LanternRecommendation result = useCase.execute(List.of("pensamiento suelto"));
 
         assertThat(result.activityType()).isEqualTo("diary");
-        assertThat(recommendationsUseCase.query.intensity()).isEqualTo(0.35);
-        assertThat(recommendationsUseCase.query.userGoal()).isEqualTo("recibir una actividad de bienestar");
+        assertThat(recommendationService.query.intensity()).isEqualTo(0.35);
+        assertThat(recommendationService.query.userGoal()).isEqualTo("recibir una actividad de bienestar");
     }
 
     @Test
     void execute_shouldMapNubeRecommendationToLanternContract() {
         emotionalAnalysisPort.result =
                 analysis(true, EmotionType.SADNESS, -0.7, 0.2, -0.5, 0.8, "soltar pensamientos");
-        recommendationsUseCase.result = result(item(ActivityType.NUBE, "Faroles emocionales"));
+        recommendationService.result = result(item(ActivityType.NUBE, "Faroles emocionales"));
 
         LanternRecommendation result = useCase.execute(List.of("quiero soltar esto"));
 
@@ -102,7 +116,7 @@ class GetLanternRecommendationUseCaseTest {
     void execute_shouldMapBubbleRecommendationToLanternContract() {
         emotionalAnalysisPort.result =
                 analysis(true, EmotionType.STRESS, -0.4, 0.5, -0.3, 0.7, "distraerme");
-        recommendationsUseCase.result = result(item(ActivityType.BURBUJA, "Burbujas"));
+        recommendationService.result = result(item(ActivityType.BURBUJA, "Burbujas"));
 
         LanternRecommendation result = useCase.execute(List.of("tengo tension acumulada"));
 
@@ -112,10 +126,10 @@ class GetLanternRecommendationUseCaseTest {
     }
 
     @Test
-    void execute_shouldReturnFallback_whenCommonRecommendationUseCaseReturnsNoRecommendations() {
+    void execute_shouldReturnFallback_whenSharedRecommendationServiceReturnsNoRecommendations() {
         emotionalAnalysisPort.result =
                 analysis(true, EmotionType.SADNESS, -0.5, 0.3, -0.4, 0.7, "procesar");
-        recommendationsUseCase.result = new EmotionalRecommendationResult(List.of(), false);
+        recommendationService.result = new EmotionalRecommendationResult(List.of(), false);
 
         LanternRecommendation result = useCase.execute(List.of("pensamiento"));
 
@@ -167,18 +181,51 @@ class GetLanternRecommendationUseCaseTest {
         }
     }
 
-    private static class CapturingRecommendationsUseCase extends GetEmotionalRecommendationsUseCase {
+    private static class CapturingRecommendationService extends EmotionalRecommendationService {
+
         private EmotionalRecommendationQuery query;
+        private List<Activity> activities = List.of();
+        private List<EmotionalEvent> userHistory = List.of();
         private EmotionalRecommendationResult result = new EmotionalRecommendationResult(List.of(), false);
 
-        private CapturingRecommendationsUseCase() {
-            super(null, null, null);
+        @Override
+        public EmotionalRecommendationResult recommend(
+                EmotionalRecommendationQuery query,
+                List<Activity> activities,
+                List<EmotionalEvent> userHistory
+        ) {
+            this.query = query;
+            this.activities = activities;
+            this.userHistory = userHistory;
+            return result;
+        }
+    }
+
+    private static class StaticActivityRepository implements ActivityRepository {
+        private final List<Activity> activities = List.of(Activity.builder().id(1L).type(ActivityType.RESPIRACION).build());
+
+        @Override
+        public List<Activity> findAll() {
+            return activities;
         }
 
         @Override
-        public EmotionalRecommendationResult execute(EmotionalRecommendationQuery query) {
-            this.query = query;
-            return result;
+        public boolean existsById(Long id) {
+            throw new UnsupportedOperationException();
         }
+    }
+
+    private static class StaticEmotionalEventRepository implements EmotionalEventRepository {
+        private List<EmotionalEvent> history = List.of();
+
+        @Override
+        public List<EmotionalEvent> findRecentRecommendationHistoryByUserId(Long userId, int limit) {
+            return history;
+        }
+
+        @Override public EmotionalEvent save(EmotionalEvent emotionalEvent) { throw new UnsupportedOperationException(); }
+        @Override public List<EmotionalEvent> findByUserId(Long userId) { throw new UnsupportedOperationException(); }
+        @Override public List<EmotionalEvent> findRecommendationEventsByUserId(Long userId) { throw new UnsupportedOperationException(); }
+        @Override public java.util.Optional<EmotionalEvent> findById(Long id) { throw new UnsupportedOperationException(); }
     }
 }

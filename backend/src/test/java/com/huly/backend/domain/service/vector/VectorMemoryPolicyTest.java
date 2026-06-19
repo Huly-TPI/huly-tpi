@@ -123,6 +123,40 @@ class VectorMemoryPolicyTest {
     }
 
     @Test
+    void shouldRemember_shouldAcceptShortGuidedLanternMessageUsingSourceSpecificMinimum() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_LANTERNS,
+                null,
+                null,
+                null,
+                "ansiedad",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "ansiedad")).isTrue();
+    }
+
+    @Test
+    void shouldRemember_shouldStillRejectVeryShortGuidedLanternMessage() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_LANTERNS,
+                null,
+                null,
+                null,
+                "ok",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "ok")).isFalse();
+    }
+
+    @Test
     void validateAndNormalizeQuery_shouldRejectInvalidLimitAndBlankQuery() {
         SearchVectorMemoryQuery invalidLimit = new SearchVectorMemoryQuery(
                 1L,

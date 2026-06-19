@@ -3,6 +3,7 @@ package com.huly.backend.domain.useCase.onboarding;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
+import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
@@ -15,10 +16,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.huly.backend.domain.useCase.badge.GrantBadgeUseCase;
 
-
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,7 +56,12 @@ class CompleteOnboardingUseCaseTest {
         completeOnboardingUseCase.execute(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
 
         verify(userDetailDomainRepository).completeOnboarding(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
-        verify(userVectorMemoryService).rememberOnboardingGoals(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
+        
+        org.mockito.ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                org.mockito.ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(1L);
+        assertThat(captor.getValue().content()).contains("Desestresarme");
     }
 
     @Test
@@ -69,7 +76,7 @@ class CompleteOnboardingUseCaseTest {
     void execute_shouldCompleteOnboarding_evenIfVectorMemoryFails() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         doThrow(new RuntimeException("Vector memory error"))
-                .when(userVectorMemoryService).rememberOnboardingGoals(1L, "A", "B", "C");
+                .when(userVectorMemoryService).saveMemory(any(SaveVectorMemoryCommand.class));
 
         completeOnboardingUseCase.execute(1L, "A", "B", "C");
 
