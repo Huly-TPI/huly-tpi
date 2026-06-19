@@ -1,4 +1,4 @@
-package com.huly.backend.domain.useCase.admin;
+package com.huly.backend.domain.useCase.admin.userAntiScroll;
 
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
@@ -6,9 +6,6 @@ import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
-import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsUseCase;
-import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsRequest;
-import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
