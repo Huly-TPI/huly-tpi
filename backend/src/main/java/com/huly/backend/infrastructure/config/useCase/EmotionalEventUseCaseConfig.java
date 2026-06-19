@@ -25,12 +25,12 @@ public class EmotionalEventUseCaseConfig {
     public GetEmotionalRecommendationsUseCase getEmotionalRecommendationsUseCase(
             ActivityRepository activityRepository,
             EmotionalEventRepository emotionalEventRepository,
-            EmotionalRecommendationService recommendationService
+            EmotionalRecommendationService emotionalRecommendationService
     ) {
         return new GetEmotionalRecommendationsUseCase(
                 activityRepository,
                 emotionalEventRepository,
-                recommendationService
+                emotionalRecommendationService
         );
     }
 

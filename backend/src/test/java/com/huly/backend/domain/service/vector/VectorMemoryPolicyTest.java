@@ -90,7 +90,7 @@ class VectorMemoryPolicyTest {
 
     @Test
     void shouldRemember_shouldAcceptShortMessageIfWeBypassLengthCheck() {
-        properties.setMinContentLength(2);
+        properties.setGuidedCloudsMinContentLength(2);
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
                 VectorMemorySource.GUIDED_CLOUDS,
@@ -104,7 +104,41 @@ class VectorMemoryPolicyTest {
         );
 
         assertThat(policy.shouldRemember(command, "ab")).isTrue();
-        properties.setMinContentLength(12);
+        properties.setGuidedCloudsMinContentLength(3);
+    }
+
+    @Test
+    void shouldRemember_shouldAcceptShortGuidedCloudMessageUsingSourceSpecificMinimum() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_CLOUDS,
+                null,
+                null,
+                null,
+                "ansiedad",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "ansiedad")).isTrue();
+    }
+
+    @Test
+    void shouldRemember_shouldStillRejectVeryShortGuidedCloudMessage() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_CLOUDS,
+                null,
+                null,
+                null,
+                "ok",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "ok")).isFalse();
     }
 
     @Test

@@ -1,6 +1,8 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.CloudRecommendation;
+import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
+import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationRequest;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -33,7 +36,18 @@ public class CloudController {
             @RequestBody @Valid CloudThoughtRequest request
     ) {
         Long userId = getUserId(principal);
-        userVectorMemoryService.rememberGuidedCloudInput(userId, UUID.randomUUID().toString(), request.thought());
+        String sessionId = UUID.randomUUID().toString();
+        userVectorMemoryService.saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                VectorMemorySource.GUIDED_CLOUDS,
+                sessionId,
+                "GUIDED_CLOUD_INPUT",
+                "GUIDED_CLOUD_INPUT",
+                request.thought(),
+                null,
+                null,
+                Map.of("createdFrom", "USER_MESSAGE", "feature", "GUIDED_CLOUDS")
+        ));
         return ResponseEntity.noContent().build();
     }
 
