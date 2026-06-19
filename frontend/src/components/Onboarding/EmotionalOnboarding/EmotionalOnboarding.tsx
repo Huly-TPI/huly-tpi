@@ -25,6 +25,7 @@ type Props = {
   onAdvance: () => void
   onSelectOption: (option: string) => void
   onSkip: () => Promise<void>
+  submitting?: boolean
 }
 
 export default function EmotionalOnboarding({
@@ -34,6 +35,7 @@ export default function EmotionalOnboarding({
   onAdvance,
   onSelectOption,
   onSkip,
+  submitting = false,
 }: Props) {
 
 
@@ -59,7 +61,7 @@ export default function EmotionalOnboarding({
             <button className="eo-btn-primary" onClick={onAdvance}>
               Empezar
             </button>
-            <button className="eo-btn-skip-link" onClick={onSkip}>
+            <button className="eo-btn-skip-link" onClick={onSkip} disabled={submitting}>
               Saltar por ahora
             </button>
           </div>
@@ -75,7 +77,7 @@ export default function EmotionalOnboarding({
                 style={{ width: `${(step / 3) * 100}%` }}
               />
             </div>
-            <button className="eo-btn-skip-top" onClick={onSkip}>
+            <button className="eo-btn-skip-top" onClick={onSkip} disabled={submitting}>
               Saltar
             </button>
           </div>
@@ -94,10 +96,12 @@ export default function EmotionalOnboarding({
                   key={opt.title}
                   className="eo-card-option"
                   onClick={() => onSelectOption(opt.title)}
+                  disabled={submitting}
                 >
                   <opt.Icon className="eo-card-option__icon" />
                   <span className="eo-card-option__title">{opt.title}</span>
                   <span className="eo-card-option__subtitle">{opt.subtitle}</span>
+                  
                 </button>
               ))}
             </div>
@@ -110,6 +114,7 @@ export default function EmotionalOnboarding({
                   key={opt}
                   className="eo-pill"
                   onClick={() => onSelectOption(opt)}
+                  disabled={submitting}
                 >
                   {opt}
                 </button>
