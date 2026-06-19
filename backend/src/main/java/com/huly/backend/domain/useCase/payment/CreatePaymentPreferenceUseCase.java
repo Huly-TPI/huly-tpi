@@ -8,9 +8,9 @@ import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.port.MercadoPagoPort;
-import com.huly.backend.domain.repository.PaymentEventRepository;
-import com.huly.backend.domain.repository.ProductRepository;
-import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.repository.payment.PaymentEventRepository;
+import com.huly.backend.domain.repository.payment.ProductRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;

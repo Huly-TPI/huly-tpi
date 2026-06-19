@@ -2,9 +2,9 @@ package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.port.PasswordHasherPort;
 import com.huly.backend.domain.port.TokenPort;
-import com.huly.backend.domain.repository.RefreshTokenRepository;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.auth.RefreshTokenRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.auth.LoginUseCase;

@@ -6,10 +6,11 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.admin.BackofficeUserSummary;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
-import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.dto.payment.UserPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class ListBackofficeUsersUseCaseTest {
     private UserAntiScrollSettingsRepository settingsRepository;
     private ExtensionMetricsRepository metricsRepository;
     private UserPlanRepository userPlanRepository;
-    private com.huly.backend.domain.repository.EmotionalEventRepository emotionalEventRepository;
+    private EmotionalEventRepository emotionalEventRepository;
     private ListBackofficeUsersUseCase useCase;
 
     @BeforeEach
@@ -36,7 +37,7 @@ class ListBackofficeUsersUseCaseTest {
         settingsRepository = mock(UserAntiScrollSettingsRepository.class);
         metricsRepository = mock(ExtensionMetricsRepository.class);
         userPlanRepository = mock(UserPlanRepository.class);
-        emotionalEventRepository = mock(com.huly.backend.domain.repository.EmotionalEventRepository.class);
+        emotionalEventRepository = mock(EmotionalEventRepository.class);
         useCase = new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository, emotionalEventRepository);
     }
 

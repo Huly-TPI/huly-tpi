@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.enums.ThemePreference;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
