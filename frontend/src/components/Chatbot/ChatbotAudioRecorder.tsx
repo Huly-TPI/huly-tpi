@@ -93,7 +93,7 @@ export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange 
         onClick={() => void startRecording()}
         disabled={disabled}
         aria-label="Grabar audio"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-secondary)] hover:text-violeta disabled:opacity-50"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color,opacity,box-shadow] duration-300 ease-in-out hover:bg-violeta/10 hover:text-violeta focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[#8869ac59] disabled:opacity-50"
       >
         <MicrophoneIcon className="h-5 w-5" />
       </button>
