@@ -272,6 +272,7 @@ export default function Challenges() {
         <HarvestModal
           plantNumber={harvestPlant}
           onCreateNew={() => { setHarvestPlant(null); setModal({ mode: 'create' }) }}
+          onGoToOrchard={() => navigate('/orchard')}
         />
       )}
     </div>
