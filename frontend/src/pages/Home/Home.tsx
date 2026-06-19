@@ -17,14 +17,17 @@ import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-pl
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import StoreModal from '../../components/Shop/StoreModal'
+import { ShoppingBagIcon } from '@heroicons/react/24/outline'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useTheme } from '../../context/theme'
+import { useAuth } from '../../context/auth'
 import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
 import { useInventory } from '../../hooks/store/useInventory'
 import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
 import './Home.css'
+
 
 const THEME_BEHAVIOR: Record<SceneTheme, { restrictedElementIds: Set<string> }> = {
   light: {
@@ -37,6 +40,8 @@ const THEME_BEHAVIOR: Record<SceneTheme, { restrictedElementIds: Set<string> }> 
 
 const CATEGORY_BY_ELEMENT_ID: Record<string, string> = {
   house: 'HOUSE',
+  notebook: 'NOTEBOOK',
+  tree: 'TREE',
 }
 
 const cloudClipPath =
@@ -141,6 +146,7 @@ export default function Home() {
   const [isStoreOpen, setIsStoreOpen] = useState(false)
   const { inventory, refetch: refetchInventory } = useInventory()
   const equippedByCategory = resolveEquippedImages(inventory)
+  const { user } = useAuth()
   const {
     onboardingMode,
     onboardingStepIndex,
@@ -252,14 +258,16 @@ export default function Home() {
         ) : null}
       </section>
 
-      <button
-        type="button"
-        onClick={() => setIsStoreOpen(true)}
-        aria-label="Abrir tienda"
-        className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#4C7C64] text-2xl text-white shadow-lg transition hover:bg-[#3d6450] active:scale-95"
-      >
-        🛍️
-      </button>
+      {user?.onboardingTutorialCompleted && (
+        <button
+          type="button"
+          onClick={() => setIsStoreOpen(true)}
+          aria-label="Abrir tienda"
+          className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#4C7C64] text-2xl text-white shadow-lg transition hover:bg-[#3d6450] active:scale-95"
+        >
+          <ShoppingBagIcon className="h-7 w-7" />
+        </button>
+      )}
 
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
     </main>

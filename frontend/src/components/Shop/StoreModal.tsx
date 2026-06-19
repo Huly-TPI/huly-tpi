@@ -44,20 +44,20 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 backdrop-blur-sm md:items-center md:p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <button type="button" aria-label="Cerrar tienda" className="absolute inset-0 cursor-default" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Tienda de decoración"
-        className="relative z-10 flex max-h-[80dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl"
+       className="relative z-10 flex max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl"
       >
-        <div className="flex items-center justify-between gap-3 bg-[#4C7C64] px-5 py-4 text-white">
-          <div>
+        <div className="flex items-center justify-between gap-2 bg-[#4C7C64] px-4 py-3 text-white sm:px-5 sm:py-4">
+          <div className="min-w-0">
             <p className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-70">Decorá tu jardín</p>
-            <h2 className="font-nunito text-2xl font-black leading-tight">Tienda</h2>
+            <h2 className="font-nunito text-xl font-black leading-tight sm:text-2xl">Tienda</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {coins !== null && <CoinsBadge coins={coins} />}
             <button onClick={onClose} aria-label="Cerrar" className="rounded-full p-1.5 transition hover:bg-white/20">
               <XMarkIcon className="h-5 w-5" />
@@ -65,7 +65,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
           {(actionError || itemsError) && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700">
               {actionError ?? itemsError}
@@ -74,7 +74,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
           {itemsLoading ? (
             <p className="py-8 text-center text-sm text-[#4C7C64]">Cargando tienda...</p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
               {items.map(item => {
                 const owned = ownedById.get(item.id)
                 return (
@@ -95,6 +95,6 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
           )}
         </div>
       </div>
-    </div>
+    </div >
   )
 }

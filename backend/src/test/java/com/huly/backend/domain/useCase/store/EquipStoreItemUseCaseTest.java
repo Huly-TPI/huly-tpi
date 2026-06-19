@@ -64,7 +64,7 @@ class EquipStoreItemUseCaseTest {
         when(storeItemRepository.findById(10L)).thenReturn(Optional.of(item(10L, ItemCategory.HOUSE)));
         when(userStoreItemRepository.isOwned(1L, 10L)).thenReturn(true);
         when(userStoreItemRepository.findAllByUserId(1L)).thenReturn(List.of(userItem(20L, ItemCategory.HOUSE, true), 
-        userItem(30L, ItemCategory.POT, true), 
+        userItem(30L, ItemCategory.TREE, true), 
         userItem(10L, ItemCategory.HOUSE, false)));
         
         equipStoreItemUseCase.execute(1L, 10L);

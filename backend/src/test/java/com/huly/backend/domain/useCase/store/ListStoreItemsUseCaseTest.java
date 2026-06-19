@@ -36,7 +36,7 @@ class ListStoreItemsUseCaseTest {
                 .id(2L)
                 .name("Maceta lila")
                 .description("Maceta en tono lila")
-                .category(ItemCategory.POT)
+                .category(ItemCategory.TREE)
                 .assetKey("maceta-lila")
                 .priceCoins(30)
                 .build();
