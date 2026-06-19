@@ -1,4 +1,4 @@
-UPDATE activity SET
+ UPDATE activity SET
     valence_min = -1.0, valence_max = 0.3,
     arousal_min = 0.5,  arousal_max = 1.0,
     dominance_min = -1.0, dominance_max = 1.0,
