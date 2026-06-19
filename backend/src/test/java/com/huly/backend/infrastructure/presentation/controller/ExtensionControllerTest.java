@@ -1,13 +1,11 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.extension.ExtensionMetric;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsResponse;
 import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveExtensionMetricsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveUserAntiScrollSettingsUseCase;
-import com.huly.backend.infrastructure.presentation.controller.ExtensionController;
 import com.huly.backend.infrastructure.presentation.dto.extension.AntiScrollSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionMetricRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;

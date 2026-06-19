@@ -1,4 +1,4 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.useCase.payment.HandleWebhookUseCase;

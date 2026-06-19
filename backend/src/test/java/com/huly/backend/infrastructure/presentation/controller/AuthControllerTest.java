@@ -1,16 +1,11 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.port.TokenPort;
-import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
-import com.huly.backend.domain.useCase.auth.LoginUseCase;
-import com.huly.backend.domain.useCase.auth.LogoutUseCase;
-import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
-import com.huly.backend.domain.useCase.auth.RegisterUseCase;
+import com.huly.backend.domain.useCase.auth.*;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
-import com.huly.backend.infrastructure.presentation.controller.AuthController;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;

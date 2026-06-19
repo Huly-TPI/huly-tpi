@@ -1,4 +1,4 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.RiskWord;
@@ -7,7 +7,6 @@ import com.huly.backend.domain.useCase.riskWord.CreateRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.DeleteRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.ListRiskWordsUseCase;
 import com.huly.backend.domain.useCase.riskWord.UpdateRiskWordUseCase;
-import com.huly.backend.infrastructure.presentation.controller.RiskWordController;
 import com.huly.backend.infrastructure.presentation.dto.riskWord.RiskWordRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,11 +21,10 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class RiskWordControllerTest {
 

@@ -1,10 +1,9 @@
-package com.huly.backend.presentation.controller;
+package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.useCase.chatBotConfig.GetBotConfigUseCase;
 import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
-import com.huly.backend.infrastructure.presentation.controller.BotConfigController;
 import com.huly.backend.infrastructure.presentation.dto.chatConfig.UpdateBotConfigRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
