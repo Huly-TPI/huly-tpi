@@ -1,6 +1,8 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -9,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.model.enums.ThemePreference;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
@@ -50,6 +52,7 @@ public class UserRepositoryImpl implements UserRepository {
                     .birth(user.getBirthDate())
                     .createdAt(Instant.now())
                     .onboardingTutorialCompleted(false)
+                    .profileOnboardingTutorialCompleted(false)
                     .themePreference(ThemePreference.LIGHT)
                     .build());
         }
@@ -64,8 +67,20 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public int debitCoins(Long userId, int amount) {
+        return jpaRepository.debitCoins(userId, amount);
+    }
+
+    @Override
     public int getCoins(Long userId) {
         return jpaRepository.findCoinsById(userId).orElse(0);
+    }
+
+    @Override
+    public List<AppUser> findAllNonAdmins() {
+        return jpaRepository.findByRoleNot(com.huly.backend.domain.model.enums.UserRole.ADMIN).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override
@@ -76,6 +91,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .sourceAction(sourceAction)
                 .createdAt(Instant.now())
                 .onboardingTutorialCompleted(false)
+                .profileOnboardingTutorialCompleted(false)
                 .themePreference(ThemePreference.LIGHT)
                 .build());
     }
@@ -89,6 +105,14 @@ public class UserRepositoryImpl implements UserRepository {
                         .orElse(null)
                 : null;
 
+        LocalDate birth = entity.getUserDetails() != null
+                ? entity.getUserDetails().stream()
+                        .map(UserDetailEntity::getBirth)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null)
+                : null;
+
         return AppUser.builder()
                 .id(entity.getId())
                 .name(name)
@@ -96,8 +120,8 @@ public class UserRepositoryImpl implements UserRepository {
                 .password(entity.getPassword())
                 .role(entity.getRole())
                 .status(entity.getStatus())
+                .birthDate(birth)
                 .build();
-
     }
 
     private AppUserEntity toEntity(AppUser domain) {

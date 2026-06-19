@@ -62,14 +62,14 @@ export function RiskDetectionSection({
     <SectionCard className="flex flex-col lg:h-full">
       <CardHeader
         title="Detección de Riesgo"
-        action={totalElements > 0 ? <span className="text-xs text-[#A0AEC0]">{totalElements} frases</span> : undefined}
+        action={totalElements > 0 ? <span className="text-xs text-[#A0AEC0] dark:text-gray-500">{totalElements} frases</span> : undefined}
       />
 
       <div ref={listSlotRef} className="flex-1 min-h-0">
         {loading ? (
           <ul className="flex flex-col gap-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3">
+              <li key={i} className="flex items-center justify-between gap-3 rounded-xl bg-white dark:bg-[#09111f] px-4 py-3">
                 <Skeleton className="h-4 flex-1" />
                 <Skeleton className="h-5 w-[62px] shrink-0 rounded-full" />
                 <Skeleton className="h-3.5 w-3.5 shrink-0" />
@@ -80,7 +80,7 @@ export function RiskDetectionSection({
           <ul className="flex flex-col gap-2">
             {words.map(w => <RiskWordItem key={w.id} word={w} onDelete={onDelete} />)}
             {words.length === 0 && (
-              <p className="py-4 text-center text-xs text-[#A0AEC0]">No hay frases de riesgo cargadas.</p>
+              <p className="py-4 text-center text-xs text-[#A0AEC0] dark:text-gray-500">No hay frases de riesgo cargadas.</p>
             )}
           </ul>
         )}
@@ -91,18 +91,18 @@ export function RiskDetectionSection({
           <button
             onClick={onPrev}
             disabled={!hasPrev || loading}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] bg-white text-[#4A5568] shadow-sm transition-colors hover:border-[#8869AC] hover:text-[#8869AC] disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] dark:border-gray-800 bg-white dark:bg-[#09111f] text-[#4A5568] dark:text-gray-300 shadow-sm dark:shadow-none transition-colors hover:border-violeta dark:hover:border-violeta-claro hover:text-violeta dark:hover:text-violeta-claro disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Página anterior"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span className="text-xs font-semibold text-[#A0AEC0]">{page + 1} / {Math.max(1, totalPages)}</span>
+          <span className="text-xs font-semibold text-[#A0AEC0] dark:text-gray-500">{page + 1} / {Math.max(1, totalPages)}</span>
           <button
             onClick={onNext}
             disabled={!hasNext || loading}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] bg-white text-[#4A5568] shadow-sm transition-colors hover:border-[#8869AC] hover:text-[#8869AC] disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EDF2ED] dark:border-gray-800 bg-white dark:bg-[#09111f] text-[#4A5568] dark:text-gray-300 shadow-sm dark:shadow-none transition-colors hover:border-violeta dark:hover:border-violeta-claro hover:text-violeta dark:hover:text-violeta-claro disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Página siguiente"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -113,7 +113,7 @@ export function RiskDetectionSection({
       )}
 
       {showForm && (
-        <div className="mt-3 flex flex-col gap-2 rounded-xl border border-[#D1CAEF] bg-[#D1CAEF]/20 p-3">
+        <div className="mt-3 flex flex-col gap-2 rounded-xl border border-[#D1CAEF] dark:border-violet-900/30 bg-[#D1CAEF]/20 dark:bg-violet-950/10 p-3">
           <input
             autoFocus
             type="text"
@@ -121,12 +121,12 @@ export function RiskDetectionSection({
             value={newWord}
             onChange={e => setNewWord(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#8869AC]"
+            className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#09111f] text-gray-700 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-violeta dark:focus:border-violeta-claro"
           />
           <select
             value={newSeverity}
             onChange={e => setNewSeverity(e.target.value as RiskSeverity)}
-            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-[#4A5568] focus:outline-none focus:border-[#8869AC]"
+            className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#09111f] px-3 py-2 text-xs text-[#4A5568] dark:text-gray-200 focus:outline-none focus:border-violeta dark:focus:border-violeta-claro"
           >
             <option value="HIGH">CRÍTICO (Alto)</option>
             <option value="MEDIUM">ALTO (Medio)</option>

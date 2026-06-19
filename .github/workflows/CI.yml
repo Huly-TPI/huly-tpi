@@ -9,10 +9,11 @@ permissions:
 
 on:
   push:
-    branches: [ main, dev ]
+    # sin 'branches' -> dispara en TODAS las branches
     paths:
       - 'backend/**'
       - 'frontend/**'
+      - 'sensevoice-service/**'
       - '.github/workflows/CI.yml'
 
   pull_request:
@@ -21,7 +22,12 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
+      - 'sensevoice-service/**'
       - '.github/workflows/CI.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
@@ -55,15 +61,10 @@ jobs:
           echo "✔ PR válido hacia main"
 
 
-  # FRONTEND BUILD — DEV + MAIN
+  # FRONTEND BUILD — TODAS LAS BRANCHES
 
   build-frontend:
     runs-on: ubuntu-latest
-    if: >
-      github.ref_name == 'dev' ||
-      github.ref_name == 'main' ||
-      github.base_ref == 'dev' ||
-      github.base_ref == 'main'
 
     defaults:
       run:
@@ -87,15 +88,10 @@ jobs:
         run: npm run build
 
 
-  # BACKEND BUILD — DEV + MAIN
+  # BACKEND BUILD — TODAS LAS BRANCHES
 
   build-backend:
     runs-on: ubuntu-latest
-    if: >
-      github.ref_name == 'dev' ||
-      github.ref_name == 'main' ||
-      github.base_ref == 'dev' ||
-      github.base_ref == 'main'
 
     defaults:
       run:
@@ -110,21 +106,20 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'maven'
 
       - name: Build backend with Maven
         run: mvn clean install -DskipTests=true
 
 
 
-  # TEST COVERAGE — DEV + MAIN
+  # TEST COVERAGE — SOLO PR A DEV
 
   test-coverage:
     runs-on: ubuntu-latest
     if: >
-      github.ref_name == 'dev' ||
-      github.ref_name == 'main' ||
-      github.base_ref == 'dev' ||
-      github.base_ref == 'main'
+      github.event_name == 'pull_request' &&
+      github.base_ref == 'dev'
 
     permissions:
       contents: read
@@ -143,6 +138,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'maven'
 
       - name: Run tests with coverage
         run: mvn verify -Dspring.profiles.active=h2-test
@@ -172,11 +168,58 @@ jobs:
           path: backend/target/site/jacoco/
 
       - name: Post coverage comment on PR
+        id: jacoco
         if: github.event_name == 'pull_request'
         uses: madrapps/jacoco-report@v1.7.2
         with:
           paths: backend/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           title: 'Test Coverage'
-          min-coverage-overall: 0
+          min-coverage-overall: 80
           min-coverage-changed-files: 0
+
+      - name: Enforce minimum coverage (80%)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = parseFloat('${{ steps.jacoco.outputs.coverage-overall }}')
+            core.info(`Cobertura general: ${coverage}%`)
+            if (isNaN(coverage) || coverage < 80) {
+              core.setFailed(`❌ Cobertura ${coverage}% por debajo del mínimo requerido (80%).`)
+            } else {
+              core.info('✔ Cobertura cumple el mínimo de 80%.')
+            }
+
+
+  # SENSEVOICE TESTS — SOLO PR A DEV
+
+  test-sensevoice:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request' &&
+      github.base_ref == 'dev'
+
+    defaults:
+      run:
+        working-directory: sensevoice-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: sensevoice-service/requirements.txt
+
+      - name: Install torch (CPU-only)
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -v

@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.security;
 
-import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.port.TokenPort;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final String AUTH_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final TokenProvider tokenProvider;
+    private final TokenPort tokenPort;
     private final UserDetailsWithIdService userDetailsService;
 
     @Override
@@ -41,12 +41,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(BEARER_PREFIX.length());
 
-        if (!tokenProvider.isTokenValid(token) || !tokenProvider.isAccessToken(token)) {
+        if (!tokenPort.isTokenValid(token) || !tokenPort.isAccessToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        Long userId = tokenProvider.extractUserId(token);
+        Long userId = tokenPort.extractUserId(token);
 
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserById(userId);

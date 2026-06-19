@@ -45,4 +45,15 @@ public class UserGoalsEntity {
     @JoinColumn(name = "user_plant_id", nullable = true)
     private UserPlantEntity userPlant;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    @Builder.Default
+    @Column(name = "coins_reward", nullable = false)
+    private Integer coinsReward = 10;
+
+    @Builder.Default
+    @Column(name = "coins_reward_with_image", nullable = false)
+    private Integer coinsRewardWithImage = 25;
+
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { completeTutorial } from '../../api/onboarding'
+import { completeProfileTutorial, completeTutorial } from '../../api/onboarding'
 import { api } from '../../api/client'
 
 vi.mock('../../api/client', () => ({
@@ -22,5 +22,13 @@ describe('onboarding tutorial api', () => {
     await completeTutorial()
 
     expect(mockedPost).toHaveBeenCalledWith('/onboarding/tutorial/complete', null)
+  })
+
+  it('completeProfileTutorial llama endpoint de completado del perfil', async () => {
+    mockedPost.mockResolvedValueOnce(undefined)
+
+    await completeProfileTutorial()
+
+    expect(mockedPost).toHaveBeenCalledWith('/onboarding/profile-onboarding-tutorial/complete', null)
   })
 })

@@ -1,11 +1,15 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.port.ImageValidationPort;
+import com.huly.backend.domain.repository.user.UserGoalRepository;
 import com.huly.backend.domain.repository.UserPlantRepository;
+import com.huly.backend.domain.service.payment.CoinService;
+import com.huly.backend.domain.service.userGoal.ImageStorageService;
 import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
+import com.huly.backend.domain.useCase.userGoal.GetGoalImageUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
 import com.huly.backend.domain.useCase.userPlant.GetOrCreateCurrentPlantUseCase;
@@ -29,8 +33,17 @@ public class UserGoalUseCaseConfig {
     public CompleteUserGoalUseCase completeUserGoalUseCase(
             UserGoalRepository userGoalRepository,
             UserPlantRepository userPlantRepository,
-            GetOrCreateCurrentPlantUseCase getOrCreateCurrentPlantUseCase) {
-        return new CompleteUserGoalUseCase(userGoalRepository, userPlantRepository, getOrCreateCurrentPlantUseCase);
+            GetOrCreateCurrentPlantUseCase getOrCreateCurrentPlantUseCase,
+            CoinService coinService,
+            ImageStorageService imageStorageService,
+            ImageValidationPort imageValidationPort) {
+        return new CompleteUserGoalUseCase(userGoalRepository, userPlantRepository,
+                getOrCreateCurrentPlantUseCase, coinService, imageStorageService, imageValidationPort);
+    }
+
+    @Bean
+    public GetGoalImageUseCase getGoalImageUseCase(ImageStorageService imageStorageService) {
+        return new GetGoalImageUseCase(imageStorageService);
     }
 
     @Bean

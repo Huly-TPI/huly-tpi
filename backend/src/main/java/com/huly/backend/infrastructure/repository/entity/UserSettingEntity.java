@@ -30,7 +30,19 @@ public class UserSettingEntity {
     @Column(name = "anti_scroll_enabled")
     private Boolean antiScrollEnabled;
 
+    @Column(name = "pause_interval_minutes")
+    private Integer pauseIntervalMinutes;
+
+    @Column(name = "pause_interval_seconds")
+    private Integer pauseIntervalSeconds;
+
+    @Column(name = "monitored_domains")
+    private String monitoredDomains;
+
     @Column(name = "darkmode")
     private Boolean darkmode;
+
+    @Column(name = "data_sharing_consent")
+    private Boolean dataSharingConsent;
 
 }

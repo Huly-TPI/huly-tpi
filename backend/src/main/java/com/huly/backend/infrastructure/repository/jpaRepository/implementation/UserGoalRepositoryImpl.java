@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.model.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
-import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.repository.user.UserGoalRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -81,6 +81,9 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
                 .createdAt(domain.getCreatedAt())
                 .activity(activity)
                 .userPlant(userPlant)
+                .imageUrl(domain.getImageUrl())
+                .coinsReward(domain.getCoinsReward() != null ? domain.getCoinsReward() : 10)
+                .coinsRewardWithImage(domain.getCoinsRewardWithImage() != null ? domain.getCoinsRewardWithImage() : 25)
                 .build();
     }
 
@@ -94,6 +97,9 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
                 .createdAt(entity.getCreatedAt())
                 .activityId(entity.getActivity() != null ? entity.getActivity().getId() : null)
                 .userPlantId(entity.getUserPlant() != null ? entity.getUserPlant().getId() : null)
+                .imageUrl(entity.getImageUrl())
+                .coinsReward(entity.getCoinsReward())
+                .coinsRewardWithImage(entity.getCoinsRewardWithImage())
                 .build();
     }
 }

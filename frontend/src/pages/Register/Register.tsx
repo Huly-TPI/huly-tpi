@@ -3,12 +3,45 @@ import { useNavigate } from 'react-router-dom'
 import { register } from '../../api/auth'
 import { useAuth } from '../../context/auth'
 import { ApiError } from '../../api/apiError'
-import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, validEmail, minLength, maxLength, matchesField, minAge, safeText } from '../../utils/validation'
+import { useForm, ValidationRule, required, validEmail, minLength, maxLength, matchesField, safeText } from '../../hooks/useForm'
 import AuthPageLayout from '../../layouts/AuthPageLayout/AuthPageLayout'
 import hulyGreeting from '../../assets/register/huly-greeting.webp'
 import AuthForm from '../../components/AuthForm/AuthForm'
 import type { AuthFormField } from '../../components/AuthForm/AuthForm'
+
+const REGISTER_NAME_PATTERN = /^(?=(?:.*\p{L}){3,})[\p{L}]+(?:\s+[\p{L}]+)*$/u
+
+export const minAge = (min: number, message?: string): ValidationRule =>
+  (value) => {
+    if (!value) 
+      return undefined
+    
+    const birth = new Date(value)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) 
+      age -= 1
+    
+    if (age >= min) 
+      return undefined
+    
+    if (message) 
+      return message
+    
+    return `Debés tener al menos ${min} años`
+  }
+
+export const validRegisterName = (
+  message = 'El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios',
+): ValidationRule =>
+  (value) => {
+    const normalizedValue = value.trim()
+    if (REGISTER_NAME_PATTERN.test(normalizedValue)) 
+      return undefined
+    
+    return message
+  }
 
 const REGISTER_FIELDS: AuthFormField[] = [
   { name: 'name', type: 'text', placeholder: 'Nombre' },
@@ -27,17 +60,17 @@ const INITIAL_VALUES = {
 }
 
 const VALIDATION_RULES = {
-  name: [required(), maxLength(50), safeText],
+  name: [required(), maxLength(50), safeText, validRegisterName()],
   birthDate: [required('La fecha de nacimiento es requerida'), minAge(13)],
   email: [required(), validEmail(), maxLength(100)],
-  password: [required(), minLength(6), maxLength(72)],
+  password: [required(), minLength(6)],
   confirmPassword: [required(), matchesField('password')],
 }
 
 export default function Register() {
   const navigate = useNavigate()
   const { loginWithToken } = useAuth()
-  const { values, errors, handleChange, validateAll, setFieldErrors, getSanitizedValues } = useAuthForm(
+  const { values, errors, handleChange, validateAll, setFieldErrors, getSanitizedValues } = useForm(
     INITIAL_VALUES,
     VALIDATION_RULES,
   )

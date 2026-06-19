@@ -35,7 +35,7 @@ class ProductRepositoryImplTest {
         return ProductEntity.builder()
                 .id(10L).name("Plan Premium").description("Acceso premium")
                 .price(new BigDecimal("9999")).coinsAmount(0)
-                .type(ProductType.PLAN).planCode("PREMIUM")
+                .type(ProductType.PLAN).planCode("PREMIUM").chatDailyLimit(20)
                 .build();
     }
 
@@ -73,6 +73,7 @@ class ProductRepositoryImplTest {
         assertThat(result.get().getId()).isEqualTo(10L);
         assertThat(result.get().getType()).isEqualTo(ProductType.PLAN);
         assertThat(result.get().getPlanCode()).isEqualTo("PREMIUM");
+        assertThat(result.get().getChatDailyLimit()).isEqualTo(20);
     }
 
     @Test
@@ -98,5 +99,16 @@ class ProductRepositoryImplTest {
         when(jpaRepository.findByType(ProductType.COIN_PACK)).thenReturn(List.of());
 
         assertThat(repository.findByType(ProductType.COIN_PACK)).isEmpty();
+    }
+
+    @Test
+    void findByIds_shouldReturnMappedProducts_whenFound() {
+        when(jpaRepository.findAllById(List.of(1L, 10L))).thenReturn(List.of(coinPackEntity(), planEntity()));
+
+        List<Product> result = repository.findByIds(List.of(1L, 10L));
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(1).getId()).isEqualTo(10L);
     }
 }

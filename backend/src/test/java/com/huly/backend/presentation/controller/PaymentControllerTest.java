@@ -75,7 +75,7 @@ class PaymentControllerTest {
     void getPlans_shouldMapDomainPlansToResponse() {
         Product plan = Product.builder()
                 .id(10L).name("Plan Premium").description("Acceso premium")
-                .price(new BigDecimal("9999")).coinsAmount(0)
+                .price(new BigDecimal("9999")).coinsAmount(500)
                 .type(ProductType.PLAN).planCode("PREMIUM").build();
         when(listPlansUseCase.execute()).thenReturn(List.of(plan));
 
@@ -88,6 +88,7 @@ class PaymentControllerTest {
         assertThat(body.name()).isEqualTo("Plan Premium");
         assertThat(body.description()).isEqualTo("Acceso premium");
         assertThat(body.price()).isEqualByComparingTo("9999");
+        assertThat(body.coinsAmount()).isEqualTo(500);
         assertThat(body.planCode()).isEqualTo("PREMIUM");
     }
 

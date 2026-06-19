@@ -71,14 +71,14 @@ export function useUserGoals() {
   )
 
   const completeGoal = useCallback(
-    async (id: number): Promise<GoalCompleteResponse> => {
+    async (id: number, image?: File): Promise<GoalCompleteResponse> => {
       setPending(prev =>
         prev
           ? { ...prev, content: prev.content.filter(g => g.id !== id), totalElements: Math.max(0, prev.totalElements - 1) }
           : null
       )
       try {
-        const result = await userGoalsApi.complete(id)
+        const result = await userGoalsApi.complete(id, image)
         await silentRefetch()
         return result
       } catch (err) {

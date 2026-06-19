@@ -100,8 +100,7 @@ public class EmailPortJavaMailImpl implements EmailPort {
                               <table cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                   <td align="center"
-                                      style="background:linear-gradient(135deg,#6c47ff,#9b7aff);
-                                             border-radius:10px;">
+                                      style="background-color:#5c34ef;border-radius:10px;">
                                     <a href="https://huly-tpi-frontend.onrender.com"
                                        style="display:inline-block;padding:14px 36px;
                                               color:#ffffff;text-decoration:none;
@@ -135,10 +134,10 @@ public class EmailPortJavaMailImpl implements EmailPort {
                                 hulycomunicaciones@gmail.com
                               </p>
                               <p style="margin:0 0 18px;font-size:12px;color:#ababc8;">
-                                huly.com
+                                https://huly-tpi-frontend.onrender.com/
                               </p>
                               <p style="margin:0;font-size:11px;color:#c8c8dc;">
-                                &copy; 2025 Huly &mdash; Todos los derechos reservados.
+                                &copy; 2026 Huly &mdash; Todos los derechos reservados.
                               </p>
                             </td>
                           </tr>

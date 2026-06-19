@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.dto.payment.UserPlan;
-import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.infrastructure.repository.entity.UserPlanEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserPlanJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +29,7 @@ public class UserPlanRepositoryImpl implements UserPlanRepository {
         return UserPlan.builder()
                 .id(e.getId())
                 .userId(e.getUserId())
+                .productId(e.getProductId())
                 .planCode(e.getPlanCode())
                 .grantedAt(e.getGrantedAt())
                 .expiresAt(e.getExpiresAt())
@@ -39,6 +40,7 @@ public class UserPlanRepositoryImpl implements UserPlanRepository {
         return UserPlanEntity.builder()
                 .id(p.getId())
                 .userId(p.getUserId())
+                .productId(p.getProductId())
                 .planCode(p.getPlanCode())
                 .grantedAt(p.getGrantedAt())
                 .expiresAt(p.getExpiresAt())

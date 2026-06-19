@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.dto.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;
-import com.huly.backend.domain.repository.ProductRepository;
+import com.huly.backend.domain.repository.payment.ProductRepository;
 import com.huly.backend.infrastructure.repository.entity.ProductEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IProductJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +31,14 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public List<Product> findByIds(List<Long> ids) {
+        return jpaRepository.findAllById(ids)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Product> findByType(ProductType type) {
         return jpaRepository.findByType(type)
                 .stream()
@@ -47,6 +55,7 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .coinsAmount(entity.getCoinsAmount())
                 .type(entity.getType())
                 .planCode(entity.getPlanCode())
+                .chatDailyLimit(entity.getChatDailyLimit())
                 .build();
     }
 }

@@ -1,15 +1,15 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.ActivityRepository;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
-import com.huly.backend.domain.repository.UserEmotionalStateRepository;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.repository.user.UserEmotionalStateRepository;
 import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
-import com.huly.backend.domain.useCase.emotionalEvent.GetEmotionalRecommendationsUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventDecisionUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventFeedbackUseCase;
+import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,8 +22,16 @@ public class EmotionalEventUseCaseConfig {
     }
 
     @Bean
-    public GetEmotionalRecommendationsUseCase getEmotionalRecommendationsUseCase(ActivityRepository activityRepository, EmotionalRecommendationService recommendationService) {
-        return new GetEmotionalRecommendationsUseCase(activityRepository, recommendationService);
+    public GetEmotionalRecommendationsUseCase getEmotionalRecommendationsUseCase(
+            ActivityRepository activityRepository,
+            EmotionalEventRepository emotionalEventRepository,
+            EmotionalRecommendationService emotionalRecommendationService
+    ) {
+        return new GetEmotionalRecommendationsUseCase(
+                activityRepository,
+                emotionalEventRepository,
+                emotionalRecommendationService
+        );
     }
 
     @Bean

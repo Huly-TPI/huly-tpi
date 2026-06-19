@@ -3,16 +3,15 @@ package com.huly.backend.domain.service.vector;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Component
 public class VectorMemoryPolicy {
 
@@ -30,20 +29,21 @@ public class VectorMemoryPolicy {
             "violencia", "trauma"
     );
 
-    private final VectorMemoryProperties properties;
-    private final Map<VectorMemorySource, VectorMemorySourcePolicy> sourcePolicies;
-    private final DefaultVectorMemorySourcePolicy defaultSourcePolicy;
+    private static final List<String> CHATBOT_MEMORY_SIGNALS = List.of(
+            "me llamo", "mi nombre", "soy ", "tengo ", "vivo ", "trabajo", "estudio",
+            "me gusta", "me encanta", "no me gusta", "prefiero", "no prefiero",
+            "me relaja", "me ayuda", "me sirve", "me calma", "me cuesta", "se me dificulta",
+            "suelo", "normalmente", "cuando estoy", "me siento", "estoy", "estoy estresado",
+            "estoy ansioso", "me da ansiedad", "me cuesta dormir", "no puedo dormir",
+            "mi amigo", "mi amiga", "mi mejor amigo", "mi mejor amiga", "mi familia",
+            "quiero mejorar", "necesito", "mi objetivo",
+            "usuario se llama", "usuario tiene", "usuario es estudiante"
+    );
 
-    public VectorMemoryPolicy(
-            VectorMemoryProperties properties,
-            List<VectorMemorySourcePolicy> sourcePolicies,
-            DefaultVectorMemorySourcePolicy defaultSourcePolicy
-    ) {
+    private final VectorMemoryProperties properties;
+
+    public VectorMemoryPolicy(VectorMemoryProperties properties) {
         this.properties = properties;
-        this.sourcePolicies = sourcePolicies.stream()
-                .filter(policy -> policy.sourceType() != null)
-                .collect(Collectors.toMap(VectorMemorySourcePolicy::sourceType, Function.identity()));
-        this.defaultSourcePolicy = defaultSourcePolicy;
     }
 
     public String normalizeContent(String content) {
@@ -59,19 +59,41 @@ public class VectorMemoryPolicy {
 
     public Boolean shouldRemember(SaveVectorMemoryCommand command, String content) {
         String normalized = normalizeContent(content);
-        if (normalized.length() < properties.getMinContentLength()) {
+
+        int effectiveMinLength = effectiveMinLength(command);
+
+        if (normalized.length() < effectiveMinLength) {
+            log.info("Memoria vectorial descartada por longitud insuficiente ({} < {}) userId={} sourceType={}",
+                    normalized.length(), effectiveMinLength, command.userId(), command.sourceType());
             return false;
         }
 
         String comparable = comparableText(normalized);
         if (TRIVIAL_MESSAGES.contains(comparable)) {
+            log.info("Memoria vectorial descartada por mensaje trivial userId={} sourceType={}",
+                    command.userId(), command.sourceType());
             return false;
+        }
+        if (command.sourceType() == VectorMemorySource.CHATBOT && command.contentType() != null && !"CHAT_MESSAGE".equals(command.contentType())) {
+            return true;
         }
         if (containsAny(comparable, SENSITIVE_SIGNALS)) {
+            log.info("Memoria vectorial descartada por señal sensible userId={} sourceType={}",
+                    command.userId(), command.sourceType());
             return false;
         }
-        return Boolean.TRUE.equals(sourcePolicies.getOrDefault(command.sourceType(), defaultSourcePolicy)
-                .shouldRemember(comparable));
+        
+        if (command.sourceType() == VectorMemorySource.CHATBOT) {
+            return CHATBOT_MEMORY_SIGNALS.stream().anyMatch(comparable::contains);
+        }
+        return true;
+    }
+
+    private int effectiveMinLength(SaveVectorMemoryCommand command) {
+        if (command.sourceType() == VectorMemorySource.GUIDED_CLOUDS)
+            return properties.getGuidedCloudsMinContentLength();
+
+        return properties.getMinContentLength();
     }
 
     public void validateSaveCommand(SaveVectorMemoryCommand command) {

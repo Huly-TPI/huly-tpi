@@ -9,7 +9,7 @@ import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.domain.model.enums.ThemePreference;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +51,7 @@ public class UserController {
                 .role(profile.user().getRole())
                 .onBoardingCompleted(profile.onBoardingCompleted())
                 .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
+                .profileOnboardingTutorialCompleted(profile.profileOnboardingTutorialCompleted())
                 .themePreference(themePreference)
                 .build());
     }
@@ -70,7 +71,11 @@ public class UserController {
     ) {
         Long userId = currentUserId(principal);
         MembershipResponse response = getCurrentMembershipUseCase.execute(userId)
-                .map(p -> new MembershipResponse(true, p.getPlanCode(), p.getExpiresAt()))
+                .map(p -> new MembershipResponse(
+                        true,
+                        p.getPlanCode(),
+                        p.getProductId() != null ? p.getProductId().toString() : null,
+                        p.getExpiresAt()))
                 .orElseGet(MembershipResponse::inactive);
         return ResponseEntity.ok(response);
     }

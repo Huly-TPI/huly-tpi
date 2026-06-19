@@ -64,6 +64,9 @@ const makeGoal = (overrides: Partial<UserGoalResponse> = {}): UserGoalResponse =
   status: 'PENDING',
   createdAt: '2026-01-01T00:00:00Z',
   activityId: null,
+  imageUrl: null,
+  coinsReward: 10,
+  coinsRewardWithImage: 25,
   ...overrides,
 })
 
@@ -217,7 +220,7 @@ describe('Challenges', () => {
     await user.click(screen.getByLabelText('Completar reto'))
 
     await waitFor(() => {
-      expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7)
+      expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7, undefined)
       expect(registerActivitySession).toHaveBeenCalledWith({
         activityType: 'RETO',
       }, undefined)

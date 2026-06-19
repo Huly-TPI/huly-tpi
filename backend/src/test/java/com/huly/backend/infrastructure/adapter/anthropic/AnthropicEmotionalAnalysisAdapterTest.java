@@ -4,90 +4,49 @@ import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.EmotionType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.model.Generation;
-import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.client.ChatClient;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AnthropicEmotionalAnalysisAdapterTest {
 
-    private ChatModel chatModel;
+    private ChatClient chatClient;
     private AnthropicEmotionalAnalysisAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        chatModel = mock(ChatModel.class);
-        adapter = new AnthropicEmotionalAnalysisAdapter(chatModel);
+        chatClient = mock(ChatClient.class, RETURNS_DEEP_STUBS);
+        adapter = new AnthropicEmotionalAnalysisAdapter(chatClient);
     }
 
     @Test
-    void analyze_shouldParseValidStructuredJson() {
-        givenModelReturns("""
-                {
-                  "shouldRecommend": true,
-                  "detectedEmotion": "GRIEF",
-                  "confidence": 0.92,
-                  "valence": -0.85,
-                  "arousal": 0.35,
-                  "dominance": -0.75,
-                  "intensity": 0.88,
-                  "userGoal": "aliviar tristeza",
-                  "shortReason": "duelo"
-                }""");
+    void analyze_shouldReturnParsedResult() {
+        EmotionalAnalysisResult mockResult = new EmotionalAnalysisResult(true, EmotionType.GRIEF, 0.92, -0.85, 0.35, -0.75, 0.88, "aliviar tristeza", "duelo");
+        
+        when(chatClient.prompt().system(anyString()).messages(anyList()).user(anyString()).call().entity(EmotionalAnalysisResult.class))
+                .thenReturn(mockResult);
 
         EmotionalAnalysisResult result = adapter.analyze("prompt", "mensaje", List.of());
 
-        assertThat(result.shouldRecommend()).isTrue();
-        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.GRIEF);
-        assertThat(result.confidence()).isEqualTo(0.92);
-        assertThat(result.intensity()).isEqualTo(0.88);
-        assertThat(result.userGoal()).isEqualTo("aliviar tristeza");
+        assertThat(result).isSameAs(mockResult);
     }
 
     @Test
-    void analyze_shouldMapSpanishEmotionAliases() {
-        givenModelReturns("""
-                {
-                  "shouldRecommend": true,
-                  "detectedEmotion": "TRISTEZA",
-                  "confidence": 0.9,
-                  "valence": -0.7,
-                  "arousal": 0.2,
-                  "dominance": -0.5,
-                  "intensity": 0.8
-                }""");
-
-        EmotionalAnalysisResult result = adapter.analyze("prompt", "mensaje", List.of());
-
-        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
-    }
-
-    @Test
-    void analyze_shouldFallbackToNeutral_whenJsonIsInvalid() {
-        givenModelReturns("no es json");
+    void analyze_shouldFallbackToNeutral_whenExceptionOccurs() {
+        when(chatClient.prompt().system(anyString()).messages(anyList()).user(anyString()).call().entity(EmotionalAnalysisResult.class))
+                .thenThrow(new RuntimeException("Error parsing JSON"));
 
         EmotionalAnalysisResult result = adapter.analyze("prompt", "mensaje", List.of());
 
         assertThat(result.shouldRecommend()).isFalse();
         assertThat(result.detectedEmotion()).isEqualTo(EmotionType.NEUTRAL);
-        assertThat(result.confidence()).isZero();
-    }
-
-    private void givenModelReturns(String text) {
-        ChatResponse chatResponse = mock(ChatResponse.class);
-        Generation generation = mock(Generation.class);
-        AssistantMessage output = mock(AssistantMessage.class);
-        when(chatModel.call(any(Prompt.class))).thenReturn(chatResponse);
-        when(chatResponse.getResult()).thenReturn(generation);
-        when(generation.getOutput()).thenReturn(output);
-        when(output.getText()).thenReturn(text);
     }
 }

@@ -2,13 +2,14 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.dto.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
-import com.huly.backend.domain.repository.PaymentEventRepository;
+import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.infrastructure.repository.entity.PaymentEventEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IPaymentEventJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -30,6 +31,20 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
     @Override
     public Optional<PaymentEvent> findByExternalReference(String externalReference) {
         return jpaRepository.findByExternalReference(externalReference).map(this::toDomain);
+    }
+
+    @Override
+    public List<PaymentEvent> findByUserId(Long userId) {
+        return jpaRepository.findByUserId(userId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<PaymentEvent> findByUserIdAndStatus(Long userId, PaymentStatus status) {
+        return jpaRepository.findByUserIdAndStatus(userId, status).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

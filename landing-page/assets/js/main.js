@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://huly-tpi.onrender.com'; // Actualizar con la URL del backend en prod
+const API_BASE_URL = 'https://huly-tpi.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -59,6 +59,36 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.modal-overlay.open').forEach((m) => closeModal(m.id));
   });
 
+  function showModalError(modalId, message) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const errEl = modal.querySelector('.modal-error');
+    if (!errEl) return;
+    errEl.textContent = message;
+    errEl.hidden = false;
+  }
+
+  function clearModalError(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const errEl = modal.querySelector('.modal-error');
+    if (errEl) {
+      errEl.textContent = '';
+      errEl.hidden = true;
+    }
+  }
+
+  function showModalSuccess(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const inner = modal.querySelector('.modal');
+    if (!inner) return;
+    inner.innerHTML = `
+      <h3>¡Ya estás anotado!</h3>
+      <p class="modal-sub">Te avisamos en cuanto abramos las puertas. Hasta pronto.</p>
+    `;
+  }
+
   document.getElementById('submit-register')?.addEventListener('click', async () => {
     const nicknameInput = document.getElementById('reg-username');
     const emailInput    = document.getElementById('reg-email');
@@ -106,32 +136,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  function showModalError(modalId, message) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    let errorEl = modal.querySelector('.modal-error');
-    if (!errorEl) {
-      errorEl = document.createElement('p');
-      errorEl.className = 'modal-error';
-      errorEl.style.cssText = 'color:#e55;font-size:.85rem;margin:.5rem 0 0;text-align:center';
-      modal.querySelector('.modal-submit')?.insertAdjacentElement('afterend', errorEl);
-    }
-    errorEl.textContent = message;
-  }
+  // Video controls
+  const video      = document.getElementById('hero-video');
+  const btnPlay    = document.getElementById('vc-play');
+  const btnMute    = document.getElementById('vc-mute');
+  const btnSpeed   = document.getElementById('vc-speed');
+  const speedMenu  = document.getElementById('vc-speed-menu');
 
-  function clearModalError(modalId) {
-    const errorEl = document.getElementById(modalId)?.querySelector('.modal-error');
-    if (errorEl) errorEl.textContent = '';
-  }
+  const ICON_PLAY  = '<svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor"><polygon points="2,1 11,6 2,11"/></svg>';
+  const ICON_PAUSE = '<svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor"><rect x="2" y="1" width="3" height="10" rx="1"/><rect x="7" y="1" width="3" height="10" rx="1"/></svg>';
+  const ICON_SOUND = '<svg viewBox="0 0 16 14" width="15" height="13" fill="currentColor"><path d="M0 4.5v5h3.5l4.5 4V.5L3.5 4.5H0zm12 2.5c0-1.4-.8-2.6-2-3.2v6.4c1.2-.6 2-1.8 2-3.2z"/><path d="M10 .8v1.5c2 .8 3.5 2.8 3.5 4.7s-1.5 3.9-3.5 4.7v1.5c2.8-.9 5-3.5 5-6.2S12.8 1.7 10 .8z"/></svg>';
+  const ICON_MUTED = '<svg viewBox="0 0 16 14" width="15" height="13" fill="currentColor"><path d="M0 4.5v5h3.5l4.5 4V.5L3.5 4.5H0z"/><line x1="10.5" y1="3.5" x2="15.5" y2="10.5" stroke="currentColor" stroke-width="1.6"/><line x1="15.5" y1="3.5" x2="10.5" y2="10.5" stroke="currentColor" stroke-width="1.6"/></svg>';
 
-  function showModalSuccess(modalId) {
-    const modal = document.getElementById(modalId)?.querySelector('.modal');
-    if (!modal) return;
-    modal.innerHTML = `
-      <span class="modal-icon"><img src="./assets/images/garden/envelope.png" alt="Envelope" width="56" height="56"/></span>
-      <h3>¡Ya estás en la lista!</h3>
-      <p class="modal-sub">Te avisamos cuando estés listo para entrar. Sin spam, prometido.</p>
-    `;
+  if (video && btnPlay && btnMute) {
+    const syncPlay = () => {
+      btnPlay.innerHTML = video.paused ? ICON_PLAY : ICON_PAUSE;
+      btnPlay.setAttribute('aria-label', video.paused ? 'Reproducir' : 'Pausar');
+    };
+    const syncMute = () => {
+      btnMute.innerHTML = video.muted ? ICON_MUTED : ICON_SOUND;
+      btnMute.setAttribute('aria-label', video.muted ? 'Activar sonido' : 'Silenciar');
+    };
+
+    syncPlay();
+    syncMute();
+    video.addEventListener('play',  syncPlay);
+    video.addEventListener('pause', syncPlay);
+
+    btnPlay.addEventListener('click', () => { video.paused ? video.play() : video.pause(); });
+    btnMute.addEventListener('click', () => { video.muted = !video.muted; syncMute(); });
+
+    btnSpeed.addEventListener('click', (e) => {
+      e.stopPropagation();
+      speedMenu.classList.toggle('open');
+    });
+
+    speedMenu.querySelectorAll('button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        video.playbackRate = parseFloat(btn.dataset.speed);
+        btnSpeed.textContent = btn.textContent;
+        speedMenu.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        speedMenu.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', () => speedMenu.classList.remove('open'));
   }
 
   document.getElementById('submit-explore')?.addEventListener('click', () => {

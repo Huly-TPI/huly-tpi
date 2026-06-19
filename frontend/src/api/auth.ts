@@ -24,6 +24,7 @@ export interface UserProfile {
   role: string
   onBoardingCompleted?: boolean
   onboardingTutorialCompleted?: boolean
+  profileOnboardingTutorialCompleted?: boolean
   themePreference: 'LIGHT' | 'DARK'
 }
 
@@ -57,6 +58,7 @@ export const getUserCoins = () =>
 export interface Membership {
   active: boolean
   planCode: string | null
+  productId: string | null
   expiresAt: string | null
 }
 

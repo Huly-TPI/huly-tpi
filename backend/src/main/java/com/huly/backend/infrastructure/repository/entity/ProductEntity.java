@@ -37,4 +37,7 @@ public class ProductEntity {
 
     @Column(name = "plan_code", length = 50)
     private String planCode;
+
+    @Column(name = "chat_daily_limit")
+    private Integer chatDailyLimit;
 }

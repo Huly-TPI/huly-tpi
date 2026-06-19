@@ -5,7 +5,7 @@ import com.huly.backend.domain.dto.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.port.MercadoPagoPort;
-import com.huly.backend.domain.repository.PaymentEventRepository;
+import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.service.payment.PlanService;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +65,11 @@ public class HandleWebhookUseCase {
         if (event.getProductType() == ProductType.PLAN) {
             planService.activate(event.getUserId(), event.getProductId());
             log.info("Payment {} APPROVED — activated plan from product {} for user {}", mpPaymentId, event.getProductId(), event.getUserId());
+            Integer coins = event.getCoinsAmount();
+            if (coins != null && coins > 0) {
+                coinService.credit(event.getUserId(), coins);
+                log.info("Payment {} APPROVED — credited {} bonus coins from plan to user {}", mpPaymentId, coins, event.getUserId());
+            }
         } else {
             coinService.credit(event.getUserId(), event.getCoinsAmount());
             log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());

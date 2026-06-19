@@ -3,8 +3,8 @@ package com.huly.backend.domain.service.payment;
 import com.huly.backend.domain.dto.payment.Product;
 import com.huly.backend.domain.dto.payment.UserPlan;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.repository.ProductRepository;
-import com.huly.backend.domain.repository.UserPlanRepository;
+import com.huly.backend.domain.repository.payment.ProductRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,13 +30,12 @@ public class PlanService {
     public void activate(Long userId, Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("producto", "id", productId));
-        String planCode = product.getPlanCode();
 
         Instant now = Instant.now();
         UserPlan current = userPlanRepository.findByUser(userId).orElse(null);
 
         boolean renewSame = current != null
-                && planCode.equals(current.getPlanCode())
+                && productId.equals(current.getProductId())
                 && current.isActive(now);
 
         Instant base = renewSame ? current.getExpiresAt() : now;
@@ -45,7 +44,8 @@ public class PlanService {
         userPlanRepository.save(UserPlan.builder()
                 .id(current != null ? current.getId() : null)
                 .userId(userId)
-                .planCode(planCode)
+                .productId(productId)
+                .planCode(product.getPlanCode())
                 .grantedAt(renewSame ? current.getGrantedAt() : now)
                 .expiresAt(newExpiry)
                 .build());

@@ -29,10 +29,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserRepositoryImplTest {
 
-    @Mock private AppUserRepository jpaRepository;
-    @Mock private UserDetailRepository userDetailRepository;
+    @Mock
+    private AppUserRepository jpaRepository;
+    @Mock
+    private UserDetailRepository userDetailRepository;
 
-    @InjectMocks private UserRepositoryImpl userRepository;
+    @InjectMocks
+    private UserRepositoryImpl userRepository;
 
     @Test
     void findByEmail_shouldReturnMappedDomain_whenEntityExists() {
@@ -166,8 +169,7 @@ class UserRepositoryImplTest {
                 .id(1L).email("user@huly.com").password("encoded")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .userDetails(List.of(
-                        UserDetailEntity.builder().name("Mili").build()
-                ))
+                        UserDetailEntity.builder().name("Mili").build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -215,8 +217,7 @@ class UserRepositoryImplTest {
                 .userDetails(List.of(
                         UserDetailEntity.builder().name(null).build(),
                         UserDetailEntity.builder().name("Mili").build(),
-                        UserDetailEntity.builder().name("Otro").build()
-                ))
+                        UserDetailEntity.builder().name("Otro").build()))
                 .build();
         when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
 
@@ -224,5 +225,102 @@ class UserRepositoryImplTest {
 
         assertThat(result).isPresent();
         assertThat(result.get().getName()).isEqualTo("Mili");
+    }
+
+    @Test
+    void findById_shouldReturnMappedDomain_whenEntityExists() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(1L).email("user@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE).build();
+        when(jpaRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        Optional<AppUser> result = userRepository.findById(1L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void findById_shouldReturnEmpty_whenEntityDoesNotExist() {
+        when(jpaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThat(userRepository.findById(99L)).isEmpty();
+    }
+
+    @Test
+    void addCoins_shouldDelegateToJpa() {
+        userRepository.addCoins(1L, 10);
+        verify(jpaRepository).addCoins(1L, 10);
+    }
+
+    @Test
+    void getCoins_shouldReturnCoins_whenFound() {
+        when(jpaRepository.findCoinsById(1L)).thenReturn(Optional.of(100));
+
+        assertThat(userRepository.getCoins(1L)).isEqualTo(100);
+    }
+
+    @Test
+    void getCoins_shouldReturnZero_whenNotFound() {
+        when(jpaRepository.findCoinsById(1L)).thenReturn(Optional.empty());
+
+        assertThat(userRepository.getCoins(1L)).isEqualTo(0);
+    }
+
+    @Test
+    void findAllNonAdmins_shouldReturnMappedDomainList() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(1L).email("user@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE).build();
+        when(jpaRepository.findByRoleNot(UserRole.ADMIN)).thenReturn(List.of(entity));
+
+        List<AppUser> result = userRepository.findAllNonAdmins();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void findByEmail_shouldHydrateBirthDate_whenUserDetailHasBirthDate() {
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(1L).email("user@huly.com").password("encoded")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .userDetails(List.of(
+                        UserDetailEntity.builder().birth(LocalDate.of(1995, 5, 5)).build()))
+                .build();
+        when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity));
+
+        Optional<AppUser> result = userRepository.findByEmail("user@huly.com");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getBirthDate()).isEqualTo(LocalDate.of(1995, 5, 5));
+    }
+
+    @Test
+    void findByEmail_shouldReturnNullBirthDate_whenUserDetailsIsEmptyOrNull() {
+        AppUserEntity entity1 = AppUserEntity.builder()
+                .id(1L).email("user@huly.com")
+                .userDetails(null)
+                .build();
+        AppUserEntity entity2 = AppUserEntity.builder()
+                .id(2L).email("user2@huly.com")
+                .userDetails(List.of())
+                .build();
+
+        when(jpaRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(entity1));
+        when(jpaRepository.findByEmail("user2@huly.com")).thenReturn(Optional.of(entity2));
+
+        assertThat(userRepository.findByEmail("user@huly.com").get().getBirthDate()).isNull();
+        assertThat(userRepository.findByEmail("user2@huly.com").get().getBirthDate()).isNull();
+    }
+
+    @Test
+    void debitCoins_shouldDelegateToJpaAndReturnRowsAffected() {
+        when(jpaRepository.debitCoins(1L, 10)).thenReturn(1);
+
+        int result = userRepository.debitCoins(1L, 10);
+
+        assertThat(result).isEqualTo(1);
+        verify(jpaRepository).debitCoins(1L, 10);
     }
 }

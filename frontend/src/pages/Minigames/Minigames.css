@@ -19,6 +19,28 @@
   isolation: isolate;
 }
 
+.minigames-home-return {
+  top: 28%;
+  right: -8%;
+  z-index: 40;
+  width: min(46vw, 18rem);
+}
+
+.minigames-home-return__image {
+  display: block;
+  width: 185%;
+  max-width: none;
+  height: auto;
+  filter: drop-shadow(-0.45rem 0.5rem 1.25rem rgba(15, 23, 42, 0.18));
+}
+
+.minigames-home-return__hotspot {
+  left: 16%;
+  top: 2%;
+  width: 66%;
+  height: 96%;
+}
+
 .minigames-scene__title {
   position: absolute;
   top: 1.25rem;
@@ -62,6 +84,23 @@
     aspect-ratio: auto;
   }
 
+  .minigames-home-return {
+    top: 11%;
+    right: -6%;
+    width: min(30vw, 22rem);
+  }
+
+  .minigames-home-return__image {
+    width: 176%;
+  }
+
+  .minigames-home-return__hotspot {
+    left: 18%;
+    top: 7%;
+    width: 54%;
+    height: 90%;
+  }
+
   .minigames-scene__title {
     top: 1.5rem;
     left: 2rem;
@@ -79,6 +118,23 @@
 }
 
 @media (min-width: 1200px) {
+  .minigames-home-return {
+    top: 8%;
+    right: -4%;
+    width: min(26vw, 24rem);
+  }
+
+  .minigames-home-return__image {
+    width: 168%;
+  }
+
+  .minigames-home-return__hotspot {
+    left: 18%;
+    top: 6%;
+    width: 58%;
+    height: 92%;
+  }
+
   .minigames-scene__background--desktop {
     object-position: center 56%;
   }

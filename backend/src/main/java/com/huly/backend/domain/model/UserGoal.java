@@ -19,4 +19,7 @@ public class UserGoal {
     private Instant createdAt;
     private Long activityId;
     private Long userPlantId;
+    private String imageUrl;
+    private Integer coinsReward = 10;
+    private Integer coinsRewardWithImage = 25;
 }

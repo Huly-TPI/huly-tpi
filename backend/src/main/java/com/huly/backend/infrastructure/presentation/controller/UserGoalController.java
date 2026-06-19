@@ -5,6 +5,7 @@ import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
+import com.huly.backend.domain.useCase.userGoal.GetGoalImageUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.AcceptChallengeRequest;
@@ -19,14 +20,20 @@ import com.huly.backend.infrastructure.presentation.exception.UnauthorizedExcept
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Path;
 
 @Slf4j
 @RestController
@@ -40,22 +47,15 @@ public class UserGoalController {
     private final DeleteUserGoalUseCase deleteUserGoalUseCase;
     private final UpdateUserGoalUseCase updateUserGoalUseCase;
     private final CompleteUserGoalUseCase completeUserGoalUseCase;
+    private final GetGoalImageUseCase getGoalImageUseCase;
 
     @PostMapping("/accept")
     public ResponseEntity<UserGoalResponse> acceptChallenge(
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody AcceptChallengeRequest request) {
         Long userId = getUserId(principal);
-
-        UserGoal created = acceptChallengeUseCase.execute(
-                userId,
-                request.title(),
-                request.description(),
-                request.activityId()
-        );
-
+        UserGoal created = acceptChallengeUseCase.execute(userId, request.title(), request.description(), request.activityId());
         log.info("Challenge aceptado exitosamente. userGoalId='{}', userId='{}'", created.getId(), userId);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
@@ -64,12 +64,7 @@ public class UserGoalController {
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody UserGoalRequest request) {
         Long userId = getUserId(principal);
-        UserGoal created = addUserGoalUseCase.execute(
-                userId,
-                request.title(),
-                request.description(),
-                request.activityId()
-        );
+        UserGoal created = addUserGoalUseCase.execute(userId, request.title(), request.description(), request.activityId());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
@@ -89,12 +84,7 @@ public class UserGoalController {
     public ResponseEntity<UserGoalResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody UserGoalUpdateRequest request) {
-        UserGoal updated = updateUserGoalUseCase.execute(
-                id,
-                request.title(),
-                request.description(),
-                request.activityId()
-        );
+        UserGoal updated = updateUserGoalUseCase.execute(id, request.title(), request.description(), request.activityId());
         return ResponseEntity.ok(toResponse(updated));
     }
 
@@ -104,9 +94,11 @@ public class UserGoalController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/complete")
-    public ResponseEntity<GoalCompleteResponse> complete(@PathVariable Long id) {
-        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(id);
+    @PatchMapping(value = "/{id}/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GoalCompleteResponse> complete(
+            @PathVariable Long id,
+            @RequestParam(required = false) MultipartFile image) {
+        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(id, image);
         GoalCompleteResponse response = new GoalCompleteResponse(
                 toResponse(result.goal()),
                 result.harvestTriggered(),
@@ -114,6 +106,22 @@ public class UserGoalController {
                 toPlantSummary(result.currentPlant())
         );
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/images/{filename:.+}")
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
+        Path path = getGoalImageUseCase.execute(filename);
+        Resource resource = new FileSystemResource(path);
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+        String ext = filename.contains(".") ? filename.substring(filename.lastIndexOf('.') + 1).toLowerCase() : "";
+        MediaType mediaType = switch (ext) {
+            case "png" -> MediaType.IMAGE_PNG;
+            case "gif" -> MediaType.IMAGE_GIF;
+            default -> MediaType.IMAGE_JPEG;
+        };
+        return ResponseEntity.ok().contentType(mediaType).body(resource);
     }
 
     private Long getUserId(UserDetails principal) {
@@ -131,7 +139,10 @@ public class UserGoalController {
                 userGoal.getDescription(),
                 userGoal.getStatus().name(),
                 userGoal.getCreatedAt(),
-                userGoal.getActivityId()
+                userGoal.getActivityId(),
+                userGoal.getImageUrl(),
+                userGoal.getCoinsReward(),
+                userGoal.getCoinsRewardWithImage()
         );
     }
 
