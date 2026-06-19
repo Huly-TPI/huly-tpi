@@ -6,9 +6,9 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.RefreshToken;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.provider.TokenProvider;
-import com.huly.backend.domain.repository.RefreshTokenRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.port.TokenPort;
+import com.huly.backend.domain.repository.auth.RefreshTokenRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +19,12 @@ public class RefreshTokenUseCase {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final TokenProvider tokenProvider;
+    private final TokenPort tokenPort;
 
     @Transactional
     public AuthTokens execute(String rawToken) {
 
-        if (!tokenProvider.isTokenValid(rawToken) || !tokenProvider.isRefreshToken(rawToken)) {
+        if (!tokenPort.isTokenValid(rawToken) || !tokenPort.isRefreshToken(rawToken)) {
             throw new InvalidCredentialsException("Invalid or expired refresh token");
         }
 
@@ -36,7 +36,7 @@ public class RefreshTokenUseCase {
             throw new InvalidCredentialsException("Refresh token expired");
         }
 
-        Long userId = tokenProvider.extractUserId(rawToken);
+        Long userId = tokenPort.extractUserId(rawToken);
         if (userId == null) {
             throw new InvalidCredentialsException("Invalid refresh token");
         }
@@ -50,10 +50,10 @@ public class RefreshTokenUseCase {
 
         refreshTokenRepository.delete(stored);
 
-        String newAccessToken = tokenProvider.generateAccessToken(
+        String newAccessToken = tokenPort.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole(), user.getStatus()
         );
-        String newRefreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getEmail());
+        String newRefreshToken = tokenPort.generateRefreshToken(user.getId(), user.getEmail());
 
         persistRefreshToken(user.getId(), newRefreshToken);
 
@@ -73,7 +73,7 @@ public class RefreshTokenUseCase {
                 .userId(userId)
                 .token(token)
                 .createdAt(now)
-                .expiredAt(now.plusSeconds(tokenProvider.getRefreshTokenMaxAgeSecs()))
+                .expiredAt(now.plusSeconds(tokenPort.getRefreshTokenMaxAgeSecs()))
                 .build());
     }
 }

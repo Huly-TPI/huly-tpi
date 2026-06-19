@@ -19,10 +19,10 @@ import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
-import com.huly.backend.domain.provider.ChatMemoryPort;
-import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.repository.RiskWordRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.port.ChatMemoryPort;
+import com.huly.backend.domain.port.LLMChatPort;
+import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
@@ -42,23 +42,22 @@ public class ChatService {
     private final PromptBuilderService promptBuilderService;
     private final UserVectorMemoryService userVectorMemoryService;
     private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
-    private final ChatIntentDetectionService chatIntentDetectionService;
     private final ChatQuotaService chatQuotaService;
     private final UserRepository userRepository;
     private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
 
     public ChatReply processMessage(String message, String conversationId, Long userId) {
-        return processMessage(message, conversationId, userId, false);
+        return processMessage(message, conversationId, userId, false, ChatUserIntent.NONE);
     }
 
     public ChatReply processMessage(
             String message,
             String conversationId,
             Long userId,
-            boolean offerCommunicationStyleWhenSafe) {
+            boolean offerCommunicationStyleWhenSafe,
+            ChatUserIntent userIntent) {
         chatQuotaService.assertWithinLimit(userId);
         ChatContext context = loadChatContext(message, conversationId, userId);
-        ChatUserIntent userIntent = chatIntentDetectionService.detect(message);
         ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
                 message,
                 userId,

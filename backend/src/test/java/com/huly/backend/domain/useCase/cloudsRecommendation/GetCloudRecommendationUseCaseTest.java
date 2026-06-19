@@ -8,7 +8,7 @@ import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
@@ -30,7 +30,7 @@ class GetCloudRecommendationUseCaseTest {
     void setUp() {
         emotionalAnalysisPort = new CapturingEmotionalAnalysisPort();
         recommendationsUseCase = new CapturingRecommendationsUseCase();
-        useCase = new GetCloudRecommendationUseCase(
+        useCase = new GetCloudRecommendationUseCase(new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes()), 
                 emotionalAnalysisPort,
                 new PromptBuilderService(),
                 new ChatEmotionalRecommendationPolicy(),

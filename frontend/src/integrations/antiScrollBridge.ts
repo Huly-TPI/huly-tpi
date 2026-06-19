@@ -20,7 +20,7 @@ const GARDEN_URL_ATTR = 'data-huly-garden-url'
 
 export const getAntiScrollRuntimeConfig = (): AntiScrollRuntimeConfig => ({
   backendUrl: getBackendOrigin(),
-  gardenUrl: new URL('/garden', window.location.origin).toString(),
+  gardenUrl: new URL('/', window.location.origin).toString(),
 })
 
 export const publishAntiScrollRuntimeConfig = (): void => {
@@ -40,7 +40,7 @@ export const publishAntiScrollExtensionSettings = async (): Promise<void> => {
   const settings = await getExtensionSettings()
   const payload: ExtensionSettingsBridgePayload = {
     enabled: settings.enabled,
-    pauseIntervalSeconds: settings.pauseIntervalMinutes * 60,
+    pauseIntervalSeconds: settings.pauseIntervalSeconds,
     gardenUrl: settings.gardenUrl,
     backendUrl: settings.backendUrl,
     monitoredDomains: settings.monitoredDomains,

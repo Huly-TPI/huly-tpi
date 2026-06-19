@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import com.huly.backend.domain.model.Activity;
-import com.huly.backend.domain.repository.ActivityRepository;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IActivityJpaRepository;
 import org.springframework.stereotype.Component;

@@ -34,6 +34,7 @@ public class AppUserEntity {
     @Column(name = "status", length = 50)
     private UserStatus status;
 
+    @Builder.Default
     @Column(name = "coins", nullable = false)
     private Integer coins = 0;
 

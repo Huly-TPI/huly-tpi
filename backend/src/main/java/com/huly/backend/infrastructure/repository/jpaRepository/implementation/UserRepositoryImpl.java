@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.model.enums.ThemePreference;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
@@ -64,6 +64,11 @@ public class UserRepositoryImpl implements UserRepository {
     @org.springframework.transaction.annotation.Transactional
     public void addCoins(Long userId, int amount) {
         jpaRepository.addCoins(userId, amount);
+    }
+
+    @Override
+    public int debitCoins(Long userId, int amount) {
+        return jpaRepository.debitCoins(userId, amount);
     }
 
     @Override

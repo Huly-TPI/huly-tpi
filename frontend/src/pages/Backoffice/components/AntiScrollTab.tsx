@@ -1,5 +1,5 @@
 import { Clock, Monitor, HelpCircle, ShieldAlert } from 'lucide-react'
-import { formatConsumptionTime } from '../../../utils/date'
+import { useTimeFormatter } from '../../../hooks/useTimeFormatter'
 import DomainFavicon from '../../../components/backoffice/DomainFavicon'
 import { UserAntiScrollResponse } from '../../../api/admin'
 
@@ -34,6 +34,7 @@ export function AntiScrollTab({
   filteredTotalTime,
   hasUsageData,
 }: AntiScrollTabProps) {
+  const { formatConsumptionTime } = useTimeFormatter()
   if (antiscrollLoading && !antiscrollStats) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
