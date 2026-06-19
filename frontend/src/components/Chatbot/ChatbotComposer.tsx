@@ -78,16 +78,6 @@ export default function ChatbotComposer({
         >
           <FiTrash2 className="h-5 w-5" />
         </button>
-        <Button
-          type="button"
-          onClick={onSend}
-          disabled={isSending || !input.trim()}
-          variant="primary"
-          size="sm"
-          className="shrink-0 !w-auto !min-w-0"
-        >
-          Enviar
-        </Button>
       </div>
     </footer>
   )
