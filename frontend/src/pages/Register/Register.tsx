@@ -63,7 +63,7 @@ const VALIDATION_RULES = {
   name: [required(), maxLength(50), safeText, validRegisterName()],
   birthDate: [required('La fecha de nacimiento es requerida'), minAge(13)],
   email: [required(), validEmail(), maxLength(100)],
-  password: [required(), minLength(6), maxLength(72)],
+  password: [required(), minLength(6)],
   confirmPassword: [required(), matchesField('password')],
 }
 

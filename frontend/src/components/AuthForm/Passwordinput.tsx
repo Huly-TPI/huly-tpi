@@ -4,7 +4,6 @@ import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
 import { getInputClassName } from './authInputStyles'
 
 const PASSWORD_MIN = 6
-const PASSWORD_MAX = 72
 
 interface PasswordRule {
     label: string
@@ -13,7 +12,6 @@ interface PasswordRule {
 
 const PASSWORD_RULES: PasswordRule[] = [
     { label: `Al menos ${PASSWORD_MIN} caracteres`, passes: (v) => v.length >= PASSWORD_MIN },
-    { label: `Máximo ${PASSWORD_MAX} caracteres`, passes: (v) => v.length <= PASSWORD_MAX },
 ]
 
 interface PasswordInputProps {
