@@ -1,7 +1,8 @@
 package com.huly.backend.domain.service.payment;
 
-import com.huly.backend.domain.repository.UserRepository;
+
 import com.huly.backend.domain.exception.InsufficientCoinsException;
+import com.huly.backend.domain.repository.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

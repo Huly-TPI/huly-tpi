@@ -1,8 +1,8 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.ActivityRepository;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
-import com.huly.backend.domain.repository.UserEmotionalStateRepository;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.repository.user.UserEmotionalStateRepository;
 import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;

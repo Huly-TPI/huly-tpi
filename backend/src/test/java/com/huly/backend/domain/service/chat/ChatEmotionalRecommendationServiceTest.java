@@ -14,7 +14,7 @@ import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +62,7 @@ class ChatEmotionalRecommendationServiceTest {
         when(emotionalAnalysisPort.analyze("analysis prompt", "hola", history))
                 .thenReturn(new EmotionalAnalysisResult(false, EmotionType.NEUTRAL, 0.8, 0.0, 0.0, 0.0, 0.1, null, null));
 
-        ChatRecommendationOutcome outcome = service.evaluate("hola", 1L, "base", memories, history);
+        ChatRecommendationOutcome outcome = service.evaluate("hola", 1L, "base", memories, history, null, false);
 
         assertThat(outcome.suggestedAction()).isNull();
         assertThat(outcome.analysis().shouldRecommend()).isFalse();
@@ -111,7 +111,9 @@ class ChatEmotionalRecommendationServiceTest {
                 3L,
                 "base",
                 List.of(),
-                List.of()
+                List.of(),
+                null,
+                false
         );
 
         assertThat(outcome.suggestedAction()).isNotNull();
@@ -190,7 +192,8 @@ class ChatEmotionalRecommendationServiceTest {
                 "base",
                 List.of(),
                 List.of(),
-                conversationalReply
+                conversationalReply,
+                false
         );
 
         assertThat(outcome.suggestedAction()).isNotNull();
@@ -224,7 +227,14 @@ class ChatEmotionalRecommendationServiceTest {
         when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
                 .thenReturn(new EmotionalRecommendationResult(List.of(), false));
 
-        ChatRecommendationOutcome outcome = service.evaluate("estoy muy estresado", 1L, "base", List.of(), List.of());
+        ChatRecommendationOutcome outcome = service.evaluate(
+                "estoy muy estresado",
+                1L,
+                "base",
+                List.of(),
+                List.of(),
+                null,
+                false);
 
         assertThat(outcome.suggestedAction()).isNull();
         verify(createEmotionalEventUseCase, never()).execute(any());

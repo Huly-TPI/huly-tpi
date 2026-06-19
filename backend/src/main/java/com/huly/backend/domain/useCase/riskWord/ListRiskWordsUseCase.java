@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.riskWord;
 
 import com.huly.backend.domain.model.RiskWord;
-import com.huly.backend.domain.service.RiskWordService;
+import com.huly.backend.domain.service.chat.RiskWordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -4,10 +4,10 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.admin.AntiScrollDashboardStats;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
@@ -16,7 +16,7 @@ import java.util.*;
 public class GetAntiScrollDashboardUseCase {
 
     private final UserRepository userRepository;
-    private final ExtensionSettingsRepository settingsRepository;
+    private final UserAntiScrollSettingsRepository settingsRepository;
     private final ExtensionMetricsRepository metricsRepository;
 
     public AntiScrollDashboardStats execute() {
@@ -26,7 +26,7 @@ public class GetAntiScrollDashboardUseCase {
         int consentUsers = 0;
 
         for (AppUser user : users) {
-            Optional<ExtensionSettings> settingsOpt = settingsRepository.findByUserId(user.getId());
+            Optional<UserAntiScrollSettings> settingsOpt = settingsRepository.findByUserId(user.getId());
             if (settingsOpt.isPresent()) {
                 if (settingsOpt.get().isEnabled()) {
                     activeUsers++;

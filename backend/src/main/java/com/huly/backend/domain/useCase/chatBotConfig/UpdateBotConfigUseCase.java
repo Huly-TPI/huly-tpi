@@ -2,7 +2,7 @@ package com.huly.backend.domain.useCase.chatBotConfig;
 
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.UpdateBotConfigCommand;
-import com.huly.backend.domain.service.BotConfigService;
+import com.huly.backend.domain.service.chat.BotConfigService;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

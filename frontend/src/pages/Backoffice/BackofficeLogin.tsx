@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { backofficeLogin } from '../../api/auth'
-import { useAuthForm } from '../../hooks/useAuthForm'
-import { required, validEmail } from '../../utils/validation'
+import { useForm, required, validEmail } from '../../hooks/useForm'
 import Button from '../../components/Buttons/Button/Button'
 import { Leaf, Eye, EyeOff } from 'lucide-react'
 import colorLogo from '../../assets/brand/color-logo.webp'
@@ -32,7 +31,7 @@ export default function BackofficeLogin() {
   if (role === 'ADMIN') 
     return <Navigate to="/backoffice" replace />
 
-  const { values, errors, handleChange, validateAll } = useAuthForm(INITIAL_VALUES, VALIDATION_RULES)
+  const { values, errors, handleChange, validateAll } = useForm(INITIAL_VALUES, VALIDATION_RULES)
 
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)

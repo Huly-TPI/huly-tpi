@@ -1,9 +1,9 @@
 package com.huly.backend.domain.useCase.extension;
 
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,14 +22,14 @@ class SaveExtensionMetricsUseCaseTest {
     private ExtensionMetricsRepository metricsRepository;
 
     @Mock
-    private ExtensionSettingsRepository settingsRepository;
+    private UserAntiScrollSettingsRepository settingsRepository;
 
     @InjectMocks
     private SaveExtensionMetricsUseCase saveExtensionMetricsUseCase;
 
     @Test
     void execute_shouldSaveMetrics_whenUserHasConsented() {
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .dataSharingConsent(true)
                 .build();
         when(settingsRepository.findByUserId(1L)).thenReturn(Optional.of(settings));
@@ -51,7 +51,7 @@ class SaveExtensionMetricsUseCaseTest {
 
     @Test
     void execute_shouldNotSaveMetrics_whenUserHasNotConsented() {
-        ExtensionSettings settings = ExtensionSettings.builder()
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
                 .dataSharingConsent(false)
                 .build();
         when(settingsRepository.findByUserId(1L)).thenReturn(Optional.of(settings));

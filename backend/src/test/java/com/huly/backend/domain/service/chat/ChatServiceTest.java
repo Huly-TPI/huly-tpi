@@ -18,10 +18,10 @@ import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.vector.VectorMemory;
-import com.huly.backend.domain.provider.ChatMemoryPort;
-import com.huly.backend.domain.provider.LLMChatPort;
-import com.huly.backend.domain.repository.RiskWordRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.port.ChatMemoryPort;
+import com.huly.backend.domain.port.LLMChatPort;
+import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
@@ -58,7 +58,6 @@ class ChatServiceTest {
     @Mock private PromptBuilderService promptBuilderService;
     @Mock private UserVectorMemoryService userVectorMemoryService;
     @Mock private ChatEmotionalRecommendationService chatEmotionalRecommendationService;
-    @Mock private ChatIntentDetectionService chatIntentDetectionService;
     @Mock private ChatQuotaService chatQuotaService;
     @Mock private UserRepository userRepository;
     @Mock private ChatConversationPreferenceRepository chatConversationPreferenceRepository;
@@ -68,11 +67,8 @@ class ChatServiceTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any()))
-                .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
         lenient().when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
-        lenient().when(chatIntentDetectionService.detect(any())).thenReturn(ChatUserIntent.NONE);
         lenient().when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
         lenient().when(chatConversationPreferenceRepository.findByUserId(anyLong())).thenReturn(Optional.empty());
     }
@@ -272,12 +268,10 @@ class ChatServiceTest {
                 30L
         );
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-        when(chatIntentDetectionService.detect("dame una recomendacion de actividad"))
-                .thenReturn(ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
         when(chatEmotionalRecommendationService.evaluate(any(), any(), any(), any(), any(), any(), eq(true)))
                 .thenReturn(new ChatRecommendationOutcome(EmotionalAnalysisResult.neutral(), action));
 
-        ChatReply result = chatService.processMessage("dame una recomendacion de actividad", "conv-1", 1L);
+        ChatReply result = chatService.processMessage("dame una recomendacion de actividad", "conv-1", 1L, false, ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
 
         assertThat(result.suggestedAction()).isEqualTo(action);
         verify(chatEmotionalRecommendationService).evaluate(any(), any(), any(), any(), any(), any(), eq(true));
@@ -289,9 +283,8 @@ class ChatServiceTest {
     void processMessage_shouldForceChallengePrompt_whenUserExplicitlyRequestsChallenge() {
         ChatReply reply = new ChatReply("claro", EmotionType.MOTIVATION, 5, false, null);
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-        when(chatIntentDetectionService.detect("quiero un reto")).thenReturn(ChatUserIntent.CHALLENGE_REQUEST);
 
-        ChatReply result = chatService.processMessage("quiero un reto", "conv-1", 1L);
+        ChatReply result = chatService.processMessage("quiero un reto", "conv-1", 1L, false, ChatUserIntent.CHALLENGE_REQUEST);
 
         assertThat(result.generatedChallenge()).isNotNull();
         assertThat(result.generatedChallenge().title()).isEqualTo("Reto de accion pequena");
@@ -316,7 +309,7 @@ class ChatServiceTest {
                 List.of(),
                 new ChatReply("Todo bien por acá.", EmotionType.JOY, 3, false, null));
 
-        ChatReply result = chatService.processMessage("qué onda", "conv-1", 1L, true);
+        ChatReply result = chatService.processMessage("qué onda", "conv-1", 1L, true, ChatUserIntent.NONE);
 
         assertThat(result.content())
                 .contains("Todo bien por acá.")
@@ -345,7 +338,7 @@ class ChatServiceTest {
                 List.of(),
                 new ChatReply("Estoy acá para acompañarte.", EmotionType.SADNESS, 9, true, "riesgo"));
 
-        ChatReply result = chatService.processMessage("estoy muy mal", "conv-1", 1L, true);
+        ChatReply result = chatService.processMessage("estoy muy mal", "conv-1", 1L, true, ChatUserIntent.NONE);
 
         assertThat(result.content()).doesNotContain("Cómo te gustaría");
         verify(chatConversationPreferenceRepository, never()).save(any());

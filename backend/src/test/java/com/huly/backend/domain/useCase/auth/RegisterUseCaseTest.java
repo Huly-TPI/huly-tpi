@@ -4,9 +4,9 @@ import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.provider.PasswordHasher;
+import com.huly.backend.domain.port.PasswordHasherPort;
 import com.huly.backend.domain.exception.DuplicateResourceException;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 class RegisterUseCaseTest {
 
     @Mock private UserRepository userRepository;
-    @Mock private PasswordHasher passwordHasher;
+    @Mock private PasswordHasherPort passwordHasherPort;
     @Mock private LoginUseCase loginUseCase;
 
     @InjectMocks private RegisterUseCase registerUseCase;
@@ -36,7 +36,7 @@ class RegisterUseCaseTest {
     @Test
     void execute_shouldSaveUserWithNameRoleUserAndStatusActive() {
         when(userRepository.existsByEmail("new@huly.com")).thenReturn(false);
-        when(passwordHasher.encode("rawPass")).thenReturn("encodedPass");
+        when(passwordHasherPort.encode("rawPass")).thenReturn("encodedPass");
         when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().id(1L).build());
         when(loginUseCase.execute("new@huly.com", "rawPass")).thenReturn(AuthTokens.builder().build());
 
@@ -65,13 +65,13 @@ class RegisterUseCaseTest {
     @Test
     void execute_shouldEncodePasswordBeforeSaving() {
         when(userRepository.existsByEmail("new@huly.com")).thenReturn(false);
-        when(passwordHasher.encode("rawPass")).thenReturn("hashedPassword");
+        when(passwordHasherPort.encode("rawPass")).thenReturn("hashedPassword");
         when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().build());
         when(loginUseCase.execute("new@huly.com", "rawPass")).thenReturn(AuthTokens.builder().build());
 
         registerUseCase.execute("new@huly.com", "rawPass", "Juan", BIRTH_DATE);
 
-        verify(passwordHasher).encode("rawPass");
+        verify(passwordHasherPort).encode("rawPass");
     }
 
     @Test
@@ -79,7 +79,7 @@ class RegisterUseCaseTest {
         AuthTokens expected = AuthTokens.builder()
                 .accessToken("tok").refreshToken("ref").role(UserRole.USER).build();
         when(userRepository.existsByEmail("new@huly.com")).thenReturn(false);
-        when(passwordHasher.encode("rawPass")).thenReturn("encodedPass");
+        when(passwordHasherPort.encode("rawPass")).thenReturn("encodedPass");
         when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().build());
         when(loginUseCase.execute("new@huly.com", "rawPass")).thenReturn(expected);
 

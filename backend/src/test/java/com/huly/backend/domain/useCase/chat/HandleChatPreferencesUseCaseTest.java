@@ -8,10 +8,10 @@ import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
 import com.huly.backend.domain.model.enums.ChatPreferenceExpectedField;
 import com.huly.backend.domain.model.enums.ChatPreferenceMessageType;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
-import com.huly.backend.domain.provider.ChatMemoryPort;
+import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
-import com.huly.backend.domain.service.chat.ChatPreferenceResolutionService;
+import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 class HandleChatPreferencesUseCaseTest {
 
     @Mock private ChatConversationPreferenceRepository preferenceRepository;
-    @Mock private ChatPreferenceResolutionService resolutionService;
+    @Mock private ChatPreferenceExtractionPort extractionPort;
     @Mock private InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
     @Mock private ChatMemoryPort chatMemoryPort;
     @Mock private ChatQuotaService chatQuotaService;
@@ -46,7 +46,7 @@ class HandleChatPreferencesUseCaseTest {
     void setUp() {
         useCase = new HandleChatPreferencesUseCase(
                 preferenceRepository,
-                resolutionService,
+                extractionPort,
                 initializeChatPreferencesUseCase,
                 chatMemoryPort,
                 chatQuotaService,
@@ -59,7 +59,7 @@ class HandleChatPreferencesUseCaseTest {
     void execute_shouldSavePreferredNameAndAskForCommunicationStyle() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
-        when(resolutionService.resolve("Sergito", ChatPreferenceExpectedField.PREFERRED_NAME))
+        when(extractionPort.extract("Sergito", ChatPreferenceExpectedField.PREFERRED_NAME))
                 .thenReturn(result("Sergito", null, ChatPreferenceMessageType.PREFERENCE_ONLY));
 
         ChatPreferenceHandlingResult result = useCase.execute(1L, "conv-1", "Sergito");
@@ -80,7 +80,7 @@ class HandleChatPreferencesUseCaseTest {
     void execute_shouldSaveNameAndContinueForMixedMessage() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
-        when(resolutionService.resolve(
+        when(extractionPort.extract(
                 "Llamame crack y estoy triste",
                 ChatPreferenceExpectedField.PREFERRED_NAME))
                 .thenReturn(result("Crack", null, ChatPreferenceMessageType.MIXED));
@@ -104,10 +104,10 @@ class HandleChatPreferencesUseCaseTest {
     void execute_shouldSkipOnboardingWhenMessageDoesNotAnswerNameQuestion() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
-        when(resolutionService.resolve(
+        when(extractionPort.extract(
                 "Necesito hablar de algo",
                 ChatPreferenceExpectedField.PREFERRED_NAME))
-                .thenReturn(ChatPreferenceDetectionResult.unrelated());
+                .thenThrow(new RuntimeException("API Error")); // Simulating fallback to detection and unrelated result
 
         ChatPreferenceHandlingResult result =
                 useCase.execute(1L, "conv-1", "Necesito hablar de algo");
@@ -122,10 +122,16 @@ class HandleChatPreferencesUseCaseTest {
 
     @Test
     void execute_shouldSaveCommunicationStyleAndCompleteOnboarding() {
-        ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
-                .withPreferredName("Sergito", Instant.now());
+        ChatConversationPreference preference = ChatConversationPreference.builder()
+                .id(10L)
+                .userId(1L)
+                .preferredName("Sergito")
+                .onboardingStatus(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE)
+                .createdAt(Instant.parse("2026-01-01T00:00:00Z"))
+                .updatedAt(Instant.now())
+                .build();
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
-        when(resolutionService.resolve("informal", ChatPreferenceExpectedField.COMMUNICATION_STYLE))
+        when(extractionPort.extract("informal", ChatPreferenceExpectedField.COMMUNICATION_STYLE))
                 .thenReturn(result(null, CommunicationStyle.INFORMAL, ChatPreferenceMessageType.PREFERENCE_ONLY));
 
         ChatPreferenceHandlingResult result = useCase.execute(1L, "conv-1", "informal");
@@ -144,8 +150,6 @@ class HandleChatPreferencesUseCaseTest {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
                 .updatePreferredName("Crack", Instant.now());
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
-        when(resolutionService.resolve("Estoy muy mal", ChatPreferenceExpectedField.ANY))
-                .thenReturn(ChatPreferenceDetectionResult.unrelated());
 
         ChatPreferenceHandlingResult result = useCase.execute(1L, "conv-1", "Estoy muy mal");
 
@@ -158,7 +162,7 @@ class HandleChatPreferencesUseCaseTest {
     void execute_shouldApplyBothPreferencesFromOneMessage() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
-        when(resolutionService.resolve(
+        when(extractionPort.extract(
                 "Decime Crack y hablame directo",
                 ChatPreferenceExpectedField.PREFERRED_NAME))
                 .thenReturn(result(

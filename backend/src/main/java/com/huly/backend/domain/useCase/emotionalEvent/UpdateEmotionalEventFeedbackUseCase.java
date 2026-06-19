@@ -4,7 +4,7 @@ import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.UpdateEmotionalEventFeedbackCommand;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;

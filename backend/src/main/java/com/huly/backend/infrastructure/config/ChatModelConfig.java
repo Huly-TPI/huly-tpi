@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.config;
 
 import org.springframework.ai.anthropic.AnthropicChatModel;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,5 +16,12 @@ public class ChatModelConfig {
     @ConditionalOnProperty(name = "app.ai.provider", havingValue = "anthropic")
     ChatModel anthropicPrimaryModel(AnthropicChatModel model) {
         return model;
+    }
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(name = "app.ai.provider", havingValue = "anthropic")
+    ChatClient anthropicChatClient(ChatModel chatModel) {
+        return ChatClient.create(chatModel);
     }
 }

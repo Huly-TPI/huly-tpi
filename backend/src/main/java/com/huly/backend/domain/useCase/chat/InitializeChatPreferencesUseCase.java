@@ -7,8 +7,9 @@ import com.huly.backend.domain.model.chat.ChatOnboardingInitialization;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
-import com.huly.backend.domain.provider.ChatMemoryPort;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.model.enums.CommunicationStyle;
+import com.huly.backend.domain.port.ChatMemoryPort;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
-/**
- * Initializes conversational preferences and stores the first assistant greeting once per user.
- */
 @Service
 @RequiredArgsConstructor
 public class InitializeChatPreferencesUseCase {
@@ -29,13 +27,6 @@ public class InitializeChatPreferencesUseCase {
     private final ChatMemoryPort chatMemoryPort;
     private final ChatConfigRepository chatConfigRepository;
 
-    /**
-     * Initializes chatbot onboarding when the authenticated user has no preference record.
-     *
-     * @param userId authenticated user identifier
-     * @param conversationId active conversation identifier
-     * @return initialization outcome
-     */
     @Transactional
     public ChatOnboardingInitialization execute(Long userId, String conversationId) {
         if (preferenceRepository.findByUserId(userId).isPresent()) {
@@ -83,8 +74,7 @@ public class InitializeChatPreferencesUseCase {
             return prefix + " ¿Cómo te gustaría que te llame de ahora en adelante?";
         }
         if (config.askCommunicationStyle()) {
-            return prefix + " ¿Cómo te gustaría que te hable? Puede ser de forma neutra, amable, "
-                    + "informal, formal, directa, indirecta, cercana o como un amigo.";
+            return prefix + " " + CommunicationStyle.QUESTION_TEXT;
         }
         return prefix + " ¿En qué te puedo ayudar hoy?";
     }

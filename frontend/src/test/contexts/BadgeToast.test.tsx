@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BadgeToastProvider, useBadgeToast } from '../../context/BadgeToast'
@@ -15,6 +15,10 @@ function TriggerButton() {
 }
 
 describe('BadgeToast', () => {
+  beforeEach(() => {
+    document.body.removeAttribute('data-home-onboarding-active')
+  })
+
   it('renderiza los hijos correctamente', () => {
     render(<BadgeToastProvider><p>Hijo</p></BadgeToastProvider>)
     expect(screen.getByText('Hijo')).toBeInTheDocument()
@@ -33,6 +37,16 @@ describe('BadgeToast', () => {
     await userEvent.click(button)
     const closeButton = screen.getByRole('button', { name: 'Cerrar' })
     await userEvent.click(closeButton)
+    expect(screen.queryByText('Primer paso')).not.toBeInTheDocument()
+  })
+
+  it('no muestra el toast mientras el tutorial principal esta activo', async () => {
+    document.body.setAttribute('data-home-onboarding-active', 'true')
+
+    render(<BadgeToastProvider><TriggerButton /></BadgeToastProvider>)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mostrar' }))
+
     expect(screen.queryByText('Primer paso')).not.toBeInTheDocument()
   })
   })

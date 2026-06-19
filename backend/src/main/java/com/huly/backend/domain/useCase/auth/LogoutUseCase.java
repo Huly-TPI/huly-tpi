@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.auth;
 
-import com.huly.backend.domain.repository.RefreshTokenRepository;
+import com.huly.backend.domain.repository.auth.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 

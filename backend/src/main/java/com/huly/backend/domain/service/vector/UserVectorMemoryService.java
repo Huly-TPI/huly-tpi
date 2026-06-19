@@ -10,12 +10,12 @@ import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand;
-import com.huly.backend.domain.provider.VectorMemoryService;
-import lombok.RequiredArgsConstructor;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,7 +28,6 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserVectorMemoryService {
 
     private static final List<VectorMemorySource> ALL_USER_MEMORY_SOURCES = List.of(
@@ -48,11 +47,29 @@ public class UserVectorMemoryService {
     private static final String GENERATED_CHALLENGE = "GENERATED_CHALLENGE";
     private static final String CHALLENGE_DECISION = "CHALLENGE_DECISION";
 
-    private final VectorMemoryService vectorMemoryService;
+    record PersonalitySummaryDto(String summary, String accepted, String rejected) {}
+
+    private final VectorMemoryPort vectorMemoryPort;
     private final VectorMemoryProperties vectorMemoryProperties;
     private final UserProfileFactExtractor userProfileFactExtractor;
-    private final ObjectProvider<ChatModel> chatModelProvider;
+    private final ObjectProvider<ChatClient> chatClientProvider;
     private final JdbcTemplate jdbcTemplate;
+    private final org.springframework.core.io.Resource personalitySummaryPrompt;
+
+    public UserVectorMemoryService(
+            VectorMemoryPort vectorMemoryPort,
+            VectorMemoryProperties vectorMemoryProperties,
+            UserProfileFactExtractor userProfileFactExtractor,
+            ObjectProvider<ChatClient> chatClientProvider,
+            JdbcTemplate jdbcTemplate,
+            @Value("classpath:/prompts/personality-summary.st") org.springframework.core.io.Resource personalitySummaryPrompt) {
+        this.vectorMemoryPort = vectorMemoryPort;
+        this.vectorMemoryProperties = vectorMemoryProperties;
+        this.userProfileFactExtractor = userProfileFactExtractor;
+        this.chatClientProvider = chatClientProvider;
+        this.jdbcTemplate = jdbcTemplate;
+        this.personalitySummaryPrompt = personalitySummaryPrompt;
+    }
 
     public List<VectorMemory> findRelevantUserMemories(Long userId, String query) {
         return findRelevantUserMemoriesBySources(userId, ALL_USER_MEMORY_SOURCES, query);
@@ -62,7 +79,7 @@ public class UserVectorMemoryService {
         try {
             List<VectorMemory> memories = new ArrayList<>();
             for (String recallQuery : buildRecallQueries(query)) {
-                memories.addAll(vectorMemoryService.findRelevantMemories(new SearchVectorMemoryQuery(
+                memories.addAll(vectorMemoryPort.findRelevantMemories(new SearchVectorMemoryQuery(
                         userId,
                         sourceType,
                         recallQuery,
@@ -92,7 +109,7 @@ public class UserVectorMemoryService {
         try {
             List<VectorMemory> memories = new ArrayList<>();
             for (String recallQuery : buildRecallQueries(query)) {
-                memories.addAll(vectorMemoryService.findRelevantMemories(new SearchVectorMemoriesQuery(
+                memories.addAll(vectorMemoryPort.findRelevantMemories(new SearchVectorMemoriesQuery(
                         userId,
                         sourceTypes,
                         recallQuery,
@@ -270,7 +287,7 @@ public class UserVectorMemoryService {
     }
 
     public void rememberGuidedCloudInput(Long userId, String cloudSessionId, String content) {
-        saveMemory(new SaveVectorMemoryCommand(
+        saveSimpleMemory(
                 userId,
                 VectorMemorySource.GUIDED_CLOUDS,
                 cloudSessionId,
@@ -279,13 +296,12 @@ public class UserVectorMemoryService {
                 content,
                 null,
                 null,
-                metadata("GUIDED_CLOUDS")
-        ));
+                "GUIDED_CLOUDS");
     }
 
     public void rememberJournalEntry(Long userId, Long journalEntryId, String content) {
         String sourceId = journalEntryId != null ? journalEntryId.toString() : null;
-        saveMemory(new SaveVectorMemoryCommand(
+        saveSimpleMemory(
                 userId,
                 VectorMemorySource.EMOTIONAL_JOURNAL,
                 sourceId,
@@ -294,13 +310,12 @@ public class UserVectorMemoryService {
                 content,
                 null,
                 sourceId,
-                metadata("EMOTIONAL_JOURNAL")
-        ));
+                "EMOTIONAL_JOURNAL");
     }
 
     public void rememberOnboardingGoals(Long userId, String answer1, String answer2, String answer3) {
         String content = String.format("Goal 1: %s\nGoal 2: %s\nGoal 3: %s", answer1, answer2, answer3);
-        saveMemory(new SaveVectorMemoryCommand(
+        saveSimpleMemory(
                 userId,
                 VectorMemorySource.ONBOARDING,
                 userMemorySourceId(userId),
@@ -309,8 +324,7 @@ public class UserVectorMemoryService {
                 content,
                 null,
                 null,
-                metadata("ONBOARDING")
-        ));
+                "ONBOARDING");
     }
 
     private List<String> buildRecallQueries(String query) {
@@ -370,7 +384,7 @@ public class UserVectorMemoryService {
 
     private void saveMemory(SaveVectorMemoryCommand command) {
         try {
-            vectorMemoryService.saveMemory(command);
+            vectorMemoryPort.saveMemory(command);
             if (command != null && command.userId() != null && !"PERSONALITY_SUMMARY".equals(command.contentType())) {
                 CompletableFuture.runAsync(() -> {
                     generateAndSavePersonalitySummary(command.userId());
@@ -384,9 +398,32 @@ public class UserVectorMemoryService {
         }
     }
 
+    private void saveSimpleMemory(
+            Long userId,
+            VectorMemorySource sourceType,
+            String sourceId,
+            String memoryType,
+            String contentType,
+            String content,
+            String conversationId,
+            String relatedEntityId,
+            String feature) {
+        saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                sourceType,
+                sourceId,
+                memoryType,
+                contentType,
+                content,
+                conversationId,
+                relatedEntityId,
+                metadata(feature)
+        ));
+    }
+
     public void deletePersonalitySummary(Long userId) {
         try {
-            vectorMemoryService.deleteMemories(new DeleteVectorMemoryCommand(
+            vectorMemoryPort.deleteMemories(new DeleteVectorMemoryCommand(
                     userId,
                     VectorMemorySource.CHATBOT,
                     "personality-summary"
@@ -419,49 +456,40 @@ public class UserVectorMemoryService {
                 memoriesJoined = memoriesJoined.substring(0, 4000) + "...";
             }
 
-            String systemPrompt = """
-                Eres un psicólogo clínico experto analizando el comportamiento de un usuario en base a sus registros de interacción con un asistente de bienestar.
-                Tu tarea es generar un análisis del perfil psicológico/conductual y receptividades del usuario en formato JSON.
-                
-                Debes responder estrictamente con un objeto JSON válido estructurado con las siguientes claves (no agregues introducciones, explicaciones ni formato adicional, solo el JSON puro):
-                {
-                  "summary": "Un párrafo corto (de 3 a 4 oraciones como máximo) en español sobre el perfil psicológico y conductual del usuario. Sé empático, profesional y constructivo. IMPORTANTE: No comiences el texto con títulos, negritas ni asteriscos (no uses '**Perfil Psicológico y Conductual**' ni similar). Tampoco menciones términos técnicos (como 'logs', 'memoria', 'vectores', etc.).",
-                  "accepted": "Una frase muy corta y concisa de 3 a 5 palabras en español que generalice lo que el usuario suele aceptar (ej. 'actividades relajantes', 'retos sencillos al aire libre').",
-                  "rejected": "Una frase muy corta y concisa de 3 a 5 palabras en español que generalice lo que el usuario suele rechazar o ignorar (ej. 'ejercicios físicos exigentes', 'interacciones sociales')."
-                }
-                """;
-
             String userMessage = "Analiza las siguientes memorias del usuario para estructurar el JSON:\n\n- " + memoriesJoined;
 
-            ChatModel chat = chatModelProvider.getIfAvailable();
-            if (chat == null) {
-                log.warn("ChatModel no disponible. No se puede generar perfil de personalidad.");
+            ChatClient chatClient = chatClientProvider.getIfAvailable();
+            if (chatClient == null) {
+                log.warn("ChatClient no disponible. No se puede generar perfil de personalidad.");
                 return;
             }
 
-            org.springframework.ai.chat.model.ChatResponse response = chat.call(new org.springframework.ai.chat.prompt.Prompt(List.of(
-                new org.springframework.ai.chat.messages.SystemMessage(systemPrompt),
-                new org.springframework.ai.chat.messages.UserMessage(userMessage)
-            )));
+            PersonalitySummaryDto dto = chatClient.prompt()
+                    .system(personalitySummaryPrompt)
+                    .user(userMessage)
+                    .call()
+                    .entity(PersonalitySummaryDto.class);
 
-            if (response != null && response.getResult() != null && response.getResult().getOutput() != null) {
-                String summary = response.getResult().getOutput().getText();
-                if (summary != null && !summary.isBlank()) {
-                    deletePersonalitySummary(userId);
+            if (dto != null && dto.summary() != null && !dto.summary().isBlank()) {
+                deletePersonalitySummary(userId);
 
-                    saveMemory(new SaveVectorMemoryCommand(
-                            userId,
-                            VectorMemorySource.CHATBOT,
-                            "personality-summary",
-                            "PERSONALITY_SUMMARY",
-                            "PERSONALITY_SUMMARY",
-                            summary.trim(),
-                            null,
-                            null,
-                            Map.of("contentType", "PERSONALITY_SUMMARY", "feature", "PERSONALITY_SUMMARY")
-                    ));
-                    log.info("Perfil de personalidad generado e insertado para userId={}", userId);
-                }
+                String finalSummary = String.format("%s\n\nAcepta: %s\nRechaza: %s",
+                        dto.summary().trim(),
+                        valueOrDefault(dto.accepted(), "N/A"),
+                        valueOrDefault(dto.rejected(), "N/A"));
+
+                saveMemory(new SaveVectorMemoryCommand(
+                        userId,
+                        VectorMemorySource.CHATBOT,
+                        "personality-summary",
+                        "PERSONALITY_SUMMARY",
+                        "PERSONALITY_SUMMARY",
+                        finalSummary,
+                        null,
+                        null,
+                        Map.of("contentType", "PERSONALITY_SUMMARY", "feature", "PERSONALITY_SUMMARY")
+                ));
+                log.info("Perfil de personalidad generado e insertado para userId={}", userId);
             }
         } catch (Exception e) {
             log.warn("Error generando perfil de personalidad para userId={}", userId, e);
