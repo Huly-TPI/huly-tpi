@@ -8,7 +8,7 @@ import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.repository.UserGoalRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.model.ImageValidationResult;
-import com.huly.backend.domain.provider.ImageValidationPort;
+import com.huly.backend.domain.port.ImageValidationPort;
 import com.huly.backend.domain.service.userGoal.ImageStorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

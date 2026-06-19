@@ -3,7 +3,7 @@ package com.huly.backend.domain.useCase.onboarding;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.provider.LLMChatPort;
+import com.huly.backend.domain.port.LLMChatPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;

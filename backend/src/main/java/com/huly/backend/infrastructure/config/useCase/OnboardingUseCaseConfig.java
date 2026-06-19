@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.provider.LLMChatPort;
+import com.huly.backend.domain.port.LLMChatPort;
 import com.huly.backend.domain.repository.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.UserRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;

@@ -12,11 +12,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PasswordHasherImplTest {
+class PasswordHasherPortImplTest {
 
     @Mock private PasswordEncoder passwordEncoder;
 
-    @InjectMocks private PasswordHasherImpl passwordHasher;
+    @InjectMocks private PasswordHasherPortImpl passwordHasher;
 
     @Test
     void matches_shouldReturnTrue_whenPasswordMatches() {

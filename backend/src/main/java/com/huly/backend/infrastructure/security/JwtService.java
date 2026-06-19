@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.security;
 
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.port.TokenPort;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -18,7 +18,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Service
-public class JwtService implements TokenProvider {
+public class JwtService implements TokenPort {
 
     private static final String CLAIM_TYPE = "type";
     private static final String CLAIM_USER_ID = "userId";

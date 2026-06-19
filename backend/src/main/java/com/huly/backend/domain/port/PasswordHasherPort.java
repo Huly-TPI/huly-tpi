@@ -1,6 +1,6 @@
-package com.huly.backend.domain.provider;
+package com.huly.backend.domain.port;
 
-public interface PasswordHasher {
+public interface PasswordHasherPort {
     boolean matches(String rawPassword, String encodedPassword);
     String encode(String rawPassword);
 }
