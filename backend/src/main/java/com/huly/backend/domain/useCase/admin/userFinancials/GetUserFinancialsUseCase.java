@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.admin.userFinancials;
 
-import com.huly.backend.domain.dto.payment.PaymentEvent;
-import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.payment.PaymentEvent;
+import com.huly.backend.domain.model.payment.Product;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.domain.repository.payment.ProductRepository;

@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.useCase.riskWord.CreateRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.DeleteRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.ListRiskWordsUseCase;

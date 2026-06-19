@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.dto.payment.PaymentPreferenceResult;
+import com.huly.backend.domain.model.payment.PaymentPreferenceResult;
 import com.huly.backend.domain.useCase.payment.CreatePaymentPreferenceUseCase;
 import com.huly.backend.domain.useCase.payment.ListPlansUseCase;
 import com.huly.backend.domain.useCase.payment.ListProductsUseCase;

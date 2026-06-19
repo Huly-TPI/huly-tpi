@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.payment;
 
-import com.huly.backend.domain.dto.payment.MercadoPagoPaymentResult;
-import com.huly.backend.domain.dto.payment.PaymentEvent;
+import com.huly.backend.domain.model.payment.MercadoPagoPaymentResult;
+import com.huly.backend.domain.model.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.port.MercadoPagoPort;
