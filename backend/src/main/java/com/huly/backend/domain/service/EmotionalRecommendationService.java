@@ -65,21 +65,23 @@ public class EmotionalRecommendationService {
     );
 
     private static final Set<String> BREATHING_GOALS = Set.of(
-            "calmar", "calmarme", "relajar", "relajarme", "ansiedad", "ansioso", "ansiosa",
-            "dormir", "estres", "stress", "tranquilizar", "tranquilizarme"
+            "calmar", "calmarme", "calmarse", "relajar", "relajarme", "relajarse",
+            "ansiedad", "ansioso", "ansiosa", "dormir", "estres", "stress",
+            "respirar", "tranquilizar", "tranquilizarme", "tranquilizarse"
     );
 
     private static final Set<String> JOURNAL_GOALS = Set.of(
             "reflexionar", "entender", "escribir", "ordenar", "pensamientos", "diario",
-            "procesar", "comprender"
+            "procesar", "comprender", "claridad", "aclarar"
     );
 
     private static final Set<String> CLOUD_GOALS = Set.of(
-            "soltar", "distraerme", "visualizar", "nubes", "nube", "liberar"
+            "soltar", "visualizar", "nubes", "nube", "liberar", "rumiar", "rumia"
     );
 
     private static final Set<String> BUBBLE_GOALS = Set.of(
-            "juego", "jugar", "liviano", "liviana", "distraerme", "burbujas", "burbuja"
+            "juego", "jugar", "liviano", "liviana", "distraer", "distraerme", "distraerse",
+            "burbujas", "burbuja", "desconectar", "despejarme"
     );
 
     /**
