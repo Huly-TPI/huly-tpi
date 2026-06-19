@@ -1,8 +1,8 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.BadgeRepository;
-import com.huly.backend.domain.repository.UserBadgeRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.badge.BadgeRepository;
+import com.huly.backend.domain.repository.user.UserBadgeRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.badge.GetAllBadgesUseCase;
 import com.huly.backend.domain.useCase.badge.GetUserBadgesUseCase;
 import com.huly.backend.domain.useCase.badge.GrantBadgeUseCase;

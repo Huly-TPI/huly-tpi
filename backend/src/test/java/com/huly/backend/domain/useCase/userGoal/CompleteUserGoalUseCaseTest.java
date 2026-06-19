@@ -5,7 +5,7 @@ import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.exception.ImageValidationUnavailableException;
 import com.huly.backend.domain.exception.InvalidGoalImageException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.repository.user.UserGoalRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.model.ImageValidationResult;
 import com.huly.backend.domain.port.ImageValidationPort;

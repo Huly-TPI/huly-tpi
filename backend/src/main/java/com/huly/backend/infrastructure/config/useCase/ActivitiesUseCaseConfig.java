@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.ActivityRepository;
-import com.huly.backend.domain.repository.ActivitySessionRepository;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
 import com.huly.backend.domain.useCase.activities.RegisterActivitySessionUseCase;
 import org.springframework.context.annotation.Bean;

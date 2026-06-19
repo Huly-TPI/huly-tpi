@@ -3,9 +3,9 @@ package com.huly.backend.domain.useCase.admin.userAiDiagnostics;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
-import com.huly.backend.domain.repository.UserRepository;
-import com.huly.backend.domain.repository.VectorMemoryRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import lombok.RequiredArgsConstructor;
 

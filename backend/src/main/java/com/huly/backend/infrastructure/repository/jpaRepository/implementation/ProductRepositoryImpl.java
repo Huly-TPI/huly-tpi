@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.dto.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;
-import com.huly.backend.domain.repository.ProductRepository;
+import com.huly.backend.domain.repository.payment.ProductRepository;
 import com.huly.backend.infrastructure.repository.entity.ProductEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IProductJpaRepository;
 import lombok.RequiredArgsConstructor;

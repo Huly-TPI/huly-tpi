@@ -12,7 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.huly.backend.domain.model.Activity;
 import com.huly.backend.domain.model.enums.ActivityType;
-import com.huly.backend.domain.repository.ActivityRepository;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)

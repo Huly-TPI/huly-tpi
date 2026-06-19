@@ -1,4 +1,4 @@
-package com.huly.backend.domain.repository;
+package com.huly.backend.domain.repository.breathingTechnique;
 import com.huly.backend.domain.model.BreathingTechnique;
 import java.util.List;
 

@@ -4,8 +4,8 @@ import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.model.CreateEmotionalEventCommand;
 import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.Vad;
-import com.huly.backend.domain.repository.ActivityRepository;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
