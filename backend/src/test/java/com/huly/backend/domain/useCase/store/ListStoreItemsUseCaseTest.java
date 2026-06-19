@@ -1,4 +1,5 @@
 package com.huly.backend.domain.useCase.store;
+
 import com.huly.backend.domain.model.StoreItem;
 import com.huly.backend.domain.model.enums.ItemCategory;
 import com.huly.backend.domain.repository.StoreItemRepository;
@@ -22,7 +23,7 @@ class ListStoreItemsUseCaseTest {
     @InjectMocks
     private ListStoreItemsUseCase listStoreItemsUseCase;
 
-    @Test 
+    @Test
     void execute_shouldReturnAllItemsFromRepository() {
         StoreItem casa = StoreItem.builder()
                 .id(1L)
@@ -44,5 +45,5 @@ class ListStoreItemsUseCaseTest {
         List<StoreItem> result = listStoreItemsUseCase.execute();
         assertThat(result).containsExactly(casa, maceta);
     }
-    
+
 }

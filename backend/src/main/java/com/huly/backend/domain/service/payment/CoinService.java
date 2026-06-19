@@ -1,6 +1,4 @@
 package com.huly.backend.domain.service.payment;
-
-
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.exception.InsufficientCoinsException;
 import lombok.RequiredArgsConstructor;
