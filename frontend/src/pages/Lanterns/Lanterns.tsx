@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import background from '../../assets/lanterns/ligth-theme/background-lanterns.webp'
 import darkBackground from '../../assets/lanterns/dark-theme/background/night-background.webp'
 import lanternImage from '../../assets/lanterns/ligth-theme/Lantern-Ligth.webp'
-import darkLanternImage from '../../assets/lanterns/dark-theme/Lantern-Dark.webp'
+import darkLanternImage from '../../assets/lanterns/dark-theme/lantern-Dark.webp'
 import paperImage from '../../assets/lanterns/paper.webp'
 
 import { useTheme } from '../../context/theme'
