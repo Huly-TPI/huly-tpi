@@ -67,6 +67,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public int debitCoins(Long userId, int amount) {
+        return jpaRepository.debitCoins(userId, amount);
+    }
+
+    @Override
     public int getCoins(Long userId) {
         return jpaRepository.findCoinsById(userId).orElse(0);
     }
