@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
+import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
+import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.repository.journal.JournalEntryRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class CreateJournalEntryUseCase {
@@ -18,7 +22,18 @@ public class CreateJournalEntryUseCase {
 
     public JournalEntry execute(Long userId, String content, Mood mood, boolean useTextForAI) {
         JournalEntry entry = journalEntryRepository.save(userId, content, mood);
-        userVectorMemoryService.rememberJournalEntry(userId, entry.getId(), buildVectorContent(content, mood, useTextForAI));
+        String sourceId = entry.getId() != null ? entry.getId().toString() : null;
+        userVectorMemoryService.saveMemory(new SaveVectorMemoryCommand(
+                userId,
+                VectorMemorySource.EMOTIONAL_JOURNAL,
+                sourceId,
+                "EMOTIONAL_JOURNAL_ENTRY",
+                "JOURNAL_ENTRY",
+                buildVectorContent(content, mood, useTextForAI),
+                null,
+                sourceId,
+                Map.of("createdFrom", "USER_MESSAGE", "feature", "EMOTIONAL_JOURNAL")
+        ));
         return entry;
     }
 

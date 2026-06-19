@@ -1,4 +1,4 @@
-package com.huly.backend.domain.service.chat;
+package com.huly.backend.domain.useCase.chat;
 
 import com.huly.backend.domain.model.CreateEmotionalEventCommand;
 import com.huly.backend.domain.model.EmotionalEvent;
@@ -15,6 +15,8 @@ import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
+import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
+import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,13 +33,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class ChatEmotionalRecommendationServiceTest {
+class GetChatEmotionalRecommendationUseCaseTest {
 
     private EmotionalAnalysisPort emotionalAnalysisPort;
     private PromptBuilderService promptBuilderService;
     private GetEmotionalRecommendationsUseCase recommendationsUseCase;
     private CreateEmotionalEventUseCase createEmotionalEventUseCase;
-    private ChatEmotionalRecommendationService service;
+    private GetChatEmotionalRecommendationUseCase useCase;
 
     @BeforeEach
     void setUp() {
@@ -45,7 +47,7 @@ class ChatEmotionalRecommendationServiceTest {
         promptBuilderService = mock(PromptBuilderService.class);
         recommendationsUseCase = mock(GetEmotionalRecommendationsUseCase.class);
         createEmotionalEventUseCase = mock(CreateEmotionalEventUseCase.class);
-        service = new ChatEmotionalRecommendationService(
+        useCase = new GetChatEmotionalRecommendationUseCase(
                 emotionalAnalysisPort,
                 promptBuilderService,
                 new ChatEmotionalRecommendationPolicy(),
@@ -62,7 +64,7 @@ class ChatEmotionalRecommendationServiceTest {
         when(emotionalAnalysisPort.analyze("analysis prompt", "hola", history))
                 .thenReturn(new EmotionalAnalysisResult(false, EmotionType.NEUTRAL, 0.8, 0.0, 0.0, 0.0, 0.1, null, null));
 
-        ChatRecommendationOutcome outcome = service.evaluate("hola", 1L, "base", memories, history, null, false);
+        ChatRecommendationOutcome outcome = useCase.execute("hola", 1L, "base", memories, history, null, false);
 
         assertThat(outcome.suggestedAction()).isNull();
         assertThat(outcome.analysis().shouldRecommend()).isFalse();
@@ -106,7 +108,7 @@ class ChatEmotionalRecommendationServiceTest {
                 .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
 
-        ChatRecommendationOutcome outcome = service.evaluate(
+        ChatRecommendationOutcome outcome = useCase.execute(
                 "estoy decaido, se murio mi perro",
                 3L,
                 "base",
@@ -186,7 +188,7 @@ class ChatEmotionalRecommendationServiceTest {
                 .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
 
-        ChatRecommendationOutcome outcome = service.evaluate(
+        ChatRecommendationOutcome outcome = useCase.execute(
                 "Estoy decaido, se murio Rocky y no se como procesarlo. Me siento sin fuerzas.",
                 1L,
                 "base",
@@ -227,7 +229,7 @@ class ChatEmotionalRecommendationServiceTest {
         when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
                 .thenReturn(new EmotionalRecommendationResult(List.of(), false));
 
-        ChatRecommendationOutcome outcome = service.evaluate(
+        ChatRecommendationOutcome outcome = useCase.execute(
                 "estoy muy estresado",
                 1L,
                 "base",
@@ -276,7 +278,7 @@ class ChatEmotionalRecommendationServiceTest {
                 .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
 
-        ChatRecommendationOutcome outcome = service.evaluate(
+        ChatRecommendationOutcome outcome = useCase.execute(
                 "dame una recomendacion de actividad",
                 1L,
                 "base",

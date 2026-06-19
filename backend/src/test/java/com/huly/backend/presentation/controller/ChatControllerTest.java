@@ -7,10 +7,10 @@ import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
-import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
+import com.huly.backend.domain.useCase.chat.SaveChallengeDecisionUseCase;
 import com.huly.backend.infrastructure.presentation.controller.ChatController;
 import com.huly.backend.infrastructure.presentation.dto.chat.ChatRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
@@ -53,7 +53,7 @@ class ChatControllerTest {
     private ChatUseCase chatUseCase;
     private AudioChatUseCase audioChatUseCase;
     private ListChatHistoryUseCase listChatHistoryUseCase;
-    private UserVectorMemoryService userVectorMemoryService;
+    private SaveChallengeDecisionUseCase saveChallengeDecisionUseCase;
 
     private static final Long USER_ID = 1L;
 
@@ -62,7 +62,7 @@ class ChatControllerTest {
         chatUseCase = mock(ChatUseCase.class);
         audioChatUseCase = mock(AudioChatUseCase.class);
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
-        userVectorMemoryService = mock(UserVectorMemoryService.class);
+        saveChallengeDecisionUseCase = mock(SaveChallengeDecisionUseCase.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
@@ -72,7 +72,7 @@ class ChatControllerTest {
                 chatUseCase,
                 audioChatUseCase,
                 listChatHistoryUseCase,
-                userVectorMemoryService
+                saveChallengeDecisionUseCase
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
@@ -302,5 +302,18 @@ class ChatControllerTest {
                 .andExpect(jsonPath("$.page_size").value(1))
                 .andExpect(jsonPath("$.total_elements").value(1))
                 .andExpect(jsonPath("$.total_pages").value(1));
+    }
+
+    @Test
+    void challengeDecision_shouldReturn204AndDelegateToSaveChallengeDecisionUseCase() throws Exception {
+        com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest req =
+                new com.huly.backend.infrastructure.presentation.dto.chat.ChatChallengeDecisionRequest("conv-1", "title", "desc", "ACCEPTED");
+
+        mockMvc.perform(post("/api/chat/challenge-decision")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isNoContent());
+
+        verify(saveChallengeDecisionUseCase).execute(eq(USER_ID), eq("title"), eq("ACCEPTED"), eq("desc"), eq("conv-1"));
     }
 }

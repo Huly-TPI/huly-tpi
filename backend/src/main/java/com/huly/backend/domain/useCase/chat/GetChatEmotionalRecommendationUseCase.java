@@ -1,4 +1,4 @@
-package com.huly.backend.domain.service.chat;
+package com.huly.backend.domain.useCase.chat;
 
 import com.huly.backend.domain.model.CreateEmotionalEventCommand;
 import com.huly.backend.domain.model.EmotionalEvent;
@@ -14,18 +14,18 @@ import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
+import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
+import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
-public class ChatEmotionalRecommendationService {
+public class GetChatEmotionalRecommendationUseCase {
 
     private static final String ACTIVITIES_URL = "/api/activities";
 
@@ -35,7 +35,7 @@ public class ChatEmotionalRecommendationService {
     private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
     private final CreateEmotionalEventUseCase createEmotionalEventUseCase;
 
-    public ChatRecommendationOutcome evaluate(
+    public ChatRecommendationOutcome execute(
             String message,
             Long userId,
             String basePrompt,

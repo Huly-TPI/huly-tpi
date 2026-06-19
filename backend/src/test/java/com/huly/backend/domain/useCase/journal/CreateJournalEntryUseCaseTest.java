@@ -2,6 +2,7 @@ package com.huly.backend.domain.useCase.journal;
 
 import com.huly.backend.domain.model.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
+import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.repository.journal.JournalEntryRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -103,7 +102,11 @@ class CreateJournalEntryUseCaseTest {
 
         createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, true);
 
-        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), anyString());
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(1L);
+        assertThat(captor.getValue().sourceId()).isEqualTo("10");
     }
 
     @Test
@@ -111,11 +114,12 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
 
-        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
         createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, true);
 
-        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
-        assertThat(vectorCaptor.getValue()).contains("HAPPY");
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().content()).contains("HAPPY");
     }
 
     @Test
@@ -123,11 +127,12 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, null))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, null));
 
-        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
         createJournalEntryUseCase.execute(1L, JSON_CONTENT, null, true);
 
-        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
-        String vectorContent = vectorCaptor.getValue();
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        String vectorContent = captor.getValue().content();
         assertThat(vectorContent).contains("Lo de adentro");
         assertThat(vectorContent).contains("Mi pensamiento");
         assertThat(vectorContent).contains("Algo bien");
@@ -140,11 +145,12 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, plainContent, null))
                 .thenReturn(buildEntry(10L, plainContent, null));
 
-        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
         createJournalEntryUseCase.execute(1L, plainContent, null, true);
 
-        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
-        assertThat(vectorCaptor.getValue()).contains("Texto plano sin formato JSON");
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().content()).contains("Texto plano sin formato JSON");
     }
 
     @Test
@@ -152,11 +158,12 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
 
-        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
         createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, false);
 
-        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
-        String vectorContent = vectorCaptor.getValue();
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        String vectorContent = captor.getValue().content();
         assertThat(vectorContent).doesNotContain("Lo de adentro");
         assertThat(vectorContent).doesNotContain("Mi pensamiento");
         assertThat(vectorContent).doesNotContain("Algo bien");
@@ -168,11 +175,12 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.CALM))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.CALM));
 
-        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
         createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.CALM, false);
 
-        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
-        assertThat(vectorCaptor.getValue()).contains("CALM");
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().content()).contains("CALM");
     }
 
     @Test
@@ -180,10 +188,11 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, null))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, null));
 
-        ArgumentCaptor<String> vectorCaptor = ArgumentCaptor.forClass(String.class);
         createJournalEntryUseCase.execute(1L, JSON_CONTENT, null, true);
 
-        verify(userVectorMemoryService).rememberJournalEntry(eq(1L), eq(10L), vectorCaptor.capture());
-        assertThat(vectorCaptor.getValue()).doesNotContain("Estado de ánimo");
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().content()).doesNotContain("Estado de ánimo");
     }
 }

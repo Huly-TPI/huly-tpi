@@ -5,12 +5,15 @@ import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
+import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
+import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class UpdateEmotionalEventDecisionUseCase {
@@ -38,7 +41,38 @@ public class UpdateEmotionalEventDecisionUseCase {
                 .updatedAt(Instant.now())
                 .build();
         EmotionalEvent saved = emotionalEventRepository.save(updated);
-        userVectorMemoryService.rememberActivityRecommendationDecision(saved);
+        if (saved != null && saved.getUserId() != null && saved.getRecommendationDecision() != null) {
+            RecommendationDecision decision = saved.getRecommendationDecision();
+            String decisionText = decision == RecommendationDecision.ACCEPTED ? "acepto"
+                                : decision == RecommendationDecision.IGNORED ? "rechazo"
+                                : "eligio otra actividad para";
+            String recText = saved.getGeneratedRecommendation() != null ? saved.getGeneratedRecommendation() : "";
+            String recommendedId = saved.getRecommendedActivityId() != null ? saved.getRecommendedActivityId().toString() : "";
+            String chosenId = saved.getChosenActivityId() != null ? saved.getChosenActivityId().toString() : "";
+            String eventIdStr = saved.getId() != null ? saved.getId().toString() : "";
+
+            String contentStr = "El usuario %s la recomendacion de actividad. Actividad recomendada id: %s. Actividad elegida id: %s. Recomendacion: %s."
+                    .formatted(decisionText, recommendedId, chosenId, recText);
+
+            userVectorMemoryService.saveMemory(new SaveVectorMemoryCommand(
+                    saved.getUserId(),
+                    VectorMemorySource.CHATBOT,
+                    saved.getId() != null ? saved.getId().toString() : saved.getUserId().toString(),
+                    "ACTIVITY_RECOMMENDATION_DECISION",
+                    "ACTIVITY_RECOMMENDATION_DECISION",
+                    contentStr,
+                    null,
+                    saved.getId() != null ? saved.getId().toString() : null,
+                    Map.of(
+                            "createdFrom", "USER_MESSAGE",
+                            "feature", "CHATBOT_ACTIVITY_DECISION",
+                            "decision", decision.name(),
+                            "recommendedActivityId", recommendedId,
+                            "chosenActivityId", chosenId,
+                            "emotionalEventId", eventIdStr
+                    )
+            ));
+        }
         return saved;
     }
 

@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
@@ -69,9 +70,16 @@ public class AdminUseCaseConfig {
             UserRepository userRepository,
             EmotionalEventRepository emotionalEventRepository,
             VectorMemoryRepository vectorMemoryRepository,
+            UserPersonalitySummaryRepository userPersonalitySummaryRepository,
             ChatConversationPreferenceRepository chatConversationPreferenceRepository
     ) {
-        return new GetUserAiDiagnosticsUseCase(userRepository, emotionalEventRepository, vectorMemoryRepository, chatConversationPreferenceRepository);
+        return new GetUserAiDiagnosticsUseCase(
+                userRepository,
+                emotionalEventRepository,
+                vectorMemoryRepository,
+                userPersonalitySummaryRepository,
+                chatConversationPreferenceRepository
+        );
     }
 
     @Bean
