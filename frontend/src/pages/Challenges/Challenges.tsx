@@ -14,6 +14,7 @@ import dayBackground from '../../assets/shared/day-background.webp'
 import nightBackground from '../../assets/shared/dark-background.webp'
 import boardBg from '../../assets/challenges/board-challenges.png'
 import stumpImg from '../../assets/challenges/stump.png'
+import nurseryImg from '../../assets/challenges/nursery.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
 import { useAuthGate } from '../../context/authGate'
@@ -132,9 +133,6 @@ export default function Challenges() {
           </h1>
 
           <div className="w-full max-w-[200px] text-center">
-            <p className="text-[0.78rem] text-bosque m-0 mb-[0.35rem]">
-              <strong>{cycleProgress}</strong> / {requiredGoals} en este ciclo
-            </p>
             <div
               className="h-[9px] bg-white/30 rounded-full overflow-hidden w-full"
               role="progressbar"
@@ -155,17 +153,12 @@ export default function Challenges() {
             {PLANT_HINTS[plantStage]}
           </p>
 
-          {completedPlants > 0 && (
-            <p className="text-[0.72rem] text-bosque text-center m-0">
-              Plantas cosechadas: <strong>{completedPlants}</strong>
-            </p>
-          )}
-
           <button
-            className="mt-1 text-[0.72rem] text-bosque underline underline-offset-2 bg-transparent border-0 cursor-pointer hover:opacity-70 transition-opacity"
+            className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 border border-bosque/20 shadow-sm cursor-pointer hover:bg-white/90 hover:shadow-md transition-all duration-150"
             onClick={() => navigate('/orchard')}
           >
-            🌿 Ver Huerta
+            <img src={nurseryImg} alt="" aria-hidden="true" className="w-12 h-12 object-contain" />
+            <span className="text-sm font-semibold text-bosque">Ver Vivero</span>
           </button>
         </div>
 

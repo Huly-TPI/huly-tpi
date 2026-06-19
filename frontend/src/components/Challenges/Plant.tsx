@@ -1,7 +1,5 @@
 import wateringCanImg from '../../assets/challenges/watering-can.png'
-import flowerpotBaseImg from '../../assets/challenges/plant-stages/flowerpot-base.png'
-import flowerpotTopImg from '../../assets/challenges/plant-stages/flowerpot-top.png'
-import { getPlantImages } from '../../config/plantImages'
+import { getPlantAssets } from '../../config/plantImages'
 
 export interface PlantProps {
   stage: 0 | 1 | 2 | 3 | 4 | 5
@@ -10,7 +8,7 @@ export interface PlantProps {
 }
 
 export default function Plant({ stage, isWatering, plantType = 1 }: PlantProps) {
-  const images = getPlantImages(plantType)
+  const { stages: images, flowerpotBase: flowerpotBaseImg, flowerpotTop: flowerpotTopImg } = getPlantAssets(plantType)
 
   return (
     <div className={`plant relative w-[220px] h-[260px] flex-shrink-0 z-[1]${isWatering ? ' plant--watering' : ''}`}>

@@ -16,7 +16,7 @@ export function useUserPlants() {
       setPlants(data)
     } catch (err) {
       if (err instanceof SessionExpiredError) {
-        setError('Debés iniciar sesión para ver tu huerta')
+        setError('Debés iniciar sesión para ver tu vivero')
       } else {
         setError('No pudimos cargar tus plantas. Intentá de nuevo más tarde.')
       }

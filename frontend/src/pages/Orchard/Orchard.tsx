@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUserPlants } from '../../hooks/useUserPlants'
 import { type UserPlantSummaryResponse } from '../../api/userGoals'
@@ -9,32 +9,26 @@ import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import dayBackground from '../../assets/shared/day-background.webp'
 import nightBackground from '../../assets/shared/dark-background.webp'
 import plotImg from '../../assets/challenges/plot.png'
-import stumpShortImg from '../../assets/challenges/stump-short.png'
+import mobilePlotImg from '../../assets/challenges/mobile/plot.png'
 import { useTheme } from '../../context/theme'
 import './Orchard.css'
 
-// Garden layout constants
-const COLS = 6
-const ROWS = 2
-const TOTAL_SLOTS = COLS * ROWS       // 12
-const HISTORY_SLOTS = TOTAL_SLOTS - 1  // 11 slots for completed plants
-const SLOT_WIDTH = VISUAL_W            // 121px per slot
+const TOTAL_SLOTS = 12
+const HISTORY_SLOTS = TOTAL_SLOTS - 1
+const SLOT_WIDTH = VISUAL_W
 const GAP = 12
+
+
+const M_TOP    = '5%'
+const M_BOTTOM = '5%'
+const M_LEFT   = '5%'
+const M_RIGHT  = '5%'
 
 function EmptyGardenSlot() {
   return (
     <div aria-hidden="true" className="flex flex-col items-center" style={{ width: SLOT_WIDTH }}>
-      {/* Badge spacer */}
       <div className="mb-1" style={{ minHeight: 32 }} />
-      {/* Plant spacer */}
       <div style={{ width: VISUAL_W, height: VISUAL_H }} />
-      {/* Faded stump */}
-      <img
-        src={stumpShortImg}
-        alt=""
-        className="object-contain"
-        style={{ width: 88, marginTop: -22, opacity: 0.25 }}
-      />
     </div>
   )
 }
@@ -83,6 +77,14 @@ export default function Orchard() {
   const { plants, loading, error } = useUserPlants()
   const [selectedPlant, setSelectedPlant] = useState<UserPlantSummaryResponse | null>(null)
   const [scrollPage, setScrollPage] = useState(0)
+  const [hoveredPlantId, setHoveredPlantId] = useState<number | null>(null)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   const growingPlant = plants.find(p => p.status === 'GROWING') ?? null
   const completedPlants = plants
@@ -104,7 +106,6 @@ export default function Orchard() {
   const showLeftArrow = safePage > 0
   const showRightArrow = safePage < totalScrollPages - 1
 
-  // Slot 0 = ACT (always top-left), slots 1–11 = current page of completed plants
   const currentPageCompleted = Array.from({ length: HISTORY_SLOTS }, (_, i) =>
     completedPlants[safePage * HISTORY_SLOTS + i] ?? null
   )
@@ -113,7 +114,7 @@ export default function Orchard() {
 
   const gardenGridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateRows: `repeat(${ROWS}, auto)`,
+    gridTemplateRows: 'repeat(2, auto)',
     gridAutoFlow: 'column',
     gridAutoColumns: `${SLOT_WIDTH}px`,
     columnGap: `${GAP}px`,
@@ -121,9 +122,9 @@ export default function Orchard() {
   }
 
   const arrowClass = (visible: boolean) =>
-    `text-5xl font-thin leading-none select-none transition-opacity duration-150 pb-4 ${
+    `${isMobile ? 'text-5xl' : 'text-8xl'} font-thin leading-none select-none transition-opacity duration-150 pb-4 ${
       visible
-        ? 'opacity-100 cursor-pointer text-bosque hover:text-bosque/60'
+        ? 'opacity-100 cursor-pointer text-[#f5ead8]/90 hover:text-[#f5ead8]'
         : 'opacity-0 pointer-events-none'
     }`
 
@@ -132,22 +133,20 @@ export default function Orchard() {
       <ThemeBackground
         lightSrc={dayBackground}
         darkSrc={nightBackground}
-        lightAlt="Fondo huerta"
-        darkAlt="Fondo nocturno huerta"
+        lightAlt="Fondo vivero"
+        darkAlt="Fondo nocturno vivero"
       />
       <BackButton to="/challenges" />
 
-      {/* Stats cards */}
-      <div className="relative z-20 flex justify-center gap-4 pt-6 px-4 flex-shrink-0">
+      <div className="relative z-20 flex justify-center gap-4 pt-16 md:pt-6 px-4 flex-shrink-0">
         <StatCard label="En curso" count={loading ? 0 : (growingPlant ? 1 : 0)} isDark={isDark} />
         <StatCard label="Completadas" count={loading ? 0 : completedPlants.length} isDark={isDark} />
       </div>
 
-      {/* Loading / error / empty states */}
       {loading && (
         <div className="relative z-10 flex-1 flex items-center justify-center">
           <p className={`text-sm italic ${isDark ? 'text-white/60' : 'text-bosque/60'}`}>
-            Cargando tu huerta…
+            Cargando tu vivero…
           </p>
         </div>
       )}
@@ -161,7 +160,7 @@ export default function Orchard() {
       {!loading && !error && plants.length === 0 && (
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-3">
           <p className={`text-sm italic ${isDark ? 'text-white/70' : 'text-bosque/70'}`}>
-            Tu huerta está vacía todavía.
+            Tu vivero está vacío todavía.
           </p>
           <button
             onClick={() => navigate('/challenges')}
@@ -172,64 +171,123 @@ export default function Orchard() {
         </div>
       )}
 
-      {/* Garden: plants + plot */}
       {!loading && !error && plants.length > 0 && (
         <div className="relative flex-1 flex flex-col items-center justify-end">
 
-          {/* plot.png es el fondo del contenedor; la grilla se posiciona dentro de él */}
           <div
             className="relative flex-shrink-0"
-            style={{ width: '85%', maxWidth: 1100, minWidth: 640, marginBottom: -25 }}
+            style={isMobile
+              ? { width: '100%', marginBottom: 65 }
+              : { width: '85%', maxWidth: 1100, minWidth: 640, marginBottom: -25 }
+            }
           >
-            {/* plot.png — define el tamaño del contenedor, actúa como fondo */}
             <img
-              src={plotImg}
+              src={isMobile ? mobilePlotImg : plotImg}
               alt=""
               aria-hidden="true"
               className="block w-full"
-              style={{ transform: 'translateY(30px)' }}
+              style={{ transform: isMobile ? 'translateY(70px)' : 'translateY(30px)' }}
             />
 
-            {/* Grilla: cubre el contenedor, alineada al fondo del plot */}
-            <div className="absolute inset-0 flex items-end justify-center pb-2" style={{ zIndex: 20 }}>
-              <div className="flex items-end gap-3">
-                {/* Left arrow */}
+            {isMobile ? (
+              <>
                 <button
                   onClick={() => setScrollPage(p => Math.max(0, p - 1))}
                   aria-label="Ver plantas más recientes"
                   className={arrowClass(showLeftArrow)}
+                  style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 30 }}
                 >
                   ‹
                 </button>
-
-                {/* 6×2 CSS grid, column-major fill */}
-                <div style={gardenGridStyle}>
-                  {gridItems.map((plant, i) => {
-                    const rowStyle = i % 2 === 1
-                      ? { marginTop: -80, position: 'relative' as const, zIndex: 1 }
-                      : {}
-                    return plant ? (
-                      <div key={plant.id} style={rowStyle}>
-                        <OrchardPlantSlot plant={plant} onClick={() => handleCardClick(plant)} />
-                      </div>
-                    ) : (
-                      <div key={`empty-${i}`} style={rowStyle}>
-                        <EmptyGardenSlot />
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Right arrow */}
                 <button
                   onClick={() => setScrollPage(p => Math.min(totalScrollPages - 1, p + 1))}
                   aria-label="Ver plantas más antiguas"
                   className={arrowClass(showRightArrow)}
+                  style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 30 }}
                 >
                   ›
                 </button>
+
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: M_TOP,
+                    bottom: M_BOTTOM,
+                    left: M_LEFT,
+                    right: M_RIGHT,
+                    zIndex: 20,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gridTemplateRows: 'repeat(4, 1fr)',
+                    columnGap: `${GAP}px`,
+                  }}
+                >
+                  {gridItems.map((plant, i) => (
+                    <div
+                      key={plant ? plant.id : `empty-${i}`}
+                      style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+                    >
+                      {plant ? (
+                        <OrchardPlantSlot
+                          plant={plant}
+                          onClick={() => handleCardClick(plant)}
+                          isMobile
+                        />
+                      ) : (
+                        <EmptyGardenSlot />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="absolute inset-0 flex items-end justify-center pb-[15%]" style={{ zIndex: 20 }}>
+                <div className="flex items-end gap-3">
+                  <button
+                    onClick={() => setScrollPage(p => Math.max(0, p - 1))}
+                    aria-label="Ver plantas más recientes"
+                    className={arrowClass(showLeftArrow)}
+                  >
+                    ‹
+                  </button>
+
+                  <div style={gardenGridStyle}>
+                    {gridItems.map((plant, i) => {
+                      const rowStyle = i % 2 === 1
+                        ? { marginTop: -50, position: 'relative' as const, zIndex: 1 }
+                        : {}
+                      return plant ? (
+                        <div key={plant.id} style={rowStyle}>
+                          <OrchardPlantSlot
+                            plant={plant}
+                            onClick={() => handleCardClick(plant)}
+                            hideBadge={
+                              plant.status === 'GROWING' &&
+                              hoveredPlantId !== null &&
+                              hoveredPlantId !== plant.id
+                            }
+                            onHoverStart={() => setHoveredPlantId(plant.id)}
+                            onHoverEnd={() => setHoveredPlantId(null)}
+                          />
+                        </div>
+                      ) : (
+                        <div key={`empty-${i}`} style={rowStyle}>
+                          <EmptyGardenSlot />
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => setScrollPage(p => Math.min(totalScrollPages - 1, p + 1))}
+                    aria-label="Ver plantas más antiguas"
+                    className={arrowClass(showRightArrow)}
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
