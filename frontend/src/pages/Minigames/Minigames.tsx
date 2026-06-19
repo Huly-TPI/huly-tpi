@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import darkBackgroundImage from '../../assets/minigames/dark-theme/background/Background-minigames.webp'
 import darkMobileBackgroundImage from '../../assets/minigames/dark-theme/background/mobile/background-minigames-mobile.webp'
-import backgroundImage from '../../assets/minigames/light-theme/background/background-minigames.webp'
+import backgroundImage from '../../assets/minigames/light-theme/background/Background-minigames.webp'
 import mobileBackgroundImage from '../../assets/minigames/light-theme/background/mobile/background-minigames-mobile.webp'
 
 import cloudImage from '../../assets/garden/light-theme/Cloud.webp'
