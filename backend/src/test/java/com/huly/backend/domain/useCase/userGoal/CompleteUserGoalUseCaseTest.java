@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.userGoal;
 
-import com.huly.backend.domain.model.UserGoal;
-import com.huly.backend.domain.model.UserPlant;
+import com.huly.backend.domain.model.user.UserGoal;
+import com.huly.backend.domain.model.user.UserPlant;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.model.enums.PlantStatus;
 import com.huly.backend.domain.exception.ImageValidationUnavailableException;
@@ -11,7 +11,7 @@ import com.huly.backend.domain.repository.user.UserGoalRepository;
 import com.huly.backend.domain.repository.UserPlantRepository;
 import com.huly.backend.domain.useCase.userPlant.GetOrCreateCurrentPlantUseCase;
 import com.huly.backend.domain.service.payment.CoinService;
-import com.huly.backend.domain.model.ImageValidationResult;
+import com.huly.backend.domain.model.goals.ImageValidationResult;
 import com.huly.backend.domain.port.ImageValidationPort;
 import com.huly.backend.domain.service.userGoal.ImageStorageService;
 import org.junit.jupiter.api.Test;

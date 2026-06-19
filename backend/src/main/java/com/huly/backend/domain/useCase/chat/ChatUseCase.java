@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.chat.*;
 import com.huly.backend.domain.model.enums.ChatOnboardingStatus;
 import com.huly.backend.domain.model.enums.CommunicationStyle;

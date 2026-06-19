@@ -1,10 +1,10 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
@@ -104,7 +104,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 .build();
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
+        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
                 .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
 
@@ -122,8 +122,8 @@ class GetChatEmotionalRecommendationUseCaseTest {
         assertThat(outcome.suggestedAction().activityId()).isEqualTo(7L);
         assertThat(outcome.suggestedAction().emotionalEventId()).isEqualTo(50L);
 
-        ArgumentCaptor<EmotionalRecommendationQuery> queryCaptor =
-                ArgumentCaptor.forClass(EmotionalRecommendationQuery.class);
+        ArgumentCaptor<EmotionalRecommendation> queryCaptor =
+                ArgumentCaptor.forClass(EmotionalRecommendation.class);
         verify(recommendationsUseCase).execute(queryCaptor.capture());
         assertThat(queryCaptor.getValue().userId()).isEqualTo(3L);
         assertThat(queryCaptor.getValue().vad().valence()).isEqualTo(-0.85);
@@ -184,7 +184,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
         );
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
+        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
                 .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
 
@@ -226,7 +226,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 "calmarme",
                 "estres claro"
         ));
-        when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
+        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
                 .thenReturn(new EmotionalRecommendationResult(List.of(), false));
 
         ChatRecommendationOutcome outcome = useCase.execute(
@@ -274,7 +274,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 .build();
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(EmotionalRecommendationQuery.class)))
+        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
                 .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
 

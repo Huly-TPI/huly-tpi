@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.ActivitySession;
+import com.huly.backend.domain.model.activity.ActivitySession;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.infrastructure.repository.entity.ActivitySessionEntity;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;

@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.dto.emotionalEvent;
 
-import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 

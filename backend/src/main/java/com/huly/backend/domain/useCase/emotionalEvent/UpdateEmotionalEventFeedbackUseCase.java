@@ -2,8 +2,8 @@ package com.huly.backend.domain.useCase.emotionalEvent;
 
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.UpdateEmotionalEventFeedbackCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.UpdateEmotionalEventFeedbackCommand;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import lombok.RequiredArgsConstructor;
 

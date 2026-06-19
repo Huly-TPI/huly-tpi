@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.chatBotConfig;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

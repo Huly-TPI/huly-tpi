@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.UserEmotionalState;
+import com.huly.backend.domain.model.user.UserEmotionalState;
 import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
 import com.huly.backend.infrastructure.presentation.dto.emotionalState.UserEmotionalStateRequest;
 import org.junit.jupiter.api.BeforeEach;

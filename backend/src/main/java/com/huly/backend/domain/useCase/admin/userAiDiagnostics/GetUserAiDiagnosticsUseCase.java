@@ -1,8 +1,8 @@
 package com.huly.backend.domain.useCase.admin.userAiDiagnostics;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
 import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;

@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.user;
 
-import com.huly.backend.domain.dto.payment.UserPlan;
+import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
 import lombok.RequiredArgsConstructor;
 

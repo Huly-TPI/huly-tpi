@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.repository.mapper;
-import com.huly.backend.domain.model.Badge;
+import com.huly.backend.domain.model.badge.Badge;
 import com.huly.backend.infrastructure.repository.entity.BadgeEntity;
 import org.springframework.stereotype.Component;
 
