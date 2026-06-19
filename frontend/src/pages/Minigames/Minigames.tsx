@@ -6,8 +6,8 @@ import mobileBackgroundImage from '../../assets/minigames/light-theme/background
 
 import cloudImage from '../../assets/garden/light-theme/cloud.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
-import darkLanternImage from '../../assets/lanterns/dark-theme/Lantern-Dark.webp'
-import lanternImage from '../../assets/lanterns/ligth-theme/Lantern-Ligth.webp'
+import darkLanternImage from '../../assets/lanterns/dark-theme/lantern-Dark.webp'
+import lanternImage from '../../assets/lanterns/ligth-theme/lantern-Ligth.webp'
 import darkFishImage from '../../assets/minigames/dark-theme/fish.webp'
 import darkEaselImage from '../../assets/minigames/dark-theme/paddle.webp'
 import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
