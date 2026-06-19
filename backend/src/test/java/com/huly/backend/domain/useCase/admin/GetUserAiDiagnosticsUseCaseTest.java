@@ -1,4 +1,4 @@
-package com.huly.backend.domain.useCase.admin.userAiDiagnostics;
+package com.huly.backend.domain.useCase.admin;
 
 import com.huly.backend.domain.model.AppUser;
 import com.huly.backend.domain.model.EmotionalEvent;
@@ -13,6 +13,9 @@ import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
+import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsRequest;
+import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsResponse;
+import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
