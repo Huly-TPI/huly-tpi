@@ -1,4 +1,4 @@
-CREATE TABLE user_plant (
+CREATE TABLE IF NOT EXISTS user_plant (
     id             BIGSERIAL PRIMARY KEY,
     id_app_user    BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
     plant_number   INT NOT NULL,
@@ -9,4 +9,4 @@ CREATE TABLE user_plant (
 );
 
 ALTER TABLE user_goals
-    ADD COLUMN user_plant_id BIGINT REFERENCES user_plant(id) ON DELETE SET NULL;
+    ADD COLUMN IF NOT EXISTS user_plant_id BIGINT REFERENCES user_plant(id) ON DELETE SET NULL;

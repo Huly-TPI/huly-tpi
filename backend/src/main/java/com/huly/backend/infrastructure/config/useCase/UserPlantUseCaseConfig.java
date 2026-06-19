@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.config.useCase;
 
-import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.repository.user.UserGoalRepository;
 import com.huly.backend.domain.repository.UserPlantRepository;
 import com.huly.backend.domain.useCase.userPlant.GetOrCreateCurrentPlantUseCase;
 import com.huly.backend.domain.useCase.userPlant.GetPlantGoalsUseCase;

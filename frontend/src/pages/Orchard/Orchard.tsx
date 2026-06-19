@@ -11,7 +11,6 @@ import nightBackground from '../../assets/shared/dark-background.webp'
 import plotImg from '../../assets/challenges/plot.png'
 import mobilePlotImg from '../../assets/challenges/mobile/plot.png'
 import { useTheme } from '../../context/theme'
-import './Orchard.css'
 
 const TOTAL_SLOTS = 12
 const HISTORY_SLOTS = TOTAL_SLOTS - 1

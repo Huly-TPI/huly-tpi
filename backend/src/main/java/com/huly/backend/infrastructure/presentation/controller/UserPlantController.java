@@ -52,7 +52,8 @@ public class UserPlantController {
         List<UserGoal> goals = getPlantGoalsUseCase.execute(id);
         List<UserGoalResponse> goalResponses = goals.stream().map(g -> new UserGoalResponse(
                 g.getId(), g.getUserId(), g.getTitle(), g.getDescription(),
-                g.getStatus().name(), g.getCreatedAt(), g.getActivityId()
+                g.getStatus().name(), g.getCreatedAt(), g.getActivityId(),
+                g.getImageUrl(), g.getCoinsReward(), g.getCoinsRewardWithImage()
         )).toList();
         return ResponseEntity.ok(new PlantGoalsResponse(id, goalResponses));
     }
