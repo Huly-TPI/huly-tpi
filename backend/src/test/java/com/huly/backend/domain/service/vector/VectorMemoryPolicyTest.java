@@ -11,11 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class VectorMemoryPolicyTest {
 
     private final VectorMemoryProperties properties = new VectorMemoryProperties();
-    private final VectorMemoryPolicy policy = new VectorMemoryPolicy(
-            properties,
-            List.of(new ChatbotVectorMemoryPolicy(), new GuidedLanternsVectorMemoryPolicy()),
-            new DefaultVectorMemorySourcePolicy()
-    );
+    private final VectorMemoryPolicy policy = new VectorMemoryPolicy(properties);
 
     @Test
     void normalizeContent_shouldTrimAndCollapseSpaces() {
@@ -93,7 +89,24 @@ class VectorMemoryPolicyTest {
     }
 
     @Test
-    void shouldRemember_shouldAcceptShortMessageAtGuidedLanternsMinimum() {
+    void shouldRemember_shouldAcceptGuidedLanternsContentAboveMinLength() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_LANTERNS,
+                null,
+                null,
+                null,
+                "me siento muy triste hoy",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "me siento muy triste hoy")).isTrue();
+    }
+
+    @Test
+    void shouldRemember_shouldRejectGuidedLanternsContentBelowMinLength() {
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
                 VectorMemorySource.GUIDED_LANTERNS,
@@ -106,24 +119,7 @@ class VectorMemoryPolicyTest {
                 null
         );
 
-        assertThat(policy.shouldRemember(command, "ab")).isTrue();
-    }
-
-    @Test
-    void shouldRemember_shouldRejectMessageBelowGuidedLanternsMinimum() {
-        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
-                1L,
-                VectorMemorySource.GUIDED_LANTERNS,
-                null,
-                null,
-                null,
-                "a",
-                null,
-                null,
-                null
-        );
-
-        assertThat(policy.shouldRemember(command, "a")).isFalse();
+        assertThat(policy.shouldRemember(command, "ab")).isFalse();
     }
 
     @Test

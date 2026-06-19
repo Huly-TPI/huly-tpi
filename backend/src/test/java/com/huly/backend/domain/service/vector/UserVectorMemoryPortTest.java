@@ -42,7 +42,7 @@ class UserVectorMemoryPortTest {
         assertThat(vectorMemoryService.lastMultiSourceQuery.userId()).isEqualTo(1L);
         assertThat(vectorMemoryService.lastMultiSourceQuery.sourceTypes()).containsExactly(
                 VectorMemorySource.CHATBOT,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
                 VectorMemorySource.EMOTIONAL_JOURNAL,
                 VectorMemorySource.ONBOARDING
         );
@@ -53,10 +53,10 @@ class UserVectorMemoryPortTest {
 
     @Test
     void findRelevantUserMemories_shouldSearchSpecificSource() {
-        service.findRelevantUserMemories(1L, VectorMemorySource.GUIDED_CLOUDS, "ansiedad");
+        service.findRelevantUserMemories(1L, VectorMemorySource.GUIDED_LANTERNS, "ansiedad");
 
         assertThat(vectorMemoryService.lastSingleSourceQuery).isNotNull();
-        assertThat(vectorMemoryService.lastSingleSourceQuery.sourceType()).isEqualTo(VectorMemorySource.GUIDED_CLOUDS);
+        assertThat(vectorMemoryService.lastSingleSourceQuery.sourceType()).isEqualTo(VectorMemorySource.GUIDED_LANTERNS);
     }
 
     @Test
@@ -192,13 +192,13 @@ class UserVectorMemoryPortTest {
     }
 
     @Test
-    void rememberGuidedCloudInput_shouldBuildGuidedCloudMemoryCommand() {
-        service.rememberGuidedCloudInput(7L, "cloud-1", "me cuesta soltar lo que paso");
+    void rememberGuidedLanternInput_shouldBuildGuidedCloudMemoryCommand() {
+        service.rememberGuidedLanternInput(7L, "cloud-1", "me cuesta soltar lo que paso");
 
         SaveVectorMemoryCommand command = vectorMemoryService.savedCommands.get(0);
-        assertThat(command.sourceType()).isEqualTo(VectorMemorySource.GUIDED_CLOUDS);
-        assertThat(command.source()).isEqualTo("GUIDED_CLOUD_INPUT");
-        assertThat(command.contentType()).isEqualTo("GUIDED_CLOUD_INPUT");
+        assertThat(command.sourceType()).isEqualTo(VectorMemorySource.GUIDED_LANTERNS);
+        assertThat(command.source()).isEqualTo("GUIDED_LANTERN_INPUT");
+        assertThat(command.contentType()).isEqualTo("GUIDED_LANTERN_INPUT");
     }
 
     @Test

@@ -6,7 +6,7 @@ import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.ActivityType;
-import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
@@ -19,7 +19,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GetCloudRecommendationUseCase {
+public class GetLanternRecommendationUseCase {
 
     private static final String CLOUD_ANALYSIS_CONTEXT = """
             Eres Huly, un asistente de bienestar mental.
@@ -32,7 +32,7 @@ public class GetCloudRecommendationUseCase {
     private final ChatEmotionalRecommendationPolicy recommendationPolicy;
     private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
 
-    public CloudRecommendation execute(List<String> thoughts) {
+    public LanternRecommendation execute(List<String> thoughts) {
         return execute(thoughts, null);
     }
 

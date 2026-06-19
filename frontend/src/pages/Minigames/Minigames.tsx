@@ -158,6 +158,7 @@ const allImageSources: string[] = [
 
 export default function Minigames() {
     const { theme } = useTheme()
+    const isDark = theme === 'dark'
 
     useEffect(() => {
         const sources = new Set<string>([
