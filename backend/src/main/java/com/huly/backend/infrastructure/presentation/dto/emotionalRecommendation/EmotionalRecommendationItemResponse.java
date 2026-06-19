@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation;
 
-import com.huly.backend.domain.model.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.enums.ActivityType;
 
 public record EmotionalRecommendationItemResponse(

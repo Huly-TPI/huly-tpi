@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.repository.mapper;
-import com.huly.backend.domain.model.UserBadge;
+import com.huly.backend.domain.model.user.UserBadge;
 import com.huly.backend.infrastructure.repository.entity.UserBadgeEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

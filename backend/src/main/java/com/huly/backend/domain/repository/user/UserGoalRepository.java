@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.user;
 
-import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

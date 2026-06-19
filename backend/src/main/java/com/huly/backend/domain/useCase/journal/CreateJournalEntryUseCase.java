@@ -2,7 +2,7 @@ package com.huly.backend.domain.useCase.journal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.JournalEntry;
+import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;

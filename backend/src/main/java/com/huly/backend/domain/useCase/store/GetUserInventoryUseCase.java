@@ -1,5 +1,5 @@
 package com.huly.backend.domain.useCase.store;
-import com.huly.backend.domain.model.UserStoreItem;
+import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import lombok.RequiredArgsConstructor;
 import java.util.List;

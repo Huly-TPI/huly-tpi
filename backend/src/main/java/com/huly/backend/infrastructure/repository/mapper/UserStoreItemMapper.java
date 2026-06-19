@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.mapper;
-import com.huly.backend.domain.model.StoreItem;
-import com.huly.backend.domain.model.UserStoreItem;
+import com.huly.backend.domain.model.shop.StoreItem;
+import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.infrastructure.repository.entity.StoreItemEntity;
 import com.huly.backend.infrastructure.repository.entity.UserStoreItemEntity;
 import org.springframework.stereotype.Component;

@@ -1,9 +1,9 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.dto.payment.UserPlan;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.user.UserPlan;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;

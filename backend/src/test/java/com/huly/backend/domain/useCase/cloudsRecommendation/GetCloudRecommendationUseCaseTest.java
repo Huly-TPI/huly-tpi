@@ -1,11 +1,11 @@
 package com.huly.backend.domain.useCase.cloudsRecommendation;
 
-import com.huly.backend.domain.model.Activity;
-import com.huly.backend.domain.model.CloudRecommendation;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.model.cloudRecommendation.CloudRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.ActivityType;
@@ -13,7 +13,7 @@ import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
-import com.huly.backend.domain.service.EmotionalRecommendationService;
+import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
@@ -70,7 +70,7 @@ class GetCloudRecommendationUseCaseTest {
         assertThat(result.redirectUrl()).isEqualTo("/guided-breathing");
         assertThat(emotionalAnalysisPort.userMessage).isEqualTo("me siento muy ansioso\nno puedo parar");
 
-        EmotionalRecommendationQuery query = recommendationService.query;
+        EmotionalRecommendation query = recommendationService.query;
         assertThat(query.vad().valence()).isEqualTo(-0.75);
         assertThat(query.vad().arousal()).isEqualTo(0.85);
         assertThat(query.vad().dominance()).isEqualTo(-0.70);
@@ -226,14 +226,14 @@ class GetCloudRecommendationUseCaseTest {
 
     private static class CapturingRecommendationService extends EmotionalRecommendationService {
 
-        private EmotionalRecommendationQuery query;
+        private EmotionalRecommendation query;
         private List<Activity> activities = List.of();
         private List<EmotionalEvent> userHistory = List.of();
         private EmotionalRecommendationResult result = new EmotionalRecommendationResult(List.of(), false);
 
         @Override
         public EmotionalRecommendationResult recommend(
-                EmotionalRecommendationQuery query,
+                EmotionalRecommendation query,
                 List<Activity> activities,
                 List<EmotionalEvent> userHistory
         ) {

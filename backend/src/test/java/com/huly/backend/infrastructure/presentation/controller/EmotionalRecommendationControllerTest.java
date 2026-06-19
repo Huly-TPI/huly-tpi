@@ -1,9 +1,9 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
@@ -74,7 +74,7 @@ class EmotionalRecommendationControllerTest {
                 )),
                 false
         );
-        when(useCase.execute(any(EmotionalRecommendationQuery.class))).thenReturn(result);
+        when(useCase.execute(any(EmotionalRecommendation.class))).thenReturn(result);
 
         EmotionalRecommendationRequest request = new EmotionalRecommendationRequest(
                 1L,
@@ -97,8 +97,8 @@ class EmotionalRecommendationControllerTest {
                 .andExpect(jsonPath("$.recommendations[0].activityId").value(1L))
                 .andExpect(jsonPath("$.recommendations[0].type").value("RESPIRACION"));
 
-        ArgumentCaptor<EmotionalRecommendationQuery> queryCaptor =
-                ArgumentCaptor.forClass(EmotionalRecommendationQuery.class);
+        ArgumentCaptor<EmotionalRecommendation> queryCaptor =
+                ArgumentCaptor.forClass(EmotionalRecommendation.class);
         verify(useCase).execute(queryCaptor.capture());
         assertThat(queryCaptor.getValue().userId()).isEqualTo(AUTHENTICATED_USER_ID);
     }

@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.UserGoal;
-import com.huly.backend.domain.model.UserPlant;
+import com.huly.backend.domain.model.user.UserGoal;
+import com.huly.backend.domain.model.user.UserPlant;
 import com.huly.backend.domain.repository.UserPlantRepository;
 import com.huly.backend.domain.useCase.userPlant.GetOrCreateCurrentPlantUseCase;
 import com.huly.backend.domain.useCase.userPlant.GetPlantGoalsUseCase;

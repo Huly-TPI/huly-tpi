@@ -1,7 +1,7 @@
 package com.huly.backend.domain.service.chat;
 
-import com.huly.backend.domain.dto.payment.Product;
-import com.huly.backend.domain.dto.payment.UserPlan;
+import com.huly.backend.domain.model.payment.Product;
+import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.repository.payment.ProductRepository;

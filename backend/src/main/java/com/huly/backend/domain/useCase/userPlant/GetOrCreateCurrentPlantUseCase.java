@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.userPlant;
 
-import com.huly.backend.domain.model.UserPlant;
+import com.huly.backend.domain.model.user.UserPlant;
 import com.huly.backend.domain.model.enums.PlantStatus;
 import com.huly.backend.domain.repository.UserPlantRepository;
 import lombok.RequiredArgsConstructor;

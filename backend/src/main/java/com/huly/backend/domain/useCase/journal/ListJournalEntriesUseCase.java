@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.journal;
 
-import com.huly.backend.domain.model.JournalEntry;
+import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.repository.journal.JournalEntryRepository;
 import lombok.RequiredArgsConstructor;
 

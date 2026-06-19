@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.adapter.anthropic;
 
 import com.huly.backend.domain.exception.ImageValidationUnavailableException;
-import com.huly.backend.domain.model.ImageValidationResult;
+import com.huly.backend.domain.model.goals.ImageValidationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;

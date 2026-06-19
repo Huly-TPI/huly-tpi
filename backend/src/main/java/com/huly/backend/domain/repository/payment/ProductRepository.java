@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.payment;
 
-import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;
 
 import java.util.List;

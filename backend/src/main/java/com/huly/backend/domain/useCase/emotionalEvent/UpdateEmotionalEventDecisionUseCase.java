@@ -2,8 +2,8 @@ package com.huly.backend.domain.useCase.emotionalEvent;
 
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.UpdateRecommendationDecisionCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;

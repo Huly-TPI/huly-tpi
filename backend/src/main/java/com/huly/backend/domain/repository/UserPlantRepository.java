@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository;
 
-import com.huly.backend.domain.model.UserPlant;
+import com.huly.backend.domain.model.user.UserPlant;
 import com.huly.backend.domain.model.enums.PlantStatus;
 
 import java.util.List;

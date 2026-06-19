@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.useCase.riskWord.CreateRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.DeleteRiskWordUseCase;

@@ -1,10 +1,10 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
@@ -82,7 +82,7 @@ public class GetChatEmotionalRecommendationUseCase {
             EmotionalAnalysisResult analysis
     ) {
         try {
-            EmotionalRecommendationQuery query = new EmotionalRecommendationQuery(
+            EmotionalRecommendation query = new EmotionalRecommendation(
                     userId,
                     analysis.vad(),
                     analysis.intensity(),
