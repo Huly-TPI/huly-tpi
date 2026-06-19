@@ -10,11 +10,13 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class VectorMemoryRepositoryImplTest {
 
@@ -32,7 +34,7 @@ class VectorMemoryRepositoryImplTest {
     @Test
     void findMemoriesByUserIdExcludingSummary_shouldReturnMappedList() {
         VectorMemoryEntry entry = new VectorMemoryEntry("1", "content", "source", "type", "date");
-        
+
         when(jdbcTemplate.query(anyString(), any(RowMapper.class), anyString()))
                 .thenReturn(List.of(entry));
 
@@ -49,26 +51,6 @@ class VectorMemoryRepositoryImplTest {
                 .thenThrow(new RuntimeException("DB Error"));
 
         List<VectorMemoryEntry> result = repository.findMemoriesByUserIdExcludingSummary(1L);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void findPersonalitySummaryByUserId_shouldReturnSummary() {
-        when(jdbcTemplate.query(anyString(), any(RowMapper.class), anyString()))
-                .thenReturn(List.of("Personality Summary"));
-
-        Optional<String> result = repository.findPersonalitySummaryByUserId(1L);
-
-        assertThat(result).isPresent().contains("Personality Summary");
-    }
-
-    @Test
-    void findPersonalitySummaryByUserId_shouldReturnEmpty_onException() {
-        when(jdbcTemplate.query(anyString(), any(RowMapper.class), anyString()))
-                .thenThrow(new RuntimeException("DB Error"));
-
-        Optional<String> result = repository.findPersonalitySummaryByUserId(1L);
 
         assertThat(result).isEmpty();
     }
@@ -113,20 +95,5 @@ class VectorMemoryRepositoryImplTest {
         }).when(jdbcTemplate).query(anyString(), any(RowMapper.class), anyString());
 
         repository.findMemoriesByUserIdExcludingSummary(1L);
-    }
-
-    @Test
-    void findPersonalitySummary_rowMapper_shouldMapCorrectly() throws Exception {
-        ResultSet rs = mock(ResultSet.class);
-        when(rs.getString("content")).thenReturn("Personality Summary Content");
-
-        doAnswer(invocation -> {
-            RowMapper<String> mapper = invocation.getArgument(1);
-            String mapped = mapper.mapRow(rs, 1);
-            assertThat(mapped).isEqualTo("Personality Summary Content");
-            return List.of(mapped);
-        }).when(jdbcTemplate).query(anyString(), any(RowMapper.class), anyString());
-
-        repository.findPersonalitySummaryByUserId(1L);
     }
 }

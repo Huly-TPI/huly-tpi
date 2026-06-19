@@ -86,8 +86,8 @@ public class SpringAiVectorMemoryService implements VectorMemoryService {
                 new PGvector(embedding)
         );
 
-        log.info("Memoria vectorial guardada id={} userId={} sourceType={}",
-                id, command.userId(), command.sourceType());
+        log.info("Memoria vectorial guardada id={} userId={} sourceType={} contentType={}",
+                id, command.userId(), command.sourceType(), valueOrDefault(command.contentType(), DEFAULT_CONTENT_TYPE));
     }
 
     @Override

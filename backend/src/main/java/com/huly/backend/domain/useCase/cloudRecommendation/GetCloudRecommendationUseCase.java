@@ -1,44 +1,53 @@
 package com.huly.backend.domain.useCase.cloudRecommendation;
 
 import com.huly.backend.domain.model.CloudRecommendation;
+import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.EmotionalEvent;
 import com.huly.backend.domain.model.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.EmotionalRecommendationQuery;
 import com.huly.backend.domain.model.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.provider.EmotionalAnalysisPort;
+import com.huly.backend.domain.repository.ActivityRepository;
+import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.service.EmotionalRecommendationService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
-import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
-@Service
 public class GetCloudRecommendationUseCase {
+    private static final int HISTORY_LIMIT = 20;
 
     private final org.springframework.core.io.Resource cloudAnalysisPrompt;
 
     private final EmotionalAnalysisPort emotionalAnalysisPort;
     private final PromptBuilderService promptBuilderService;
     private final ChatEmotionalRecommendationPolicy recommendationPolicy;
-    private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
+    private final EmotionalRecommendationService recommendationService;
+    private final ActivityRepository activityRepository;
+    private final EmotionalEventRepository emotionalEventRepository;
 
     public GetCloudRecommendationUseCase(
             @Value("classpath:/prompts/cloud-analysis.st") org.springframework.core.io.Resource cloudAnalysisPrompt,
             EmotionalAnalysisPort emotionalAnalysisPort,
             PromptBuilderService promptBuilderService,
             ChatEmotionalRecommendationPolicy recommendationPolicy,
-            GetEmotionalRecommendationsUseCase recommendationsUseCase) {
+            EmotionalRecommendationService recommendationService,
+            ActivityRepository activityRepository,
+            EmotionalEventRepository emotionalEventRepository) {
         this.cloudAnalysisPrompt = cloudAnalysisPrompt;
         this.emotionalAnalysisPort = emotionalAnalysisPort;
         this.promptBuilderService = promptBuilderService;
         this.recommendationPolicy = recommendationPolicy;
-        this.recommendationsUseCase = recommendationsUseCase;
+        this.recommendationService = recommendationService;
+        this.activityRepository = activityRepository;
+        this.emotionalEventRepository = emotionalEventRepository;
     }
 
     public CloudRecommendation execute(List<String> thoughts) {
@@ -56,7 +65,12 @@ public class GetCloudRecommendationUseCase {
                     true
             );
 
-            EmotionalRecommendationResult result = recommendationsUseCase.execute(toQuery(recommendationAnalysis, userId));
+            EmotionalRecommendationQuery query = toQuery(recommendationAnalysis, userId);
+            EmotionalRecommendationResult result = recommendationService.recommend(
+                    query,
+                    activities(),
+                    userHistory(userId)
+            );
             if (result.recommendations().isEmpty()) {
                 return fallback();
             }
@@ -89,6 +103,17 @@ public class GetCloudRecommendationUseCase {
                 analysis.intensity(),
                 analysis.userGoal()
         );
+    }
+
+    private List<Activity> activities() {
+        return activityRepository.findAll();
+    }
+
+    private List<EmotionalEvent> userHistory(Long userId) {
+        if (userId == null)
+            return List.of();
+
+        return emotionalEventRepository.findRecentRecommendationHistoryByUserId(userId, HISTORY_LIMIT);
     }
 
     private CloudRecommendation toCloudRecommendation(EmotionalRecommendationItem recommendation) {

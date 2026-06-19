@@ -99,6 +99,27 @@ class SpringAiVectorMemoryServiceTest {
     }
 
     @Test
+    void saveMemory_shouldPersistShortGuidedCloudMessageUsingGuidedCloudThreshold() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_CLOUDS,
+                "cloud-1",
+                "GUIDED_CLOUD_INPUT",
+                "GUIDED_CLOUD_INPUT",
+                "ansiedad",
+                null,
+                null,
+                Map.of("createdFrom", "USER_MESSAGE")
+        );
+
+        service.saveMemory(command);
+
+        assertThat(embeddingModel.embedCalls).isEqualTo(1);
+        assertThat(jdbcTemplate.updateCalls).isEqualTo(1);
+        assertThat(jdbcTemplate.lastUpdateArgs[1]).isEqualTo("ansiedad");
+    }
+
+    @Test
     void findRelevantMemories_shouldQueryByUserSourceAndMapResult() {
         jdbcTemplate.searchRowId = "mem-1";
         jdbcTemplate.searchRowContent = "Al usuario le gusta la play";

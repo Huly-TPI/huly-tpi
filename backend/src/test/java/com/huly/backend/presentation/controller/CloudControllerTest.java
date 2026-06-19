@@ -2,6 +2,7 @@ package com.huly.backend.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.CloudRecommendation;
+import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
 import com.huly.backend.infrastructure.presentation.controller.CloudController;
@@ -31,6 +32,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
+import org.mockito.ArgumentCaptor;
 
 class CloudControllerTest {
 
@@ -131,7 +134,11 @@ class CloudControllerTest {
                         .content(objectMapper.writeValueAsString(Map.of("thought", "me siento ansioso"))))
                 .andExpect(status().isNoContent());
 
-        verify(userVectorMemoryService).rememberGuidedCloudInput(eq(USER_ID), anyString(), eq("me siento ansioso"));
+        ArgumentCaptor<SaveVectorMemoryCommand> captor =
+                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(USER_ID);
+        assertThat(captor.getValue().content()).isEqualTo("me siento ansioso");
     }
 
     @Test

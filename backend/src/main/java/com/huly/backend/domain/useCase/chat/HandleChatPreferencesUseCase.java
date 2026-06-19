@@ -17,7 +17,6 @@ import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
@@ -29,7 +28,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Service
 @RequiredArgsConstructor
 public class HandleChatPreferencesUseCase {
 
