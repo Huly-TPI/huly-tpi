@@ -4,6 +4,7 @@ import { useAuth } from '../context/auth'
 import { useTheme } from '../context/theme'
 import logo from '../assets/brand/monocromatico-menta-logo.png'
 import ThemeToggle from './ThemeToggle/ThemeToggle'
+import BadgeModal from './Badges/BadgeModal'
 
 const NAV_LINKS = [
   { to: '/', label: 'Jardín' },
@@ -18,6 +19,7 @@ export default function Navbar() {
   const { theme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const isDark = theme === 'dark'
+  const [badgesOpen, setBadgesOpen] = useState(false)
 
   const navRef = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -104,6 +106,20 @@ export default function Navbar() {
             <ThemeToggle compact />
           </div>
 
+          {isAuthenticated && (
+            <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
+              <span>Mis estampitas</span>
+              <button
+                type="button"
+                onClick={() => { setBadgesOpen(true); closeMenu() }}
+                aria-label="Abrir insignias"
+                className="flex h-11 w-11 items-center justify-center transition hover:scale-105"
+              >
+                <img src="/badges/badge_launcher.webp" alt="" className="h-11 w-11 object-contain" />
+              </button>
+            </div>
+          )}
+
           {!isAuthenticated && (
             <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               <Link
@@ -124,6 +140,7 @@ export default function Navbar() {
           )}
         </div>
       )}
+      <BadgeModal isOpen={badgesOpen} onClose={() => setBadgesOpen(false)} />
     </nav>
   )
 }
