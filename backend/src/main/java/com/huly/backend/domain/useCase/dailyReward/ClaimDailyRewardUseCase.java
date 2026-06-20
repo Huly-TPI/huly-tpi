@@ -1,10 +1,11 @@
 package com.huly.backend.domain.useCase.dailyReward;
 
+import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardRequest;
+import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardResponse;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.DailyRewardAlreadyClaimedException;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
-import com.huly.backend.domain.model.dailyReward.DailyRewardClaim;
 import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
@@ -28,7 +29,8 @@ public class ClaimDailyRewardUseCase {
     private final Clock clock;
 
     @Transactional
-    public DailyRewardClaim execute(Long userId) {
+    public ClaimDailyRewardResponse execute(ClaimDailyRewardRequest request) {
+        Long userId = request.userId();
         LocalDate today = LocalDate.now(clock);
         DailyClaimState state = userDetailDomainRepository.findDailyClaimState(userId);
 
@@ -53,7 +55,7 @@ public class ClaimDailyRewardUseCase {
         coinService.credit(userId, coins);
         userDetailDomainRepository.updateDailyClaim(userId, newStreak, today);
 
-        return new DailyRewardClaim(coins, cycleDay, newStreak);
+        return new ClaimDailyRewardResponse(coins, cycleDay, newStreak);
     }
 
     private int resolveCoins(List<DailyReward> cycle, int dayNumber) {

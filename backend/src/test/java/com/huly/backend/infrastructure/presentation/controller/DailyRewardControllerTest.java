@@ -1,8 +1,10 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
+import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardRequest;
+import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardResponse;
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusRequest;
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusResponse;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
-import com.huly.backend.domain.model.dailyReward.DailyRewardClaim;
-import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;
 import org.junit.jupiter.api.AfterEach;
@@ -59,13 +61,13 @@ class DailyRewardControllerTest {
 
     @Test
     void getStatus_shouldReturn200WithCalendar() throws Exception {
-        DailyRewardStatus status = new DailyRewardStatus(
+        GetDailyRewardStatusResponse status = new GetDailyRewardStatusResponse(
                 List.of(
                         DailyReward.builder().id(1L).dayNumber(1).coins(10).build(),
                         DailyReward.builder().id(2L).dayNumber(2).coins(15).build()
                 ),
                 3, 3, false, 0, false);
-        when(getDailyRewardStatusUseCase.execute(USER_ID)).thenReturn(status);
+        when(getDailyRewardStatusUseCase.execute(new GetDailyRewardStatusRequest(USER_ID))).thenReturn(status);
 
         mockMvc.perform(get("/api/daily-rewards/status"))
                 .andExpect(status().isOk())
@@ -82,13 +84,13 @@ class DailyRewardControllerTest {
 
     @Test
     void getStatus_shouldReturnMultipliedCoins_whenPlanBonusActive() throws Exception {
-        DailyRewardStatus status = new DailyRewardStatus(
+        GetDailyRewardStatusResponse status = new GetDailyRewardStatusResponse(
                 List.of(
                         DailyReward.builder().id(1L).dayNumber(1).coins(10).build(),
                         DailyReward.builder().id(2L).dayNumber(2).coins(15).build()
                 ),
                 3, 3, false, 0, true);
-        when(getDailyRewardStatusUseCase.execute(USER_ID)).thenReturn(status);
+        when(getDailyRewardStatusUseCase.execute(new GetDailyRewardStatusRequest(USER_ID))).thenReturn(status);
 
         mockMvc.perform(get("/api/daily-rewards/status"))
                 .andExpect(status().isOk())
@@ -100,7 +102,7 @@ class DailyRewardControllerTest {
 
     @Test
     void claim_shouldReturn200WithReward() throws Exception {
-        when(claimDailyRewardUseCase.execute(USER_ID)).thenReturn(new DailyRewardClaim(10, 1, 1));
+        when(claimDailyRewardUseCase.execute(new ClaimDailyRewardRequest(USER_ID))).thenReturn(new ClaimDailyRewardResponse(10, 1, 1));
 
         mockMvc.perform(post("/api/daily-rewards/claim"))
                 .andExpect(status().isOk())

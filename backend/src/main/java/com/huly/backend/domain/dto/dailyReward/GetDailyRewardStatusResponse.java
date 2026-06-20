@@ -1,4 +1,6 @@
-package com.huly.backend.domain.model.dailyReward;
+package com.huly.backend.domain.dto.dailyReward;
+
+import com.huly.backend.domain.model.dailyReward.DailyReward;
 
 import java.util.List;
 
@@ -12,7 +14,7 @@ import java.util.List;
  * @param nextDay         día del ciclo (1..N) que reclamaría hoy; 0 si ya reclamó hoy.
  * @param planBonusActive true si el usuario tiene un plan activo y recibe el bonus de monedas.
  */
-public record DailyRewardStatus(
+public record GetDailyRewardStatusResponse(
         List<DailyReward> days,
         int currentStreak,
         int completedDays,

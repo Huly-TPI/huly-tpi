@@ -1,9 +1,10 @@
 package com.huly.backend.domain.useCase.dailyReward;
 
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusRequest;
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusResponse;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
 import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
-import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
@@ -22,7 +23,8 @@ public class GetDailyRewardStatusUseCase {
     private final UserPlanRepository userPlanRepository;
     private final Clock clock;
 
-    public DailyRewardStatus execute(Long userId) {
+    public GetDailyRewardStatusResponse execute(GetDailyRewardStatusRequest request) {
+        Long userId = request.userId();
         LocalDate today = LocalDate.now(clock);
         DailyClaimState state = userDetailDomainRepository.findDailyClaimState(userId);
         List<DailyReward> cycle = dailyRewardRepository.findAllOrderByDay();
@@ -47,6 +49,6 @@ public class GetDailyRewardStatusUseCase {
             }
         }
 
-        return new DailyRewardStatus(cycle, currentStreak, completedDays, canClaimToday, nextDay, planBonusActive);
+        return new GetDailyRewardStatusResponse(cycle, currentStreak, completedDays, canClaimToday, nextDay, planBonusActive);
     }
 }

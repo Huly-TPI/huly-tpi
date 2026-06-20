@@ -1,8 +1,9 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.dailyReward.DailyRewardClaim;
+import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardRequest;
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusRequest;
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusResponse;
 import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
-import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;
 import com.huly.backend.infrastructure.presentation.dto.dailyReward.ClaimDailyRewardResponse;
@@ -26,14 +27,15 @@ public class DailyRewardController {
     @GetMapping("/status")
     public ResponseEntity<DailyRewardStatusResponse> getStatus(@AuthenticationPrincipal UserDetails principal) {
         Long userId = currentUserId(principal);
-        DailyRewardStatus status = getDailyRewardStatusUseCase.execute(userId);
+        GetDailyRewardStatusResponse status = getDailyRewardStatusUseCase.execute(new GetDailyRewardStatusRequest(userId));
         return ResponseEntity.ok(toResponse(status));
     }
 
     @PostMapping("/claim")
     public ResponseEntity<ClaimDailyRewardResponse> claim(@AuthenticationPrincipal UserDetails principal) {
         Long userId = currentUserId(principal);
-        DailyRewardClaim claim = claimDailyRewardUseCase.execute(userId);
+        com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardResponse claim =
+                claimDailyRewardUseCase.execute(new ClaimDailyRewardRequest(userId));
         return ResponseEntity.ok(new ClaimDailyRewardResponse(claim.coins(), claim.dayNumber(), claim.newStreak()));
     }
 
@@ -48,7 +50,7 @@ public class DailyRewardController {
         }
     }
 
-    private DailyRewardStatusResponse toResponse(DailyRewardStatus status) {
+    private DailyRewardStatusResponse toResponse(GetDailyRewardStatusResponse status) {
         return new DailyRewardStatusResponse(
                 status.days().stream()
                         .map(d -> new DailyRewardDayResponse(

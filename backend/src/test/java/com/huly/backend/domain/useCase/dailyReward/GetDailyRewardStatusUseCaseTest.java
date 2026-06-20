@@ -1,8 +1,9 @@
 package com.huly.backend.domain.useCase.dailyReward;
 
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusRequest;
+import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusResponse;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
-import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
 import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
@@ -60,7 +61,7 @@ class GetDailyRewardStatusUseCaseTest {
         when(userDetailDomainRepository.findDailyClaimState(USER_ID)).thenReturn(new DailyClaimState(0, null));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(List.of());
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.days()).isEmpty();
         assertThat(status.currentStreak()).isEqualTo(0);
@@ -75,7 +76,7 @@ class GetDailyRewardStatusUseCaseTest {
                 .thenReturn(new DailyClaimState(3, TODAY.minusDays(1)));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.canClaimToday()).isTrue();
         assertThat(status.currentStreak()).isEqualTo(3);
@@ -89,7 +90,7 @@ class GetDailyRewardStatusUseCaseTest {
                 .thenReturn(new DailyClaimState(3, TODAY.minusDays(2)));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.canClaimToday()).isTrue();
         assertThat(status.currentStreak()).isEqualTo(0); // racha rota -> no viva
@@ -102,7 +103,7 @@ class GetDailyRewardStatusUseCaseTest {
         when(userDetailDomainRepository.findDailyClaimState(USER_ID)).thenReturn(new DailyClaimState(0, null));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.currentStreak()).isEqualTo(0);
         assertThat(status.nextDay()).isEqualTo(1);
@@ -115,7 +116,7 @@ class GetDailyRewardStatusUseCaseTest {
                 .thenReturn(new DailyClaimState(3, TODAY));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.canClaimToday()).isFalse();
         assertThat(status.currentStreak()).isEqualTo(3);
@@ -129,7 +130,7 @@ class GetDailyRewardStatusUseCaseTest {
                 .thenReturn(new DailyClaimState(8, TODAY));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.canClaimToday()).isFalse();
         assertThat(status.currentStreak()).isEqualTo(8);
@@ -141,7 +142,7 @@ class GetDailyRewardStatusUseCaseTest {
         when(userDetailDomainRepository.findDailyClaimState(USER_ID)).thenReturn(new DailyClaimState(0, null));
         when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.planBonusActive()).isFalse();
     }
@@ -156,7 +157,7 @@ class GetDailyRewardStatusUseCaseTest {
                 .build();
         when(userPlanRepository.findByUser(USER_ID)).thenReturn(Optional.of(activePlan));
 
-        DailyRewardStatus status = useCase.execute(USER_ID);
+        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
 
         assertThat(status.planBonusActive()).isTrue();
     }
