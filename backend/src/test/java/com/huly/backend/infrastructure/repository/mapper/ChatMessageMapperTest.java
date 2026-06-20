@@ -10,6 +10,8 @@ import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.infrastructure.repository.entity.ChatMessageEntity;
 import com.huly.backend.infrastructure.repository.entity.ChatSessionEntity;
 import com.huly.backend.infrastructure.repository.entity.EmotionEntity;
+import com.huly.backend.infrastructure.repository.entity.GeneratedChallengeEmbeddable;
+import com.huly.backend.infrastructure.repository.entity.SuggestedActionEmbeddable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +56,51 @@ class ChatMessageMapperTest {
     }
 
     @Test
+    void toEntity_shouldReturnNullNestedObjects_whenMessageHasNoSuggestedActionOrChallenge() {
+        ChatSessionEntity session = ChatSessionEntity.builder().id(8L).build();
+        ConversationMessage message = new ConversationMessage(
+                MessageRole.USER,
+                "mensaje simple",
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        ChatMessageEntity entity = chatMessageMapper.toEntity(session, message);
+
+        assertThat(entity.getChatSession()).isEqualTo(session);
+        assertThat(entity.getSuggestedAction()).isNull();
+        assertThat(entity.getGeneratedChallenge()).isNull();
+    }
+
+    @Test
+    void toEntity_shouldMapNullSuggestedActionTypeAndEmptyChallengeDescription() {
+        ChatSessionEntity session = ChatSessionEntity.builder().id(9L).build();
+        ConversationMessage message = new ConversationMessage(
+                MessageRole.ASSISTANT,
+                "mensaje",
+                null,
+                false,
+                null,
+                new SuggestedChatAction(null, 4L, "Respirar", "Desc", "/guided-breathing", 12L),
+                new ChatReply.GeneratedChallenge("Reto", null),
+                "ACCEPTED",
+                "PENDING"
+        );
+
+        ChatMessageEntity entity = chatMessageMapper.toEntity(session, message);
+
+        assertThat(entity.getSuggestedAction()).isNotNull();
+        assertThat(entity.getSuggestedAction().getType()).isNull();
+        assertThat(entity.getGeneratedChallenge()).isNotNull();
+        assertThat(entity.getGeneratedChallenge().getDescription()).isEmpty();
+    }
+
+    @Test
     void toDomain_shouldMapEmbeddablesAndEmotion() {
         Instant now = Instant.now();
         ChatMessageEntity entity = ChatMessageEntity.builder()
@@ -88,6 +135,74 @@ class ChatMessageMapperTest {
         assertThat(chatMessage.suggestedActionDecision()).isEqualTo("ACCEPTED");
         assertThat(chatMessage.generatedChallenge()).isNotNull();
         assertThat(chatMessage.generatedChallenge().title()).isEqualTo("Reto");
+        assertThat(chatMessage.challengeDecision()).isEqualTo("REJECTED");
+    }
+
+    @Test
+    void toDomain_shouldReturnNullNestedObjects_whenEmbeddablesAreMissing() {
+        Instant now = Instant.now();
+        ChatMessageEntity entity = ChatMessageEntity.builder()
+                .id(2L)
+                .role(MessageRole.USER)
+                .content("contenido")
+                .riskDetected(false)
+                .createdAt(now)
+                .suggestedAction(null)
+                .generatedChallenge(null)
+                .emotions(null)
+                .build();
+
+        ChatMessage chatMessage = chatMessageMapper.toDomain(entity);
+
+        assertThat(chatMessage.id()).isEqualTo(2L);
+        assertThat(chatMessage.detectedEmotion()).isNull();
+        assertThat(chatMessage.suggestedAction()).isNull();
+        assertThat(chatMessage.generatedChallenge()).isNull();
+        assertThat(chatMessage.suggestedActionDecision()).isNull();
+        assertThat(chatMessage.challengeDecision()).isNull();
+    }
+
+    @Test
+    void toDomain_shouldReturnNullSuggestedAction_whenSuggestedActionTypeIsNull() {
+        ChatMessageEntity entity = ChatMessageEntity.builder()
+                .id(3L)
+                .role(MessageRole.ASSISTANT)
+                .content("contenido")
+                .createdAt(Instant.now())
+                .suggestedAction(SuggestedActionEmbeddable.builder()
+                        .type(null)
+                        .activityId(4L)
+                        .title("Respirar")
+                        .description("Desc")
+                        .actionUrl("/guided-breathing")
+                        .emotionalEventId(12L)
+                        .decision("ACCEPTED")
+                        .build())
+                .build();
+
+        ChatMessage chatMessage = chatMessageMapper.toDomain(entity);
+
+        assertThat(chatMessage.suggestedAction()).isNull();
+        assertThat(chatMessage.suggestedActionDecision()).isEqualTo("ACCEPTED");
+    }
+
+    @Test
+    void toDomain_shouldReturnNullGeneratedChallenge_whenGeneratedChallengeTitleIsNull() {
+        ChatMessageEntity entity = ChatMessageEntity.builder()
+                .id(4L)
+                .role(MessageRole.ASSISTANT)
+                .content("contenido")
+                .createdAt(Instant.now())
+                .generatedChallenge(GeneratedChallengeEmbeddable.builder()
+                        .title(null)
+                        .description("Descripcion")
+                        .decision("REJECTED")
+                        .build())
+                .build();
+
+        ChatMessage chatMessage = chatMessageMapper.toDomain(entity);
+
+        assertThat(chatMessage.generatedChallenge()).isNull();
         assertThat(chatMessage.challengeDecision()).isEqualTo("REJECTED");
     }
 }
