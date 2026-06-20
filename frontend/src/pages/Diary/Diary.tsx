@@ -6,6 +6,8 @@ import cloudImg from '../../assets/garden/light-theme/cloud.webp'
 import dayBackground from '../../assets/shared/day-background.webp'
 import darkCloudImg from '../../assets/garden/dark-theme/cloud.webp'
 import nightBackground from '../../assets/shared/dark-background.webp'
+import diaryBg from '../../assets/diary/diary-background.png'
+import mobileDiaryBg from '../../assets/diary/mobile-diary-background.png'
 import Button from '../../components/Buttons/Button/Button.tsx'
 import BackButton from '../../components/Buttons/BackButton/BackButton.tsx'
 import DiaryConsentModal from '../../components/DiaryConsentModal.tsx'
@@ -71,45 +73,24 @@ export default function Diary() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const { requireAuth } = useAuthGate()
-  const diaryPalette = isDark
-    ? {
-        cardBackground: '#22324d',
-        cardText: '#dbe7f5',
-        border: 'rgba(136, 105, 172, 0.55)',
-        lineColor: 'rgba(148, 163, 184, 0.32)',
-        accentSurface: 'rgba(92, 120, 172, 0.22)',
-        successSurface: 'rgba(109, 138, 152, 0.22)',
-        warningSurface: 'rgba(132, 124, 110, 0.22)',
-        moodIdle: '#4f7a67',
-        moodHover: '#5b8b76',
-        moodSelected: '#649959',
-        moodRing: '#a7f3d0',
-      }
-    : {
-        cardBackground: 'rgba(255, 255, 255, 0.94)',
-        cardText: '#1f2937',
-        border: '#8869AC',
-        lineColor: 'rgba(0, 0, 0, 0.22)',
-        accentSurface: 'rgba(209, 202, 239, 0.3)',
-        successSurface: 'rgba(171, 203, 167, 0.3)',
-        warningSurface: 'rgba(244, 211, 138, 0.3)',
-      }
+  const cardText = isDark ? '#dbe7f5' : '#3d2b1a'
+  const lineColor = isDark ? 'rgba(148, 163, 184, 0.18)' : 'rgba(120, 90, 50, 0.12)'
+  const accentBg   = isDark ? 'rgba(92, 120, 172, 0.20)' : 'rgba(209, 202, 239, 0.28)'
+  const successBg  = isDark ? 'rgba(109, 138, 152, 0.20)' : 'rgba(171, 203, 167, 0.30)'
+  const warningBg  = isDark ? 'rgba(132, 124, 110, 0.20)' : 'rgba(244, 211, 138, 0.32)'
+  const moodIdle   = isDark ? '#4a3d6e' : '#e8e0f5'
+  const moodSelected = isDark ? '#5f4a8a' : '#D1CAEF'
+  const moodRing   = isDark ? '#a7f3d0' : '#8869AC'
 
   const lineBackground = {
-    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, ${diaryPalette.lineColor} 31px, ${diaryPalette.lineColor} 32px)`,
+    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, ${lineColor} 31px, ${lineColor} 32px)`,
     backgroundSize: '100% 32px',
     backgroundPositionY: '16px',
   }
 
   const pagerButtonStyle = isDark
-    ? {
-        color: '#cbd5e1',
-        backgroundColor: 'rgba(15, 23, 42, 0.18)',
-      }
-    : {
-        color: '#6b7280',
-        backgroundColor: 'transparent',
-      }
+    ? { color: '#cbd5e1', backgroundColor: 'rgba(0,0,0,0.18)' }
+    : { color: '#7a5c38', backgroundColor: 'transparent' }
 
   const saveButtonClassName = isDark
     ? '!w-auto !min-w-0 !border-[#5c4a86] !bg-[#5f4a8a] hover:!shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.18)]'
@@ -128,10 +109,24 @@ export default function Diary() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showConsentModal, setShowConsentModal] = useState(false)
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 767px)').matches
+  )
 
   const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(
     ActivityType.DIARIO
   )
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const mql = window.matchMedia('(max-width: 767px)')
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    setIsMobile(mql.matches)
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+
+  const cardBg = isMobile ? mobileDiaryBg : diaryBg
 
   useEffect(() => {
     if (adentro.trim() || pensamiento.trim() || bien.trim() || manana.trim() || selectedMood !== null) {
@@ -272,25 +267,21 @@ export default function Diary() {
       <BackButton to="/"/>
 
       <div
-        className="diary-card relative w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border-2"
-        style={{
-          backgroundColor: diaryPalette.cardBackground,
-          color: diaryPalette.cardText,
-          borderColor: diaryPalette.border,
-          zIndex: 1,
-        }}
+        className="diary-card relative h-screen w-full max-w-4xl bg-no-repeat [background-size:100%_100%] bg-center rounded-[6px] overflow-hidden drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] flex flex-col md:max-h-[calc(100dvh-120px)]"
+        style={{ backgroundImage: `url(${cardBg})`, color: cardText, zIndex: 1 }}
       >
+        {isDark && (
+          <div className="absolute inset-0 bg-[#1a1008]/[0.3] pointer-events-none" aria-hidden="true" />
+        )}
+        <div className="relative z-10 flex flex-col flex-1 min-h-0 pt-4 md:pt-6 px-[4%] md:px-[5%] pb-4 md:pb-6">
         <div
-          className="flex items-center justify-between px-3 sm:px-5 py-3 border-b gap-2"
-          style={{
-            backgroundColor: diaryPalette.cardBackground,
-            borderColor: diaryPalette.lineColor,
-          }}
+          className="flex items-center justify-between p-3 border-b gap-2 flex-shrink-0"
+          style={{ borderColor: lineColor }}
         >
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-bold text-green-800 text-lg tracking-tight flex-shrink-0 dark:text-menta">huly</span>
-            <span className="sm:hidden text-xs capitalize" style={{ color: '#D1CAEF' }}>{displayDateMobile}</span>
-            <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: '#D1CAEF' }}>{displayDate}</span>
+            <span className="sm:hidden text-xs capitalize" style={{ color: '#8869AC' }}>{displayDateMobile}</span>
+            <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: '#8869AC' }}>{displayDate}</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <div className="flex items-center gap-1">
@@ -302,7 +293,7 @@ export default function Diary() {
               >
                 ‹
               </button>
-              <span className="text-xs sm:text-sm min-w-[28px] sm:min-w-[40px] text-center" style={{ color: isDark ? '#e2e8f0' : '#4b5563' }}>
+              <span className="text-xs sm:text-sm min-w-[28px] sm:min-w-[40px] text-center" style={{ color: isDark ? '#e2e8f0' : '#7a5c38' }}>
                 {pageIndex + 1} / {totalPages}
               </span>
               <button
@@ -324,13 +315,13 @@ export default function Diary() {
               loadingLabel="..."
               className={saveButtonClassName}
             >
-              <span className="hidden sm:inline">💾 </span>Guardar
+              💾<span className="hidden sm:inline"> Guardar</span>
             </Button>
           </div>
         </div>
 
-        <div className="diary-content flex flex-col md:flex-row" style={{ minHeight: '520px', ...lineBackground }}>
-          <div className="diary-left flex-1 px-4 md:px-6 py-5 flex flex-col">
+        <div className="diary-content flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden" style={{ ...lineBackground }}>
+          <div className="diary-left md:flex-1 md:min-h-0 px-2 py-5 flex flex-col">
             <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: '#649959' }}>
               Hoy
             </p>
@@ -352,27 +343,20 @@ export default function Diary() {
                     className="flex flex-col items-center gap-1 group"
                   >
                     <div
-                      className={`diary-mood-circle w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl transition-all ${
-                        isDark
-                          ? isSelected
-                            ? 'ring-2 ring-offset-1 ring-[#a7f3d0]'
-                            : 'group-hover:brightness-110'
-                          : isSelected
-                            ? 'bg-green-400 ring-2 ring-green-600 ring-offset-1'
-                            : 'bg-green-200 group-hover:bg-green-300'
+                      className={`diary-mood-circle w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl transition-all group-hover:brightness-110 ${
+                        isSelected ? 'ring-2 ring-offset-1' : ''
                       } ${!isNewEntry ? 'cursor-default' : 'cursor-pointer'}`}
-                      style={
-                        isDark
-                          ? {
-                              backgroundColor: isSelected ? diaryPalette.moodSelected : diaryPalette.moodIdle,
-                            }
-                          : undefined
-                      }
+                      style={{
+                        backgroundColor: isSelected ? moodSelected : moodIdle,
+                        outlineColor: isSelected ? moodRing : undefined,
+                        boxShadow: isSelected ? `0 0 0 2px ${moodRing}` : undefined,
+                      }}
                     >
                       {mood.emoji}
                     </div>
                     <span
-                      className={`text-[11px] ${isSelected ? 'text-green-700 font-semibold dark:text-menta' : 'text-[var(--text-secondary)]'}`}
+                      className={`text-[11px] ${isSelected ? 'font-semibold' : ''}`}
+                      style={{ color: isSelected ? (isDark ? '#a7f3d0' : '#5f4a8a') : (isDark ? '#94a3b8' : '#7a5c38') }}
                     >
                       {mood.label}
                     </span>
@@ -390,8 +374,8 @@ export default function Diary() {
               readOnly={!isNewEntry || !user}
               onFocus={() => !user && requireAuth(() => {})}
               placeholder="Hoy me pasó..."
-              className="flex-1 w-full resize-none border-none outline-none text-sm leading-8 min-h-[180px] rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
-              style={{ backgroundColor: diaryPalette.accentSurface, color: diaryPalette.cardText }}
+              className="flex-1 min-h-[120px] md:min-h-0 w-full md:w-[95%] resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
+              style={{ backgroundColor: accentBg, color: cardText }}
             />
 
             {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
@@ -401,12 +385,12 @@ export default function Diary() {
             </p>
           </div>
 
-          <div className="hidden md:block w-1 my-4" style={{ backgroundColor: '#8869AC' }} />
-          <div className="block md:hidden h-px mx-4" style={{ backgroundColor: '#8869AC' }} />
+          <div className="hidden md:block w-px my-4" style={{ backgroundColor: 'rgba(120, 90, 50, 0.25)' }} />
+          <div className="block md:hidden h-px mx-4" style={{ backgroundColor: 'rgba(120, 90, 50, 0.25)' }} />
 
-          <div className="diary-right flex-1 px-4 md:px-6 py-5 flex flex-col gap-5">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#8869AC' }}>
+          <div className="diary-right md:flex-1 md:min-h-0 px-2 md:pl-6 md:pr-2 pt-5 pb-8 flex flex-col gap-5">
+            <div className="flex-1 min-h-0 flex flex-col">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0" style={{ color: '#8869AC' }}>
                 ☁️ Un pensamiento que quiero soltar
               </p>
               <textarea
@@ -415,14 +399,13 @@ export default function Diary() {
                 readOnly={!isNewEntry || !user}
                 onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Lo que ya no quiero cargar..."
-                rows={4}
-                className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
-                style={{ backgroundColor: diaryPalette.accentSurface, color: diaryPalette.cardText }}
+                className="flex-1 min-h-[90px] md:min-h-0 w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(136,105,172,0.7)]"
+                style={{ backgroundColor: accentBg, color: cardText }}
               />
             </div>
 
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#649959' }}>
+            <div className="flex-1 min-h-0 flex flex-col">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0" style={{ color: '#649959' }}>
                 🌱 Algo que me salió bien hoy
               </p>
               <textarea
@@ -431,14 +414,13 @@ export default function Diary() {
                 readOnly={!isNewEntry || !user}
                 onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Hoy logré..."
-                rows={4}
-                className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(100,153,89,0.7)]"
-                style={{ backgroundColor: diaryPalette.successSurface, color: diaryPalette.cardText }}
+                className="flex-1 min-h-[90px] md:min-h-0 w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(100,153,89,0.7)]"
+                style={{ backgroundColor: successBg, color: cardText }}
               />
             </div>
 
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#F2C57C' }}>
+            <div className="flex-1 min-h-0 flex flex-col">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0" style={{ color: isDark ? '#F2C57C' : '#a07830' }}>
                 ☀️ Lo que quiero para mañana
               </p>
               <textarea
@@ -447,12 +429,12 @@ export default function Diary() {
                 readOnly={!isNewEntry || !user}
                 onFocus={() => !user && requireAuth(() => {})}
                 placeholder="Mañana quiero..."
-                rows={4}
-                className="w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[#F2C57C]"
-                style={{ backgroundColor: diaryPalette.warningSurface, color: diaryPalette.cardText }}
+                className="flex-1 min-h-[90px] md:min-h-0 w-full resize-none border-none outline-none text-sm leading-8 rounded-xl px-3 py-2 placeholder:text-[rgba(160,120,48,0.6)]"
+                style={{ backgroundColor: warningBg, color: cardText }}
               />
             </div>
           </div>
+        </div>
         </div>
       </div>
 

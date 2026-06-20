@@ -30,7 +30,7 @@
 
   .diary-right > div {
     flex: none;
-    height: calc((100vh - 310px) / 3);
+    height: calc((100vh - 330px) / 3);
     min-height: 0;
     display: flex;
     flex-direction: column;

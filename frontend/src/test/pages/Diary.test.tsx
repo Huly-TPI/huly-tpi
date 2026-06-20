@@ -190,7 +190,7 @@ describe('Diary', () => {
     const { user } = renderDiary()
     const felizButton = screen.getByText('Feliz').closest('button')!
     await user.click(felizButton)
-    expect(felizButton.querySelector('div')).toHaveClass('bg-green-400')
+    expect(felizButton.querySelector('div')).toHaveClass('ring-2')
   })
 
   it('deselecciona el mood al hacer click por segunda vez', async () => {
@@ -198,7 +198,7 @@ describe('Diary', () => {
     const felizButton = screen.getByText('Feliz').closest('button')!
     await user.click(felizButton)
     await user.click(felizButton)
-    expect(felizButton.querySelector('div')).toHaveClass('bg-green-200')
+    expect(felizButton.querySelector('div')).not.toHaveClass('ring-2')
   })
 
 
