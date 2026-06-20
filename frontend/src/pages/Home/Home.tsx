@@ -19,6 +19,7 @@ import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-pl
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import StoreModal from '../../components/Shop/StoreModal'
+import RewardsModal from '../../components/RewardsModal/RewardsModal'
 import { ShoppingBagIcon } from '@heroicons/react/24/outline'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
@@ -146,8 +147,9 @@ const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds)
 export default function Home() {
   const { theme: sceneTheme } = useTheme()
   const [isStoreOpen, setIsStoreOpen] = useState(false)
+  const [isRewardsOpen, setIsRewardsOpen] = useState(false)
   const { inventory, refetch: refetchInventory } = useInventory()
-  const { coins } = useUserCoins()
+  const { coins, refresh: refreshCoins } = useUserCoins()
   const equippedByCategory = resolveEquippedImages(inventory)
   const { user } = useAuth()
   const {
@@ -272,13 +274,18 @@ export default function Home() {
         </button>
       )}
 
-      <div className="fixed top-16 right-4 z-[200] pointer-events-none select-none flex gap-2 items-start">
-        <div className="relative w-24">
+      <div className="fixed top-16 right-4 z-[200] select-none flex gap-2 items-start">
+        <button
+          type="button"
+          aria-label="Ver recompensas diarias"
+          onClick={() => setIsRewardsOpen(true)}
+          className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+        >
           <img src={recompensasImg} alt="Recompensas diarias" className="w-full h-auto scale-[0.97] origin-top" />
           <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b] whitespace-nowrap">
             Reclamar
           </span>
-        </div>
+        </button>
         <div className="relative w-24">
           <img src={semillasImg} alt="Semillas en colección" className="w-full h-auto" />
           {coins !== null && (
@@ -290,6 +297,7 @@ export default function Home() {
       </div>
 
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
+      <RewardsModal isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} onClaimed={refreshCoins} />
     </main>
   )
 }
