@@ -51,12 +51,6 @@ describe('useChatbot', () => {
     mockedGetHistory.mockResolvedValueOnce({
       content: [
         {
-          id: 1,
-          role: 'USER',
-          content: 'hola',
-          created_at: '2026-01-01T00:00:00Z',
-        },
-        {
           id: 2,
           role: 'ASSISTANT',
           content: 'hola yo',
@@ -70,6 +64,12 @@ describe('useChatbot', () => {
           },
           suggested_action_decision: 'accepted',
           created_at: '2026-01-01T00:01:00Z',
+        },
+        {
+          id: 1,
+          role: 'USER',
+          content: 'hola',
+          created_at: '2026-01-01T00:00:00Z',
         },
       ],
       page_number: 0,
@@ -86,7 +86,7 @@ describe('useChatbot', () => {
       expect(result.current.isLoadingHistory).toBe(false)
     })
 
-    expect(mockedGetHistory).toHaveBeenCalledWith('conv-history', 0, 100)
+    expect(mockedGetHistory).toHaveBeenCalledWith('conv-history', 0, 20)
     expect(result.current.messages).toEqual([
       { role: 'user', content: 'hola' },
       {
@@ -108,25 +108,9 @@ describe('useChatbot', () => {
     ])
   })
 
-  it('loads all history pages before hydrating messages', async () => {
+  it('loads older history page when scrolling to the top', async () => {
     localStorage.setItem('hulyChatConversationId:1', 'conv-paged')
     mockedGetHistory
-      .mockResolvedValueOnce({
-        content: [
-          {
-            id: 1,
-            role: 'USER',
-            content: 'primer mensaje',
-            created_at: '2026-01-01T00:00:00Z',
-          },
-        ],
-        page_number: 0,
-        page_size: 100,
-        total_elements: 101,
-        total_pages: 2,
-        first: true,
-        last: false,
-      } as never)
       .mockResolvedValueOnce({
         content: [
           {
@@ -137,8 +121,24 @@ describe('useChatbot', () => {
             created_at: '2026-01-01T01:40:00Z',
           },
         ],
+        page_number: 0,
+        page_size: 20,
+        total_elements: 101,
+        total_pages: 2,
+        first: true,
+        last: false,
+      } as never)
+      .mockResolvedValueOnce({
+        content: [
+          {
+            id: 1,
+            role: 'USER',
+            content: 'primer mensaje',
+            created_at: '2026-01-01T00:00:00Z',
+          },
+        ],
         page_number: 1,
-        page_size: 100,
+        page_size: 20,
         total_elements: 101,
         total_pages: 2,
         first: false,
@@ -147,13 +147,26 @@ describe('useChatbot', () => {
 
     const { result } = renderHook(() => useChatbot())
 
-    await waitFor(() => {
-      expect(result.current.isLoadingHistory).toBe(false)
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    const container = document.createElement('section')
+    Object.defineProperty(container, 'scrollTop', { value: 0, writable: true })
+    Object.defineProperty(container, 'scrollHeight', { value: 300, writable: true })
+    ;(result.current.messagesContainerRef as { current: HTMLElement | null }).current = container
+
+    await act(async () => {
+      result.current.handleMessagesScroll()
     })
 
-    expect(mockedGetHistory).toHaveBeenNthCalledWith(1, 'conv-paged', 0, 100)
-    expect(mockedGetHistory).toHaveBeenNthCalledWith(2, 'conv-paged', 1, 100)
+    await waitFor(() => expect(mockedGetHistory).toHaveBeenCalledTimes(2))
+
+    expect(mockedGetHistory).toHaveBeenNthCalledWith(1, 'conv-paged', 0, 20)
+    expect(mockedGetHistory).toHaveBeenNthCalledWith(2, 'conv-paged', 1, 20)
     expect(result.current.messages).toHaveLength(2)
+    expect(result.current.messages[0]).toMatchObject({
+      role: 'user',
+      content: 'primer mensaje',
+    })
     expect(result.current.messages[1]).toMatchObject({
       role: 'assistant',
       content: 'ultima respuesta',
@@ -415,7 +428,7 @@ describe('useChatbot', () => {
     const { result } = renderHook(() => useChatbot())
     await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
 
-    expect(mockedGetHistory).toHaveBeenLastCalledWith('old-conv-id', 0, 100)
+    expect(mockedGetHistory).toHaveBeenLastCalledWith('old-conv-id', 0, 20)
 
     act(() => {
       result.current.resetConversation()

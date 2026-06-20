@@ -18,7 +18,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -35,6 +37,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -267,7 +270,14 @@ class ChatControllerTest {
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk());
 
-        verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
+        verify(listChatHistoryUseCase).execute(
+                eq("conv-1"),
+                eq(USER_ID),
+                argThat(pageable ->
+                        pageable.getPageNumber() == 0
+                                && pageable.getPageSize() == 20
+                                && pageable.getSort().equals(Sort.by("createdAt").descending()))
+        );
     }
 
     @Test
@@ -280,7 +290,14 @@ class ChatControllerTest {
                         .param("size", "5"))
                 .andExpect(status().isOk());
 
-        verify(listChatHistoryUseCase).execute(eq("conv-1"), eq(USER_ID), any(Pageable.class));
+        verify(listChatHistoryUseCase).execute(
+                eq("conv-1"),
+                eq(USER_ID),
+                argThat(pageable ->
+                        pageable.getPageNumber() == 2
+                                && pageable.getPageSize() == 5
+                                && pageable.getSort().equals(Sort.by("createdAt").descending()))
+        );
     }
 
     @Test

@@ -85,7 +85,7 @@ public class ChatController {
             @RequestParam(defaultValue = "20") int size) {
         Long userId = getUserId(principal);
         Page<ChatMessage> result = listChatHistoryUseCase.execute(
-                conversationId, userId, PageRequest.of(page, size, Sort.by("createdAt").ascending()));
+                conversationId, userId, PageRequest.of(page, size, Sort.by("createdAt").descending()));
         return ResponseEntity.ok(toPageResponse(result));
     }
 
