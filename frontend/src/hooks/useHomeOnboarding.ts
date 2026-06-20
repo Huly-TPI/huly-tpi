@@ -8,6 +8,7 @@ export function useHomeOnboarding(totalSteps: number) {
   const { user, refreshUser } = useAuth()
   const [onboardingMode, setOnboardingMode] = useState<HomeOnboardingMode>('hidden')
   const [onboardingStepIndex, setOnboardingStepIndex] = useState(0)
+  const [showNotificationsPrompt, setShowNotificationsPrompt] = useState(false)
 
   useEffect(() => {
     if (!user || user.onBoardingCompleted !== true) {
@@ -29,11 +30,14 @@ export function useHomeOnboarding(totalSteps: number) {
       await refreshUser()
       setOnboardingStepIndex(0)
       setOnboardingMode('hidden')
+      setShowNotificationsPrompt(true)
       return
     }
 
     setOnboardingStepIndex(currentIndex => currentIndex + 1)
   }
+
+  const closeNotificationsPrompt = () => setShowNotificationsPrompt(false)
 
   return {
     onboardingMode,
@@ -41,5 +45,7 @@ export function useHomeOnboarding(totalSteps: number) {
     shouldRenderOnboarding: onboardingMode !== 'hidden',
     startOnboarding,
     advanceOnboarding,
+    showNotificationsPrompt,
+    closeNotificationsPrompt,
   }
 }

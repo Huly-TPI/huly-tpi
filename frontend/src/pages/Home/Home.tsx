@@ -16,6 +16,7 @@ import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-plant.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
+import NotificationsPrompt from '../../components/Notifications/NotificationsPrompt/NotificationsPrompt'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useTheme } from '../../context/theme'
@@ -137,6 +138,8 @@ export default function Home() {
     shouldRenderOnboarding,
     startOnboarding,
     advanceOnboarding,
+    showNotificationsPrompt,
+    closeNotificationsPrompt,
   } = useHomeOnboarding(homeOnboardingSteps.length)
 
   useEffect(() => {
@@ -168,8 +171,8 @@ export default function Home() {
       }
     }
     for (const step of homeOnboardingSteps) {
-      if (step.mascot) 
-        sources.add(step.mascot.imageSrc)      
+      if (step.mascot)
+        sources.add(step.mascot.imageSrc)
     }
 
     sources.forEach(src => {
@@ -234,6 +237,9 @@ export default function Home() {
             onAdvance={advanceOnboarding}
           />
         ) : null}
+         {showNotificationsPrompt && (
+          <NotificationsPrompt onClose={closeNotificationsPrompt} />
+        )}
       </section>
     </main>
   )
