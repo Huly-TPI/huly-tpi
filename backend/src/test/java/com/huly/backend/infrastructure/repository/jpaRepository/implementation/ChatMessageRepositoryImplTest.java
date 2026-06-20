@@ -7,6 +7,7 @@ import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.infrastructure.repository.entity.ChatMessageEntity;
 import com.huly.backend.infrastructure.repository.entity.ChatSessionEntity;
 import com.huly.backend.infrastructure.repository.entity.EmotionEntity;
+import com.huly.backend.infrastructure.repository.mapper.ChatMessageMapper;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatMessageJpaRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatSessionJpaRepository;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +36,7 @@ class ChatMessageRepositoryImplTest {
 
     @Mock private IChatMessageJpaRepository jpa;
     @Mock private IChatSessionJpaRepository sessionJpa;
+    @Mock private ChatMessageMapper chatMessageMapper;
 
     @InjectMocks
     private ChatMessageRepositoryImpl repository;
@@ -44,6 +47,13 @@ class ChatMessageRepositoryImplTest {
     void saveMessage_shouldPersistEntityWithoutEmotion_whenEmotionIsNull() {
         ChatSessionEntity session = ChatSessionEntity.builder().id(1L).conversationId("conv-1").build();
         when(sessionJpa.findById(1L)).thenReturn(Optional.of(session));
+        when(chatMessageMapper.toEntity(any(ChatSessionEntity.class), any(ConversationMessage.class)))
+                .thenAnswer(invocation -> ChatMessageEntity.builder()
+                        .chatSession(invocation.getArgument(0))
+                        .role(invocation.<ConversationMessage>getArgument(1).role())
+                        .content(invocation.<ConversationMessage>getArgument(1).content())
+                        .riskDetected(invocation.<ConversationMessage>getArgument(1).riskDetected())
+                        .build());
 
         ConversationMessage msg = new ConversationMessage(MessageRole.USER, "hola", null, false, null, null, null, null, null);
         repository.saveMessage(1L, msg);
@@ -59,6 +69,13 @@ class ChatMessageRepositoryImplTest {
     void saveMessage_shouldPersistEntityWithEmotion_whenEmotionIsPresent() {
         ChatSessionEntity session = ChatSessionEntity.builder().id(1L).conversationId("conv-1").build();
         when(sessionJpa.findById(1L)).thenReturn(Optional.of(session));
+        when(chatMessageMapper.toEntity(any(ChatSessionEntity.class), any(ConversationMessage.class)))
+                .thenAnswer(invocation -> ChatMessageEntity.builder()
+                        .chatSession(invocation.getArgument(0))
+                        .role(invocation.<ConversationMessage>getArgument(1).role())
+                        .content(invocation.<ConversationMessage>getArgument(1).content())
+                        .riskDetected(invocation.<ConversationMessage>getArgument(1).riskDetected())
+                        .build());
 
         ConversationMessage msg = new ConversationMessage(MessageRole.ASSISTANT, "resp", EmotionType.JOY, false, null, null, null, null, null);
         repository.saveMessage(1L, msg);
@@ -115,6 +132,8 @@ class ChatMessageRepositoryImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         when(jpa.findByChatSessionConversationIdAndChatSessionAppUserId("conv-1", 10L, pageable))
                 .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
+        when(chatMessageMapper.toDomain(entity))
+                .thenReturn(new ChatMessage(1L, MessageRole.USER, "msg", true, EmotionType.SADNESS, entity.getCreatedAt(), null, null, null, null));
 
         Page<ChatMessage> result = repository.findByConversationIdAndUserId("conv-1", 10L, pageable);
 
@@ -131,6 +150,8 @@ class ChatMessageRepositoryImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         when(jpa.findByChatSessionConversationIdAndChatSessionAppUserId("conv-1", 10L, pageable))
                 .thenReturn(new PageImpl<>(List.of(entity)));
+        when(chatMessageMapper.toDomain(entity))
+                .thenReturn(new ChatMessage(2L, MessageRole.ASSISTANT, "resp", null, null, entity.getCreatedAt(), null, null, null, null));
 
         Page<ChatMessage> result = repository.findByConversationIdAndUserId("conv-1", 10L, pageable);
 
@@ -145,6 +166,8 @@ class ChatMessageRepositoryImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         when(jpa.findByChatSessionConversationIdAndChatSessionAppUserId("conv-1", 10L, pageable))
                 .thenReturn(new PageImpl<>(List.of(entity)));
+        when(chatMessageMapper.toDomain(entity))
+                .thenReturn(new ChatMessage(3L, MessageRole.USER, "msg", null, null, entity.getCreatedAt(), null, null, null, null));
 
         Page<ChatMessage> result = repository.findByConversationIdAndUserId("conv-1", 10L, pageable);
 
