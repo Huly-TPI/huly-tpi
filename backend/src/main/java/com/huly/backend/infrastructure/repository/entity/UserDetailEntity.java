@@ -86,4 +86,7 @@ public class UserDetailEntity {
     @Column(name = "last_daily_claim_date")
     private LocalDate lastDailyClaimDate;
 
+    @Column(name = "inactivity_reminder_sent_at")
+    private Instant inactivityReminderSentAt;
+
 }

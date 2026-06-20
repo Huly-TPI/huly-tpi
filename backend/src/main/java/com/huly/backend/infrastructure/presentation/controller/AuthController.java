@@ -47,6 +47,7 @@ public class AuthController {
                         .accessToken(tokens.getAccessToken())
                         .role(tokens.getRole())
                         .onBoardingCompleted(tokens.getOnBoardingCompleted())
+                        .comebackReward(tokens.getComebackReward())
                         .build());
     }
     @PostMapping("/backoffice/login")

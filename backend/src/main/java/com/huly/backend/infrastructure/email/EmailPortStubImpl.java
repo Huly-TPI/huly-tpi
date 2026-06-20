@@ -14,4 +14,9 @@ public class EmailPortStubImpl implements EmailPort {
     public void sendWelcomeLead(String to, String nickname) {
         log.info("[EMAIL-STUB] Bienvenida lead → to={} nickname={}", to, nickname);
     }
+
+    @Override
+    public void sendInactivityReminder(String to, String displayName, int rewardCoins) {
+        log.info("[EMAIL-STUB] inactividad → to={} displayName={} reward={}", to, displayName, rewardCoins);
+    }
 }

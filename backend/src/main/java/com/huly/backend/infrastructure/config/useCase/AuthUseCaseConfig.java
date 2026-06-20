@@ -5,6 +5,7 @@ import com.huly.backend.domain.port.TokenPort;
 import com.huly.backend.domain.repository.auth.RefreshTokenRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.auth.LoginUseCase;
@@ -14,12 +15,16 @@ import com.huly.backend.domain.useCase.auth.RegisterUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
+
 @Configuration
 public class AuthUseCaseConfig {
 
     @Bean
-    public LoginUseCase loginUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenPort tokenPort, PasswordHasherPort passwordHasherPort, UserDetailDomainRepository userDetailDomainRepository) {
-        return new LoginUseCase(userRepository, refreshTokenRepository, tokenPort, passwordHasherPort, userDetailDomainRepository);
+    public LoginUseCase loginUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenPort tokenPort, PasswordHasherPort passwordHasherPort, UserDetailDomainRepository userDetailDomainRepository, CoinService coinService) {
+        return new LoginUseCase(userRepository, refreshTokenRepository, tokenPort, passwordHasherPort, userDetailDomainRepository,
+                coinService, Clock.system(RewardPolicy.ZONE),
+                RewardPolicy.INACTIVITY_THRESHOLD_DAYS, RewardPolicy.COMEBACK_REWARD_COINS);
     }
 
     @Bean

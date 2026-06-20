@@ -15,4 +15,6 @@ public class AuthTokens {
     private String refreshToken;
     private UserRole role;
     private Boolean onBoardingCompleted;
+    /** Monedas otorgadas por volver tras un período de inactividad; null si no aplica. */
+    private Integer comebackReward;
 }

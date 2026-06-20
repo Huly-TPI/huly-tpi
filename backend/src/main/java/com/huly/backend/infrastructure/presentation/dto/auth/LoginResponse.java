@@ -13,4 +13,6 @@ public class LoginResponse {
     private String refreshToken;
     private UserRole role;
     private Boolean onBoardingCompleted;
+    /** Monedas otorgadas por volver tras inactividad; omitido si no aplica. */
+    private Integer comebackReward;
 }

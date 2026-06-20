@@ -11,37 +11,54 @@ import com.huly.backend.domain.repository.auth.RefreshTokenRepository;
 import com.huly.backend.domain.exception.AccountNotActiveException;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.service.payment.CoinService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LoginUseCaseTest {
 
+    private static final Instant NOW = Instant.parse("2026-06-19T12:00:00Z");
+    private static final int THRESHOLD_DAYS = 5;
+    private static final int REWARD_COINS = 30;
+
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private TokenPort tokenPort;
     @Mock private PasswordHasherPort passwordHasherPort;
     @Mock private UserDetailDomainRepository userDetailDomainRepository;
+    @Mock private CoinService coinService;
 
-    @InjectMocks private LoginUseCase loginUseCase;
+    private LoginUseCase loginUseCase;
 
     private AppUser activeUser;
 
     @BeforeEach
     void setUp() {
+        Clock fixedClock = Clock.fixed(NOW, ZoneOffset.UTC);
+        loginUseCase = new LoginUseCase(userRepository, refreshTokenRepository, tokenPort, passwordHasherPort,
+                userDetailDomainRepository, coinService, fixedClock, THRESHOLD_DAYS, REWARD_COINS);
+
         activeUser = AppUser.builder()
                 .id(1L)
                 .email("user@huly.com")
@@ -58,7 +75,6 @@ class LoginUseCaseTest {
         when(tokenPort.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("accessToken");
         when(tokenPort.generateRefreshToken(1L, "user@huly.com")).thenReturn("refreshToken");
         when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
-        when(refreshTokenRepository.save(any())).thenReturn(null);
 
         AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
 
@@ -126,7 +142,6 @@ class LoginUseCaseTest {
         when(tokenPort.generateAccessToken(1L, "user@huly.com", UserRole.USER, UserStatus.ACTIVE)).thenReturn("at");
         when(tokenPort.generateRefreshToken(1L, "user@huly.com")).thenReturn("rt");
         when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(3600L);
-        when(refreshTokenRepository.save(any())).thenReturn(null);
 
         loginUseCase.execute("user@huly.com", "rawPass");
 
@@ -134,32 +149,92 @@ class LoginUseCaseTest {
         verify(tokenPort).generateRefreshToken(1L, "user@huly.com");
     }
 
-    @Test 
+    @Test
     void execute_shouldReturnOnBoardingCompletedFromUserDetailDomainRepository() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
         when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
         when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
         when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
         when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
-        when(refreshTokenRepository.save(any())).thenReturn(null);
         when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.of(true));
 
         AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
         assertThat(result.getOnBoardingCompleted()).isTrue();
-        }
+    }
 
-    @Test 
+    @Test
     void execute_shouldReturnFalse_whenUserDetailNotFound() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
         when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
         when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
         when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
         when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
-        when(refreshTokenRepository.save(any())).thenReturn(null);
         when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.empty());
+
         AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
         assertThat(result.getOnBoardingCompleted()).isFalse();
     }
 
+    // --- Recompensa de retorno por inactividad ---
 
+    private void stubValidLogin(AppUser user) {
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(passwordHasherPort.matches("rawPass", user.getPassword())).thenReturn(true);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+    }
+
+    @Test
+    void execute_shouldNotReward_whenFirstLogin() {
+        stubValidLogin(activeUser);
+        when(userDetailDomainRepository.findLastLoginDate(1L)).thenReturn(Optional.empty());
+
+        AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
+
+        assertThat(result.getComebackReward()).isNull();
+        verify(coinService, never()).credit(anyLong(), anyInt());
+        verify(userDetailDomainRepository).updateLastLoginDate(1L, NOW);
+    }
+
+    @Test
+    void execute_shouldNotReward_whenGapBelowThreshold() {
+        stubValidLogin(activeUser);
+        when(userDetailDomainRepository.findLastLoginDate(1L))
+                .thenReturn(Optional.of(NOW.minus(Duration.ofDays(4))));
+
+        AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
+
+        assertThat(result.getComebackReward()).isNull();
+        verify(coinService, never()).credit(anyLong(), anyInt());
+        verify(userDetailDomainRepository).updateLastLoginDate(1L, NOW);
+    }
+
+    @Test
+    void execute_shouldReward_whenGapAtOrAboveThresholdAndRoleUser() {
+        stubValidLogin(activeUser);
+        when(userDetailDomainRepository.findLastLoginDate(1L))
+                .thenReturn(Optional.of(NOW.minus(Duration.ofDays(5))));
+
+        AuthTokens result = loginUseCase.execute("user@huly.com", "rawPass");
+
+        assertThat(result.getComebackReward()).isEqualTo(REWARD_COINS);
+        verify(coinService).credit(1L, REWARD_COINS);
+        verify(userDetailDomainRepository).updateLastLoginDate(1L, NOW);
+    }
+
+    @Test
+    void execute_shouldNotReward_whenRoleIsNotUser() {
+        AppUser admin = AppUser.builder()
+                .id(9L).email("admin@huly.com").password("encodedPass")
+                .role(UserRole.ADMIN).status(UserStatus.ACTIVE).build();
+        stubValidLogin(admin);
+
+        AuthTokens result = loginUseCase.execute("admin@huly.com", "rawPass");
+
+        assertThat(result.getComebackReward()).isNull();
+        verify(coinService, never()).credit(anyLong(), anyInt());
+        verify(userDetailDomainRepository, never()).findLastLoginDate(anyLong());
+        verify(userDetailDomainRepository).updateLastLoginDate(9L, NOW);
+    }
 }
