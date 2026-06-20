@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.chatBotConfig;
 
-import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 
 import java.util.List;
 import java.util.Optional;

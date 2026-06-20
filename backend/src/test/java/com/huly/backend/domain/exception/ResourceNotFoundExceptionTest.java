@@ -1,32 +1,31 @@
 package com.huly.backend.domain.exception;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ResourceNotFoundExceptionTest {
 
     @Test
-    void testMessageConstructor() {
+    void messageConstructor_shouldSetMessage() {
         ResourceNotFoundException ex = new ResourceNotFoundException("Usuario no encontrado");
-        assertEquals("Usuario no encontrado", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("Usuario no encontrado");
     }
 
     @Test
-    void testFormattedMessageConstructor() {
+    void formattedMessageConstructor_shouldSetFormattedMessage() {
         ResourceNotFoundException ex = new ResourceNotFoundException("Usuario", "id", 42);
-        assertEquals("No se encontró un Usuario con id 42", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("No se encontró un Usuario con id 42");
     }
 
     @Test
-    void testExtendsDomainException() {
+    void inheritance_shouldExtendDomainException() {
         ResourceNotFoundException ex = new ResourceNotFoundException("test");
-        assertInstanceOf(DomainException.class, ex);
+        assertThat(ex).isInstanceOf(DomainException.class);
     }
 
     @Test
-    void testNullMessage() {
+    void messageConstructor_shouldHandleNullMessage() {
         ResourceNotFoundException ex = new ResourceNotFoundException(null);
-        assertNull(ex.getMessage());
+        assertThat(ex.getMessage()).isNull();
     }
 }

@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.onboarding;
 
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;

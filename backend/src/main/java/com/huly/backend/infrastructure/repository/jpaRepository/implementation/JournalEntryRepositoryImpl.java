@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.JournalEntry;
+import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.repository.journal.JournalEntryRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;

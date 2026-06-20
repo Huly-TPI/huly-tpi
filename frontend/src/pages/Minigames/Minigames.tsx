@@ -18,9 +18,11 @@ import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
 import sandImage from '../../assets/minigames/light-theme/sand.webp'
 
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
+import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import { useTheme } from '../../context/theme'
+import { useInventory } from '../../hooks/store/useInventory'
 import './Minigames.css'
 
 const FULL_WIDTH = 'w-full'
@@ -105,11 +107,14 @@ const minigameElements: SceneElementDefinition[] = [
 
 export default function Minigames() {
     const { theme } = useTheme()
+    const { inventory } = useInventory()
+    const equippedByCategory = resolveEquippedImages(inventory)
+    const equippedTreeImage = equippedByCategory.TREE
     const homeReturnElement: SceneElementDefinition = {
         id: 'home-return-tree',
         title: 'Volver al jardin',
         imageAlt: 'Fragmento del arbol del jardin',
-        image: { light: treeImage, dark: darkTreeImage },
+        image: equippedTreeImage ?? { light: treeImage, dark: darkTreeImage },
         placementClassName: 'minigames-home-return',
         imageClassName: 'minigames-home-return__image',
         hotspotClassName: 'minigames-home-return__hotspot',

@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.UserEmotionalState;
+import com.huly.backend.domain.model.user.UserEmotionalState;
 import com.huly.backend.domain.repository.user.UserEmotionalStateRepository;
 import com.huly.backend.infrastructure.repository.entity.UserEmotionalStateEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserEmotionalStateJpaRepository;

@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository;
 
-import com.huly.backend.domain.model.UserStoreItem;
+import com.huly.backend.domain.model.user.UserStoreItem;
 import java.util.List;
 public interface UserStoreItemRepository {
     List<UserStoreItem> findAllByUserId(Long userId);

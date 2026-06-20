@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.CloudRecommendation;
+import com.huly.backend.domain.model.cloudRecommendation.CloudRecommendation;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;

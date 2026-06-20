@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
-import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IActivityJpaRepository;

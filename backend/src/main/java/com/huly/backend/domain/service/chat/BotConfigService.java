@@ -1,7 +1,7 @@
 package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.chat.ChatConfig;
-import com.huly.backend.domain.model.UpdateBotConfigCommand;
+import com.huly.backend.domain.model.chat.UpdateBotConfigCommand;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.activity;
 
-import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.activity.Activity;
 import java.util.List;
 
 public interface ActivityRepository {

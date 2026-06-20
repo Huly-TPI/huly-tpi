@@ -1,8 +1,8 @@
 package com.huly.backend.domain.useCase.auth;
 
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;

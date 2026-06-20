@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.dto.payment.UserPlan;
+import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.infrastructure.repository.entity.UserPlanEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserPlanJpaRepository;

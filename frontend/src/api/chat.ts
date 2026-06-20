@@ -46,6 +46,10 @@ export interface ChatHistoryMessageDto {
   content: string
   risk_detected?: boolean | null
   detected_emotion?: string | null
+  suggested_action?: SuggestedActionDto | null
+  generated_challenge?: GeneratedChallengeDto | null
+  suggested_action_decision?: 'accepted' | 'rejected' | null
+  challenge_decision?: 'accepted' | 'rejected' | null
   created_at: string
 }
 

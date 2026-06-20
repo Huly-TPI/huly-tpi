@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.admin;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.admin.BackofficeUserSummary;
@@ -11,7 +11,7 @@ import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
-import com.huly.backend.domain.dto.payment.UserPlan;
+import com.huly.backend.domain.model.user.UserPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

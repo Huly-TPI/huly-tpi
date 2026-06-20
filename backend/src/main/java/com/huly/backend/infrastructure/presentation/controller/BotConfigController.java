@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.chat.ChatConfig;
-import com.huly.backend.domain.model.UpdateBotConfigCommand;
+import com.huly.backend.domain.model.chat.UpdateBotConfigCommand;
 import com.huly.backend.domain.useCase.chatBotConfig.GetBotConfigUseCase;
 import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
 import com.huly.backend.infrastructure.presentation.dto.chatConfig.UpdateBotConfigRequest;

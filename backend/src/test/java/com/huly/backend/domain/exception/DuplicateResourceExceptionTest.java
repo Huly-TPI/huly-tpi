@@ -1,32 +1,31 @@
 package com.huly.backend.domain.exception;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DuplicateResourceExceptionTest {
 
     @Test
-    void testMessageConstructor() {
+    void messageConstructor_shouldSetMessage() {
         DuplicateResourceException ex = new DuplicateResourceException("El email ya existe");
-        assertEquals("El email ya existe", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("El email ya existe");
     }
 
     @Test
-    void testFormattedMessageConstructor() {
+    void formattedMessageConstructor_shouldSetFormattedMessage() {
         DuplicateResourceException ex = new DuplicateResourceException("Usuario", "email", "test@example.com");
-        assertEquals("Ya existe un Usuario con email test@example.com", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("Ya existe un Usuario con email test@example.com");
     }
 
     @Test
-    void testExtendsDomainException() {
+    void inheritance_shouldExtendDomainException() {
         DuplicateResourceException ex = new DuplicateResourceException("test");
-        assertInstanceOf(DomainException.class, ex);
+        assertThat(ex).isInstanceOf(DomainException.class);
     }
 
     @Test
-    void testNullMessage() {
+    void messageConstructor_shouldHandleNullMessage() {
         DuplicateResourceException ex = new DuplicateResourceException(null);
-        assertNull(ex.getMessage());
+        assertThat(ex.getMessage()).isNull();
     }
 }

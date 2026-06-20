@@ -1,5 +1,5 @@
 package com.huly.backend.domain.repository.badge;
-import com.huly.backend.domain.model.Badge;
+import com.huly.backend.domain.model.badge.Badge;
 import java.util.List;
 import java.util.Optional;
 

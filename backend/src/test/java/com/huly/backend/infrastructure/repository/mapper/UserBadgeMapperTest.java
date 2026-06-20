@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.mapper;
 
-import com.huly.backend.domain.model.UserBadge;
+import com.huly.backend.domain.model.user.UserBadge;
 import com.huly.backend.infrastructure.repository.entity.BadgeEntity;
 import com.huly.backend.infrastructure.repository.entity.UserBadgeEntity;
 import org.junit.jupiter.api.BeforeEach;

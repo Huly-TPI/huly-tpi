@@ -1,6 +1,6 @@
 package com.huly.backend.domain.service;
 
-import com.huly.backend.domain.model.UpdateBotConfigCommand;
+import com.huly.backend.domain.model.chat.UpdateBotConfigCommand;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.chat.BotConfigService;

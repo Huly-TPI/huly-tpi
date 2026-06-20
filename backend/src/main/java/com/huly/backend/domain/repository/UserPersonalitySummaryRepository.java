@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository;
 
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 
 import java.util.Optional;
 

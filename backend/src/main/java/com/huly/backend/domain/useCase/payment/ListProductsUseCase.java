@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.payment;
 
-import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.repository.payment.ProductRepository;
 import lombok.RequiredArgsConstructor;

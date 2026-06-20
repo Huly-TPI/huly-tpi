@@ -1,11 +1,14 @@
-package com.huly.backend.domain.useCase.admin.userActivities;
+package com.huly.backend.domain.useCase.admin;
 
-import com.huly.backend.domain.model.ActivitySession;
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.activity.ActivitySession;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesResponse;
+import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
