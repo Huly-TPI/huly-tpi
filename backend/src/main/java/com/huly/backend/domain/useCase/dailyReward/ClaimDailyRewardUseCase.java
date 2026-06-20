@@ -8,11 +8,13 @@ import com.huly.backend.domain.model.dailyReward.DailyRewardClaim;
 import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,6 +23,7 @@ public class ClaimDailyRewardUseCase {
 
     private final DailyRewardRepository dailyRewardRepository;
     private final UserDetailDomainRepository userDetailDomainRepository;
+    private final UserPlanRepository userPlanRepository;
     private final CoinService coinService;
     private final Clock clock;
 
@@ -40,7 +43,12 @@ public class ClaimDailyRewardUseCase {
 
         int newStreak = DailyRewardCycle.nextStreak(state, today);
         int cycleDay = DailyRewardCycle.cycleDay(newStreak, cycle.size());
-        int coins = resolveCoins(cycle, cycleDay);
+
+        boolean hasPlan = userPlanRepository.findByUser(userId)
+                .filter(p -> p.isActive(Instant.now(clock)))
+                .isPresent();
+        int baseCoins = resolveCoins(cycle, cycleDay);
+        int coins = DailyRewardCycle.applyPlanBonus(baseCoins, hasPlan);
 
         coinService.credit(userId, coins);
         userDetailDomainRepository.updateDailyClaim(userId, newStreak, today);

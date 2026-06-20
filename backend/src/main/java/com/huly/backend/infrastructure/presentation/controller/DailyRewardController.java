@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.dailyReward.DailyRewardClaim;
+import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
 import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;
@@ -50,12 +51,15 @@ public class DailyRewardController {
     private DailyRewardStatusResponse toResponse(DailyRewardStatus status) {
         return new DailyRewardStatusResponse(
                 status.days().stream()
-                        .map(d -> new DailyRewardDayResponse(d.getDayNumber(), d.getCoins()))
+                        .map(d -> new DailyRewardDayResponse(
+                                d.getDayNumber(),
+                                DailyRewardCycle.applyPlanBonus(d.getCoins(), status.planBonusActive())))
                         .toList(),
                 status.currentStreak(),
                 status.completedDays(),
                 status.canClaimToday(),
-                status.nextDay()
+                status.nextDay(),
+                status.planBonusActive()
         );
     }
 }

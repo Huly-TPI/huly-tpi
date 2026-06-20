@@ -6,9 +6,11 @@ import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
 import com.huly.backend.domain.model.dailyReward.DailyRewardStatus;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,12 +19,17 @@ public class GetDailyRewardStatusUseCase {
 
     private final DailyRewardRepository dailyRewardRepository;
     private final UserDetailDomainRepository userDetailDomainRepository;
+    private final UserPlanRepository userPlanRepository;
     private final Clock clock;
 
     public DailyRewardStatus execute(Long userId) {
         LocalDate today = LocalDate.now(clock);
         DailyClaimState state = userDetailDomainRepository.findDailyClaimState(userId);
         List<DailyReward> cycle = dailyRewardRepository.findAllOrderByDay();
+
+        boolean planBonusActive = userPlanRepository.findByUser(userId)
+                .filter(p -> p.isActive(Instant.now(clock)))
+                .isPresent();
 
         boolean canClaimToday = !today.equals(state.lastClaimDate());
         int currentStreak = DailyRewardCycle.isAlive(state, today) ? state.streak() : 0;
@@ -40,6 +47,6 @@ public class GetDailyRewardStatusUseCase {
             }
         }
 
-        return new DailyRewardStatus(cycle, currentStreak, completedDays, canClaimToday, nextDay);
+        return new DailyRewardStatus(cycle, currentStreak, completedDays, canClaimToday, nextDay, planBonusActive);
     }
 }

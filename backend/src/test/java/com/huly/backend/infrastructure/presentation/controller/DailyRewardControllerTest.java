@@ -64,7 +64,7 @@ class DailyRewardControllerTest {
                         DailyReward.builder().id(1L).dayNumber(1).coins(10).build(),
                         DailyReward.builder().id(2L).dayNumber(2).coins(15).build()
                 ),
-                3, 3, false, 0);
+                3, 3, false, 0, false);
         when(getDailyRewardStatusUseCase.execute(USER_ID)).thenReturn(status);
 
         mockMvc.perform(get("/api/daily-rewards/status"))
@@ -76,7 +76,26 @@ class DailyRewardControllerTest {
                 .andExpect(jsonPath("$.currentStreak").value(3))
                 .andExpect(jsonPath("$.completedDays").value(3))
                 .andExpect(jsonPath("$.canClaimToday").value(false))
-                .andExpect(jsonPath("$.nextDay").value(0));
+                .andExpect(jsonPath("$.nextDay").value(0))
+                .andExpect(jsonPath("$.planBonusActive").value(false));
+    }
+
+    @Test
+    void getStatus_shouldReturnMultipliedCoins_whenPlanBonusActive() throws Exception {
+        DailyRewardStatus status = new DailyRewardStatus(
+                List.of(
+                        DailyReward.builder().id(1L).dayNumber(1).coins(10).build(),
+                        DailyReward.builder().id(2L).dayNumber(2).coins(15).build()
+                ),
+                3, 3, false, 0, true);
+        when(getDailyRewardStatusUseCase.execute(USER_ID)).thenReturn(status);
+
+        mockMvc.perform(get("/api/daily-rewards/status"))
+                .andExpect(status().isOk())
+                // Coins ya potenciados x1.5: 10 -> 15, 15 -> 23 (round(22.5)).
+                .andExpect(jsonPath("$.days[0].coins").value(15))
+                .andExpect(jsonPath("$.days[1].coins").value(23))
+                .andExpect(jsonPath("$.planBonusActive").value(true));
     }
 
     @Test

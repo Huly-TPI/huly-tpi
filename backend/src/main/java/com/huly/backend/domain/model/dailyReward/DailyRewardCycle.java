@@ -16,6 +16,14 @@ public final class DailyRewardCycle {
     private DailyRewardCycle() {
     }
 
+    /** Multiplicador de monedas para usuarios con un plan/membresía activa. */
+    public static final double PLAN_BONUS_MULTIPLIER = 1.5;
+
+    /** Aplica el bonus por plan al monto base, redondeando al entero más cercano. */
+    public static int applyPlanBonus(int baseCoins, boolean hasPlan) {
+        return hasPlan ? (int) Math.round(baseCoins * PLAN_BONUS_MULTIPLIER) : baseCoins;
+    }
+
     /** True si el último reclamo fue hoy o ayer (la racha sigue viva). */
     public static boolean isAlive(DailyClaimState state, LocalDate today) {
         LocalDate last = state.lastClaimDate();

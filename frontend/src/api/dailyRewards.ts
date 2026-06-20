@@ -11,6 +11,8 @@ export interface DailyRewardStatus {
   completedDays: number
   canClaimToday: boolean
   nextDay: number
+  /** true si el usuario tiene un plan activo: los `coins` ya vienen con el bonus x1.5 aplicado. */
+  planBonusActive: boolean
 }
 
 export interface ClaimDailyRewardResult {

@@ -5,8 +5,10 @@ import com.huly.backend.domain.exception.DailyRewardAlreadyClaimedException;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
 import com.huly.backend.domain.model.dailyReward.DailyRewardClaim;
+import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,10 +17,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +41,9 @@ class ClaimDailyRewardUseCaseTest {
     private UserDetailDomainRepository userDetailDomainRepository;
 
     @Mock
+    private UserPlanRepository userPlanRepository;
+
+    @Mock
     private CoinService coinService;
 
     private ClaimDailyRewardUseCase useCase;
@@ -44,7 +51,7 @@ class ClaimDailyRewardUseCaseTest {
     @BeforeEach
     void setUp() {
         Clock fixedClock = Clock.fixed(TODAY.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneId.from(ZoneOffset.UTC));
-        useCase = new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, coinService, fixedClock);
+        useCase = new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, coinService, fixedClock);
     }
 
     private List<DailyReward> sevenDayCycle() {
@@ -175,5 +182,25 @@ class ClaimDailyRewardUseCaseTest {
         assertThat(result.coins()).isEqualTo(10);
         verify(coinService).credit(USER_ID, 10);
         verify(userDetailDomainRepository).updateDailyClaim(USER_ID, 2, TODAY);
+    }
+
+    @Test
+    void execute_shouldApplyPlanBonus_whenUserHasActivePlan() {
+        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
+                .thenReturn(new DailyClaimState(0, null));
+        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
+        UserPlan activePlan = UserPlan.builder()
+                .userId(USER_ID)
+                .expiresAt(Instant.parse("2026-12-31T00:00:00Z"))
+                .build();
+        when(userPlanRepository.findByUser(USER_ID)).thenReturn(Optional.of(activePlan));
+
+        DailyRewardClaim result = useCase.execute(USER_ID);
+
+        // Día 1 base = 10 -> con plan x1.5 = 15.
+        assertThat(result.dayNumber()).isEqualTo(1);
+        assertThat(result.coins()).isEqualTo(15);
+        verify(coinService).credit(USER_ID, 15);
+        verify(userDetailDomainRepository).updateDailyClaim(USER_ID, 1, TODAY);
     }
 }
