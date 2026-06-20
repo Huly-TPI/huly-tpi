@@ -1,4 +1,4 @@
-import { TrashIcon } from '@heroicons/react/24/outline'
+import { Trash2 } from 'lucide-react'
 import AudioMessagePlayer from './AudioMessagePlayer'
 
 interface ChatMessageBubbleProps {
@@ -29,7 +29,7 @@ export default function ChatMessageBubble({
             aria-label="Eliminar mensaje de voz"
             className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50"
           >
-            <TrashIcon className="h-3.5 w-3.5 text-red-500" />
+            <Trash2 className="h-3.5 w-3.5 text-red-500" strokeWidth={2} />
           </button>
         )}
       </div>

@@ -12,7 +12,7 @@ export default function DomainFavicon({ domain, size = 16, className = '' }: Dom
   const isOther = !domain || domain === 'Otros sitios'
 
   if (isOther || error) {
-    return <Globe className={`${className} text-gray-400`} size={size} strokeWidth={1.8} />
+    return <Globe className={`${className} text-gray-400`} size={size} strokeWidth={2} />
   }
 
   return (

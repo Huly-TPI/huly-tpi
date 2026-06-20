@@ -1,4 +1,4 @@
-import { CurrencyDollarIcon } from '@heroicons/react/24/solid'
+import { CircleDollarSign } from 'lucide-react'
 import type { Plan } from '../../api/payment'
 
 interface PlanCardProps {
@@ -36,7 +36,7 @@ export function PlanCard({ plan, buying, disabled, activeProductId, onBuy }: Pla
           )}
         </div>
         <div className="flex items-center gap-1 mb-2">
-          <CurrencyDollarIcon className="w-4 h-4 text-yellow-500" />
+          <CircleDollarSign className="w-4 h-4 text-yellow-500" strokeWidth={2} />
           <span className="text-yellow-700 font-semibold text-sm">
             {plan.coinsAmount.toLocaleString('es-AR')} monedas
           </span>
