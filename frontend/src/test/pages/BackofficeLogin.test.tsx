@@ -11,9 +11,15 @@ vi.mock('../../api/auth', () => ({
 
 const mockLoginWithToken = vi.fn().mockResolvedValue(undefined)
 vi.mock('../../context/auth', () => ({
-    useAuth: () => ({
-        loginWithToken: mockLoginWithToken,
-    }),
+    useAuth: () => {
+        const hasAdminRole = window.localStorage.getItem('role') === 'ADMIN'
+        return {
+            loginWithToken: mockLoginWithToken,
+            isAuthenticated: hasAdminRole,
+            loading: false,
+            user: hasAdminRole ? { role: 'ADMIN' } : null,
+        }
+    },
 }))
 
 const mockSetToken = vi.fn()

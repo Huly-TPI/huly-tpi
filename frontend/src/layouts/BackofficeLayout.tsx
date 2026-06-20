@@ -9,10 +9,17 @@ import { useAuth } from '../context/auth'
 export default function BackofficeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, loading, isAuthenticated } = useAuth()
 
-  const role = localStorage.getItem('role')
-  if (!role || role !== 'ADMIN') {
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#EDF2ED] dark:bg-[#09111f]">
+        <span className="text-sm text-gray-500">Cargando...</span>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated || !user || user.role !== 'ADMIN') {
     return <Navigate to="/backoffice/login" replace />
   }
 
@@ -26,7 +33,7 @@ export default function BackofficeLayout() {
     }
   }
 
-  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : ''
+  const userInitial = user.name.charAt(0).toUpperCase()
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#EDF2ED] dark:bg-[#09111f] font-sans transition-colors duration-200">
