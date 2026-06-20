@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Menu, User, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/auth'
 import { useTheme } from '../context/theme'
@@ -80,7 +81,7 @@ export default function Navbar() {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(prev => !prev)}
           >
-            {menuOpen ? <XIcon className="size-6" /> : <HamburgerIcon className="size-6" />}
+            {menuOpen ? <X className="size-6" strokeWidth={2} /> : <Menu className="size-6" strokeWidth={2} />}
           </button>
         </div>
       </div>
@@ -185,7 +186,7 @@ function UserMenu({ name }: { name: string }) {
         aria-expanded={open}
         className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-bosque shadow-sm transition-all hover:brightness-95 active:translate-y-px"
       >
-        <UserIcon className="size-4" />
+        <User className="size-4" strokeWidth={2} />
         <span className="max-w-[8rem] truncate">{name}</span>
       </button>
 
@@ -240,36 +241,5 @@ function AuthButtons() {
         Registrarse
       </Link>
     </div>
-  )
-}
-
-function UserIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  )
-}
-
-function HamburgerIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <line x1="4" y1="18" x2="20" y2="18" />
-    </svg>
-  )
-}
-
-function XIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
   )
 }

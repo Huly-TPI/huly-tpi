@@ -53,7 +53,7 @@ export function FinanceTab({
       <div className="bg-gray-55/50 dark:bg-[#09111f]/40 border border-gray-100 dark:border-gray-800/40 rounded-xl p-5 lg:flex-grow lg:min-h-0 lg:flex lg:flex-col">
         <div className="flex items-center gap-2 mb-4 shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-            <DollarSign className="h-5 w-5" strokeWidth={1.8} />
+            <DollarSign className="h-5 w-5" strokeWidth={2} />
           </div>
           <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Historial de Transacciones</h2>
         </div>

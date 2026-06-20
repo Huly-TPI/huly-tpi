@@ -1,6 +1,6 @@
 import { useUsers } from '../../hooks/backoffice/useUsers'
 import { SectionCard } from '../../components/backoffice/SectionCard'
-import { ChevronLeft, ShieldAlert, Brain, Activity, DollarSign, Check, X } from 'lucide-react'
+import { ChevronLeft, ShieldAlert, Brain, Activity, DollarSign, Check, X, CircleDollarSign } from 'lucide-react'
 import { UsageTab } from './components/UsageTab'
 import { AiDiagnosticsTab } from './components/AiDiagnosticsTab'
 import { AntiScrollTab } from './components/AntiScrollTab'
@@ -57,7 +57,7 @@ export default function UserDetailPage() {
             className="text-gray-400 dark:text-gray-555 hover:text-violeta dark:hover:text-violeta-claro transition duration-150 flex items-center justify-center p-0.5"
             aria-label="volver"
           >
-            <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
+            <ChevronLeft className="h-5 w-5" strokeWidth={2} />
           </button>
           <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Detalle de usuario</h1>
         </div>
@@ -97,7 +97,8 @@ export default function UserDetailPage() {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="font-semibold text-gray-400 dark:text-gray-555">Monedas</span>
-                <span className="font-bold text-amber-500 dark:text-amber-400">
+                <span className="inline-flex items-center gap-1 font-bold text-amber-500 dark:text-amber-400">
+                  <CircleDollarSign className="h-4 w-4" strokeWidth={2} />
                   {selectedUser.coins ?? 0}
                 </span>
               </div>

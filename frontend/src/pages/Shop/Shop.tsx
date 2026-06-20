@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { X } from 'lucide-react'
 import { useProducts } from '../../hooks/shop/useProducts'
 import { usePlans } from '../../hooks/shop/usePlans'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
@@ -106,7 +106,7 @@ export default function Shop() {
               onClick={() => setPaymentBanner(null)}
               className="shrink-0 rounded-full p-1 hover:bg-black/5 transition bg-transparent border-0 cursor-pointer"
             >
-              <XMarkIcon className="w-4 h-4" />
+              <X className="w-4 h-4" strokeWidth={2} />
             </button>
           </div>
         )}

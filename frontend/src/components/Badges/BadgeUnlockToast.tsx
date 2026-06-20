@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { BadgeResponse } from '../../api/badges'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { X } from 'lucide-react'
 
 interface BadgeUnlockToastProps {
   badge: BadgeResponse | null
@@ -36,7 +36,7 @@ export default function BadgeUnloackToast({ badge, onDismiss }: BadgeUnlockToast
                 onClick={onDismiss}
                 className="ml-1 rounded-full p-1.5 hover:bg-white/20 transition"
             >
-                <XMarkIcon className="h-5 w-5" />
+                <X className="h-5 w-5" strokeWidth={2} />
             </button>
         </div>
   )

@@ -39,7 +39,7 @@ export function AiDiagnosticsTab({
         <div className="flex-grow flex flex-col gap-3 justify-center">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-              <User className="h-5 w-5" strokeWidth={1.8} />
+              <User className="h-5 w-5" strokeWidth={2} />
             </div>
             <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Perfil Psicológico y Conductual (Síntesis de IA)</h2>
           </div>
@@ -73,7 +73,7 @@ export function AiDiagnosticsTab({
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-                <Heart className="h-5 w-5" strokeWidth={1.8} />
+                <Heart className="h-5 w-5" strokeWidth={2} />
               </div>
               <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Receptividad a las Sugerencias</h2>
             </div>
@@ -127,7 +127,7 @@ export function AiDiagnosticsTab({
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Suele Aceptar:</span>
                 {(aiDiagnostics.acceptedActivities?.length ?? 0) > 0 ? (
                   <div className="text-xs text-gray-600 dark:text-gray-300 font-medium flex items-start gap-1.5">
-                    <ThumbsUp className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0 mt-0.5" strokeWidth={2.2} />
+                    <ThumbsUp className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0 mt-0.5" strokeWidth={2} />
                     <span>
                       {(() => {
                         const text = aiDiagnostics.acceptedActivities?.join(', ') ?? '';
@@ -144,7 +144,7 @@ export function AiDiagnosticsTab({
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Suele Ignorar/Rechazar:</span>
                 {(aiDiagnostics.ignoredActivities?.length ?? 0) > 0 ? (
                   <div className="text-xs text-gray-600 dark:text-gray-300 font-medium flex items-start gap-1.5">
-                    <ThumbsDown className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" strokeWidth={2.2} />
+                    <ThumbsDown className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" strokeWidth={2} />
                     <span>
                       {(() => {
                         const text = aiDiagnostics.ignoredActivities?.join(', ') ?? '';
@@ -165,7 +165,7 @@ export function AiDiagnosticsTab({
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-                <Brain className="h-5 w-5" strokeWidth={1.8} />
+                <Brain className="h-5 w-5" strokeWidth={2} />
               </div>
               <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Preferencias de Personalización</h2>
             </div>
@@ -191,7 +191,7 @@ export function AiDiagnosticsTab({
         <div className="bg-gray-55/50 dark:bg-[#09111f]/40 border border-gray-100 dark:border-gray-800/40 rounded-xl p-5 flex flex-col">
           <div className="flex items-center gap-2 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-              <Sparkles className="h-5 w-5" strokeWidth={1.8} />
+              <Sparkles className="h-5 w-5" strokeWidth={2} />
             </div>
             <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">
               Estado emocional predominante: <span className="text-violeta dark:text-violeta-claro font-extrabold">{mapEmotionToSpanish(aiDiagnostics.dominantEmotion ?? null)}</span>

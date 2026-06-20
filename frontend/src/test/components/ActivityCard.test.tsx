@@ -1,21 +1,23 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { Sparkles, Wind } from 'lucide-react'
 import { ActivityCard, type Activity } from '../../components/backoffice/ActivityCard'
 
 const makeActivity = (overrides?: Partial<Activity>): Activity => ({
-  emoji: '🫧',
+  Icon: Sparkles,
   name: 'Reventar burbujas',
   pct: 65,
   barColor: 'bg-violeta',
   iconBg: 'bg-violet-100',
+  iconColor: 'text-violeta',
   ...overrides,
 })
 
 describe('ActivityCard', () => {
-  it('renderiza el emoji, nombre y porcentaje', () => {
-    render(<ActivityCard activity={makeActivity()} />)
+  it('renderiza el icono, nombre y porcentaje', () => {
+    const { container } = render(<ActivityCard activity={makeActivity()} />)
 
-    expect(screen.getByText('🫧')).toBeInTheDocument()
+    expect(container.querySelector('svg')).toBeInTheDocument()
     expect(screen.getByText('Reventar burbujas')).toBeInTheDocument()
     expect(screen.getByText('65%')).toBeInTheDocument()
   })
@@ -44,13 +46,15 @@ describe('ActivityCard', () => {
     expect(progressBar).toHaveStyle({ width: '100%' })
   })
 
-  it('muestra emoji y fondo de icono personalizados', () => {
-    render(
+  it('muestra icono y fondo personalizados', () => {
+    const { container } = render(
       <ActivityCard
-        activity={makeActivity({ emoji: '🌬️', iconBg: 'bg-teal-100' })}
+        activity={makeActivity({ Icon: Wind, iconBg: 'bg-teal-100', iconColor: 'text-teal-500' })}
       />,
     )
 
-    expect(screen.getByText('🌬️')).toBeInTheDocument()
+    const iconContainer = container.querySelector('.bg-teal-100')
+    expect(iconContainer).toBeInTheDocument()
+    expect(iconContainer?.querySelector('svg')).toBeInTheDocument()
   })
 })

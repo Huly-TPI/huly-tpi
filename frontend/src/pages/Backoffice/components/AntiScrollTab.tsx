@@ -63,7 +63,7 @@ export function AntiScrollTab({
               <div className="bg-gray-55/50 dark:bg-[#09111f]/40 border border-gray-100 dark:border-gray-800/40 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-                    <Clock className="h-5 w-5" strokeWidth={1.8} />
+                    <Clock className="h-5 w-5" strokeWidth={2} />
                   </div>
                   <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Tiempo scrolleando por día</h2>
                 </div>
@@ -101,7 +101,7 @@ export function AntiScrollTab({
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-gray-50 dark:border-gray-800/60 pb-3">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-                        <Monitor className="h-5 w-5" strokeWidth={1.8} />
+                        <Monitor className="h-5 w-5" strokeWidth={2} />
                       </div>
                       <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Tiempo en cada dominio</h2>
                     </div>
@@ -158,7 +158,7 @@ export function AntiScrollTab({
           ) : (
             <div className="flex flex-col items-center justify-center text-center py-12 px-4 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl w-full">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-955/20 text-blue-500 mb-3">
-                <HelpCircle className="h-6 w-6" strokeWidth={1.8} />
+                <HelpCircle className="h-6 w-6" strokeWidth={2} />
               </div>
               <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Sin estadísticas de uso</h4>
               <p className="text-xs text-gray-400 dark:text-gray-500 max-w-sm">
@@ -169,7 +169,7 @@ export function AntiScrollTab({
         ) : (
           <div className="flex flex-col items-center justify-center text-center py-12 px-4 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl w-full">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-955/20 text-red-500 mb-3">
-              <ShieldAlert className="h-6 w-6" strokeWidth={1.8} />
+              <ShieldAlert className="h-6 w-6" strokeWidth={2} />
             </div>
             <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Estadísticas privadas</h4>
             <p className="text-xs text-gray-400 dark:text-gray-555 max-w-sm">
@@ -180,7 +180,7 @@ export function AntiScrollTab({
       ) : (
         <div className="flex flex-col items-center justify-center text-center py-12 px-4 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl w-full">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-555 mb-3">
-            <ShieldAlert className="h-6 w-6" strokeWidth={1.8} />
+            <ShieldAlert className="h-6 w-6" strokeWidth={2} />
           </div>
           <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Antiscroll desactivado</h4>
           <p className="text-xs text-gray-400 dark:text-gray-555 max-w-sm">
