@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
+import com.huly.backend.domain.model.vector.VectorMemoryEntry;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.service.vector.VectorMemoryPolicy;
@@ -121,6 +122,45 @@ public class SpringAiVectorMemoryPort implements VectorMemoryPort {
                 maxDistance,
                 query.limit()
         );
+    }
+
+    @Override
+    public List<String> findMemoryContentsByUserIdExcludingSummary(Long userId) {
+        String sql = """
+                SELECT content
+                FROM %s
+                WHERE metadata ->> 'userId' = ?
+                  AND COALESCE(metadata ->> 'deleted', 'false') = 'false'
+                  AND (metadata ->> 'contentType' IS NULL OR metadata ->> 'contentType' != 'PERSONALITY_SUMMARY')
+                """.formatted(tableName);
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("content"), userId.toString());
+    }
+
+    @Override
+    public List<VectorMemoryEntry> findMemoriesByUserIdExcludingSummary(Long userId) {
+        String sql = """
+                SELECT id::text AS id, content, metadata::text AS metadata
+                FROM %s
+                WHERE metadata ->> 'userId' = ?
+                  AND COALESCE(metadata ->> 'deleted', 'false') = 'false'
+                  AND (metadata ->> 'contentType' IS NULL OR metadata ->> 'contentType' != 'PERSONALITY_SUMMARY')
+                """.formatted(tableName);
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Map<String, Object> metadata = toMetadata(rs.getString("metadata"));
+            String sourceType = metadata.containsKey("sourceType") ? metadata.get("sourceType").toString() : "UNKNOWN";
+            String contentType = metadata.containsKey("contentType") ? metadata.get("contentType").toString() : "TEXT_MEMORY";
+            String createdAt = metadata.containsKey("createdAt") ? metadata.get("createdAt").toString() : null;
+
+            return new VectorMemoryEntry(
+                    rs.getString("id"),
+                    rs.getString("content"),
+                    sourceType,
+                    contentType,
+                    createdAt
+            );
+        }, userId.toString());
     }
 
     @Override
