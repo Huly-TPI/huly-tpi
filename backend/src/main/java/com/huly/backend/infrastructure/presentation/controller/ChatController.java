@@ -143,7 +143,20 @@ public class ChatController {
                 msg.content(),
                 msg.riskDetected(),
                 msg.detectedEmotion() != null ? msg.detectedEmotion().name() : null,
-                msg.createdAt()
+                msg.createdAt(),
+                toSuggestedAction(msg.suggestedAction()),
+                msg.generatedChallenge() != null
+                        ? new ChatResponse.GeneratedChallenge(msg.generatedChallenge().title(), msg.generatedChallenge().description())
+                        : null,
+                toFrontendDecision(msg.suggestedActionDecision()),
+                toFrontendDecision(msg.challengeDecision())
         );
+    }
+
+    private String toFrontendDecision(String decision) {
+        if (decision == null || decision.isBlank())
+            return null;
+        
+        return "ACCEPTED".equalsIgnoreCase(decision) ? "accepted" : "rejected";
     }
 }

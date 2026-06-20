@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import hulySideImage from '../../assets/chatbot/huly-side.webp'
 import { useChatbot } from '../../hooks/useChatbot'
 import BaseModal from '../Modal/BaseModal'
@@ -26,6 +27,11 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     decideSuggestedAction,
     resetConversation,
   } = useChatbot()
+
+  useEffect(() => {
+    if (!isOpen || isLoadingHistory) return
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [isOpen, isLoadingHistory, messages.length, bottomRef])
 
   return (
     <BaseModal

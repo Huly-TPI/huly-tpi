@@ -45,7 +45,7 @@ class ChatMessageRepositoryImplTest {
         ChatSessionEntity session = ChatSessionEntity.builder().id(1L).conversationId("conv-1").build();
         when(sessionJpa.findById(1L)).thenReturn(Optional.of(session));
 
-        ConversationMessage msg = new ConversationMessage(MessageRole.USER, "hola", null, false, null);
+        ConversationMessage msg = new ConversationMessage(MessageRole.USER, "hola", null, false, null, null, null, null, null);
         repository.saveMessage(1L, msg);
 
         ArgumentCaptor<ChatMessageEntity> captor = ArgumentCaptor.forClass(ChatMessageEntity.class);
@@ -60,7 +60,7 @@ class ChatMessageRepositoryImplTest {
         ChatSessionEntity session = ChatSessionEntity.builder().id(1L).conversationId("conv-1").build();
         when(sessionJpa.findById(1L)).thenReturn(Optional.of(session));
 
-        ConversationMessage msg = new ConversationMessage(MessageRole.ASSISTANT, "resp", EmotionType.JOY, false, null);
+        ConversationMessage msg = new ConversationMessage(MessageRole.ASSISTANT, "resp", EmotionType.JOY, false, null, null, null, null, null);
         repository.saveMessage(1L, msg);
 
         ArgumentCaptor<ChatMessageEntity> captor = ArgumentCaptor.forClass(ChatMessageEntity.class);

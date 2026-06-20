@@ -7,6 +7,7 @@ import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendatio
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
@@ -27,6 +28,7 @@ class EmotionalEventUseCaseTest {
 
     private EmotionalEventRepository emotionalEventRepository;
     private ActivityRepository activityRepository;
+    private ChatMessageRepository chatMessageRepository;
     private UserVectorMemoryService userVectorMemoryService;
     private CreateEmotionalEventUseCase createUseCase;
     private UpdateEmotionalEventDecisionUseCase decisionUseCase;
@@ -36,12 +38,14 @@ class EmotionalEventUseCaseTest {
     void setUp() {
         emotionalEventRepository = mock(EmotionalEventRepository.class);
         activityRepository = mock(ActivityRepository.class);
+        chatMessageRepository = mock(ChatMessageRepository.class);
         userVectorMemoryService = mock(UserVectorMemoryService.class);
         createUseCase = new CreateEmotionalEventUseCase(emotionalEventRepository, activityRepository);
         decisionUseCase = new UpdateEmotionalEventDecisionUseCase(
                 emotionalEventRepository,
                 activityRepository,
-                userVectorMemoryService);
+                userVectorMemoryService,
+                chatMessageRepository);
         feedbackUseCase = new UpdateEmotionalEventFeedbackUseCase(emotionalEventRepository);
     }
 

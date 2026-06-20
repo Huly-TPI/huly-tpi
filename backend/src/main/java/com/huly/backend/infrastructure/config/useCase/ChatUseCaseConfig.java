@@ -124,8 +124,9 @@ public class ChatUseCaseConfig {
 
     @Bean
     public SaveChallengeDecisionUseCase saveChallengeDecisionUseCase(
-            UserVectorMemoryService userVectorMemoryService
+            UserVectorMemoryService userVectorMemoryService,
+            ChatMessageRepository chatMessageRepository
     ) {
-        return new SaveChallengeDecisionUseCase(userVectorMemoryService);
+        return new SaveChallengeDecisionUseCase(userVectorMemoryService, chatMessageRepository);
     }
 }

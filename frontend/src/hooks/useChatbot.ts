@@ -71,7 +71,15 @@ async function mapHistoryMessage(
     return { role: 'user', content: message.content }
   }
 
-  return { role: 'assistant', content: message.content }
+  return {
+    role: 'assistant',
+    content: message.content,
+    detected_emotion: message.detected_emotion,
+    suggested_action: message.suggested_action,
+    generated_challenge: message.generated_challenge,
+    suggestedActionDecision: message.suggested_action_decision ?? undefined,
+    challengeDecision: message.challenge_decision ?? undefined,
+  }
 }
 
 function getSuggestedActionActivityId(action: SuggestedActionDto) {
@@ -92,6 +100,18 @@ function getOrCreateConversationId(storageKey: string) {
   const newConversationId = randomConversationId()
   localStorage.setItem(storageKey, newConversationId)
   return newConversationId
+}
+
+async function getFullHistory(conversationId: string) {
+  const firstPage = await chatApi.getHistory(conversationId, 0, 100)
+  const messages = [...firstPage.content]
+
+  for (let page = 1; page < firstPage.total_pages; page++) {
+    const nextPage = await chatApi.getHistory(conversationId, page, 100)
+    messages.push(...nextPage.content)
+  }
+
+  return messages
 }
 
 export function useChatbot() {
@@ -127,11 +147,11 @@ export function useChatbot() {
       setIsLoadingHistory(true)
 
       try {
-        const history = await chatApi.getHistory(conversationId)
+        const history = await getFullHistory(conversationId)
         const audioKeys = getStoredAudioKeys(conversationId)
         const iterator = { index: 0, keys: audioKeys }
         const mapped = await Promise.all(
-          history.content.map(msg => mapHistoryMessage(msg, conversationId, iterator)),
+          history.map(msg => mapHistoryMessage(msg, conversationId, iterator)),
         )
         setMessages(mapped)
       } catch {

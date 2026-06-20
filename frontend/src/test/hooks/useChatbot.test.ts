@@ -60,6 +60,15 @@ describe('useChatbot', () => {
           id: 2,
           role: 'ASSISTANT',
           content: 'hola yo',
+          suggested_action: {
+            type: 'RESPIRACION',
+            action_id: '7',
+            title: 'Respiracion guiada',
+            description: 'Respira con calma',
+            action_url: '/guided-breathing',
+            emotional_event_id: 22,
+          },
+          suggested_action_decision: 'accepted',
           created_at: '2026-01-01T00:01:00Z',
         },
       ],
@@ -77,11 +86,79 @@ describe('useChatbot', () => {
       expect(result.current.isLoadingHistory).toBe(false)
     })
 
-    expect(mockedGetHistory).toHaveBeenCalledWith('conv-history')
+    expect(mockedGetHistory).toHaveBeenCalledWith('conv-history', 0, 100)
     expect(result.current.messages).toEqual([
       { role: 'user', content: 'hola' },
-      { role: 'assistant', content: 'hola yo' },
+      {
+        role: 'assistant',
+        content: 'hola yo',
+        detected_emotion: undefined,
+        suggested_action: {
+          type: 'RESPIRACION',
+          action_id: '7',
+          title: 'Respiracion guiada',
+          description: 'Respira con calma',
+          action_url: '/guided-breathing',
+          emotional_event_id: 22,
+        },
+        generated_challenge: undefined,
+        suggestedActionDecision: 'accepted',
+        challengeDecision: undefined,
+      },
     ])
+  })
+
+  it('loads all history pages before hydrating messages', async () => {
+    localStorage.setItem('hulyChatConversationId:1', 'conv-paged')
+    mockedGetHistory
+      .mockResolvedValueOnce({
+        content: [
+          {
+            id: 1,
+            role: 'USER',
+            content: 'primer mensaje',
+            created_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+        page_number: 0,
+        page_size: 100,
+        total_elements: 101,
+        total_pages: 2,
+        first: true,
+        last: false,
+      } as never)
+      .mockResolvedValueOnce({
+        content: [
+          {
+            id: 101,
+            role: 'ASSISTANT',
+            content: 'ultima respuesta',
+            generated_challenge: { title: 'Reto final', description: 'Desc final' },
+            created_at: '2026-01-01T01:40:00Z',
+          },
+        ],
+        page_number: 1,
+        page_size: 100,
+        total_elements: 101,
+        total_pages: 2,
+        first: false,
+        last: true,
+      } as never)
+
+    const { result } = renderHook(() => useChatbot())
+
+    await waitFor(() => {
+      expect(result.current.isLoadingHistory).toBe(false)
+    })
+
+    expect(mockedGetHistory).toHaveBeenNthCalledWith(1, 'conv-paged', 0, 100)
+    expect(mockedGetHistory).toHaveBeenNthCalledWith(2, 'conv-paged', 1, 100)
+    expect(result.current.messages).toHaveLength(2)
+    expect(result.current.messages[1]).toMatchObject({
+      role: 'assistant',
+      content: 'ultima respuesta',
+      generated_challenge: { title: 'Reto final', description: 'Desc final' },
+    })
   })
 
   it('sendMessage appends user and assistant messages', async () => {
@@ -338,7 +415,7 @@ describe('useChatbot', () => {
     const { result } = renderHook(() => useChatbot())
     await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
 
-    expect(mockedGetHistory).toHaveBeenLastCalledWith('old-conv-id')
+    expect(mockedGetHistory).toHaveBeenLastCalledWith('old-conv-id', 0, 100)
 
     act(() => {
       result.current.resetConversation()

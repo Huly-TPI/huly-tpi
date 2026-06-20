@@ -185,7 +185,7 @@ class ChatControllerTest {
 
     @Test
     void getHistory_shouldReturn200WithPagedMessages() throws Exception {
-        ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.JOY, Instant.parse("2024-01-01T00:00:00Z"));
+        ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.JOY, Instant.parse("2024-01-01T00:00:00Z"), null, null, null, null);
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
         when(listChatHistoryUseCase.execute(eq("conv-1"), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
@@ -202,6 +202,41 @@ class ChatControllerTest {
     }
 
     @Test
+    void getHistory_shouldReturnCardsAndDecisions_whenAssistantMessageIncludesThem() throws Exception {
+        SuggestedChatAction action = new SuggestedChatAction(
+                ActivityType.RESPIRACION,
+                4L,
+                "Respiracion guiada",
+                "Respira lento",
+                "/guided-breathing",
+                12L
+        );
+        ChatReply.GeneratedChallenge challenge = new ChatReply.GeneratedChallenge("Reto breve", "Tomate cinco minutos");
+        ChatMessage msg = new ChatMessage(
+                3L,
+                MessageRole.ASSISTANT,
+                "Te sugiero esto",
+                false,
+                EmotionType.CALM,
+                Instant.parse("2024-01-01T00:02:00Z"),
+                action,
+                challenge,
+                "ACCEPTED",
+                "REJECTED"
+        );
+        Page<ChatMessage> page = new PageImpl<>(List.of(msg));
+        when(listChatHistoryUseCase.execute(eq("conv-1"), eq(USER_ID), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/chat/conv-1/messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].suggested_action.type").value("RESPIRACION"))
+                .andExpect(jsonPath("$.content[0].suggested_action.emotional_event_id").value(12))
+                .andExpect(jsonPath("$.content[0].generated_challenge.title").value("Reto breve"))
+                .andExpect(jsonPath("$.content[0].suggested_action_decision").value("accepted"))
+                .andExpect(jsonPath("$.content[0].challenge_decision").value("rejected"));
+    }
+
+    @Test
     void getHistory_shouldReturn200WithEmptyPage_whenNoMessages() throws Exception {
         Page<ChatMessage> emptyPage = Page.empty();
         when(listChatHistoryUseCase.execute(eq("conv-vacia"), eq(USER_ID), any(Pageable.class))).thenReturn(emptyPage);
@@ -214,7 +249,7 @@ class ChatControllerTest {
 
     @Test
     void getHistory_shouldReturn200WithNullRoleAndEmotion_whenMessageHasNulls() throws Exception {
-        ChatMessage msg = new ChatMessage(2L, null, "mensaje", null, null, Instant.now());
+        ChatMessage msg = new ChatMessage(2L, null, "mensaje", null, null, Instant.now(), null, null, null, null);
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
         when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
@@ -287,7 +322,7 @@ class ChatControllerTest {
 
     @Test
     void getHistory_shouldReturnPaginationMetadata() throws Exception {
-        ChatMessage msg = new ChatMessage(1L, MessageRole.ASSISTANT, "resp", false, EmotionType.CALM, Instant.now());
+        ChatMessage msg = new ChatMessage(1L, MessageRole.ASSISTANT, "resp", false, EmotionType.CALM, Instant.now(), null, null, null, null);
         Page<ChatMessage> page = new PageImpl<>(List.of(msg));
         when(listChatHistoryUseCase.execute(any(), eq(USER_ID), any(Pageable.class))).thenReturn(page);
 
