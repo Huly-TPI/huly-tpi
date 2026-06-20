@@ -341,7 +341,7 @@ public class ChatUseCase {
 
     private void saveConversationExchange(String conversationId, String message, ChatReply reply, Long userId) {
         saveUserMessage(conversationId, message, reply, userId);
-        saveAssistantMessage(conversationId, reply.content(), userId);
+        saveAssistantMessage(conversationId, reply, userId);
     }
 
     private void saveUserMessage(String conversationId, String message, ChatReply reply, Long userId) {
@@ -351,15 +351,28 @@ public class ChatUseCase {
                     message,
                     reply.detectedEmotion(),
                     reply.riskDetected(),
-                    reply.matchedWord()), userId);
+                    reply.matchedWord(),
+                    null,
+                    null,
+                    null,
+                    null), userId);
         } catch (Exception e) {
             log.warn("No se pudo guardar mensaje de usuario userId={} conversationId={}", userId, conversationId, e);
         }
     }
 
-    private void saveAssistantMessage(String conversationId, String content, Long userId) {
+    private void saveAssistantMessage(String conversationId, ChatReply reply, Long userId) {
         try {
-            chatMemoryPort.addMessage(conversationId, ConversationMessage.of(MessageRole.ASSISTANT, content), userId);
+            chatMemoryPort.addMessage(conversationId, new ConversationMessage(
+                    MessageRole.ASSISTANT,
+                    reply.content(),
+                    null,
+                    null,
+                    null,
+                    reply.suggestedAction(),
+                    reply.generatedChallenge(),
+                    null,
+                    null), userId);
         } catch (Exception e) {
             log.warn("No se pudo guardar mensaje del asistente userId={} conversationId={}", userId, conversationId, e);
         }

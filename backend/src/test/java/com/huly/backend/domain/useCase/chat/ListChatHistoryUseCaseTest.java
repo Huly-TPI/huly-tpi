@@ -38,7 +38,7 @@ class ListChatHistoryUseCaseTest {
         String conversationId = "conv-1";
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.NEUTRAL, Instant.now());
+        ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.NEUTRAL, Instant.now(), null, null, null, null);
         Page<ChatMessage> expected = new PageImpl<>(List.of(msg), pageable, 1);
 
         when(chatMessageRepository.findByConversationIdAndUserId(conversationId, userId, pageable)).thenReturn(expected);

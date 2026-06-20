@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   chatApi,
   type ChatHistoryMessageDto,
@@ -12,6 +12,7 @@ import { deleteAudioBlob, getAudioBlob, saveAudioBlob } from './useAudioCache'
 
 const CHAT_CONVERSATION_STORAGE_KEY = 'hulyChatConversationId'
 const AUDIO_KEYS_PREFIX = 'hulyAudioKeys:'
+const HISTORY_PAGE_SIZE = 20
 
 function randomConversationId() {
   return `chat-${Math.random().toString(36).slice(2, 10)}`
@@ -71,7 +72,26 @@ async function mapHistoryMessage(
     return { role: 'user', content: message.content }
   }
 
-  return { role: 'assistant', content: message.content }
+  return {
+    role: 'assistant',
+    content: message.content,
+    detected_emotion: message.detected_emotion,
+    suggested_action: message.suggested_action,
+    generated_challenge: message.generated_challenge,
+    suggestedActionDecision: message.suggested_action_decision ?? undefined,
+    challengeDecision: message.challenge_decision ?? undefined,
+  }
+}
+
+async function mapHistoryPageDescending(
+  historyPage: ChatHistoryMessageDto[],
+  conversationId: string,
+  audioKeyIterator: { index: number; keys: string[] },
+) {
+  const mappedDescending = await Promise.all(
+    historyPage.map(msg => mapHistoryMessage(msg, conversationId, audioKeyIterator)),
+  )
+  return mappedDescending.reverse()
 }
 
 function getSuggestedActionActivityId(action: SuggestedActionDto) {
@@ -99,6 +119,7 @@ export function useChatbot() {
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [isLoadingOlderHistory, setIsLoadingOlderHistory] = useState(false)
   const [error, setError] = useState('')
   const { user } = useAuth()
   const conversationStorageKey = useMemo(
@@ -109,33 +130,62 @@ export function useChatbot() {
     getOrCreateConversationId(conversationStorageKey),
   )
   const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLElement>(null)
   const sendingRef = useRef(false)
   const audioAbortRef = useRef<AbortController | null>(null)
+  const nextHistoryPageRef = useRef(0)
+  const hasMoreHistoryRef = useRef(false)
+  const audioHistoryCursorRef = useRef<{ index: number; keys: string[] }>({ index: -1, keys: [] })
+  const restoreScrollHeightRef = useRef<number | null>(null)
+  const shouldAutoScrollRef = useRef(false)
 
   useEffect(() => {
     setConversationId(getOrCreateConversationId(conversationStorageKey))
     setMessages([])
     setError('')
+    nextHistoryPageRef.current = 0
+    hasMoreHistoryRef.current = false
+    audioHistoryCursorRef.current = { index: -1, keys: [] }
+    restoreScrollHeightRef.current = null
   }, [conversationStorageKey])
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isSending])
+  useLayoutEffect(() => {
+    const previousScrollHeight = restoreScrollHeightRef.current
+    const container = messagesContainerRef.current
+
+    if (previousScrollHeight !== null && container) {
+      container.scrollTop += container.scrollHeight - previousScrollHeight
+      restoreScrollHeightRef.current = null
+      return
+    }
+
+    if (shouldAutoScrollRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      shouldAutoScrollRef.current = false
+    }
+  }, [messages])
 
   useEffect(() => {
     const loadHistory = async () => {
       setIsLoadingHistory(true)
 
       try {
-        const history = await chatApi.getHistory(conversationId)
+        const historyPage = await chatApi.getHistory(conversationId, 0, HISTORY_PAGE_SIZE)
         const audioKeys = getStoredAudioKeys(conversationId)
-        const iterator = { index: 0, keys: audioKeys }
-        const mapped = await Promise.all(
-          history.content.map(msg => mapHistoryMessage(msg, conversationId, iterator)),
+        const iterator = { index: audioKeys.length - 1, keys: audioKeys }
+        audioHistoryCursorRef.current = iterator
+        const mapped = await mapHistoryPageDescending(
+          historyPage.content,
+          conversationId,
+          iterator,
         )
         setMessages(mapped)
+        nextHistoryPageRef.current = historyPage.page_number + 1
+        hasMoreHistoryRef.current = !historyPage.last
       } catch {
         setMessages([])
+        nextHistoryPageRef.current = 0
+        hasMoreHistoryRef.current = false
       } finally {
         setIsLoadingHistory(false)
       }
@@ -144,10 +194,46 @@ export function useChatbot() {
     void loadHistory()
   }, [conversationId])
 
+  const loadOlderHistory = async () => {
+    if (isLoadingHistory || isLoadingOlderHistory || !hasMoreHistoryRef.current) return
+
+    const container = messagesContainerRef.current
+    restoreScrollHeightRef.current = container?.scrollHeight ?? null
+    setIsLoadingOlderHistory(true)
+
+    try {
+      const historyPage = await chatApi.getHistory(
+        conversationId,
+        nextHistoryPageRef.current,
+        HISTORY_PAGE_SIZE,
+      )
+      const mapped = await mapHistoryPageDescending(
+        historyPage.content,
+        conversationId,
+        audioHistoryCursorRef.current,
+      )
+      setMessages(prev => [...mapped, ...prev])
+      nextHistoryPageRef.current = historyPage.page_number + 1
+      hasMoreHistoryRef.current = !historyPage.last
+    } catch {
+      restoreScrollHeightRef.current = null
+    } finally {
+      setIsLoadingOlderHistory(false)
+    }
+  }
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    if (container.scrollTop > 48) return
+    void loadOlderHistory()
+  }
+
   const sendChatMessage = async (text: string) => {
     if (sendingRef.current) return
     sendingRef.current = true
 
+    shouldAutoScrollRef.current = true
     setMessages(prev => [...prev, { role: 'user', content: text }])
     setIsSending(true)
     setError('')
@@ -169,6 +255,7 @@ export function useChatbot() {
           generated_challenge: response.generated_challenge,
         },
       ])
+      shouldAutoScrollRef.current = true
     } catch (requestError) {
       if (requestError instanceof Error) {
         setError(requestError.message)
@@ -200,6 +287,7 @@ export function useChatbot() {
     pushAudioKey(conversationId, uuid)
 
     const audioUrl = URL.createObjectURL(blob)
+    shouldAutoScrollRef.current = true
     setMessages(prev => [
       ...prev,
       { role: 'user', content: '', audioBlob: blob, audioUrl, audioKey: uuid },
@@ -223,6 +311,7 @@ export function useChatbot() {
           generated_challenge: response.generated_challenge,
         },
       ])
+      shouldAutoScrollRef.current = true
     } catch (requestError) {
       if (requestError instanceof Error && requestError.name !== 'AbortError') {
         setError(requestError.message)
@@ -386,6 +475,9 @@ export function useChatbot() {
     isLoadingHistory,
     error,
     bottomRef,
+    messagesContainerRef,
+    isLoadingOlderHistory,
+    handleMessagesScroll,
     sendMessage,
     sendAudioMessage,
     deleteAudioMessage,
