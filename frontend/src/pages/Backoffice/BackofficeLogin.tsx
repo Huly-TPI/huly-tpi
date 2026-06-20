@@ -25,17 +25,23 @@ const getInputClassName = (hasError: boolean) => {
 
 export default function BackofficeLogin() {
   const navigate = useNavigate()
-  const role = localStorage.getItem('role')
-  const { loginWithToken } = useAuth()
-
-  if (role === 'ADMIN') 
-    return <Navigate to="/backoffice" replace />
-
+  const { user, loading: authLoading, isAuthenticated, loginWithToken } = useAuth()
   const { values, errors, handleChange, validateAll } = useForm(INITIAL_VALUES, VALIDATION_RULES)
 
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#EDF2ED] dark:bg-[#09111f]">
+        <span className="text-sm text-gray-500">Cargando...</span>
+      </div>
+    )
+  }
+
+  if (isAuthenticated && user?.role === 'ADMIN') 
+    return <Navigate to="/backoffice" replace />
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/auth'
+import { useAuth, hasSessionFlag } from '../context/auth'
 import { useTheme } from '../context/theme'
 import logo from '../assets/brand/monocromatico-menta-logo.png'
 import ThemeToggle from './ThemeToggle/ThemeToggle'
@@ -15,7 +15,7 @@ const NAV_LINKS = [
 ] as const
 
 export default function Navbar() {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, loading } = useAuth()
   const { theme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const isDark = theme === 'dark'
@@ -64,7 +64,9 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          {isAuthenticated && user ? (
+          {loading && hasSessionFlag() ? (
+            <div className="h-9 w-24 animate-pulse rounded-full bg-white/10" aria-hidden="true" />
+          ) : isAuthenticated && user ? (
             <UserMenu name={user.name} />
           ) : (
             <AuthButtons />
@@ -106,7 +108,9 @@ export default function Navbar() {
             <ThemeToggle compact />
           </div>
 
-          {isAuthenticated && (
+          {loading && hasSessionFlag() ? (
+            <div className="mx-3 my-2 h-10 w-3/4 animate-pulse rounded-lg bg-white/10" aria-hidden="true" />
+          ) : isAuthenticated ? (
             <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
               <span>Mis estampitas</span>
               <button
@@ -118,9 +122,7 @@ export default function Navbar() {
                 <img src="/badges/badge_launcher.webp" alt="" className="h-11 w-11 object-contain" />
               </button>
             </div>
-          )}
-
-          {!isAuthenticated && (
+          ) : (
             <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               <Link
                 to="/login"
