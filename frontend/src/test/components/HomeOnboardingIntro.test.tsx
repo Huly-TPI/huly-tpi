@@ -18,4 +18,11 @@ describe('HomeOnboardingIntro', () => {
 
     expect(onStart).toHaveBeenCalledTimes(1)
   })
+
+  it('puede ocultar el kicker y el logo de marca', () => {
+    render(<HomeOnboardingIntro showBrand={false} onStart={vi.fn()} />)
+
+    expect(screen.queryByText('Bienvenido a')).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Huly' })).not.toBeInTheDocument()
+  })
 })

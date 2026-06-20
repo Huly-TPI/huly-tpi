@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.onboarding;
 
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,5 +12,10 @@ public class CompleteTutorialUseCase {
     @Transactional
     public void execute(Long userId) {
         userDetailDomainRepository.completeTutorial(userId);
+    }
+
+    @Transactional
+    public void executeProfile(Long userId) {
+        userDetailDomainRepository.completeProfileTutorial(userId);
     }
 }

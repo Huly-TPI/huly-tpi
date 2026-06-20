@@ -1,8 +1,8 @@
 package com.huly.backend.domain.useCase.chatConfig;
 
-import com.huly.backend.domain.model.UpdateBotConfigCommand;
+import com.huly.backend.domain.model.chat.UpdateBotConfigCommand;
 import com.huly.backend.domain.model.chat.ChatConfig;
-import com.huly.backend.domain.service.BotConfigService;
+import com.huly.backend.domain.service.chat.BotConfigService;
 import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

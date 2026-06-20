@@ -22,6 +22,7 @@ export const tryToRefreshToken = async (): Promise<string | null> => {
     const { backendUrl } = await getSettings();
     const response = await fetch(`${backendUrl}/api/auth/refresh`, {
       method: 'POST',
+      cache: 'no-store',
       credentials: 'include',
     });
 
@@ -63,7 +64,10 @@ export const fetchRemoteSettings = async (): Promise<Partial<ExtensionSettings> 
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    let response = await fetch(`${backendUrl}/api/extension/settings`, { headers });
+    let response = await fetch(`${backendUrl}/api/extension/settings`, {
+      headers,
+      cache: 'no-store',
+    });
     
     if (response.status === 401) {
       const newToken = await tryToRefreshToken();
@@ -71,7 +75,10 @@ export const fetchRemoteSettings = async (): Promise<Partial<ExtensionSettings> 
         const retryHeaders: HeadersInit = {
           'Authorization': `Bearer ${newToken}`
         };
-        response = await fetch(`${backendUrl}/api/extension/settings`, { headers: retryHeaders });
+        response = await fetch(`${backendUrl}/api/extension/settings`, {
+          headers: retryHeaders,
+          cache: 'no-store',
+        });
       } else {
         return null;
       }
@@ -82,7 +89,7 @@ export const fetchRemoteSettings = async (): Promise<Partial<ExtensionSettings> 
     const data = await response.json();
     return {
       enabled: data.enabled,
-      pauseIntervalSeconds: data.pauseIntervalMinutes * 60,
+      pauseIntervalSeconds: data.pauseIntervalSeconds,
       gardenUrl: data.gardenUrl,
       backendUrl: data.backendUrl,
       monitoredDomains: data.monitoredDomains,
@@ -113,7 +120,7 @@ export const pushRemoteSettings = async (settings: Partial<ExtensionSettings>): 
       headers,
       body: JSON.stringify({
         enabled: merged.enabled,
-        pauseIntervalMinutes: Math.floor(merged.pauseIntervalSeconds / 60),
+        pauseIntervalSeconds: merged.pauseIntervalSeconds,
         monitoredDomains: merged.monitoredDomains,
         dataSharingConsent: merged.dataSharingConsent,
       }),
@@ -131,7 +138,7 @@ export const pushRemoteSettings = async (settings: Partial<ExtensionSettings>): 
           headers: retryHeaders,
           body: JSON.stringify({
             enabled: merged.enabled,
-            pauseIntervalMinutes: Math.floor(merged.pauseIntervalSeconds / 60),
+            pauseIntervalSeconds: merged.pauseIntervalSeconds,
             monitoredDomains: merged.monitoredDomains,
             dataSharingConsent: merged.dataSharingConsent,
           }),

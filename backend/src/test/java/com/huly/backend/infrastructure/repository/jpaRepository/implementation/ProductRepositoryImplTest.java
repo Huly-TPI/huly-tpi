@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.infrastructure.repository.entity.ProductEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IProductJpaRepository;
@@ -99,5 +99,16 @@ class ProductRepositoryImplTest {
         when(jpaRepository.findByType(ProductType.COIN_PACK)).thenReturn(List.of());
 
         assertThat(repository.findByType(ProductType.COIN_PACK)).isEmpty();
+    }
+
+    @Test
+    void findByIds_shouldReturnMappedProducts_whenFound() {
+        when(jpaRepository.findAllById(List.of(1L, 10L))).thenReturn(List.of(coinPackEntity(), planEntity()));
+
+        List<Product> result = repository.findByIds(List.of(1L, 10L));
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(1).getId()).isEqualTo(10L);
     }
 }

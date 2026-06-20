@@ -1,20 +1,21 @@
 package com.huly.backend.domain.useCase.emotionalRecommendation;
 
-import com.huly.backend.domain.model.Activity;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
-import com.huly.backend.domain.model.Vad;
-import com.huly.backend.domain.repository.ActivityRepository;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
-import com.huly.backend.domain.service.EmotionalRecommendationService;
+import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.Vad;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationService;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 /**
- * Retrieves and ranks activities for a validated emotional recommendation query.
+ * Application use case that validates the input and loads the data needed by the
+ * shared emotional recommendation domain service.
  */
 @RequiredArgsConstructor
 public class GetEmotionalRecommendationsUseCase {
@@ -27,14 +28,7 @@ public class GetEmotionalRecommendationsUseCase {
     private final EmotionalEventRepository emotionalEventRepository;
     private final EmotionalRecommendationService recommendationService;
 
-    /**
-     * Validates the emotional state and returns all activities ordered by relevance.
-     *
-     * @param query emotional recommendation criteria
-     * @return ordered emotional recommendations
-     * @throws BadRequestException when VAD or intensity values are outside their supported ranges
-     */
-    public EmotionalRecommendationResult execute(EmotionalRecommendationQuery query) {
+    public EmotionalRecommendationResult execute(EmotionalRecommendation query) {
         validateVad(query.vad());
         validateRange("intensity", query.intensity(), MIN_INTENSITY, MAX_INTENSITY);
 

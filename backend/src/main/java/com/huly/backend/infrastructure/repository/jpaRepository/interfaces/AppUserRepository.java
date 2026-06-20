@@ -27,9 +27,15 @@ public interface AppUserRepository extends JpaRepository<AppUserEntity, Long> {
     Optional<Integer> findCoinsById(@Param("userId") Long userId);
 
     @Modifying
+
     @Query("UPDATE AppUserEntity u SET u.lastLoginAt = :now WHERE u.id = :userId")
     void updateLastLogin(@Param("userId") Long userId, @Param("now") Instant now);
 
     @Query("SELECT u FROM AppUserEntity u WHERE u.lastLoginAt IS NOT NULL AND u.lastLoginAt < :since")
     List<AppUserEntity> findByLastLoginAtBefore(@Param("since") Instant since);
+
+    @Modifying
+    @Query("UPDATE AppUserEntity u SET u.coins = u.coins - :amount WHERE u.id = :userId AND u.coins >= :amount")
+    int debitCoins(@Param("userId") Long userId, @Param("amount") int amount);
+
 }

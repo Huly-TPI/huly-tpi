@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.JournalEntry;
+import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
 import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;

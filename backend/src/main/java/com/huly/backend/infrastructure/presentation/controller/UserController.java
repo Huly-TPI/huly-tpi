@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
@@ -9,7 +9,7 @@ import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.domain.model.enums.ThemePreference;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +51,7 @@ public class UserController {
                 .role(profile.user().getRole())
                 .onBoardingCompleted(profile.onBoardingCompleted())
                 .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
+                .profileOnboardingTutorialCompleted(profile.profileOnboardingTutorialCompleted())
                 .themePreference(themePreference)
                 .build());
     }

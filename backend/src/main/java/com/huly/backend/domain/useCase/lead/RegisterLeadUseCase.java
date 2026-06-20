@@ -1,12 +1,12 @@
 package com.huly.backend.domain.useCase.lead;
 
 import com.huly.backend.domain.exception.DuplicateResourceException;
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.port.EmailPort;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 

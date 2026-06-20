@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.AuthTokens;
-import com.huly.backend.domain.provider.TokenProvider;
+import com.huly.backend.domain.model.auth.AuthTokens;
+import com.huly.backend.domain.port.TokenPort;
 import com.huly.backend.domain.useCase.auth.AdminLoginUseCase;
 import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
@@ -33,7 +33,7 @@ public class AuthController {
     private final RegisterUseCase registerUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
-    private final TokenProvider tokenProvider;
+    private final TokenPort tokenPort;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
@@ -105,7 +105,7 @@ public class AuthController {
     ) {
         logoutUseCase.execute(refreshToken);
 
-        boolean secure = tokenProvider.isCookieSecure();
+        boolean secure = tokenPort.isCookieSecure();
         ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(secure)
@@ -120,12 +120,12 @@ public class AuthController {
     }
 
     private ResponseCookie buildRefreshCookie(String token) {
-        boolean secure = tokenProvider.isCookieSecure();
+        boolean secure = tokenPort.isCookieSecure();
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
                 .secure(secure)
                 .path("/")
-                .maxAge(tokenProvider.getRefreshTokenMaxAgeSecs())
+                .maxAge(tokenPort.getRefreshTokenMaxAgeSecs())
                 .sameSite(sameSitePolicy(secure))
                 .build();
     }

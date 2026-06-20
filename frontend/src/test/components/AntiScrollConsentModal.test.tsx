@@ -15,8 +15,8 @@ const mockedSaveSettings = vi.mocked(extensionApi.saveExtensionSettings)
 describe('AntiScrollConsentModal', () => {
   const defaultSettings = {
     enabled: true,
-    pauseIntervalMinutes: 20,
-    gardenUrl: 'http://localhost:5173/garden',
+    pauseIntervalSeconds: 20,
+    gardenUrl: 'http://localhost:5173/',
     backendUrl: 'http://localhost:8080',
     monitoredDomains: ['twitter.com'],
     dataSharingConsent: false,
@@ -45,7 +45,7 @@ describe('AntiScrollConsentModal', () => {
     expect(screen.getByText('Cargando estado...')).toBeInTheDocument()
   })
 
-  it('renderiza correctamente cuando no está instalada la extensión', async () => {
+  it('renderiza correctamente cuando no esta instalada la extension', async () => {
     mockedGetSettings.mockResolvedValueOnce(defaultSettings)
 
     render(<AntiScrollConsentModal onClose={vi.fn()} />)
@@ -55,15 +55,14 @@ describe('AntiScrollConsentModal', () => {
     })
 
     expect(screen.getByText(/pausa digital: anti-scroll/i)).toBeInTheDocument()
-    expect(screen.getByText('Extensión no instalada')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /descargar/i })).toBeInTheDocument()
+    expect(screen.getByText('Extension no instalada')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /instalar/i })).toBeInTheDocument()
   })
 
-  it('al hacer click en descargar, se descarga el zip y se muestran instrucciones', async () => {
+  it('al hacer click en instalar, abre la Chrome Web Store', async () => {
     const user = userEvent.setup()
     mockedGetSettings.mockResolvedValueOnce(defaultSettings)
-
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
 
     render(<AntiScrollConsentModal onClose={vi.fn()} />)
 
@@ -71,14 +70,16 @@ describe('AntiScrollConsentModal', () => {
       expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
     })
 
-    const downloadBtn = screen.getByRole('button', { name: /descargar/i })
-    await user.click(downloadBtn)
+    await user.click(screen.getByRole('button', { name: /instalar/i }))
 
-    expect(clickSpy).toHaveBeenCalled()
-    expect(screen.getByText('¿Cómo instalar la extensión?')).toBeInTheDocument()
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://chromewebstore.google.com/detail/opafcmdcpkhcfnbfmfipdninpkkpamgh?utm_source=item-share-cb',
+      '_blank',
+      'noopener,noreferrer',
+    )
   })
 
-  it('renderiza con toggles cuando la extensión está instalada', async () => {
+  it('renderiza con toggles cuando la extension esta instalada', async () => {
     document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true')
     document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'true')
     document.documentElement.setAttribute('data-huly-antiscroll-consent', 'true')
@@ -92,9 +93,9 @@ describe('AntiScrollConsentModal', () => {
       expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
     })
 
-    expect(screen.getByText('Extensión anti-scroll')).toBeInTheDocument()
+    expect(screen.getByText('Extension anti-scroll')).toBeInTheDocument()
     expect(screen.getByText('Activo y limitando el scroll infinito')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /descargar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /instalar/i })).not.toBeInTheDocument()
   })
 
   it('llama a onClose al hacer click en Entendido', async () => {
@@ -116,7 +117,7 @@ describe('AntiScrollConsentModal', () => {
   it('cambia el estado de los switches al hacer click y guarda/sincroniza', async () => {
     document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true')
     document.documentElement.setAttribute('data-huly-antiscroll-id', 'ext-id-123')
-    
+
     const user = userEvent.setup()
     mockedGetSettings.mockResolvedValueOnce(defaultSettings)
 
@@ -137,7 +138,7 @@ describe('AntiScrollConsentModal', () => {
     expect(mockedSaveSettings).toHaveBeenCalled()
     expect((window as any).chrome.runtime.sendMessage).toHaveBeenCalledWith(
       'ext-id-123',
-      expect.objectContaining({ type: 'SET_ENABLED', enabled: true })
+      expect.objectContaining({ type: 'SET_ENABLED', enabled: true }),
     )
   })
 })

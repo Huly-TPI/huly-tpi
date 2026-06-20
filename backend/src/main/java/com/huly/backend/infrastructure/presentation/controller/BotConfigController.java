@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.chat.ChatConfig;
-import com.huly.backend.domain.model.UpdateBotConfigCommand;
+import com.huly.backend.domain.model.chat.UpdateBotConfigCommand;
 import com.huly.backend.domain.useCase.chatBotConfig.GetBotConfigUseCase;
 import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
 import com.huly.backend.infrastructure.presentation.dto.chatConfig.UpdateBotConfigRequest;
@@ -33,7 +33,9 @@ public class BotConfigController {
     public ResponseEntity<BotConfigResponse> updateConfig(@RequestBody @Valid UpdateBotConfigRequest request) {
         UpdateBotConfigCommand command = new UpdateBotConfigCommand(
                 request.riskDetectionEnabled(),
-                request.systemPrompt()
+                request.systemPrompt(),
+                request.preferredNameQuestionEnabled(),
+                request.communicationStyleQuestionEnabled()
         );
         ChatConfig updated = updateBotConfigUseCase.execute(command);
         return ResponseEntity.ok(toResponse(updated));
@@ -43,7 +45,9 @@ public class BotConfigController {
         return new BotConfigResponse(
                 config.getId(),
                 config.getRiskDetectionEnabled(),
-                config.getSystemPrompt()
+                config.getSystemPrompt(),
+                config.getPreferredNameQuestionEnabled(),
+                config.getCommunicationStyleQuestionEnabled()
         );
     }
 }

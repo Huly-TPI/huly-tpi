@@ -16,7 +16,7 @@ export function ActivitiesSection() {
       {loading ? (
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-xl border border-gray-100 p-3">
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-gray-800/60 p-3">
               <Skeleton className="h-9 w-9 shrink-0 rounded-xl" />
               <div className="min-w-0 flex-1 space-y-1.5">
                 <Skeleton className="h-3 w-4/5" />

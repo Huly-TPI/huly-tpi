@@ -20,8 +20,11 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     error,
     bottomRef,
     sendMessage,
+    sendAudioMessage,
+    deleteAudioMessage,
     decideChallenge,
     decideSuggestedAction,
+    resetConversation,
   } = useChatbot()
 
   return (
@@ -38,7 +41,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         />
       }
     >
-      <ChatbotHeader onClose={onClose} />
+      <ChatbotHeader onClose={onClose} onReset={resetConversation} />
       <ChatbotMessages
         messages={messages}
         isSending={isSending}
@@ -47,9 +50,16 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         onClose={onClose}
         onChallengeDecision={decideChallenge}
         onSuggestedActionDecision={decideSuggestedAction}
+        onDeleteAudioMessage={deleteAudioMessage}
         bottomRef={bottomRef}
       />
-      <ChatbotComposer input={input} isSending={isSending} onInputChange={setInput} onSend={() => void sendMessage()} />
+      <ChatbotComposer
+        input={input}
+        isSending={isSending}
+        onInputChange={setInput}
+        onSend={() => void sendMessage()}
+        onSendAudio={(blob) => void sendAudioMessage(blob)}
+      />
     </BaseModal>
   )
 }

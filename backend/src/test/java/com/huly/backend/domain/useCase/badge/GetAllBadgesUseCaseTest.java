@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.badge;
-import com.huly.backend.domain.model.Badge;
-import com.huly.backend.domain.repository.BadgeRepository;
+import com.huly.backend.domain.model.badge.Badge;
+import com.huly.backend.domain.repository.badge.BadgeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

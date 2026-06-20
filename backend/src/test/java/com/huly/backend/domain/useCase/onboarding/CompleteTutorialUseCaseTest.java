@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.onboarding;
 
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +24,13 @@ class CompleteTutorialUseCaseTest {
         completeTutorialUseCase.execute(1L);
 
         verify(userDetailDomainRepository).completeTutorial(1L);
+    }
+
+    @Test
+    void executeProfile_shouldCompleteProfileTutorial() {
+        completeTutorialUseCase.executeProfile(1L);
+
+        verify(userDetailDomainRepository).completeProfileTutorial(1L);
     }
 
     @Test

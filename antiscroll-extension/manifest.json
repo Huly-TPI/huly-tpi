@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Huly Pausa Digital",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Una pausa para tu bienestar digital con Huly.",
   "permissions": [
     "storage",
     "tabs",
-    "alarms"
+    "alarms",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -41,7 +42,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "src/content/styles.css",
         "color-logo.webp",
         "fonts/Nunito-Regular.ttf",
         "fonts/Nunito-Bold.ttf"

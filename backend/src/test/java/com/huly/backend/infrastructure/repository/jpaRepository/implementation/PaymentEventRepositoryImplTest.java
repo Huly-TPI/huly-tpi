@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.dto.payment.PaymentEvent;
+import com.huly.backend.domain.model.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.infrastructure.repository.entity.PaymentEventEntity;
@@ -143,5 +143,28 @@ class PaymentEventRepositoryImplTest {
                 eq(PaymentStatus.APPROVED), eq(PaymentStatus.PENDING))).thenReturn(0);
 
         assertThat(repository.approveIfPending(1L, 99L)).isFalse();
+    }
+
+    @Test
+    void findByUserId_shouldReturnMappedList() {
+        when(jpaRepository.findByUserId(10L)).thenReturn(java.util.List.of(entity()));
+
+        java.util.List<PaymentEvent> result = repository.findByUserId(10L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(0).getUserId()).isEqualTo(10L);
+        verify(jpaRepository).findByUserId(10L);
+    }
+
+    @Test
+    void findByUserIdAndStatus_shouldReturnMappedList() {
+        when(jpaRepository.findByUserIdAndStatus(10L, PaymentStatus.APPROVED)).thenReturn(java.util.List.of(entity()));
+
+        java.util.List<PaymentEvent> result = repository.findByUserIdAndStatus(10L, PaymentStatus.APPROVED);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserId()).isEqualTo(10L);
+        verify(jpaRepository).findByUserIdAndStatus(10L, PaymentStatus.APPROVED);
     }
 }

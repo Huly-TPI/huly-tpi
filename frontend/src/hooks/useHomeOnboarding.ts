@@ -1,51 +1,32 @@
-import { useEffect, useState } from 'react'
-import { useAuth } from '../context/auth'
+import { useState } from 'react'
 import { completeTutorial } from '../api/onboarding'
+import type { UserProfile } from '../api/auth'
+import { useSceneOnboarding, type SceneOnboardingMode } from './useSceneOnboarding'
 
-export type HomeOnboardingMode = 'hidden' | 'intro' | 'steps'
+export type HomeOnboardingMode = SceneOnboardingMode
+
+const selectHomeTutorialCompleted = (user: UserProfile) => user.onboardingTutorialCompleted
 
 export function useHomeOnboarding(totalSteps: number) {
-  const { user, refreshUser } = useAuth()
-  const [onboardingMode, setOnboardingMode] = useState<HomeOnboardingMode>('hidden')
-  const [onboardingStepIndex, setOnboardingStepIndex] = useState(0)
+  const scene = useSceneOnboarding({
+    totalSteps,
+    completedSelector: selectHomeTutorialCompleted,
+    completeTutorial,
+  })
+
   const [showNotificationsPrompt, setShowNotificationsPrompt] = useState(false)
 
-  useEffect(() => {
-    if (!user || user.onBoardingCompleted !== true) {
-      setOnboardingMode('hidden')
-      return
-    }
-
-    setOnboardingMode(user.onboardingTutorialCompleted === true ? 'hidden' : 'intro')
-  }, [user])
-
-  const startOnboarding = () => {
-    setOnboardingStepIndex(0)
-    setOnboardingMode('steps')
-  }
-
   const advanceOnboarding = async () => {
-    if (onboardingStepIndex >= totalSteps - 1) {
-      await completeTutorial()
-      await refreshUser()
-      setOnboardingStepIndex(0)
-      setOnboardingMode('hidden')
-      setShowNotificationsPrompt(true)
-      return
-    }
+    const willComplete = scene.onboardingStepIndex >= totalSteps - 1
 
-    setOnboardingStepIndex(currentIndex => currentIndex + 1)
+    await scene.advanceOnboarding()
+
+    if (willComplete) {
+      setShowNotificationsPrompt(true)
+    }
   }
 
   const closeNotificationsPrompt = () => setShowNotificationsPrompt(false)
 
-  return {
-    onboardingMode,
-    onboardingStepIndex,
-    shouldRenderOnboarding: onboardingMode !== 'hidden',
-    startOnboarding,
-    advanceOnboarding,
-    showNotificationsPrompt,
-    closeNotificationsPrompt,
-  }
+  return { ...scene, advanceOnboarding, showNotificationsPrompt, closeNotificationsPrompt }
 }

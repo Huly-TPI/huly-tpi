@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.adapter.memory;
 
 import com.huly.backend.domain.model.chat.ConversationMessage;
-import com.huly.backend.domain.provider.ChatMemoryPort;
+import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chat.ChatSessionRepository;
 import lombok.RequiredArgsConstructor;

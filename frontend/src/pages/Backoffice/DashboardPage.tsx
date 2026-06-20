@@ -33,7 +33,7 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <SectionCard className="bg-white border-l-4 border-l-violeta hover:translate-y-[-2px] transition duration-200">
+        <SectionCard className="bg-white dark:bg-[#172033] border-l-4 border-l-violeta hover:translate-y-[-2px] transition duration-200">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violeta-claro/30 text-violeta">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -41,15 +41,15 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Usuarios Registrados</p>
-              <h3 className="text-2xl font-extrabold text-gray-800 mt-0.5">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Usuarios Registrados</p>
+              <h3 className="text-2xl font-extrabold text-gray-800 dark:text-gray-100 mt-0.5">
                 {loading ? '...' : stats?.totalUsersCount ?? 0}
               </h3>
             </div>
           </div>
         </SectionCard>
 
-        <SectionCard className="bg-white border-l-4 border-l-bosque hover:translate-y-[-2px] transition duration-200">
+        <SectionCard className="bg-white dark:bg-[#172033] border-l-4 border-l-bosque hover:translate-y-[-2px] transition duration-200">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-menta/30 text-bosque">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -57,15 +57,15 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Extensión Activa</p>
-              <h3 className="text-2xl font-extrabold text-gray-800 mt-0.5">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Extensión Activa</p>
+              <h3 className="text-2xl font-extrabold text-gray-800 dark:text-gray-100 mt-0.5">
                 {loading ? '...' : stats?.activeExtensionUsersCount ?? 0}
               </h3>
             </div>
           </div>
         </SectionCard>
 
-        <SectionCard className="bg-white border-l-4 border-l-anaranjado hover:translate-y-[-2px] transition duration-200">
+        <SectionCard className="bg-white dark:bg-[#172033] border-l-4 border-l-anaranjado hover:translate-y-[-2px] transition duration-200">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-anaranjado/20 text-anaranjado">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -73,8 +73,8 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Comparten Datos</p>
-              <h3 className="text-2xl font-extrabold text-gray-800 mt-0.5">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Comparten Datos</p>
+              <h3 className="text-2xl font-extrabold text-gray-800 dark:text-gray-100 mt-0.5">
                 {loading ? '...' : stats?.dataSharingConsentUsersCount ?? 0}
               </h3>
             </div>

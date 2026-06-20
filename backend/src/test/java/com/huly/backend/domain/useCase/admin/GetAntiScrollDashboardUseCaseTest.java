@@ -1,15 +1,14 @@
 package com.huly.backend.domain.useCase.admin;
 
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.admin.AntiScrollDashboardStats;
-import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.ExtensionSettings;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
-import com.huly.backend.domain.repository.extension.ExtensionSettingsRepository;
+import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,14 +21,14 @@ import static org.mockito.Mockito.*;
 class GetAntiScrollDashboardUseCaseTest {
 
     private UserRepository userRepository;
-    private ExtensionSettingsRepository settingsRepository;
+    private UserAntiScrollSettingsRepository settingsRepository;
     private ExtensionMetricsRepository metricsRepository;
     private GetAntiScrollDashboardUseCase useCase;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        settingsRepository = mock(ExtensionSettingsRepository.class);
+        settingsRepository = mock(UserAntiScrollSettingsRepository.class);
         metricsRepository = mock(ExtensionMetricsRepository.class);
         useCase = new GetAntiScrollDashboardUseCase(userRepository, settingsRepository, metricsRepository);
     }
@@ -39,8 +38,8 @@ class GetAntiScrollDashboardUseCaseTest {
         AppUser user1 = AppUser.builder().id(2L).role(UserRole.USER).status(UserStatus.ACTIVE).build();
         AppUser user2 = AppUser.builder().id(3L).role(UserRole.USER).status(UserStatus.ACTIVE).build();
 
-        ExtensionSettings settings1 = ExtensionSettings.builder().enabled(true).dataSharingConsent(true).build();
-        ExtensionSettings settings2 = ExtensionSettings.builder().enabled(false).dataSharingConsent(false).build();
+        UserAntiScrollSettings settings1 = UserAntiScrollSettings.builder().enabled(true).dataSharingConsent(true).build();
+        UserAntiScrollSettings settings2 = UserAntiScrollSettings.builder().enabled(false).dataSharingConsent(false).build();
 
         when(userRepository.findAllNonAdmins()).thenReturn(List.of(user1, user2));
         when(settingsRepository.findByUserId(2L)).thenReturn(Optional.of(settings1));

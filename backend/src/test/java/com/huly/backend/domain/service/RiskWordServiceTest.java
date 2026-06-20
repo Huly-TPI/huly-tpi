@@ -1,8 +1,9 @@
 package com.huly.backend.domain.service;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
-import com.huly.backend.domain.repository.RiskWordRepository;
+import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
+import com.huly.backend.domain.service.chat.RiskWordService;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import com.huly.backend.infrastructure.presentation.exception.ConflictException;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;

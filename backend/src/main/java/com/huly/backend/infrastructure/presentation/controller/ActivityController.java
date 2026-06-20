@@ -1,8 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.Activity;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
 import com.huly.backend.domain.useCase.activities.RegisterActivitySessionUseCase;
 import com.huly.backend.infrastructure.presentation.dto.activities.RegisterActivitySessionRequest;

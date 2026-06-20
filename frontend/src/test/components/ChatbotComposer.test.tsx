@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ChatbotComposer from '../../components/Chatbot/ChatbotComposer'
 
@@ -11,6 +11,7 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={vi.fn()}
         onSend={vi.fn()}
+        onSendAudio={vi.fn()}
       />,
     )
 
@@ -28,6 +29,7 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={onInputChange}
         onSend={vi.fn()}
+        onSendAudio={vi.fn()}
       />,
     )
 
@@ -45,6 +47,7 @@ describe('ChatbotComposer', () => {
         isSending={false}
         onInputChange={vi.fn()}
         onSend={onSend}
+        onSendAudio={vi.fn()}
       />,
     )
 
@@ -54,5 +57,34 @@ describe('ChatbotComposer', () => {
     await user.type(screen.getByPlaceholderText('Escribí tu mensaje...'), '{enter}')
     expect(onSend).toHaveBeenCalledTimes(2)
   })
-})
 
+  it('autofocuses the textarea on mount', async () => {
+    render(
+      <ChatbotComposer
+        input=""
+        isSending={false}
+        onInputChange={vi.fn()}
+        onSend={vi.fn()}
+        onSendAudio={vi.fn()}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toHaveFocus()
+    })
+  })
+
+  it('does not render reset button in the composer', () => {
+    render(
+      <ChatbotComposer
+        input=""
+        isSending={false}
+        onInputChange={vi.fn()}
+        onSend={vi.fn()}
+        onSendAudio={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Limpiar chat' })).not.toBeInTheDocument()
+  })
+})

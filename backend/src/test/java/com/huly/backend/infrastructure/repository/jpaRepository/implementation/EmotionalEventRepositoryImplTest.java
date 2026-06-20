@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
@@ -96,6 +96,30 @@ class EmotionalEventRepositoryImplTest {
         assertThat(repository.findRecentRecommendationHistoryByUserId(null, 20)).isEmpty();
     }
 
+    @Test
+    void findByUserId_shouldReturnMappedList() {
+        when(emotionalEventJpaRepository.findByUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(entity()));
+
+        List<EmotionalEvent> result = repository.findByUserId(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(10L);
+        assertThat(result.get(0).getUserId()).isEqualTo(1L);
+        verify(emotionalEventJpaRepository).findByUserIdOrderByCreatedAtDesc(1L);
+    }
+
+    @Test
+    void findRecommendationEventsByUserId_shouldReturnMappedList() {
+        when(emotionalEventJpaRepository.findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(1L))
+                .thenReturn(List.of(entity()));
+
+        List<EmotionalEvent> result = repository.findRecommendationEventsByUserId(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getRecommendationDecision()).isEqualTo(RecommendationDecision.ACCEPTED);
+        verify(emotionalEventJpaRepository).findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(1L);
+    }
+
     private EmotionalEvent domain() {
         Instant now = Instant.now();
         return EmotionalEvent.builder()
@@ -144,6 +168,49 @@ class EmotionalEventRepositoryImplTest {
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
+    }
+
+    @Test
+    void findRecentRecommendationHistoryByUserId_shouldReturnEmptyWhenLimitIsZeroOrLess() {
+        assertThat(repository.findRecentRecommendationHistoryByUserId(1L, 0)).isEmpty();
+        assertThat(repository.findRecentRecommendationHistoryByUserId(1L, -5)).isEmpty();
+    }
+
+    @Test
+    void findByUserId_shouldReturnEmptyWhenUserIdIsNull() {
+        assertThat(repository.findByUserId(null)).isEmpty();
+    }
+
+    @Test
+    void findRecommendationEventsByUserId_shouldReturnEmptyWhenUserIdIsNull() {
+        assertThat(repository.findRecommendationEventsByUserId(null)).isEmpty();
+    }
+
+    @Test
+    void save_shouldMapNullIdsCorrectly() {
+        EmotionalEvent domainWithNulls = EmotionalEvent.builder()
+                .id(10L)
+                .userId(null)
+                .source(EmotionalEventSource.CHATBOT)
+                .recommendedActivityId(null)
+                .chosenActivityId(null)
+                .build();
+
+        EmotionalEventEntity entityWithNulls = EmotionalEventEntity.builder()
+                .id(10L)
+                .user(null)
+                .source(EmotionalEventSource.CHATBOT)
+                .recommendedActivity(null)
+                .chosenActivity(null)
+                .build();
+
+        when(emotionalEventJpaRepository.save(any())).thenReturn(entityWithNulls);
+
+        EmotionalEvent result = repository.save(domainWithNulls);
+
+        assertThat(result.getUserId()).isNull();
+        assertThat(result.getRecommendedActivityId()).isNull();
+        assertThat(result.getChosenActivityId()).isNull();
     }
 
     private AppUserEntity user(Long id) {

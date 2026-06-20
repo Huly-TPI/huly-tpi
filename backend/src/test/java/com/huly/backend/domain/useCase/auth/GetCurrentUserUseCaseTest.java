@@ -1,12 +1,12 @@
 package com.huly.backend.domain.useCase.auth;
 
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.repository.UserDetailDomainRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +37,7 @@ class GetCurrentUserUseCaseTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userDetailDomainRepository.findOnBoardingCompleted(1L)).thenReturn(Optional.of(true));
         when(userDetailDomainRepository.findOnboardingTutorialCompleted(1L)).thenReturn(Optional.of(false));
+        when(userDetailDomainRepository.findProfileOnboardingTutorialCompleted(1L)).thenReturn(Optional.of(true));
 
         UserProfile result = getCurrentUserUseCase.execute(1L);
 
@@ -46,6 +47,7 @@ class GetCurrentUserUseCaseTest {
         assertThat(result.user().getRole()).isEqualTo(UserRole.USER);
         assertThat(result.onBoardingCompleted()).isTrue();
         assertThat(result.onboardingTutorialCompleted()).isFalse();
+        assertThat(result.profileOnboardingTutorialCompleted()).isTrue();
     }
 
     @Test

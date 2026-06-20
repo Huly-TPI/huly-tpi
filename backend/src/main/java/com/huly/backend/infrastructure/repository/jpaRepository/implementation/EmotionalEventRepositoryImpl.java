@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.EmotionalEventEntity;
@@ -40,6 +40,26 @@ public class EmotionalEventRepositoryImpl implements EmotionalEventRepository {
             return List.of();
         }
         return emotionalEventJpaRepository.findRecommendationHistoryByUserId(userId, PageRequest.of(0, limit)).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<EmotionalEvent> findByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return emotionalEventJpaRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<EmotionalEvent> findRecommendationEventsByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return emotionalEventJpaRepository.findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(userId).stream()
                 .map(this::toDomain)
                 .toList();
     }

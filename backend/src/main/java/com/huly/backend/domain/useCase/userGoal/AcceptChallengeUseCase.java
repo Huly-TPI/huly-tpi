@@ -1,8 +1,8 @@
 package com.huly.backend.domain.useCase.userGoal;
 
-import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
-import com.huly.backend.domain.repository.UserGoalRepository;
+import com.huly.backend.domain.repository.user.UserGoalRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;

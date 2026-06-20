@@ -10,10 +10,23 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
+const THEME_STORAGE_KEY = 'huly:scene-theme'
+
+const isSceneTheme = (value: string | null): value is SceneTheme =>
+  value === 'light' || value === 'dark'
+
 const getSystemTheme = (): SceneTheme => {
   if (typeof window.matchMedia !== 'function') return 'light'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
+
+const getStoredTheme = (): SceneTheme | null => {
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+  return isSceneTheme(storedTheme) ? storedTheme : null
+}
+
+const getInitialTheme = (): SceneTheme =>
+  getStoredTheme() ?? getSystemTheme()
 
 const toSceneTheme = (themePreference: UserProfile['themePreference']): SceneTheme =>
   themePreference === 'DARK' ? 'dark' : 'light'
@@ -26,7 +39,7 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<SceneTheme>(getSystemTheme)
+  const [theme, setThemeState] = useState<SceneTheme>(getInitialTheme)
   const [hasUserTheme, setHasUserTheme] = useState(false)
 
   useEffect(() => {
@@ -43,7 +56,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
     const handleUserCleared = () => {
       setHasUserTheme(false)
-      setThemeState(getSystemTheme())
+      setThemeState(getInitialTheme())
     }
 
     window.addEventListener('auth:user-loaded', handleUserLoaded)
@@ -59,13 +72,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (typeof window.matchMedia !== 'function') return
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = () => setThemeState(getSystemTheme())
+    const handleChange = () => {
+      const storedTheme = getStoredTheme()
+      setThemeState(storedTheme ?? getSystemTheme())
+    }
 
     mediaQuery.addEventListener('change', handleChange)
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [hasUserTheme])
 
   const persistTheme = useCallback((nextTheme: SceneTheme) => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
     if (!hasUserTheme) return
     void updateThemePreference(toThemePreference(nextTheme))
   }, [hasUserTheme])

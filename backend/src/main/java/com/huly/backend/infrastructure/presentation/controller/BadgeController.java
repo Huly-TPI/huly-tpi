@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
-import com.huly.backend.domain.model.Badge;
-import com.huly.backend.domain.model.UserBadge;
+import com.huly.backend.domain.model.badge.Badge;
+import com.huly.backend.domain.model.user.UserBadge;
 import com.huly.backend.domain.useCase.badge.GetAllBadgesUseCase;
 import com.huly.backend.domain.useCase.badge.GetUserBadgesUseCase;
 import com.huly.backend.infrastructure.presentation.dto.badge.BadgeResponse;

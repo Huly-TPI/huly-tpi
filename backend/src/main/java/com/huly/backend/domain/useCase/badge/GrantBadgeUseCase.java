@@ -1,11 +1,11 @@
 package com.huly.backend.domain.useCase.badge;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.Badge;
-import com.huly.backend.domain.model.UserBadge;
-import com.huly.backend.domain.repository.BadgeRepository;
-import com.huly.backend.domain.repository.UserBadgeRepository;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.badge.Badge;
+import com.huly.backend.domain.model.user.UserBadge;
+import com.huly.backend.domain.repository.badge.BadgeRepository;
+import com.huly.backend.domain.repository.user.UserBadgeRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;

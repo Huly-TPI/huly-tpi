@@ -1,13 +1,13 @@
 package com.huly.backend.domain.useCase.emotionalRecommendation;
 
-import com.huly.backend.domain.model.Activity;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
-import com.huly.backend.domain.model.Vad;
-import com.huly.backend.domain.repository.ActivityRepository;
-import com.huly.backend.domain.repository.EmotionalEventRepository;
-import com.huly.backend.domain.service.EmotionalRecommendationService;
+import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.Vad;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
+import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationService;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class GetEmotionalRecommendationsUseCaseTest {
 
     @Test
     void execute_shouldLoadActivitiesAndDelegateRankingWithoutHistory_whenUserIdIsMissing() {
-        EmotionalRecommendationQuery query = query(new Vad(-0.7, 0.8, -0.6), 0.8);
+        EmotionalRecommendation query = query(new Vad(-0.7, 0.8, -0.6), 0.8);
         List<Activity> activities = List.of(Activity.builder().id(1L).build());
         EmotionalRecommendationResult expected = new EmotionalRecommendationResult(List.of(), false);
         when(activityRepository.findAll()).thenReturn(activities);
@@ -54,7 +54,7 @@ class GetEmotionalRecommendationsUseCaseTest {
 
     @Test
     void execute_shouldLoadUserHistoryAndDelegateRanking_whenUserIdIsPresent() {
-        EmotionalRecommendationQuery query = new EmotionalRecommendationQuery(7L, new Vad(-0.7, 0.8, -0.6), 0.8, "calmarme");
+        EmotionalRecommendation query = new EmotionalRecommendation(7L, new Vad(-0.7, 0.8, -0.6), 0.8, "calmarme");
         List<Activity> activities = List.of(Activity.builder().id(1L).build());
         List<EmotionalEvent> history = List.of(EmotionalEvent.builder().userId(7L).build());
         EmotionalRecommendationResult expected = new EmotionalRecommendationResult(List.of(), false);
@@ -71,7 +71,7 @@ class GetEmotionalRecommendationsUseCaseTest {
 
     @Test
     void execute_shouldRejectInvalidVadBeforeLoadingActivities() {
-        EmotionalRecommendationQuery query = query(new Vad(-1.1, 0.0, 0.0), 0.5);
+        EmotionalRecommendation query = query(new Vad(-1.1, 0.0, 0.0), 0.5);
 
         assertThatThrownBy(() -> useCase.execute(query))
                 .isInstanceOf(BadRequestException.class)
@@ -81,7 +81,7 @@ class GetEmotionalRecommendationsUseCaseTest {
 
     @Test
     void execute_shouldRejectInvalidIntensityBeforeLoadingActivities() {
-        EmotionalRecommendationQuery query = query(new Vad(0.0, 0.0, 0.0), 1.1);
+        EmotionalRecommendation query = query(new Vad(0.0, 0.0, 0.0), 1.1);
 
         assertThatThrownBy(() -> useCase.execute(query))
                 .isInstanceOf(BadRequestException.class)
@@ -89,7 +89,7 @@ class GetEmotionalRecommendationsUseCaseTest {
         verify(activityRepository, never()).findAll();
     }
 
-    private EmotionalRecommendationQuery query(Vad vad, double intensity) {
-        return new EmotionalRecommendationQuery(vad, intensity, "calmarme");
+    private EmotionalRecommendation query(Vad vad, double intensity) {
+        return new EmotionalRecommendation(vad, intensity, "calmarme");
     }
 }

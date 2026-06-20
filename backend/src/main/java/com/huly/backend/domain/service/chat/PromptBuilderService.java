@@ -1,6 +1,6 @@
 package com.huly.backend.domain.service.chat;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
@@ -10,46 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PromptBuilderService {
-
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords) {
-        return buildEnrichedPrompt(basePrompt, riskWords, Collections.emptyList());
-    }
-
-    public String buildEnrichedPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, null);
-    }
-
-    public String buildEnrichedPrompt(
-            String basePrompt,
-            List<RiskWord> riskWords,
-            List<VectorMemory> memories,
-            SuggestedChatAction suggestedAction
-    ) {
-        return buildEnrichedPrompt(basePrompt, riskWords, memories, suggestedAction, ChatUserIntent.NONE);
-    }
-
-    public String buildEnrichedPrompt(
-            String basePrompt,
-            List<RiskWord> riskWords,
-            List<VectorMemory> memories,
-            SuggestedChatAction suggestedAction,
-            ChatUserIntent userIntent
-    ) {
-        return buildEnrichedPrompt(
-                basePrompt,
-                riskWords,
-                memories,
-                suggestedAction,
-                userIntent,
-                null);
-    }
 
     public String buildEnrichedPrompt(
             String basePrompt,
@@ -65,22 +31,6 @@ public class PromptBuilderService {
         appendSuggestedActionContext(sb, suggestedAction);
         appendUserIntentContext(sb, userIntent);
         appendResponseInstructions(sb);
-        appendRiskWords(sb, riskWords);
-        return sb.toString();
-    }
-
-    public String buildStreamingPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        StringBuilder sb = basePromptBuilder(basePrompt);
-        appendVectorMemories(sb, memories);
-        appendStreamingInstructions(sb);
-        appendRiskWords(sb, riskWords);
-        return sb.toString();
-    }
-
-    public String buildMetadataPrompt(String basePrompt, List<RiskWord> riskWords, List<VectorMemory> memories) {
-        StringBuilder sb = basePromptBuilder(basePrompt);
-        appendVectorMemories(sb, memories);
-        appendMetadataInstructions(sb);
         appendRiskWords(sb, riskWords);
         return sb.toString();
     }
@@ -141,6 +91,7 @@ public class PromptBuilderService {
 
     private void appendResponseInstructions(StringBuilder sb) {
         sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA ===");
+        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno para guiar tu respuesta, pero NO los menciones ni hagas referencia a ellos en huly_reply.");
         sb.append("\nRespondé SIEMPRE con un JSON válido con exactamente este formato (sin texto fuera del JSON):");
         sb.append("\n{");
         sb.append("\n  \"huly_reply\": \"<tu respuesta empática>\",");
@@ -152,10 +103,13 @@ public class PromptBuilderService {
         sb.append("\n}");
         sb.append("\n");
         sb.append("\nReglas para generated_challenge:");
-        sb.append("\n- Incluilo SOLO cuando el contexto de la conversación lo justifique genuinamente: el usuario enfrenta una dificultad concreta, expresó una emoción negativa de intensidad media-alta (>= 5), o mencionó una situación que se beneficiaría de un reto personal.");
-        sb.append("\n- El reto debe ser específico, alcanzable y relacionado con lo que el usuario está viviendo.");
-        sb.append("\n- Si no corresponde un reto, devolvé null.");
-        sb.append("\n- Si generás un reto, también presentalo de forma breve y natural dentro de huly_reply.");
+        sb.append("\n- Incluilo cuando se cumpla alguna de estas condiciones:");
+        sb.append("\n  a) El usuario enfrenta una dificultad concreta o bloqueo (no sabe cómo arrancar, está postergando algo, se siente estancado).");
+        sb.append("\n  b) El usuario expresó una emoción negativa de intensidad media-alta (>= 5).");
+        sb.append("\n  c) El usuario expresa un deseo o aspiración concreto que se puede convertir en una acción pequeña y posible hoy (quiere conocer gente, retomar algo, probar algo nuevo).");
+        sb.append("\n- El reto debe ser específico, alcanzable, relacionado con lo que el usuario está viviendo, y sin presión.");
+        sb.append("\n- Si no se cumple ninguna condición (conversación casual, saludo, pregunta informativa), devolvé null.");
+        sb.append("\n- Si generás un reto, presentalo de forma breve y natural dentro de huly_reply.");
         sb.append("\n- Si hay una ACTIVIDAD RECOMENDADA POR EL SISTEMA, no generes reto: devolvé generated_challenge null.");
         sb.append("\n- Formato cuando corresponde: { \"title\": \"<título corto>\", \"description\": \"<descripción accionable en 1-2 oraciones>\" }");
     }
@@ -194,6 +148,7 @@ public class PromptBuilderService {
         sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA EN STREAMING ===");
         sb.append("\nRespondé en texto natural, cálido y directo. No devuelvas JSON ni markdown técnico.");
         sb.append("\nLa metadata emocional y de riesgo se calculará después; durante el stream solo escribí la respuesta para el usuario.");
+        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno, pero NO los menciones en tu respuesta.");
     }
 
     private void appendMetadataInstructions(StringBuilder sb) {
@@ -220,6 +175,7 @@ public class PromptBuilderService {
         sb.append("\nTu tarea NO es responder al usuario. Tu tarea es producir un analisis emocional estructurado para decidir si conviene recomendar una actividad de bienestar.");
         sb.append("\nNo todos los mensajes requieren recomendacion. Mensajes casuales, saludos, agradecimientos o informacion neutra no deben recomendar actividad.");
         sb.append("\nRecomenda actividad solo si hay senales claras de malestar, ansiedad, tristeza, estres, sobrepensamiento, duelo, bloqueo emocional, baja motivacion o necesidad de regulacion.");
+        sb.append("\nCRITICO: shouldRecommend debe ser FALSE cuando el usuario esta motivado, positivo, aspirando a algo o expresando un deseo constructivo, aunque 'podria beneficiarse' de una actividad. La recomendacion es para malestar activo, no para estados positivos. Si valence > 0 y dominance > 0, shouldRecommend debe ser false salvo que haya ademas una senal clara de malestar.");
         sb.append("\nUsa los recuerdos del usuario solo si son relevantes. Si el usuario venia bien y ahora expresa una recaida, reflejalo en intensidad y VAD.");
         sb.append("\nEl VAD representa el estado emocional actual: valence negativo = malestar/tristeza, positivo = bienestar; arousal bajo = apagado/cansado, alto = activado/ansioso; dominance bajo = sin control/abrumado, alto = con control.");
         sb.append("\nUsa detectedEmotion con uno de estos valores reales del enum: ").append(buildEmotionList()).append(".");

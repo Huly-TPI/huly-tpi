@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.RiskWord;
-import com.huly.backend.domain.repository.RiskWordRepository;
+import com.huly.backend.domain.model.riskWord.RiskWord;
+import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
 import com.huly.backend.infrastructure.repository.entity.RiskWordEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IRiskWordJpaRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.specification.RiskWordFilterSpec;

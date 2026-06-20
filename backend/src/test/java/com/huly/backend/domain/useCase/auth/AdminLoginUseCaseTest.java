@@ -1,11 +1,11 @@
 package com.huly.backend.domain.useCase.auth;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.AuthTokens;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.auth.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

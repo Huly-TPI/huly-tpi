@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.onboarding;
 import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.provider.LLMChatPort;
+import com.huly.backend.domain.port.LLMChatPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

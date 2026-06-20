@@ -47,6 +47,9 @@ public class UserDetailEntity {
     @Column(name = "onboarding_tutorial_completed", nullable = false)
     private Boolean onboardingTutorialCompleted;
 
+    @Column(name = "profile_onboarding_tutorial_completed", nullable = false)
+    private Boolean profileOnboardingTutorialCompleted;
+
     @Column(name = "avatar_url_2")
     private String avatarUrl2;
 
@@ -75,5 +78,12 @@ public class UserDetailEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "theme_preference", nullable = false, length = 20)
     private ThemePreference themePreference;
+
+    @Builder.Default
+    @Column(name = "daily_reward_streak", nullable = false)
+    private Integer dailyRewardStreak = 0;
+
+    @Column(name = "last_daily_claim_date")
+    private LocalDate lastDailyClaimDate;
 
 }

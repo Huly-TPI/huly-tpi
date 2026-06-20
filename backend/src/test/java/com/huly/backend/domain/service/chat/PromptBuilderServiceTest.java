@@ -1,6 +1,6 @@
 package com.huly.backend.domain.service.chat;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
@@ -21,13 +21,13 @@ class PromptBuilderServiceTest {
 
     @Test
     void buildEnrichedPrompt_shouldStartWithBasePrompt() {
-        String result = service.buildEnrichedPrompt("mi prompt base", List.of());
+        String result = buildPrompt("mi prompt base", List.of());
         assertThat(result).startsWith("mi prompt base");
     }
 
     @Test
     void buildEnrichedPrompt_shouldIncludeJsonFormatInstructions() {
-        String result = service.buildEnrichedPrompt("", List.of());
+        String result = buildPrompt("", List.of());
         assertThat(result)
                 .contains("INSTRUCCIONES DE RESPUESTA")
                 .contains("huly_reply")
@@ -39,7 +39,7 @@ class PromptBuilderServiceTest {
 
     @Test
     void buildEnrichedPrompt_shouldIncludeAllEmotionTypesInInstructions() {
-        String result = service.buildEnrichedPrompt("", List.of());
+        String result = buildPrompt("", List.of());
         String emotionList = Arrays.stream(EmotionType.values())
                 .map(EmotionType::name)
                 .collect(Collectors.joining("|"));
@@ -48,14 +48,14 @@ class PromptBuilderServiceTest {
 
     @Test
     void buildEnrichedPrompt_shouldNotIncludeRiskWordsSection_whenListIsEmpty() {
-        String result = service.buildEnrichedPrompt("base", List.of());
+        String result = buildPrompt("base", List.of());
         assertThat(result).doesNotContain("PALABRAS Y FRASES DE RIESGO");
     }
 
     @Test
     void buildEnrichedPrompt_shouldIncludeRiskWordsSection_whenListIsNotEmpty() {
         RiskWord rw = RiskWord.builder().word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
-        String result = service.buildEnrichedPrompt("base", List.of(rw));
+        String result = buildPrompt("base", List.of(rw));
         assertThat(result)
                 .contains("PALABRAS Y FRASES DE RIESGO")
                 .contains("\"suicidio\"")
@@ -66,7 +66,7 @@ class PromptBuilderServiceTest {
     void buildEnrichedPrompt_shouldIncludeDescription_whenRiskWordHasDescription() {
         RiskWord rw = RiskWord.builder().word("panico").severity(RiskSeverity.MEDIUM)
                 .description("descripción de prueba").active(true).build();
-        String result = service.buildEnrichedPrompt("base", List.of(rw));
+        String result = buildPrompt("base", List.of(rw));
         assertThat(result).contains("descripción de prueba");
     }
 
@@ -74,7 +74,7 @@ class PromptBuilderServiceTest {
     void buildEnrichedPrompt_shouldNotIncludeDescription_whenDescriptionIsNull() {
         RiskWord rw = RiskWord.builder().word("panico").severity(RiskSeverity.MEDIUM)
                 .description(null).active(true).build();
-        String result = service.buildEnrichedPrompt("base", List.of(rw));
+        String result = buildPrompt("base", List.of(rw));
         assertThat(result).doesNotContain(" — ");
     }
 
@@ -82,7 +82,7 @@ class PromptBuilderServiceTest {
     void buildEnrichedPrompt_shouldNotIncludeDescription_whenDescriptionIsBlank() {
         RiskWord rw = RiskWord.builder().word("panico").severity(RiskSeverity.MEDIUM)
                 .description("   ").active(true).build();
-        String result = service.buildEnrichedPrompt("base", List.of(rw));
+        String result = buildPrompt("base", List.of(rw));
         assertThat(result).doesNotContain(" — ");
     }
 
@@ -91,7 +91,7 @@ class PromptBuilderServiceTest {
         RiskWord rw1 = RiskWord.builder().word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
         RiskWord rw2 = RiskWord.builder().word("autolesion").severity(RiskSeverity.MEDIUM)
                 .description("daño físico").active(true).build();
-        String result = service.buildEnrichedPrompt("base", List.of(rw1, rw2));
+        String result = buildPrompt("base", List.of(rw1, rw2));
         assertThat(result)
                 .contains("\"suicidio\"").contains("[HIGH]")
                 .contains("\"autolesion\"").contains("[MEDIUM]").contains("daño físico");
@@ -122,7 +122,8 @@ class PromptBuilderServiceTest {
                 List.of(),
                 List.of(),
                 null,
-                ChatUserIntent.CHALLENGE_REQUEST
+                ChatUserIntent.CHALLENGE_REQUEST,
+                null
         );
 
         assertThat(result)
@@ -153,5 +154,15 @@ class PromptBuilderServiceTest {
                 .contains("Estilo preferido: directo")
                 .contains(CommunicationStyle.DIRECT.promptInstruction())
                 .contains("Respetá siempre el estilo preferido");
+    }
+
+    private String buildPrompt(String basePrompt, List<RiskWord> riskWords) {
+        return service.buildEnrichedPrompt(
+                basePrompt,
+                riskWords,
+                List.of(),
+                null,
+                ChatUserIntent.NONE,
+                null);
     }
 }

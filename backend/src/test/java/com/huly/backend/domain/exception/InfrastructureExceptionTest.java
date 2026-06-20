@@ -1,35 +1,34 @@
 package com.huly.backend.domain.exception;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class InfrastructureExceptionTest {
 
     @Test
-    void testMessageConstructor() {
+    void messageConstructor_shouldSetMessage() {
         InfrastructureException ex = new InfrastructureException("Error de base de datos");
-        assertEquals("Error de base de datos", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("Error de base de datos");
     }
 
     @Test
-    void testMessageAndCauseConstructor() {
+    void messageAndCauseConstructor_shouldSetMessageAndCause() {
         Throwable cause = new RuntimeException("timeout");
         InfrastructureException ex = new InfrastructureException("Error de conexión", cause);
 
-        assertEquals("Error de conexión", ex.getMessage());
-        assertEquals(cause, ex.getCause());
+        assertThat(ex.getMessage()).isEqualTo("Error de conexión");
+        assertThat(ex.getCause()).isEqualTo(cause);
     }
 
     @Test
-    void testExtendsDomainException() {
+    void inheritance_shouldExtendDomainException() {
         InfrastructureException ex = new InfrastructureException("test");
-        assertInstanceOf(DomainException.class, ex);
+        assertThat(ex).isInstanceOf(DomainException.class);
     }
 
     @Test
-    void testNullMessage() {
+    void messageConstructor_shouldHandleNullMessage() {
         InfrastructureException ex = new InfrastructureException(null);
-        assertNull(ex.getMessage());
+        assertThat(ex.getMessage()).isNull();
     }
 }

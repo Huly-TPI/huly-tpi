@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
@@ -361,5 +361,16 @@ class UserRepositoryImplTest {
     void updateLastLogin_shouldDelegateToJpaWithCurrentInstant() {
         userRepository.updateLastLogin(5L);
         verify(jpaRepository).updateLastLogin(eq(5L), any(Instant.class));
+    }
+
+    @Test
+    void debitCoins_shouldDelegateToJpaAndReturnRowsAffected() {
+        when(jpaRepository.debitCoins(1L, 10)).thenReturn(1);
+
+        int result = userRepository.debitCoins(1L, 10);
+
+        assertThat(result).isEqualTo(1);
+        verify(jpaRepository).debitCoins(1L, 10);
+
     }
 }

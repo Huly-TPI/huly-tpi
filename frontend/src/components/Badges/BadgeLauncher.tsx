@@ -28,7 +28,7 @@ export default function BadgeLauncher() {
             type="button"
             onClick={() => setIsOpen(true)}
             aria-label="Abrir insignias"
-            className="fixed bottom-5 left-5 z-40 h-20 w-20 transition hover:scale-105 drop-shadow-xl"
+            className="fixed bottom-5 left-5 z-40 hidden h-20 w-20 transition hover:scale-105 drop-shadow-xl md:block"
         >
             <img src="/badges/badge_launcher.webp" alt="Abrir insignias" className="h-full w-full object-contain" />
         </button>

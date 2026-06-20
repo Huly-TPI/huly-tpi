@@ -1,8 +1,8 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
-import com.huly.backend.domain.model.Vad;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.Vad;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation.EmotionalRecommendationRequest;
 import com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation.EmotionalRecommendationResponse;
@@ -33,14 +33,14 @@ public class EmotionalRecommendationController {
         return ResponseEntity.ok(EmotionalRecommendationResponse.from(result));
     }
 
-    private EmotionalRecommendationQuery toQuery(
+    private EmotionalRecommendation toQuery(
             EmotionalRecommendationRequest request,
             UserDetails principal
     ) {
         if (principal == null) {
             throw new UnauthorizedException("Not authenticated");
         }
-        return new EmotionalRecommendationQuery(
+        return new EmotionalRecommendation(
                 Long.parseLong(principal.getUsername()),
                 new Vad(request.valence(), request.arousal(), request.dominance()),
                 request.intensity(),

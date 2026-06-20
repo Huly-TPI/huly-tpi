@@ -6,3 +6,6 @@ export const completeOnboarding = (answer1: string, answer2: string, answer3: st
 
 export const completeTutorial = () =>
     api.post<void>('/onboarding/tutorial/complete', null)
+
+export const completeProfileTutorial = () =>
+    api.post<void>('/onboarding/profile-onboarding-tutorial/complete', null)

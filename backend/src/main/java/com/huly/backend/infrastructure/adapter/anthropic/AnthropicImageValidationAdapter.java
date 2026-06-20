@@ -1,15 +1,11 @@
 package com.huly.backend.infrastructure.adapter.anthropic;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.exception.ImageValidationUnavailableException;
-import com.huly.backend.domain.model.ImageValidationResult;
-import com.huly.backend.domain.provider.ImageValidationPort;
+import com.huly.backend.domain.model.goals.ImageValidationResult;
+import com.huly.backend.domain.port.ImageValidationPort;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
@@ -25,11 +21,10 @@ import java.util.List;
 @ConditionalOnProperty(name = "app.ai.provider", havingValue = "anthropic")
 public class AnthropicImageValidationAdapter implements ImageValidationPort {
 
-    private final ChatModel chatModel;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ChatClient chatClient;
 
-    public AnthropicImageValidationAdapter(ChatModel chatModel) {
-        this.chatModel = chatModel;
+    public AnthropicImageValidationAdapter(ChatClient chatClient) {
+        this.chatClient = chatClient;
     }
 
     @Override
@@ -44,9 +39,11 @@ public class AnthropicImageValidationAdapter implements ImageValidationPort {
                     .text(prompt)
                     .media(List.of(media))
                     .build();
-            ChatResponse response = chatModel.call(new Prompt(List.of(userMessage)));
-            String raw = extractText(response);
-            return parseResponse(raw);
+            
+            return chatClient.prompt()
+                    .messages(userMessage)
+                    .call()
+                    .entity(ImageValidationResult.class);
         } catch (ImageValidationUnavailableException e) {
             throw e;
         } catch (Exception e) {
@@ -66,33 +63,6 @@ public class AnthropicImageValidationAdapter implements ImageValidationPort {
         prompt.append("Si no está relacionada, respondé con un mensaje breve (máx. 15 palabras), amable y motivador en español, ");
         prompt.append("que explique por qué no aplica y sugiera qué tipo de imagen sería ideal.\n");
         prompt.append("Si está relacionada, el reason puede ser un mensaje de aliento corto.\n");
-        prompt.append("Responde SOLO con JSON válido, sin texto adicional:\n");
-        prompt.append("{\"valid\": true/false, \"reason\": \"mensaje en español\"}");
         return prompt.toString();
-    }
-
-    private String extractText(ChatResponse response) {
-        if (response == null || response.getResult() == null || response.getResult().getOutput() == null) {
-            return "";
-        }
-        return response.getResult().getOutput().getText();
-    }
-
-    private ImageValidationResult parseResponse(String raw) {
-        try {
-            int start = raw.indexOf('{');
-            int end = raw.lastIndexOf('}');
-            if (start == -1 || end == -1 || end <= start) {
-                throw new IllegalStateException("Respuesta sin JSON: " + raw);
-            }
-            String json = raw.substring(start, end + 1);
-            JsonNode node = objectMapper.readTree(json);
-            boolean valid = node.get("valid").asBoolean();
-            String reason = node.get("reason").asText();
-            return new ImageValidationResult(valid, reason);
-        } catch (Exception e) {
-            log.error("No se pudo parsear la respuesta de validación: {}", raw, e);
-            throw new ImageValidationUnavailableException("Respuesta inválida del servicio de validación", e);
-        }
     }
 }
