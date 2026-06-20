@@ -1,5 +1,5 @@
 package com.huly.backend.domain.useCase.badge;
-import com.huly.backend.domain.model.Badge;
+import com.huly.backend.domain.model.badge.Badge;
 import com.huly.backend.domain.repository.badge.BadgeRepository;
 import lombok.RequiredArgsConstructor;
 

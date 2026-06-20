@@ -1,13 +1,16 @@
-package com.huly.backend.domain.useCase.admin.userFinancials;
+package com.huly.backend.domain.useCase.admin;
 
-import com.huly.backend.domain.dto.payment.PaymentEvent;
-import com.huly.backend.domain.dto.payment.Product;
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.payment.PaymentEvent;
+import com.huly.backend.domain.model.payment.Product;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.domain.repository.payment.ProductRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsRequest;
+import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsResponse;
+import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

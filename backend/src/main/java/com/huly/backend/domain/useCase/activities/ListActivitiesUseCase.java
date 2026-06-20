@@ -2,7 +2,7 @@ package com.huly.backend.domain.useCase.activities;
 
 import lombok.RequiredArgsConstructor;
 
-import com.huly.backend.domain.model.Activity;
+import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import java.util.List;
 

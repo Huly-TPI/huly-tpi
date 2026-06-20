@@ -1,5 +1,6 @@
 package com.huly.backend.domain.model;
 
+import com.huly.backend.domain.model.emotionalRecommendation.Vad;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

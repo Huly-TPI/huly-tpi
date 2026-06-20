@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.auth;
 
-import com.huly.backend.domain.model.RefreshToken;
+import com.huly.backend.domain.model.auth.RefreshToken;
 import com.huly.backend.domain.repository.auth.RefreshTokenRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

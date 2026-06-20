@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.chat.ChatOnboardingInitialization;

@@ -8,7 +8,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.user.UserRepository;

@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
-import com.huly.backend.domain.model.UserBadge;
+import com.huly.backend.domain.model.user.UserBadge;
 import com.huly.backend.domain.repository.user.UserBadgeRepository;
 import com.huly.backend.infrastructure.repository.entity.BadgeEntity;
 import com.huly.backend.infrastructure.repository.entity.UserBadgeEntity;

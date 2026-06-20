@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.StoreItem;
-import com.huly.backend.domain.model.UserStoreItem;
+import com.huly.backend.domain.model.shop.StoreItem;
+import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.useCase.store.BuyStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.EquipStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.GetUserInventoryUseCase;

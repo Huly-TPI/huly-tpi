@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import {completeOnboarding } from '../api/onboarding'
+import { useState, useRef } from 'react'
+import { completeOnboarding } from '../api/onboarding'
 import {
     PauseCircleIcon,
     CloudIcon,
@@ -20,10 +20,10 @@ type Step = 0 | 1 | 2 | 3
 
 
 const STEP1_OPTIONS: Step1Option[] = [
-    { Icon: PauseCircleIcon,      title: 'Un momento para mí',      subtitle: 'Para pausar y respirar' },
-    { Icon: CloudIcon,            title: 'Soltar lo que cargo',      subtitle: 'Tengo cosas en la cabeza' },
-    { Icon: MagnifyingGlassIcon,  title: 'Entender lo que siento',   subtitle: 'Quiero explorar mis emociones' },
-    { Icon: SparklesIcon,         title: 'Descansar un rato',        subtitle: 'Busco desconectarme un poco' },
+    { Icon: PauseCircleIcon, title: 'Un momento para mí', subtitle: 'Para pausar y respirar' },
+    { Icon: CloudIcon, title: 'Soltar lo que cargo', subtitle: 'Tengo cosas en la cabeza' },
+    { Icon: MagnifyingGlassIcon, title: 'Entender lo que siento', subtitle: 'Quiero explorar mis emociones' },
+    { Icon: SparklesIcon, title: 'Descansar un rato', subtitle: 'Busco desconectarme un poco' },
 ]
 
 
@@ -65,28 +65,47 @@ const STEP3_OPTIONS = [
 export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
     const [step, setStep] = useState<Step>(0)
     const [pillOptions, setPillOptions] = useState<string[]>([])
-    const [answers, setAnswers] = useState<{ a1?: string, a2?: string}>({})
+    const [answers, setAnswers] = useState<{ a1?: string, a2?: string }>({})
+    const [submitting, setSubmitting] = useState(false)
+    const submittingRef = useRef(false)
     const advance = () => setStep(1)
 
     const selectOption = async (option: string) => {
-        if(step === 1) {
+
+    if(submittingRef.current) return
+        if (step === 1) {
             setAnswers({ a1: option })
             setPillOptions(STEP2_MAP[option] ?? STEP3_OPTIONS)
             setStep(2)
         } else if (step === 2) {
-            setAnswers( prev => ({ ...prev, a2: option }))
+            setAnswers(prev => ({ ...prev, a2: option }))
             setPillOptions(STEP3_OPTIONS)
             setStep(3)
         } else if (step === 3) {
+            submittingRef.current = true
+            setSubmitting(true)
+            try { 
             await completeOnboarding(answers.a1!, answers.a2!, option)
             await onComplete()
+            } finally {
+                submittingRef.current = false
+                setSubmitting(false)
+            }
         }
     }
 
     const skip = async () => {
-        await completeOnboarding('Prefiero no decirlo', 'Prefiero no decirlo', 'Todavía lo estoy descubriendo')
-        await onComplete()
+        if(submittingRef.current) return
+        submittingRef.current = true
+        setSubmitting(true)
+        try {
+            await completeOnboarding('Prefiero no decirlo', 'Prefiero no decirlo', 'Todavía lo estoy descubriendo')
+            await onComplete()
+        } finally {
+            submittingRef.current = false
+            setSubmitting(false)
+        }
     }
 
-    return { step, step1Options: STEP1_OPTIONS, pillOptions, advance, selectOption, skip}
-    }
+    return { step, step1Options: STEP1_OPTIONS, pillOptions, advance, selectOption, skip, submitting }
+}

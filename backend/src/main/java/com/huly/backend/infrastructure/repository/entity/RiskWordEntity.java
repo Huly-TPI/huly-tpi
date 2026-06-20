@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.repository.entity;
 
 import com.huly.backend.domain.model.enums.RiskSeverity;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +10,7 @@ import java.time.Instant;
 /**
  * Entidad JPA que mapea la tabla {@code risk_word} en la base de datos.
  * Pertenece a la capa de infraestructura y es independiente del modelo de dominio
- * {@link com.huly.backend.domain.model.RiskWord}. La conversión entre ambas
+ * {@link RiskWord}. La conversión entre ambas
  * representaciones la realiza {@link com.huly.backend.infrastructure.repository.jpaRepository.implementation.RiskWordRepositoryImpl}.
  */
 @Getter

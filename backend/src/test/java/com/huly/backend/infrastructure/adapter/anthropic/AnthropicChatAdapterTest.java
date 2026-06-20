@@ -29,13 +29,24 @@ class AnthropicChatAdapterTest {
     }
 
     @Test
-    void chat_shouldReturnParsedResult() {
-        // Since ChatReplyDto is private, we'll mock the entity() call but ChatReplyDto is package-private or private!
-        // Wait, if it's private, we can't instantiate it here.
-        // We can just rely on mocking the entire adapter or test it with an integration test, or make ChatReplyDto package-private.
-        // Since we can't easily mock entity(ChatReplyDto.class) if it's private, we'll just test the fallback for now, 
-        // or change ChatReplyDto to be public/package-private in the main class.
-        // Let's mock a fallback for now.
+    void chat_shouldReturnParsedResult_whenLlmCallSucceeds() {
+        AnthropicChatAdapter.ChatReplyDto mockDto = new AnthropicChatAdapter.ChatReplyDto(
+                "hola", "JOY", 8, false, null, null
+        );
+
+        when(chatClient.prompt().system(anyString()).messages(anyList()).user(anyString()).call().entity(AnthropicChatAdapter.ChatReplyDto.class))
+                .thenReturn(mockDto);
+
+        ChatReply result = adapter.chat("sys", "user", List.of());
+
+        assertThat(result.content()).isEqualTo("hola");
+        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.JOY);
+        assertThat(result.intensity()).isEqualTo(8);
+        assertThat(result.riskDetected()).isFalse();
+    }
+
+    @Test
+    void chat_shouldReturnFallback_whenExceptionOccurs() {
         when(chatClient.prompt().system(anyString()).messages(anyList()).user(anyString()).call().entity(any(Class.class)))
                 .thenThrow(new RuntimeException("Test Exception"));
 

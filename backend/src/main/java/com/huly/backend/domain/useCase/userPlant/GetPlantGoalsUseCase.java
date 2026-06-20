@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.userPlant;
 
-import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.repository.user.UserGoalRepository;
 import lombok.RequiredArgsConstructor;
 

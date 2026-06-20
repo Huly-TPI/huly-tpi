@@ -10,5 +10,9 @@ public record ChatMessageResponse(
         String content,
         @JsonProperty("risk_detected") Boolean riskDetected,
         @JsonProperty("detected_emotion") String detectedEmotion,
-        @JsonProperty("created_at") Instant createdAt
+        @JsonProperty("created_at") Instant createdAt,
+        @JsonProperty("suggested_action") ChatResponse.SuggestedAction suggestedAction,
+        @JsonProperty("generated_challenge") ChatResponse.GeneratedChallenge generatedChallenge,
+        @JsonProperty("suggested_action_decision") String suggestedActionDecision,
+        @JsonProperty("challenge_decision") String challengeDecision
 ) {}

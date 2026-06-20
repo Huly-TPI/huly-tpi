@@ -51,7 +51,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const handleUserLoaded = (event: Event) => {
       const profile = (event as CustomEvent<UserProfile>).detail
       setHasUserTheme(true)
-      setThemeState(toSceneTheme(profile.themePreference))
+      const userTheme = toSceneTheme(profile.themePreference)
+      setThemeState(userTheme)
+      window.localStorage.setItem(THEME_STORAGE_KEY, userTheme)
     }
 
     const handleUserCleared = () => {

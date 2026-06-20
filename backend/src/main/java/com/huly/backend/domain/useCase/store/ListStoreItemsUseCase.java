@@ -1,5 +1,5 @@
 package com.huly.backend.domain.useCase.store;
-import com.huly.backend.domain.model.StoreItem;
+import com.huly.backend.domain.model.shop.StoreItem;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import lombok.RequiredArgsConstructor;
 

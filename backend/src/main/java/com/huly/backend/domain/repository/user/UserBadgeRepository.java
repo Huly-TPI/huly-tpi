@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.user;
 
-import com.huly.backend.domain.model.UserBadge;
+import com.huly.backend.domain.model.user.UserBadge;
 
 import java.util.List;
 

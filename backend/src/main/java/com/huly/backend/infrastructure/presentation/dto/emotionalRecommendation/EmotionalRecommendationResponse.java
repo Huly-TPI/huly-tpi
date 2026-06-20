@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation;
 
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
 
 import java.util.List;
 

@@ -1,11 +1,28 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import treeBlueLight from '../../assets/garden/light-theme/tree-blue.webp'
 import Minigames from '../../pages/Minigames/Minigames'
 import { ThemeProvider } from '../../context/theme'
 
+const mockUseInventory = vi.fn()
+
+vi.mock('../../hooks/store/useInventory', () => ({
+  useInventory: () => mockUseInventory(),
+}))
+
 describe('Minigames', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUseInventory.mockReturnValue({
+      inventory: [],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    })
+  })
+
   const renderWithRouter = () => {
     return render(
       <ThemeProvider>
@@ -37,7 +54,29 @@ describe('Minigames', () => {
     expect(cloudLinks[0].closest('a')).toHaveAttribute('href', '/clouds')
   })
 
-  it('el botón volver navega a /', async () => {
+  it('usa el arbol cosmetico equipado para volver al jardin', () => {
+    mockUseInventory.mockReturnValue({
+      inventory: [
+        {
+          storeItemId: 7,
+          name: 'Arbol azul',
+          category: 'TREE',
+          assetKey: 'tree-blue',
+          equipped: true,
+        },
+      ],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    })
+
+    renderWithRouter()
+
+    const treeImage = screen.getByAltText('Fragmento del arbol del jardin') as HTMLImageElement
+    expect(treeImage.src).toContain(treeBlueLight)
+  })
+
+  it('el boton volver navega a /', async () => {
     const user = userEvent.setup()
 
     render(

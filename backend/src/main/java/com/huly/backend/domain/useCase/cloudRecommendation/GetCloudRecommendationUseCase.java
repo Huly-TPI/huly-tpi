@@ -1,17 +1,17 @@
 package com.huly.backend.domain.useCase.cloudRecommendation;
 
-import com.huly.backend.domain.model.CloudRecommendation;
-import com.huly.backend.domain.model.Activity;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.cloudRecommendation.CloudRecommendation;
+import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
-import com.huly.backend.domain.service.EmotionalRecommendationService;
+import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +64,7 @@ public class GetCloudRecommendationUseCase {
                     true
             );
 
-            EmotionalRecommendationQuery query = toQuery(recommendationAnalysis, userId);
+            EmotionalRecommendation query = toQuery(recommendationAnalysis, userId);
             EmotionalRecommendationResult result = recommendationService.recommend(
                     query,
                     activities(),
@@ -95,8 +95,8 @@ public class GetCloudRecommendationUseCase {
         return result == null ? EmotionalAnalysisResult.neutral() : result;
     }
 
-    private EmotionalRecommendationQuery toQuery(EmotionalAnalysisResult analysis, Long userId) {
-        return new EmotionalRecommendationQuery(
+    private EmotionalRecommendation toQuery(EmotionalAnalysisResult analysis, Long userId) {
+        return new EmotionalRecommendation(
                 userId,
                 analysis.vad(),
                 analysis.intensity(),

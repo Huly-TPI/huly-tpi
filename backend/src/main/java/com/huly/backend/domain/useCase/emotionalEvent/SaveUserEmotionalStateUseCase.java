@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
-import com.huly.backend.domain.model.UserEmotionalState;
+import com.huly.backend.domain.model.user.UserEmotionalState;
 import com.huly.backend.domain.repository.user.UserEmotionalStateRepository;
 import lombok.RequiredArgsConstructor;
 

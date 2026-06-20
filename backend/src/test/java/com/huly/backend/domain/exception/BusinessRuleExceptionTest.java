@@ -1,26 +1,25 @@
 package com.huly.backend.domain.exception;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class BusinessRuleExceptionTest {
 
     @Test
-    void testMessageIsSet() {
+    void messageConstructor_shouldSetMessage() {
         BusinessRuleException ex = new BusinessRuleException("source es obligatorio");
-        assertEquals("source es obligatorio", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("source es obligatorio");
     }
 
     @Test
-    void testExtendsDomainException() {
+    void inheritance_shouldExtendDomainException() {
         BusinessRuleException ex = new BusinessRuleException("test");
-        assertInstanceOf(DomainException.class, ex);
+        assertThat(ex).isInstanceOf(DomainException.class);
     }
 
     @Test
-    void testNullMessage() {
+    void messageConstructor_shouldHandleNullMessage() {
         BusinessRuleException ex = new BusinessRuleException(null);
-        assertNull(ex.getMessage());
+        assertThat(ex.getMessage()).isNull();
     }
 }

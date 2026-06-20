@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.extension;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.extension.AntiScrollGlobalConfig;

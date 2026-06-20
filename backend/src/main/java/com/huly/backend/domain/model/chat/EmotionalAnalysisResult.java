@@ -1,6 +1,6 @@
 package com.huly.backend.domain.model.chat;
 
-import com.huly.backend.domain.model.Vad;
+import com.huly.backend.domain.model.emotionalRecommendation.Vad;
 import com.huly.backend.domain.model.enums.EmotionType;
 
 /**

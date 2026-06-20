@@ -1,6 +1,6 @@
 package com.huly.backend.domain.service.vector;
 
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;

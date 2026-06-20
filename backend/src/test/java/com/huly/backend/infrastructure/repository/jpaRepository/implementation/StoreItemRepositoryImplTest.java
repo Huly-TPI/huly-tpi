@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
-import com.huly.backend.domain.model.StoreItem;
+import com.huly.backend.domain.model.shop.StoreItem;
 import com.huly.backend.domain.model.enums.ItemCategory;
 import com.huly.backend.infrastructure.repository.entity.StoreItemEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IStoreItemJpaRepository;
