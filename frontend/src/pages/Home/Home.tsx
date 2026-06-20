@@ -1,3 +1,5 @@
+import semillasImg from '../../assets/garden/image.png'
+import recompensasImg from '../../assets/garden/image2.png'
 import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
 import dayMobileBackgroundImage from '../../assets/garden/light-theme/background/mobile/day-background.webp'
 import { useEffect, useState } from 'react'
@@ -24,6 +26,7 @@ import { useTheme } from '../../context/theme'
 import { useAuth } from '../../context/auth'
 import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
 import { useInventory } from '../../hooks/store/useInventory'
+import { useUserCoins } from '../../hooks/shop/useUserCoins'
 import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
 import './Home.css'
@@ -68,7 +71,6 @@ const cloudElements: SceneElementDefinition[] = [
   createCloudElement('cloud-top-left', 'left-[7%] top-[5.5%] z-10 w-[10%] md:left-[8%] md:top-[2%] md:w-[8.8%] min-[1400px]:top-[1.2%]'),
   createCloudElement('cloud-upper-left', 'left-[28%] top-[3.8%] z-10 w-[22%] md:left-[22%] md:top-[8.5%] md:w-[13.2%] min-[1400px]:top-[7.2%]'),
   createCloudElement('cloud-center', 'left-[60%] top-[12%] z-10 w-[14.5%] md:left-[46.8%] md:top-[6.8%] md:w-[19.8%] min-[1400px]:top-[5.2%]'),
-  createCloudElement('cloud-right', 'left-[82%] top-[4.8%] z-10 w-[10%] md:left-[82.6%] md:top-[9.8%] md:w-[7.5%] min-[1400px]:top-[8.8%]'),
   createCloudElement('cloud-bottom-left', 'left-[15%] top-[16.5%] z-10 w-[20%] md:hidden md:left-[-3.2%] md:top-[30%] md:z-10 md:w-[7%]', 'top-full mt-1'),
   createCloudElement('cloud-bottom-right', 'left-[82%] top-[23%] z-10 w-[10%] md:hidden md:left-[88.2%] md:top-[39.5%] md:z-10 md:w-[10%]', 'top-full mt-1'),
 ]
@@ -145,6 +147,7 @@ export default function Home() {
   const { theme: sceneTheme } = useTheme()
   const [isStoreOpen, setIsStoreOpen] = useState(false)
   const { inventory, refetch: refetchInventory } = useInventory()
+  const { coins } = useUserCoins()
   const equippedByCategory = resolveEquippedImages(inventory)
   const { user } = useAuth()
   const {
@@ -268,6 +271,23 @@ export default function Home() {
           <ShoppingBagIcon className="h-7 w-7" />
         </button>
       )}
+
+      <div className="fixed top-16 right-4 z-[200] pointer-events-none select-none flex gap-2 items-start">
+        <div className="relative w-24">
+          <img src={recompensasImg} alt="Recompensas diarias" className="w-full h-auto scale-[0.97] origin-top" />
+          <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b] whitespace-nowrap">
+            Reclamar
+          </span>
+        </div>
+        <div className="relative w-24">
+          <img src={semillasImg} alt="Semillas en colección" className="w-full h-auto" />
+          {coins !== null && (
+            <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b]">
+              {coins.toLocaleString('es-AR')}
+            </span>
+          )}
+        </div>
+      </div>
 
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
     </main>
