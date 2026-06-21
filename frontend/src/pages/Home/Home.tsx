@@ -28,6 +28,7 @@ import { useAuth } from '../../context/auth'
 import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
 import { useInventory } from '../../hooks/store/useInventory'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
+import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
 import './Home.css'
@@ -144,14 +145,29 @@ const sceneElements = [...cloudElements, ...gardenElements]
 const cloudElementIds = cloudElements.map(element => element.id)
 const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds)
 
+let rewardAutoOpenedForUserId: number | null = null
+
 export default function Home() {
   const { theme: sceneTheme } = useTheme()
   const [isStoreOpen, setIsStoreOpen] = useState(false)
   const [isRewardsOpen, setIsRewardsOpen] = useState(false)
   const { inventory, refetch: refetchInventory } = useInventory()
   const { coins, refresh: refreshCoins } = useUserCoins()
+  const { status: rewardsStatus } = useDailyRewards()
   const equippedByCategory = resolveEquippedImages(inventory)
   const { user } = useAuth()
+
+  useEffect(() => {
+    if (
+      user?.id &&
+      user.onboardingTutorialCompleted &&
+      rewardsStatus?.canClaimToday &&
+      rewardAutoOpenedForUserId !== user.id
+    ) {
+      rewardAutoOpenedForUserId = user.id
+      setIsRewardsOpen(true)
+    }
+  }, [user?.id, user?.onboardingTutorialCompleted, rewardsStatus?.canClaimToday])
   const {
     onboardingMode,
     onboardingStepIndex,
@@ -274,27 +290,29 @@ export default function Home() {
         </button>
       )}
 
-      <div className="fixed top-16 right-4 z-40 select-none flex gap-2 items-start">
-        <button
-          type="button"
-          aria-label="Ver recompensas diarias"
-          onClick={() => setIsRewardsOpen(true)}
-          className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
-        >
-          <img src={recompensasImg} alt="Recompensas diarias" className="w-full h-auto scale-[0.97] origin-top" />
-          <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b] whitespace-nowrap">
-            Reclamar
-          </span>
-        </button>
-        <div className="relative w-24">
-          <img src={semillasImg} alt="Semillas en colección" className="w-full h-auto" />
-          {coins !== null && (
-            <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b]">
-              {coins.toLocaleString('es-AR')}
+      {user?.onboardingTutorialCompleted && (
+        <div className="fixed top-16 right-4 z-40 select-none flex gap-2 items-start">
+          <button
+            type="button"
+            aria-label="Ver recompensas diarias"
+            onClick={() => setIsRewardsOpen(true)}
+            className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+          >
+            <img src={recompensasImg} alt="Recompensas diarias" className="w-full h-auto scale-[0.97] origin-top" />
+            <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b] whitespace-nowrap">
+              Reclamar
             </span>
-          )}
+          </button>
+          <div className="relative w-24">
+            <img src={semillasImg} alt="Semillas en colección" className="w-full h-auto" />
+            {coins !== null && (
+              <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b]">
+                {coins.toLocaleString('es-AR')}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
       <RewardsModal isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} onClaimed={refreshCoins} />
