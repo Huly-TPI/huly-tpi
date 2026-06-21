@@ -274,7 +274,7 @@ export default function Home() {
         </button>
       )}
 
-      <div className="fixed top-16 right-4 z-[200] select-none flex gap-2 items-start">
+      <div className="fixed top-16 right-4 z-40 select-none flex gap-2 items-start">
         <button
           type="button"
           aria-label="Ver recompensas diarias"

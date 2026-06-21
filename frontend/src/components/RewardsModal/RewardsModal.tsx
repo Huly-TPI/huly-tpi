@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon, LockClosedIcon, CheckIcon } from '@heroicons/react/24/solid'
-import modalSemillasBg from '../../assets/rewards/modalSemillas.png'
+import modalBg from '../../assets/rewards/modal_papel_transparente.png'
+import cardBg from '../../assets/rewards/card.png'
+import semillaImg from '../../assets/rewards/semilla.png'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 
 interface RewardsModalProps {
@@ -15,6 +17,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
 
   useEffect(() => {
     if (toastCoins === null) return
+
     const id = setTimeout(() => setToastCoins(null), 3500)
     return () => clearTimeout(id)
   }, [toastCoins])
@@ -23,6 +26,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
 
   const handleClaim = async () => {
     const result = await claim()
+
     if (result) {
       setToastCoins(result.coins)
       onClaimed?.()
@@ -30,8 +34,26 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
   }
 
   const completed = status?.completedDays ?? 0
-  const claimableDay = status?.canClaimToday ? status.nextDay : null
-  const claimableCoins = status?.days.find(d => d.dayNumber === claimableDay)?.coins ?? 0
+
+  const rewards =
+    status?.days && status.days.length > 0
+      ? status.days
+      : [
+          { dayNumber: 1, coins: 10 },
+          { dayNumber: 2, coins: 15 },
+          { dayNumber: 3, coins: 20 },
+          { dayNumber: 4, coins: 25 },
+          { dayNumber: 5, coins: 30 },
+          { dayNumber: 6, coins: 40 },
+          { dayNumber: 7, coins: 100 },
+        ]
+
+  const visualCurrentDay = status?.canClaimToday
+    ? status.nextDay
+    : Math.min(completed + 1, 7)
+
+  const claimableCoins =
+    status?.days.find(day => day.dayNumber === status.nextDay)?.coins ?? 0
 
   return (
     <div
@@ -42,127 +64,148 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
         role="dialog"
         aria-modal="true"
         aria-label="Recompensas diarias"
-        className="relative z-10 w-full max-w-[520px]"
+        className="relative z-10 w-full max-w-[680px]"
         onClick={e => e.stopPropagation()}
       >
-        {/* Fondo — modalSemillas.png con los 7 slots, el badge arriba y la barra verde abajo */}
         <img
-          src={modalSemillasBg}
+          src={modalBg}
           alt=""
           aria-hidden="true"
           className="w-full h-auto select-none pointer-events-none block"
           draggable={false}
         />
 
-        <div className="absolute inset-0">
-
-          {/* Botón cerrar */}
+        <div className="absolute inset-0 px-[6%] pt-[19%] pb-[7%]">
           <button
             onClick={onClose}
             aria-label="Cerrar recompensas"
-            className="absolute top-[3%] right-[2%] w-6 h-6 flex items-center justify-center rounded-full bg-[#8B7355]/80 hover:bg-[#6d5840] text-white transition z-10"
+            className="absolute top-[4%] right-[4%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20"
           >
-            <XMarkIcon className="w-3.5 h-3.5" />
+            <XMarkIcon className="w-5 h-5" />
           </button>
 
-          {/* Título y subtítulo centrados en el badge */}
-          <div className="absolute left-0 right-0 text-center z-10" style={{ top: '27%' }}>
-            <p className="text-[20px] font-black text-[#8a4f16] leading-tight">
+          <div className="text-center">
+            <h2 className="text-[22px] sm:text-[27px] font-black text-[#9b5718] leading-none">
               ¡Cosecha diaria!
-            </p>
-            <p className="text-[12px] font-bold text-[#8B7355] leading-tight mt-0.5">
+            </h2>
+
+            <p className="mt-2 text-[11px] sm:text-[13px] font-bold text-[#7b5c3c]">
               Iniciá sesión todos los días y obtené más semillas
             </p>
+
+            <div className="mx-auto mt-3 w-fit rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
+              <span className="text-[11px] sm:text-[12px] font-black text-[#68451f]">
+                🔥 Racha actual:{' '}
+                <span className="text-[#4d8a2d]">{completed} días</span>
+              </span>
+            </div>
           </div>
 
-          {/* 7 slots */}
-          <div
-            className="absolute grid grid-cols-7"
-            style={{
-              top: '38%',
-              left: '10%',
-              right: '10%',
-              height: '35%',
-            }}
-
-          >
+          <div className="grid grid-cols-7">
             {loading ? (
-              <div className="col-span-7 flex items-center justify-center">
-                <div className="w-5 h-5 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
+              <div className="col-span-7 flex justify-center py-12">
+                <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
               </div>
-            ) : status && status.days.length > 0 ? (
-              status.days.map(day => {
+            ) : (
+              rewards.map(day => {
                 const isClaimed = day.dayNumber <= completed
+                const isToday = day.dayNumber === visualCurrentDay
+                const isClaimable =
+                  day.dayNumber === status?.nextDay && Boolean(status?.canClaimToday)
+                const isLocked = !isClaimed && !isClaimable
 
                 return (
-                  <div key={day.dayNumber} className="relative h-full">
+                  <div
+                    key={day.dayNumber}
+                    className={`
+                      relative h-[120px] sm:h-[140px]
+                      transition-all duration-200 origin-center
+                      ${isToday ? 'scale-[1.06] z-10' : ''}
+                      ${isLocked ? 'opacity-95' : ''}
+                    `}
+                  >
+                    {isToday && (
+                      <div className="absolute inset-x-1 top-8 bottom-8 rounded-full bg-[#f6d56b]/45 blur-md" />
+                    )}
 
-                    {/* Día arriba de la semilla */}
-                    <span
-                      className="absolute left-0 right-0 text-center text-[10px] font-black text-[#5a3e1b] leading-none"
-                      style={{ top: '8%' }}
-                    >
-                      Día {day.dayNumber}
-                    </span>
+                    <img
+                      src={cardBg}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_5px_6px_rgba(91,60,24,0.18)]"
+                      draggable={false}
+                    />
 
-                    {/* Cantidad debajo de la semilla */}
-                    <span
-                      className="absolute left-0 right-0 text-center text-[10px] font-black text-[#5a3e1b] leading-none"
-                      style={{ top: '52%' }}
-                    >
-                      {day.coins}
-                    </span>
+                    <div className="absolute inset-0 flex flex-col items-center px-1.5 pt-3.5 pb-2">
+                      <span className="text-[9px] sm:text-[12px] font-black whitespace-nowrap leading-none text-[#5b3b1b]">
+                        Día {day.dayNumber}
+                      </span>
 
-                    {/* Candado/check debajo del número, dentro de la card */}
-                    <div
+                      <div className="relative mt-1 flex flex-1 items-center justify-center">
+                        {isToday && (
+                          <div className="absolute w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#f6d56b]/50 blur-md" />
+                        )}
 
-                      className="absolute left-0 right-0 flex justify-center"
-                      style={{ top: '67%' }}
-                    >
+                        <img
+                          src={semillaImg}
+                          alt=""
+                          className={`
+                            relative z-10 object-contain drop-shadow-[0_4px_3px_rgba(73,43,18,0.28)]
+                            ${
+                              isToday
+                                ? 'w-14 h-14 sm:w-16 sm:h-16'
+                                : 'w-12 h-12 sm:w-14 sm:h-14'
+                            }
+                          `}
+                        />
+                      </div>
 
-                      {isClaimed ? (
-                        <CheckIcon className="w-3 h-3 text-[#4a7a30]" />
-                      ) : (
-                        <LockClosedIcon className="w-3 h-3 text-[#b8944f]" />
+                      <span className="text-[15px] sm:text-[18px] font-black text-[#5b3b1b] leading-none">
+                        {day.coins}
+                      </span>
+
+                      <div className="mt-1 h-4 flex items-center justify-center">
+                        {isClaimed ? (
+                          <CheckIcon className="w-4 h-4 text-[#4d8a2d]" />
+                        ) : (
+                          <LockClosedIcon className="w-3.5 h-3.5 text-[#9a7541]" />
+                        )}
+                      </div>
+
+                      {isClaimable && (
+                        <button
+                          onClick={handleClaim}
+                          disabled={claiming}
+                          className="mt-1 rounded-full bg-[#6f9f38] px-2.5 py-0.5 text-[8px] sm:text-[9px] font-black text-white shadow-md active:scale-95 disabled:opacity-60"
+                        >
+                          {claiming ? '...' : 'Recolectar'}
+                        </button>
                       )}
                     </div>
                   </div>
                 )
               })
-            ) : null}
+            )}
           </div>
 
-          {/* Botón — superpuesto sobre la barra verde dibujada en la imagen */}
           {!loading && status && (
-            <div
-              className="absolute flex items-center justify-center"
-              style={{ top: '69%', left: '10%', right: '10%', bottom: '8%' }}
-            >
-              {status.canClaimToday ? (
-                <button
-                  onClick={handleClaim}
-                  disabled={claiming}
-                  className="w-full h-full flex items-center justify-center text-[#3d4a2e] font-bold text-[11px] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {claiming ? 'Reclamando...' : `Recoger +${claimableCoins} semillas`}
-                </button>
-              ) : (
-                <span className="text-[#3d4a2e] font-semibold text-[11px] text-center leading-tight">
-                  Volvé mañana para tu siguiente recompensa
-                </span>
-              )}
+            <div className="mt-4 sm:mt-5 mx-auto w-fit rounded-2xl bg-[#f3d8aa]/80 border border-[#c49a60] px-5 py-2 text-center shadow-sm">
+              <p className="text-[11px] sm:text-[12px] text-[#6b4a2a] font-bold">
+                {status.canClaimToday
+                  ? `Recolectá ${claimableCoins} semillas hoy`
+                  : 'Volvé mañana para seguir cultivando tu jardín'}
+              </p>
             </div>
           )}
 
           {error && (
-            <p className="absolute bottom-[3%] left-0 right-0 text-red-600 text-[9px] text-center px-2">
+            <p className="absolute bottom-[3%] left-0 right-0 text-red-600 text-[10px] text-center px-4 font-bold">
               {error}
             </p>
           )}
         </div>
       </div>
 
-      {/* Toast */}
       {toastCoins !== null && (
         <div
           role="status"
@@ -170,10 +213,12 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           className="fixed bottom-24 right-5 z-[60] flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#4C7C64] to-[#6aaa8a] px-5 py-4 shadow-xl text-white"
         >
           <span className="text-2xl">🌱</span>
+
           <div>
             <p className="text-sm opacity-90 m-0">¡Recompensa reclamada!</p>
             <p className="font-bold text-lg m-0">+{toastCoins} semillas</p>
           </div>
+
           <button
             aria-label="Cerrar notificación"
             onClick={() => setToastCoins(null)}
