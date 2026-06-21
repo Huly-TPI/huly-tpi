@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon, LockClosedIcon, CheckIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/rewards/modal_papel_transparente.png'
-import cardBg from '../../assets/rewards/card.png'
+import cardBg from '../../assets/rewards/cardSeed.png'
 import semillaImg from '../../assets/rewards/semilla.png'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 
@@ -39,14 +39,14 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
     status?.days && status.days.length > 0
       ? status.days
       : [
-          { dayNumber: 1, coins: 10 },
-          { dayNumber: 2, coins: 15 },
-          { dayNumber: 3, coins: 20 },
-          { dayNumber: 4, coins: 25 },
-          { dayNumber: 5, coins: 30 },
-          { dayNumber: 6, coins: 40 },
-          { dayNumber: 7, coins: 100 },
-        ]
+        { dayNumber: 1, coins: 10 },
+        { dayNumber: 2, coins: 15 },
+        { dayNumber: 3, coins: 20 },
+        { dayNumber: 4, coins: 25 },
+        { dayNumber: 5, coins: 30 },
+        { dayNumber: 6, coins: 40 },
+        { dayNumber: 7, coins: 100 },
+      ]
 
   const visualCurrentDay = status?.canClaimToday
     ? status.nextDay
@@ -64,7 +64,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
         role="dialog"
         aria-modal="true"
         aria-label="Recompensas diarias"
-        className="relative z-10 w-full max-w-[680px]"
+        className="relative z-10 w-full max-w-[700px]"
         onClick={e => e.stopPropagation()}
       >
         <img
@@ -75,7 +75,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           draggable={false}
         />
 
-        <div className="absolute inset-0 px-[6%] pt-[19%] pb-[7%]">
+        <div className="absolute inset-0 px-[8%] pt-[19%] pb-[7%]">
           <button
             onClick={onClose}
             aria-label="Cerrar recompensas"
@@ -101,7 +101,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
             </div>
           </div>
 
-          <div className="grid grid-cols-7">
+          <div className="grid grid-cols-7 mt-4 sm:mt-4">
             {loading ? (
               <div className="col-span-7 flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
@@ -118,7 +118,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
                   <div
                     key={day.dayNumber}
                     className={`
-                      relative h-[120px] sm:h-[140px]
+                      relative aspect-[3/5]
                       transition-all duration-200 origin-center
                       ${isToday ? 'scale-[1.06] z-10' : ''}
                       ${isLocked ? 'opacity-95' : ''}
@@ -136,47 +136,31 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
                       draggable={false}
                     />
 
-                    <div className="absolute inset-0 flex flex-col items-center px-1.5 pt-3.5 pb-2">
-                      <span className="text-[9px] sm:text-[12px] font-black whitespace-nowrap leading-none text-[#5b3b1b]">
+                    <div className="absolute inset-0">
+                      <span className="absolute top-[9%] left-0 right-0 text-center text-[9px] sm:text-[12px] font-black whitespace-nowrap leading-none text-[#5b3b1b]">
                         Día {day.dayNumber}
                       </span>
 
-                      <div className="relative mt-1 flex flex-1 items-center justify-center">
-                        {isToday && (
-                          <div className="absolute w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#f6d56b]/50 blur-md" />
-                        )}
 
-                        <img
-                          src={semillaImg}
-                          alt=""
-                          className={`
-                            relative z-10 object-contain drop-shadow-[0_4px_3px_rgba(73,43,18,0.28)]
-                            ${
-                              isToday
-                                ? 'w-14 h-14 sm:w-16 sm:h-16'
-                                : 'w-12 h-12 sm:w-14 sm:h-14'
-                            }
-                          `}
-                        />
-                      </div>
-
-                      <span className="text-[15px] sm:text-[18px] font-black text-[#5b3b1b] leading-none">
+                      <span className="absolute bottom-[29%] left-0 right-0 text-center text-[15px] sm:text-[18px] font-black text-[#5b3b1b] leading-none">
                         {day.coins}
                       </span>
 
-                      <div className="mt-1 h-4 flex items-center justify-center">
-                        {isClaimed ? (
-                          <CheckIcon className="w-4 h-4 text-[#4d8a2d]" />
-                        ) : (
-                          <LockClosedIcon className="w-3.5 h-3.5 text-[#9a7541]" />
-                        )}
-                      </div>
+                      {(isClaimed || isLocked) && (
+                        <div className="absolute bottom-[15%] left-0 right-0 flex items-center justify-center">
+                          {isClaimed ? (
+                            <CheckIcon className="w-4 h-4 text-[#4d8a2d]" />
+                          ) : (
+                            <LockClosedIcon className="w-3.5 h-3.5 text-[#9a7541]" />
+                          )}
+                        </div>
+                      )}
 
                       {isClaimable && (
                         <button
                           onClick={handleClaim}
                           disabled={claiming}
-                          className="mt-1 rounded-full bg-[#6f9f38] px-2.5 py-0.5 text-[8px] sm:text-[9px] font-black text-white shadow-md active:scale-95 disabled:opacity-60"
+                          className="absolute bottom-[6%] left-1/2 -translate-x-1/2 rounded-full bg-[#6f9f38] px-2.5 py-0.5 text-[8px] sm:text-[9px] font-black text-white shadow-md active:scale-95 disabled:opacity-60 whitespace-nowrap"
                         >
                           {claiming ? '...' : 'Recolectar'}
                         </button>
