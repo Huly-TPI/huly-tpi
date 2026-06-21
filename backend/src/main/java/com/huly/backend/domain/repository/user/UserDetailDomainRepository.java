@@ -21,4 +21,10 @@ public interface UserDetailDomainRepository {
 
     /** Persiste el reclamo diario: nueva racha y fecha del reclamo. */
     void updateDailyClaim(Long userId, int streak, LocalDate claimDate);
+
+    /** Fecha de la última actividad registrada (base de la recompensa de regreso). */
+    Optional<LocalDate> findLastLoginDate(Long userId);
+
+    /** Registra la actividad de hoy (resetea la brecha de inactividad). */
+    void updateLastLoginDate(Long userId, LocalDate date);
 }
