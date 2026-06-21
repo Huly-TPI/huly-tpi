@@ -37,7 +37,8 @@ public class SecurityConfig {
                                 "/api/leads",
                                 "/api/breathing/techniques",
                                 "/api/webhook/mercadopago",
-                                "/api/user-goals/images/**"
+                                "/api/user-goals/images/**",
+                                "/api/notifications/unsubscribe"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
