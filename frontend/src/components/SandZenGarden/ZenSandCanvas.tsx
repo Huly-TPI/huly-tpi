@@ -22,10 +22,14 @@ interface ActivePointer {
   strokeIndex: number
 }
 
+interface ZenSandCanvasProps {
+  onDraw?: () => void
+}
+
 const getIntensity = (speed: number) =>
   Math.min(1.08, Math.max(0.72, 1.08 - speed * 0.2))
 
-export default function ZenSandCanvas() {
+export default function ZenSandCanvas({ onDraw }: ZenSandCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const strokesRef = useRef<SandStroke[]>([])
   const activePointerRef = useRef<ActivePointer | null>(null)
@@ -115,6 +119,8 @@ export default function ZenSandCanvas() {
       const elapsed = Math.max(1, pointerEvent.timeStamp - activePointer.lastTime)
 
       if (distance < 0.5) continue
+
+      onDraw?.()
 
       const speed = distance / elapsed
       point.intensity = getIntensity(speed)
