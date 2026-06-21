@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Button from '../Buttons/Button/Button'
 import ChatbotAudioRecorder from './ChatbotAudioRecorder'
 import { useEffect, useRef } from 'react'
-import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
+import { SendHorizontal } from 'lucide-react'
 
 interface ChatbotComposerProps {
   input: string
@@ -66,7 +66,7 @@ export default function ChatbotComposer({
             aria-label="Enviar"
             title="Enviar"
           >
-            <PaperAirplaneIcon className="h-4 w-4 -rotate-45" />
+            <SendHorizontal className="h-4 w-4" strokeWidth={2} />
           </Button>
         )}
       </div>

@@ -5,10 +5,10 @@ import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
-import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class GetUserAiDiagnosticsUseCase {
 
     private final UserRepository userRepository;
     private final EmotionalEventRepository emotionalEventRepository;
-    private final VectorMemoryRepository vectorMemoryRepository;
+    private final VectorMemoryPort vectorMemoryPort;
     private final UserPersonalitySummaryRepository userPersonalitySummaryRepository;
     private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
 
@@ -35,7 +35,7 @@ public class GetUserAiDiagnosticsUseCase {
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        List<VectorMemoryEntry> memories = vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(user.getId());
+        List<VectorMemoryEntry> memories = vectorMemoryPort.findMemoriesByUserIdExcludingSummary(user.getId());
         List<VectorMemoryResponse> aiMemories = memories.stream()
                 .map(memory -> new VectorMemoryResponse(
                         memory.id(),

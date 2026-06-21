@@ -5,7 +5,7 @@ export default function BackofficeNotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 animate-fadeIn">
       <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 mb-6 shadow-sm">
-        <AlertOctagon className="h-10 w-10" strokeWidth={1.8} />
+        <AlertOctagon className="h-10 w-10" strokeWidth={2} />
       </div>
       
       <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 tracking-tight mb-2">

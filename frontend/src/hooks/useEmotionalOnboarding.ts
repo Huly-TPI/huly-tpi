@@ -1,13 +1,6 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
+import { Cloud, PauseCircle, Search, Sparkles } from 'lucide-react'
 import { completeOnboarding } from '../api/onboarding'
-import {
-    PauseCircleIcon,
-    CloudIcon,
-    MagnifyingGlassIcon,
-    SparklesIcon,
-} from '@heroicons/react/24/outline'
-
-
 
 export type Step1Option = {
     Icon: React.ComponentType<{ className?: string }>
@@ -15,42 +8,39 @@ export type Step1Option = {
     subtitle: string
 }
 
-
 type Step = 0 | 1 | 2 | 3
 
-
 const STEP1_OPTIONS: Step1Option[] = [
-    { Icon: PauseCircleIcon, title: 'Un momento para mí', subtitle: 'Para pausar y respirar' },
-    { Icon: CloudIcon, title: 'Soltar lo que cargo', subtitle: 'Tengo cosas en la cabeza' },
-    { Icon: MagnifyingGlassIcon, title: 'Entender lo que siento', subtitle: 'Quiero explorar mis emociones' },
-    { Icon: SparklesIcon, title: 'Descansar un rato', subtitle: 'Busco desconectarme un poco' },
+    { Icon: PauseCircle, title: 'Un momento para mí', subtitle: 'Para pausar y respirar' },
+    { Icon: Cloud, title: 'Soltar lo que cargo', subtitle: 'Tengo cosas en la cabeza' },
+    { Icon: Search, title: 'Entender lo que siento', subtitle: 'Quiero explorar mis emociones' },
+    { Icon: Sparkles, title: 'Descansar un rato', subtitle: 'Busco desconectarme un poco' },
 ]
-
 
 const STEP2_MAP: Record<string, string[]> = {
     'Un momento para mí': [
         'Bajar el ritmo',
         'Despejar la cabeza',
         'Encontrar calma',
-        'Tomarme un respiro'
+        'Tomarme un respiro',
     ],
     'Soltar lo que cargo': [
         'Poner en palabras lo que siento',
         'Ordenar mis pensamientos',
         'Liberar un poco la mente',
-        'Sentirme más tranquilo/a'
+        'Sentirme más tranquilo/a',
     ],
     'Entender lo que siento': [
         'Conocerme un poco más',
         'Conectar conmigo',
         'Ordenar mis ideas',
-        'Expresar lo que siento'
+        'Expresar lo que siento',
     ],
     'Descansar un rato': [
         'Desconectarme un momento',
         'Jugar algo tranquilo',
         'Recargar energía',
-        'Despejar la cabeza'
+        'Despejar la cabeza',
     ],
 }
 
@@ -61,7 +51,6 @@ const STEP3_OPTIONS = [
     'Todavía lo estoy descubriendo',
 ]
 
-
 export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
     const [step, setStep] = useState<Step>(0)
     const [pillOptions, setPillOptions] = useState<string[]>([])
@@ -71,8 +60,8 @@ export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
     const advance = () => setStep(1)
 
     const selectOption = async (option: string) => {
+        if (submittingRef.current) return
 
-    if(submittingRef.current) return
         if (step === 1) {
             setAnswers({ a1: option })
             setPillOptions(STEP2_MAP[option] ?? STEP3_OPTIONS)
@@ -84,9 +73,9 @@ export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
         } else if (step === 3) {
             submittingRef.current = true
             setSubmitting(true)
-            try { 
-            await completeOnboarding(answers.a1!, answers.a2!, option)
-            await onComplete()
+            try {
+                await completeOnboarding(answers.a1!, answers.a2!, option)
+                await onComplete()
             } finally {
                 submittingRef.current = false
                 setSubmitting(false)
@@ -95,7 +84,7 @@ export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
     }
 
     const skip = async () => {
-        if(submittingRef.current) return
+        if (submittingRef.current) return
         submittingRef.current = true
         setSubmitting(true)
         try {
