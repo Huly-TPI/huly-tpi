@@ -373,4 +373,35 @@ class UserRepositoryImplTest {
         verify(jpaRepository).debitCoins(1L, 10);
 
     }
+
+      @Test
+    void findByUnsubscribeToken_shouldReturnMappedDomain_whenTokenExists() {
+        java.util.UUID token = java.util.UUID.randomUUID();
+        AppUserEntity entity = AppUserEntity.builder()
+                .id(3L).email("user@huly.com")
+                .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .build();
+        when(jpaRepository.findByUnsubscribeToken(token)).thenReturn(Optional.of(entity));
+
+        Optional<AppUser> result = userRepository.findByUnsubscribeToken(token.toString());
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(3L);
+    }
+
+    @Test
+    void findByUnsubscribeToken_shouldReturnEmpty_whenTokenIsNotValidUuid() {
+        Optional<AppUser> result = userRepository.findByUnsubscribeToken("no-es-uuid");
+
+        assertThat(result).isEmpty();
+        verify(jpaRepository, never()).findByUnsubscribeToken(any());
+    }
+
+    @Test
+    void disableReengagementEmails_shouldDelegateToJpa() {
+        userRepository.disableReengagementEmails(5L);
+        verify(jpaRepository).disableReengagementEmails(5L);
+    }
+
+
 }
