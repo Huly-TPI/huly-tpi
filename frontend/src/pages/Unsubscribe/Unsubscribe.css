@@ -23,8 +23,9 @@
 }
 
 .unsubscribe-icon {
-  font-size: 2.75rem;
-  line-height: 1;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: #4c7c64;
 }
 
 .unsubscribe-title {

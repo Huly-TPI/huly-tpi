@@ -1,4 +1,5 @@
 import { usePushNotifications } from '../../../hooks/usePushNotifications'
+import { Bell } from 'lucide-react'
 import './NotificationsPrompt.css'
 
 interface NotificationsPromptProps {
@@ -18,7 +19,7 @@ export default function NotificationsPrompt({ onClose }: NotificationsPromptProp
     return (
         <div className="notif-prompt-overlay" role="dialog" aria-modal="true" aria-labelledby="notif-prompt-title">
             <div className="notif-prompt-card">
-                <span className="notif-prompt-icon" aria-hidden="true">🌿</span>
+                <Bell className="notif-prompt-icon" strokeWidth={2} aria-hidden="true" />
                 <h2 id="notif-prompt-title" className="notif-prompt-title">
                     ¿Querés que te recordemos pasar por tu jardín?
                 </h2>

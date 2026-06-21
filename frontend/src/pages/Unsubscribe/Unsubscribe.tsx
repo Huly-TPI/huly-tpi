@@ -1,14 +1,15 @@
 import { useSearchParams, Link } from 'react-router-dom'
 import './Unsubscribe.css'
+import { Leaf } from 'lucide-react'
 
 export default function Unsubscribe() {
     const [searchParams] = useSearchParams()
     const ok = searchParams.get('status') === 'ok'
 
-     return (
+    return (
         <main className="unsubscribe-page">
             <div className="unsubscribe-card">
-                <span className="unsubscribe-icon" aria-hidden="true">🌿</span>
+                <Leaf className="unsubscribe-icon" strokeWidth={2} aria-hidden="true" />
                 {ok ? (
                     <>
                         <h1 className="unsubscribe-title">Listo, te diste de baja</h1>

@@ -26,8 +26,9 @@
 }
 
 .notif-prompt-icon {
-  font-size: 2.25rem;
-  line-height: 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #8869ac;
 }
 
 .notif-prompt-title {
