@@ -2,6 +2,7 @@ package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;
@@ -20,13 +21,15 @@ public class DailyRewardUseCaseConfig {
     @Bean
     public ClaimDailyRewardUseCase claimDailyRewardUseCase(DailyRewardRepository dailyRewardRepository,
                                                            UserDetailDomainRepository userDetailDomainRepository,
+                                                           UserPlanRepository userPlanRepository,
                                                            CoinService coinService) {
-        return new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, coinService, Clock.system(ZONE));
+        return new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, coinService, Clock.system(ZONE));
     }
 
     @Bean
     public GetDailyRewardStatusUseCase getDailyRewardStatusUseCase(DailyRewardRepository dailyRewardRepository,
-                                                                   UserDetailDomainRepository userDetailDomainRepository) {
-        return new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, Clock.system(ZONE));
+                                                                   UserDetailDomainRepository userDetailDomainRepository,
+                                                                   UserPlanRepository userPlanRepository) {
+        return new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, Clock.system(ZONE));
     }
 }
