@@ -17,6 +17,7 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -90,7 +91,7 @@ class EmailPortJavaMailImplTest {
 
     @Test
     void sendReEngagement_shouldCallMailSenderSend() {
-        emailPort.sendReEngagement("user@example.com");
+        assertDoesNotThrow(() -> emailPort.sendReEngagement("user@example.com", "tok-123"));
         verify(mailSender).send(any(MimeMessage.class));
     }
 
@@ -103,7 +104,7 @@ class EmailPortJavaMailImplTest {
     @Test 
     void sendReEngagement_noPropagaExcepcion_cuandoFallaElEnvio() {
         doThrow(new RuntimeException("SMTP down")).when(mailSender).send(any(MimeMessage.class));
-        emailPort.sendReEngagement("user@example.com");
+        assertDoesNotThrow(() -> emailPort.sendReEngagement("user@example.com", "tok-123"));
         verify(mailSender).send(any(MimeMessage.class));
     }
 

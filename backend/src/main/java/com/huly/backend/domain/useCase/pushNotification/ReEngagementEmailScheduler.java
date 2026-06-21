@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.pushNotification;
 import com.huly.backend.domain.port.EmailPort;
-import com.huly.backend.domain.repository.UserRepository;
+import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,7 +21,7 @@ public class ReEngagementEmailScheduler {
     public void sendReEngagementEmails() {
         Instant cutoff = Instant.now().minus(3, ChronoUnit.DAYS);
         userRepository.findUsersInactiveSince(cutoff).forEach(user -> { 
-            emailPort.sendReEngagement(user.getEmail());
+            emailPort.sendReEngagement(user.getEmail(), user.getUnsubscribeToken());
         });
     }
 }

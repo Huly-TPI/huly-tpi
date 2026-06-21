@@ -164,10 +164,10 @@ class LoginUseCaseTest {
     @Test 
     void execute_shouldUpdateLastLogin_whenCredentialsAreValid() {
         when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
-        when(passwordHasher.matches("rawPass", "encodedPass")).thenReturn(true);
-        when(tokenProvider.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
-        when(tokenProvider.generateRefreshToken(any(), any())).thenReturn("refresh");
-        when(tokenProvider.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
         when(refreshTokenRepository.save(any())).thenReturn(null);
 
         loginUseCase.execute("user@huly.com", "rawPass");

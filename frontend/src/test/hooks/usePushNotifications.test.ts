@@ -7,6 +7,7 @@ vi.mock('../../api/pushNotifications', () => ({
     pushNotificationsApi: {
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
+        getStatus: vi.fn(),
     },
 }))
 
@@ -18,6 +19,8 @@ vi.mock('../../context/auth', () => ({
 
 const mockedSubscribe = vi.mocked(pushNotificationsApi.subscribe)
 const mockedUnsubscribe = vi.mocked(pushNotificationsApi.unsubscribe)
+const mockedGetStatus = vi.mocked(pushNotificationsApi.getStatus)
+const mockRequestPermission = vi.fn()
 
 const mockPushSub = {
     endpoint: 'https://push.example.com/sub',
@@ -43,14 +46,22 @@ const mockServiceWorker = {
 describe('usePushNotifications', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mockRequestPermission.mockResolvedValue('granted')
+        mockedGetStatus.mockResolvedValue({ subscribed: false })
+        mockPushManager.getSubscription.mockResolvedValue(null)
         Object.defineProperty(navigator, 'serviceWorker', { value: mockServiceWorker, configurable: true })
         Object.defineProperty(window, 'PushManager', { value: {}, configurable: true })
+        Object.defineProperty(window, 'Notification', {
+            value: { requestPermission: mockRequestPermission },
+            configurable: true,
+        })
     })
 
 
     afterEach(() => {
         Object.defineProperty(navigator, 'serviceWorker', { value: undefined, configurable: true })
         Object.defineProperty(window, 'PushManager', { value: undefined, configurable: true })
+        Object.defineProperty(window, 'Notification', { value: undefined, configurable: true })
     })
 
     it('isSupported es true cuando el browser soporta push', async () => {
@@ -60,18 +71,42 @@ describe('usePushNotifications', () => {
         expect(result.current.isSupported).toBe(true)
     })
 
-    it('isSupported es false cuando no hay suscripción existente', async () => {
-        mockPushManager.getSubscription.mockResolvedValue(null)
+
+    it('isSuscribed es false cuando no hay suscripción existente', async () => {
+        mockedGetStatus.mockResolvedValue({ subscribed: false })
         const { result } = renderHook(() => usePushNotifications())
         await waitFor(() => expect(result.current.isLoading).toBe(false))
         expect(result.current.isSubscribed).toBe(false)
     })
 
     it('isSuscribed es true cuando ya existe una suscripción', async () => {
-        mockPushManager.getSubscription.mockResolvedValue(mockPushSub)
+        mockedGetStatus.mockResolvedValue({ subscribed: true })
         const { result } = renderHook(() => usePushNotifications())
         await waitFor(() => expect(result.current.isLoading).toBe(false))
         expect(result.current.isSubscribed).toBe(true)
+    })
+
+    it('pide permiso de notificaciones al suscribir', async () => {
+        mockPushManager.getSubscription.mockResolvedValue(null)
+        mockPushManager.subscribe.mockResolvedValue(mockPushSub)
+        mockedSubscribe.mockResolvedValue(undefined as never)
+        const { result } = renderHook(() => usePushNotifications())
+        await waitFor(() => expect(result.current.isLoading).toBe(false))
+        await act(async () => { await result.current.subscribe() })
+
+        expect(mockRequestPermission).toHaveBeenCalled()
+    })
+
+    it('no se suscribe si el usuario rechaza el permiso', async () => {
+        mockRequestPermission.mockResolvedValue('denied')
+        mockPushManager.getSubscription.mockResolvedValue(null)
+        const { result } = renderHook(() => usePushNotifications())
+        await waitFor(() => expect(result.current.isLoading).toBe(false))
+        await act(async () => { await result.current.subscribe() })
+
+        expect(mockPushManager.subscribe).not.toHaveBeenCalled()
+        expect(mockedSubscribe).not.toHaveBeenCalled()
+        expect(result.current.isSubscribed).toBe(false)
     })
 
     it('suscribe llama a la api con userId, endpoint, p256dh y auth', async () => {
@@ -93,6 +128,23 @@ describe('usePushNotifications', () => {
 
         expect(result.current.isSubscribed).toBe(true)
     })
+
+    it('reusa la suscripción existente sin volver a crear una nueva', async () => {
+        mockPushManager.getSubscription.mockResolvedValue(mockPushSub)
+        mockedSubscribe.mockResolvedValue(undefined as never)
+        const { result } = renderHook(() => usePushNotifications())
+        await waitFor(() => expect(result.current.isLoading).toBe(false))
+        await act(async () => { await result.current.subscribe() })
+
+        expect(mockPushManager.subscribe).not.toHaveBeenCalled()
+        expect(mockedSubscribe).toHaveBeenCalledWith({
+            userId: 42,
+            endpoint: 'https://push.example.com/sub',
+            p256dh: 'p256dhKey',
+            auth: 'authKey',
+        })
+    })
+
 
     it('unsubscribe llama a la api y al unsubscribe del browser', async () => {
         mockPushManager.getSubscription.mockResolvedValue(mockPushSub)

@@ -16,7 +16,7 @@ public class EmailPortStubImpl implements EmailPort {
     }
 
     @Override
-    public void sendReEngagement(String to) {
-        log.info("[EMAIL-STUB] Re-engagement → to={}", to);
+    public void sendReEngagement(String to, String unsubscribeToken) {
+        log.info("[EMAIL-STUB] Re-engagement → to={}", to, unsubscribeToken);
     }
 }

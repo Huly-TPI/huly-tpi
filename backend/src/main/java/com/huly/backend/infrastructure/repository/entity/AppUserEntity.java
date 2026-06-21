@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "app_user")
@@ -41,6 +42,13 @@ public class AppUserEntity {
 
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
+
+    @Builder.Default
+    @Column(name = "reengagement_emails_enabled", nullable = false)
+    private Boolean reengagementEmailsEnabled = true;
+
+    @Column(name = "unsubscribe_token", insertable = false, updatable = false)
+    private UUID unsubscribeToken;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDetailEntity> userDetails;

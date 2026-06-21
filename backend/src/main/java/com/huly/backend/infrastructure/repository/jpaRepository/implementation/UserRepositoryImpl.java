@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.huly.backend.domain.model.user.AppUser;
@@ -110,6 +109,21 @@ public class UserRepositoryImpl implements UserRepository {
                 .toList();
     }
 
+    @Override
+    public Optional<AppUser> findByUnsubscribeToken(String token) {
+        try {
+            return jpaRepository.findByUnsubscribeToken(java.util.UUID.fromString(token)).map(this::toDomain);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void disableReengagementEmails(Long userId) {
+        jpaRepository.disableReengagementEmails(userId);
+    }
+
     private AppUser toDomain(AppUserEntity entity) {
         String name = entity.getUserDetails() != null
                 ? entity.getUserDetails().stream()
@@ -135,6 +149,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .role(entity.getRole())
                 .status(entity.getStatus())
                 .birthDate(birth)
+                .unsubscribeToken(entity.getUnsubscribeToken() != null ? entity.getUnsubscribeToken().toString() : null)
                 .build();
     }
 

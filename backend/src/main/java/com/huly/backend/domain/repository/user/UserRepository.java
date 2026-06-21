@@ -20,4 +20,6 @@ public interface UserRepository {
     List<AppUser> findUsersInactiveSince(Instant since);
     int debitCoins(Long userId, int amount);
     List<AppUser> findAllNonAdmins();
+    Optional<AppUser> findByUnsubscribeToken(String unsubscribeToken);
+    void disableReengagementEmails(Long userId);
 }

@@ -23,4 +23,5 @@ public class AppUser {
     private UserRole role;
     private UserStatus status;
     private Instant lastLoginAt;
+    private String unsubscribeToken;
 }

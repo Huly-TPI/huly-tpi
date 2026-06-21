@@ -23,8 +23,10 @@ class EmailPortStubImplTest {
 
     @Test
     void sendReEngagement_noLanzaExcepcion() {
-        assertDoesNotThrow(() -> emailPort.sendReEngagement("user@example.com"));
+        assertDoesNotThrow(() -> emailPort.sendReEngagement("user@example.com", "tok-123"));
     }
+
+    
 
 
 }

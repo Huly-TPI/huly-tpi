@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { pushNotificationsApi } from '../api/pushNotifications'
 import { useAuth } from '../context/auth'
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string 
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -17,51 +17,56 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 export function usePushNotifications() {
     const { user } = useAuth()
-    const isSupported = 
-        typeof window !== 'undefined' && 
-        'serviceWorker' in navigator && 
+    const isSupported =
+        typeof window !== 'undefined' &&
+        'serviceWorker' in navigator &&
         'PushManager' in window
 
     const [isSubscribed, setIsSubscribed] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        if(!isSupported) {
+        if (!isSupported) {
             setIsLoading(false)
             return
         }
-        navigator.serviceWorker
-        .register('/service-worker.js')
-        .then(async (reg) => {
-            const existing = await reg.pushManager.getSubscription()
-            setIsSubscribed(existing !== null)
-        })
-        .catch(() => {})
-        .finally(() => setIsLoading(false))
-    }, [isSupported])
+        navigator.serviceWorker.register('/service-worker.js').catch(() => { })
+        if (!user) {
+            setIsSubscribed(false)
+            setIsLoading(false)
+            return
+        }
+        setIsLoading(true)
+        pushNotificationsApi.getStatus()
+            .then(status => setIsSubscribed(status.subscribed))
+            .catch(() => { })
+            .finally(() => setIsLoading(false))
+    }, [isSupported, user?.id])
 
     const subscribe = useCallback(async () => {
-        if (!user || !isSupported) return 
+        if (!user || !isSupported) return
         setIsLoading(true)
-        try{ 
+        try {
+            const permission = await Notification.requestPermission()
+            if (permission !== 'granted') return
+
             const reg = await navigator.serviceWorker.ready
             const existing = await reg.pushManager.getSubscription()
-            if (existing) await existing.unsubscribe()
-            const sub = await reg.pushManager.subscribe({ 
+            const sub = existing ?? await reg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
             })
-        const json = sub.toJSON() as { 
-            endpoint: string
-            keys: { p256dh: string; auth: string}
-        }
-        await pushNotificationsApi.subscribe({
-            userId: user.id, 
-            endpoint: json.endpoint, 
-            p256dh: json.keys.p256dh, 
-            auth: json.keys.auth,
-        })
-        setIsSubscribed(true)
+            const json = sub.toJSON() as {
+                endpoint: string
+                keys: { p256dh: string; auth: string }
+            }
+            await pushNotificationsApi.subscribe({
+                userId: user.id,
+                endpoint: json.endpoint,
+                p256dh: json.keys.p256dh,
+                auth: json.keys.auth,
+            })
+            setIsSubscribed(true)
         } catch (err) {
             console.error('Error al suscribirse a notificaciones', err)
         } finally {
@@ -70,11 +75,11 @@ export function usePushNotifications() {
     }, [user, isSupported])
 
     const unsubscribe = useCallback(async () => {
-        if(!isSupported) return
+        if (!isSupported) return
         setIsLoading(true)
         try {
             const reg = await navigator.serviceWorker.ready
-            const sub = await reg.pushManager.getSubscription() 
+            const sub = await reg.pushManager.getSubscription()
             if (sub) {
                 await pushNotificationsApi.unsubscribe(sub.endpoint)
                 await sub.unsubscribe()
@@ -93,6 +98,6 @@ export function usePushNotifications() {
         isSupported,
         subscribe,
         unsubscribe,
-    
-            }
+
+    }
 }

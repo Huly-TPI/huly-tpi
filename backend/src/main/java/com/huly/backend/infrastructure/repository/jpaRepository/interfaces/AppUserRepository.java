@@ -1,6 +1,5 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.interfaces;
 
-
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 import java.time.Instant;
+import java.util.UUID;
 
 public interface AppUserRepository extends JpaRepository<AppUserEntity, Long> {
 
@@ -31,8 +31,14 @@ public interface AppUserRepository extends JpaRepository<AppUserEntity, Long> {
     @Query("UPDATE AppUserEntity u SET u.lastLoginAt = :now WHERE u.id = :userId")
     void updateLastLogin(@Param("userId") Long userId, @Param("now") Instant now);
 
-    @Query("SELECT u FROM AppUserEntity u WHERE u.lastLoginAt IS NOT NULL AND u.lastLoginAt < :since")
+    @Query("SELECT u FROM AppUserEntity u WHERE u.lastLoginAt IS NOT NULL AND u.lastLoginAt < :since AND u.reengagementEmailsEnabled = true")
     List<AppUserEntity> findByLastLoginAtBefore(@Param("since") Instant since);
+
+    Optional<AppUserEntity> findByUnsubscribeToken(UUID unsubscribeToken);
+
+    @Modifying
+    @Query("UPDATE AppUserEntity u SET u.reengagementEmailsEnabled = false WHERE u.id = :userId")
+    void disableReengagementEmails(@Param("userId") Long userId);
 
     @Modifying
     @Query("UPDATE AppUserEntity u SET u.coins = u.coins - :amount WHERE u.id = :userId AND u.coins >= :amount")

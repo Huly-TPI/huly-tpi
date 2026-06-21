@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.email;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 public class EmailPortJavaMailImpl implements EmailPort {
 
   private final JavaMailSender mailSender;
+
+  @Value("${backend.url:http://localhost:8080}")
+  private String backendUrl;
 
   @Override
   public void sendWelcomeLead(String to, String nickname) {
@@ -153,14 +157,15 @@ public class EmailPortJavaMailImpl implements EmailPort {
   }
 
   @Override
-  public void sendReEngagement(String to) {
+  public void sendReEngagement(String to, String unsubscribeToken) {
     try {
       MimeMessage message = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
       helper.setTo(to);
       helper.setFrom("hulycomunicaciones@gmail.com", "Huly");
       helper.setSubject("¡Te extrañamos en Huly!");
-      helper.setText(EMAIL_BODY, true);
+      String unsubscribeUrl = backendUrl + "/api/notifications/unsubscribe?token=" + unsubscribeToken;
+      helper.setText(EMAIL_BODY.replace("{{UNSUBSCRIBE_URL}}", unsubscribeUrl), true);
       helper.addInline("logo", new ClassPathResource("email/logo.png"));
       mailSender.send(message);
       log.info("[MAIL] Email de re-engagement enviado → to={}", to);
@@ -216,7 +221,11 @@ public class EmailPortJavaMailImpl implements EmailPort {
                   </tr>
                   <tr>
                     <td style="padding:20px 48px 36px;border-top:1px solid #E9F1EA;">
-                      <p style="font-size:13px;color:#6B6B6B;margin:0;">Con cariño, el equipo de Huly 🌿</p>
+                     <p style="font-size:13px;color:#6B6B6B;margin:0;">Con cariño, el equipo de Huly 🌿</p>
+                      <p style="font-size:12px;color:#9090b0;margin:12px 0 0;">
+                        Si no querés recibir más estos recordatorios,
+                        <a href="{{UNSUBSCRIBE_URL}}" style="color:#8869AC;">date de baja acá</a>.
+                      </p>
                     </td>
                   </tr>
                 </table>
