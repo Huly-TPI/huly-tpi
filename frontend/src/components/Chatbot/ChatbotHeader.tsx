@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { EllipsisVerticalIcon } from '@heroicons/react/24/outline'
-import { TrashIcon } from '@heroicons/react/24/solid'
+import { MoreVertical, Trash2 } from 'lucide-react'
 import Button from '../Buttons/Button/Button'
 import hulyChatbotImage from '../../assets/chatbot/huly-chatbot.webp'
 
@@ -53,7 +52,7 @@ export default function ChatbotHeader({ onClose, onReset }: ChatbotHeaderProps) 
             onClick={() => setIsMenuOpen(open => !open)}
             className="flex h-10 w-10 items-center justify-center rounded-full text-violeta transition-[background-color,color,opacity,box-shadow] duration-300 ease-in-out hover:bg-violeta/10 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[#8869ac59]"
           >
-            <EllipsisVerticalIcon className="h-5 w-5" />
+            <MoreVertical className="h-5 w-5" strokeWidth={2} />
           </button>
 
           {isMenuOpen && (
@@ -71,7 +70,7 @@ export default function ChatbotHeader({ onClose, onReset }: ChatbotHeaderProps) 
                 }}
                 className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[var(--text-primary)] transition hover:bg-violeta/10"
               >
-                <TrashIcon className="h-4 w-4 shrink-0 text-violeta" />
+                <Trash2 className="h-4 w-4 shrink-0 text-violeta" strokeWidth={2} />
                 Limpiar chat
               </button>
             </div>

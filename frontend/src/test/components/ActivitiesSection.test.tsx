@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { Sparkles, Wind } from 'lucide-react'
 
 vi.mock('../../hooks/backoffice/useActivities', () => ({
   useActivities: vi.fn(),
@@ -16,7 +17,6 @@ describe('ActivitiesSection', () => {
 
     render(<ActivitiesSection />)
 
-    // Skeleton renders 4 placeholder items with animate-pulse divs
     const skeletons = document.querySelectorAll('.animate-pulse')
     expect(skeletons.length).toBeGreaterThanOrEqual(4)
   })
@@ -24,8 +24,8 @@ describe('ActivitiesSection', () => {
   it('renderiza las ActivityCards cuando los datos están cargados', () => {
     mockedUseActivities.mockReturnValue({
       activities: [
-        { emoji: '🫧', name: 'Reventar burbujas', pct: 75, barColor: 'bg-violeta', iconBg: 'bg-violet-100' },
-        { emoji: '🌬️', name: 'Respiraciones guiadas', pct: 50, barColor: 'bg-teal-400', iconBg: 'bg-teal-100' },
+        { Icon: Sparkles, name: 'Reventar burbujas', pct: 75, barColor: 'bg-violeta', iconBg: 'bg-violet-100', iconColor: 'text-violeta' },
+        { Icon: Wind, name: 'Respiraciones guiadas', pct: 50, barColor: 'bg-teal-400', iconBg: 'bg-teal-100', iconColor: 'text-teal-500' },
       ],
       loading: false,
     })

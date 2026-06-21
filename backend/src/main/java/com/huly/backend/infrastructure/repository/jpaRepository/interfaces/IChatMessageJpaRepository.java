@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface IChatMessageJpaRepository extends JpaRepository<ChatMessageEntity, Long> {
 
@@ -19,6 +20,20 @@ public interface IChatMessageJpaRepository extends JpaRepository<ChatMessageEnti
             String conversationId,
             Long userId,
             Pageable pageable
+    );
+
+    Optional<ChatMessageEntity> findFirstByChatSessionAppUserIdAndRoleAndSuggestedActionEmotionalEventIdOrderByCreatedAtDesc(
+            Long userId,
+            MessageRole role,
+            Long suggestedActionEmotionalEventId
+    );
+
+    Optional<ChatMessageEntity> findFirstByChatSessionConversationIdAndChatSessionAppUserIdAndRoleAndGeneratedChallengeTitleAndGeneratedChallengeDescriptionOrderByCreatedAtDesc(
+            String conversationId,
+            Long userId,
+            MessageRole role,
+            String generatedChallengeTitle,
+            String generatedChallengeDescription
     );
 
     long countByChatSessionAppUserIdAndRoleAndCreatedAtAfter(Long userId, MessageRole role, Instant since);

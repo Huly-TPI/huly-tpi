@@ -5,6 +5,7 @@ import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
@@ -21,6 +22,7 @@ public class UpdateEmotionalEventDecisionUseCase {
     private final EmotionalEventRepository emotionalEventRepository;
     private final ActivityRepository activityRepository;
     private final UserVectorMemoryService userVectorMemoryService;
+    private final ChatMessageRepository chatMessageRepository;
 
     public EmotionalEvent execute(Long eventId, UpdateRecommendationDecisionCommand command) {
         if (command.decision() == null) {
@@ -41,6 +43,13 @@ public class UpdateEmotionalEventDecisionUseCase {
                 .updatedAt(Instant.now())
                 .build();
         EmotionalEvent saved = emotionalEventRepository.save(updated);
+        if (saved != null && saved.getUserId() != null && saved.getId() != null && saved.getRecommendationDecision() != null) {
+            chatMessageRepository.updateSuggestedActionDecision(
+                    saved.getUserId(),
+                    saved.getId(),
+                    saved.getRecommendationDecision().name()
+            );
+        }
         if (saved != null && saved.getUserId() != null && saved.getRecommendationDecision() != null) {
             RecommendationDecision decision = saved.getRecommendationDecision();
             String decisionText = decision == RecommendationDecision.ACCEPTED ? "acepto"

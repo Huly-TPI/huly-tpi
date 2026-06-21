@@ -26,15 +26,15 @@ interface AuthContextValue {
   logout: () => Promise<void>
 }
 
-const SESSION_FLAG_KEY = 'huly:has-session'
+export const SESSION_FLAG_KEY = 'huly:has-session'
 
-const hasSessionFlag = (): boolean =>
+export const hasSessionFlag = (): boolean =>
   window.localStorage.getItem(SESSION_FLAG_KEY) === '1'
 
-const setSessionFlag = (): void =>
+export const setSessionFlag = (): void =>
   window.localStorage.setItem(SESSION_FLAG_KEY, '1')
 
-const clearSessionFlag = (): void =>
+export const clearSessionFlag = (): void =>
   window.localStorage.removeItem(SESSION_FLAG_KEY)
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)

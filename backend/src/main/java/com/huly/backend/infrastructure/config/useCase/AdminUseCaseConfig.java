@@ -6,7 +6,7 @@ import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.domain.repository.payment.ProductRepository;
-import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.repository.extension.AntiScrollGlobalConfigRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
@@ -69,14 +69,14 @@ public class AdminUseCaseConfig {
     public GetUserAiDiagnosticsUseCase getUserAiDiagnosticsUseCase(
             UserRepository userRepository,
             EmotionalEventRepository emotionalEventRepository,
-            VectorMemoryRepository vectorMemoryRepository,
+            VectorMemoryPort vectorMemoryPort,
             UserPersonalitySummaryRepository userPersonalitySummaryRepository,
             ChatConversationPreferenceRepository chatConversationPreferenceRepository
     ) {
         return new GetUserAiDiagnosticsUseCase(
                 userRepository,
                 emotionalEventRepository,
-                vectorMemoryRepository,
+                vectorMemoryPort,
                 userPersonalitySummaryRepository,
                 chatConversationPreferenceRepository
         );

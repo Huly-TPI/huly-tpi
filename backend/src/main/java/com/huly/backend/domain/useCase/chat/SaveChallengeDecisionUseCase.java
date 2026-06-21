@@ -2,6 +2,7 @@ package com.huly.backend.domain.useCase.chat;
 
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import lombok.RequiredArgsConstructor;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map;
 public class SaveChallengeDecisionUseCase {
 
     private final UserVectorMemoryService userVectorMemoryService;
+    private final ChatMessageRepository chatMessageRepository;
 
     public void execute(Long userId, String title, String decision, String description, String conversationId) {
         if (userId == null || title == null || title.isBlank() || decision == null || decision.isBlank()) {
@@ -17,6 +19,7 @@ public class SaveChallengeDecisionUseCase {
         }
 
         String normalizedDecision = decision.toUpperCase();
+        chatMessageRepository.updateChallengeDecision(conversationId, userId, title, description, normalizedDecision);
         String decText = "ACCEPTED".equals(normalizedDecision) ? "acepto" : "rechazo";
         String desc = description != null ? description : "";
         String content = "El usuario %s el reto: %s. Descripcion: %s."

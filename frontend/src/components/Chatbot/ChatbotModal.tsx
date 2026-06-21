@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import hulySideImage from '../../assets/chatbot/huly-side.webp'
 import { useChatbot } from '../../hooks/useChatbot'
 import BaseModal from '../Modal/BaseModal'
@@ -19,6 +20,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     isLoadingHistory,
     error,
     bottomRef,
+    messagesContainerRef,
+    isLoadingOlderHistory,
+    handleMessagesScroll,
     sendMessage,
     sendAudioMessage,
     deleteAudioMessage,
@@ -26,6 +30,21 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     decideSuggestedAction,
     resetConversation,
   } = useChatbot()
+  const wasLoadingHistoryRef = useRef(false)
+  const pendingInitialScrollRef = useRef(false)
+
+  useEffect(() => {
+    if (wasLoadingHistoryRef.current && !isLoadingHistory) {
+      pendingInitialScrollRef.current = true
+    }
+
+    if (isOpen && !isLoadingHistory && pendingInitialScrollRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+      pendingInitialScrollRef.current = false
+    }
+
+    wasLoadingHistoryRef.current = isLoadingHistory
+  }, [isOpen, isLoadingHistory, bottomRef])
 
   return (
     <BaseModal
@@ -52,6 +71,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         onSuggestedActionDecision={decideSuggestedAction}
         onDeleteAudioMessage={deleteAudioMessage}
         bottomRef={bottomRef}
+        containerRef={messagesContainerRef}
+        isLoadingOlderHistory={isLoadingOlderHistory}
+        onScroll={handleMessagesScroll}
       />
       <ChatbotComposer
         input={input}

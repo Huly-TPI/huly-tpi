@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.domain.repository.user.UserEmotionalStateRepository;
 import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationService;
@@ -40,8 +41,8 @@ public class EmotionalEventUseCaseConfig {
     }
 
     @Bean
-    public UpdateEmotionalEventDecisionUseCase updateEmotionalEventDecisionUseCase(EmotionalEventRepository emotionalEventRepository, ActivityRepository activityRepository, UserVectorMemoryService userVectorMemoryService) {
-        return new UpdateEmotionalEventDecisionUseCase(emotionalEventRepository, activityRepository, userVectorMemoryService);
+    public UpdateEmotionalEventDecisionUseCase updateEmotionalEventDecisionUseCase(EmotionalEventRepository emotionalEventRepository, ActivityRepository activityRepository, UserVectorMemoryService userVectorMemoryService, ChatMessageRepository chatMessageRepository) {
+        return new UpdateEmotionalEventDecisionUseCase(emotionalEventRepository, activityRepository, userVectorMemoryService, chatMessageRepository);
     }
 
     @Bean

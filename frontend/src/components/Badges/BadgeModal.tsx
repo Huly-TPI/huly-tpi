@@ -1,6 +1,6 @@
 import { useBadges } from '../../hooks/useBadges'
 import BadgeCard from './BadgeCard'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { X } from 'lucide-react'
 
 interface BadgeModalProps {
     isOpen: boolean
@@ -47,7 +47,7 @@ export default function BadgeModal({ isOpen, onClose }: BadgeModalProps) {
                                 aria-label="Cerrar"
                                 className="rounded-full p-1.5 transition hover:bg-white/20"
                             >
-                                <XMarkIcon className="h-5 w-5" />
+                                <X className="h-5 w-5" strokeWidth={2} />
                             </button>
                         </div>
                     </div>

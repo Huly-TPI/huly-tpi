@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { CalendarDaysIcon } from '@heroicons/react/24/outline'
+import { CalendarDays } from 'lucide-react'
 import { getInputClassName } from './authInputStyles'
 
 interface DateInputProps {
@@ -58,7 +58,7 @@ export default function DateInput({
         className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9c8b74] hover:text-[#6b5d4a] transition-colors"
         aria-label="Abrir calendario"
       >
-        <CalendarDaysIcon className="size-5" />
+        <CalendarDays className="size-5" strokeWidth={2} />
       </button>
     </div>
   )

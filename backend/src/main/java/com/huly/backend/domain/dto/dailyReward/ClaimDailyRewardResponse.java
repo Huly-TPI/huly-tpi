@@ -1,4 +1,4 @@
-package com.huly.backend.domain.model.dailyReward;
+package com.huly.backend.domain.dto.dailyReward;
 
 /**
  * Resultado de reclamar la recompensa diaria.
@@ -7,5 +7,5 @@ package com.huly.backend.domain.model.dailyReward;
  * @param dayNumber  día del ciclo que se reclamó (1..N).
  * @param newStreak  nueva racha del usuario tras el reclamo (== dayNumber).
  */
-public record DailyRewardClaim(int coins, int dayNumber, int newStreak) {
+public record ClaimDailyRewardResponse(int coins, int dayNumber, int newStreak) {
 }

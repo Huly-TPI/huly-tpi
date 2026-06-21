@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
-import { MicrophoneIcon, StopIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
+import { Mic, SendHorizontal, Square, Trash2 } from 'lucide-react'
 import AudioMessagePlayer from './AudioMessagePlayer'
 
 type RecorderState = 'idle' | 'recording' | 'recorded'
@@ -96,7 +95,7 @@ export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange 
         aria-label="Grabar audio"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color,opacity,box-shadow] duration-300 ease-in-out hover:bg-violeta/10 hover:text-violeta focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[#8869ac59] disabled:opacity-50"
       >
-        <MicrophoneIcon className="h-5 w-5" />
+        <Mic className="h-5 w-5" strokeWidth={2} />
       </button>
     )
   }
@@ -114,7 +113,7 @@ export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange 
           aria-label="Detener grabación"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-red-500 transition-[background-color,color,opacity,box-shadow] duration-300 ease-in-out hover:bg-red-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[rgba(239,68,68,0.2)]"
         >
-          <StopIcon className="h-5 w-5" />
+          <Square className="h-5 w-5" strokeWidth={2} />
         </button>
       </div>
     )
@@ -131,7 +130,7 @@ export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange 
         aria-label="Eliminar grabación"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color,opacity,box-shadow] duration-300 ease-in-out hover:bg-red-50 hover:text-red-500 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[rgba(239,68,68,0.2)]"
       >
-        <TrashIcon className="h-5 w-5" />
+        <Trash2 className="h-5 w-5" strokeWidth={2} />
       </button>
       <button
         type="button"
@@ -140,7 +139,7 @@ export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange 
         aria-label="Enviar audio"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violeta text-white transition-[background-color,color,opacity,box-shadow] duration-300 ease-in-out hover:shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.12)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[#8869ac59] disabled:opacity-50"
       >
-        <PaperAirplaneIcon className="h-4 w-4 -rotate-45" />
+        <SendHorizontal className="h-4 w-4" strokeWidth={2} />
       </button>
     </div>
   )
