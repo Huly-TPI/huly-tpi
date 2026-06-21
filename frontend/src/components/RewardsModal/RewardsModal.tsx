@@ -4,6 +4,7 @@ import modalBg from '../../assets/rewards/modal_papel_transparente.png'
 import cardBg from '../../assets/rewards/cardSeed.png'
 import giftIcon from '../../assets/rewards/regalo.png'
 import brote from '../../assets/rewards/brote.png'
+import seedIcon from '../../assets/rewards/semilla.png'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 
 interface RewardsModalProps {
@@ -131,7 +132,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
                   src={brote}
                   alt=""
                   aria-hidden="true"
-                  className="w-6 h-6 sm:w-7 sm:h-7 max-[640px]:w-5 max-[640px]:h-5 object-contain pointer-events-none select-none shrink-0"
+                  className="w-8 h-8 sm:w-7 sm:h-7 max-[640px]:w-5 max-[640px]:h-5 object-contain pointer-events-none select-none shrink-0"
                   draggable={false}
                 />
 
@@ -249,23 +250,23 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           role="status"
           aria-live="polite"
           className="
-      fixed bottom-24 right-5 max-[640px]:right-4 max-[640px]:left-4
-      z-[60]
-      flex items-center justify-between gap-3
-      rounded-2xl
-      bg-[#f3d8aa]/95
-      border border-[#b98a54]
-      px-4 py-3
-      shadow-[0_6px_12px_rgba(91,60,24,0.25),inset_0_1px_0_rgba(255,255,255,0.45)]
-      text-[#6b4a2a]
-    "
+          fixed bottom-24 right-5 max-[640px]:right-4 max-[640px]:left-4
+          z-[60]
+          flex items-center justify-between gap-3
+          rounded-2xl
+          bg-[#f3d8aa]/95
+          border border-[#b98a54]
+          px-4 py-3
+          shadow-[0_6px_12px_rgba(91,60,24,0.25),inset_0_1px_0_rgba(255,255,255,0.45)]
+          text-[#6b4a2a]
+        "
         >
           <div className="flex items-center gap-2">
             <img
-              src={brote}
+              src={seedIcon}
               alt=""
               aria-hidden="true"
-              className="w-8 h-8 object-contain shrink-0"
+              className="w-10 h-10 object-contain shrink-0"
             />
 
             <div>
