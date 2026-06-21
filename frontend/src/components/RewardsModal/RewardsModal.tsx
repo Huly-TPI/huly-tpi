@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon, LockClosedIcon, CheckIcon } from '@heroicons/react/24/solid'
-import modalBg from '../../assets/rewards/modal_papel_transparente.png'
-import cardBg from '../../assets/rewards/cardSeed.png'
-import giftIcon from '../../assets/rewards/regalo.png'
-import brote from '../../assets/rewards/brote.png'
-import seedIcon from '../../assets/rewards/semilla.png'
+import modalBg from '../../assets/rewards/modal.webp'
+import cardBg from '../../assets/rewards/cardSeed.webp'
+import giftIcon from '../../assets/rewards/gift.webp'
+import brote from '../../assets/rewards/brote.webp'
+import seedIcon from '../../assets/rewards/seed.webp'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 
 interface RewardsModalProps {
