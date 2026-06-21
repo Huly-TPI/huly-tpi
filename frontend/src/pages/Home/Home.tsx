@@ -16,7 +16,9 @@ import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-plant.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
+import NotificationsPrompt from '../../components/Notifications/NotificationsPrompt/NotificationsPrompt'
 import StoreModal from '../../components/Shop/StoreModal'
+import ComebackRewardModal from '../../components/Shop/ComebackRewardModal'
 import { ShoppingBag } from 'lucide-react'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
@@ -153,6 +155,8 @@ export default function Home() {
     shouldRenderOnboarding,
     startOnboarding,
     advanceOnboarding,
+    showNotificationsPrompt,
+    closeNotificationsPrompt,
   } = useHomeOnboarding(homeOnboardingSteps.length)
 
   useEffect(() => {
@@ -256,6 +260,9 @@ export default function Home() {
             onAdvance={advanceOnboarding}
           />
         ) : null}
+         {showNotificationsPrompt && (
+          <NotificationsPrompt onClose={closeNotificationsPrompt} />
+        )}
       </section>
 
       {user?.onboardingTutorialCompleted && (
@@ -270,6 +277,8 @@ export default function Home() {
       )}
 
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
+
+      {user?.onboardingTutorialCompleted && <ComebackRewardModal />}
     </main>
   )
 }
