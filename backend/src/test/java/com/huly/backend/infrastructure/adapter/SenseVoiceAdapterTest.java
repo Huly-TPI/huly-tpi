@@ -36,16 +36,22 @@ class SenseVoiceAdapterTest {
 
     @Test
     void transcribe_shouldReturnFullResult_whenServiceRespondsSuccessfully() {
-        String responseJson = """
+        String transcribeJson = """
                 {
                   "transcripcion": "hola mundo",
-                  "idioma_detectado": "es",
+                  "idioma_detectado": "es"
+                }""";
+        String analyzeJson = """
+                {
                   "emocion_dominante": "happy",
                   "vad": { "arousal": 0.6, "dominance": 0.5, "valence": 0.7 }
                 }""";
+        mockServer.expect(requestTo(BASE_URL + "/transcribe"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(transcribeJson, MediaType.APPLICATION_JSON));
         mockServer.expect(requestTo(BASE_URL + "/analyze"))
                 .andExpect(method(HttpMethod.POST))
-                .andRespond(withSuccess(responseJson, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(analyzeJson, MediaType.APPLICATION_JSON));
 
         AudioTranscriptionResult result = adapter.transcribe("audio".getBytes(), "recording.wav");
 
@@ -58,15 +64,20 @@ class SenseVoiceAdapterTest {
 
     @Test
     void transcribe_shouldParseVadValues_fromResponse() {
-        String responseJson = """
+        String transcribeJson = """
                 {
                   "transcripcion": "texto",
-                  "idioma_detectado": "es",
+                  "idioma_detectado": "es"
+                }""";
+        String analyzeJson = """
+                {
                   "emocion_dominante": "sad",
                   "vad": { "arousal": 0.2, "dominance": 0.4, "valence": 0.3 }
                 }""";
+        mockServer.expect(requestTo(BASE_URL + "/transcribe"))
+                .andRespond(withSuccess(transcribeJson, MediaType.APPLICATION_JSON));
         mockServer.expect(requestTo(BASE_URL + "/analyze"))
-                .andRespond(withSuccess(responseJson, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(analyzeJson, MediaType.APPLICATION_JSON));
 
         AudioTranscriptionResult result = adapter.transcribe("audio".getBytes(), "audio.wav");
 
@@ -78,6 +89,8 @@ class SenseVoiceAdapterTest {
 
     @Test
     void transcribe_shouldReturnNeutralDefaults_whenResponseBodyIsNull() {
+        mockServer.expect(requestTo(BASE_URL + "/transcribe"))
+                .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
         mockServer.expect(requestTo(BASE_URL + "/analyze"))
                 .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
 
@@ -91,7 +104,7 @@ class SenseVoiceAdapterTest {
 
     @Test
     void transcribe_shouldThrowRuntimeException_whenServiceUnavailable() {
-        mockServer.expect(requestTo(BASE_URL + "/analyze"))
+        mockServer.expect(requestTo(BASE_URL + "/transcribe"))
                 .andRespond(withServerError());
 
         assertThatThrownBy(() -> adapter.transcribe("audio".getBytes(), "audio.wav"))
