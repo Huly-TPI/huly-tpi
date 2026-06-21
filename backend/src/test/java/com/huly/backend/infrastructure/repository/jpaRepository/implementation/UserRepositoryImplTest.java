@@ -374,12 +374,13 @@ class UserRepositoryImplTest {
 
     }
 
-      @Test
+    @Test
     void findByUnsubscribeToken_shouldReturnMappedDomain_whenTokenExists() {
         java.util.UUID token = java.util.UUID.randomUUID();
         AppUserEntity entity = AppUserEntity.builder()
                 .id(3L).email("user@huly.com")
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
+                .unsubscribeToken(token)
                 .build();
         when(jpaRepository.findByUnsubscribeToken(token)).thenReturn(Optional.of(entity));
 
@@ -387,6 +388,7 @@ class UserRepositoryImplTest {
 
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo(3L);
+        assertThat(result.get().getUnsubscribeToken()).isEqualTo(token.toString());
     }
 
     @Test
@@ -402,6 +404,5 @@ class UserRepositoryImplTest {
         userRepository.disableReengagementEmails(5L);
         verify(jpaRepository).disableReengagementEmails(5L);
     }
-
 
 }
