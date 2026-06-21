@@ -1,5 +1,5 @@
 import { BadgeResponse } from '../../api/badges'
-import { LockClosedIcon } from '@heroicons/react/24/solid'
+import { Lock } from 'lucide-react'
 
 interface BadgeCardProps {
     badge: BadgeResponse
@@ -25,7 +25,7 @@ export default function BadgeCard({ badge, unlocked }: BadgeCardProps) {
                 />
                 {!unlocked && (
                     <div data-testid="lock-icon" className="absolute bottom-1.5 right-1.5">
-                        <LockClosedIcon className="h-3.5 w-3.5 text-[#8869AC]" />
+                        <Lock className="h-3.5 w-3.5 text-[#8869AC]" strokeWidth={2} />
                     </div>
                 )}
             </div>

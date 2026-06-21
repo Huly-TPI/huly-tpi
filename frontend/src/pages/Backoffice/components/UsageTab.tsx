@@ -1,5 +1,5 @@
 import { ActivityType, ACTIVITY_METADATA } from '../../../types/ai'
-import { TrendingUp, Calendar } from 'lucide-react'
+import { Activity, Calendar } from 'lucide-react'
 import { UserActivitiesResponse } from '../../../api/admin'
 import { Timeframe } from '../../../types/timeframe'
 
@@ -94,7 +94,7 @@ export function UsageTab({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 pb-1">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-              <TrendingUp className="h-5 w-5" strokeWidth={1.8} />
+              <Activity className="h-5 w-5" strokeWidth={2} />
             </div>
             <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Distribución de Uso de Funcionalidades</h2>
           </div>
@@ -140,7 +140,7 @@ export function UsageTab({
       <div className="bg-gray-55/50 dark:bg-[#09111f]/40 border border-gray-100 dark:border-gray-800/40 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-            <Calendar className="h-5 w-5" strokeWidth={1.8} />
+            <Calendar className="h-5 w-5" strokeWidth={2} />
           </div>
           <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Historial de uso reciente</h2>
         </div>

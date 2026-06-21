@@ -1,4 +1,4 @@
-# ── Huly Voice Microservice v4.0 ─────────────────────────────────────────────
+# ── Huly Voice Microservice v7.0 ─────────────────────────────────────────────
 # CPU-only. Para GPU: cambiar a pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
 FROM python:3.11-slim
 

@@ -3,7 +3,7 @@ import { useUsers } from '../../hooks/backoffice/useUsers'
 import { UserResponse } from '../../api/admin'
 import { SectionCard } from '../../components/backoffice/SectionCard'
 import { Table, Column } from '../../components/backoffice/Table'
-import { Search, Eye, Check, X } from 'lucide-react'
+import { Search, Eye, Check, X, CircleDollarSign } from 'lucide-react'
 import { mapEmotionToSpanish } from '../../types/ai'
 
 export default function UsersPage() {
@@ -63,7 +63,8 @@ export default function UsersPage() {
       header: 'Monedas',
       className: 'text-center',
       render: (u) => (
-        <span className="font-bold text-sm text-amber-500 dark:text-amber-400">
+        <span className="inline-flex items-center gap-1 font-bold text-sm text-amber-500 dark:text-amber-400">
+          <CircleDollarSign className="h-4 w-4" strokeWidth={2} />
           {u.coins ?? 0}
         </span>
       ),
@@ -92,7 +93,7 @@ export default function UsersPage() {
           className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-550 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
           aria-label={`Ver detalles de ${u.name}`}
         >
-          <Eye className="h-5 w-5" strokeWidth={1.8} />
+          <Eye className="h-5 w-5" strokeWidth={2} />
         </button>
       ),
     },
@@ -124,7 +125,7 @@ export default function UsersPage() {
                 className="absolute right-3 top-2.5 text-gray-400 dark:text-gray-550 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
                 aria-label="Buscar"
               >
-                <Search className="h-4 w-4" strokeWidth={1.8} />
+                <Search className="h-4 w-4" strokeWidth={2} />
               </button>
             </form>
           </div>

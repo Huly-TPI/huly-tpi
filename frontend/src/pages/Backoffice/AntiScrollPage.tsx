@@ -57,7 +57,7 @@ export default function AntiScrollPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-                  <RefreshCw className="h-5 w-5" strokeWidth={1.8} />
+                  <RefreshCw className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Tasa de retorno al jardín</h2>
               </div>
@@ -116,7 +116,7 @@ export default function AntiScrollPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-menta/30 dark:bg-emerald-955/20 text-bosque dark:text-menta">
-                  <Monitor className="h-5 w-5" strokeWidth={1.8} />
+                  <Monitor className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Usuarios en la extensión</h2>
               </div>
@@ -128,7 +128,7 @@ export default function AntiScrollPage() {
             <div className="flex flex-col gap-3 py-1">
               <div className="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-gray-800 p-3 bg-gray-50/20 dark:bg-[#09111f]/20">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-950/30 text-green-600 dark:text-green-400 shadow-sm">
-                  <Monitor className="h-5 w-5" strokeWidth={1.8} />
+                  <Monitor className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
                   <span className="block text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Extensión activa ahora</span>
@@ -140,7 +140,7 @@ export default function AntiScrollPage() {
 
               <div className="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-gray-800 p-3 bg-gray-50/20 dark:bg-[#09111f]/20">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 shadow-sm">
-                  <Database className="h-5 w-5" strokeWidth={1.8} />
+                  <Database className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
                   <span className="block text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Comparten datos de navegación</span>
@@ -169,7 +169,7 @@ export default function AntiScrollPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-                  <Settings className="h-5 w-5" strokeWidth={1.8} />
+                  <Settings className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Configuración de la extensión</h2>
               </div>
@@ -248,7 +248,7 @@ export default function AntiScrollPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro">
-                  <Link2 className="h-5 w-5" strokeWidth={1.8} />
+                  <Link2 className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Páginas más consumidas</h2>
               </div>

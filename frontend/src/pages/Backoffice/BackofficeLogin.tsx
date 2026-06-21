@@ -73,7 +73,7 @@ export default function BackofficeLogin() {
 
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D1CAEF] dark:bg-[#2A233C]">
-            <Leaf className="h-8 w-8 text-violeta dark:text-violeta-claro fill-violeta dark:fill-violeta-claro" strokeWidth={1.8} />
+            <Leaf className="h-8 w-8 text-violeta dark:text-violeta-claro" strokeWidth={2} />
           </div>
           <img src={colorLogo} alt="Huly" className="h-8 object-contain" />
           <p className="text-xs font-bold uppercase tracking-widest text-[#A0AEC0] dark:text-gray-500">

@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.vector.DeleteVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
+import com.huly.backend.domain.model.vector.VectorMemoryEntry;
 import com.huly.backend.domain.port.VectorMemoryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,6 +27,18 @@ public class NoOpVectorMemoryPort implements VectorMemoryPort {
     public List<VectorMemory> findRelevantMemories(SearchVectorMemoryQuery query) {
         log.debug("Memoria vectorial desactivada. No se buscan memorias para userId={}",
                 query != null ? query.userId() : null);
+        return List.of();
+    }
+
+    @Override
+    public List<String> findMemoryContentsByUserIdExcludingSummary(Long userId) {
+        log.debug("Memoria vectorial desactivada. No se consultan contenidos para userId={}", userId);
+        return List.of();
+    }
+
+    @Override
+    public List<VectorMemoryEntry> findMemoriesByUserIdExcludingSummary(Long userId) {
+        log.debug("Memoria vectorial desactivada. No se consultan memorias para diagnostico userId={}", userId);
         return List.of();
     }
 
