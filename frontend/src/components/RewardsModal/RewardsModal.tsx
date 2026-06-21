@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { XMarkIcon, LockClosedIcon, CheckIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/rewards/modal.webp'
 import cardBg from '../../assets/rewards/cardSeed.webp'
@@ -9,7 +9,6 @@ import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 import type { DailyRewardDay } from '../../api/dailyRewards'
 
 
-const TOAST_DURATION_MS = 3500
 const MAX_STREAK_DAYS = 7
 
 const DEFAULT_REWARDS: DailyRewardDay[] = [
@@ -43,7 +42,12 @@ interface ClaimToastProps {
   onDismiss: () => void
 }
 
-function getCardStatus(dayNumber: number, completedDays: number, claimableDay: number | undefined, canClaim: boolean): CardStatus {
+function getCardStatus(
+  dayNumber: number,
+  completedDays: number,
+  claimableDay: number | undefined,
+  canClaim: boolean,
+): CardStatus {
   if (dayNumber <= completedDays) return 'claimed'
   if (dayNumber === claimableDay && canClaim) return 'claimable'
   return 'locked'
@@ -113,11 +117,6 @@ function RewardCard({ day, cardStatus, isToday, claiming, onClaim }: RewardCardP
 }
 
 function ClaimToast({ coins, onDismiss }: ClaimToastProps) {
-  useEffect(() => {
-    const id = setTimeout(onDismiss, TOAST_DURATION_MS)
-    return () => clearTimeout(id)
-  }, [onDismiss])
-
   return (
     <div
       role="status"
@@ -155,34 +154,34 @@ function ClaimToast({ coins, onDismiss }: ClaimToastProps) {
 
 /* ─── Main Component ─── */
 
+const TOAST_DURATION_MS = 3500
+
 export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModalProps) {
   const { status, loading, claiming, error, claim } = useDailyRewards()
   const [toastCoins, setToastCoins] = useState<number | null>(null)
 
   const dismissToast = useCallback(() => setToastCoins(null), [])
 
-  if (!isOpen) return null
-
-  const handleClaim = async () => {
+  const handleClaim = useCallback(async () => {
     const result = await claim()
     if (result) {
       setToastCoins(result.coins)
+      setTimeout(dismissToast, TOAST_DURATION_MS)
       onClaimed?.()
     }
-  }
+  }, [claim, onClaimed, dismissToast])
+
+  if (!isOpen) return null
 
   const completedDays = status?.completedDays ?? 0
   const canClaimToday = Boolean(status?.canClaimToday)
   const rewards = status?.days?.length ? status.days : DEFAULT_REWARDS
 
   const currentDay = canClaimToday
-    ? status?.nextDay ?? 1
+    ? (status?.nextDay ?? 1)
     : Math.min(completedDays + 1, MAX_STREAK_DAYS)
 
-  const nextRewardCoins = findCoinsForDay(
-    rewards,
-    canClaimToday ? currentDay : Math.min(completedDays + 1, MAX_STREAK_DAYS),
-  )
+  const nextRewardCoins = findCoinsForDay(rewards, currentDay)
 
   return (
     <div
@@ -277,22 +276,18 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
 
           {!loading && status && (
             <div className="mt-2 sm:mt-3 max-[640px]:mt-3 mx-auto w-fit rounded-2xl px-5 max-[640px]:px-2 py-2 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <div>
-                  <p className="text-[14px] max-[640px]:text-[12px] font-black text-[#6b4a2a] leading-none">
-                    Te esperan{' '}
-                    <span className="text-[#4d8a2d]">
-                      {nextRewardCoins} semillas
-                    </span>{' '}
-                    {canClaimToday ? 'hoy' : 'mañana'}
-                  </p>
-                  <p className="text-[11px] max-[640px]:text-[9px] text-[#7b5c3c] font-bold mt-1">
-                    {canClaimToday
-                      ? '¡Recolectalas para hacer crecer tu jardín!'
-                      : '¡Volvé cada día para hacer crecer tu jardín!'}
-                  </p>
-                </div>
-              </div>
+              <p className="text-[14px] max-[640px]:text-[12px] font-black text-[#6b4a2a] leading-none">
+                Te esperan{' '}
+                <span className="text-[#4d8a2d]">
+                  {nextRewardCoins} semillas
+                </span>{' '}
+                {canClaimToday ? 'hoy' : 'mañana'}
+              </p>
+              <p className="text-[11px] max-[640px]:text-[9px] text-[#7b5c3c] font-bold mt-1">
+                {canClaimToday
+                  ? '¡Recolectalas para hacer crecer tu jardín!'
+                  : '¡Volvé cada día para hacer crecer tu jardín!'}
+              </p>
             </div>
           )}
 
