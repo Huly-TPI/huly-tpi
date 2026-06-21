@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { XMarkIcon, LockClosedIcon, CheckIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/rewards/modal_papel_transparente.png'
 import cardBg from '../../assets/rewards/cardSeed.png'
-import semillaImg from '../../assets/rewards/semilla.png'
+import giftIcon from '../../assets/rewards/regalo.png'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 
 interface RewardsModalProps {
@@ -74,8 +74,9 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           className="w-full h-auto select-none pointer-events-none block"
           draggable={false}
         />
+        
 
-        <div className="absolute inset-0 px-[8%] pt-[19%] pb-[7%]">
+        <div className="absolute inset-0 px-[8%] pt-[20%] pb-[7%]">
           <button
             onClick={onClose}
             aria-label="Cerrar recompensas"
@@ -85,6 +86,25 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           </button>
 
           <div className="text-center">
+           <img
+    src={giftIcon}
+    alt=""
+    aria-hidden="true"
+    className="
+      absolute
+      top-[7.5%]
+      left-1/2
+      -translate-x-1/2
+      w-18
+      h-18
+      sm:w-20
+      sm:h-20
+      object-contain
+      pointer-events-none
+      select-none
+      z-10
+    "
+  />
             <h2 className="text-[22px] sm:text-[27px] font-black text-[#9b5718] leading-none">
               ¡Cosecha diaria!
             </h2>
@@ -137,7 +157,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
                     />
 
                     <div className="absolute inset-0">
-                      <span className="absolute top-[9%] left-0 right-0 text-center text-[9px] sm:text-[12px] font-black whitespace-nowrap leading-none text-[#5b3b1b]">
+                      <span className="absolute top-[9%] left-0 right-0 text-center text-[9px] sm:text-[12px] font-black whitespace-nowrap leading-none text-[#fff]">
                         Día {day.dayNumber}
                       </span>
 
@@ -160,7 +180,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
                         <button
                           onClick={handleClaim}
                           disabled={claiming}
-                          className="absolute bottom-[6%] left-1/2 -translate-x-1/2 rounded-full bg-[#6f9f38] px-2.5 py-0.5 text-[8px] sm:text-[9px] font-black text-white shadow-md active:scale-95 disabled:opacity-60 whitespace-nowrap"
+                          className="absolute bottom-[14%] left-1/2 -translate-x-1/2 rounded-full bg-[#6f9f38] px-2.5 py-0.5 text-[8px] sm:text-[9px] font-black text-white shadow-md active:scale-95 disabled:opacity-60 whitespace-nowrap"
                         >
                           {claiming ? '...' : 'Recolectar'}
                         </button>
