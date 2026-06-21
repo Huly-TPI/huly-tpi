@@ -77,7 +77,7 @@ describe('BubblesActivity component', () => {
 
     await user.click(screen.getByRole('button', { name: /comenzar/i }))
     await user.click(screen.getByRole('button', { name: /volver/i }))
-    expect(screen.getByRole('heading', { name: 'Vista Minijuegos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Vista Minijuegos' })).toBeInTheDocument()
   })
 
   it('llama a startSession al hacer click en "Comenzar"', async () => {
