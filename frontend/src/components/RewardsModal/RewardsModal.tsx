@@ -3,6 +3,7 @@ import { XMarkIcon, LockClosedIcon, CheckIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/rewards/modal_papel_transparente.png'
 import cardBg from '../../assets/rewards/cardSeed.png'
 import giftIcon from '../../assets/rewards/regalo.png'
+import brote from '../../assets/rewards/brote.png'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 
 interface RewardsModalProps {
@@ -55,6 +56,13 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
   const claimableCoins =
     status?.days.find(day => day.dayNumber === status.nextDay)?.coins ?? 0
 
+  const nextRewardDay = status?.canClaimToday
+    ? status.nextDay
+    : Math.min(completed + 1, 7)
+
+  const nextRewardCoins =
+    rewards.find(day => day.dayNumber === nextRewardDay)?.coins ?? 0
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
@@ -74,7 +82,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           className="w-full h-auto select-none pointer-events-none block"
           draggable={false}
         />
-        
+
 
         <div className="absolute inset-0 px-[8%] pt-[20%] pb-[7%]">
           <button
@@ -86,25 +94,25 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           </button>
 
           <div className="text-center">
-           <img
-    src={giftIcon}
-    alt=""
-    aria-hidden="true"
-    className="
-      absolute
-      top-[7.5%]
-      left-1/2
-      -translate-x-1/2
-      w-18
-      h-18
-      sm:w-20
-      sm:h-20
-      object-contain
-      pointer-events-none
-      select-none
-      z-10
-    "
-  />
+            <img
+              src={giftIcon}
+              alt=""
+              aria-hidden="true"
+              className="
+              absolute
+              top-[7.5%]
+              left-1/2
+              -translate-x-1/2
+              w-18
+              h-18
+              sm:w-20
+              sm:h-20
+              object-contain
+              pointer-events-none
+              select-none
+              z-10
+            "
+            />
             <h2 className="text-[22px] sm:text-[27px] font-black text-[#9b5718] leading-none">
               ¡Cosecha diaria!
             </h2>
@@ -113,11 +121,21 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
               Iniciá sesión todos los días y obtené más semillas
             </p>
 
-            <div className="mx-auto mt-3 w-fit rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
-              <span className="text-[11px] sm:text-[12px] font-black text-[#68451f]">
-                🔥 Racha actual:{' '}
-                <span className="text-[#4d8a2d]">{completed} días</span>
-              </span>
+            <div className="mx-auto mt-3 w-fit rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
+              <div className="flex items-center justify-center ">
+                <img
+                  src={brote}
+                  alt=""
+                  aria-hidden="true"
+                  className="w-6 h-6 sm:w-7 sm:h-7 object-contain pointer-events-none select-none shrink-0"
+                  draggable={false}
+                />
+
+                <span className="text-[11px] sm:text-[12px] font-black text-[#68451f] leading-none">
+                  Racha actual:{' '}
+                  <span className="text-[#4d8a2d]">{completed} días</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -193,12 +211,25 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           </div>
 
           {!loading && status && (
-            <div className="mt-4 sm:mt-5 mx-auto w-fit rounded-2xl bg-[#f3d8aa]/80 border border-[#c49a60] px-5 py-2 text-center shadow-sm">
-              <p className="text-[11px] sm:text-[12px] text-[#6b4a2a] font-bold">
-                {status.canClaimToday
-                  ? `Recolectá ${claimableCoins} semillas hoy`
-                  : 'Volvé mañana para seguir cultivando tu jardín'}
-              </p>
+            <div className="mt-2 sm:mt-3 mx-auto w-fit rounded-2xl  px-5 py-2 text-center">
+              <div className="flex items-center justify-center gap-2">
+
+                <div>
+                  <p className="text-[14px] font-black text-[#6b4a2a] leading-none">
+                    Te esperan{' '}
+                    <span className="text-[#4d8a2d]">
+                      {status.canClaimToday ? claimableCoins : nextRewardCoins} semillas
+                    </span>{' '}
+                    {status.canClaimToday ? 'hoy' : 'mañana'}
+                  </p>
+
+                  <p className="text-[11px] text-[#7b5c3c] font-bold mt-1">
+                    {status.canClaimToday
+                      ? '¡Recolectalas para hacer crecer tu jardín!'
+                      : '¡Volvé cada día para hacer crecer tu jardín!'}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -216,8 +247,6 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
           aria-live="polite"
           className="fixed bottom-24 right-5 z-[60] flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#4C7C64] to-[#6aaa8a] px-5 py-4 shadow-xl text-white"
         >
-          <span className="text-2xl">🌱</span>
-
           <div>
             <p className="text-sm opacity-90 m-0">¡Recompensa reclamada!</p>
             <p className="font-bold text-lg m-0">+{toastCoins} semillas</p>
