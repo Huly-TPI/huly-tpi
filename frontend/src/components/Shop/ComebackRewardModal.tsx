@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { CircleDollarSign, Gift, X } from 'lucide-react'
 import { useComebackReward } from '../../hooks/shop/useComebackReward'
-import type { ClaimComebackRewardResult } from '../../api/comebackRewards'
+import { RewardToast } from './RewardToast'
+import modalCard from '../../assets/return-modal/modal_transparente_estilo_cozy.webp'
+import claimButton from '../../assets/return-modal/boton_reclamar_cozy.webp'
 
 interface ComebackRewardModalProps {
   /** Se llama tras reclamar con éxito, por si el contenedor necesita refrescar el saldo. */
@@ -10,25 +11,24 @@ interface ComebackRewardModalProps {
 
 /**
  * Modal de "bienvenida de vuelta": aparece en el home cuando el usuario estuvo inactivo el
- * tiempo suficiente y tiene una recompensa de monedas para reclamar.
+ * tiempo suficiente y tiene una recompensa para reclamar. Usa el arte de fieltro
+ * (card + botón) de assets/return-modal. Al canjear, cierra la oferta y muestra el toast dorado.
  */
 export default function ComebackRewardModal({ onClaimed }: ComebackRewardModalProps) {
   const { status, claiming, error, claim } = useComebackReward()
-  const [dismissed, setDismissed] = useState(false)
-  const [result, setResult] = useState<ClaimComebackRewardResult | null>(null)
+  const [closed, setClosed] = useState(false)
+  const [toastCoins, setToastCoins] = useState<number | null>(null)
 
-  const showSuccess = !dismissed && !!result?.granted
-  const showOffer = !dismissed && !result && !!status?.available
-  const isOpen = showOffer || showSuccess
+  const showDialog = !closed && !!status?.available
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!showDialog) return
 
     const originalOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setDismissed(true)
+      if (event.key === 'Escape') setClosed(true)
     }
     window.addEventListener('keydown', handleKeyDown)
 
@@ -36,106 +36,88 @@ export default function ComebackRewardModal({ onClaimed }: ComebackRewardModalPr
       document.body.style.overflow = originalOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen])
+  }, [showDialog])
 
-  if (!isOpen) return null
-
-  const coins = result?.coins ?? status?.coins ?? 0
-  const days = result?.daysInactive ?? status?.daysInactive ?? 0
-
-  const close = () => setDismissed(true)
+  const close = () => setClosed(true)
 
   const handleClaim = async () => {
+    if (claiming) return
     const res = await claim()
     if (res?.granted) {
-      setResult(res)
+      setToastCoins(res.coins)
       onClaimed?.()
+      setClosed(true)
     } else if (res) {
       // No calificaba (caso borde por carrera): cerramos sin error.
-      setDismissed(true)
+      setClosed(true)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-strong)] p-4">
-      <button
-        type="button"
-        aria-label="Cerrar"
-        className="absolute inset-0 cursor-default"
-        onClick={close}
-      />
+    <>
+      {showDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-strong)] p-4">
+          <button
+            type="button"
+            aria-label="Cerrar"
+            className="absolute inset-0 cursor-default"
+            onClick={close}
+          />
 
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Recompensa por volver"
-        className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-2xl"
-      >
-        <button
-          type="button"
-          aria-label="Cerrar"
-          onClick={close}
-          className="absolute right-3 top-3 rounded-full border-0 bg-transparent p-1.5 text-[var(--text-secondary)] transition hover:bg-black/5"
-        >
-          <X className="h-5 w-5" strokeWidth={2} />
-        </button>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Recompensa por volver"
+            className="relative z-10 w-full max-w-4xl"
+          >
+            <img
+              src={modalCard}
+              alt="¡Recompensa por volver a la página! Gracias por regresar."
+              className="pointer-events-none w-full select-none"
+              draggable={false}
+            />
 
-        <div className="flex flex-col items-center gap-3 px-6 pb-7 pt-9 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
-            {showSuccess ? (
-              <CircleDollarSign className="h-9 w-9 text-yellow-500" strokeWidth={2} aria-hidden="true" />
-            ) : (
-              <Gift className="h-9 w-9 text-yellow-500" strokeWidth={2} aria-hidden="true" />
+            {/* Hotspot invisible sobre la X horneada (arriba-derecha del card). */}
+            <button
+              type="button"
+              aria-label="Cerrar"
+              onClick={close}
+              className="absolute right-[3%] top-[4%] h-[14%] w-[14%] cursor-pointer rounded-full"
+            />
+
+            {/* Botón "Reclamar" sobre el hueco inferior del card. */}
+            <button
+              type="button"
+              aria-label="Reclamar recompensa"
+              onClick={handleClaim}
+              disabled={claiming}
+              className="absolute bottom-[7%] left-1/2 w-[46%] -translate-x-1/2 transition-transform hover:scale-[1.03] active:scale-95 disabled:cursor-not-allowed"
+            >
+              <img
+                src={claimButton}
+                alt="Reclamar"
+                className={`w-full select-none ${claiming ? 'opacity-60' : ''}`}
+                draggable={false}
+              />
+              {claiming && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                </span>
+              )}
+            </button>
+
+            {error && (
+              <p className="absolute bottom-[2%] left-1/2 w-[80%] -translate-x-1/2 text-center text-xs font-semibold text-red-600">
+                {error}
+              </p>
             )}
           </div>
-
-          {showSuccess ? (
-            <>
-              <h2 className="text-xl font-bold">¡Monedas acreditadas!</h2>
-              <p className="text-sm text-[var(--text-secondary)]">
-                Sumaste <span className="font-bold text-yellow-600">+{coins} monedas</span> por volver. 🪙
-              </p>
-              <button
-                type="button"
-                onClick={close}
-                className="mt-2 w-full rounded-xl bg-yellow-500 py-3 text-sm font-semibold text-white transition-all hover:bg-yellow-600 active:scale-95"
-              >
-                ¡Genial!
-              </button>
-            </>
-          ) : (
-            <>
-              <h2 className="text-xl font-bold">¡Qué bueno verte de nuevo!</h2>
-              <p className="text-sm text-[var(--text-secondary)]">
-                Pasaron <span className="font-semibold">{days} días</span> desde tu última visita. Te dejamos una
-                recompensa por volver al jardín.
-              </p>
-
-              {error && (
-                <div className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-center text-sm text-red-700">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={handleClaim}
-                disabled={claiming}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-500 py-3 text-sm font-semibold text-white transition-all hover:bg-yellow-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {claiming ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Reclamando…
-                  </>
-                ) : (
-                  <>Reclamar +{coins} monedas 🪙</>
-                )}
-              </button>
-            </>
-          )}
         </div>
-      </div>
-    </div>
+      )}
+
+      {toastCoins !== null && (
+        <RewardToast coins={toastCoins} onClose={() => setToastCoins(null)} />
+      )}
+    </>
   )
 }
