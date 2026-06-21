@@ -405,4 +405,14 @@ class UserRepositoryImplTest {
         verify(jpaRepository).disableReengagementEmails(5L);
     }
 
+    @Test
+    void findByUnsubscribeToken_shouldReturnEmpty_whenTokenNotFound() {
+        java.util.UUID token = java.util.UUID.randomUUID();
+        when(jpaRepository.findByUnsubscribeToken(token)).thenReturn(Optional.empty());
+
+        Optional<AppUser> result = userRepository.findByUnsubscribeToken(token.toString());
+
+        assertThat(result).isEmpty();
+    }
+
 }
