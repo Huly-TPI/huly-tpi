@@ -1,10 +1,10 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.UpdateEmotionalEventFeedbackCommand;
-import com.huly.backend.domain.model.UpdateRecommendationDecisionCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.UpdateEmotionalEventFeedbackCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;

@@ -2,6 +2,7 @@ package com.huly.backend.domain.useCase.chat;
 
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,9 @@ class SaveChallengeDecisionUseCaseTest {
 
     @Mock
     private UserVectorMemoryService userVectorMemoryService;
+
+    @Mock
+    private ChatMessageRepository chatMessageRepository;
 
     @InjectMocks
     private SaveChallengeDecisionUseCase useCase;
@@ -47,6 +51,7 @@ class SaveChallengeDecisionUseCaseTest {
         assertThat(command.conversationId()).isEqualTo(conversationId);
         assertThat(command.metadata()).containsEntry("decision", "ACCEPTED");
         assertThat(command.metadata()).containsEntry("challengeTitle", title);
+        verify(chatMessageRepository).updateChallengeDecision(conversationId, userId, title, description, "ACCEPTED");
     }
 
     @Test

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { Check, Eye, EyeOff, X } from 'lucide-react'
 import { getInputClassName } from './authInputStyles'
 
 const PASSWORD_MIN = 6
@@ -63,8 +62,8 @@ export default function PasswordInput({
                     aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                     {visible
-                        ? <EyeSlashIcon className="size-5" />
-                        : <EyeIcon className="size-5" />
+                        ? <EyeOff className="size-5" strokeWidth={2} />
+                        : <Eye className="size-5" strokeWidth={2} />
                     }
                 </button>
             </div>
@@ -76,8 +75,8 @@ export default function PasswordInput({
                         return (
                             <li key={rule.label} className={`flex items-center gap-1.5 text-xs transition-colors ${ok ? 'text-[#4C7C64]' : 'text-red-500'}`}>
                                 {ok
-                                    ? <CheckCircleIcon className="size-3.5 shrink-0" />
-                                    : <XCircleIcon className="size-3.5 shrink-0" />
+                                    ? <Check className="size-3.5 shrink-0" strokeWidth={2} />
+                                    : <X className="size-3.5 shrink-0" strokeWidth={2} />
                                 }
                                 {rule.label}
                             </li>

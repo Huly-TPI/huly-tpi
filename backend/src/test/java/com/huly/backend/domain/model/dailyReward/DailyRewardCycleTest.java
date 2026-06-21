@@ -81,4 +81,26 @@ class DailyRewardCycleTest {
         assertThat(DailyRewardCycle.cycleDay(14, 7)).isEqualTo(7);
         assertThat(DailyRewardCycle.cycleDay(15, 7)).isEqualTo(1);
     }
+
+    // --- applyPlanBonus ---
+
+    @Test
+    void applyPlanBonus_shouldReturnBase_whenNoPlan() {
+        assertThat(DailyRewardCycle.applyPlanBonus(10, false)).isEqualTo(10);
+        assertThat(DailyRewardCycle.applyPlanBonus(15, false)).isEqualTo(15);
+    }
+
+    @Test
+    void applyPlanBonus_shouldMultiplyByOnePointFive_whenHasPlan() {
+        assertThat(DailyRewardCycle.applyPlanBonus(10, true)).isEqualTo(15);
+        assertThat(DailyRewardCycle.applyPlanBonus(20, true)).isEqualTo(30);
+    }
+
+    @Test
+    void applyPlanBonus_shouldRoundHalfUp_whenResultIsFractional() {
+        // 15 * 1.5 = 22.5 -> 23
+        assertThat(DailyRewardCycle.applyPlanBonus(15, true)).isEqualTo(23);
+        // 25 * 1.5 = 37.5 -> 38
+        assertThat(DailyRewardCycle.applyPlanBonus(25, true)).isEqualTo(38);
+    }
 }

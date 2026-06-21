@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.infrastructure.repository.entity.RiskWordEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IRiskWordJpaRepository;

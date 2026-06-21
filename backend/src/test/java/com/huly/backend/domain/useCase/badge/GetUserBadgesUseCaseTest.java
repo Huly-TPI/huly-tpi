@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.badge;
 
-import com.huly.backend.domain.model.Badge;
-import com.huly.backend.domain.model.UserBadge;
+import com.huly.backend.domain.model.badge.Badge;
+import com.huly.backend.domain.model.user.UserBadge;
 import com.huly.backend.domain.repository.user.UserBadgeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

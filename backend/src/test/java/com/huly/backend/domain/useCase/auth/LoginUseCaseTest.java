@@ -1,8 +1,8 @@
 package com.huly.backend.domain.useCase.auth;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.AuthTokens;
-import com.huly.backend.domain.model.RefreshToken;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.auth.AuthTokens;
+import com.huly.backend.domain.model.auth.RefreshToken;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.port.PasswordHasherPort;
@@ -161,5 +161,18 @@ class LoginUseCaseTest {
         assertThat(result.getOnBoardingCompleted()).isFalse();
     }
 
+    @Test 
+    void execute_shouldUpdateLastLogin_whenCredentialsAreValid() {
+        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(refreshTokenRepository.save(any())).thenReturn(null);
+
+        loginUseCase.execute("user@huly.com", "rawPass");
+
+        verify(userRepository).updateLastLogin(1L);
+    }
 
 }

@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;

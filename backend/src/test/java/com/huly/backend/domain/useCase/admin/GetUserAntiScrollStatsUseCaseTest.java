@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.admin;
 
-import com.huly.backend.domain.model.AppUser;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.user.UserRepository;

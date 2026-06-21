@@ -18,9 +18,10 @@ import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import darkWateringCanImage from '../../assets/garden/dark-theme/watering-can-plant.webp'
 import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
+import NotificationsPrompt from '../../components/Notifications/NotificationsPrompt/NotificationsPrompt'
 import StoreModal from '../../components/Shop/StoreModal'
 import RewardsModal from '../../components/RewardsModal/RewardsModal'
-import { ShoppingBagIcon } from '@heroicons/react/24/outline'
+import { ShoppingBag } from 'lucide-react'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useTheme } from '../../context/theme'
@@ -174,6 +175,8 @@ export default function Home() {
     shouldRenderOnboarding,
     startOnboarding,
     advanceOnboarding,
+    showNotificationsPrompt,
+    closeNotificationsPrompt,
   } = useHomeOnboarding(homeOnboardingSteps.length)
 
   useEffect(() => {
@@ -277,6 +280,9 @@ export default function Home() {
             onAdvance={advanceOnboarding}
           />
         ) : null}
+         {showNotificationsPrompt && (
+          <NotificationsPrompt onClose={closeNotificationsPrompt} />
+        )}
       </section>
 
       {user?.onboardingTutorialCompleted && (
@@ -286,7 +292,7 @@ export default function Home() {
           aria-label="Abrir tienda"
           className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#4C7C64] text-2xl text-white shadow-lg transition hover:bg-[#3d6450] active:scale-95"
         >
-          <ShoppingBagIcon className="h-7 w-7" />
+          <ShoppingBag className="h-7 w-7" strokeWidth={2} />
         </button>
       )}
 

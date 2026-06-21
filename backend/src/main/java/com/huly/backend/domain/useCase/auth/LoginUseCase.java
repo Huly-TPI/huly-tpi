@@ -2,9 +2,9 @@ package com.huly.backend.domain.useCase.auth;
 
 import com.huly.backend.domain.exception.AccountNotActiveException;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.AuthTokens;
-import com.huly.backend.domain.model.RefreshToken;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.auth.AuthTokens;
+import com.huly.backend.domain.model.auth.RefreshToken;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.port.PasswordHasherPort;
 import com.huly.backend.domain.port.TokenPort;
@@ -51,6 +51,8 @@ public class LoginUseCase {
                 .createdAt(now)
                 .expiredAt(now.plusSeconds(tokenPort.getRefreshTokenMaxAgeSecs()))
                 .build());
+
+        userRepository.updateLastLogin(user.getId());
 
         Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
 

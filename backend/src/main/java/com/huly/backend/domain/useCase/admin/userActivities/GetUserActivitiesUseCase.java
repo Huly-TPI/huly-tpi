@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.admin.userActivities;
 
-import com.huly.backend.domain.model.ActivitySession;
+import com.huly.backend.domain.model.activity.ActivitySession;
 import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.repository.user.UserRepository;

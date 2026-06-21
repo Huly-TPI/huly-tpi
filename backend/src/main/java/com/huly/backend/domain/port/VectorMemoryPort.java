@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoriesQuery;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
+import com.huly.backend.domain.model.vector.VectorMemoryEntry;
 
 import java.util.Comparator;
 import java.util.List;
@@ -15,6 +16,10 @@ public interface VectorMemoryPort {
     void saveMemory(SaveVectorMemoryCommand command);
 
     List<VectorMemory> findRelevantMemories(SearchVectorMemoryQuery query);
+
+    List<String> findMemoryContentsByUserIdExcludingSummary(Long userId);
+
+    List<VectorMemoryEntry> findMemoriesByUserIdExcludingSummary(Long userId);
 
     default List<VectorMemory> findRelevantMemories(SearchVectorMemoriesQuery query) {
         if (query == null || query.sourceTypes() == null || query.sourceTypes().isEmpty()) {

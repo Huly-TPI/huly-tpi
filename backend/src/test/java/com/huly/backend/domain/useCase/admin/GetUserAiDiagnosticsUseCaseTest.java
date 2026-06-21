@@ -1,17 +1,17 @@
 package com.huly.backend.domain.useCase.admin;
 
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
 import com.huly.backend.domain.model.enums.CommunicationStyle;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.model.vector.VectorMemoryEntry;
+import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
-import com.huly.backend.domain.repository.chatBotConfig.VectorMemoryRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsRequest;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsResponse;
@@ -34,7 +34,7 @@ class GetUserAiDiagnosticsUseCaseTest {
 
     private UserRepository userRepository;
     private EmotionalEventRepository emotionalEventRepository;
-    private VectorMemoryRepository vectorMemoryRepository;
+    private VectorMemoryPort vectorMemoryPort;
     private UserPersonalitySummaryRepository personalitySummaryRepository;
     private ChatConversationPreferenceRepository preferenceRepository;
     private GetUserAiDiagnosticsUseCase useCase;
@@ -43,13 +43,13 @@ class GetUserAiDiagnosticsUseCaseTest {
     void setUp() {
         userRepository = mock(UserRepository.class);
         emotionalEventRepository = mock(EmotionalEventRepository.class);
-        vectorMemoryRepository = mock(VectorMemoryRepository.class);
+        vectorMemoryPort = mock(VectorMemoryPort.class);
         personalitySummaryRepository = mock(UserPersonalitySummaryRepository.class);
         preferenceRepository = mock(ChatConversationPreferenceRepository.class);
         useCase = new GetUserAiDiagnosticsUseCase(
                 userRepository,
                 emotionalEventRepository,
-                vectorMemoryRepository,
+                vectorMemoryPort,
                 personalitySummaryRepository,
                 preferenceRepository
         );
@@ -90,7 +90,7 @@ class GetUserAiDiagnosticsUseCaseTest {
                 .build();
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory));
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory));
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.of(UserPersonalitySummary.builder()
                 .userId(USER_ID)
                 .summary("Perfil")
@@ -121,7 +121,7 @@ class GetUserAiDiagnosticsUseCaseTest {
     @Test
     void execute_shouldUseDedicatedPersonalitySummaryFields() {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.of(UserPersonalitySummary.builder()
                 .userId(USER_ID)
                 .summary("Resumen clinico del usuario.")
@@ -153,7 +153,7 @@ class GetUserAiDiagnosticsUseCaseTest {
                 .recommendationDecision(RecommendationDecision.IGNORED).build();
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of(ev1, ev2));
         when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of(ev1, ev2));
@@ -194,7 +194,7 @@ class GetUserAiDiagnosticsUseCaseTest {
         VectorMemoryEntry memory2 = new VectorMemoryEntry("2", "Me gusta escuchar musica y hacer ejercicio para relajarme", "CHATBOT", "TEXT_MEMORY", null);
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory1, memory2));
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory1, memory2));
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
         when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of());
@@ -208,7 +208,7 @@ class GetUserAiDiagnosticsUseCaseTest {
     @Test
     void execute_shouldCleanPersonalitySummaryHeadersAndMarkdown() {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of());
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.of(UserPersonalitySummary.builder()
                 .userId(USER_ID)
                 .summary("**Perfil Psicológico y Conductual** El usuario es receptivo.")
@@ -231,7 +231,7 @@ class GetUserAiDiagnosticsUseCaseTest {
         VectorMemoryEntry memory2 = new VectorMemoryEntry("2", "Rechazó el reto de meditar", "CHALLENGE_DECISION", "CHALLENGE_DECISION", null);
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory1, memory2));
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(memory1, memory2));
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
         when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of());
@@ -251,7 +251,7 @@ class GetUserAiDiagnosticsUseCaseTest {
         VectorMemoryEntry nullContentMemory = new VectorMemoryEntry("1", null, "CHATBOT", "TEXT_MEMORY", null);
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(nullContentMemory));
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(nullContentMemory));
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of(blankRecEvent));
         when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of(blankRecEvent));
@@ -274,7 +274,7 @@ class GetUserAiDiagnosticsUseCaseTest {
                 .recommendationDecision(RecommendationDecision.ACCEPTED).build();
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
-        when(vectorMemoryRepository.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(irrelevantMemory));
+        when(vectorMemoryPort.findMemoriesByUserIdExcludingSummary(USER_ID)).thenReturn(List.of(irrelevantMemory));
         when(personalitySummaryRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(emotionalEventRepository.findByUserId(USER_ID)).thenReturn(List.of(challengeRecEvent, otherRecEvent));
         when(emotionalEventRepository.findRecommendationEventsByUserId(USER_ID)).thenReturn(List.of(challengeRecEvent, otherRecEvent));

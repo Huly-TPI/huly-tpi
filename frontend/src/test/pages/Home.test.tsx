@@ -8,12 +8,26 @@ import { completeTutorial } from '../../api/onboarding'
 
 const mockUseAuth = vi.fn()
 const mockRefreshUser = vi.fn()
+
 vi.mock('../../context/auth', () => ({
   useAuth: () => mockUseAuth(),
 }))
 
 vi.mock('../../api/onboarding', () => ({
   completeTutorial: vi.fn(),
+}))
+
+vi.mock('../../components/Shop/StoreModal', () => ({
+  default: () => null,
+}))
+
+vi.mock('../../hooks/store/useInventory', () => ({
+  useInventory: () => ({
+    inventory: [],
+    loading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
 }))
 
 describe('Home', () => {

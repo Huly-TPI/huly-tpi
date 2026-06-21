@@ -3,7 +3,7 @@ import { useCosmeticActions } from '../../hooks/store/useCosmeticActions'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
 import { CosmeticCard } from './CosmeticCard'
 import { CoinsBadge } from './CoinsBadge'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { X } from 'lucide-react'
 import type { InventoryItemResponse } from '../../api/store'
 interface StoreModalProps {
   isOpen: boolean
@@ -60,7 +60,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
           <div className="flex shrink-0 items-center gap-2">
             {coins !== null && <CoinsBadge coins={coins} />}
             <button onClick={onClose} aria-label="Cerrar" className="rounded-full p-1.5 transition hover:bg-white/20">
-              <XMarkIcon className="h-5 w-5" />
+              <X className="h-5 w-5" strokeWidth={2} />
             </button>
           </div>
         </div>

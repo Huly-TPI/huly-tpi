@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.riskWord;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.service.chat.RiskWordService;
 import lombok.RequiredArgsConstructor;

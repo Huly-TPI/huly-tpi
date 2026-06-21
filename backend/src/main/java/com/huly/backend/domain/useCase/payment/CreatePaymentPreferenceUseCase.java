@@ -1,8 +1,8 @@
 package com.huly.backend.domain.useCase.payment;
 
-import com.huly.backend.domain.dto.payment.PaymentEvent;
-import com.huly.backend.domain.dto.payment.PaymentPreferenceResult;
-import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.payment.PaymentEvent;
+import com.huly.backend.domain.model.payment.PaymentPreferenceResult;
+import com.huly.backend.domain.model.payment.Product;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.model.enums.PaymentStatus;

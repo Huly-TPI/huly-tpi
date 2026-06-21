@@ -1,5 +1,4 @@
-import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
-import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid'
+import { Star } from 'lucide-react'
 import type { Membership } from '../../api/auth'
 
 interface MembershipBadgeProps {
@@ -10,7 +9,7 @@ export function MembershipBadge({ membership }: MembershipBadgeProps) {
   if (!membership.active) {
     return (
       <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2">
-        <StarOutlineIcon className="w-6 h-6 text-gray-400" />
+        <Star className="w-6 h-6 text-gray-400" strokeWidth={2} />
         <span className="text-gray-500 text-sm font-medium">Sin membresía</span>
       </div>
     )
@@ -26,7 +25,7 @@ export function MembershipBadge({ membership }: MembershipBadgeProps) {
 
   return (
     <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
-      <StarSolidIcon className="w-6 h-6 text-green-500" />
+      <Star className="w-6 h-6 text-green-500" strokeWidth={2} />
       <span className="text-green-700 font-bold text-lg">{membership.planCode}</span>
       {expiry && <span className="text-green-600 text-sm">vence {expiry}</span>}
     </div>

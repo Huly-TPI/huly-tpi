@@ -1,6 +1,6 @@
 package com.huly.backend.domain.service.vector;
 
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.jdbc.core.JdbcTemplate;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
@@ -43,7 +42,6 @@ public class UserVectorMemoryService {
     private final VectorMemoryProperties vectorMemoryProperties;
     private final UserProfileFactExtractor userProfileFactExtractor;
     private final ObjectProvider<ChatClient> chatClientProvider;
-    private final JdbcTemplate jdbcTemplate;
     private final UserPersonalitySummaryRepository userPersonalitySummaryRepository;
     private final org.springframework.core.io.Resource personalitySummaryPrompt;
 
@@ -52,14 +50,12 @@ public class UserVectorMemoryService {
             VectorMemoryProperties vectorMemoryProperties,
             UserProfileFactExtractor userProfileFactExtractor,
             ObjectProvider<ChatClient> chatClientProvider,
-            JdbcTemplate jdbcTemplate,
             UserPersonalitySummaryRepository userPersonalitySummaryRepository,
             @Value("classpath:/prompts/personality-summary.st") org.springframework.core.io.Resource personalitySummaryPrompt) {
         this.vectorMemoryPort = vectorMemoryPort;
         this.vectorMemoryProperties = vectorMemoryProperties;
         this.userProfileFactExtractor = userProfileFactExtractor;
         this.chatClientProvider = chatClientProvider;
-        this.jdbcTemplate = jdbcTemplate;
         this.userPersonalitySummaryRepository = userPersonalitySummaryRepository;
         this.personalitySummaryPrompt = personalitySummaryPrompt;
     }
@@ -267,8 +263,7 @@ public class UserVectorMemoryService {
 
     public List<String> getAllMemoryContents(Long userId) {
         try {
-            String sql = "SELECT content FROM vector_store WHERE metadata ->> 'userId' = ? AND COALESCE(metadata ->> 'deleted', 'false') = 'false' AND (metadata ->> 'contentType' IS NULL OR metadata ->> 'contentType' != 'PERSONALITY_SUMMARY')";
-            return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("content"), userId.toString());
+            return vectorMemoryPort.findMemoryContentsByUserIdExcludingSummary(userId);
         } catch (Exception e) {
             log.warn("Error getting all memory contents for userId={}: {}", userId, e.getMessage());
             return List.of();

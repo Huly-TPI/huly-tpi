@@ -69,15 +69,40 @@ describe('useEmotionalOnboarding', () => {
         await act(async () => { result.current.skip() })
         await waitFor(() => {
             expect(completeOnboarding).toHaveBeenCalledWith(
-            'Prefiero no decirlo',
-            'Prefiero no decirlo',
-            'Todavía lo estoy descubriendo'
-        )
+                'Prefiero no decirlo',
+                'Prefiero no decirlo',
+                'Todavía lo estoy descubriendo'
+            )
         })
         expect(onComplete).toHaveBeenCalledTimes(1)
 
 
     })
 
+    it('hacer más de un click en step 3 no dispara completeOnboarding más de una vez', async () => {
+        vi.mocked(completeOnboarding).mockResolvedValueOnce(undefined)
+        const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
+        await act(async () => { result.current.advance() })
+        await act(async () => { result.current.selectOption('Descansar un rato') })
+        await waitFor(() => expect(result.current.step).toBe(2))
+        await act(async () => { result.current.selectOption('Jugar algo tranquilo') })
+        await waitFor(() => expect(result.current.step).toBe(3))
+        await act(async () => {
+            result.current.selectOption('Todavía lo estoy descubriendo')
+            result.current.selectOption('Todavía lo estoy descubriendo')
+        })
+        expect(completeOnboarding).toHaveBeenCalledTimes(1)
+    })
+
+    it('un segundo skip mientras carga otro no dispara de nuevo completeOnboarding', async () => {
+        vi.mocked(completeOnboarding).mockResolvedValue(undefined)
+        const { result } = renderHook(() => useEmotionalOnboarding(onComplete))
+        await act(async () => {
+            result.current.skip()
+            result.current.skip()
+        })
+
+        expect(completeOnboarding).toHaveBeenCalledTimes(1)
+    })
 
 })

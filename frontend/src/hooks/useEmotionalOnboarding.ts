@@ -1,13 +1,6 @@
-import { useState } from 'react'
-import {completeOnboarding } from '../api/onboarding'
-import {
-    PauseCircleIcon,
-    CloudIcon,
-    MagnifyingGlassIcon,
-    SparklesIcon,
-} from '@heroicons/react/24/outline'
-
-
+import { useRef, useState } from 'react'
+import { Cloud, PauseCircle, Search, Sparkles } from 'lucide-react'
+import { completeOnboarding } from '../api/onboarding'
 
 export type Step1Option = {
     Icon: React.ComponentType<{ className?: string }>
@@ -15,42 +8,39 @@ export type Step1Option = {
     subtitle: string
 }
 
-
 type Step = 0 | 1 | 2 | 3
 
-
 const STEP1_OPTIONS: Step1Option[] = [
-    { Icon: PauseCircleIcon,      title: 'Un momento para mí',      subtitle: 'Para pausar y respirar' },
-    { Icon: CloudIcon,            title: 'Soltar lo que cargo',      subtitle: 'Tengo cosas en la cabeza' },
-    { Icon: MagnifyingGlassIcon,  title: 'Entender lo que siento',   subtitle: 'Quiero explorar mis emociones' },
-    { Icon: SparklesIcon,         title: 'Descansar un rato',        subtitle: 'Busco desconectarme un poco' },
+    { Icon: PauseCircle, title: 'Un momento para mí', subtitle: 'Para pausar y respirar' },
+    { Icon: Cloud, title: 'Soltar lo que cargo', subtitle: 'Tengo cosas en la cabeza' },
+    { Icon: Search, title: 'Entender lo que siento', subtitle: 'Quiero explorar mis emociones' },
+    { Icon: Sparkles, title: 'Descansar un rato', subtitle: 'Busco desconectarme un poco' },
 ]
-
 
 const STEP2_MAP: Record<string, string[]> = {
     'Un momento para mí': [
         'Bajar el ritmo',
         'Despejar la cabeza',
         'Encontrar calma',
-        'Tomarme un respiro'
+        'Tomarme un respiro',
     ],
     'Soltar lo que cargo': [
         'Poner en palabras lo que siento',
         'Ordenar mis pensamientos',
         'Liberar un poco la mente',
-        'Sentirme más tranquilo/a'
+        'Sentirme más tranquilo/a',
     ],
     'Entender lo que siento': [
         'Conocerme un poco más',
         'Conectar conmigo',
         'Ordenar mis ideas',
-        'Expresar lo que siento'
+        'Expresar lo que siento',
     ],
     'Descansar un rato': [
         'Desconectarme un momento',
         'Jugar algo tranquilo',
         'Recargar energía',
-        'Despejar la cabeza'
+        'Despejar la cabeza',
     ],
 }
 
@@ -61,32 +51,50 @@ const STEP3_OPTIONS = [
     'Todavía lo estoy descubriendo',
 ]
 
-
 export function useEmotionalOnboarding(onComplete: () => Promise<void> | void) {
     const [step, setStep] = useState<Step>(0)
     const [pillOptions, setPillOptions] = useState<string[]>([])
-    const [answers, setAnswers] = useState<{ a1?: string, a2?: string}>({})
+    const [answers, setAnswers] = useState<{ a1?: string, a2?: string }>({})
+    const [submitting, setSubmitting] = useState(false)
+    const submittingRef = useRef(false)
     const advance = () => setStep(1)
 
     const selectOption = async (option: string) => {
-        if(step === 1) {
+        if (submittingRef.current) return
+
+        if (step === 1) {
             setAnswers({ a1: option })
             setPillOptions(STEP2_MAP[option] ?? STEP3_OPTIONS)
             setStep(2)
         } else if (step === 2) {
-            setAnswers( prev => ({ ...prev, a2: option }))
+            setAnswers(prev => ({ ...prev, a2: option }))
             setPillOptions(STEP3_OPTIONS)
             setStep(3)
         } else if (step === 3) {
-            await completeOnboarding(answers.a1!, answers.a2!, option)
-            await onComplete()
+            submittingRef.current = true
+            setSubmitting(true)
+            try {
+                await completeOnboarding(answers.a1!, answers.a2!, option)
+                await onComplete()
+            } finally {
+                submittingRef.current = false
+                setSubmitting(false)
+            }
         }
     }
 
     const skip = async () => {
-        await completeOnboarding('Prefiero no decirlo', 'Prefiero no decirlo', 'Todavía lo estoy descubriendo')
-        await onComplete()
+        if (submittingRef.current) return
+        submittingRef.current = true
+        setSubmitting(true)
+        try {
+            await completeOnboarding('Prefiero no decirlo', 'Prefiero no decirlo', 'Todavía lo estoy descubriendo')
+            await onComplete()
+        } finally {
+            submittingRef.current = false
+            setSubmitting(false)
+        }
     }
 
-    return { step, step1Options: STEP1_OPTIONS, pillOptions, advance, selectOption, skip}
-    }
+    return { step, step1Options: STEP1_OPTIONS, pillOptions, advance, selectOption, skip, submitting }
+}

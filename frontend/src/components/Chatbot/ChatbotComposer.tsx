@@ -2,14 +2,13 @@ import { useState } from 'react'
 import Button from '../Buttons/Button/Button'
 import ChatbotAudioRecorder from './ChatbotAudioRecorder'
 import { useEffect, useRef } from 'react'
-import { FiTrash2 } from 'react-icons/fi'
+import { SendHorizontal } from 'lucide-react'
 
 interface ChatbotComposerProps {
   input: string
   isSending: boolean
   onInputChange: (value: string) => void
   onSend: () => void
-  onReset: () => void
   onSendAudio: (blob: Blob) => void
 }
 
@@ -18,7 +17,6 @@ export default function ChatbotComposer({
   isSending,
   onInputChange,
   onSend,
-  onReset,
   onSendAudio
 }: ChatbotComposerProps) {
   const [isRecorderActive, setIsRecorderActive] = useState(false)
@@ -33,7 +31,7 @@ export default function ChatbotComposer({
 
   return (
     <footer className="border-t border-[var(--border-soft)] px-5 py-5">
-      <div className="flex items-end gap-2">
+      <div className="flex h-14 items-center gap-2">
         {!isRecorderActive && (
           <>
             <textarea
@@ -49,18 +47,8 @@ export default function ChatbotComposer({
                 }
               }}
               disabled={isSending}
-              className="min-h-[44px] w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta md:min-h-[52px]"
+              className="h-14 w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta"
             />
-            <Button
-              type="button"
-              onClick={onSend}
-              disabled={isSending || !input.trim()}
-              variant="primary"
-              size="sm"
-              className="shrink-0 !w-auto !min-w-0"
-            >
-              Enviar
-            </Button>
           </>
         )}
         <ChatbotAudioRecorder
@@ -68,26 +56,19 @@ export default function ChatbotComposer({
           disabled={isSending}
           onActiveChange={setIsRecorderActive}
         />
-        <button
-          type="button"
-          onClick={onReset}
-          disabled={isSending}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-violeta text-violeta hover:bg-violeta/10 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[#8869ac59] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed mb-[2px]"
-          title="Limpiar chat"
-          aria-label="Limpiar chat"
-        >
-          <FiTrash2 className="h-5 w-5" />
-        </button>
-        <Button
-          type="button"
-          onClick={onSend}
-          disabled={isSending || !input.trim()}
-          variant="primary"
-          size="sm"
-          className="shrink-0 !w-auto !min-w-0"
-        >
-          Enviar
-        </Button>
+        {!isRecorderActive && (
+          <Button
+            type="button"
+            onClick={onSend}
+            disabled={isSending || !input.trim()}
+            variant="primary"
+            className="h-10 w-10 shrink-0 !min-w-0 !rounded-full !px-0 !py-0 !transition-[background-color,color,opacity,box-shadow] !duration-300 !ease-in-out max-md:!w-10"
+            aria-label="Enviar"
+            title="Enviar"
+          >
+            <SendHorizontal className="h-4 w-4" strokeWidth={2} />
+          </Button>
+        )}
       </div>
     </footer>
   )

@@ -1,8 +1,8 @@
+import { Smile } from 'lucide-react'
 import { useEmotionalCategories } from '../../hooks/backoffice/useEmotionalCategories'
 import { EmotionCard } from './EmotionCard'
 import { SectionCard } from './SectionCard'
 import { Skeleton } from './Skeleton'
-import purpleSmile from '../../assets/backoffice/purpleSmile.webp'
 import Button from '../Buttons/Button/Button'
 
 export function EmotionalCategoriesSection() {
@@ -12,7 +12,7 @@ export function EmotionalCategoriesSection() {
     <SectionCard bg="bg-[#EDF2ED] dark:bg-[#09111f]" padding="p-0" className="shadow-none">
       <div className="mb-4 flex items-center justify-between gap-2 px-4 pt-4 lg:px-5 lg:pt-5">
         <div className="flex items-center gap-2">
-          <img src={purpleSmile} alt="" className="w-6 h-6 object-contain -translate-y-0.0" />
+          <Smile className="h-6 w-6 text-violeta dark:text-violeta-claro" strokeWidth={2} />
           <h2 className="text-[20px] font-bold text-[#2D3748] dark:text-gray-100">Panel de categorías emocionales</h2>
         </div>
         <Button variant="tertiary" size="sm">

@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.Badge;
+import com.huly.backend.domain.model.badge.Badge;
 import com.huly.backend.domain.repository.badge.BadgeRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IBadgeJpaRepository;
 import com.huly.backend.infrastructure.repository.mapper.BadgeMapper;

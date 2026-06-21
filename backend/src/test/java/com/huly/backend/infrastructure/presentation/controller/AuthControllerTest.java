@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.AuthTokens;
+import com.huly.backend.domain.model.auth.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.port.TokenPort;
 import com.huly.backend.domain.useCase.auth.*;

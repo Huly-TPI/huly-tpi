@@ -8,9 +8,13 @@ public record ConversationMessage(
         String content,
         EmotionType detectedEmotion,
         Boolean riskDetected,
-        String matchedWord
+        String matchedWord,
+        SuggestedChatAction suggestedAction,
+        ChatReply.GeneratedChallenge generatedChallenge,
+        String suggestedActionDecision,
+        String challengeDecision
 ) {
     public static ConversationMessage of(MessageRole role, String content) {
-        return new ConversationMessage(role, content, null, null, null);
+        return new ConversationMessage(role, content, null, null, null, null, null, null, null);
     }
 }

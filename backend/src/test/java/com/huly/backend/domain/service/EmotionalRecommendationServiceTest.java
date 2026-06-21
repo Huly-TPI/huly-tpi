@@ -1,12 +1,13 @@
 package com.huly.backend.domain.service;
 
-import com.huly.backend.domain.model.Activity;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.EmotionalRecommendationQuery;
-import com.huly.backend.domain.model.EmotionalRecommendationResult;
-import com.huly.backend.domain.model.Vad;
+import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
+import com.huly.backend.domain.model.emotionalRecommendation.Vad;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
+import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationService;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -82,7 +83,7 @@ class EmotionalRecommendationServiceTest {
 
     @Test
     void recommend_shouldKeepVadRanking_whenUserHistoryIsEmpty() {
-        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        EmotionalRecommendation query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
         List<Activity> activities = defaultActivities();
 
         EmotionalRecommendationResult withoutHistory = service.recommend(query, activities);
@@ -102,7 +103,7 @@ class EmotionalRecommendationServiceTest {
 
     @Test
     void recommend_shouldRaiseActivityWithPositiveAcceptedHistory() {
-        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        EmotionalRecommendation query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
         List<Activity> activities = defaultActivities();
 
         double baseScore = scoreFor(service.recommend(query, activities), ActivityType.DIARIO);
@@ -117,7 +118,7 @@ class EmotionalRecommendationServiceTest {
 
     @Test
     void recommend_shouldLowerActivityWithIgnoredHistory() {
-        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        EmotionalRecommendation query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
         List<Activity> activities = defaultActivities();
 
         double baseScore = scoreFor(service.recommend(query, activities), ActivityType.RESPIRACION);
@@ -132,7 +133,7 @@ class EmotionalRecommendationServiceTest {
 
     @Test
     void recommend_shouldUseChosenActivityAsPositiveSignal_whenUserChoseOther() {
-        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        EmotionalRecommendation query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
         List<Activity> activities = defaultActivities();
 
         EmotionalRecommendationResult result = service.recommend(
@@ -149,7 +150,7 @@ class EmotionalRecommendationServiceTest {
 
     @Test
     void recommend_shouldRaiseHighFeedbackAndLowerLowFeedback() {
-        EmotionalRecommendationQuery query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
+        EmotionalRecommendation query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
         List<Activity> activities = defaultActivities();
         EmotionalRecommendationResult base = service.recommend(query, activities);
 
@@ -170,7 +171,7 @@ class EmotionalRecommendationServiceTest {
 
     @Test
     void recommend_shouldKeepTrendAdjustmentBoundedSoVadStillMatters() {
-        EmotionalRecommendationQuery query = query(-0.8, 0.9, -0.7, 0.85, "calmarme para dormir");
+        EmotionalRecommendation query = query(-0.8, 0.9, -0.7, 0.85, "calmarme para dormir");
         List<Activity> activities = defaultActivities();
 
         EmotionalRecommendationResult result = service.recommend(
@@ -188,14 +189,14 @@ class EmotionalRecommendationServiceTest {
                 .isLessThanOrEqualTo(0.15);
     }
 
-    private EmotionalRecommendationQuery query(
+    private EmotionalRecommendation query(
             double valence,
             double arousal,
             double dominance,
             double intensity,
             String userGoal
     ) {
-        return new EmotionalRecommendationQuery(
+        return new EmotionalRecommendation(
                 new Vad(valence, arousal, dominance),
                 intensity,
                 userGoal

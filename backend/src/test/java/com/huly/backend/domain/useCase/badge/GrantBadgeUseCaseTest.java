@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.badge;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.Badge;
-import com.huly.backend.domain.model.UserBadge;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.badge.Badge;
+import com.huly.backend.domain.model.user.UserBadge;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.repository.badge.BadgeRepository;
