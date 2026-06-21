@@ -58,6 +58,8 @@ public class LoginUseCase {
                 .expiredAt(now.plusSeconds(tokenPort.getRefreshTokenMaxAgeSecs()))
                 .build());
 
+        userRepository.updateLastLogin(user.getId());
+
         Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
 
         return AuthTokens.builder()

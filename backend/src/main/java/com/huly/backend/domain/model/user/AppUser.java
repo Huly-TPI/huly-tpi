@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.time.Instant;
 
 @Getter
 @Builder
@@ -21,4 +22,6 @@ public class AppUser {
     private LocalDate birthDate;
     private UserRole role;
     private UserStatus status;
+    private Instant lastLoginAt;
+    private String unsubscribeToken;
 }
