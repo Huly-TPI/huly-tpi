@@ -30,9 +30,10 @@ interface SeedCardProps {
 function SeedCard({ product, buying, disabled, featured = false, image, onBuy }: SeedCardProps) {
   return (
     <div className={`relative aspect-[3/4] w-full transition-transform duration-200 origin-center hover:scale-[1.03] ${featured ? 'scale-[1.03] z-10' : ''}`}>
+      {/* Star icon for featured */}
       {featured && (
-        <div className="absolute -top-3 -right-2 z-30 rotate-12 text-[22px] drop-shadow-[0_2px_2px_rgba(91,60,24,0.18)]">
-          <img src={startIcon} alt="" aria-hidden="true" className="w-6 h-6 object-contain" />
+        <div className="absolute top-1 right-1 z-30 rotate-12">
+          <img src={startIcon} alt="" aria-hidden="true" className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-[0_2px_4px_rgba(180,120,30,0.4)]" />
         </div>
       )}
 
@@ -145,7 +146,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Tienda de semillas"
-        className="relative z-10 w-full max-w-[700px] max-[640px]:max-w-[370px]"
+        className="relative z-10 w-full max-w-[730px] max-[640px]:max-w-[370px]"
         onClick={e => e.stopPropagation()}
       >
         <img
@@ -156,7 +157,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
           draggable={false}
         />
 
-        <div className="absolute inset-0 px-[8%] pt-[18%] pb-[6%] max-[640px]:px-[8%] max-[640px]:pt-[24%] max-[640px]:pb-[6%] flex flex-col">
+        <div className="absolute inset-0 px-[9%] pt-[19%] pb-[7%] max-[640px]:px-[8%] max-[640px]:pt-[22%] max-[640px]:pb-[6%] flex flex-col">
           {/* Botón cerrar */}
           <button
             onClick={onClose}
@@ -184,11 +185,11 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
               src={seedIcon}
               alt=""
               aria-hidden="true"
-              className="absolute top-[7%] max-[640px]:top-[5.5%] left-1/2 -translate-x-1/2 w-18 h-18 sm:w-20 sm:h-20 max-[640px]:w-14 max-[640px]:h-14 object-contain pointer-events-none select-none z-10"
+              className="absolute top-[6.5%] max-[640px]:top-[5%] left-1/2 -translate-x-1/2 w-18 h-18 sm:w-20 sm:h-20 max-[640px]:w-14 max-[640px]:h-14 object-contain pointer-events-none select-none z-10"
               draggable={false}
             />
 
-            <h2 className="text-[22px] sm:text-[27px] max-[640px]:text-[20px] font-black text-[#9b5718] leading-none">
+            <h2 className="text-[22px] sm:text-[27px] max-[640px]:text-[20px] font-black text-[#9b5718] mt-2 leading-none">
               Tienda de semillas
             </h2>
 
@@ -198,7 +199,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
           </div>
 
           {/* Grid de cards */}
-          <div className="grid grid-cols-3 max-[640px]:grid-cols-2 gap-x-4 max-[640px]:gap-x-2 gap-y-5 mt-9 max-[640px]:mt-6 px-[2%] max-[640px]:px-0 flex-1 min-h-0 overflow-y-visible">
+          <div className="grid grid-cols-3 max-[640px]:grid-cols-2 gap-x-4 max-[640px]:gap-x-2 gap-y-2 max-[640px]:mt-3 px-[2%] max-[640px]:px-0 flex-1 min-h-0 overflow-visible">
             {loading ? (
               <div className="col-span-3 max-[640px]:col-span-2 flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
