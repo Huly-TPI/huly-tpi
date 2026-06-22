@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
-import { Check, CircleDollarSign, Trophy, X, Zap } from 'lucide-react'
+import { useState } from 'react'
+import { Check, CircleDollarSign, Trophy, Zap } from 'lucide-react'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
+import { InlineError } from '../feedback/InlineError'
+import { RewardToast } from './RewardToast'
 
 interface DailyRewardCalendarProps {
   /** Se llama tras reclamar con éxito, para refrescar el saldo de monedas. */
@@ -10,12 +12,6 @@ interface DailyRewardCalendarProps {
 export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
   const { status, loading, claiming, error, claim } = useDailyRewards()
   const [toastCoins, setToastCoins] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (toastCoins === null) return
-    const id = setTimeout(() => setToastCoins(null), 3500)
-    return () => clearTimeout(id)
-  }, [toastCoins])
 
   const handleClaim = async () => {
     const result = await claim()
@@ -56,10 +52,9 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
       </p>
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2.5 text-sm text-center">
-          {error}
-        </div>
+        <InlineError message={error} className="mb-4" />
       )}
+
 
       <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 mb-6">
         {status.days.map((day) => {
@@ -131,24 +126,7 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
       )}
 
       {toastCoins !== null && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-24 right-5 z-50 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#e6b800] px-5 py-4 shadow-xl text-white"
-        >
-          <CircleDollarSign className="w-7 h-7 text-white" strokeWidth={2} aria-hidden="true" />
-          <div>
-            <p className="text-sm opacity-90 m-0">¡Recompensa reclamada!</p>
-            <p className="font-bold text-lg m-0">+{toastCoins} monedas</p>
-          </div>
-          <button
-            aria-label="Cerrar"
-            onClick={() => setToastCoins(null)}
-            className="ml-1 rounded-full p-1.5 hover:bg-white/20 transition bg-transparent border-0 cursor-pointer text-white"
-          >
-            <X className="w-4 h-4" strokeWidth={2} />
-          </button>
-        </div>
+        <RewardToast coins={toastCoins} onClose={() => setToastCoins(null)} />
       )}
     </div>
   )

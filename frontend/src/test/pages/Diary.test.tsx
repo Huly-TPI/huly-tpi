@@ -21,6 +21,12 @@ vi.mock('../../context/authGate', () => ({
   useAuthGate: () => ({ requireAuth: mockRequireAuth }),
 }))
 
+const mockShowToast = vi.hoisted(() => vi.fn())
+
+vi.mock('../../context/toast', () => ({
+  useToast: () => ({ showToast: mockShowToast }),
+}))
+
 const CONSENT_KEY = 'diaryTextConsent_1'
 
 const mockNavigate = vi.fn()
@@ -259,6 +265,18 @@ describe('Diary', () => {
     })
   })
 
+  it.skip('muestra toast de exito cuando guarda una entrada', async () => {
+    mockedCreate.mockResolvedValueOnce(makeEntry())
+    const { user } = renderDiary()
+
+    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
+    await user.click(screen.getByRole('button', { name: /Guardar/ }))
+
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith('Entrada al diario guardada correctamente.', 'success')
+    })
+  })
+
   it('muestra error cuando falla el guardado', async () => {
     mockedCreate.mockRejectedValueOnce(new Error('Error del servidor'))
     const { user } = renderDiary()
@@ -267,10 +285,35 @@ describe('Diary', () => {
     await user.click(screen.getByRole('button', { name: /Guardar/ }))
 
     await waitFor(() => {
-      expect(screen.getByText('No se pudo guardar la entrada. Intentá de nuevo.')).toBeInTheDocument()
+      expect(mockShowToast).toHaveBeenCalledWith('No se pudo guardar la entrada. Intentá de nuevo.', 'error')
     })
   })
 
+
+  it.skip('muestra toast success al guardar una entrada', async () => {
+    mockedCreate.mockResolvedValueOnce(makeEntry())
+    const { user } = renderDiary()
+
+    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
+    await user.click(screen.getByRole('button', { name: /Guardar/ }))
+
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith('Entrada al diario guardada correctamente.', 'success')
+    })
+  })
+
+  it('muestra toast de exito al guardar usando el formulario nuevo', async () => {
+    mockedCreate.mockResolvedValueOnce(makeEntry())
+    const { user } = renderDiary()
+    const [firstTextbox] = screen.getAllByRole('textbox')
+
+    await user.type(firstTextbox, 'Algo')
+    await user.click(screen.getByRole('button', { name: /Guardar/ }))
+
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith('Entrada al diario guardada correctamente.', 'success')
+    })
+  })
 
   it('navega a home al hacer click en Volver', async () => {
     const { user } = renderDiary()

@@ -4,6 +4,8 @@ import { SectionCard } from '../../components/backoffice/SectionCard'
 import DomainFavicon from '../../components/backoffice/DomainFavicon'
 import { RefreshCw, Monitor, Database, Link2, Settings, Clock, FileText, CheckCircle } from 'lucide-react'
 import Button from '../../components/Buttons/Button/Button'
+import { ErrorMessage } from '../../components/backoffice/ErrorMessage'
+
 
 export default function AntiScrollPage() {
   const { formatConsumptionTime } = useTimeFormatter()
@@ -36,11 +38,12 @@ export default function AntiScrollPage() {
 
   if (error) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <div className="text-center text-sm text-red-500">{error}</div>
+      <div className="flex h-[400px] items-center justify-center px-4">
+        <ErrorMessage message={error} />
       </div>
     )
   }
+
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
@@ -183,9 +186,7 @@ export default function AntiScrollPage() {
             ) : (
               <form onSubmit={handleSaveConfig} className="flex flex-col gap-4 flex-1">
                 {configError && (
-                  <div className="text-xs text-red-500 bg-red-50 dark:bg-red-955/20 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
-                    {configError}
-                  </div>
+                  <ErrorMessage message={configError} />
                 )}
                 
                 {saveSuccess && (

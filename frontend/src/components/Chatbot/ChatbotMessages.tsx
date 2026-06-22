@@ -3,6 +3,7 @@ import ChatbotChallengeCard from './ChatbotChallengeCard'
 import ChatbotSuggestedActionCard from './ChatbotSuggestedActionCard'
 import { type ChatbotMessage } from './chatbotTypes'
 import ChatMessageBubble from './ChatMessageBubble'
+import ChatbotQuotaLimitCard from './ChatbotQuotaLimitCard'
 
 interface ChatbotMessagesProps {
   messages: ChatbotMessage[]
@@ -129,7 +130,13 @@ export default function ChatbotMessages({
         </div>
       )}
 
-      {!!error && <p className="text-center text-xs text-red-500">{error}</p>}
+      {!!error && (
+        error.includes('Alcanzaste el límite diario') ? (
+          <ChatbotQuotaLimitCard message={error} onClose={onClose} />
+        ) : (
+          <p className="text-center text-xs text-red-500">{error}</p>
+        )
+      )}
       <div ref={bottomRef} />
     </section>
   )

@@ -336,7 +336,13 @@ input:checked + .huly-slider-round:before {
 .huly-error-message {
   font-size: 0.75rem;
   color: #e53e3e;
-  font-weight: 600;
+  font-weight: 700;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  padding: 8px 12px;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 4px;
 }
 
 .huly-custom-domains-list {

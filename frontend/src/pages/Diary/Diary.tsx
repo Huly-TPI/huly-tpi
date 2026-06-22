@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './Diary.css'
 import { journalApi, type JournalEntryResponse, type Mood } from '../../api/journal.ts'
 import { useAuth } from '../../context/auth.tsx'
+import { useToast } from '../../context/toast.tsx'
 import cloudImg from '../../assets/garden/light-theme/cloud.webp'
 import dayBackground from '../../assets/shared/day-background.webp'
 import darkCloudImg from '../../assets/garden/dark-theme/cloud.webp'
@@ -69,6 +70,7 @@ function formatDateShortMobile(isoString: string): string {
 export default function Diary() {
   const { user } = useAuth()
   const { theme } = useTheme()
+  const { showToast } = useToast()
   const isDark = theme === 'dark'
   const { requireAuth } = useAuthGate()
   const diaryPalette = isDark
@@ -126,7 +128,6 @@ export default function Diary() {
   const [manana, setManana] = useState('')
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [showConsentModal, setShowConsentModal] = useState(false)
 
   const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(
@@ -213,7 +214,6 @@ export default function Diary() {
   const handleSave = async () => {
     if (!hasContent) return
     setSaving(true)
-    setError(null)
     try {
       const contentJson = JSON.stringify({
         adentro: adentro.trim(),
@@ -234,8 +234,9 @@ export default function Diary() {
       setManana('')
       setSelectedMood(null)
       setPageIndex(0)
+      showToast('Entrada al diario guardada correctamente.', 'success')
     } catch {
-      setError('No se pudo guardar la entrada. Intentá de nuevo.')
+      showToast('No se pudo guardar la entrada. Intentá de nuevo.', 'error')
     } finally {
       setSaving(false)
     }
@@ -394,7 +395,7 @@ export default function Diary() {
               style={{ backgroundColor: diaryPalette.accentSurface, color: diaryPalette.cardText }}
             />
 
-            {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+
 
             <p className="text-[10px] italic mt-3" style={{ color: '#649959' }}>
               Tu espacio privado y seguro

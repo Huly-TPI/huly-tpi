@@ -14,12 +14,18 @@ import com.huly.backend.domain.useCase.auth.RegisterUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
+import java.time.ZoneId;
+
 @Configuration
 public class AuthUseCaseConfig {
 
+    /** Zona horaria de negocio para registrar la fecha de actividad del usuario. */
+    private static final ZoneId ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
+
     @Bean
     public LoginUseCase loginUseCase(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, TokenPort tokenPort, PasswordHasherPort passwordHasherPort, UserDetailDomainRepository userDetailDomainRepository) {
-        return new LoginUseCase(userRepository, refreshTokenRepository, tokenPort, passwordHasherPort, userDetailDomainRepository);
+        return new LoginUseCase(userRepository, refreshTokenRepository, tokenPort, passwordHasherPort, userDetailDomainRepository, Clock.system(ZONE));
     }
 
     @Bean

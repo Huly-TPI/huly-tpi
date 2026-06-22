@@ -4,6 +4,7 @@ import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardRequest;
 import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardResponse;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.DailyRewardAlreadyClaimedException;
+import com.huly.backend.domain.model.comebackReward.ComebackRewardPolicy;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
 import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
@@ -54,6 +55,13 @@ public class ClaimDailyRewardUseCase {
 
         coinService.credit(userId, coins);
         userDetailDomainRepository.updateDailyClaim(userId, newStreak, today);
+
+        // Reclamar la recompensa diaria cuenta como actividad: avanza last_login_date salvo que
+        // exista un comeback pendiente (para no borrar la brecha antes de reclamarlo).
+        LocalDate lastSeen = userDetailDomainRepository.findLastLoginDate(userId).orElse(null);
+        if (ComebackRewardPolicy.shouldRegisterActivity(lastSeen, today)) {
+            userDetailDomainRepository.updateLastLoginDate(userId, today);
+        }
 
         return new ClaimDailyRewardResponse(coins, cycleDay, newStreak);
     }

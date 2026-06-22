@@ -22,6 +22,7 @@ import NotificationsPrompt from '../../components/Notifications/NotificationsPro
 import StoreModal from '../../components/Shop/StoreModal'
 import RewardsModal from '../../components/RewardsModal/RewardsModal'
 import SeedShopModal from '../../components/SeedShopModal/SeedShopModal'
+import ComebackRewardModal from '../../components/Shop/ComebackRewardModal'
 import { ShoppingBag } from 'lucide-react'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
@@ -330,6 +331,8 @@ export default function Home() {
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
       <RewardsModal isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} onClaimed={refreshCoins} />
       <SeedShopModal isOpen={isSeedShopOpen} onClose={() => setIsSeedShopOpen(false)} />
+
+      {user?.onboardingTutorialCompleted && <ComebackRewardModal />}
     </main>
   )
 }
