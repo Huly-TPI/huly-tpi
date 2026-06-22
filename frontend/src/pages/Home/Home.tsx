@@ -21,6 +21,7 @@ import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboa
 import NotificationsPrompt from '../../components/Notifications/NotificationsPrompt/NotificationsPrompt'
 import StoreModal from '../../components/Shop/StoreModal'
 import RewardsModal from '../../components/RewardsModal/RewardsModal'
+import SeedShopModal from '../../components/SeedShopModal/SeedShopModal'
 import { ShoppingBag } from 'lucide-react'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
@@ -152,6 +153,7 @@ export default function Home() {
   const { theme: sceneTheme } = useTheme()
   const [isStoreOpen, setIsStoreOpen] = useState(false)
   const [isRewardsOpen, setIsRewardsOpen] = useState(false)
+  const [isSeedShopOpen, setIsSeedShopOpen] = useState(false)
   const { inventory, refetch: refetchInventory } = useInventory()
   const { coins, refresh: refreshCoins } = useUserCoins()
   const { status: rewardsStatus } = useDailyRewards()
@@ -309,19 +311,25 @@ export default function Home() {
               Reclamar
             </span>
           </button>
-          <div className="relative w-24">
+          <button
+            type="button"
+            aria-label="Abrir tienda de semillas"
+            onClick={() => setIsSeedShopOpen(true)}
+            className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+          >
             <img src={semillasImg} alt="Semillas en colección" className="w-full h-auto" />
             {coins !== null && (
               <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b]">
                 {coins.toLocaleString('es-AR')}
               </span>
             )}
-          </div>
+          </button>
         </div>
       )}
 
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
       <RewardsModal isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} onClaimed={refreshCoins} />
+      <SeedShopModal isOpen={isSeedShopOpen} onClose={() => setIsSeedShopOpen(false)} />
     </main>
   )
 }
