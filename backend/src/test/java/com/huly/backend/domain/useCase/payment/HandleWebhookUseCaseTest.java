@@ -13,6 +13,7 @@ import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.service.payment.PlanService;
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,9 +25,11 @@ import java.time.Instant;
 import java.util.Optional;
 import java.math.BigDecimal;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 class HandleWebhookUseCaseTest {
@@ -333,5 +336,23 @@ class HandleWebhookUseCaseTest {
 
                 verify(userStoreItemRepository, never()).save(any());
                 verifyNoInteractions(coinService);
+        }
+
+        @Test
+        void execute_shouldThrowResourceNotFound_whenStoreItemMissingOnGrant() {
+                when(paymentEventRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
+                when(mercadoPagoPort.getPayment(99L))
+                                .thenReturn(new MercadoPagoPaymentResult(99L, "uuid-ext-ref", "approved",
+                                                "accredited"));
+                when(paymentEventRepository.findByExternalReference("uuid-ext-ref"))
+                                .thenReturn(Optional.of(storeItemEvent()));
+                when(paymentEventRepository.approveIfPending(1L, 99L)).thenReturn(true);
+                when(userStoreItemRepository.isOwned(10L, 3L)).thenReturn(false);
+                when(storeItemRepository.findById(3L)).thenReturn(Optional.empty());
+
+                assertThatThrownBy(() -> handleWebhookUseCase.execute(99L))
+                                .isInstanceOf(ResourceNotFoundException.class);
+
+                verify(userStoreItemRepository, never()).save(any());
         }
 }
