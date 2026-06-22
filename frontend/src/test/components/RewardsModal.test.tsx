@@ -38,6 +38,7 @@ function createStatus(overrides: Partial<DailyRewardStatus> = {}): DailyRewardSt
     currentStreak: 2,
     completedDays: 2,
     canClaimToday: true,
+    planBonusActive: false,
     nextDay: 3,
     ...overrides,
   }
@@ -92,7 +93,8 @@ function getSubtitle() {
 }
 
 function getStreakBadge(days: number) {
-  return screen.getByText(new RegExp(`${days} días`))
+  const label = `${days} ${days === 1 ? 'día' : 'días'}`
+  return screen.getByText(new RegExp(label))
 }
 
 function getAllCardLabels() {

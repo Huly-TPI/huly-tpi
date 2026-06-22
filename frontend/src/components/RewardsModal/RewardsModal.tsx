@@ -240,7 +240,9 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
                 />
                 <span className="text-[11px] sm:text-[12px] max-[640px]:text-[10px] font-black text-[#68451f] leading-none">
                   Racha actual:{' '}
-                  <span className="text-[#4d8a2d]">{completedDays} días</span>
+                  <span className="text-[#4d8a2d]">
+                    {completedDays} {completedDays === 1 ? 'día' : 'días'}
+                  </span>
                 </span>
               </div>
             </div>
