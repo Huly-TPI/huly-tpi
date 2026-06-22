@@ -28,3 +28,6 @@ export const getPlans = () => api.get<Plan[]>('/payment/plans')
 
 export const createPreference = (productId: string) =>
   api.post<CreatePreferenceResponse>(`/payment/preference/${productId}`, {})
+
+export const createStoreItemPreference = (storeItemId: string) =>
+  api.post<CreatePreferenceResponse>(`/payment/store-preference/${storeItemId}`, {})

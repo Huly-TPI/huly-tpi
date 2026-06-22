@@ -33,6 +33,7 @@ public class StoreItemRepositoryImpl implements StoreItemRepository {
                 .category(entity.getCategory())
                 .assetKey(entity.getAssetKey())
                 .priceCoins(entity.getPriceCoins())
+                .price(entity.getPrice())
                 .build();
     }
     
