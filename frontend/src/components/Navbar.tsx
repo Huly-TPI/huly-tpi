@@ -8,6 +8,9 @@ import ThemeToggle from './ThemeToggle/ThemeToggle'
 import BadgeModal from './Badges/BadgeModal'
 import { useMembership } from '../hooks/shop/useMembership'
 import SubscriptionModal from './SubscriptionModal/SubscriptionModal'
+import budIcon from '../assets/suscription/budIcon.webp'
+import flowerpotIcon from '../assets/suscription/flowerpotIcon.webp'
+import crownIcon from '../assets/suscription/crownIcon.webp'
 
 const NAV_LINKS = [
   { to: '/', label: 'Jardín' },
@@ -167,11 +170,11 @@ function UserMenu({ name }: { name: string }) {
   const { logout } = useAuth()
   const { membership, refresh: refreshMembership } = useMembership()
 
-  const subscriptionEmoji = !membership?.active
-    ? '🌱'
+  const subscriptionIcon = !membership?.active
+    ? budIcon
     : membership.planCode === 'PREMIUM'
-    ? '👑'
-    : '🪴'
+    ? crownIcon
+    : flowerpotIcon
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -198,7 +201,7 @@ function UserMenu({ name }: { name: string }) {
         aria-expanded={open}
         className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-bosque shadow-sm transition-all hover:brightness-95 active:translate-y-px"
       >
-        <span className="text-sm">{subscriptionEmoji}</span>
+        <img src={subscriptionIcon} alt="" aria-hidden="true" className="size-5 object-contain" />
         <span className="max-w-[8rem] truncate">{name}</span>
       </button>
 

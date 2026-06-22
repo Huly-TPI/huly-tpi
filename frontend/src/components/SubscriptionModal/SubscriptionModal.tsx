@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/solid'
-import modalBg from '../../assets/suscription/modalSuscripcion.png'
-import cardGreen from '../../assets/suscription/cardGreen.png'
-import cardYellow from '../../assets/suscription/cardYellow.png'
-import cardPurple from '../../assets/suscription/cardPurple.png'
+import modalBg from '../../assets/suscription/modalSuscripcion.webp'
+import cardGreen from '../../assets/suscription/cardGreen.webp'
+import cardYellow from '../../assets/suscription/cardYellow.webp'
+import cardPurple from '../../assets/suscription/cardPurple.webp'
 import { usePlans } from '../../hooks/shop/usePlans'
 import { useMembership } from '../../hooks/shop/useMembership'
 import { usePurchase } from '../../hooks/shop/usePurchase'
@@ -54,10 +54,8 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
           ))}
         </ul>
 
-        <div className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap bg-[#7b8f45] border border-[#5f7332] ${
-          isCurrentPlan ? '' : 'invisible'
-        }`}>
-          Plan actual
+        <div className="mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap bg-[#7b8f45] border border-[#5f7332]">
+          {isCurrentPlan ? 'Plan actual' : 'Plan base'}
         </div>
       </div>
     </div>
@@ -135,6 +133,11 @@ function PaidCard({
         >
           {buying ? 'Procesando…' : label}
         </button>
+        {isCurrentPlan && (
+          <div className={`mt-1 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap ${buttonClass}`}>
+            Plan actual
+          </div>
+        )}
       </div>
     </div>
   )
