@@ -1,5 +1,6 @@
 import type { StoreItemResponse } from '../../api/store'
 import { cosmeticAssets } from '../Scene/cosmeticAssets'
+import seedIcon from '../../assets/rewards/seed.webp'
 
 interface CosmeticCardProps {
   item: StoreItemResponse
@@ -24,8 +25,8 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onE
         <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-500">{item.description}</p>
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-sm text-yellow-500">🪙</span>
-        <span className="text-xs font-semibold text-yellow-700">{item.priceCoins.toLocaleString('es-AR')}</span>
+        <img src={seedIcon} alt="" aria-hidden="true" className="w-4 h-4 object-contain shrink-0" />
+        <span className="text-xs font-semibold text-yellow-700">{item.priceCoins.toLocaleString('es-AR')} semillas</span>
       </div>
       {equipped ? (
         <button
