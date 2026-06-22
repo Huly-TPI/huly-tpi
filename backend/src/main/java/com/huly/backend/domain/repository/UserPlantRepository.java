@@ -8,7 +8,8 @@ import java.util.Optional;
 
 public interface UserPlantRepository {
     UserPlant save(UserPlant userPlant);
-    Optional<UserPlant> findByUserIdAndStatus(Long userId, PlantStatus status);
+    Optional<UserPlant> findLatestByUserIdAndStatus(Long userId, PlantStatus status);
+    Optional<UserPlant> findLatestByUserId(Long userId);
     List<UserPlant> findAllByUserIdOrderByPlantNumber(Long userId);
     long countCompletedGoalsByPlantId(Long plantId);
 }
