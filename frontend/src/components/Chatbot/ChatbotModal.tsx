@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect } from 'react'
 import hulySideImage from '../../assets/chatbot/huly-side.webp'
 import { useChatbot } from '../../hooks/useChatbot'
 import BaseModal from '../Modal/BaseModal'
@@ -30,21 +30,16 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     decideSuggestedAction,
     resetConversation,
   } = useChatbot()
-  const wasLoadingHistoryRef = useRef(false)
-  const pendingInitialScrollRef = useRef(false)
-
-  useEffect(() => {
-    if (wasLoadingHistoryRef.current && !isLoadingHistory) {
-      pendingInitialScrollRef.current = true
+  useLayoutEffect(() => {
+    if (isOpen && !isLoadingHistory) {
+      if (messagesContainerRef?.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      } else if (typeof bottomRef?.current?.scrollIntoView === 'function') {
+        bottomRef.current.scrollIntoView({ behavior: 'auto' })
+      }
     }
+  }, [isOpen, isLoadingHistory, bottomRef, messagesContainerRef])
 
-    if (isOpen && !isLoadingHistory && pendingInitialScrollRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: 'auto' })
-      pendingInitialScrollRef.current = false
-    }
-
-    wasLoadingHistoryRef.current = isLoadingHistory
-  }, [isOpen, isLoadingHistory, bottomRef])
 
   return (
     <BaseModal
@@ -78,6 +73,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       <ChatbotComposer
         input={input}
         isSending={isSending}
+        disabled={!!error && error.includes('Alcanzaste el límite diario')}
         onInputChange={setInput}
         onSend={() => void sendMessage()}
         onSendAudio={(blob) => void sendAudioMessage(blob)}

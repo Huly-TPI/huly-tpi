@@ -33,11 +33,11 @@ export const getMe = () => {
 }
 
 export const register = (data: RegisterRequest) => {
-  return api.post<AuthResponse>('/auth/register', data)
+  return api.post<AuthResponse>('/auth/register', data, { skipAuthRedirect: true })
 }
 
 export const login = (data: LoginRequest) => {
-  return api.post<AuthResponse>('/auth/login', data)
+  return api.post<AuthResponse>('/auth/login', data, { skipAuthRedirect: true })
 }
 
 export const backofficeLogin = (data: LoginRequest) => {

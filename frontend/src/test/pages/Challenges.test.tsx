@@ -24,6 +24,12 @@ vi.mock('../../context/authGate', () => ({
   useAuthGate: () => ({ requireAuth: mockRequireAuth }),
 }))
 
+const mockShowToast = vi.hoisted(() => vi.fn())
+
+vi.mock('../../context/toast', () => ({
+  useToast: () => ({ showToast: mockShowToast }),
+}))
+
 vi.mock('../../hooks/useUserGoals', () => ({
   useUserGoals: vi.fn(),
 }))

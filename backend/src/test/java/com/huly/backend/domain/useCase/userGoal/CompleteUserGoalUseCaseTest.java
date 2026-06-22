@@ -17,6 +17,7 @@ import com.huly.backend.domain.service.userGoal.ImageStorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -212,6 +213,40 @@ class CompleteUserGoalUseCaseTest {
         completeUserGoalUseCase.execute(1L, image);
 
         verify(coinService).credit(10L, 40);
+    }
+
+    @Test
+    void execute_shouldFlushCompletedPlantBeforeCreatingNextPlant_whenHarvestIsTriggered() {
+        UserGoal goal = pendingGoal(1L);
+        UserPlant currentPlant = activePlant();
+        UserPlant nextPlant = UserPlant.builder()
+                .id(2L).userId(10L).plantNumber(2).requiredGoals(8)
+                .status(PlantStatus.GROWING).startedAt(Instant.now()).build();
+
+        when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
+        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(currentPlant);
+        when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(5L);
+        when(userPlantRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(userPlantRepository.save(argThat((UserPlant plant) -> plant.getId() == null))).thenReturn(nextPlant);
+
+        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(1L, null);
+
+        InOrder inOrder = inOrder(userPlantRepository);
+        inOrder.verify(userPlantRepository).countCompletedGoalsByPlantId(1L);
+        inOrder.verify(userPlantRepository).saveAndFlush(argThat((UserPlant plant) ->
+                plant.getId().equals(1L)
+                        && plant.getStatus() == PlantStatus.COMPLETED
+                        && plant.getCompletedAt() != null
+        ));
+        inOrder.verify(userPlantRepository).save(argThat((UserPlant plant) ->
+                plant.getId() == null
+                        && plant.getPlantNumber().equals(2)
+                        && plant.getStatus() == PlantStatus.GROWING
+        ));
+
+        assertThat(result.harvestTriggered()).isTrue();
+        assertThat(result.currentPlant().getId()).isEqualTo(2L);
     }
 
     @Test

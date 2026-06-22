@@ -34,7 +34,7 @@ describe('register', () => {
 
         await register(validRegisterRequest)
 
-        expect(mockedPost).toHaveBeenCalledWith('/auth/register', validRegisterRequest)
+        expect(mockedPost).toHaveBeenCalledWith('/auth/register', validRegisterRequest, { skipAuthRedirect: true })
     })
 
     it('retorna el accessToken del backend', async () => {
@@ -69,7 +69,7 @@ describe('login', () => {
 
         await login(validLoginRequest)
 
-        expect(mockedPost).toHaveBeenCalledWith('/auth/login', validLoginRequest)
+        expect(mockedPost).toHaveBeenCalledWith('/auth/login', validLoginRequest, { skipAuthRedirect: true })
     })
 
     it('retorna accessToken y role del backend', async () => {

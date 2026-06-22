@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, CircleDollarSign, Trophy, Zap } from 'lucide-react'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
+import { InlineError } from '../feedback/InlineError'
 import { RewardToast } from './RewardToast'
 
 interface DailyRewardCalendarProps {
@@ -51,10 +52,9 @@ export function DailyRewardCalendar({ onClaimed }: DailyRewardCalendarProps) {
       </p>
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2.5 text-sm text-center">
-          {error}
-        </div>
+        <InlineError message={error} className="mb-4" />
       )}
+
 
       <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 mb-6">
         {status.days.map((day) => {

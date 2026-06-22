@@ -9,6 +9,11 @@ import { userGoalsApi } from '../api/userGoals'
 import { type ChatbotMessage } from '../components/Chatbot/chatbotTypes'
 import { useAuth } from '../context/auth'
 import { deleteAudioBlob, getAudioBlob, saveAudioBlob } from './useAudioCache'
+import { getMyMembership } from '../api/auth'
+
+function getTodayDateString() {
+  return new Date().toISOString().split('T')[0]
+}
 
 const CHAT_CONVERSATION_STORAGE_KEY = 'hulyChatConversationId'
 const AUDIO_KEYS_PREFIX = 'hulyAudioKeys:'
@@ -129,6 +134,8 @@ export function useChatbot() {
   const [conversationId, setConversationId] = useState(() =>
     getOrCreateConversationId(conversationStorageKey),
   )
+
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLElement>(null)
   const sendingRef = useRef(false)
@@ -159,8 +166,8 @@ export function useChatbot() {
       return
     }
 
-    if (shouldAutoScrollRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (shouldAutoScrollRef.current && container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
       shouldAutoScrollRef.current = false
     }
   }, [messages])
@@ -168,6 +175,28 @@ export function useChatbot() {
   useEffect(() => {
     const loadHistory = async () => {
       setIsLoadingHistory(true)
+
+      const limitDate = localStorage.getItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`)
+      const today = getTodayDateString()
+      if (limitDate === today) {
+        try {
+          const membership = await getMyMembership()
+          if (membership?.active) {
+            localStorage.removeItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`)
+            localStorage.removeItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`)
+          } else {
+            const limitMsg = localStorage.getItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`)
+            if (limitMsg) {
+              setError(limitMsg)
+            }
+          }
+        } catch {
+          const limitMsg = localStorage.getItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`)
+          if (limitMsg) {
+            setError(limitMsg)
+          }
+        }
+      }
 
       try {
         const historyPage = await chatApi.getHistory(conversationId, 0, HISTORY_PAGE_SIZE)
@@ -258,7 +287,12 @@ export function useChatbot() {
       shouldAutoScrollRef.current = true
     } catch (requestError) {
       if (requestError instanceof Error) {
-        setError(requestError.message)
+        const errorMsg = requestError.message
+        if (errorMsg.includes('Alcanzaste el límite diario')) {
+          localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
+          localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, errorMsg)
+        }
+        setError(errorMsg)
       }
     } finally {
       sendingRef.current = false
@@ -314,7 +348,12 @@ export function useChatbot() {
       shouldAutoScrollRef.current = true
     } catch (requestError) {
       if (requestError instanceof Error && requestError.name !== 'AbortError') {
-        setError(requestError.message)
+        const errorMsg = requestError.message
+        if (errorMsg.includes('Alcanzaste el límite diario')) {
+          localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
+          localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, errorMsg)
+        }
+        setError(errorMsg)
       }
     } finally {
       audioAbortRef.current = null
