@@ -2,11 +2,12 @@ import { useCallback } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/rewards/modal.webp'
 import cardBg from '../../assets/shop-seed/card.png'
-import startIcon from '../../assets/shop-seed/start.png'
 import seedIcon from '../../assets/rewards/seed.webp'
-import oneSeedIcon from '../../assets/shop-seed/1seed.png'
-import twoSeedsIcon from '../../assets/shop-seed/2seed.png'
-import threeSeedsIcon from '../../assets/shop-seed/3seed.png'
+import violeta from '../../assets/shop-seed/violeta.png'
+import startIcon from '../../assets/shop-seed/start.webp'
+import oneSeedIcon from '../../assets/shop-seed/1seed.webp'
+import twoSeedsIcon from '../../assets/shop-seed/2seed.webp'
+import threeSeedsIcon from '../../assets/shop-seed/3seed.webp'
 import { useProducts } from '../../hooks/shop/useProducts'
 import { usePurchase } from '../../hooks/shop/usePurchase'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
@@ -29,41 +30,51 @@ interface SeedCardProps {
 
 function SeedCard({ product, buying, disabled, featured = false, image, onBuy }: SeedCardProps) {
   return (
-    <div className={`relative aspect-[3/4] w-full transition-transform duration-200 origin-center hover:scale-[1.03] ${featured ? 'scale-[1.03] z-10' : ''}`}>
-      {/* Star icon for featured */}
+    <div className={`relative aspect-[3/4] w-full transition-transform duration-200 origin-center hover:scale-[1.03] ${featured ? 'scale-[1.03] z-10 mt-1' : ''}`}>
+      {/* Ribbon "Mejor valor" for featured */}
       {featured && (
-        <div className="absolute top-1 right-1 z-30 rotate-12">
-          <img src={startIcon} alt="" aria-hidden="true" className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-[0_2px_4px_rgba(180,120,30,0.4)]" />
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 w-[75%]">
+          <img
+            src={violeta}
+            alt=""
+            aria-hidden="true"
+            className="w-full h-auto object-contain pointer-events-none select-none"
+            draggable={false}
+          />
+          <span className="absolute inset-0 flex items-center justify-center gap-1 text-[8px] sm:text-[10px] font-black text-white whitespace-nowrap tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+            <img src={startIcon} alt="" aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 object-contain" />
+            Mejor valor
+          </span>
         </div>
       )}
 
-      {/* Golden glow behind card when featured */}
+      {/* Glow behind card when featured - violeta tones */}
       {featured && (
-        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-b from-[#f0b83a]/30 via-[#d4952b]/20 to-[#f0b83a]/30 blur-sm pointer-events-none" />
+        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-b from-[#9b6b9e]/25 via-[#7a4f7d]/15 to-[#9b6b9e]/25 blur-sm pointer-events-none" />
       )}
 
       <img
         src={cardBg}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(91,60,24,0.16)]"
+        className={`absolute inset-0 w-full h-full object-fill pointer-events-none select-none ${featured ? 'drop-shadow-[0_4px_10px_rgba(120,70,130,0.25)]' : 'drop-shadow-[0_3px_4px_rgba(91,60,24,0.16)]'}`}
         draggable={false}
       />
 
       <div className="absolute inset-[8%] flex flex-col items-center text-center">
         {/* Título */}
-        <h3 className="text-[12px] sm:text-[14px] font-black text-[#5b3b1b] leading-tight line-clamp-2">
+        <h3 className={`text-[12px] sm:text-[14px] font-black text-[#5b3b1b] leading-tight line-clamp-2 ${featured ? 'mt-2' : ''}`}>
           {product.name}
         </h3>
 
         {/* Imagen con glow */}
         <div className="relative mt-auto mb-1">
-          <div className={`absolute inset-0 rounded-full blur-md scale-125 ${featured ? 'bg-[#f0b83a]/30' : 'bg-[#a8d860]/25'}`} />
+          <div className={`absolute inset-0 rounded-full blur-md scale-125 ${featured ? 'bg-[#9b6b9e]/20' : 'bg-[#a8d860]/25'}`} />
           <img
             src={image}
             alt=""
             aria-hidden="true"
-            className={`relative aspect-square object-contain ${featured ? 'w-16 sm:w-[4.5rem] drop-shadow-[0_2px_8px_rgba(180,120,30,0.4)]' : 'w-14 sm:w-16 drop-shadow-[0_2px_6px_rgba(77,138,45,0.3)]'}`}
+            className={`relative aspect-square object-contain ${featured ? 'w-16 sm:w-[4.5rem] drop-shadow-[0_2px_8px_rgba(120,70,130,0.3)]' : 'w-14 sm:w-16 drop-shadow-[0_2px_6px_rgba(77,138,45,0.3)]'}`}
           />
         </div>
 
@@ -86,7 +97,7 @@ function SeedCard({ product, buying, disabled, featured = false, image, onBuy }:
         </p>
 
         {/* Separador */}
-        <div className={`mt-auto mb-1 w-[60%] h-px bg-gradient-to-r from-transparent to-transparent ${featured ? 'via-[#d4a23a]/50' : 'via-[#c9a96e]/40'}`} />
+        <div className={`mt-auto mb-1 w-[60%] h-px bg-gradient-to-r from-transparent to-transparent ${featured ? 'via-[#9b6b9e]/40' : 'via-[#c9a96e]/40'}`} />
 
         {/* Precio */}
         <span className="font-black leading-none tracking-tight text-[15px] sm:text-[17px] text-[#8f541f]">
@@ -101,7 +112,7 @@ function SeedCard({ product, buying, disabled, featured = false, image, onBuy }:
           type="button"
           onClick={() => onBuy(product.id)}
           disabled={disabled}
-          className="mt-1.5 rounded-lg bg-[#7b8f45] border border-[#5f7332] border-b-[3px] px-4 sm:px-5 py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[9px] sm:text-[11px]"
+          className={`mt-1.5 rounded-lg border-b-[3px] px-4 sm:px-5 py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[9px] sm:text-[11px] ${featured ? 'bg-gradient-to-r from-[#8b5a8e] to-[#a06f9e] border-[#6b4470] hover:from-[#7d4f80] hover:to-[#926390]' : 'bg-[#7b8f45] border border-[#5f7332] hover:bg-[#6d8139]'}`}
         >
           {buying ? (
             <>
@@ -177,7 +188,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
               draggable={false}
             />
 
-            <h2 className=" mt-4 text-[22px] sm:text-[27px] max-[640px]:text-[20px] font-black text-[#9b5718] leading-none">
+            <h2 className="mt-2 text-[22px] sm:text-[27px] max-[640px]:text-[20px] font-black text-[#9b5718] leading-none">
               Tienda de semillas
             </h2>
 
@@ -187,7 +198,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
           </div>
 
           {/* Grid de cards */}
-          <div className="grid grid-cols-3 max-[640px]:grid-cols-2 gap-x-4 max-[640px]:gap-x-2 gap-y-2 max-[640px]:mt-3 px-[2%] max-[640px]:px-0 flex-none">
+          <div className="grid grid-cols-3 max-[640px]:grid-cols-2 gap-x-4 max-[640px]:gap-x-2 gap-y-2 max-[640px]:mt-3 px-[2%] max-[640px]:px-0 overflow-visible">
             {loading ? (
               <div className="col-span-3 max-[640px]:col-span-2 flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
@@ -209,7 +220,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
 
           {/* Saldo de semillas */}
           {coins !== null && (
-            <div className="shrink-0 mx-auto mt-1 max-[640px]:mt-4 rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-3 max-[640px]:px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
+            <div className="shrink-0 mx-auto mt-2 max-[640px]:mt-1.5 rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-3 max-[640px]:px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
               <div className="flex items-center gap-1 py-0.5">
                 <img src={seedIcon} alt="" aria-hidden="true" className="w-4 h-4 max-[640px]:w-3.5 max-[640px]:h-3.5 object-contain shrink-0" />
                 <span className="text-[11px] sm:text-[12px] max-[640px]:text-[10px] font-black text-[#68451f] leading-none">
