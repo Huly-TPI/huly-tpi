@@ -13,7 +13,9 @@ import java.util.Optional;
 
 public interface IUserPlantJpaRepository extends JpaRepository<UserPlantEntity, Long> {
 
-    Optional<UserPlantEntity> findByAppUser_IdAndStatus(Long userId, PlantStatus status);
+    Optional<UserPlantEntity> findTopByAppUser_IdAndStatusOrderByPlantNumberDescStartedAtDescIdDesc(Long userId, PlantStatus status);
+
+    Optional<UserPlantEntity> findTopByAppUser_IdOrderByPlantNumberDescStartedAtDescIdDesc(Long userId);
 
     List<UserPlantEntity> findByAppUser_IdOrderByPlantNumberAsc(Long userId);
 

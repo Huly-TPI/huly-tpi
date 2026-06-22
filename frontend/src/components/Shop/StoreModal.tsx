@@ -5,6 +5,8 @@ import { CosmeticCard } from './CosmeticCard'
 import { CoinsBadge } from './CoinsBadge'
 import { X } from 'lucide-react'
 import type { InventoryItemResponse } from '../../api/store'
+import { InlineError } from '../feedback/InlineError'
+
 interface StoreModalProps {
   isOpen: boolean
   onClose: () => void
@@ -67,10 +69,9 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
 
         <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
           {(actionError || itemsError) && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700">
-              {actionError ?? itemsError}
-            </div>
+            <InlineError message={(actionError ?? itemsError) || ''} className="mb-4" />
           )}
+
           {itemsLoading ? (
             <p className="py-8 text-center text-sm text-[#4C7C64]">Cargando tienda...</p>
           ) : (

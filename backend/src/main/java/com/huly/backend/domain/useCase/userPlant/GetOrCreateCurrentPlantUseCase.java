@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @RequiredArgsConstructor
@@ -17,15 +16,17 @@ public class GetOrCreateCurrentPlantUseCase {
 
     @Transactional
     public UserPlant execute(Long userId) {
-        UserPlant plant = userPlantRepository.findByUserIdAndStatus(userId, PlantStatus.GROWING)
-                .orElseGet(() -> createFirstPlant(userId));
+        UserPlant plant = userPlantRepository.findLatestByUserIdAndStatus(userId, PlantStatus.GROWING)
+                .orElseGet(() -> createNextPlant(userId));
         plant.setCompletedGoalsCount(userPlantRepository.countCompletedGoalsByPlantId(plant.getId()));
         return plant;
     }
 
-    private UserPlant createFirstPlant(Long userId) {
-        List<UserPlant> existing = userPlantRepository.findAllByUserIdOrderByPlantNumber(userId);
-        int nextNumber = existing.isEmpty() ? 1 : existing.get(existing.size() - 1).getPlantNumber() + 1;
+    private UserPlant createNextPlant(Long userId) {
+        int nextNumber = userPlantRepository.findLatestByUserId(userId)
+                .map(UserPlant::getPlantNumber)
+                .map(plantNumber -> plantNumber + 1)
+                .orElse(1);
         return userPlantRepository.save(UserPlant.builder()
                 .userId(userId)
                 .plantNumber(nextNumber)

@@ -1,8 +1,33 @@
 import { type RefObject, type UIEventHandler } from 'react'
 import ChatbotChallengeCard from './ChatbotChallengeCard'
+
+const MIN_BUBBLE_LENGTH = 150
+
+function splitIntoBubbles(content: string): string[] {
+  const parts = content.split('\n\n').filter((p) => p.trim() !== '')
+  const bubbles: string[] = []
+  let pending = ''
+  for (const part of parts) {
+    const trimmed = part.trim()
+    if (pending) {
+      pending = pending + '\n\n' + trimmed
+      if (pending.length >= MIN_BUBBLE_LENGTH) {
+        bubbles.push(pending)
+        pending = ''
+      }
+    } else if (trimmed.length < MIN_BUBBLE_LENGTH) {
+      pending = trimmed
+    } else {
+      bubbles.push(trimmed)
+    }
+  }
+  if (pending) bubbles.push(pending)
+  return bubbles
+}
 import ChatbotSuggestedActionCard from './ChatbotSuggestedActionCard'
 import { type ChatbotMessage } from './chatbotTypes'
 import ChatMessageBubble from './ChatMessageBubble'
+import ChatbotQuotaLimitCard from './ChatbotQuotaLimitCard'
 
 interface ChatbotMessagesProps {
   messages: ChatbotMessage[]
@@ -79,14 +104,20 @@ export default function ChatbotMessages({
       )}
 
       {messages.map((message, index) => (
-        <div key={index} className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-          <ChatMessageBubble
-            role={message.role}
-            content={message.content}
-            audioUrl={'audioUrl' in message ? message.audioUrl : undefined}
-            isAudioMessage={'audioKey' in message}
-            onDelete={'audioKey' in message ? () => void onDeleteAudioMessage(index) : undefined}
-          />
+        <div key={index} className={`flex flex-col gap-1.5 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+          {message.role === 'assistant'
+            ? splitIntoBubbles(message.content).map((part, partIndex) => (
+                  <ChatMessageBubble key={partIndex} role="assistant" content={part} />
+                ))
+            : (
+              <ChatMessageBubble
+                role={message.role}
+                content={message.content}
+                audioUrl={'audioUrl' in message ? message.audioUrl : undefined}
+                isAudioMessage={'audioKey' in message}
+                onDelete={'audioKey' in message ? () => void onDeleteAudioMessage(index) : undefined}
+              />
+            )}
 
           {message.role === 'assistant' && (
             <div className="ml-1 mt-2 flex w-full max-w-[85%] min-w-0 flex-col gap-2 sm:w-auto">
@@ -129,7 +160,13 @@ export default function ChatbotMessages({
         </div>
       )}
 
-      {!!error && <p className="text-center text-xs text-red-500">{error}</p>}
+      {!!error && (
+        error.includes('Alcanzaste el límite diario') ? (
+          <ChatbotQuotaLimitCard message={error} onClose={onClose} />
+        ) : (
+          <p className="text-center text-xs text-red-500">{error}</p>
+        )
+      )}
       <div ref={bottomRef} />
     </section>
   )
