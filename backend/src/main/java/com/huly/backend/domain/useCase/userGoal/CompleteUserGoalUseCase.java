@@ -74,7 +74,7 @@ public class CompleteUserGoalUseCase {
         if (completedCount >= currentPlant.getRequiredGoals()) {
             currentPlant.setStatus(PlantStatus.COMPLETED);
             currentPlant.setCompletedAt(Instant.now());
-            userPlantRepository.save(currentPlant);
+            userPlantRepository.saveAndFlush(currentPlant);
 
             int nextNumber = currentPlant.getPlantNumber() + 1;
             UserPlant nextPlant = userPlantRepository.save(UserPlant.builder()

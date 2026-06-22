@@ -56,6 +56,14 @@ class TestVadToEmotion:
         # valence == 0.6 triggers the >= branch; arousal < 0.5 → neutral
         assert vad_to_emotion(0.4, 0.5, 0.6) == "neutral"
 
+    def test_angry_spanish_high_valence_1(self):
+        # Voz enojada española real: arousal y dominance altos, valence moderada (~0.48)
+        assert vad_to_emotion(0.644, 0.655, 0.481) == "angry"
+
+    def test_angry_spanish_high_valence_2(self):
+        # Voz enojada española real: arousal y dominance muy altos, valence moderada-alta (~0.63)
+        assert vad_to_emotion(0.747, 0.714, 0.626) == "angry"
+
 
 class TestConvertToWav16k:
     def test_raises_runtime_error_on_ffmpeg_failure(self, tmp_path):
