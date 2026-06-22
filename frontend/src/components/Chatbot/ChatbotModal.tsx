@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect } from 'react'
 import hulySideImage from '../../assets/chatbot/huly-side.webp'
 import { useChatbot } from '../../hooks/useChatbot'
 import BaseModal from '../Modal/BaseModal'
