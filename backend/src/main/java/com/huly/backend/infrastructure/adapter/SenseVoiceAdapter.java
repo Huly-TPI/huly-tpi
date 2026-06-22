@@ -19,8 +19,8 @@ import java.util.Map;
 @Component
 public class SenseVoiceAdapter implements AudioTranscriptionPort {
 
-    private static final int  MAX_RETRIES    = 3;
-    private static final long RETRY_DELAY_MS = 20_000L;
+    private static final int  MAX_RETRIES    = 5;
+    private static final long RETRY_DELAY_MS = 5_000L;
 
     @Value("${app.sensevoice.url}")
     private String senseVoiceUrl;
