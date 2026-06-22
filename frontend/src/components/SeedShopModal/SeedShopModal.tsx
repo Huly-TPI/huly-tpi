@@ -3,11 +3,12 @@ import { XMarkIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/rewards/modal.webp'
 import cardBg from '../../assets/shop-seed/cardWhite.webp'
 import seedIcon from '../../assets/rewards/seed.webp'
-import violeta from '../../assets/shop-seed/violeta.png'
+import violeta from '../../assets/shop-seed/violeta.webp'
 import startIcon from '../../assets/shop-seed/start.webp'
 import oneSeedIcon from '../../assets/shop-seed/1seed.webp'
 import twoSeedsIcon from '../../assets/shop-seed/2seed.webp'
 import threeSeedsIcon from '../../assets/shop-seed/3seed.webp'
+import { ShieldCheck } from 'lucide-react'
 import { useProducts } from '../../hooks/shop/useProducts'
 import { usePurchase } from '../../hooks/shop/usePurchase'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
@@ -80,12 +81,6 @@ function SeedCard({ product, buying, disabled, featured = false, image, onBuy }:
 
         {/* Badge de semillas */}
         <div className="flex items-center gap-1 rounded-full border border-[#b98a54] bg-[#f3d7a6]/70 px-2 py-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
-          <img
-            src={seedIcon}
-            alt=""
-            aria-hidden="true"
-            className="w-3 h-3 object-contain shrink-0"
-          />
           <span className="text-[9px] sm:text-[11px] font-black whitespace-nowrap text-[#3d7a1a]">
             {product.coinsAmount.toLocaleString('es-AR')} semillas
           </span>
@@ -150,14 +145,14 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Tienda de semillas"
-        className="relative z-10 w-full max-w-[730px] max-[640px]:max-w-[370px]"
+        className="relative z-10 w-full max-w-[760px] max-[640px]:max-w-[370px]"
         onClick={e => e.stopPropagation()}
       >
         <img
@@ -218,18 +213,16 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
             )}
           </div>
 
-          {/* Saldo de semillas */}
-          {coins !== null && (
-            <div className="shrink-0 mx-auto mt-2 max-[640px]:mt-1.5 rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-3 max-[640px]:px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
-              <div className="flex items-center gap-1 py-0.5">
-                <img src={seedIcon} alt="" aria-hidden="true" className="w-4 h-4 max-[640px]:w-3.5 max-[640px]:h-3.5 object-contain shrink-0" />
-                <span className="text-[11px] sm:text-[12px] max-[640px]:text-[10px] font-black text-[#68451f] leading-none">
-                  Tus semillas:{' '}
-                  <span className="text-[#4d8a2d]">{coins.toLocaleString('es-AR')}</span>
-                </span>
-              </div>
-            </div>
-          )}
+          {/* Mensaje de confianza */}
+          <div className="shrink-0 mx-auto mt-4 max-[640px]:mt-1.5 text-center">
+            <p className="flex items-center justify-center gap-1 text-[10px] sm:text-[12px] font-bold text-[#7b5c3c] leading-tight">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#9b6b9e] shrink-0" />
+              Pago seguro y único
+            </p>
+            <p className="text-[8px] sm:text-[11px] font-bold text-[#7b5c3c] leading-tight">
+              Tus semillas se agregan al instante
+            </p>
+          </div>
 
           {(error || purchaseError) && (
             <p className="shrink-0 mt-1 text-red-600 text-[10px] text-center px-4 font-bold">

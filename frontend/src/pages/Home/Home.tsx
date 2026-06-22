@@ -1,5 +1,5 @@
-import semillasImg from '../../assets/garden/image.png'
-import recompensasImg from '../../assets/garden/image2.png'
+import seedIcon from '../../assets/garden/seedIcon.webp'
+import rewardsIcon from '../../assets/garden/rewardsIcon.webp'
 import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
 import dayMobileBackgroundImage from '../../assets/garden/light-theme/background/mobile/day-background.webp'
 import { useEffect, useState } from 'react'
@@ -306,8 +306,8 @@ export default function Home() {
             onClick={() => setIsRewardsOpen(true)}
             className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
           >
-            <img src={recompensasImg} alt="Recompensas diarias" className="w-full h-auto scale-[0.97] origin-top" />
-            <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b] whitespace-nowrap">
+            <img src={rewardsIcon} alt="Recompensas diarias" className="w-full h-auto scale-[0.97] origin-top" />
+            <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523] whitespace-nowrap">
               Reclamar
             </span>
           </button>
@@ -317,9 +317,9 @@ export default function Home() {
             onClick={() => setIsSeedShopOpen(true)}
             className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
           >
-            <img src={semillasImg} alt="Semillas en colección" className="w-full h-auto" />
+            <img src={seedIcon} alt="Semillas en colección" className="w-full h-auto" />
             {coins !== null && (
-              <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#5a3e1b]">
+              <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523]">
                 {coins.toLocaleString('es-AR')}
               </span>
             )}
