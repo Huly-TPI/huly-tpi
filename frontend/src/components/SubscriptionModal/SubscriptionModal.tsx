@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/solid'
-import { ShieldCheck, CircleDollarSign } from 'lucide-react'
 import modalBg from '../../assets/suscription/modalSuscripcion.png'
+import seedIcon from '../../assets/shop-seed/1seed.webp'
 import cardGreen from '../../assets/suscription/cardGreen.png'
 import cardYellow from '../../assets/suscription/cardYellow.png'
 import cardPurple from '../../assets/suscription/cardPurple.png'
@@ -108,9 +108,9 @@ function PaidCard({ plan, cardImage, buying, disabled, activeProductId, buttonTh
       <div className="absolute top-[38%] bottom-[16%] left-[8%] right-[8%] flex flex-col items-center justify-between text-center">
         <div className="flex flex-col items-center gap-1">
           <div className="flex items-center gap-1 rounded-full border border-[#b98a54] bg-[#f3d7a6]/70 px-2 py-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
-            <CircleDollarSign className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-yellow-600 shrink-0" />
+            <img src={seedIcon} alt="" aria-hidden="true" className="w-4 h-4 object-contain shrink-0" />
             <span className="text-[8px] sm:text-[10px] font-black whitespace-nowrap text-[#3d7a1a]">
-              {plan.coinsAmount.toLocaleString('es-AR')} monedas
+              {plan.coinsAmount.toLocaleString('es-AR')} semillas
             </span>
           </div>
           <p className="text-[8px] sm:text-[10px] text-[#7b5c3c] leading-snug line-clamp-2 px-1">
