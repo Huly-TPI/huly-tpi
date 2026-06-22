@@ -119,16 +119,20 @@ def predict_vad(audio_array: np.ndarray) -> dict:
 def vad_to_emotion(arousal: float, dominance: float, valence: float) -> str:
     """
     Mapeo VAD → etiqueta de emoción dominante.
-    Basado en el modelo circumplejo de Russell (activación-valencia) con dominancia.
-    Valores en [0, 1]: valence 0=negativo 1=positivo, arousal 0=calmado 1=activado.
+    Calibrado para el modelo audeering (entrenado en inglés) con voz española:
+    el modelo sobreestima valence en ira española; arousal+dominance son más fiables.
     """
-    if valence >= 0.6:
-        return "happy" if arousal >= 0.5 else "neutral"
-    if valence <= 0.4:
+    # Ira/frustración: alta activación + alta dominancia (patrón cross-lingüístico estable).
+    # Valence < 0.70 descarta voces genuinamente alegres/entusiastas.
+    if arousal >= 0.55 and dominance >= 0.60 and valence < 0.70:
+        return "angry"
+    if valence >= 0.60:
+        return "happy" if arousal >= 0.50 else "neutral"
+    if valence <= 0.40:
         if arousal >= 0.55:
-            return "angry" if dominance >= 0.5 else "fearful"
+            return "fearful"
         return "sad"
-    if arousal >= 0.6:
+    if arousal >= 0.65:
         return "surprised"
     return "neutral"
 
@@ -152,6 +156,9 @@ async def lifespan(app: FastAPI):
         vad_model     = EmotionModel.from_pretrained(VAD_MODEL_ID)
         vad_model.eval()
         logger.info("Modelo VAD cargado (float32).")
+        logger.info("Ejecutando warm-up del modelo VAD...")
+        predict_vad(np.zeros(16000, dtype=np.float32))
+        logger.info("Warm-up completo.")
     except Exception as exc:
         logger.error(f"Error cargando modelo VAD: {exc}")
         raise
