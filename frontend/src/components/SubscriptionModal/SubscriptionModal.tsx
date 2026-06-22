@@ -40,7 +40,7 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
         <h3 className="text-[13px] sm:text-[15px] font-black text-[#1a4a1a] leading-none">Free</h3>
         <div className="mt-3">
           <p className="font-black text-[16px] sm:text-[19px] text-[#2a6a2a] leading-none">$0</p>
-          <p className="mt-1 text-[7px] sm:text-[8px] font-bold text-[#3a5c2a]">Siempre gratis</p>
+          <p className="mt-1 text-[7px] sm:text-[10px] font-bold text-[#3a5c2a]">Siempre gratis</p>
         </div>
 
         <div className="mt-3 mb-2 w-[78%] h-px bg-gradient-to-r from-transparent via-[#6abf55]/35 to-transparent" />
@@ -49,7 +49,7 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
           {FREE_FEATURES.map((feature, index) => (
             <li key={index} className="flex items-start gap-1.5 text-left text-[10px] sm:text-[10px] text-[#3a5c2a] leading-tight">
               <span className="mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-[#8ccf65] text-white text-[7px] font-black">✓</span>
-              <span>{feature}</span>
+              <span className="font-bold">{feature}</span>
             </li>
           ))}
         </ul>
@@ -104,7 +104,7 @@ function PaidCard({
             ${plan.price.toLocaleString('es-AR')}
             <span className="text-[10px] sm:text-[12px] font-black"> ARS</span>
           </p>
-          <p className="mt-1 text-[7px] sm:text-[8px] font-bold text-[#7b5c3c]">
+          <p className="mt-1 text-[7px] sm:text-[10px] font-bold text-[#7b5c3c]">
             Acceso por 30 días
           </p>
         </div>
@@ -122,7 +122,7 @@ function PaidCard({
           {features.map((feature, index) => (
             <li key={index} className={`flex items-start gap-1.5 text-left text-[10px] ${compact ? 'sm:text-[10px]' : 'sm:text-[10px]'} text-[#7b5c3c] leading-tight`}>
               <span className={`mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full ${checkBg} text-white text-[7px] font-black`}>✓</span>
-              <span>{feature}</span>
+              <span className="font-bold">{feature}</span>
             </li>
           ))}
         </ul>
