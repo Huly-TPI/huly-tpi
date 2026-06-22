@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/suscription/modalSuscripcion.png'
-import seedIcon from '../../assets/shop-seed/1seed.webp'
 import cardGreen from '../../assets/suscription/cardGreen.png'
 import cardYellow from '../../assets/suscription/cardYellow.png'
 import cardPurple from '../../assets/suscription/cardPurple.png'
@@ -21,6 +20,8 @@ interface PaidCardProps {
   plan: Plan
   cardImage: string
   features: string[]
+  showSeeds?: boolean
+  compact?: boolean
   buying: boolean
   disabled: boolean
   activeProductId: string | null
@@ -32,122 +33,108 @@ const FREE_FEATURES = ['5 mensajes al día']
 
 function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
   return (
-    <div className="relative h-full w-auto transition-transform duration-200 origin-center hover:scale-[1.03]"
-      style={{ aspectRatio: '353/706' }}
-    >
-      <img
-        src={cardGreen}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(0,80,0,0.16)]"
-        draggable={false}
-      />
+    <div className="relative h-full w-full min-w-0 transition-transform duration-200 origin-center hover:scale-[1.015]" style={{ aspectRatio: '353/706' }}>
+      <img src={cardGreen} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(0,80,0,0.16)]" draggable={false} />
 
-      <div className="absolute top-[8%] left-[28%] right-[8%]">
-        <h3 className="text-[11px] sm:text-[13px] font-black text-[#1a4a1a] leading-tight">
-          Plan Gratuito
-        </h3>
-      </div>
+      <div className="absolute inset-x-[8%] top-[7%] bottom-[8%] flex flex-col items-center text-center overflow-hidden">
+        <h3 className="text-[13px] sm:text-[15px] font-black text-[#1a4a1a] leading-none">Free</h3>
+        <div className="mt-3">
+          <p className="font-black text-[16px] sm:text-[19px] text-[#2a6a2a] leading-none">$0</p>
+          <p className="mt-1 text-[7px] sm:text-[8px] font-bold text-[#3a5c2a]">Siempre gratis</p>
+        </div>
 
-      <div className="absolute top-[38%] bottom-[16%] left-[8%] right-[8%] flex flex-col justify-between">
-        <ul className="w-full">
-          {FREE_FEATURES.map((f, i) => (
-            <li key={i} className="flex items-start gap-1 text-[7px] sm:text-[9px] text-[#3a5c2a] leading-tight mb-0.5">
-              <span className="text-[#3d7a1a] font-black shrink-0">✓</span>
-              <span>{f}</span>
+        <div className="mt-3 mb-2 w-[78%] h-px bg-gradient-to-r from-transparent via-[#6abf55]/35 to-transparent" />
+
+        <ul className="w-full flex-1 space-y-1">
+          {FREE_FEATURES.map((feature, index) => (
+            <li key={index} className="flex items-start gap-1.5 text-left text-[10px] sm:text-[10px] text-[#3a5c2a] leading-tight">
+              <span className="mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-[#8ccf65] text-white text-[7px] font-black">✓</span>
+              <span>{feature}</span>
             </li>
           ))}
         </ul>
 
-        <div className="flex flex-col items-center gap-1.5">
-          <span className="font-black text-[16px] sm:text-[19px] text-[#2a6a2a]">
-            Gratis
-          </span>
-          <div
-            className={`rounded-lg border-b-[3px] px-3 sm:px-4 py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[9px] sm:text-[11px] whitespace-nowrap bg-[#7b8f45] border border-[#5f7332] ${
-              isCurrentPlan ? '' : 'invisible'
-            }`}
-          >
-            Tu plan actual
-          </div>
+        <div className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap bg-[#7b8f45] border border-[#5f7332] ${
+          isCurrentPlan ? '' : 'invisible'
+        }`}>
+          Plan actual
         </div>
       </div>
     </div>
   )
 }
 
-function PaidCard({ plan, cardImage, features, buying, disabled, activeProductId, buttonTheme, onBuy }: PaidCardProps) {
+function PaidCard({
+  plan,
+  cardImage,
+  features,
+  showSeeds = false,
+  compact = false,
+  buying,
+  disabled,
+  activeProductId,
+  buttonTheme,
+  onBuy,
+}: PaidCardProps) {
   const isCurrentPlan = activeProductId === plan.id
   const blockedByOther = activeProductId !== null && !isCurrentPlan
   const buttonDisabled = disabled || blockedByOther
+  const isBasic = buttonTheme === 'yellow'
 
-  const label = isCurrentPlan ? 'Renovar' : blockedByOther ? 'Plan activo' : 'Suscribirme'
+  const label = isCurrentPlan ? 'Renovar' : blockedByOther ? 'Plan activo' : `Elegir ${plan.name.replace('Plan ', '')}`
 
-  const buttonClass =
-    buttonTheme === 'yellow'
-      ? 'bg-amber-500 border border-amber-600 hover:bg-amber-600'
-      : 'bg-gradient-to-r from-[#8b5a8e] to-[#a06f9e] border-[#6b4470] hover:from-[#7d4f80] hover:to-[#926390]'
+  const textColor = isBasic ? 'text-[#8f541f]' : 'text-[#5d3a80]'
+  const checkBg = isBasic ? 'bg-[#f5a623]' : 'bg-[#8b5a8e]'
+
+  const buttonClass = isBasic
+    ? 'bg-amber-500 border-amber-600 hover:bg-amber-600'
+    : 'bg-gradient-to-r from-[#8b5a8e] to-[#a06f9e] border-[#6b4470] hover:from-[#7d4f80] hover:to-[#926390]'
 
   return (
-    <div
-      className="relative h-full w-auto transition-transform duration-200 origin-center hover:scale-[1.03]"
-      style={{ aspectRatio: '353/706' }}
-    >
-      <img
-        src={cardImage}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(91,60,24,0.16)]"
-        draggable={false}
-      />
+    <div className="relative h-full w-full min-w-0 transition-transform duration-200 origin-center hover:scale-[1.015]" style={{ aspectRatio: '353/706' }}>
+      <img src={cardImage} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(91,60,24,0.16)]" draggable={false} />
 
-      {/* Zona superior: título alineado debajo del emoji pintado */}
-      <div className="absolute top-[8%] left-[28%] right-[8%]">
-        <h3 className="text-[11px] sm:text-[13px] font-black text-[#3a2a10] leading-tight line-clamp-2">
-          {plan.name}
+      <div className="absolute inset-x-[8%] top-[8%] bottom-[7%] flex flex-col items-center text-center overflow-hidden">
+        <h3 className={`text-[13px] sm:text-[15px] font-black leading-none whitespace-nowrap ${textColor}`}>
+          {plan.name.replace('Plan ', '')}
         </h3>
-      </div>
 
-      {/* Zona inferior: contenido debajo de la línea divisoria (~35%) */}
-      <div className="absolute top-[38%] bottom-[16%] left-[8%] right-[8%] flex flex-col items-center justify-between text-center">
-        <div className="flex flex-col items-start gap-1 w-full">
-          <div className="flex items-center gap-1 rounded-full border border-[#b98a54] bg-[#f3d7a6]/70 px-2 py-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] self-center">
-            <img src={seedIcon} alt="" aria-hidden="true" className="w-4 h-4 object-contain shrink-0" />
-            <span className="text-[8px] sm:text-[10px] font-black whitespace-nowrap text-[#3d7a1a]">
-              {plan.coinsAmount.toLocaleString('es-AR')} semillas
-            </span>
-          </div>
-          <ul className="w-full mt-1">
-            {features.map((f, i) => (
-              <li key={i} className="flex items-start gap-1 text-[7px] sm:text-[9px] text-[#7b5c3c] leading-tight mb-0.5">
-                <span className="text-[#3d7a1a] font-black shrink-0">✓</span>
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="flex flex-col items-center gap-1.5">
-          <span className="font-black text-[16px] sm:text-[19px] text-[#8f541f]">
+        <div className="mt-3">
+          <p className={`font-black text-[16px] sm:text-[19px] leading-none ${textColor}`}>
             ${plan.price.toLocaleString('es-AR')}
-            <span className="text-[8px] sm:text-[9px] font-bold text-[#7b5c3c] ml-0.5">ARS</span>
-          </span>
-          <button
-            type="button"
-            onClick={() => onBuy(plan.id)}
-            disabled={buttonDisabled}
-            className={`rounded-lg border-b-[3px] px-3 sm:px-4 py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[9px] sm:text-[11px] ${buttonClass}`}
-          >
-            {buying ? (
-              <>
-                <span className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Procesando…
-              </>
-            ) : (
-              label
-            )}
-          </button>
+            <span className="text-[10px] sm:text-[12px] font-black"> ARS</span>
+          </p>
+          <p className="mt-1 text-[7px] sm:text-[8px] font-bold text-[#7b5c3c]">
+            Acceso por 30 días
+          </p>
         </div>
+
+        <div className="mt-3 mb-2 w-[78%] h-px bg-gradient-to-r from-transparent via-[#c9a96e]/40 to-transparent" />
+
+        <ul className={`w-full flex-1 overflow-hidden ${compact ? 'space-y-[2px]' : 'space-y-[3px]'}`}>
+          {showSeeds && (
+            <li className="flex items-start gap-1.5 text-left text-[7px] sm:text-[8px] text-[#7b5c3c] leading-tight">
+              <span className={`mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full ${checkBg} text-white text-[7px] font-black`}>✓</span>
+              <span>{plan.coinsAmount.toLocaleString('es-AR')} semillas</span>
+            </li>
+          )}
+
+          {features.map((feature, index) => (
+            <li key={index} className={`flex items-start gap-1.5 text-left text-[10px] ${compact ? 'sm:text-[10px]' : 'sm:text-[10px]'} text-[#7b5c3c] leading-tight`}>
+              <span className={`mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full ${checkBg} text-white text-[7px] font-black`}>✓</span>
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+
+        <button
+          type="button"
+          onClick={() => onBuy(plan.id)}
+          disabled={buttonDisabled}
+          className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] ${buttonClass}`}
+        >
+          {buying ? 'Procesando…' : label}
+        </button>
       </div>
     </div>
   )
@@ -180,31 +167,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
   const activeProductId = membership?.active ? membership.productId : null
 
   return (
-    <div
-      className="fixed inset-0 z-[400] flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Planes de suscripción"
-        className="relative z-10 w-full max-w-[760px] max-[640px]:max-w-[380px]"
-        onClick={e => e.stopPropagation()}
-      >
-        <img
-          src={modalBg}
-          alt=""
-          aria-hidden="true"
-          className="w-full h-auto select-none pointer-events-none block"
-          draggable={false}
-        />
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label="Planes de suscripción" className="relative z-10 w-full max-w-[820px] max-[640px]:max-w-[390px]" onClick={e => e.stopPropagation()}>
+        <img src={modalBg} alt="" aria-hidden="true" className="w-full h-auto select-none pointer-events-none block" draggable={false} />
 
-        <div className="absolute inset-0 px-[8%] pt-[9%] pb-[5%] flex flex-col">
-          <button
-            onClick={onClose}
-            aria-label="Cerrar planes de suscripción"
-            className="absolute top-[3%] right-[3%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20"
-          >
+        <div className="absolute inset-0 px-[8%] pt-[9%] pb-[6%] flex flex-col overflow-hidden">
+          <button onClick={onClose} aria-label="Cerrar planes de suscripción" className="absolute top-[3%] right-[3%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20">
             <XMarkIcon className="w-5 h-5" />
           </button>
 
@@ -218,21 +186,23 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
             Elegí el plan que mejor se adapte a vos
           </p>
 
-          <div className="flex justify-center items-start gap-2 sm:gap-3 mt-2 px-[1%]">
+          <div className="flex justify-center items-stretch gap-2 sm:gap-3 mt-2 px-[1%]">
             {plansLoading ? (
               <div className="flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <>
-                <div className="h-[clamp(280px,50vh,400px)]">
+                <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
                   <FreeCard isCurrentPlan={!activeProductId} />
                 </div>
+
                 {basicPlan && (
-                  <div className="h-[clamp(280px,50vh,400px)]">
+                  <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
                     <PaidCard
                       plan={basicPlan}
                       cardImage={cardYellow}
+                      showSeeds={false}
                       features={[
                         'Chatbot libre',
                         'Items exclusivos de la tienda',
@@ -248,15 +218,18 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                     />
                   </div>
                 )}
+
                 {premiumPlan && (
-                  <div className="h-[clamp(280px,50vh,400px)]">
+                  <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
                     <PaidCard
                       plan={premiumPlan}
                       cardImage={cardPurple}
+                      showSeeds={false}
+                      compact
                       features={[
                         'Chatbot libre',
                         'Items exclusivos de la tienda',
-                        'Mandalas exclusivos (básico + exclusivos Huly)',
+                        'Mandalas exclusivos Huly',
                         '1000 monedas',
                         'Audios libres',
                         '1.5x recompensas diarias',
