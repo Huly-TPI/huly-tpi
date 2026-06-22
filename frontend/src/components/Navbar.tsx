@@ -6,6 +6,8 @@ import { useTheme } from '../context/theme'
 import logo from '../assets/brand/monocromatico-menta-logo.png'
 import ThemeToggle from './ThemeToggle/ThemeToggle'
 import BadgeModal from './Badges/BadgeModal'
+import { useMembership } from '../hooks/shop/useMembership'
+import SubscriptionModal from './SubscriptionModal/SubscriptionModal'
 
 const NAV_LINKS = [
   { to: '/', label: 'Jardín' },
@@ -159,9 +161,17 @@ export default function Navbar() {
 
 function UserMenu({ name }: { name: string }) {
   const [open, setOpen] = useState(false)
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const { membership, refresh: refreshMembership } = useMembership()
+
+  const subscriptionEmoji = !membership?.active
+    ? '🌱'
+    : membership.planCode === 'PREMIUM'
+    ? '👑'
+    : '🪴'
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -188,9 +198,15 @@ function UserMenu({ name }: { name: string }) {
         aria-expanded={open}
         className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-bosque shadow-sm transition-all hover:brightness-95 active:translate-y-px"
       >
-        <User className="size-4" strokeWidth={2} />
+        <span className="text-sm">{subscriptionEmoji}</span>
         <span className="max-w-[8rem] truncate">{name}</span>
       </button>
+
+      <SubscriptionModal
+        isOpen={subscriptionOpen}
+        onClose={() => setSubscriptionOpen(false)}
+        onRefreshMembership={refreshMembership}
+      />
 
       {open && (
         <div
@@ -205,6 +221,14 @@ function UserMenu({ name }: { name: string }) {
           >
             Mi perfil
           </Link>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => { setOpen(false); setSubscriptionOpen(true) }}
+            className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100"
+          >
+            Suscripciones
+          </button>
           <Link
             to="/privacy"
             role="menuitem"
