@@ -157,7 +157,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
           draggable={false}
         />
 
-        <div className="absolute inset-0 px-[9%] pt-[19%] pb-[7%] max-[640px]:px-[8%] max-[640px]:pt-[22%] max-[640px]:pb-[6%] flex flex-col">
+        <div className="absolute inset-0 px-[9%] pt-[18%] pb-[7%] max-[640px]:px-[8%] max-[640px]:pt-[22%] max-[640px]:pb-[6%] flex flex-col">
           {/* Botón cerrar */}
           <button
             onClick={onClose}
@@ -166,18 +166,6 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
           >
             <XMarkIcon className="w-5 h-5 max-[640px]:w-4 max-[640px]:h-4" />
           </button>
-
-          {/* Saldo de semillas */}
-          {coins !== null && (
-            <div className="absolute top-[4%] right-[13%] max-[640px]:right-[16%] z-20 rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-2.5 max-[640px]:px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
-              <div className="flex items-center gap-0.5 py-0.5">
-                <img src={seedIcon} alt="" aria-hidden="true" className="w-4 h-4 max-[640px]:w-3.5 max-[640px]:h-3.5 object-contain shrink-0" />
-                <span className="text-[10px] sm:text-[11px] max-[640px]:text-[9px] font-black text-[#68451f] leading-none">
-                  <span className="text-[#4d8a2d]">{coins.toLocaleString('es-AR')}</span>
-                </span>
-              </div>
-            </div>
-          )}
 
           {/* Header */}
           <div className="text-center shrink-0">
@@ -189,7 +177,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
               draggable={false}
             />
 
-            <h2 className="text-[22px] sm:text-[27px] max-[640px]:text-[20px] font-black text-[#9b5718] mt-2 leading-none">
+            <h2 className=" mt-4 text-[22px] sm:text-[27px] max-[640px]:text-[20px] font-black text-[#9b5718] leading-none">
               Tienda de semillas
             </h2>
 
@@ -199,7 +187,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
           </div>
 
           {/* Grid de cards */}
-          <div className="grid grid-cols-3 max-[640px]:grid-cols-2 gap-x-4 max-[640px]:gap-x-2 gap-y-2 max-[640px]:mt-3 px-[2%] max-[640px]:px-0 flex-1 min-h-0 overflow-visible">
+          <div className="grid grid-cols-3 max-[640px]:grid-cols-2 gap-x-4 max-[640px]:gap-x-2 gap-y-2 max-[640px]:mt-3 px-[2%] max-[640px]:px-0 flex-none">
             {loading ? (
               <div className="col-span-3 max-[640px]:col-span-2 flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
@@ -218,6 +206,19 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
               ))
             )}
           </div>
+
+          {/* Saldo de semillas */}
+          {coins !== null && (
+            <div className="shrink-0 mx-auto mt-1 max-[640px]:mt-4 rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-3 max-[640px]:px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
+              <div className="flex items-center gap-1 py-0.5">
+                <img src={seedIcon} alt="" aria-hidden="true" className="w-4 h-4 max-[640px]:w-3.5 max-[640px]:h-3.5 object-contain shrink-0" />
+                <span className="text-[11px] sm:text-[12px] max-[640px]:text-[10px] font-black text-[#68451f] leading-none">
+                  Tus semillas:{' '}
+                  <span className="text-[#4d8a2d]">{coins.toLocaleString('es-AR')}</span>
+                </span>
+              </div>
+            </div>
+          )}
 
           {(error || purchaseError) && (
             <p className="shrink-0 mt-1 text-red-600 text-[10px] text-center px-4 font-bold">
