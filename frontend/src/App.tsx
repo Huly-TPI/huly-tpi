@@ -26,6 +26,7 @@ import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
 import Privacy from './pages/Privacy/Privacy'
+import Unsubscribe from './pages/Unsubscribe/Unsubscribe'
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
       <ToastProvider>
         <Routes>
         <Route path="/backoffice/login" element={<BackofficeLogin />} />
+        <Route path="/unsubscribe" element={<Unsubscribe />} />
         <Route path="/backoffice" element={<BackofficeLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="chatbot" element={<ChatbotPage />} />

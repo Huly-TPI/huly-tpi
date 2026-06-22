@@ -54,7 +54,7 @@ public class UserDetailEntity {
     private String avatarUrl2;
 
     @Column(name = "last_login_date")
-    private Instant lastLoginDate;
+    private LocalDate lastLoginDate;
 
     @Column(name = "created_at")
     private Instant createdAt;

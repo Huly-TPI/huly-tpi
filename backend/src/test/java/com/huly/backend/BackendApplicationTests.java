@@ -1,5 +1,7 @@
 package com.huly.backend;
 
+
+import nl.martijndwars.webpush.PushService;
 import com.huly.backend.domain.port.LLMChatPort;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,6 +15,11 @@ class BackendApplicationTests {
 
     @MockitoBean
     private LLMChatPort llmChatPort;
+
+    @MockitoBean
+    private PushService pushService;
+
+
 
     @Test
     void contextLoads() {

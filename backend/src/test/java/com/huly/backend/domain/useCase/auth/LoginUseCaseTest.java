@@ -15,15 +15,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.huly.backend.domain.model.comebackReward.ComebackRewardPolicy;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,12 +42,16 @@ class LoginUseCaseTest {
     @Mock private PasswordHasherPort passwordHasherPort;
     @Mock private UserDetailDomainRepository userDetailDomainRepository;
 
-    @InjectMocks private LoginUseCase loginUseCase;
+    private LoginUseCase loginUseCase;
 
     private AppUser activeUser;
 
+    private static final LocalDate TODAY = LocalDate.of(2026, 6, 12);
+
     @BeforeEach
     void setUp() {
+        Clock fixedClock = Clock.fixed(TODAY.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneId.from(ZoneOffset.UTC));
+        loginUseCase = new LoginUseCase(userRepository, refreshTokenRepository, tokenPort, passwordHasherPort, userDetailDomainRepository, fixedClock);
         activeUser = AppUser.builder()
                 .id(1L)
                 .email("user@huly.com")
@@ -161,5 +171,41 @@ class LoginUseCaseTest {
         assertThat(result.getOnBoardingCompleted()).isFalse();
     }
 
+    @Test
+    void execute_shouldRegisterActivity_whenNoPendingComeback() {
+        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(userDetailDomainRepository.findLastLoginDate(1L)).thenReturn(Optional.of(TODAY.minusDays(2)));
+
+        loginUseCase.execute("user@huly.com", "rawPass");
+
+        verify(userDetailDomainRepository).updateLastLoginDate(1L, TODAY);
+    }
+
+    @Test
+    void execute_shouldDeferActivity_whenComebackPending() {
+        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(userDetailDomainRepository.findLastLoginDate(1L))
+                .thenReturn(Optional.of(TODAY.minusDays(ComebackRewardPolicy.INACTIVE_DAYS_THRESHOLD)));
+
+        loginUseCase.execute("user@huly.com", "rawPass");
+
+        verify(userDetailDomainRepository, never()).updateLastLoginDate(any(), any());
+    }
+
+    @Test
+    void execute_shouldUpdateLastLogin_whenCredentialsAreValid() {
+        when(userRepository.findByEmail("user@huly.com")).thenReturn(Optional.of(activeUser));
+        when(passwordHasherPort.matches("rawPass", "encodedPass")).thenReturn(true);
+        when(tokenPort.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenPort.generateRefreshToken(any(), any())).thenReturn("refresh");
+        when(tokenPort.getRefreshTokenMaxAgeSecs()).thenReturn(604800L);
+        when(refreshTokenRepository.save(any())).thenReturn(null);
+
+        loginUseCase.execute("user@huly.com", "rawPass");
+
+        verify(userRepository).updateLastLogin(1L);
+    }
 
 }
