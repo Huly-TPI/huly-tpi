@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import modalBg from '../../assets/rewards/modal.webp'
-import cardBg from '../../assets/shop-seed/card.png'
+import cardBg from '../../assets/shop-seed/cardWhite.webp'
 import seedIcon from '../../assets/rewards/seed.webp'
 import violeta from '../../assets/shop-seed/violeta.png'
 import startIcon from '../../assets/shop-seed/start.webp'

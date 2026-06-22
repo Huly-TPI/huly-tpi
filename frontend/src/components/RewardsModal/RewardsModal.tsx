@@ -106,7 +106,7 @@ function RewardCard({ day, cardStatus, isToday, claiming, onClaim }: RewardCardP
           <button
             onClick={onClaim}
             disabled={claiming}
-            className="absolute bottom-[14%] left-1/2 -translate-x-1/2 rounded-full bg-[#6f9f38] px-2.5 max-[640px]:px-2 py-0.5 text-[8px] sm:text-[9px] max-[640px]:text-[7px] font-black text-white shadow-md active:scale-95 disabled:opacity-60 whitespace-nowrap"
+            className="absolute bottom-[13%] left-1/2 -translate-x-1/2 rounded-lg border-b-[3px] bg-[#7b8f45] border border-[#5f7332] hover:bg-[#6d8139] px-2.5 max-[640px]:px-2 py-0.5 text-[8px] sm:text-[9px] max-[640px]:text-[7px] font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap"
           >
             {claiming ? '...' : 'Recolectar'}
           </button>
