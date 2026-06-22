@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { backofficeLogin } from '../../api/auth'
+import { InlineError } from '../../components/feedback/InlineError'
 import { useForm, required, validEmail } from '../../hooks/useForm'
 import Button from '../../components/Buttons/Button/Button'
 import { Leaf, Eye, EyeOff } from 'lucide-react'
@@ -92,7 +93,10 @@ export default function BackofficeLogin() {
               className={getInputClassName(!!errors.email)}
             />
             {errors.email && (
-              <p className="text-xs text-red-500">{errors.email}</p>
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-red-500 dark:text-red-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 dark:bg-red-400 shrink-0" />
+                {errors.email}
+              </p>
             )}
           </div>
 
@@ -120,14 +124,15 @@ export default function BackofficeLogin() {
               </button>
             </div>
             {errors.password && (
-              <p className="text-xs text-red-500">{errors.password}</p>
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-red-500 dark:text-red-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 dark:bg-red-400 shrink-0" />
+                {errors.password}
+              </p>
             )}
           </div>
 
           {apiError && (
-            <p className="rounded-xl bg-red-50 dark:bg-red-950/20 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-              {apiError}
-            </p>
+            <InlineError message={apiError} className="mt-1" />
           )}
 
           <Button

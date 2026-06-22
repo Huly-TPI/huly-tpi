@@ -7,6 +7,7 @@ import { SendHorizontal } from 'lucide-react'
 interface ChatbotComposerProps {
   input: string
   isSending: boolean
+  disabled?: boolean
   onInputChange: (value: string) => void
   onSend: () => void
   onSendAudio: (blob: Blob) => void
@@ -15,6 +16,7 @@ interface ChatbotComposerProps {
 export default function ChatbotComposer({
   input,
   isSending,
+  disabled = false,
   onInputChange,
   onSend,
   onSendAudio
@@ -39,28 +41,28 @@ export default function ChatbotComposer({
               rows={2}
               value={input}
               onChange={event => onInputChange(event.target.value)}
-              placeholder="Escribí tu mensaje..."
+              placeholder={disabled ? "Límite de mensajes alcanzado" : "Escribí tu mensaje..."}
               onKeyDown={event => {
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
                   onSend()
                 }
               }}
-              disabled={isSending}
+              disabled={isSending || disabled}
               className="h-14 w-full flex-1 resize-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-secondary)] px-3 py-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violeta"
             />
           </>
         )}
         <ChatbotAudioRecorder
           onSend={onSendAudio}
-          disabled={isSending}
+          disabled={isSending || disabled}
           onActiveChange={setIsRecorderActive}
         />
         {!isRecorderActive && (
           <Button
             type="button"
             onClick={onSend}
-            disabled={isSending || !input.trim()}
+            disabled={isSending || disabled || !input.trim()}
             variant="primary"
             className="h-10 w-10 shrink-0 !min-w-0 !rounded-full !px-0 !py-0 !transition-[background-color,color,opacity,box-shadow] !duration-300 !ease-in-out max-md:!w-10"
             aria-label="Enviar"

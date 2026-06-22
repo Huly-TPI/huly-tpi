@@ -12,6 +12,8 @@ import { PlanCard } from '../../components/Shop/PlanCard'
 import { CoinsBadge } from '../../components/Shop/CoinsBadge'
 import { MembershipBadge } from '../../components/Shop/MembershipBadge'
 import { DailyRewardCalendar } from '../../components/Shop/DailyRewardCalendar'
+import { InlineError } from '../../components/feedback/InlineError'
+
 
 type ShopTab = 'coins' | 'subscriptions'
 
@@ -139,10 +141,9 @@ export default function Shop() {
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm text-center">
-            {error}
-          </div>
+          <InlineError message={error} className="mb-6" />
         )}
+
 
         {loading ? (
           <div className="flex justify-center items-center h-40">
