@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface UserPlantRepository {
     UserPlant save(UserPlant userPlant);
+    UserPlant saveAndFlush(UserPlant userPlant);
     Optional<UserPlant> findLatestByUserIdAndStatus(Long userId, PlantStatus status);
     Optional<UserPlant> findLatestByUserId(Long userId);
     List<UserPlant> findAllByUserIdOrderByPlantNumber(Long userId);

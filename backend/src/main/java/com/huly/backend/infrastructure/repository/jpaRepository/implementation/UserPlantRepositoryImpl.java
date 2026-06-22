@@ -28,6 +28,12 @@ public class UserPlantRepositoryImpl implements UserPlantRepository {
     }
 
     @Override
+    public UserPlant saveAndFlush(UserPlant userPlant) {
+        UserPlantEntity saved = jpaRepository.saveAndFlush(toEntity(userPlant));
+        return toDomain(saved);
+    }
+
+    @Override
     public Optional<UserPlant> findLatestByUserIdAndStatus(Long userId, PlantStatus status) {
         return jpaRepository.findTopByAppUser_IdAndStatusOrderByPlantNumberDescStartedAtDescIdDesc(userId, status)
                 .map(this::toDomain);
