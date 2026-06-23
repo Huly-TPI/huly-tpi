@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { X } from 'lucide-react'
 import modalBg from '../../assets/suscription/modalSuscripcion.webp'
 import cardGreen from '../../assets/suscription/cardGreen.webp'
 import cardYellow from '../../assets/suscription/cardYellow.webp'
@@ -187,7 +187,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
 
         <div className="absolute inset-0 px-[8%] pt-[9%] pb-[6%] flex flex-col overflow-hidden">
           <button onClick={onClose} aria-label="Cerrar planes de suscripción" className="absolute top-[3%] right-[3%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20">
-            <XMarkIcon className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
 
           <div className="text-center shrink-0">

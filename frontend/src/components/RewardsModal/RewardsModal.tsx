@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { XMarkIcon, LockClosedIcon, CheckIcon } from '@heroicons/react/24/solid'
+import { X, CheckIcon, Lock } from 'lucide-react'
 import modalBg from '../../assets/rewards/modal.webp'
 import cardBg from '../../assets/rewards/cardSeed.webp'
 import giftIcon from '../../assets/rewards/gift.webp'
@@ -98,7 +98,7 @@ function RewardCard({ day, cardStatus, isToday, claiming, onClaim }: RewardCardP
 
         {cardStatus === 'locked' && (
           <div className="absolute bottom-[15%] left-0 right-0 flex items-center justify-center">
-            <LockClosedIcon className="w-3.5 h-3.5 max-[640px]:w-3 max-[640px]:h-3 text-[#9a7541]" />
+            <Lock className="w-3.5 h-3.5 max-[640px]:w-3 max-[640px]:h-3 text-[#9a7541]" />
           </div>
         )}
 
@@ -146,7 +146,7 @@ function ClaimToast({ coins, onDismiss }: ClaimToastProps) {
         onClick={onDismiss}
         className="rounded-full p-1.5 bg-[#d9b77e]/60 hover:bg-[#c99d61]/70 text-[#7b5c3c] transition"
       >
-        <XMarkIcon className="w-4 h-4" />
+        <X className="w-4 h-4" />
       </button>
     </div>
   )
@@ -209,7 +209,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
             aria-label="Cerrar recompensas"
             className="absolute top-[4%] right-[4%] w-8 h-8 max-[640px]:w-7 max-[640px]:h-7 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20"
           >
-            <XMarkIcon className="w-5 h-5 max-[640px]:w-4 max-[640px]:h-4" />
+            <X className="w-5 h-5 max-[640px]:w-4 max-[640px]:h-4" />
           </button>
 
           <div className="text-center">

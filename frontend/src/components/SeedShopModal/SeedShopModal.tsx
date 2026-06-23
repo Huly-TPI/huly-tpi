@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { X } from 'lucide-react'
 import modalBg from '../../assets/rewards/modal.webp'
 import cardBg from '../../assets/shop-seed/cardWhite.webp'
 import seedIcon from '../../assets/rewards/seed.webp'
@@ -170,7 +170,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
             aria-label="Cerrar tienda de semillas"
             className="absolute top-[4%] right-[4%] w-8 h-8 max-[640px]:w-7 max-[640px]:h-7 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20"
           >
-            <XMarkIcon className="w-5 h-5 max-[640px]:w-4 max-[640px]:h-4" />
+            <X className="w-5 h-5 max-[640px]:w-4 max-[640px]:h-4" />
           </button>
 
           {/* Header */}

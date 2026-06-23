@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Menu, User, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, hasSessionFlag } from '../context/auth'
 import { useTheme } from '../context/theme'
