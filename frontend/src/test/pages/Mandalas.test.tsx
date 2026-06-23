@@ -7,6 +7,7 @@ import Mandalas from '../../pages/Mandalas/Mandalas'
 import { mandalaAssetByKey } from '../../components/Mandalas/mandalaAssets'
 
 const mockUseAvailableMandalas = vi.fn()
+const mockUseMandalaProgress = vi.fn()
 const availableMandalas = [
   {
     id: 'mandala-01',
@@ -30,6 +31,10 @@ vi.mock('../../hooks/useAvailableMandalas', () => ({
   useAvailableMandalas: () => mockUseAvailableMandalas(),
 }))
 
+vi.mock('../../hooks/useMandalaProgress', () => ({
+  useMandalaProgress: () => mockUseMandalaProgress(),
+}))
+
 vi.mock('../../components/Mandalas/MandalaCanvas', () => ({
   default: forwardRef(function MockMandalaCanvas(_, ref) {
     useImperativeHandle(ref, () => ({ clear: vi.fn() }))
@@ -44,6 +49,12 @@ describe('Mandalas page', () => {
       loading: false,
       error: null,
       refetch: vi.fn(),
+    })
+    mockUseMandalaProgress.mockReturnValue({
+      clearProgress: vi.fn(),
+      loading: false,
+      paintBlob: null,
+      saveProgress: vi.fn(),
     })
   })
 

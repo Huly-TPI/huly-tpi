@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import {
-  clearMandalaProgress,
-  loadMandalaProgress,
-  saveMandalaProgress,
-} from '../components/Mandalas/mandalaProgressStorage'
+import { ApiError } from '../api/apiError'
+import { mandalasApi } from '../api/mandalas'
 
 export function useMandalaProgress(mandalaId: string) {
   const [paintBlob, setPaintBlob] = useState<Blob | null>(null)
@@ -14,11 +11,15 @@ export function useMandalaProgress(mandalaId: string) {
     setLoading(true)
     setPaintBlob(null)
 
-    loadMandalaProgress(mandalaId)
+    mandalasApi.getProgress(mandalaId)
       .then(blob => {
         if (!cancelled) setPaintBlob(blob)
       })
       .catch(error => {
+        if (error instanceof ApiError && error.status === 404) {
+          if (!cancelled) setPaintBlob(null)
+          return
+        }
         console.error('No se pudo cargar el progreso del mandala', error)
         if (!cancelled) setPaintBlob(null)
       })
@@ -34,7 +35,7 @@ export function useMandalaProgress(mandalaId: string) {
   const saveProgress = useCallback(
     async (blob: Blob) => {
       try {
-        await saveMandalaProgress(mandalaId, blob)
+        await mandalasApi.saveProgress(mandalaId, blob)
       } catch (error) {
         console.error('No se pudo guardar el progreso del mandala', error)
       }
@@ -45,7 +46,7 @@ export function useMandalaProgress(mandalaId: string) {
   const clearProgress = useCallback(async () => {
     setPaintBlob(null)
     try {
-      await clearMandalaProgress(mandalaId)
+      await mandalasApi.clearProgress(mandalaId)
     } catch (error) {
       console.error('No se pudo borrar el progreso del mandala', error)
     }

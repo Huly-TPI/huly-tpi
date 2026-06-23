@@ -5,7 +5,6 @@ import com.huly.backend.domain.model.enums.MandalaAccessType;
 import com.huly.backend.domain.model.enums.MandalaUnlockSource;
 import com.huly.backend.domain.model.mandala.AvailableMandala;
 import com.huly.backend.domain.model.mandala.Mandala;
-import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import com.huly.backend.domain.repository.mandala.MandalaPlanEntitlementRepository;
 import com.huly.backend.domain.repository.mandala.MandalaRepository;
@@ -36,13 +35,7 @@ public class ListAvailableMandalasUseCase {
             }
         }
 
-        Set<String> purchasedIds = new HashSet<>(userStoreItemRepository.findAllByUserId(userId).stream()
-                .map(UserStoreItem::getStoreItem)
-                .filter(item -> item != null)
-                .filter(item -> item.getCategory() == ItemCategory.MANDALA)
-                .map(item -> item.getAssetKey())
-                .filter(assetKey -> assetKey != null && !assetKey.isBlank())
-                .toList());
+        Set<String> purchasedIds = new HashSet<>(userStoreItemRepository.findAssetKeysByUserIdAndCategory(userId, ItemCategory.MANDALA));
         for (String mandalaId : purchasedIds) {
             sources.putIfAbsent(mandalaId, MandalaUnlockSource.PURCHASED);
         }

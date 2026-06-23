@@ -1,0 +1,37 @@
+-------------------------------------------------------------------------------
+Test set: com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 5, Skipped: 0, Time elapsed: 0.078 s <<< FAILURE! -- in com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest
+com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionWithNullEmail -- Time elapsed: 0.019 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/infrastructure/presentation/exception/customExceptions/UserNotFoundException
+	at com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionWithNullEmail(UserNotFoundExceptionTest.java:43)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.infrastructure.presentation.exception.customExceptions.UserNotFoundException
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 1 more
+
+com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionWithUuid -- Time elapsed: 0.007 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/infrastructure/presentation/exception/customExceptions/UserNotFoundException
+	at com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionWithUuid(UserNotFoundExceptionTest.java:16)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.infrastructure.presentation.exception.customExceptions.UserNotFoundException
+	... 1 more
+
+com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionIsNotFoundException -- Time elapsed: 0.006 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/infrastructure/presentation/exception/customExceptions/UserNotFoundException
+	at com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionIsNotFoundException(UserNotFoundExceptionTest.java:31)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.infrastructure.presentation.exception.customExceptions.UserNotFoundException
+	... 1 more
+
+com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionWithEmail -- Time elapsed: 0.006 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/infrastructure/presentation/exception/customExceptions/UserNotFoundException
+	at com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionWithEmail(UserNotFoundExceptionTest.java:24)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.infrastructure.presentation.exception.customExceptions.UserNotFoundException
+	... 1 more
+
+com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionIsRuntimeException -- Time elapsed: 0.008 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/infrastructure/presentation/exception/customExceptions/UserNotFoundException
+	at com.huly.backend.exception.customExceptions.UserNotFoundExceptionTest.testUserNotFoundExceptionIsRuntimeException(UserNotFoundExceptionTest.java:37)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.infrastructure.presentation.exception.customExceptions.UserNotFoundException
+	... 1 more
+

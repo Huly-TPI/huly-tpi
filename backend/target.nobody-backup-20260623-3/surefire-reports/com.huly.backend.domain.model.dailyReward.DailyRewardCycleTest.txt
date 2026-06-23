@@ -1,0 +1,106 @@
+-------------------------------------------------------------------------------
+Test set: com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest
+-------------------------------------------------------------------------------
+Tests run: 16, Failures: 0, Errors: 16, Skipped: 0, Time elapsed: 0.078 s <<< FAILURE! -- in com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldWrapToOne_afterCompletingCycle -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldWrapToOne_afterCompletingCycle(DailyRewardCycleTest.java:76)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldBeZero_whenStreakIsNegative -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldBeZero_whenStreakIsNegative(DailyRewardCycleTest.java:61)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeTrue_whenClaimedYesterday -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyClaimState
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeTrue_whenClaimedYesterday(DailyRewardCycleTest.java:27)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyClaimState
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldMatchStreak_withinFirstCycle -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldMatchStreak_withinFirstCycle(DailyRewardCycleTest.java:66)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeFalse_whenNeverClaimed -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyClaimState
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeFalse_whenNeverClaimed(DailyRewardCycleTest.java:17)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyClaimState
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.applyPlanBonus_shouldReturnBase_whenNoPlan -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.applyPlanBonus_shouldReturnBase_whenNoPlan(DailyRewardCycleTest.java:89)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldBeN_atLastDayOfCycle -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldBeN_atLastDayOfCycle(DailyRewardCycleTest.java:71)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldBeZero_whenStreakIsZero -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldBeZero_whenStreakIsZero(DailyRewardCycleTest.java:56)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.applyPlanBonus_shouldMultiplyByOnePointFive_whenHasPlan -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.applyPlanBonus_shouldMultiplyByOnePointFive_whenHasPlan(DailyRewardCycleTest.java:95)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.nextStreak_shouldIncrement_whenConsecutive -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyClaimState
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.nextStreak_shouldIncrement_whenConsecutive(DailyRewardCycleTest.java:39)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyClaimState
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldWrapCorrectly_acrossSecondCycle -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.cycleDay_shouldWrapCorrectly_acrossSecondCycle(DailyRewardCycleTest.java:81)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.nextStreak_shouldResetToOne_whenADayWasMissed -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyClaimState
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.nextStreak_shouldResetToOne_whenADayWasMissed(DailyRewardCycleTest.java:49)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyClaimState
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeFalse_whenClaimedTwoDaysAgo -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyClaimState
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeFalse_whenClaimedTwoDaysAgo(DailyRewardCycleTest.java:32)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyClaimState
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.nextStreak_shouldResetToOne_whenFirstClaim -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyClaimState
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.nextStreak_shouldResetToOne_whenFirstClaim(DailyRewardCycleTest.java:44)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyClaimState
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeTrue_whenClaimedToday -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyClaimState
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.isAlive_shouldBeTrue_whenClaimedToday(DailyRewardCycleTest.java:22)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyClaimState
+	... 1 more
+
+com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.applyPlanBonus_shouldRoundHalfUp_whenResultIsFractional -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/huly/backend/domain/model/dailyReward/DailyRewardCycle
+	at com.huly.backend.domain.model.dailyReward.DailyRewardCycleTest.applyPlanBonus_shouldRoundHalfUp_whenResultIsFractional(DailyRewardCycleTest.java:102)
+Caused by: java.lang.ClassNotFoundException: com.huly.backend.domain.model.dailyReward.DailyRewardCycle
+	... 1 more
+

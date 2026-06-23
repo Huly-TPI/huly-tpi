@@ -13,4 +13,9 @@ export interface MandalaResponse {
 
 export const mandalasApi = {
   getAvailable: () => api.get<MandalaResponse[]>('/mandalas'),
+  getProgress: (mandalaId: string) => api.getBlob(`/mandalas/${mandalaId}/progress`),
+  saveProgress: (mandalaId: string, blob: Blob) =>
+    api.putBlob<void>(`/mandalas/${mandalaId}/progress`, blob),
+  clearProgress: (mandalaId: string) =>
+    api.delete<void>(`/mandalas/${mandalaId}/progress`),
 }

@@ -46,7 +46,7 @@ class ListAvailableMandalasUseCaseTest {
                 getCurrentMembershipUseCase);
 
         when(mandalaRepository.findAllActiveOrderByDisplayOrder()).thenReturn(catalog());
-        when(userStoreItemRepository.findAllByUserId(USER_ID)).thenReturn(List.of());
+        when(userStoreItemRepository.findAssetKeysByUserIdAndCategory(USER_ID, ItemCategory.MANDALA)).thenReturn(List.of());
         when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.empty());
     }
 
@@ -89,8 +89,8 @@ class ListAvailableMandalasUseCaseTest {
 
     @Test
     void execute_withStorePurchaseReturnsPurchasedMandala() {
-        when(userStoreItemRepository.findAllByUserId(USER_ID))
-                .thenReturn(List.of(ownedMandala("mandala-13")));
+        when(userStoreItemRepository.findAssetKeysByUserIdAndCategory(USER_ID, ItemCategory.MANDALA))
+                .thenReturn(List.of("mandala-13"));
 
         var result = useCase.execute(USER_ID);
 
@@ -101,8 +101,8 @@ class ListAvailableMandalasUseCaseTest {
 
     @Test
     void execute_doesNotReturnMandalaMissingFromActiveCatalogEvenIfOwned() {
-        when(userStoreItemRepository.findAllByUserId(USER_ID))
-                .thenReturn(List.of(ownedMandala("mandala-99")));
+        when(userStoreItemRepository.findAssetKeysByUserIdAndCategory(USER_ID, ItemCategory.MANDALA))
+                .thenReturn(List.of("mandala-99"));
 
         var result = useCase.execute(USER_ID);
 
@@ -110,26 +110,7 @@ class ListAvailableMandalasUseCaseTest {
                 .containsExactly("mandala-01", "mandala-02");
     }
 
-    @Test
-    void execute_ignoresOwnedStoreItemsThatAreNotMandalas() {
-        StoreItem house = StoreItem.builder()
-                .id(20L)
-                .name("Casa")
-                .description("desc")
-                .category(ItemCategory.HOUSE)
-                .assetKey("house-pink")
-                .priceCoins(50)
-                .build();
-        when(userStoreItemRepository.findAllByUserId(USER_ID)).thenReturn(List.of(UserStoreItem.builder()
-                .userId(USER_ID)
-                .storeItem(house)
-                .build()));
 
-        var result = useCase.execute(USER_ID);
-
-        assertThat(result).extracting(item -> item.getMandala().getId())
-                .containsExactly("mandala-01", "mandala-02");
-    }
 
     @Test
     void execute_doesNotDuplicateFreeMandalaWhenAlsoInPlan() {
