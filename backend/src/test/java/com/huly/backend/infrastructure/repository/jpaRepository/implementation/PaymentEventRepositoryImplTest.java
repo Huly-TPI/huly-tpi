@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.dto.payment.PaymentEvent;
+import com.huly.backend.domain.model.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.infrastructure.repository.entity.PaymentEventEntity;
@@ -43,6 +43,7 @@ class PaymentEventRepositoryImplTest {
         Instant created = Instant.now();
         PaymentEvent domain = PaymentEvent.builder()
                 .id(1L).userId(10L).productId(2L)
+                .storeItemId(3L)
                 .externalReference("ext-ref").mpPreferenceId("pref-123").mpPaymentId(99L)
                 .status(PaymentStatus.PENDING).coinsAmount(500)
                 .productType(ProductType.PLAN).errorDetail("none")
@@ -57,6 +58,7 @@ class PaymentEventRepositoryImplTest {
         PaymentEventEntity persisted = captor.getValue();
         assertThat(persisted.getUserId()).isEqualTo(10L);
         assertThat(persisted.getProductId()).isEqualTo(2L);
+        assertThat(persisted.getStoreItemId()).isEqualTo(3L);
         assertThat(persisted.getExternalReference()).isEqualTo("ext-ref");
         assertThat(persisted.getMpPreferenceId()).isEqualTo("pref-123");
         assertThat(persisted.getStatus()).isEqualTo(PaymentStatus.PENDING);

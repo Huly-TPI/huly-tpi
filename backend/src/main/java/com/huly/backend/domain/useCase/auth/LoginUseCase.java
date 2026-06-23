@@ -2,9 +2,10 @@ package com.huly.backend.domain.useCase.auth;
 
 import com.huly.backend.domain.exception.AccountNotActiveException;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
-import com.huly.backend.domain.model.AppUser;
-import com.huly.backend.domain.model.AuthTokens;
-import com.huly.backend.domain.model.RefreshToken;
+import com.huly.backend.domain.model.comebackReward.ComebackRewardPolicy;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.auth.AuthTokens;
+import com.huly.backend.domain.model.auth.RefreshToken;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.port.PasswordHasherPort;
 import com.huly.backend.domain.port.TokenPort;
@@ -14,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @RequiredArgsConstructor
 public class LoginUseCase {
@@ -24,6 +27,7 @@ public class LoginUseCase {
     private final TokenPort tokenPort;
     private final PasswordHasherPort passwordHasherPort;
     private final UserDetailDomainRepository userDetailDomainRepository;
+    private final Clock clock;
 
     @Transactional
     public AuthTokens execute(String email, String rawPassword) {
@@ -39,6 +43,8 @@ public class LoginUseCase {
             throw new AccountNotActiveException("Account is not active");
         }
 
+        registerActivity(user.getId());
+
         String accessToken = tokenPort.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole(), user.getStatus()
         );
@@ -52,6 +58,8 @@ public class LoginUseCase {
                 .expiredAt(now.plusSeconds(tokenPort.getRefreshTokenMaxAgeSecs()))
                 .build());
 
+        userRepository.updateLastLogin(user.getId());
+
         Boolean onBoardingCompleted = userDetailDomainRepository.findOnBoardingCompleted(user.getId()).orElse(false);
 
         return AuthTokens.builder()
@@ -60,5 +68,18 @@ public class LoginUseCase {
                 .role(user.getRole())
                 .onBoardingCompleted(onBoardingCompleted)
                 .build();
+    }
+
+    /**
+     * Registra la actividad de hoy avanzando {@code last_login_date}, salvo que el usuario tenga un
+     * comeback pendiente (brecha de inactividad ya alcanzada): en ese caso no lo toca, para que la
+     * recompensa de regreso sobreviva al re-login y se pueda reclamar.
+     */
+    private void registerActivity(Long userId) {
+        LocalDate today = LocalDate.now(clock);
+        LocalDate lastSeen = userDetailDomainRepository.findLastLoginDate(userId).orElse(null);
+        if (ComebackRewardPolicy.shouldRegisterActivity(lastSeen, today)) {
+            userDetailDomainRepository.updateLastLoginDate(userId, today);
+        }
     }
 }

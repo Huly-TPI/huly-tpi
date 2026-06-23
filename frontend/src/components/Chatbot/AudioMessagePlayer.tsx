@@ -1,5 +1,5 @@
-import { MicrophoneIcon, PauseIcon, PlayIcon } from '@heroicons/react/24/solid'
 import { useEffect, useRef, useState } from 'react'
+import { Mic, Pause, Play } from 'lucide-react'
 
 interface AudioMessagePlayerProps {
   audioUrl?: string
@@ -71,7 +71,7 @@ export default function AudioMessagePlayer({ audioUrl, isLoading = false }: Audi
   if (!audioUrl) {
     return (
       <div className="flex items-center gap-2 text-white/80">
-        <MicrophoneIcon className="h-4 w-4 shrink-0" />
+        <Mic className="h-4 w-4 shrink-0" strokeWidth={2} />
         <span className="text-sm">Mensaje de voz</span>
       </div>
     )
@@ -114,9 +114,9 @@ export default function AudioMessagePlayer({ audioUrl, isLoading = false }: Audi
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
         >
           {isPlaying ? (
-            <PauseIcon className="h-3.5 w-3.5 text-white" />
+            <Pause className="h-3.5 w-3.5 text-white" strokeWidth={2} />
           ) : (
-            <PlayIcon className="h-3.5 w-3.5 text-white" />
+            <Play className="h-3.5 w-3.5 text-white" strokeWidth={2} />
           )}
         </button>
         <span className="text-xs tabular-nums text-white/80">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { X } from 'lucide-react'
 import { useProducts } from '../../hooks/shop/useProducts'
 import { usePlans } from '../../hooks/shop/usePlans'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
@@ -12,6 +12,8 @@ import { PlanCard } from '../../components/Shop/PlanCard'
 import { CoinsBadge } from '../../components/Shop/CoinsBadge'
 import { MembershipBadge } from '../../components/Shop/MembershipBadge'
 import { DailyRewardCalendar } from '../../components/Shop/DailyRewardCalendar'
+import { InlineError } from '../../components/feedback/InlineError'
+
 
 type ShopTab = 'coins' | 'subscriptions'
 
@@ -106,7 +108,7 @@ export default function Shop() {
               onClick={() => setPaymentBanner(null)}
               className="shrink-0 rounded-full p-1 hover:bg-black/5 transition bg-transparent border-0 cursor-pointer"
             >
-              <XMarkIcon className="w-4 h-4" />
+              <X className="w-4 h-4" strokeWidth={2} />
             </button>
           </div>
         )}
@@ -139,10 +141,9 @@ export default function Shop() {
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm text-center">
-            {error}
-          </div>
+          <InlineError message={error} className="mb-6" />
         )}
+
 
         {loading ? (
           <div className="flex justify-center items-center h-40">

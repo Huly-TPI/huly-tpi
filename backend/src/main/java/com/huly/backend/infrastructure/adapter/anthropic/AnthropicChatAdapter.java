@@ -29,7 +29,7 @@ public class AnthropicChatAdapter implements LLMChatPort {
         this.chatClient = chatClient;
     }
 
-    private record ChatReplyDto(
+    record ChatReplyDto(
             @JsonProperty("huly_reply") String hulyReply,
             @JsonProperty("detected_emotion") String detectedEmotion,
             @JsonProperty("intensity") Integer intensity,
@@ -69,12 +69,17 @@ public class AnthropicChatAdapter implements LLMChatPort {
                 }
             }
 
+            log.info("Enviando a la IA -> systemPrompt='{}' | history({} msgs)={} | userMessage='{}'",
+                    systemPrompt, messages.size(), messages, userMessage);
+
             ChatReplyDto dto = chatClient.prompt()
                     .system(systemPrompt)
                     .messages(messages)
                     .user(userMessage)
                     .call()
                     .entity(ChatReplyDto.class);
+
+            log.info("Respuesta de la IA <- {}", dto);
 
             return dto != null ? dto.toDomain() : ChatReply.of("No pude generar una respuesta.");
         } catch (Exception e) {

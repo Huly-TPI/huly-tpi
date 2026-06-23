@@ -1,9 +1,9 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
 import com.huly.backend.domain.exception.BusinessRuleException;
-import com.huly.backend.domain.model.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.EmotionalEvent;
-import com.huly.backend.domain.model.Vad;
+import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.Vad;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import lombok.RequiredArgsConstructor;

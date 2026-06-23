@@ -46,6 +46,23 @@ export interface AcceptChallengeRequest {
   activityId?: number
 }
 
+export interface UserPlantSummaryResponse {
+  id: number
+  plantNumber: number
+  requiredGoals: number
+  completedGoalsCount: number
+  status: 'GROWING' | 'COMPLETED'
+  startedAt: string
+  completedAt: string | null
+}
+
+export interface GoalCompleteResponse {
+  goal: UserGoalResponse
+  harvestTriggered: boolean
+  harvestedPlantNumber: number | null
+  currentPlant: UserPlantSummaryResponse
+}
+
 export const userGoalsApi = {
   getForCurrentUser: (page = 0, size = 50) =>
     api.get<UserGoalListResponse>(`/user-goals/me?page=${page}&size=${size}`),
@@ -62,7 +79,7 @@ export const userGoalsApi = {
   complete: (id: number, image?: File) => {
     const form = new FormData()
     if (image) form.append('image', image)
-    return api.patch<UserGoalResponse>(`/user-goals/${id}/complete`, form)
+    return api.patch<GoalCompleteResponse>(`/user-goals/${id}/complete`, form)
   },
 
   acceptChallenge: (data: AcceptChallengeRequest) =>

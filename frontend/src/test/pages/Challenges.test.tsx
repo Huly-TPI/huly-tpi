@@ -9,19 +9,25 @@ vi.mock('../../assets/shared/dark-background.webp', () => ({ default: 'dark-bg.w
 vi.mock('../../assets/challenges/stump.png', () => ({ default: 'stump.png' }))
 vi.mock('../../assets/challenges/watering-can.png', () => ({ default: 'watering-can.png' }))
 vi.mock('../../assets/challenges/challenge-detail-bg.png', () => ({ default: 'challenge-detail-bg.png' }))
-vi.mock('../../assets/challenges/plant-stages/flowerpot-base.png', () => ({ default: 'flowerpot-base.png' }))
-vi.mock('../../assets/challenges/plant-stages/flowerpot-top.png', () => ({ default: 'flowerpot-top.png' }))
-vi.mock('../../assets/challenges/plant-stages/plant-0.png', () => ({ default: 'plant-0.png' }))
-vi.mock('../../assets/challenges/plant-stages/plant-1.png', () => ({ default: 'plant-1.png' }))
-vi.mock('../../assets/challenges/plant-stages/plant-2.png', () => ({ default: 'plant-2.png' }))
-vi.mock('../../assets/challenges/plant-stages/plant-3.png', () => ({ default: 'plant-3.png' }))
-vi.mock('../../assets/challenges/plant-stages/plant-4.png', () => ({ default: 'plant-4.png' }))
-vi.mock('../../assets/challenges/plant-stages/plant-5.png', () => ({ default: 'plant-5.png' }))
+vi.mock('../../config/plantImages', () => ({
+  getPlantAssets: vi.fn().mockReturnValue({
+    stages: ['p0.png', 'p1.png', 'p2.png', 'p3.png', 'p4.png', 'p5.png'],
+    flowerpotBase: 'flowerpot-base.png',
+    flowerpotTop: 'flowerpot-top.png',
+  }),
+  getPlantImages: vi.fn().mockReturnValue(['p0.png', 'p1.png', 'p2.png', 'p3.png', 'p4.png', 'p5.png']),
+}))
 
 const mockRequireAuth = vi.hoisted(() => vi.fn((fn: () => void) => fn()))
 
 vi.mock('../../context/authGate', () => ({
   useAuthGate: () => ({ requireAuth: mockRequireAuth }),
+}))
+
+const mockShowToast = vi.hoisted(() => vi.fn())
+
+vi.mock('../../context/toast', () => ({
+  useToast: () => ({ showToast: mockShowToast }),
 }))
 
 vi.mock('../../hooks/useUserGoals', () => ({

@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.auth;
 
-import com.huly.backend.domain.model.RefreshToken;
+import com.huly.backend.domain.model.auth.RefreshToken;
 
 import java.util.Optional;
 

@@ -1,10 +1,18 @@
 """
-Huly Voice Microservice v5.0
+Huly Voice Microservice v7.0
 - faster-whisper medium (int8, CPU): transcripción española de alta precisión
-- wav2vec2-large-robust (audeering): detección emocional VAD (valencia,
-  activación, dominancia) entrenado en habla espontánea multilingüe
+- wav2vec2-large-robust (audeering, float32): detección emocional VAD
+  (valencia, activación, dominancia) en precisión nativa del modelo
+
+Requiere ~2.25 GB RAM. Optimizado para Azure Container Apps (4 GB disponibles).
+
+Endpoints:
+  POST /transcribe  → transcripción (Whisper medium)
+  POST /analyze     → análisis emocional VAD (wav2vec2-large float32)
+  GET  /health      → estado de los modelos
 """
 
+import gc
 import os
 import subprocess
 import tempfile
@@ -86,6 +94,7 @@ def predict_vad(audio_array: np.ndarray) -> dict:
     Predice valores VAD a partir de un array numpy float32 a 16 kHz.
     Devuelve {'arousal': float, 'dominance': float, 'valence': float} en [0, 1].
     Orden de salida del modelo: [arousal, dominance, valence].
+    Corre en float32 (precisión nativa del modelo).
     """
     inputs = vad_processor(
         audio_array,
@@ -94,7 +103,7 @@ def predict_vad(audio_array: np.ndarray) -> dict:
         padding=True,
     )
     with torch.no_grad():
-        logits = vad_model(inputs.input_values)   # [1, 3]
+        logits = vad_model(inputs.input_values)
 
     vals      = logits[0].cpu().numpy()
     arousal   = float(np.clip(vals[0], 0.0, 1.0))
@@ -110,16 +119,20 @@ def predict_vad(audio_array: np.ndarray) -> dict:
 def vad_to_emotion(arousal: float, dominance: float, valence: float) -> str:
     """
     Mapeo VAD → etiqueta de emoción dominante.
-    Basado en el modelo circumplejo de Russell (activación-valencia) con dominancia.
-    Valores en [0, 1]: valence 0=negativo 1=positivo, arousal 0=calmado 1=activado.
+    Calibrado para el modelo audeering (entrenado en inglés) con voz española:
+    el modelo sobreestima valence en ira española; arousal+dominance son más fiables.
     """
-    if valence >= 0.6:
-        return "happy" if arousal >= 0.5 else "neutral"
-    if valence <= 0.4:
+    # Ira/frustración: alta activación + alta dominancia (patrón cross-lingüístico estable).
+    # Valence < 0.70 descarta voces genuinamente alegres/entusiastas.
+    if arousal >= 0.55 and dominance >= 0.60 and valence < 0.70:
+        return "angry"
+    if valence >= 0.60:
+        return "happy" if arousal >= 0.50 else "neutral"
+    if valence <= 0.40:
         if arousal >= 0.55:
-            return "angry" if dominance >= 0.5 else "fearful"
+            return "fearful"
         return "sad"
-    if arousal >= 0.6:
+    if arousal >= 0.65:
         return "surprised"
     return "neutral"
 
@@ -142,7 +155,10 @@ async def lifespan(app: FastAPI):
         vad_processor = Wav2Vec2Processor.from_pretrained(VAD_MODEL_ID)
         vad_model     = EmotionModel.from_pretrained(VAD_MODEL_ID)
         vad_model.eval()
-        logger.info("Modelo VAD cargado.")
+        logger.info("Modelo VAD cargado (float32).")
+        logger.info("Ejecutando warm-up del modelo VAD...")
+        predict_vad(np.zeros(16000, dtype=np.float32))
+        logger.info("Warm-up completo.")
     except Exception as exc:
         logger.error(f"Error cargando modelo VAD: {exc}")
         raise
@@ -155,8 +171,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Huly Voice Microservice",
-    description="Transcripción española (Whisper medium) + análisis emocional VAD (audeering)",
-    version="5.0.0",
+    description="Transcripción española (Whisper medium) + análisis emocional VAD (audeering, float32)",
+    version="7.0.0",
     lifespan=lifespan,
 )
 
@@ -167,57 +183,81 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-class VadValues(BaseModel):
-    arousal:   float
-    dominance: float
-    valence:   float
-
-class VoiceAnalysisResponse(BaseModel):
-    transcripcion:     str
-    emocion_dominante: str
-    idioma_detectado:  str
-    vad:               VadValues
-
-
 ALLOWED_CONTENT_TYPES = {
     "audio/wav", "audio/wave", "audio/webm", "audio/mpeg",
     "audio/ogg", "audio/flac", "audio/x-flac", "video/webm",
     "application/octet-stream",
 }
 
-@app.post("/analyze", response_model=VoiceAnalysisResponse)
-async def analyze_audio(file: UploadFile = File(...)):
-    """
-    Recibe audio (WAV, WebM, MP3, OGG, FLAC), devuelve transcripción en español
-    + valores VAD continuos y emoción dominante derivada.
-    No se almacena ningún dato de voz.
-    """
-    if whisper_model is None or vad_model is None:
-        raise HTTPException(status_code=503, detail="Modelos no disponibles aún.")
 
+class TranscriptionResponse(BaseModel):
+    transcripcion:    str
+    idioma_detectado: str
+
+
+class VadValues(BaseModel):
+    arousal:   float
+    dominance: float
+    valence:   float
+
+
+class EmotionResponse(BaseModel):
+    emocion_dominante: str
+    vad:               VadValues
+
+
+
+def _suffix_for(content_type: str) -> str:
+    if "webm" in content_type: return ".webm"
+    if "mpeg" in content_type: return ".mp3"
+    if "ogg"  in content_type: return ".ogg"
+    if "flac" in content_type: return ".flac"
+    return ".wav"
+
+
+async def _save_and_convert(file: UploadFile) -> tuple[str, str]:
+    """Guarda el audio subido y lo convierte a WAV 16 kHz. Retorna (tmp_path, wav_path)."""
     ct = (file.content_type or "").lower()
     if ct not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=415, detail=f"Tipo MIME no soportado: {ct}")
 
-    if   "webm" in ct: suffix = ".webm"
-    elif "mpeg" in ct: suffix = ".mp3"
-    elif "ogg"  in ct: suffix = ".ogg"
-    elif "flac" in ct: suffix = ".flac"
-    else:              suffix = ".wav"
-
-    tmp_path = wav_path = None
+    tmp_path = None
+    with tempfile.NamedTemporaryFile(delete=False, suffix=_suffix_for(ct)) as tmp:
+        tmp_path = tmp.name
+        tmp.write(await file.read())
 
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            tmp_path = tmp.name
-            tmp.write(await file.read())
+        wav_path = convert_to_wav_16k(tmp_path)
+    except RuntimeError as err:
+        os.unlink(tmp_path)
+        logger.error(f"Conversión de audio fallida: {err}")
+        raise HTTPException(status_code=422, detail=f"Audio inválido: {err}")
 
-        try:
-            wav_path = convert_to_wav_16k(tmp_path)
-        except RuntimeError as err:
-            logger.error(f"Conversión de audio fallida: {err}")
-            raise HTTPException(status_code=422, detail=f"Audio inválido: {err}")
+    return tmp_path, wav_path
+
+
+def _cleanup(*paths) -> None:
+    for path in paths:
+        if path and os.path.exists(path):
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+
+
+
+@app.post("/transcribe", response_model=TranscriptionResponse)
+async def transcribe_audio(file: UploadFile = File(...)):
+    """
+    Recibe audio (WAV, WebM, MP3, OGG, FLAC) y devuelve la transcripción en español.
+    No se almacena ningún dato de voz.
+    """
+    if whisper_model is None:
+        raise HTTPException(status_code=503, detail="Modelo de transcripción no disponible aún.")
+
+    tmp_path = wav_path = None
+    try:
+        tmp_path, wav_path = await _save_and_convert(file)
 
         logger.info(f"Transcribiendo '{file.filename}'...")
         segments, info = whisper_model.transcribe(
@@ -231,34 +271,58 @@ async def analyze_audio(file: UploadFile = File(...)):
         idioma_detectado = info.language or "es"
         logger.info(f"Transcripción: '{transcripcion[:120]}'")
 
+        return TranscriptionResponse(
+            transcripcion=transcripcion,
+            idioma_detectado=idioma_detectado,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Error transcribiendo audio: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(exc)}")
+    finally:
+        _cleanup(tmp_path, wav_path)
+        logger.info("Archivos temporales eliminados.")
+
+
+@app.post("/analyze", response_model=EmotionResponse)
+async def analyze_emotion(file: UploadFile = File(...)):
+    """
+    Recibe audio y devuelve los valores VAD continuos (arousal, dominance, valence)
+    y la emoción dominante derivada. No se almacena ningún dato de voz.
+    """
+    if vad_model is None:
+        raise HTTPException(status_code=503, detail="Modelo de emoción no disponible aún.")
+
+    tmp_path = wav_path = None
+    try:
+        tmp_path, wav_path = await _save_and_convert(file)
+
         logger.info("Analizando emoción (VAD)...")
         audio_array, _ = sf.read(wav_path, dtype="float32", always_2d=False)
-        vad             = predict_vad(audio_array)
-        dominant        = vad_to_emotion(vad["arousal"], vad["dominance"], vad["valence"])
+
+        gc.collect()
+
+        vad      = predict_vad(audio_array)
+        dominant = vad_to_emotion(vad["arousal"], vad["dominance"], vad["valence"])
         logger.info(
             f"VAD → arousal={vad['arousal']:.3f}  dominance={vad['dominance']:.3f}  "
             f"valence={vad['valence']:.3f}  |  emoción: {dominant}"
         )
 
-        return VoiceAnalysisResponse(
-            transcripcion=transcripcion,
+        return EmotionResponse(
             emocion_dominante=dominant,
-            idioma_detectado=idioma_detectado,
             vad=VadValues(**vad),
         )
 
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error(f"Error procesando audio: {exc}", exc_info=True)
+        logger.error(f"Error analizando emoción: {exc}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error interno: {str(exc)}")
     finally:
-        for path in (tmp_path, wav_path):
-            if path and os.path.exists(path):
-                try:
-                    os.unlink(path)
-                except OSError:
-                    pass
+        _cleanup(tmp_path, wav_path)
         logger.info("Archivos temporales eliminados.")
 
 

@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react'
 import hulySideImage from '../../assets/chatbot/huly-side.webp'
 import { useChatbot } from '../../hooks/useChatbot'
 import BaseModal from '../Modal/BaseModal'
@@ -19,6 +20,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     isLoadingHistory,
     error,
     bottomRef,
+    messagesContainerRef,
+    isLoadingOlderHistory,
+    handleMessagesScroll,
     sendMessage,
     sendAudioMessage,
     deleteAudioMessage,
@@ -26,6 +30,16 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     decideSuggestedAction,
     resetConversation,
   } = useChatbot()
+  useLayoutEffect(() => {
+    if (isOpen && !isLoadingHistory) {
+      if (messagesContainerRef?.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      } else if (typeof bottomRef?.current?.scrollIntoView === 'function') {
+        bottomRef.current.scrollIntoView({ behavior: 'auto' })
+      }
+    }
+  }, [isOpen, isLoadingHistory, bottomRef, messagesContainerRef])
+
 
   return (
     <BaseModal
@@ -41,7 +55,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         />
       }
     >
-      <ChatbotHeader onClose={onClose} />
+      <ChatbotHeader onClose={onClose} onReset={resetConversation} />
       <ChatbotMessages
         messages={messages}
         isSending={isSending}
@@ -52,14 +66,17 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         onSuggestedActionDecision={decideSuggestedAction}
         onDeleteAudioMessage={deleteAudioMessage}
         bottomRef={bottomRef}
+        containerRef={messagesContainerRef}
+        isLoadingOlderHistory={isLoadingOlderHistory}
+        onScroll={handleMessagesScroll}
       />
       <ChatbotComposer
         input={input}
         isSending={isSending}
+        disabled={!!error && error.includes('Alcanzaste el límite diario')}
         onInputChange={setInput}
         onSend={() => void sendMessage()}
         onSendAudio={(blob) => void sendAudioMessage(blob)}
-        onReset={resetConversation}
       />
     </BaseModal>
   )

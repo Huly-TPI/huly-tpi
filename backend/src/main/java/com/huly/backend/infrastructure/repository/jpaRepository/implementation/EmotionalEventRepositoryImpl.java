@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.EmotionalEvent;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;

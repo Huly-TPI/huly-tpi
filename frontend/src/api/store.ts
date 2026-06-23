@@ -7,6 +7,7 @@ export interface StoreItemResponse {
     category: string
     assetKey: string
     priceCoins: number
+    price: number | null
 }
 
 export interface InventoryItemResponse {

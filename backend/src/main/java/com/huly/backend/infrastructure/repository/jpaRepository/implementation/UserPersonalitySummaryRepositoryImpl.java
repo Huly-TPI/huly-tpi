@@ -2,7 +2,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserPersonalitySummaryEntity;

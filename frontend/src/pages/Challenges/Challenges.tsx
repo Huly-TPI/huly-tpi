@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useUserGoals } from '../../hooks/useUserGoals'
-import { type UserGoalResponse } from '../../api/userGoals'
+import { InlineError } from '../../components/feedback/InlineError'
+import { useToast } from '../../context/toast'
+import { type UserGoalResponse, type UserPlantSummaryResponse } from '../../api/userGoals'
+import { userPlantsApi } from '../../api/userPlants'
 import Plant from '../../components/Challenges/Plant'
 import BoardItem from '../../components/Challenges/BoardItem'
 import PostitModal from '../../components/Challenges/PostitModal'
@@ -12,27 +16,16 @@ import dayBackground from '../../assets/shared/day-background.webp'
 import nightBackground from '../../assets/shared/dark-background.webp'
 import boardBg from '../../assets/challenges/board-challenges.png'
 import stumpImg from '../../assets/challenges/stump.png'
+import nurseryImg from '../../assets/challenges/nursery.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
 import { useAuthGate } from '../../context/authGate'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
-const CYCLE_SIZE = 16
-
-function getCycleData(completedCount: number) {
-  const completedPlants = Math.floor(completedCount / CYCLE_SIZE)
-  const cycleProgress = completedCount % CYCLE_SIZE
-  return { completedPlants, cycleProgress }
-}
-
-function getPlantStage(cycleProgress: number): 0 | 1 | 2 | 3 | 4 | 5 {
-  if (cycleProgress === 0) return 0
-  if (cycleProgress <= 2) return 1
-  if (cycleProgress <= 5) return 2
-  if (cycleProgress <= 9) return 3
-  if (cycleProgress <= 13) return 4
-  return 5
+function getPlantStage(progress: number, required: number): 0 | 1 | 2 | 3 | 4 | 5 {
+  if (progress === 0) return 0
+  return Math.min(Math.ceil((progress / required) * 5), 5) as 0 | 1 | 2 | 3 | 4 | 5
 }
 
 const PLANT_HINTS: Record<0 | 1 | 2 | 3 | 4 | 5, string> = {
@@ -53,17 +46,13 @@ export default function Challenges() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const { requireAuth } = useAuthGate()
+  const navigate = useNavigate()
+  const { showToast } = useToast()
   const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
-  const [actionError, setActionError] = useState<string | null>(null)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
+  const [currentPlant, setCurrentPlant] = useState<UserPlantSummaryResponse | null>(null)
   const [coinToast, setCoinToast] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (coinToast === null) return
-    const timer = setTimeout(() => setCoinToast(null), 3500)
-    return () => clearTimeout(timer)
-  }, [coinToast])
 
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
@@ -72,10 +61,22 @@ export default function Challenges() {
     autoStart: true,
   })
 
-  const completedCount = completados?.totalElements ?? 0
-  const { completedPlants, cycleProgress } = getCycleData(completedCount)
-  const plantStage = getPlantStage(cycleProgress)
-  const cyclePct = Math.round((cycleProgress / CYCLE_SIZE) * 100)
+  useEffect(() => {
+    if (coinToast === null) return
+    const timer = setTimeout(() => setCoinToast(null), 3500)
+    return () => clearTimeout(timer)
+  }, [coinToast])
+
+  useEffect(() => {
+    userPlantsApi.getCurrent()
+      .then(setCurrentPlant)
+      .catch(() => {/* no plant yet, will be created on first complete */})
+  }, [])
+
+  const cycleProgress = currentPlant?.completedGoalsCount ?? 0
+  const requiredGoals = currentPlant?.requiredGoals ?? 5
+  const plantStage = getPlantStage(cycleProgress, requiredGoals)
+  const cyclePct = Math.round((cycleProgress / requiredGoals) * 100)
 
   const triggerWatering = useCallback(() => {
     setIsWatering(true)
@@ -93,35 +94,32 @@ export default function Challenges() {
   }, [updateGoal])
 
   const handleDelete = useCallback(async (id: number) => {
-    setActionError(null)
     try {
       await deleteGoal(id)
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Error al eliminar el reto')
+      showToast(err instanceof Error ? err.message : 'Error al eliminar el reto', 'error')
     }
-  }, [deleteGoal])
+  }, [deleteGoal, showToast])
 
   const handleComplete = useCallback(async (id: number, image?: File) => {
-    setActionError(null)
-    const goal = pendientes?.content.find(g => g.id === id)
-    const coinsEarned = image
-      ? (goal?.coinsRewardWithImage ?? 25)
-      : (goal?.coinsReward ?? 10)
-    const isHarvest = cycleProgress === CYCLE_SIZE - 1
     try {
-      await completeGoal(id, image)
+      const result = await completeGoal(id, image)
       markConditionMet()
       await saveSession()
+      setCurrentPlant(result.currentPlant)
+      const coinsEarned = image
+        ? (result.goal.coinsRewardWithImage ?? 25)
+        : (result.goal.coinsReward ?? 10)
       setCoinToast(coinsEarned)
-      if (isHarvest) {
-        setHarvestPlant(completedPlants + 1)
+      if (result.harvestTriggered) {
+        setHarvestPlant(result.harvestedPlantNumber)
       } else {
         triggerWatering()
       }
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Error al completar el reto')
+      showToast(err instanceof Error ? err.message : 'Error al completar el reto', 'error')
     }
-  }, [pendientes, cycleProgress, completedPlants, completeGoal, triggerWatering, markConditionMet, saveSession])
+  }, [completeGoal, triggerWatering, markConditionMet, saveSession, showToast])
 
   const hasPending  = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0
@@ -145,9 +143,6 @@ export default function Challenges() {
           </h1>
 
           <div className="w-full max-w-[200px] text-center">
-            <p className="text-[0.78rem] text-bosque m-0 mb-[0.35rem]">
-              <strong>{cycleProgress}</strong> / {CYCLE_SIZE} en este ciclo
-            </p>
             <div
               className="h-[9px] bg-white/30 rounded-full overflow-hidden w-full"
               role="progressbar"
@@ -168,15 +163,17 @@ export default function Challenges() {
             {PLANT_HINTS[plantStage]}
           </p>
 
-          {completedPlants > 0 && (
-            <p className="text-[0.72rem] text-bosque text-center m-0">
-              Plantas cosechadas: <strong>{completedPlants}</strong>
-            </p>
-          )}
+          <button
+            className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 border border-bosque/20 shadow-sm cursor-pointer hover:bg-white/90 hover:shadow-md transition-all duration-150"
+            onClick={() => navigate('/orchard')}
+          >
+            <img src={nurseryImg} alt="" aria-hidden="true" className="w-12 h-12 object-contain" />
+            <span className="text-sm font-semibold text-bosque">Ver Vivero</span>
+          </button>
         </div>
 
         <div className="plant-on-stump mt-auto flex flex-col items-center relative mr-3 translate-y-[140px]">
-          <Plant stage={plantStage} isWatering={isWatering} />
+          <Plant stage={plantStage} isWatering={isWatering} plantType={currentPlant?.plantNumber ?? 1} />
           <img
             src={stumpImg}
             className="w-[250px] -mt-[105px] relative z-0 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.22)]"
@@ -199,18 +196,7 @@ export default function Challenges() {
             />
           )}
           <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-[4rem] pl-[6rem] pr-[5rem] pb-[6rem] overflow-hidden min-h-0">
-            {actionError && (
-              <div className="flex items-start justify-between gap-[0.6rem] bg-[rgba(255,245,245,0.92)] border border-[#FEB2B2] rounded-[7px] py-[0.55rem] px-[0.75rem] text-[0.8rem] text-[#C53030] leading-[1.4]" role="alert">
-                <span>{actionError}</span>
-                <button
-                  className="bg-transparent border-0 cursor-pointer text-[#C53030] text-[0.85rem] p-0 flex-shrink-0 opacity-70 hover:opacity-100"
-                  onClick={() => setActionError(null)}
-                  aria-label="Cerrar"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
+
 
             <div className="flex justify-end mb-[0.1rem]">
               <Button variant="primary" size="sm" onClick={() => requireAuth(() => setModal({ mode: 'create' }))}>
@@ -219,7 +205,7 @@ export default function Challenges() {
             </div>
 
             {loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
-            {error && !loading && <p className="text-[0.82rem] text-[#9b2c2c] m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">{error}</p>}
+            {error && !loading && <InlineError message={error} className="mt-2" />}
 
             {!loading && !error && (
               <ul className="board-list list-none p-0 m-0 flex flex-col gap-[0.35rem] flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
@@ -278,6 +264,7 @@ export default function Challenges() {
         <HarvestModal
           plantNumber={harvestPlant}
           onCreateNew={() => { setHarvestPlant(null); setModal({ mode: 'create' }) }}
+          onGoToOrchard={() => navigate('/orchard')}
         />
       )}
 

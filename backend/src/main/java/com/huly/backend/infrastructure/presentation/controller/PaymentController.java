@@ -1,12 +1,13 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.dto.payment.PaymentPreferenceResult;
+import com.huly.backend.domain.model.payment.PaymentPreferenceResult;
 import com.huly.backend.domain.useCase.payment.CreatePaymentPreferenceUseCase;
 import com.huly.backend.domain.useCase.payment.ListPlansUseCase;
 import com.huly.backend.domain.useCase.payment.ListProductsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.payment.CreatePreferenceResponse;
 import com.huly.backend.infrastructure.presentation.dto.payment.PlanResponse;
 import com.huly.backend.infrastructure.presentation.dto.payment.ProductResponse;
+import com.huly.backend.domain.useCase.payment.CreateStoreItemPreferenceUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class PaymentController {
     private final ListProductsUseCase listProductsUseCase;
     private final ListPlansUseCase listPlansUseCase;
     private final CreatePaymentPreferenceUseCase createPaymentPreferenceUseCase;
-
+    private final CreateStoreItemPreferenceUseCase createStoreItemPreferenceUseCase;
 
     @GetMapping("/products")
     public ResponseEntity<List<ProductResponse>> getProducts() {
@@ -56,11 +56,19 @@ public class PaymentController {
     }
 
     @PostMapping("/preference/{productId}")
-    public ResponseEntity<CreatePreferenceResponse> createPreference(@PathVariable Long productId,@AuthenticationPrincipal UserDetails principal) {
+    public ResponseEntity<CreatePreferenceResponse> createPreference(@PathVariable Long productId,
+            @AuthenticationPrincipal UserDetails principal) {
         Long userId = Long.parseLong(principal.getUsername());
         PaymentPreferenceResult result = createPaymentPreferenceUseCase.execute(productId, userId);
         return ResponseEntity.ok(new CreatePreferenceResponse(result.getId(), result.getInitPoint()));
     }
 
+    @PostMapping("/store-preference/{storeItemId}")
+    public ResponseEntity<CreatePreferenceResponse> createStoreItemPreference(
+            @PathVariable Long storeItemId, @AuthenticationPrincipal UserDetails principal) {
+        Long userId = Long.parseLong(principal.getUsername());
+        PaymentPreferenceResult result = createStoreItemPreferenceUseCase.execute(storeItemId, userId);
+        return ResponseEntity.ok(new CreatePreferenceResponse(result.getId(), result.getInitPoint()));
+    }
 
 }

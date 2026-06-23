@@ -1,39 +1,114 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react'
+
+export type ToastType = 'error' | 'success' | 'warning' | 'info'
 
 interface ToastProps {
   message: string
+  type?: ToastType
   onClose: () => void
   duration?: number
+  isPortal?: boolean
 }
 
-export function Toast({ message, onClose, duration = 6000 }: ToastProps) {
-  useEffect(() => {
-    const t = setTimeout(onClose, duration)
-    return () => clearTimeout(t)
-  }, [onClose, duration])
+export function Toast({
+  message,
+  type = 'error',
+  onClose,
+  duration = 6000,
+  isPortal = true,
+}: ToastProps) {
+  const [isExiting, setIsExiting] = useState(false)
 
-  return createPortal(
-    <div className="fixed bottom-5 right-5 z-[9999] flex w-80 items-start gap-3 rounded-2xl bg-white dark:bg-[#172033] px-4 py-3.5 shadow-xl dark:shadow-none ring-1 ring-[#D1CAEF] dark:ring-violet-900/40">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violeta">
-        <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.007M10.29 3.86L1.82 18a2.25 2.25 0 001.95 3.375h16.46a2.25 2.25 0 001.95-3.375L13.71 3.86a2.25 2.25 0 00-3.9 0z" />
-        </svg>
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
+  const handleClose = useCallback(() => {
+    setIsExiting(true)
+    setTimeout(() => {
+      onCloseRef.current()
+    }, 300)
+  }, [])
+
+  useEffect(() => {
+    if (isExiting) return
+    const t = setTimeout(handleClose, duration)
+    return () => clearTimeout(t)
+  }, [handleClose, duration, isExiting])
+
+  const typeConfig = {
+    error: {
+      title: 'Error',
+      icon: AlertTriangle,
+      colorClass: 'text-red-700 dark:text-red-400',
+      bgClass: 'bg-red-50 dark:bg-red-955/20',
+      ringClass: 'ring-red-200 dark:ring-red-900/30',
+      iconBg: 'bg-red-500',
+      iconColor: 'text-white',
+    },
+    success: {
+      title: 'Éxito',
+      icon: CheckCircle2,
+      colorClass: 'text-bosque dark:text-menta',
+      bgClass: 'bg-[#EBF7EE] dark:bg-[#12231b]',
+      ringClass: 'ring-bosque/30 dark:ring-menta/20',
+      iconBg: 'bg-bosque',
+      iconColor: 'text-white',
+    },
+    warning: {
+      title: 'Advertencia',
+      icon: AlertTriangle,
+      colorClass: 'text-anaranjado dark:text-[#f3a462]',
+      bgClass: 'bg-[#FFF7ED] dark:bg-[#25180f]',
+      ringClass: 'ring-anaranjado/30 dark:ring-[#9c5312]/20',
+      iconBg: 'bg-anaranjado',
+      iconColor: 'text-white',
+    },
+    info: {
+      title: 'Información',
+      icon: Info,
+      colorClass: 'text-violeta dark:text-violeta-claro',
+      bgClass: 'bg-[#F4EFFB] dark:bg-[#1a1324]',
+      ringClass: 'ring-violeta/30 dark:ring-violeta-claro/20',
+      iconBg: 'bg-violeta',
+      iconColor: 'text-white',
+    },
+  }
+
+  const config = typeConfig[type]
+  const IconComponent = config.icon
+
+  const animationClass = isExiting ? 'animate-toast-exit' : 'animate-toast-enter'
+
+  const content = (
+    <div
+      className={`flex w-[350px] sm:w-[450px] max-w-[calc(100vw-2.5rem)] items-start gap-3.5 rounded-2xl p-4 sm:p-5 shadow-2xl ring-1 ${config.bgClass} ${config.ringClass} ${animationClass} ${
+        isPortal ? 'fixed bottom-5 right-5 z-[9999]' : 'relative'
+      }`}
+    >
+      <div className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full ${config.iconBg}`}>
+        <IconComponent className={`h-5 w-5 ${config.iconColor}`} strokeWidth={2} />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-violeta dark:text-violeta-claro">Error</p>
-        <p className="mt-0.5 text-xs text-[#4A5568] dark:text-gray-300 break-words">{message}</p>
+      <div className="min-w-0 flex-1">
+        <p className={`text-sm sm:text-base font-bold ${config.colorClass}`}>{config.title}</p>
+        <p className="mt-1 break-words text-xs sm:text-sm text-[#4A5568] dark:text-gray-300 leading-relaxed">{message}</p>
       </div>
       <button
-        onClick={onClose}
-        className="shrink-0 mt-0.5 text-[#A0AEC0] dark:text-gray-500 hover:text-violeta dark:hover:text-violeta-claro transition-colors"
+        onClick={handleClose}
+        className="mt-0.5 shrink-0 text-[#A0AEC0] transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
         aria-label="Cerrar"
       >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <X className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
       </button>
-    </div>,
-    document.body
+    </div>
   )
+
+  if (isPortal) {
+    return createPortal(content, document.body)
+  }
+
+  return content
 }

@@ -11,5 +11,9 @@ public record ChatMessage(
         String content,
         Boolean riskDetected,
         EmotionType detectedEmotion,
-        Instant createdAt
+        Instant createdAt,
+        SuggestedChatAction suggestedAction,
+        ChatReply.GeneratedChallenge generatedChallenge,
+        String suggestedActionDecision,
+        String challengeDecision
 ) {}

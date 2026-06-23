@@ -1,7 +1,7 @@
 package com.huly.backend.domain.useCase.store;
 import com.huly.backend.domain.exception.BusinessRuleException;
-import com.huly.backend.domain.model.StoreItem;
-import com.huly.backend.domain.model.UserStoreItem;
+import com.huly.backend.domain.model.shop.StoreItem;
+import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import com.huly.backend.domain.service.payment.CoinService;

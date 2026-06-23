@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
-import com.huly.backend.domain.model.BreathingTechnique;
+import com.huly.backend.domain.model.breathingTechnique.BreathingTechnique;
 import com.huly.backend.infrastructure.repository.entity.BreathingTechniquesEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IBreathingTechniqueJpaRepository;
 import org.junit.jupiter.api.Test;

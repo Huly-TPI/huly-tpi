@@ -1,6 +1,6 @@
 package com.huly.backend.domain.useCase.extension;
 
-import com.huly.backend.domain.model.UserProfile;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.extension.AntiScrollGlobalConfig;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.extension.AntiScrollGlobalConfigRepository;

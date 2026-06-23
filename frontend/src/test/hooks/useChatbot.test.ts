@@ -38,6 +38,12 @@ const mockedSendAudioMessage = vi.mocked(chatApi.sendAudioMessage)
 const mockedUpdateDecision = vi.mocked(emotionalEventsApi.updateDecision)
 const mockedSaveAudioBlob = vi.mocked(saveAudioBlob)
 
+vi.mock('../../api/auth', () => ({
+  getMyMembership: vi.fn(),
+}))
+
+const mockedGetMyMembership = vi.mocked(await import('../../api/auth')).getMyMembership
+
 describe('useChatbot', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -46,21 +52,31 @@ describe('useChatbot', () => {
     global.URL.revokeObjectURL = vi.fn()
   })
 
+
   it('loads history on mount using persisted conversationId', async () => {
     localStorage.setItem('hulyChatConversationId:1', 'conv-history')
     mockedGetHistory.mockResolvedValueOnce({
       content: [
         {
+          id: 2,
+          role: 'ASSISTANT',
+          content: 'hola yo',
+          suggested_action: {
+            type: 'RESPIRACION',
+            action_id: '7',
+            title: 'Respiracion guiada',
+            description: 'Respira con calma',
+            action_url: '/guided-breathing',
+            emotional_event_id: 22,
+          },
+          suggested_action_decision: 'accepted',
+          created_at: '2026-01-01T00:01:00Z',
+        },
+        {
           id: 1,
           role: 'USER',
           content: 'hola',
           created_at: '2026-01-01T00:00:00Z',
-        },
-        {
-          id: 2,
-          role: 'ASSISTANT',
-          content: 'hola yo',
-          created_at: '2026-01-01T00:01:00Z',
         },
       ],
       page_number: 0,
@@ -77,11 +93,123 @@ describe('useChatbot', () => {
       expect(result.current.isLoadingHistory).toBe(false)
     })
 
-    expect(mockedGetHistory).toHaveBeenCalledWith('conv-history')
+    expect(mockedGetHistory).toHaveBeenCalledWith('conv-history', 0, 20)
     expect(result.current.messages).toEqual([
       { role: 'user', content: 'hola' },
-      { role: 'assistant', content: 'hola yo' },
+      {
+        role: 'assistant',
+        content: 'hola yo',
+        detected_emotion: undefined,
+        suggested_action: {
+          type: 'RESPIRACION',
+          action_id: '7',
+          title: 'Respiracion guiada',
+          description: 'Respira con calma',
+          action_url: '/guided-breathing',
+          emotional_event_id: 22,
+        },
+        generated_challenge: undefined,
+        suggestedActionDecision: 'accepted',
+        challengeDecision: undefined,
+      },
     ])
+  })
+
+  it('restores quota limit error on mount if limit date matches today and user has no active membership', async () => {
+    const today = new Date().toISOString().split('T')[0]
+    localStorage.setItem('huly:chat-limit-date:1', today)
+    localStorage.setItem('huly:chat-limit-message:1', 'Alcanzaste el límite diario de 10 mensajes del plan gratuito.')
+    localStorage.setItem('hulyChatConversationId:1', 'some-conv-id')
+
+    mockedGetMyMembership.mockResolvedValueOnce({
+      active: false,
+      planCode: null,
+      productId: null,
+      expiresAt: null,
+    })
+
+    mockedGetHistory.mockResolvedValueOnce({
+      content: [],
+      page_number: 0,
+      page_size: 20,
+      total_elements: 0,
+      total_pages: 0,
+      first: true,
+      last: true,
+    } as never)
+
+    const { result } = renderHook(() => useChatbot())
+
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    expect(result.current.error).toBe('Alcanzaste el límite diario de 10 mensajes del plan gratuito.')
+  })
+
+
+  it('loads older history page when scrolling to the top', async () => {
+    localStorage.setItem('hulyChatConversationId:1', 'conv-paged')
+    mockedGetHistory
+      .mockResolvedValueOnce({
+        content: [
+          {
+            id: 101,
+            role: 'ASSISTANT',
+            content: 'ultima respuesta',
+            generated_challenge: { title: 'Reto final', description: 'Desc final' },
+            created_at: '2026-01-01T01:40:00Z',
+          },
+        ],
+        page_number: 0,
+        page_size: 20,
+        total_elements: 101,
+        total_pages: 2,
+        first: true,
+        last: false,
+      } as never)
+      .mockResolvedValueOnce({
+        content: [
+          {
+            id: 1,
+            role: 'USER',
+            content: 'primer mensaje',
+            created_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+        page_number: 1,
+        page_size: 20,
+        total_elements: 101,
+        total_pages: 2,
+        first: false,
+        last: true,
+      } as never)
+
+    const { result } = renderHook(() => useChatbot())
+
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    const container = document.createElement('section')
+    Object.defineProperty(container, 'scrollTop', { value: 0, writable: true })
+    Object.defineProperty(container, 'scrollHeight', { value: 300, writable: true })
+    ;(result.current.messagesContainerRef as { current: HTMLElement | null }).current = container
+
+    await act(async () => {
+      result.current.handleMessagesScroll()
+    })
+
+    await waitFor(() => expect(mockedGetHistory).toHaveBeenCalledTimes(2))
+
+    expect(mockedGetHistory).toHaveBeenNthCalledWith(1, 'conv-paged', 0, 20)
+    expect(mockedGetHistory).toHaveBeenNthCalledWith(2, 'conv-paged', 1, 20)
+    expect(result.current.messages).toHaveLength(2)
+    expect(result.current.messages[0]).toMatchObject({
+      role: 'user',
+      content: 'primer mensaje',
+    })
+    expect(result.current.messages[1]).toMatchObject({
+      role: 'assistant',
+      content: 'ultima respuesta',
+      generated_challenge: { title: 'Reto final', description: 'Desc final' },
+    })
   })
 
   it('sendMessage appends user and assistant messages', async () => {
@@ -338,7 +466,7 @@ describe('useChatbot', () => {
     const { result } = renderHook(() => useChatbot())
     await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
 
-    expect(mockedGetHistory).toHaveBeenLastCalledWith('old-conv-id')
+    expect(mockedGetHistory).toHaveBeenLastCalledWith('old-conv-id', 0, 20)
 
     act(() => {
       result.current.resetConversation()

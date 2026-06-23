@@ -1,17 +1,19 @@
 package com.huly.backend.domain.service.vector;
 
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoriesQuery;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
 import com.huly.backend.domain.model.vector.VectorMemory;
+import com.huly.backend.domain.model.vector.VectorMemoryEntry;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +35,7 @@ class UserVectorMemoryPortTest {
     private RecordingVectorMemoryPort vectorMemoryPort;
     private RecordingUserPersonalitySummaryRepository personalitySummaryRepository;
     private UserVectorMemoryService service;
-    private org.springframework.beans.factory.ObjectProvider<org.springframework.ai.chat.client.ChatClient> chatClientProvider;
-    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private ObjectProvider<org.springframework.ai.chat.client.ChatClient> chatClientProvider;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -42,14 +43,12 @@ class UserVectorMemoryPortTest {
         properties = new VectorMemoryProperties();
         vectorMemoryPort = new RecordingVectorMemoryPort();
         personalitySummaryRepository = new RecordingUserPersonalitySummaryRepository();
-        chatClientProvider = mock(org.springframework.beans.factory.ObjectProvider.class);
-        jdbcTemplate = mock(org.springframework.jdbc.core.JdbcTemplate.class);
+        chatClientProvider = mock(ObjectProvider.class);
         service = new UserVectorMemoryService(
                 vectorMemoryPort,
                 properties,
                 new UserProfileFactExtractor(),
                 chatClientProvider,
-                jdbcTemplate,
                 personalitySummaryRepository,
                 new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
         );
@@ -194,19 +193,7 @@ class UserVectorMemoryPortTest {
     @Test
     @SuppressWarnings("unchecked")
     void getAllMemoryContents_shouldReturnContentsAndFilterPersonalitySummary() throws Exception {
-        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
-                .thenAnswer(invocation -> {
-                    org.springframework.jdbc.core.RowMapper<String> mapper = invocation.getArgument(1);
-                    java.sql.ResultSet rs1 = mock(java.sql.ResultSet.class);
-                    when(rs1.getString("content")).thenReturn("Me siento feliz");
-                    String res1 = mapper.mapRow(rs1, 0);
-
-                    List<String> list = new ArrayList<>();
-                    if (res1 != null) {
-                        list.add(res1);
-                    }
-                    return list;
-                });
+        vectorMemoryPort.memoryContents = List.of("Me siento feliz");
 
         List<String> contents = service.getAllMemoryContents(1L);
         assertThat(contents).containsExactly("Me siento feliz");
@@ -221,8 +208,7 @@ class UserVectorMemoryPortTest {
         when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
                 .thenReturn(new UserVectorMemoryService.PersonalitySummaryDto("Test profile summary", "activity", "none"));
 
-        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
-                .thenReturn(List.of("Memory content 1", "Memory content 2"));
+        vectorMemoryPort.memoryContents = List.of("Memory content 1", "Memory content 2");
 
         service.saveMemory(new SaveVectorMemoryCommand(
                 1L,
@@ -262,7 +248,6 @@ class UserVectorMemoryPortTest {
                 properties,
                 new UserProfileFactExtractor(),
                 chatClientProvider,
-                jdbcTemplate,
                 failingRepository,
                 new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
         );
@@ -308,9 +293,8 @@ class UserVectorMemoryPortTest {
     }
 
     @Test
-    void getAllMemoryContents_shouldReturnEmptyList_whenJdbcThrowsException() {
-        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
-                .thenThrow(new RuntimeException("JDBC error"));
+    void getAllMemoryContents_shouldReturnEmptyList_whenPortThrowsException() {
+        vectorMemoryPort.failOnFindContents = true;
 
         List<String> contents = service.getAllMemoryContents(1L);
         assertThat(contents).isEmpty();
@@ -326,7 +310,6 @@ class UserVectorMemoryPortTest {
                 properties,
                 new UserProfileFactExtractor(),
                 chatClientProvider,
-                jdbcTemplate,
                 personalitySummaryRepository,
                 new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
         );
@@ -345,7 +328,6 @@ class UserVectorMemoryPortTest {
                 properties,
                 new UserProfileFactExtractor(),
                 chatClientProvider,
-                jdbcTemplate,
                 personalitySummaryRepository,
                 new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
         );
@@ -369,7 +351,6 @@ class UserVectorMemoryPortTest {
                 properties,
                 mockExtractor,
                 chatClientProvider,
-                jdbcTemplate,
                 personalitySummaryRepository,
                 new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
         );
@@ -395,7 +376,6 @@ class UserVectorMemoryPortTest {
                 properties,
                 new UserProfileFactExtractor(),
                 chatClientProvider,
-                jdbcTemplate,
                 personalitySummaryRepository,
                 new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
         );
@@ -406,8 +386,7 @@ class UserVectorMemoryPortTest {
     @Test
     void generatePersonalitySummary_shouldReturnEarly_whenChatModelIsNull() {
         when(chatClientProvider.getIfAvailable()).thenReturn(null);
-        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
-                .thenReturn(List.of("Memory 1"));
+        vectorMemoryPort.memoryContents = List.of("Memory 1");
 
         service.saveMemory(new SaveVectorMemoryCommand(
                 1L,
@@ -438,8 +417,7 @@ class UserVectorMemoryPortTest {
         when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
                 .thenThrow(new RuntimeException("ChatClient error"));
 
-        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
-                .thenReturn(List.of("Memory 1"));
+        vectorMemoryPort.memoryContents = List.of("Memory 1");
 
         service.saveMemory(new SaveVectorMemoryCommand(
                 1L,
@@ -471,8 +449,7 @@ class UserVectorMemoryPortTest {
         when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
                 .thenReturn(new UserVectorMemoryService.PersonalitySummaryDto("Truncated summary", "activity", "none"));
 
-        when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyString()))
-                .thenReturn(List.of("a".repeat(4005)));
+        vectorMemoryPort.memoryContents = List.of("a".repeat(4005));
 
         service.saveMemory(new SaveVectorMemoryCommand(
                 1L,
@@ -502,9 +479,11 @@ class UserVectorMemoryPortTest {
 
         private final List<SaveVectorMemoryCommand> savedCommands = new ArrayList<>();
         private final List<VectorMemory> memories = new ArrayList<>();
+        private List<String> memoryContents = List.of();
         private SearchVectorMemoryQuery lastSingleSourceQuery;
         private SearchVectorMemoriesQuery lastMultiSourceQuery;
         private boolean failOnSave;
+        private boolean failOnFindContents;
 
         @Override
         public void saveMemory(SaveVectorMemoryCommand command) {
@@ -521,6 +500,19 @@ class UserVectorMemoryPortTest {
                     .filter(memory -> memory.userId().equals(query.userId()))
                     .filter(memory -> memory.sourceType() == query.sourceType())
                     .toList();
+        }
+
+        @Override
+        public List<String> findMemoryContentsByUserIdExcludingSummary(Long userId) {
+            if (failOnFindContents) {
+                throw new RuntimeException("vector unavailable");
+            }
+            return memoryContents;
+        }
+
+        @Override
+        public List<VectorMemoryEntry> findMemoriesByUserIdExcludingSummary(Long userId) {
+            return List.of();
         }
 
         @Override

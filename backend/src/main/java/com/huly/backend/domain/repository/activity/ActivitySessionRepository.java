@@ -1,6 +1,6 @@
 package com.huly.backend.domain.repository.activity;
 
-import com.huly.backend.domain.model.ActivitySession;
+import com.huly.backend.domain.model.activity.ActivitySession;
 
 import java.time.Instant;
 import java.util.List;

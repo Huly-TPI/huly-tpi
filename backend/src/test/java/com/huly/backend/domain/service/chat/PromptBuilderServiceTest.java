@@ -1,6 +1,6 @@
 package com.huly.backend.domain.service.chat;
 
-import com.huly.backend.domain.model.RiskWord;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.chat.ChatPersonalizationContext;
 import com.huly.backend.domain.model.chat.ChatUserIntent;
 import com.huly.backend.domain.model.enums.CommunicationStyle;

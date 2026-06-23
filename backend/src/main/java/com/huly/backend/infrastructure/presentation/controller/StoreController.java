@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.StoreItem;
-import com.huly.backend.domain.model.UserStoreItem;
+import com.huly.backend.domain.model.shop.StoreItem;
+import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.useCase.store.BuyStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.EquipStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.GetUserInventoryUseCase;
@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -68,7 +69,8 @@ public class StoreController {
                 item.getDescription(),
                 item.getCategory().name(),
                 item.getAssetKey(),
-                item.getPriceCoins());
+                item.getPriceCoins(),
+                item.getPrice());
     }
 
     private InventoryItemResponse toInventoryResponse(UserStoreItem owned) {

@@ -1,8 +1,7 @@
 package com.huly.backend.domain.exception;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DomainExceptionTest {
 
@@ -12,29 +11,29 @@ class DomainExceptionTest {
     }
 
     @Test
-    void testMessageIsSet() {
+    void messageConstructor_shouldSetMessage() {
         DomainException ex = new ConcreteDomainException("error de dominio");
-        assertEquals("error de dominio", ex.getMessage());
+        assertThat(ex.getMessage()).isEqualTo("error de dominio");
     }
 
     @Test
-    void testMessageAndCauseAreSet() {
+    void messageAndCauseConstructor_shouldSetMessageAndCause() {
         Throwable cause = new RuntimeException("causa");
         DomainException ex = new ConcreteDomainException("error de dominio", cause);
 
-        assertEquals("error de dominio", ex.getMessage());
-        assertEquals(cause, ex.getCause());
+        assertThat(ex.getMessage()).isEqualTo("error de dominio");
+        assertThat(ex.getCause()).isEqualTo(cause);
     }
 
     @Test
-    void testIsDomainException() {
+    void inheritance_shouldExtendRuntimeException() {
         DomainException ex = new ConcreteDomainException("test");
-        assertInstanceOf(RuntimeException.class, ex);
+        assertThat(ex).isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    void testNullMessage() {
+    void messageConstructor_shouldHandleNullMessage() {
         DomainException ex = new ConcreteDomainException(null);
-        assertNull(ex.getMessage());
+        assertThat(ex.getMessage()).isNull();
     }
 }

@@ -1,5 +1,6 @@
 import { getBackendOrigin } from '../api/client'
 import { getExtensionSettings } from '../api/extension'
+import { hasSessionFlag } from '../context/auth'
 
 export interface AntiScrollRuntimeConfig {
   backendUrl: string
@@ -60,7 +61,9 @@ export const setupAntiScrollBridge = (): (() => void) => {
   }
 
   publishAntiScrollRuntimeConfig()
-  void publishAntiScrollExtensionSettings().catch(() => {})
+  if (hasSessionFlag()) {
+    void publishAntiScrollExtensionSettings().catch(() => {})
+  }
   window.addEventListener('auth:user-loaded', handleUserLoaded)
 
   return () => {

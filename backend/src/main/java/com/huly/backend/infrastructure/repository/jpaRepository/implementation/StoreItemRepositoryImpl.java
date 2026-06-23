@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
-import com.huly.backend.domain.model.StoreItem;
+import com.huly.backend.domain.model.shop.StoreItem;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import com.huly.backend.infrastructure.repository.entity.StoreItemEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IStoreItemJpaRepository;
@@ -33,6 +33,7 @@ public class StoreItemRepositoryImpl implements StoreItemRepository {
                 .category(entity.getCategory())
                 .assetKey(entity.getAssetKey())
                 .priceCoins(entity.getPriceCoins())
+                .price(entity.getPrice())
                 .build();
     }
     

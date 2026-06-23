@@ -1,17 +1,20 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.UserGoal;
+import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.repository.user.UserGoalRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserGoalsEntity;
+import com.huly.backend.infrastructure.repository.entity.UserPlantEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IActivityJpaRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserGoalJpaRepository;
+import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserPlantJpaRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,6 +26,7 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
     private final IUserGoalJpaRepository jpaRepository;
     private final AppUserRepository appUserRepository;
     private final IActivityJpaRepository activityJpaRepository;
+    private final IUserPlantJpaRepository userPlantJpaRepository;
 
     @Override
     public UserGoal save(UserGoal userGoal) {
@@ -51,11 +55,21 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public List<UserGoal> findCompletedByPlantId(Long plantId) {
+        return jpaRepository.findByUserPlant_IdAndStatus(plantId, GoalStatus.COMPLETED)
+                .stream().map(this::toDomain).toList();
+    }
+
     private UserGoalsEntity toEntity(UserGoal domain) {
         AppUserEntity appUser = appUserRepository.getReferenceById(domain.getUserId());
 
         ActivityEntity activity = domain.getActivityId() != null
                 ? activityJpaRepository.getReferenceById(domain.getActivityId())
+                : null;
+
+        UserPlantEntity userPlant = domain.getUserPlantId() != null
+                ? userPlantJpaRepository.getReferenceById(domain.getUserPlantId())
                 : null;
 
         return UserGoalsEntity.builder()
@@ -66,6 +80,7 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
                 .status(domain.getStatus())
                 .createdAt(domain.getCreatedAt())
                 .activity(activity)
+                .userPlant(userPlant)
                 .imageUrl(domain.getImageUrl())
                 .coinsReward(domain.getCoinsReward() != null ? domain.getCoinsReward() : 10)
                 .coinsRewardWithImage(domain.getCoinsRewardWithImage() != null ? domain.getCoinsRewardWithImage() : 25)
@@ -81,6 +96,7 @@ public class UserGoalRepositoryImpl implements UserGoalRepository {
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .activityId(entity.getActivity() != null ? entity.getActivity().getId() : null)
+                .userPlantId(entity.getUserPlant() != null ? entity.getUserPlant().getId() : null)
                 .imageUrl(entity.getImageUrl())
                 .coinsReward(entity.getCoinsReward())
                 .coinsRewardWithImage(entity.getCoinsRewardWithImage())

@@ -56,10 +56,14 @@ class TestVadToEmotion:
         # valence == 0.6 triggers the >= branch; arousal < 0.5 → neutral
         assert vad_to_emotion(0.4, 0.5, 0.6) == "neutral"
 
+    def test_angry_spanish_high_valence_1(self):
+        # Voz enojada española real: arousal y dominance altos, valence moderada (~0.48)
+        assert vad_to_emotion(0.644, 0.655, 0.481) == "angry"
 
-# ---------------------------------------------------------------------------
-# convert_to_wav_16k
-# ---------------------------------------------------------------------------
+    def test_angry_spanish_high_valence_2(self):
+        # Voz enojada española real: arousal y dominance muy altos, valence moderada-alta (~0.63)
+        assert vad_to_emotion(0.747, 0.714, 0.626) == "angry"
+
 
 class TestConvertToWav16k:
     def test_raises_runtime_error_on_ffmpeg_failure(self, tmp_path):
@@ -102,13 +106,140 @@ class TestHealth:
         assert data["vad_model"] is False
 
 
-# ---------------------------------------------------------------------------
-# POST /analyze
-# ---------------------------------------------------------------------------
-
-class TestAnalyze:
-    def test_returns_503_when_models_unavailable(self, monkeypatch):
+class TestTranscribe:
+    def test_returns_503_when_whisper_unavailable(self, monkeypatch):
         monkeypatch.setattr(main_module, "whisper_model", None)
+        client = TestClient(app)
+
+        response = client.post(
+            "/transcribe",
+            files={"file": ("audio.wav", _make_wav_bytes(), "audio/wav")},
+        )
+
+        assert response.status_code == 503
+
+    def test_returns_415_for_unsupported_mime_type(self, monkeypatch):
+        monkeypatch.setattr(main_module, "whisper_model", MagicMock())
+        client = TestClient(app)
+
+        response = client.post(
+            "/transcribe",
+            files={"file": ("document.pdf", b"fake", "application/pdf")},
+        )
+
+        assert response.status_code == 415
+
+    def test_returns_422_when_ffmpeg_fails(self, monkeypatch):
+        monkeypatch.setattr(main_module, "whisper_model", MagicMock())
+        monkeypatch.setattr(
+            main_module,
+            "convert_to_wav_16k",
+            MagicMock(side_effect=RuntimeError("ffmpeg falló (código 1): error")),
+        )
+        client = TestClient(app)
+
+        response = client.post(
+            "/transcribe",
+            files={"file": ("audio.wav", b"not-real-audio", "audio/wav")},
+        )
+
+        assert response.status_code == 422
+
+    def test_processes_wav_and_returns_transcription(self, monkeypatch, tmp_path):
+        wav_path = str(tmp_path / "converted.wav")
+        wav_bytes = _make_wav_bytes()
+        with open(wav_path, "wb") as f:
+            f.write(wav_bytes)
+
+        mock_segment = MagicMock()
+        mock_segment.text = "hola mundo"
+        mock_info = MagicMock()
+        mock_info.language = "es"
+
+        mock_whisper = MagicMock()
+        mock_whisper.transcribe.return_value = (iter([mock_segment]), mock_info)
+
+        monkeypatch.setattr(main_module, "whisper_model", mock_whisper)
+        monkeypatch.setattr(main_module, "convert_to_wav_16k", MagicMock(return_value=wav_path))
+
+        client = TestClient(app)
+        response = client.post(
+            "/transcribe",
+            files={"file": ("recording.wav", wav_bytes, "audio/wav")},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["transcripcion"] == "hola mundo"
+        assert data["idioma_detectado"] == "es"
+        assert "emocion_dominante" not in data
+        assert "vad" not in data
+
+    def test_cleans_up_temp_files_after_transcription(self, monkeypatch, tmp_path):
+        wav_path = str(tmp_path / "converted.wav")
+        wav_bytes = _make_wav_bytes()
+        with open(wav_path, "wb") as f:
+            f.write(wav_bytes)
+
+        mock_segment = MagicMock()
+        mock_segment.text = "texto"
+        mock_info = MagicMock()
+        mock_info.language = "es"
+
+        mock_whisper = MagicMock()
+        mock_whisper.transcribe.return_value = (iter([mock_segment]), mock_info)
+
+        monkeypatch.setattr(main_module, "whisper_model", mock_whisper)
+        monkeypatch.setattr(main_module, "convert_to_wav_16k", MagicMock(return_value=wav_path))
+
+        deleted_paths = []
+        real_unlink = main_module.os.unlink
+
+        def capture_unlink(path):
+            deleted_paths.append(path)
+            try:
+                real_unlink(path)
+            except OSError:
+                pass
+
+        monkeypatch.setattr(main_module.os, "unlink", capture_unlink)
+
+        client = TestClient(app)
+        client.post(
+            "/transcribe",
+            files={"file": ("audio.wav", wav_bytes, "audio/wav")},
+        )
+
+        assert wav_path in deleted_paths
+
+    def test_webm_content_type_is_accepted(self, monkeypatch, tmp_path):
+        wav_path = str(tmp_path / "converted.wav")
+        wav_bytes = _make_wav_bytes()
+        with open(wav_path, "wb") as f:
+            f.write(wav_bytes)
+
+        mock_segment = MagicMock()
+        mock_segment.text = ""
+        mock_info = MagicMock()
+        mock_info.language = "es"
+
+        mock_whisper = MagicMock()
+        mock_whisper.transcribe.return_value = (iter([mock_segment]), mock_info)
+
+        monkeypatch.setattr(main_module, "whisper_model", mock_whisper)
+        monkeypatch.setattr(main_module, "convert_to_wav_16k", MagicMock(return_value=wav_path))
+
+        client = TestClient(app)
+        response = client.post(
+            "/transcribe",
+            files={"file": ("recording.webm", b"fake-webm", "audio/webm")},
+        )
+
+        assert response.status_code == 200
+
+
+class TestAnalyzeEmotion:
+    def test_returns_503_when_vad_unavailable(self, monkeypatch):
         monkeypatch.setattr(main_module, "vad_model", None)
         client = TestClient(app)
 
@@ -120,7 +251,6 @@ class TestAnalyze:
         assert response.status_code == 503
 
     def test_returns_415_for_unsupported_mime_type(self, monkeypatch):
-        monkeypatch.setattr(main_module, "whisper_model", MagicMock())
         monkeypatch.setattr(main_module, "vad_model", MagicMock())
         client = TestClient(app)
 
@@ -132,7 +262,6 @@ class TestAnalyze:
         assert response.status_code == 415
 
     def test_returns_422_when_ffmpeg_fails(self, monkeypatch):
-        monkeypatch.setattr(main_module, "whisper_model", MagicMock())
         monkeypatch.setattr(main_module, "vad_model", MagicMock())
         monkeypatch.setattr(
             main_module,
@@ -148,21 +277,12 @@ class TestAnalyze:
 
         assert response.status_code == 422
 
-    def test_processes_wav_audio_and_returns_full_response(self, monkeypatch, tmp_path):
+    def test_processes_wav_and_returns_emotion(self, monkeypatch, tmp_path):
         wav_path = str(tmp_path / "converted.wav")
         wav_bytes = _make_wav_bytes()
         with open(wav_path, "wb") as f:
             f.write(wav_bytes)
 
-        mock_segment = MagicMock()
-        mock_segment.text = "hola mundo"
-        mock_info = MagicMock()
-        mock_info.language = "es"
-
-        mock_whisper = MagicMock()
-        mock_whisper.transcribe.return_value = (iter([mock_segment]), mock_info)
-
-        monkeypatch.setattr(main_module, "whisper_model", mock_whisper)
         monkeypatch.setattr(main_module, "vad_model", MagicMock())
         monkeypatch.setattr(main_module, "convert_to_wav_16k", MagicMock(return_value=wav_path))
         monkeypatch.setattr(
@@ -179,27 +299,18 @@ class TestAnalyze:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["transcripcion"] == "hola mundo"
-        assert data["idioma_detectado"] == "es"
-        assert data["emocion_dominante"] == "happy"  # arousal=0.6>=0.5, valence=0.7>=0.6 → happy
+        assert data["emocion_dominante"] == "happy"  # arousal=0.6>=0.5, valence=0.7>=0.6
         assert data["vad"]["arousal"] == pytest.approx(0.6)
         assert data["vad"]["valence"] == pytest.approx(0.7)
+        assert "transcripcion" not in data
+        assert "idioma_detectado" not in data
 
-    def test_cleans_up_temp_files_after_processing(self, monkeypatch, tmp_path):
+    def test_cleans_up_temp_files_after_analysis(self, monkeypatch, tmp_path):
         wav_path = str(tmp_path / "converted.wav")
         wav_bytes = _make_wav_bytes()
         with open(wav_path, "wb") as f:
             f.write(wav_bytes)
 
-        mock_segment = MagicMock()
-        mock_segment.text = "texto"
-        mock_info = MagicMock()
-        mock_info.language = "es"
-
-        mock_whisper = MagicMock()
-        mock_whisper.transcribe.return_value = (iter([mock_segment]), mock_info)
-
-        monkeypatch.setattr(main_module, "whisper_model", mock_whisper)
         monkeypatch.setattr(main_module, "vad_model", MagicMock())
         monkeypatch.setattr(main_module, "convert_to_wav_16k", MagicMock(return_value=wav_path))
         monkeypatch.setattr(
@@ -234,15 +345,6 @@ class TestAnalyze:
         with open(wav_path, "wb") as f:
             f.write(wav_bytes)
 
-        mock_segment = MagicMock()
-        mock_segment.text = ""
-        mock_info = MagicMock()
-        mock_info.language = "es"
-
-        mock_whisper = MagicMock()
-        mock_whisper.transcribe.return_value = (iter([mock_segment]), mock_info)
-
-        monkeypatch.setattr(main_module, "whisper_model", mock_whisper)
         monkeypatch.setattr(main_module, "vad_model", MagicMock())
         monkeypatch.setattr(main_module, "convert_to_wav_16k", MagicMock(return_value=wav_path))
         monkeypatch.setattr(

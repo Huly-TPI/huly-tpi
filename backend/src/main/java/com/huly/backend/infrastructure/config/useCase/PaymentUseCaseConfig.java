@@ -7,9 +7,12 @@ import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.service.payment.PlanService;
 import com.huly.backend.domain.useCase.payment.CreatePaymentPreferenceUseCase;
+import com.huly.backend.domain.useCase.payment.CreateStoreItemPreferenceUseCase;
 import com.huly.backend.domain.useCase.payment.HandleWebhookUseCase;
 import com.huly.backend.domain.useCase.payment.ListPlansUseCase;
 import com.huly.backend.domain.useCase.payment.ListProductsUseCase;
+import com.huly.backend.domain.repository.StoreItemRepository;
+import com.huly.backend.domain.repository.UserStoreItemRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,7 +25,18 @@ public class PaymentUseCaseConfig {
             MercadoPagoPort mercadoPagoPort,
             PaymentEventRepository paymentEventRepository,
             UserPlanRepository userPlanRepository) {
-        return new CreatePaymentPreferenceUseCase(productRepository, mercadoPagoPort, paymentEventRepository, userPlanRepository);
+        return new CreatePaymentPreferenceUseCase(productRepository, mercadoPagoPort, paymentEventRepository,
+                userPlanRepository);
+    }
+
+    @Bean
+    public CreateStoreItemPreferenceUseCase createStoreItemPreferenceUseCase(
+            StoreItemRepository storeItemRepository,
+            MercadoPagoPort mercadoPagoPort,
+            PaymentEventRepository paymentEventRepository,
+            UserStoreItemRepository userStoreItemRepository) {
+        return new CreateStoreItemPreferenceUseCase(
+                storeItemRepository, mercadoPagoPort, paymentEventRepository, userStoreItemRepository);
     }
 
     @Bean
@@ -40,9 +54,11 @@ public class PaymentUseCaseConfig {
             PaymentEventRepository paymentEventRepository,
             MercadoPagoPort mercadoPagoPort,
             CoinService coinDomainService,
+            StoreItemRepository storeItemRepository,
+            UserStoreItemRepository userStoreItemRepository,
             PlanService planDomainService) {
-        return new HandleWebhookUseCase(paymentEventRepository, mercadoPagoPort, coinDomainService, planDomainService);
+        return new HandleWebhookUseCase(paymentEventRepository, mercadoPagoPort, coinDomainService, planDomainService,
+                storeItemRepository, userStoreItemRepository);
     }
-
 
 }

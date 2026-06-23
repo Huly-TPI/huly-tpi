@@ -26,6 +26,9 @@ public class PaymentEventEntity {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(name = "store_item_id")
+    private Long storeItemId;
+
     @Column(name = "external_reference", nullable = false)
     private String externalReference;
 

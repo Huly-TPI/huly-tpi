@@ -10,17 +10,19 @@ import darkLanternImage from '../../assets/lanterns/dark-theme/lantern-dark.webp
 import lanternImage from '../../assets/lanterns/ligth-theme/Lantern-Ligth.webp'
 import darkFishImage from '../../assets/minigames/dark-theme/fish.webp'
 import darkEaselImage from '../../assets/minigames/dark-theme/paddle.webp'
-import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
+// import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
 import darkSandImage from '../../assets/minigames/dark-theme/sand.webp'
 import fishImage from '../../assets/minigames/light-theme/fish.webp'
 import easelImage from '../../assets/minigames/light-theme/paddle.webp'
-import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
+// import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
 import sandImage from '../../assets/minigames/light-theme/sand.webp'
 
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
+import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import { useTheme } from '../../context/theme'
+import { useInventory } from '../../hooks/store/useInventory'
 import './Minigames.css'
 
 const FULL_WIDTH = 'w-full'
@@ -108,18 +110,18 @@ const minigameElements: SceneElementDefinition[] = [
         tooltipClassName: 'bottom-full mb-2',
         to: '/bubbles',
     },
-    {
-        id: 'stones',
-        title: 'Piedras del lago',
-        imageAlt: 'Piedras a la orilla del lago',
-        image: { light: stonesImage, dark: darkStonesImage },
-        placementClassName: 'left-[38%] top-[74%] z-30 w-[28%] md:left-[58%] md:top-[80%] md:w-[9%]',
-        imageClassName: FULL_WIDTH,
-        hotspotClassName: DEFAULT_HOTSPOT,
-        clipPath: RECT_CLIP_PATH,
-        tooltipClassName: 'bottom-full mb-2',
-        to: '/stones',
-    },
+    // {
+    //     id: 'stones',
+    //     title: 'Piedras del lago',
+    //     imageAlt: 'Piedras a la orilla del lago',
+    //     image: { light: stonesImage, dark: darkStonesImage },
+    //     placementClassName: 'left-[38%] top-[74%] z-30 w-[28%] md:left-[58%] md:top-[80%] md:w-[9%]',
+    //     imageClassName: FULL_WIDTH,
+    //     hotspotClassName: DEFAULT_HOTSPOT,
+    //     clipPath: RECT_CLIP_PATH,
+    //     tooltipClassName: 'bottom-full mb-2',
+    //     to: '/stones',
+    // },
     {
         id: 'mandalas',
         title: 'Colorear mandalas',
@@ -158,7 +160,22 @@ const allImageSources: string[] = [
 
 export default function Minigames() {
     const { theme } = useTheme()
-    const isDark = theme === 'dark'
+    const { inventory } = useInventory()
+    const equippedByCategory = resolveEquippedImages(inventory)
+    const equippedTreeImage = equippedByCategory.TREE
+    const homeReturnElement: SceneElementDefinition = {
+        id: 'home-return-tree',
+        title: 'Volver al jardin',
+        imageAlt: 'Fragmento del arbol del jardin',
+        image: equippedTreeImage ?? { light: treeImage, dark: darkTreeImage },
+        placementClassName: 'minigames-home-return',
+        imageClassName: 'minigames-home-return__image',
+        hotspotClassName: 'minigames-home-return__hotspot',
+        clipPath: 'polygon(8% 14%, 24% 2%, 70% 2%, 92% 10%, 100% 24%, 100% 100%, 18% 100%, 8% 64%)',
+        tooltipClassName: 'left-[24%] top-[14%] -translate-x-1/2',
+        to: '/',
+    }
+    const sceneElements = [...cloudElements, ...minigameElements, homeReturnElement]
 
     useEffect(() => {
         const sources = new Set<string>([

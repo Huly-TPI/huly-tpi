@@ -21,19 +21,22 @@ interface AuthGateProviderProps {
 }
 
 export function AuthGateProvider({ children }: AuthGateProviderProps) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
   const requireAuth = useCallback(
     (action: () => void) => {
-      if (isAuthenticated) {
+      if (loading) 
+        return
+      
+      if (isAuthenticated)
         action()
-      } else {
+      else 
         setOpen(true)
-      }
+      
     },
-    [isAuthenticated],
+    [isAuthenticated, loading],
   )
 
   const closeModal = useCallback(() => setOpen(false), [])

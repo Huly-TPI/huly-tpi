@@ -20,7 +20,7 @@ export default function Onboarding() {
 
     
     
-  const { step, step1Options, pillOptions, advance, selectOption, skip } =
+  const { step, step1Options, pillOptions, advance, selectOption, skip, submitting } =
     useEmotionalOnboarding(async () => {
         await refreshUser()
           const myBadges = await badgesApi.getMyBadges()
@@ -42,6 +42,7 @@ export default function Onboarding() {
         onAdvance={advance}
         onSelectOption={selectOption}
         onSkip={skip}
+        submitting={submitting}
     />
     )
 }

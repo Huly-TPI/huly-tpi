@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.model.UserPersonalitySummary;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserPersonalitySummaryEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;

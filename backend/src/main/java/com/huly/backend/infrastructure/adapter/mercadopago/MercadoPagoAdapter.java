@@ -1,8 +1,8 @@
 package com.huly.backend.infrastructure.adapter.mercadopago;
 
-import com.huly.backend.domain.dto.payment.MercadoPagoPaymentResult;
-import com.huly.backend.domain.dto.payment.PaymentPreferenceResult;
-import com.huly.backend.domain.dto.payment.Product;
+import com.huly.backend.domain.model.payment.MercadoPagoPaymentResult;
+import com.huly.backend.domain.model.payment.PaymentPreferenceResult;
+import com.huly.backend.domain.model.payment.Product;
 import com.huly.backend.domain.port.MercadoPagoPort;
 import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;

@@ -11,7 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.huly.backend.domain.model.ActivitySession;
+import com.huly.backend.domain.model.activity.ActivitySession;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 

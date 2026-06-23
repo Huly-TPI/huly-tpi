@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
-import com.huly.backend.domain.dto.payment.PaymentEvent;
+import com.huly.backend.domain.model.payment.PaymentEvent;
 import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.infrastructure.repository.entity.PaymentEventEntity;
@@ -69,6 +69,7 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
                 .id(e.getId())
                 .userId(e.getUserId())
                 .productId(e.getProductId())
+                .storeItemId(e.getStoreItemId())
                 .externalReference(e.getExternalReference())
                 .mpPreferenceId(e.getMpPreferenceId())
                 .mpPaymentId(e.getMpPaymentId())
@@ -86,6 +87,7 @@ public class PaymentEventRepositoryImpl implements PaymentEventRepository {
                 .id(e.getId())
                 .userId(e.getUserId())
                 .productId(e.getProductId())
+                .storeItemId(e.getStoreItemId())
                 .externalReference(e.getExternalReference())
                 .mpPreferenceId(e.getMpPreferenceId())
                 .mpPaymentId(e.getMpPaymentId())
