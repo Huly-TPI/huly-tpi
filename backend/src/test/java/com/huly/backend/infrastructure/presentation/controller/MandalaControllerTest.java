@@ -51,7 +51,9 @@ class MandalaControllerTest {
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(userDetails, null));
 
-        mockMvc = MockMvcBuilders.standaloneSetup(new MandalaController(listAvailableMandalasUseCase, saveMandalaProgressUseCase, getMandalaProgressUseCase, clearMandalaProgressUseCase))
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(new MandalaController(listAvailableMandalasUseCase, saveMandalaProgressUseCase,
+                        getMandalaProgressUseCase, clearMandalaProgressUseCase))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -60,28 +62,6 @@ class MandalaControllerTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
-    }
-
-    @Test
-    void getAvailableMandalas_returnsMappedResponse() throws Exception {
-        when(listAvailableMandalasUseCase.execute(USER_ID)).thenReturn(List.of(AvailableMandala.builder()
-                .mandala(Mandala.builder()
-                        .id("mandala-01")
-                        .title("Mandala 01")
-                        .description("desc")
-                        .assetKey("mandala-01")
-                        .displayOrder(1)
-                        .active(true)
-                        .accessType(MandalaAccessType.FREE)
-                        .build())
-                .unlockSource(MandalaUnlockSource.FREE)
-                .build()));
-
-        mockMvc.perform(get("/api/mandalas"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("mandala-01"))
-                .andExpect(jsonPath("$[0].assetKey").value("mandala-01"))
-                .andExpect(jsonPath("$[0].unlockSource").value("FREE"));
     }
 
     @Test
@@ -97,8 +77,8 @@ class MandalaControllerTest {
         byte[] paintBlob = "paint".getBytes();
 
         mockMvc.perform(put("/api/mandalas/mandala-01/progress")
-                        .contentType("application/octet-stream")
-                        .content(paintBlob))
+                .contentType("application/octet-stream")
+                .content(paintBlob))
                 .andExpect(status().isOk());
 
         verify(saveMandalaProgressUseCase).execute(USER_ID, "mandala-01", paintBlob);

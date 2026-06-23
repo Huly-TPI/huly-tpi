@@ -51,7 +51,7 @@ vi.mock('../../context/theme', () => ({
 
 vi.mock('../../components/Mandalas/MandalaCanvas', () => ({
   default: forwardRef(function MockMandalaCanvas(_, ref) {
-    useImperativeHandle(ref, () => ({ clear: vi.fn() }))
+    useImperativeHandle(ref, () => ({ clear: vi.fn(), exportImage: vi.fn() }))
     return <div data-testid="mandala-canvas" />
   }),
 }))
@@ -101,6 +101,7 @@ describe('Mandalas page', () => {
     expect(screen.getByAltText('Fondo de día para pintar mandalas')).toHaveClass('theme-background--active')
     expect(document.querySelector('.mandala-easel-image')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /elegir otro mandala/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /descargar mandala pintada/i })).toBeInTheDocument()
   })
 
   it('vuelve desde la vista de pintura a la galeria', async () => {

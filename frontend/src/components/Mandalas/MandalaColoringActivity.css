@@ -701,10 +701,10 @@ html.dark .mandala-toolbar__tool-btn.is-active {
 }
 
 /* Clear button floating next to canvas */
-.mandala-canvas-clear-btn {
+.mandala-canvas-clear-btn,
+.mandala-canvas-download-btn {
     position: absolute;
     z-index: 5;
-    top: 12%;
     left: 71.8%;
     width: 3.2rem;
     height: 3.2rem;
@@ -722,31 +722,44 @@ html.dark .mandala-toolbar__tool-btn.is-active {
     pointer-events: auto;
 }
 
-.mandala-canvas-clear-btn:hover {
+.mandala-canvas-clear-btn {
+    top: 12%;
+}
+
+.mandala-canvas-download-btn {
+    top: 22%;
+}
+
+.mandala-canvas-clear-btn:hover,
+.mandala-canvas-download-btn:hover {
     transform: scale(1.1) rotate(-20deg);
     background: white;
     color: #8869ac;
     box-shadow: 0 8px 20px rgba(67, 44, 24, 0.18);
 }
 
-.mandala-canvas-clear-btn:active {
+.mandala-canvas-clear-btn:active,
+.mandala-canvas-download-btn:active {
     transform: scale(0.95) rotate(-35deg);
 }
 
-.mandala-canvas-clear-btn svg {
+.mandala-canvas-clear-btn svg,
+.mandala-canvas-download-btn svg {
     width: 1.5rem;
     height: 1.5rem;
     transition: transform 0.2s ease;
 }
 
-html.dark .mandala-canvas-clear-btn {
+html.dark .mandala-canvas-clear-btn,
+html.dark .mandala-canvas-download-btn {
     background: rgba(23, 32, 51, 0.88);
     border-color: rgba(209, 202, 239, 0.2);
     color: #d1caef;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
-html.dark .mandala-canvas-clear-btn:hover {
+html.dark .mandala-canvas-clear-btn:hover,
+html.dark .mandala-canvas-download-btn:hover {
     background: rgba(30, 41, 59, 0.95);
     color: #ffffff;
 }
@@ -1044,13 +1057,19 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
         margin: 0.25rem 0;
     }
 
-    .mandala-canvas-clear-btn {
+    .mandala-canvas-clear-btn,
+    .mandala-canvas-download-btn {
         width: 2.6rem;
         height: 2.6rem;
         left: 71.2%;
     }
 
-    .mandala-canvas-clear-btn svg {
+    .mandala-canvas-download-btn {
+        top: 22.5%;
+    }
+
+    .mandala-canvas-clear-btn svg,
+    .mandala-canvas-download-btn svg {
         width: 1.2rem;
         height: 1.2rem;
     }
@@ -1091,13 +1110,19 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
         height: 2.8rem;
     }
 
-    .mandala-canvas-clear-btn {
+    .mandala-canvas-clear-btn,
+    .mandala-canvas-download-btn {
         width: 2.2rem;
         height: 2.2rem;
         left: 71%;
     }
 
-    .mandala-canvas-clear-btn svg {
+    .mandala-canvas-download-btn {
+        top: 22.5%;
+    }
+
+    .mandala-canvas-clear-btn svg,
+    .mandala-canvas-download-btn svg {
         width: 1.1rem;
         height: 1.1rem;
     }

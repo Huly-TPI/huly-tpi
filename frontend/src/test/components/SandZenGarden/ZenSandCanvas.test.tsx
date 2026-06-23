@@ -53,6 +53,7 @@ describe('ZenSandCanvas', () => {
     expect(
       screen.getByLabelText('Superficie de arena interactiva para dibujar'),
     ).toHaveClass('zen-sand__canvas')
+    expect(screen.getByRole('button', { name: /descargar dibujo de arena/i })).toHaveClass('zen-sand__export-button')
     expect(screen.getByRole('button', { name: /limpiar arena/i })).toHaveClass('zen-sand__clear-button')
     expect(container.querySelector('.zen-sand__frame-image')).toBeInTheDocument()
   })

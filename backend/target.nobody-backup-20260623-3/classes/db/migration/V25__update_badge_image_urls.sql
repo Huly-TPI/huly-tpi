@@ -1,1 +1,0 @@
-UPDATE badges SET image_url = '/badges/' || image_url;

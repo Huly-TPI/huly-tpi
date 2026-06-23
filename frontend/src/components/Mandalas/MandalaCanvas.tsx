@@ -3,6 +3,7 @@ import { useMandalaPainter } from '../../hooks/useMandalaPainter'
 
 export interface MandalaCanvasHandle {
   clear: () => void
+  exportImage: () => Promise<Blob | null>
 }
 
 interface MandalaCanvasProps {
@@ -25,7 +26,8 @@ const MandalaCanvas = forwardRef<MandalaCanvasHandle, MandalaCanvasProps>(
 
     useImperativeHandle(ref, () => ({
       clear: painter.clear,
-    }), [painter.clear])
+      exportImage: painter.exportImage,
+    }), [painter.clear, painter.exportImage])
 
     return (
       <div className="mandala-canvas" ref={painter.frameRef}>

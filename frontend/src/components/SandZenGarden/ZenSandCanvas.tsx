@@ -4,8 +4,9 @@ import {
   useRef,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-import { Trash2 } from 'lucide-react'
+import { ImageDown, Trash2 } from 'lucide-react'
 import { useSandAudio } from '../../hooks/useSandAudio'
+import { canvasToPngBlob, downloadImageBlob } from '../../utils/downloadImage'
 import {
   drawLatestGroove,
   getCanvasPoint,
@@ -32,6 +33,8 @@ const getIntensity = (speed: number) =>
 
 export default function ZenSandCanvas({ onDraw }: ZenSandCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const frameRef = useRef<HTMLDivElement>(null)
+  const frameImageRef = useRef<HTMLImageElement>(null)
   const strokesRef = useRef<SandStroke[]>([])
   const activePointerRef = useRef<ActivePointer | null>(null)
   const textureSeedRef = useRef(Date.now())
@@ -141,9 +144,45 @@ export default function ZenSandCanvas({ onDraw }: ZenSandCanvasProps) {
     redraw()
   }
 
+  const exportImage = async () => {
+    const canvas = canvasRef.current
+    const frame = frameRef.current
+    const frameImage = frameImageRef.current
+    if (!canvas || !frame || !frameImage) return null
+
+    const frameRect = frame.getBoundingClientRect()
+    const canvasRect = canvas.getBoundingClientRect()
+    if (frameRect.width <= 0 || frameRect.height <= 0) return null
+
+    const exportCanvas = document.createElement('canvas')
+    exportCanvas.width = frameImage.naturalWidth || 1448
+    exportCanvas.height = frameImage.naturalHeight || 1086
+
+    const exportContext = exportCanvas.getContext('2d')
+    if (!exportContext) return null
+
+    exportContext.drawImage(frameImage, 0, 0, exportCanvas.width, exportCanvas.height)
+    exportContext.drawImage(
+      canvas,
+      ((canvasRect.left - frameRect.left) / frameRect.width) * exportCanvas.width,
+      ((canvasRect.top - frameRect.top) / frameRect.height) * exportCanvas.height,
+      (canvasRect.width / frameRect.width) * exportCanvas.width,
+      (canvasRect.height / frameRect.height) * exportCanvas.height,
+    )
+
+    return canvasToPngBlob(exportCanvas)
+  }
+
+  const handleExport = async () => {
+    const blob = await exportImage()
+    if (!blob) return
+
+    await downloadImageBlob(blob, 'arena-zen.png')
+  }
+
   return (
     <section className="zen-sand" aria-labelledby="zen-sand-title">
-      <div className="zen-sand__frame">
+      <div className="zen-sand__frame" ref={frameRef}>
         <canvas
           ref={canvasRef}
           className="zen-sand__canvas"
@@ -156,12 +195,21 @@ export default function ZenSandCanvas({ onDraw }: ZenSandCanvasProps) {
           onLostPointerCapture={event => finishDrawing(event.pointerId)}
         />
         <img
+          ref={frameImageRef}
           alt=""
           aria-hidden="true"
           className="zen-sand__frame-image"
           draggable={false}
           src={sandZenFrame}
         />
+        <button
+          aria-label="Descargar dibujo de arena"
+          className="zen-sand__export-button"
+          onClick={handleExport}
+          type="button"
+        >
+          <ImageDown aria-hidden="true" size={22} />
+        </button>
         <button
           aria-label="Limpiar arena y borrar todos los trazos"
           className="zen-sand__clear-button"

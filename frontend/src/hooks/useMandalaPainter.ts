@@ -15,6 +15,7 @@ import {
   type CanvasPoint,
   type MandalaAnalysis,
 } from '../components/Mandalas/mandalaCanvas'
+import { canvasToPngBlob } from '../utils/downloadImage'
 
 type PainterStatus = 'loading' | 'ready' | 'error'
 
@@ -177,6 +178,27 @@ export function useMandalaPainter({
     hasActiveStrokeRef.current = false
   }, [])
 
+  const exportImage = useCallback(async () => {
+    const paintCanvas = paintCanvasRef.current
+    const lineCanvas = lineCanvasRef.current
+    if (!paintCanvas || !lineCanvas || status !== 'ready') return null
+    if (paintCanvas.width <= 0 || paintCanvas.height <= 0) return null
+
+    const exportCanvas = document.createElement('canvas')
+    exportCanvas.width = paintCanvas.width
+    exportCanvas.height = paintCanvas.height
+
+    const exportContext = exportCanvas.getContext('2d')
+    if (!exportContext) return null
+
+    exportContext.fillStyle = '#ffffff'
+    exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height)
+    exportContext.drawImage(paintCanvas, 0, 0)
+    exportContext.drawImage(lineCanvas, 0, 0)
+
+    return canvasToPngBlob(exportCanvas)
+  }, [status])
+
   useEffect(() => {
     const paintCanvas = paintCanvasRef.current
     const paintContext = paintCanvas?.getContext('2d')
@@ -318,6 +340,7 @@ export function useMandalaPainter({
 
   return {
     clear,
+    exportImage,
     frameRef,
     handlePointerCancel: (event: ReactPointerEvent<HTMLCanvasElement>) => finishStroke(event.pointerId),
     handlePointerDown,
