@@ -10,6 +10,7 @@ export type MandalaUnlockSource =
   | 'mockUnlocked'
   | 'premiumPlan'
   | 'futureRelease'
+  | 'store'
 
 export interface MandalaCatalogItem {
   id: string
