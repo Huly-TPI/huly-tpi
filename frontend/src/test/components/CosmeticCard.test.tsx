@@ -21,7 +21,7 @@ describe('CosmeticCard', () => {
         render(<CosmeticCard item={makeItem()} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} />)
         expect(screen.getByText('Casa rosa')).toBeInTheDocument()
         expect(screen.getByText('Pinta tu casa de rosa')).toBeInTheDocument()
-        expect(screen.getByText('50')).toBeInTheDocument()
+        expect(screen.getByText('50 semillas')).toBeInTheDocument()
     })
 
     it('muestra Comprar cuando no lo tenés y llama onBuy con el id', async () => {
