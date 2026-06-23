@@ -17,6 +17,7 @@ import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUs
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -36,6 +37,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<AppUser> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);
     }
