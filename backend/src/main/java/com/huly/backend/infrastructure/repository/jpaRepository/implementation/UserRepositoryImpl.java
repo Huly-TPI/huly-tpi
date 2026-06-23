@@ -17,6 +17,7 @@ import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUs
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
