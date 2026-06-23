@@ -125,7 +125,7 @@ function SeedCard({ product, buying, disabled, featured = false, image, onBuy }:
 
 export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
   const { products, loading, error } = useProducts()
-  const { coins, refresh: refreshCoins } = useUserCoins()
+  const { refresh: refreshCoins } = useUserCoins()
   const { buyingId, error: purchaseError, buy } = usePurchase()
   const productImages = [oneSeedIcon, twoSeedsIcon, threeSeedsIcon]
 
