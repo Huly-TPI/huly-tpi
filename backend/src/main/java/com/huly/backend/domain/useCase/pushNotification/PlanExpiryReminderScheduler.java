@@ -30,7 +30,7 @@ public class PlanExpiryReminderScheduler {
     private final UserRepository userRepository;
     private final EmailPort emailPort;
 
-    @Scheduled(cron = "0 0 22 * * *", zone = "America/Argentina/Buenos_Aires")
+    @Scheduled(cron = "0 0 23 * * *", zone = "America/Argentina/Buenos_Aires")
     public void sendExpiryReminders() {
         Instant now = Instant.now();
         Instant threshold = now.plus(REMINDER_WINDOW_DAYS, ChronoUnit.DAYS);
