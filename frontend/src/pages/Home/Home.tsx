@@ -293,9 +293,9 @@ export default function Home() {
           type="button"
           onClick={() => setIsStoreOpen(true)}
           aria-label="Abrir tienda"
-          className="fixed bottom-24 right-6 z-40 h-14 w-14 overflow-hidden rounded-full shadow-lg transition hover:scale-105 active:scale-95"
+          className="fixed bottom-24 right-6 z-40 w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
         >
-          <img src={storeButtonImage} alt="Abrir tienda" className="h-full w-full object-cover" />
+          <img src={storeButtonImage} alt="Abrir tienda" className="w-full h-auto" />
         </button>
       )}
 
