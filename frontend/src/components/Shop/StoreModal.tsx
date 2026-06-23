@@ -2,8 +2,8 @@ import { useStoreItems } from '../../hooks/store/useStoreItems'
 import { useCosmeticActions } from '../../hooks/store/useCosmeticActions'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
 import { CosmeticCard } from './CosmeticCard'
-import { CoinsBadge } from './CoinsBadge'
 import { X } from 'lucide-react'
+import seedIcon from '../../assets/rewards/seed.webp'
 import type { InventoryItemResponse } from '../../api/store'
 import { InlineError } from '../feedback/InlineError'
 import { createStoreItemPreference } from '../../api/payment'
@@ -90,7 +90,12 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
             <h2 className="font-nunito text-xl font-black leading-tight sm:text-2xl">Tienda</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {coins !== null && <CoinsBadge coins={coins} />}
+            {coins !== null && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-1.5">
+                <img src={seedIcon} alt="" aria-hidden="true" className="w-5 h-5 object-contain shrink-0" />
+                <span className="font-bold text-sm text-white">{coins.toLocaleString('es-AR')} semillas</span>
+              </div>
+            )}
             <button onClick={onClose} aria-label="Cerrar" className="rounded-full p-1.5 transition hover:bg-white/20">
               <X className="h-5 w-5" strokeWidth={2} />
             </button>
