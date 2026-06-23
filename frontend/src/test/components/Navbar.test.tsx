@@ -4,11 +4,48 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import { ThemeProvider } from '../../context/theme'
+import type { Membership } from '../../api/auth'
+
+/* ─── Mocks ─── */
 
 const mockUseAuth = vi.fn()
 vi.mock('../../context/auth', () => ({
   useAuth: () => mockUseAuth(),
+  hasSessionFlag: () => false,
 }))
+
+const mockUseMembership = vi.fn()
+vi.mock('../../hooks/shop/useMembership', () => ({
+  useMembership: () => mockUseMembership(),
+}))
+
+vi.mock('../../components/SubscriptionModal/SubscriptionModal', () => ({
+  default: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div role="dialog" aria-label="Planes de suscripción" /> : null,
+}))
+
+vi.mock('../../components/Badges/BadgeModal', () => ({
+  default: () => null,
+}))
+
+/* ─── Test Data ─── */
+
+const NO_MEMBERSHIP: Membership = { active: false, planCode: null, productId: null, expiresAt: null }
+const BASIC_MEMBERSHIP: Membership = { active: true, planCode: 'BASIC', productId: 'plan-basic', expiresAt: null }
+const PREMIUM_MEMBERSHIP: Membership = { active: true, planCode: 'PREMIUM', productId: 'plan-premium', expiresAt: null }
+
+/* ─── Setup Helpers ─── */
+
+const renderWithRouter = () =>
+  render(
+    <ThemeProvider>
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    </ThemeProvider>,
+  )
+
+/* ─── Tests ─── */
 
 describe('Navbar', () => {
   beforeEach(() => {
@@ -16,18 +53,11 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       user: null,
+      loading: false,
       logout: vi.fn(),
     })
+    mockUseMembership.mockReturnValue({ membership: NO_MEMBERSHIP, refresh: vi.fn() })
   })
-
-  const renderWithRouter = () =>
-    render(
-      <ThemeProvider>
-        <MemoryRouter>
-          <Navbar />
-        </MemoryRouter>
-      </ThemeProvider>,
-    )
 
   it('renderiza el logo de Huly', () => {
     const { container } = renderWithRouter()
@@ -71,6 +101,7 @@ describe('Navbar', () => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: true,
         user: { id: 1, name: 'Mili', email: 'mili@huly.com', role: 'USER', themePreference: 'LIGHT' },
+        loading: false,
         logout: vi.fn(),
       })
     })
@@ -93,6 +124,48 @@ describe('Navbar', () => {
 
       expect(screen.getByRole('menuitem', { name: 'Mi perfil' })).toBeInTheDocument()
       expect(screen.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    })
+
+    it('muestra el item Suscripciones en el dropdown', async () => {
+      const user = userEvent.setup()
+      renderWithRouter()
+
+      await user.click(screen.getByRole('button', { name: /Mili/ }))
+
+      expect(screen.getByRole('menuitem', { name: 'Suscripciones' })).toBeInTheDocument()
+    })
+
+    it('abre el modal de suscripciones al hacer click en Suscripciones', async () => {
+      const user = userEvent.setup()
+      renderWithRouter()
+
+      await user.click(screen.getByRole('button', { name: /Mili/ }))
+      await user.click(screen.getByRole('menuitem', { name: 'Suscripciones' }))
+
+      expect(screen.getByRole('dialog', { name: 'Planes de suscripción' })).toBeInTheDocument()
+    })
+
+    describe('icono de suscripción', () => {
+      it('muestra el icono bud cuando no hay plan activo', () => {
+        mockUseMembership.mockReturnValue({ membership: NO_MEMBERSHIP, refresh: vi.fn() })
+        renderWithRouter()
+        const btn = screen.getByRole('button', { name: /Mili/ })
+        expect(btn.querySelector('img')).toBeInTheDocument()
+      })
+
+      it('muestra un icono cuando el plan es BASIC', () => {
+        mockUseMembership.mockReturnValue({ membership: BASIC_MEMBERSHIP, refresh: vi.fn() })
+        renderWithRouter()
+        const btn = screen.getByRole('button', { name: /Mili/ })
+        expect(btn.querySelector('img')).toBeInTheDocument()
+      })
+
+      it('muestra un icono cuando el plan es PREMIUM', () => {
+        mockUseMembership.mockReturnValue({ membership: PREMIUM_MEMBERSHIP, refresh: vi.fn() })
+        renderWithRouter()
+        const btn = screen.getByRole('button', { name: /Mili/ })
+        expect(btn.querySelector('img')).toBeInTheDocument()
+      })
     })
   })
 

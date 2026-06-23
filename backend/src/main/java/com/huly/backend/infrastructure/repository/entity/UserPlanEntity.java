@@ -22,6 +22,11 @@ public class UserPlanEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    // Asociación de solo lectura al dueño del plan (la escritura del FK va por userId).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private AppUserEntity user;
+
     @Column(name = "product_id")
     private Long productId;
 
@@ -33,4 +38,7 @@ public class UserPlanEntity {
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
+
+    @Column(name = "expiry_reminder_sent_for")
+    private Instant expiryReminderSentFor;
 }
