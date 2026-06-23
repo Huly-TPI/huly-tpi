@@ -65,7 +65,7 @@ function SeedCard({ product, buying, disabled, featured = false, image, onBuy }:
       <div className="absolute inset-[8%] flex flex-col items-center text-center">
         {/* Título */}
         <h3 className={`text-[12px] sm:text-[14px] font-black text-[#5b3b1b] leading-tight line-clamp-2 ${featured ? 'mt-2' : ''}`}>
-          {product.name}
+          {product.name.replace('Premium', 'Avanzado')}
         </h3>
 
         {/* Imagen con glow */}

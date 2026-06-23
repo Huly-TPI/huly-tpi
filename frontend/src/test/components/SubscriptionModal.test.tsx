@@ -98,9 +98,9 @@ describe('SubscriptionModal', () => {
   })
 
   describe('card Free', () => {
-    it('muestra el título Free', () => {
+    it('muestra el título Gratuito', () => {
       renderModal()
-      expect(screen.getByText('Free')).toBeInTheDocument()
+      expect(screen.getByText('Gratuito')).toBeInTheDocument()
     })
 
     it('muestra $0 y Siempre gratis', () => {
@@ -127,10 +127,10 @@ describe('SubscriptionModal', () => {
   })
 
   describe('cards de planes pagos', () => {
-    it('muestra el nombre abreviado de cada plan', () => {
+    it('muestra el nombre visual de cada plan', () => {
       renderModal()
       expect(screen.getByText('Basico')).toBeInTheDocument()
-      expect(screen.getByText('Premium')).toBeInTheDocument()
+      expect(screen.getByText('Huly')).toBeInTheDocument()
     })
 
     it('muestra los precios en ARS', () => {
@@ -150,7 +150,7 @@ describe('SubscriptionModal', () => {
       expect(screen.getByText('Mandalas exclusivos (plan básico)')).toBeInTheDocument()
     })
 
-    it('muestra features exclusivas del plan Premium', () => {
+    it('muestra features exclusivas del plan Huly', () => {
       renderModal()
       expect(screen.getByText('1000 monedas')).toBeInTheDocument()
       expect(screen.getByText('Audios libres')).toBeInTheDocument()
@@ -166,7 +166,7 @@ describe('SubscriptionModal', () => {
     it('muestra botones Elegir cuando no hay plan activo', () => {
       renderModal()
       expect(screen.getByRole('button', { name: 'Elegir Basico' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Elegir Premium' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Elegir Huly' })).toBeInTheDocument()
     })
 
     it('muestra Renovar en el plan activo del usuario', () => {
@@ -214,9 +214,9 @@ describe('SubscriptionModal', () => {
       expect(mockBuy).toHaveBeenCalledWith('plan-basic')
     })
 
-    it('llama a buy con el id del plan Premium', async () => {
+    it('llama a buy con el id del plan Huly', async () => {
       const user = renderModalWithUser()
-      await user.click(screen.getByRole('button', { name: 'Elegir Premium' }))
+      await user.click(screen.getByRole('button', { name: 'Elegir Huly' }))
       expect(mockBuy).toHaveBeenCalledWith('plan-premium')
     })
 

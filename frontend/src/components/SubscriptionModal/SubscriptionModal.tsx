@@ -18,6 +18,7 @@ interface SubscriptionModalProps {
 
 interface PaidCardProps {
   plan: Plan
+  displayName: string
   cardImage: string
   features: string[]
   showSeeds?: boolean
@@ -31,13 +32,22 @@ interface PaidCardProps {
 
 const FREE_FEATURES = ['5 mensajes al día']
 
+const PLAN_DISPLAY_NAMES: Record<string, string> = {
+  BASIC: 'Basico',
+  PREMIUM: 'Huly',
+}
+
+function getDisplayName(planCode: string, fallback: string): string {
+  return PLAN_DISPLAY_NAMES[planCode] ?? fallback
+}
+
 function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
   return (
     <div className="relative h-full w-full min-w-0 transition-transform duration-200 origin-center hover:scale-[1.015]" style={{ aspectRatio: '353/706' }}>
       <img src={cardGreen} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(0,80,0,0.16)]" draggable={false} />
 
       <div className="absolute inset-x-[8%] top-[7%] bottom-[8%] flex flex-col items-center text-center overflow-hidden">
-        <h3 className="text-[13px] sm:text-[15px] font-black text-[#1a4a1a] leading-none">Free</h3>
+        <h3 className="text-[13px] sm:text-[15px] font-black text-[#1a4a1a] leading-none">Gratuito</h3>
         <div className="mt-3">
           <p className="font-black text-[16px] sm:text-[19px] text-[#2a6a2a] leading-none">$0</p>
           <p className="mt-1 text-[7px] sm:text-[10px] font-bold text-[#3a5c2a]">Siempre gratis</p>
@@ -64,6 +74,7 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
 
 function PaidCard({
   plan,
+  displayName,
   cardImage,
   features,
   showSeeds = false,
@@ -79,7 +90,7 @@ function PaidCard({
   const buttonDisabled = disabled || blockedByOther
   const isBasic = buttonTheme === 'yellow'
 
-  const label = isCurrentPlan ? 'Renovar' : blockedByOther ? 'Plan activo' : `Elegir ${plan.name.replace('Plan ', '')}`
+  const label = isCurrentPlan ? 'Renovar' : blockedByOther ? 'Plan activo' : `Elegir ${displayName}`
 
   const textColor = isBasic ? 'text-[#8f541f]' : 'text-[#5d3a80]'
   const checkBg = isBasic ? 'bg-[#f5a623]' : 'bg-[#8b5a8e]'
@@ -94,7 +105,7 @@ function PaidCard({
 
       <div className="absolute inset-x-[8%] top-[8%] bottom-[7%] flex flex-col items-center text-center overflow-hidden">
         <h3 className={`text-[13px] sm:text-[15px] font-black leading-none whitespace-nowrap ${textColor}`}>
-          {plan.name.replace('Plan ', '')}
+          {displayName}
         </h3>
 
         <div className="mt-3">
@@ -204,6 +215,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                   <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
                     <PaidCard
                       plan={basicPlan}
+                      displayName={getDisplayName(basicPlan.planCode, basicPlan.name)}
                       cardImage={cardYellow}
                       showSeeds={false}
                       features={[
@@ -226,6 +238,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                   <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
                     <PaidCard
                       plan={premiumPlan}
+                      displayName={getDisplayName(premiumPlan.planCode, premiumPlan.name)}
                       cardImage={cardPurple}
                       showSeeds={false}
                       compact
