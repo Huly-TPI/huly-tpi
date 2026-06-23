@@ -29,7 +29,7 @@ public class PlanExpiryReminderScheduler {
     private final UserPlanRepository userPlanRepository;
     private final UserRepository userRepository;
     private final EmailPort emailPort;
-
+//tt
     @Scheduled(cron = "0 0 23 * * *", zone = "America/Argentina/Buenos_Aires")
     public void sendExpiryReminders() {
         Instant now = Instant.now();
