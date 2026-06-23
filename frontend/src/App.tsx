@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/auth'
+import { ToastProvider } from './context/toast'
 import AppLayout from './layouts/AppLayout'
 import BackofficeLayout from './layouts/BackofficeLayout'
 import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
@@ -25,13 +26,16 @@ import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
 import Privacy from './pages/Privacy/Privacy'
+import Unsubscribe from './pages/Unsubscribe/Unsubscribe'
 
 const App = () => {
   return (
 
     <AuthProvider>
-      <Routes>
+      <ToastProvider>
+        <Routes>
         <Route path="/backoffice/login" element={<BackofficeLogin />} />
+        <Route path="/unsubscribe" element={<Unsubscribe />} />
         <Route path="/backoffice" element={<BackofficeLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="chatbot" element={<ChatbotPage />} />
@@ -60,7 +64,8 @@ const App = () => {
           <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Route>
-      </Routes>
+        </Routes>
+      </ToastProvider>
     </AuthProvider>
   )
 }

@@ -38,6 +38,12 @@ const mockedSendAudioMessage = vi.mocked(chatApi.sendAudioMessage)
 const mockedUpdateDecision = vi.mocked(emotionalEventsApi.updateDecision)
 const mockedSaveAudioBlob = vi.mocked(saveAudioBlob)
 
+vi.mock('../../api/auth', () => ({
+  getMyMembership: vi.fn(),
+}))
+
+const mockedGetMyMembership = vi.mocked(await import('../../api/auth')).getMyMembership
+
 describe('useChatbot', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -45,6 +51,7 @@ describe('useChatbot', () => {
     global.URL.createObjectURL = vi.fn().mockReturnValue('blob:fake-url')
     global.URL.revokeObjectURL = vi.fn()
   })
+
 
   it('loads history on mount using persisted conversationId', async () => {
     localStorage.setItem('hulyChatConversationId:1', 'conv-history')
@@ -107,6 +114,37 @@ describe('useChatbot', () => {
       },
     ])
   })
+
+  it('restores quota limit error on mount if limit date matches today and user has no active membership', async () => {
+    const today = new Date().toISOString().split('T')[0]
+    localStorage.setItem('huly:chat-limit-date:1', today)
+    localStorage.setItem('huly:chat-limit-message:1', 'Alcanzaste el límite diario de 10 mensajes del plan gratuito.')
+    localStorage.setItem('hulyChatConversationId:1', 'some-conv-id')
+
+    mockedGetMyMembership.mockResolvedValueOnce({
+      active: false,
+      planCode: null,
+      productId: null,
+      expiresAt: null,
+    })
+
+    mockedGetHistory.mockResolvedValueOnce({
+      content: [],
+      page_number: 0,
+      page_size: 20,
+      total_elements: 0,
+      total_pages: 0,
+      first: true,
+      last: true,
+    } as never)
+
+    const { result } = renderHook(() => useChatbot())
+
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false))
+
+    expect(result.current.error).toBe('Alcanzaste el límite diario de 10 mensajes del plan gratuito.')
+  })
+
 
   it('loads older history page when scrolling to the top', async () => {
     localStorage.setItem('hulyChatConversationId:1', 'conv-paged')

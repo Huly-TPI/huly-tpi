@@ -2,6 +2,7 @@ import PasswordInput from './Passwordinput'
 import DateInput from './Dateinput'
 import { getInputClassName } from './authInputStyles'
 import Button from '../Buttons/Button/Button'
+import { InlineError } from '../feedback/InlineError'
 
 export type FieldType = 'text' | 'email' | 'password' | 'date'
 
@@ -124,8 +125,9 @@ export default function AuthForm({
               <p
                 id={`error-${field.name}`}
                 role="alert"
-                className="ml-2 text-xs text-red-600"
+                className="ml-2 flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400"
               >
+                <span className="h-1.5 w-1.5 rounded-full bg-red-600 dark:bg-red-400 shrink-0" />
                 {errors[field.name]}
               </p>
             )}
@@ -133,9 +135,7 @@ export default function AuthForm({
         ))}
 
         {apiError && (
-          <p role="alert" className="text-sm text-red-600">
-            {apiError}
-          </p>
+          <InlineError message={apiError} className="mt-1" />
         )}
 
         {onTermsChange !== undefined && (

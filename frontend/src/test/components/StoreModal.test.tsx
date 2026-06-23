@@ -43,10 +43,10 @@ describe('StoreModal', () => {
         expect(screen.queryByText('Tienda')).not.toBeInTheDocument()
     })
 
-    it('muestra el titulo y el saldo de monedas', () => {
+    it('muestra el titulo y el saldo de semillas', () => {
         render(<StoreModal isOpen onClose={() => {}} />)
         expect(screen.getByText('Tienda')).toBeInTheDocument()
-        expect(screen.getByText('100')).toBeInTheDocument()
+        expect(screen.getByText('100 semillas')).toBeInTheDocument()
     })
 
     it('renderiza una card por cada item', () => {

@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
 import org.springframework.stereotype.Component;
 
 import com.huly.backend.domain.model.user.AppUser;
@@ -18,6 +17,7 @@ import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUs
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -37,6 +37,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<AppUser> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);
     }
@@ -96,6 +97,35 @@ public class UserRepositoryImpl implements UserRepository {
                 .build());
     }
 
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void updateLastLogin(Long userId) {
+        jpaRepository.updateLastLogin(userId, Instant.now());
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<AppUser> findUsersInactiveSince(Instant since) {
+        return jpaRepository.findByLastLoginAtBefore(since).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<AppUser> findByUnsubscribeToken(String token) {
+        try {
+            return jpaRepository.findByUnsubscribeToken(java.util.UUID.fromString(token)).map(this::toDomain);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void disableReengagementEmails(Long userId) {
+        jpaRepository.disableReengagementEmails(userId);
+    }
+
     private AppUser toDomain(AppUserEntity entity) {
         String name = entity.getUserDetails() != null
                 ? entity.getUserDetails().stream()
@@ -121,6 +151,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .role(entity.getRole())
                 .status(entity.getStatus())
                 .birthDate(birth)
+                .unsubscribeToken(entity.getUnsubscribeToken() != null ? entity.getUnsubscribeToken().toString() : null)
                 .build();
     }
 
