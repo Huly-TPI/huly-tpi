@@ -66,6 +66,13 @@ describe('Mandalas page', () => {
       mandalas: availableMandalas,
       loading: false,
       error: null,
+      page: 0,
+      pageSize: 6,
+      totalElements: availableMandalas.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+      setPage: vi.fn(),
       refetch: vi.fn(),
     })
     mockUseMandalaProgress.mockReturnValue({
@@ -85,10 +92,10 @@ describe('Mandalas page', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: /elegí un mandala/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('article')).toHaveLength(2)
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /elegir mandala/i })).toHaveLength(2)
 
-    await user.click(screen.getAllByRole('button', { name: 'Pintar' })[0])
+    await user.click(screen.getAllByRole('button', { name: /elegir mandala/i })[0])
 
     expect(await screen.findByTestId('mandala-canvas')).toBeInTheDocument()
     expect(screen.getByAltText('Fondo de día para pintar mandalas')).toHaveClass('theme-background--active')
@@ -105,11 +112,11 @@ describe('Mandalas page', () => {
       </MemoryRouter>,
     )
 
-    await user.click(screen.getAllByRole('button', { name: 'Pintar' })[0])
+    await user.click(screen.getAllByRole('button', { name: /elegir mandala/i })[0])
     await screen.findByTestId('mandala-canvas')
     await user.click(screen.getByRole('button', { name: /elegir otro mandala/i }))
 
-    expect(screen.getByRole('heading', { name: /elegí un mandala/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /elegir mandala/i })).toHaveLength(2)
   })
 
   it('muestra estado de carga y error del catalogo backend', () => {
@@ -117,6 +124,13 @@ describe('Mandalas page', () => {
       mandalas: [],
       loading: true,
       error: null,
+      page: 0,
+      pageSize: 6,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+      setPage: vi.fn(),
       refetch: vi.fn(),
     })
 
@@ -126,12 +140,20 @@ describe('Mandalas page', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('status')).toHaveTextContent(/cargando mandalas/i)
+    expect(screen.getByRole('status')).toHaveAccessibleName(/cargando mandalas/i)
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
 
     mockUseAvailableMandalas.mockReturnValue({
       mandalas: [],
       loading: false,
       error: 'No se pudieron cargar las mandalas disponibles.',
+      page: 0,
+      pageSize: 6,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+      setPage: vi.fn(),
       refetch: vi.fn(),
     })
 
@@ -141,7 +163,8 @@ describe('Mandalas page', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/no se pudieron cargar/i)
+    expect(screen.getByRole('alert')).toHaveAccessibleName(/no se pudieron cargar/i)
+    expect(screen.getByRole('alert')).toBeEmptyDOMElement()
   })
 
   it('muestra AuthGateModal en vez del mensaje de error si el usuario no esta autenticado', () => {
@@ -153,6 +176,13 @@ describe('Mandalas page', () => {
       mandalas: [],
       loading: false,
       error: 'No se pudieron cargar las mandalas disponibles.',
+      page: 0,
+      pageSize: 6,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+      setPage: vi.fn(),
       refetch: vi.fn(),
     })
 

@@ -13,6 +13,7 @@ import com.huly.backend.domain.repository.mandala.MandalaRepository;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.List;
@@ -123,6 +124,34 @@ class ListAvailableMandalasUseCaseTest {
         assertThat(result).extracting(item -> item.getMandala().getId())
                 .containsExactly("mandala-01", "mandala-02", "mandala-03");
         assertThat(result.get(0).getUnlockSource()).isEqualTo(MandalaUnlockSource.FREE);
+    }
+
+    @Test
+    void execute_withPageableReturnsRequestedSliceAndMetadata() {
+        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.of(activePlan("BASIC")));
+        when(mandalaPlanEntitlementRepository.findMandalaIdsByPlanCode("BASIC"))
+                .thenReturn(subscriptionPackIds());
+
+        var result = useCase.execute(USER_ID, PageRequest.of(1, 5));
+
+        assertThat(result.getContent()).extracting(item -> item.getMandala().getId())
+                .containsExactly("mandala-06", "mandala-07", "mandala-08", "mandala-09", "mandala-10");
+        assertThat(result.getNumber()).isEqualTo(1);
+        assertThat(result.getSize()).isEqualTo(5);
+        assertThat(result.getTotalElements()).isEqualTo(12);
+        assertThat(result.getTotalPages()).isEqualTo(3);
+        assertThat(result.isFirst()).isFalse();
+        assertThat(result.isLast()).isFalse();
+    }
+
+    @Test
+    void execute_withPageableOutsideRangeReturnsEmptyPage() {
+        var result = useCase.execute(USER_ID, PageRequest.of(2, 5));
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.isLast()).isTrue();
     }
 
     private List<Mandala> catalog() {

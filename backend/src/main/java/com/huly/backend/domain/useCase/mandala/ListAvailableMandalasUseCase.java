@@ -10,6 +10,9 @@ import com.huly.backend.domain.repository.mandala.MandalaPlanEntitlementReposito
 import com.huly.backend.domain.repository.mandala.MandalaRepository;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,5 +54,17 @@ public class ListAvailableMandalasUseCase {
                         .unlockSource(sources.get(mandala.getId()))
                         .build())
                 .toList();
+    }
+
+    public Page<AvailableMandala> execute(Long userId, Pageable pageable) {
+        List<AvailableMandala> availableMandalas = execute(userId);
+        long offset = pageable.getOffset();
+        if (offset >= availableMandalas.size()) {
+            return new PageImpl<>(List.of(), pageable, availableMandalas.size());
+        }
+
+        int start = (int) offset;
+        int end = Math.min(start + pageable.getPageSize(), availableMandalas.size());
+        return new PageImpl<>(availableMandalas.subList(start, end), pageable, availableMandalas.size());
     }
 }

@@ -20,7 +20,16 @@ export default function Mandalas() {
   const { isAuthenticated } = useAuth();
   const [modalOpen, setModalOpen] = useState(true);
 
-  const { mandalas, loading, error } = useAvailableMandalas();
+  const {
+    mandalas,
+    loading,
+    error,
+    page,
+    totalPages,
+    first,
+    last,
+    setPage,
+  } = useAvailableMandalas(6);
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -37,8 +46,12 @@ export default function Mandalas() {
     navigate("/register");
   };
 
+  const pageClassName = selectedMandala
+    ? "relative min-h-full w-full overflow-x-hidden"
+    : "relative min-h-full w-full overflow-x-hidden mandala-selection-scene";
+
   return (
-    <main className="relative min-h-full w-full overflow-x-hidden">
+    <main className={pageClassName}>
       <BackButton to="/minigames" />
       {selectedMandala ? (
         <MandalaColoringActivity
@@ -54,16 +67,12 @@ export default function Mandalas() {
             darkAlt="Fondo nocturno para selección de mandalas"
           />
           {loading && (
-            <div className="mandala-gallery" role="status">
-              Cargando mandalas...
-            </div>
+            <div className="mandala-gallery mandala-gallery--status" role="status" aria-label="Cargando mandalas" />
           )}
           {!loading && error && (
             <>
               {isAuthenticated ? (
-                <div className="mandala-gallery" role="alert">
-                  {error}
-                </div>
+                <div className="mandala-gallery mandala-gallery--status" role="alert" aria-label={error} />
               ) : (
                 <AuthGateModal
                   open={modalOpen}
@@ -76,8 +85,13 @@ export default function Mandalas() {
           )}
           {!loading && !error && (
             <MandalaGallery
+              first={first}
               mandalas={mandalas}
+              last={last}
+              onPageChange={setPage}
               onSelectMandala={setSelectedMandala}
+              page={page}
+              totalPages={totalPages}
             />
           )}
         </>

@@ -54,9 +54,9 @@
 .mandala-activity__back--scene {
     position: fixed;
     z-index: 50;
-    top: 8.5rem;
-    left: 1.5rem;
-    right: auto;
+    top: 5rem;
+    left: auto;
+    right: 1.5rem;
     min-height: 2.35rem;
     border-color: rgba(72, 44, 20, 0.16);
     background: rgba(255, 255, 255, 0.78);
@@ -68,160 +68,177 @@
 .mandala-gallery {
     position: relative;
     z-index: 1;
-    width: min(100%, 78rem);
+    display: flex;
+    width: min(100%, 118rem);
+    min-height: calc(100dvh - 4rem);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1rem, 3vh, 1.8rem);
     margin: 0 auto;
     padding: clamp(5rem, 9vh, 6.75rem) clamp(1rem, 4vw, 2.5rem) 2rem;
 }
 
-.mandala-gallery__header {
-    max-width: 46rem;
-    margin-bottom: clamp(1.35rem, 3vw, 2rem);
+.mandala-gallery--status::before {
+    width: 2.8rem;
+    height: 2.8rem;
+    border: 0.28rem solid rgba(255, 255, 255, 0.72);
+    border-top-color: #8869ac;
+    border-radius: 999px;
+    animation: mandala-gallery-spin 900ms linear infinite;
+    content: "";
 }
 
-.mandala-gallery__header h1 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: clamp(1.9rem, 4vw, 2.8rem);
-    font-weight: 850;
-    line-height: 1.06;
-}
-
-.mandala-gallery__header p:last-child {
-    max-width: 42rem;
-    margin: 0.75rem 0 0;
-    color: var(--text-secondary);
-    font-size: 1rem;
-    line-height: 1.55;
+@keyframes mandala-gallery-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .mandala-gallery__grid {
     display: grid;
+    width: min(100%, 110rem);
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(1rem, 2.5vw, 1.35rem);
+    gap: clamp(0.85rem, 2vw, 1.4rem);
+    align-items: center;
 }
 
 .mandala-card {
-    display: flex;
+    position: relative;
+    display: block;
+    width: 100%;
     min-width: 0;
-    flex-direction: column;
+    aspect-ratio: 16 / 9;
+    padding: 0;
     overflow: hidden;
-    border: 1px solid rgba(136, 105, 172, 0.14);
+    border: 0;
     border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.86);
-    box-shadow: 0 1rem 2.2rem rgba(68, 55, 88, 0.1);
+    background: transparent;
+    cursor: pointer;
     transition:
         transform 180ms ease,
-        opacity 180ms ease;
+        filter 180ms ease;
 }
 
-.mandala-card:not(.mandala-card--disabled):hover {
-    transform: translateY(-2px);
+.mandala-card:hover {
+    filter: saturate(1.04) brightness(1.03);
+    transform: translateY(-3px);
 }
 
-.mandala-card--disabled {
-    opacity: 0.72;
+.mandala-card__frame {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
 }
 
 .mandala-card__preview {
+    position: absolute;
+    top: 14%;
+    left: 22%;
     display: flex;
+    width: 56%;
+    height: 72%;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1;
-    margin: 0.85rem 0.85rem 0;
     overflow: hidden;
-    border-radius: 0.5rem;
-    background:
-        radial-gradient(circle at 50% 50%,
-            rgba(255, 255, 255, 0.98),
-            rgba(245, 241, 252, 0.92)),
-        white;
+    pointer-events: none;
 }
 
 .mandala-card__preview img {
-    width: 84%;
-    height: 84%;
+    width: 82%;
+    height: 82%;
     object-fit: contain;
 }
 
-.mandala-card__body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.95rem;
-}
-
-.mandala-card__title-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem;
-}
-
-.mandala-card__title-row h2 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 850;
-    line-height: 1.2;
-}
-
 .mandala-card__badge {
+    position: absolute;
+    z-index: 2;
+    top: 15.5%;
+    right: 20%;
     display: inline-flex;
-    flex-shrink: 0;
     align-items: center;
-    gap: 0.28rem;
+    justify-content: center;
+    max-width: 8.25rem;
+    min-height: 1.85rem;
+    padding: 0.18rem 0.68rem;
+    border: 1px solid rgba(255, 255, 255, 0.72);
     border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 850;
+    color: #172033;
+    font-size: clamp(0.68rem, 0.85vw, 0.82rem);
+    font-weight: 900;
     line-height: 1;
-    padding: 0.38rem 0.52rem;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 0.55rem 1rem rgba(42, 30, 18, 0.16);
 }
 
-.mandala-card__badge--available {
-    background: rgba(123, 205, 186, 0.22);
-    color: #2f755e;
+.mandala-card__badge--free {
+    background: #f6d56f;
 }
 
-.mandala-card__badge--included {
-    background: rgba(136, 105, 172, 0.18);
-    color: #6e5591;
+.mandala-card__badge--purchased {
+    background: #8fd4c0;
 }
 
 .mandala-card__badge--premium {
-    background: rgba(246, 200, 95, 0.24);
-    color: #8a5c11;
+    background: #d1caef;
 }
 
-.mandala-card__badge--locked,
-.mandala-card__badge--soon {
-    background: rgba(107, 114, 128, 0.14);
-    color: #5f6672;
+.mandala-card:focus-visible,
+.mandala-gallery__page-button:focus-visible {
+    outline: 3px solid rgba(136, 105, 172, 0.45);
+    outline-offset: 4px;
 }
 
-.mandala-card__body p {
-    flex: 1;
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    line-height: 1.45;
+.mandala-gallery__pagination {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: center;
 }
 
-.mandala-card__action {
-    min-height: 2.55rem;
-    border: 1px solid transparent;
+.mandala-gallery__page-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.55rem;
+    height: 2.55rem;
+    border: 1px solid rgba(136, 105, 172, 0.18);
     border-radius: 999px;
-    background: #8869ac;
-    color: white;
+    background: rgba(255, 255, 255, 0.74);
+    color: #6c4d92;
     cursor: pointer;
-    font-weight: 850;
+    box-shadow: 0 0.75rem 1.5rem rgba(67, 44, 24, 0.14);
+    backdrop-filter: blur(12px);
 }
 
-.mandala-card__action:disabled {
-    border-color: rgba(107, 114, 128, 0.22);
-    background: rgba(107, 114, 128, 0.12);
-    color: #6b7280;
+.mandala-gallery__page-button:disabled {
     cursor: not-allowed;
+    opacity: 0.42;
+}
+
+.mandala-gallery__page-dots {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.mandala-gallery__page-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 0 0 1px rgba(136, 105, 172, 0.12);
+}
+
+.mandala-gallery__page-dot--active {
+    width: 1.35rem;
+    background: #8869ac;
 }
 
 .mandala-toolbar {
@@ -846,18 +863,24 @@ html.dark .mandala-toolbar__clear:hover {
     color: #172033;
 }
 
-html.dark .mandala-card {
-    border-color: rgba(209, 202, 239, 0.14);
-    background: rgba(23, 32, 51, 0.86);
-    box-shadow: 0 1rem 2.2rem rgba(2, 6, 23, 0.3);
+html.dark .mandala-gallery__page-button {
+    border-color: rgba(209, 202, 239, 0.16);
+    background: rgba(23, 32, 51, 0.78);
+    color: #d1caef;
 }
 
-html.dark .mandala-card__preview {
-    background:
-        radial-gradient(circle at 50% 50%,
-            rgba(255, 255, 255, 0.96),
-            rgba(231, 235, 244, 0.94)),
-        white;
+html.dark .mandala-gallery__page-dot {
+    background: rgba(209, 202, 239, 0.42);
+}
+
+html.dark .mandala-gallery__page-dot--active {
+    background: #d1caef;
+}
+
+html.dark .mandala-card__badge {
+    border-color: rgba(255, 255, 255, 0.46);
+    color: #172033;
+    box-shadow: 0 0.7rem 1.25rem rgba(0, 0, 0, 0.22);
 }
 
 html.dark .mandala-activity__back {
@@ -925,9 +948,13 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
     }
 
     .mandala-activity__back--scene {
-        top: 8.5rem;
-        left: 1.5rem;
-        right: auto;
+        top: 5rem;
+        left: auto;
+        right: 1.5rem;
+    }
+
+    .mandala-selection-scene .theme-background {
+        object-position: center center;
     }
 
     .mandala-easel-stage {
@@ -938,7 +965,7 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
     }
 
     .mandala-palette-overlay {
-        top: 12.5rem;
+        top: 8.5rem;
         left: 50%;
         right: auto;
         bottom: auto;
