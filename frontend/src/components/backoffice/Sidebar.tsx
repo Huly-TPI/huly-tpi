@@ -22,7 +22,7 @@ interface SidebarProps {
 const NAV_ITEMS = [
   {
     to: '/backoffice',
-    label: 'Dashboard',
+    label: 'Panel de control',
     end: true,
     icon: <LayoutDashboard className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
