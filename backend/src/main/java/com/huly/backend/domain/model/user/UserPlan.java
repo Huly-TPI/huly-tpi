@@ -14,6 +14,7 @@ public class UserPlan {
     private String planCode;
     private Instant grantedAt;
     private Instant expiresAt;
+    private Instant expiryReminderSentFor;
 
     public boolean isActive(Instant now) {
         return expiresAt != null && expiresAt.isAfter(now);
