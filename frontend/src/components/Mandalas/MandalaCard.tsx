@@ -1,46 +1,39 @@
-import { Lock, Paintbrush, Sparkles } from 'lucide-react'
-import type { MandalaAccessStatus, MandalaCatalogItem } from './mandalaTypes'
-import { isMandalaPaintable } from './mandalaTypes'
+import { Paintbrush, Sparkles } from 'lucide-react'
+import type { MandalaCatalogItem, MandalaUnlockSource } from './mandalaTypes'
 
 interface MandalaCardProps {
   mandala: MandalaCatalogItem
   onSelect: (mandala: MandalaCatalogItem) => void
 }
 
-const STATUS_LABELS: Record<MandalaAccessStatus, string> = {
-  available: 'Gratis',
-  locked: 'Bloqueada',
-  premium: 'Premium',
-  included: 'Incluida',
-  comingSoon: 'Proximamente',
+const SOURCE_LABELS: Record<MandalaUnlockSource, string> = {
+  free: 'Gratis',
+  purchased: 'Tuya',
+  premiumPlan: 'Incluida',
 }
 
-const STATUS_CLASS_NAMES: Record<MandalaAccessStatus, string> = {
-  available: 'mandala-card__badge--available',
-  locked: 'mandala-card__badge--locked',
-  premium: 'mandala-card__badge--premium',
-  included: 'mandala-card__badge--included',
-  comingSoon: 'mandala-card__badge--soon',
+const SOURCE_CLASS_NAMES: Record<MandalaUnlockSource, string> = {
+  free: 'mandala-card__badge--available',
+  purchased: 'mandala-card__badge--available',
+  premiumPlan: 'mandala-card__badge--included',
 }
 
-function getActionLabel(status: MandalaAccessStatus) {
-  if (status === 'available' || status === 'included') return 'Pintar'
-  if (status === 'comingSoon') return 'Proximamente'
-  return 'Bloqueada'
-}
-
-function getStatusIcon(status: MandalaAccessStatus) {
-  if (status === 'premium' || status === 'included') return <Sparkles aria-hidden="true" size={15} />
-  if (status === 'locked' || status === 'comingSoon') return <Lock aria-hidden="true" size={15} />
+function getStatusIcon(source: MandalaUnlockSource) {
+  if (source === 'premiumPlan') return <Sparkles aria-hidden="true" size={15} />
   return <Paintbrush aria-hidden="true" size={15} />
 }
 
+const STATUS_CLASS_NAMES = {
+  available: 'mandala-card__badge--available',
+  included: 'mandala-card__badge--included',
+}
+
 export default function MandalaCard({ mandala, onSelect }: MandalaCardProps) {
-  const paintable = isMandalaPaintable(mandala)
   const previewSrc = mandala.previewSrc ?? mandala.src
+  const badgeClassName = SOURCE_CLASS_NAMES[mandala.unlockSource] ?? STATUS_CLASS_NAMES[mandala.accessStatus]
 
   return (
-    <article className={`mandala-card ${paintable ? '' : 'mandala-card--disabled'}`}>
+    <article className="mandala-card">
       <div className="mandala-card__preview" aria-hidden="true">
         <img src={previewSrc} alt="" draggable={false} />
       </div>
@@ -48,9 +41,9 @@ export default function MandalaCard({ mandala, onSelect }: MandalaCardProps) {
       <div className="mandala-card__body">
         <div className="mandala-card__title-row">
           <h2>{mandala.title}</h2>
-          <span className={`mandala-card__badge ${STATUS_CLASS_NAMES[mandala.accessStatus]}`}>
-            {getStatusIcon(mandala.accessStatus)}
-            {STATUS_LABELS[mandala.accessStatus]}
+          <span className={`mandala-card__badge ${badgeClassName}`}>
+            {getStatusIcon(mandala.unlockSource)}
+            {SOURCE_LABELS[mandala.unlockSource]}
           </span>
         </div>
 
@@ -58,11 +51,10 @@ export default function MandalaCard({ mandala, onSelect }: MandalaCardProps) {
 
         <button
           className="mandala-card__action"
-          disabled={!paintable}
           onClick={() => onSelect(mandala)}
           type="button"
         >
-          {getActionLabel(mandala.accessStatus)}
+          Pintar
         </button>
       </div>
     </article>

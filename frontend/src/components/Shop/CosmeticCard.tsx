@@ -1,6 +1,6 @@
 import type { StoreItemResponse } from '../../api/store'
 import { cosmeticAssets } from '../Scene/cosmeticAssets'
-import { mandalaCatalog } from '../Mandalas/mandalaCatalog'
+import { mandalaAssetByKey } from '../Mandalas/mandalaAssets'
 
 interface CosmeticCardProps {
   item: StoreItemResponse
@@ -17,10 +17,7 @@ interface CosmeticCardProps {
 export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onBuyWithMoney, onEquip, onUnequip }: CosmeticCardProps) {
   let preview = cosmeticAssets[item.assetKey]?.light
   if (item.category === 'MANDALA') {
-    const found = mandalaCatalog.find(m => m.id === item.assetKey)
-    if (found) {
-      preview = found.src
-    }
+    preview = mandalaAssetByKey[item.assetKey]
   }
 
   return (
