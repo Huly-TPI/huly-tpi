@@ -35,6 +35,15 @@ export function FinanceTab({
   const totalEarnings = financials.totalEarnings
   const approvedCount = payments.filter((p) => p.status === 'APPROVED').length
 
+  const STATUS_LABELS: Record<string, string> = {
+    APPROVED: 'APROBADO',
+    PENDING: 'PENDIENTE',
+    REJECTED: 'RECHAZADO',
+    CANCELLED: 'CANCELADO',
+    REFUNDED: 'REEMBOLSADO',
+    IN_PROCESS: 'EN PROCESO',
+  }
+
   return (
     <div className="flex flex-col gap-6 animate-fadeIn lg:flex-grow lg:min-h-0">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
@@ -69,7 +78,7 @@ export function FinanceTab({
                   <div className="flex flex-col gap-1 truncate">
                     <span className="font-extrabold text-gray-750 dark:text-gray-200 truncate">{p.productName}</span>
                     <span className="text-[10px] text-gray-400 dark:text-gray-550 font-semibold truncate">
-                      Ref: {p.externalReference} {p.mpPaymentId ? `| MP ID: ${p.mpPaymentId}` : ''}
+                      Ref: {p.externalReference} {p.mpPaymentId ? `| ID MP: ${p.mpPaymentId}` : ''}
                     </span>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
@@ -83,7 +92,7 @@ export function FinanceTab({
                         ? 'bg-amber-100 dark:bg-amber-955/35 text-amber-800 dark:text-amber-400'
                         : 'bg-red-100 dark:bg-red-955/35 text-red-800 dark:text-red-400'
                     }`}>
-                      {p.status}
+                      {STATUS_LABELS[p.status] ?? p.status}
                     </span>
                   </div>
                 </div>

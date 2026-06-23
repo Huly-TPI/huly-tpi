@@ -4,7 +4,7 @@ export const profileOnboardingSteps: HomeOnboardingStep[] = [
   {
     id: 'window',
     title: 'Ventana',
-    description: 'Volvés al jardín cuando quieras salir de tu habitación y seguir recorriendo las distintas actividades.',
+    description: 'Volver al jardín',
     icon: 'V',
     elementIds: ['window'],
     cardClassName:
@@ -13,7 +13,7 @@ export const profileOnboardingSteps: HomeOnboardingStep[] = [
   {
     id: 'mirror',
     title: 'Espejo',
-    description: 'Configurá tu información básica para mantener tu perfil actualizado.',
+    description: 'Editar información del perfil',
     icon: 'E',
     elementIds: ['mirror'],
     cardClassName:
@@ -22,7 +22,7 @@ export const profileOnboardingSteps: HomeOnboardingStep[] = [
   {
     id: 'chest',
     title: 'Baúl',
-    description: 'Administrás tu cambio de contraseña y las claves delicadas que protegen tu cuenta.',
+    description: 'Cambio de contraseña',
     icon: 'B',
     elementIds: ['chest'],
     cardClassName:
@@ -31,7 +31,7 @@ export const profileOnboardingSteps: HomeOnboardingStep[] = [
   {
     id: 'clock',
     title: 'Reloj',
-    description: 'Configurá la extensión para pausas digitales y elegí cuándo querés recibir avisos.',
+    description: 'Configuración de la extensión anti-scroll',
     icon: 'R',
     elementIds: ['clock'],
     cardClassName:
@@ -40,7 +40,7 @@ export const profileOnboardingSteps: HomeOnboardingStep[] = [
   {
     id: 'music',
     title: 'Música',
-    description: 'Ajustás el volumen del ambiente para que la experiencia suene cómoda para vos.',
+    description: 'Sonidos ambientales y volúmenes',
     icon: 'M',
     elementIds: ['music'],
     cardClassName:
