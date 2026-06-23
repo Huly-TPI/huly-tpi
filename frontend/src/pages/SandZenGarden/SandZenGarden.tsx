@@ -4,8 +4,8 @@ import { ActivityType } from '../../api/activities'
 import {useTheme} from '../../context/theme'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
-import lightBackground from "../../assets/zen-sand/light-theme/background/zen-sand-minigame.webp"
-import darkBackground from "../../assets/zen-sand/dark-theme/background/zen-sand-minigame.webp"
+import lightBackground from "../../assets/zen-sand/light-theme/background/sand-zen-background-light.webp"
+import darkBackground from "../../assets/zen-sand/dark-theme/background/sand-zen-background-dark.webp"
 
 function SandZenGarden() {
 

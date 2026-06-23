@@ -4,8 +4,8 @@ import {
   useRef,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
+import { Trash2 } from 'lucide-react'
 import { useSandAudio } from '../../hooks/useSandAudio'
-import Button from '../Buttons/Button/Button'
 import {
   drawLatestGroove,
   getCanvasPoint,
@@ -13,6 +13,7 @@ import {
   type SandPoint,
   type SandStroke,
 } from './sandCanvas'
+import sandZenFrame from '../../assets/zen-sand/sand-zen-draw.webp'
 import './ZenSandCanvas.css'
 
 interface ActivePointer {
@@ -142,17 +143,6 @@ export default function ZenSandCanvas({ onDraw }: ZenSandCanvasProps) {
 
   return (
     <section className="zen-sand" aria-labelledby="zen-sand-title">
-      <div className="zen-sand__header">
-        <Button
-          variant="alert"
-          size="sm"
-          onClick={handleClear}
-          aria-label="Limpiar arena y borrar todos los trazos"
-        >
-          Limpiar arena
-        </Button>
-      </div>
-
       <div className="zen-sand__frame">
         <canvas
           ref={canvasRef}
@@ -165,6 +155,21 @@ export default function ZenSandCanvas({ onDraw }: ZenSandCanvasProps) {
           onPointerLeave={event => finishDrawing(event.pointerId)}
           onLostPointerCapture={event => finishDrawing(event.pointerId)}
         />
+        <img
+          alt=""
+          aria-hidden="true"
+          className="zen-sand__frame-image"
+          draggable={false}
+          src={sandZenFrame}
+        />
+        <button
+          aria-label="Limpiar arena y borrar todos los trazos"
+          className="zen-sand__clear-button"
+          onClick={handleClear}
+          type="button"
+        >
+          <Trash2 aria-hidden="true" size={22} />
+        </button>
       </div>
 
     </section>
