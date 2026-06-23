@@ -6,6 +6,8 @@ import { X } from 'lucide-react'
 import seedIcon from '../../assets/rewards/seed.webp'
 import type { InventoryItemResponse } from '../../api/store'
 import { InlineError } from '../feedback/InlineError'
+import { createStoreItemPreference } from '../../api/payment'
+import { useEffect, useRef } from 'react'
 
 interface StoreModalProps {
   isOpen: boolean
@@ -19,6 +21,19 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
   const { items, loading: itemsLoading, error: itemsError } = useStoreItems()
   const { coins, refresh: refetchCoins } = useUserCoins()
   const { busyId, error: actionError, buy, equip, unequip } = useCosmeticActions()
+  const awaitingPaymentRef = useRef(false)
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (awaitingPaymentRef.current) {
+        awaitingPaymentRef.current = false
+        void Promise.all([refetchInventory(), refetchCoins()])
+      }
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refetchInventory, refetchCoins])
+
 
   if (!isOpen) return null
 
@@ -29,6 +44,21 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
     if (ok) {
       await Promise.all([refetchInventory(), refetchCoins()])
     }
+  }
+
+
+  const handleBuyWithMoney = (id: number) => {
+    awaitingPaymentRef.current = true
+    const popup = window.open('', '_blank')
+    createStoreItemPreference(String(id))
+      .then(({ initPoint }) => {
+        if (popup) popup.location.href = initPoint
+        else window.location.href = initPoint
+      })
+      .catch(() => {
+        awaitingPaymentRef.current = false
+        if (popup) popup.close()
+      })
   }
 
   const handleEquip = async (id: number) => {
@@ -52,7 +82,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
         role="dialog"
         aria-modal="true"
         aria-label="Tienda de decoración"
-       className="relative z-10 flex max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl"
+        className="relative z-10 flex max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl"
       >
         <div className="flex items-center justify-between gap-2 bg-[#4C7C64] px-4 py-3 text-white sm:px-5 sm:py-4">
           <div className="min-w-0">
@@ -92,6 +122,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
                     busy={busyId === item.id}
                     disabled={busyId !== null}
                     onBuy={handleBuy}
+                    onBuyWithMoney={handleBuyWithMoney}
                     onEquip={handleEquip}
                     onUnequip={handleUnequip}
                   />

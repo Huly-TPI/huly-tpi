@@ -2,6 +2,7 @@ package com.huly.backend.infrastructure.repository.entity;
 import com.huly.backend.domain.model.enums.ItemCategory;
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -32,4 +33,7 @@ public class StoreItemEntity {
     @Column(name = "price_coins", nullable = false)
     private int priceCoins;
     
+
+    @Column(name = "price")
+    private BigDecimal price;
 }

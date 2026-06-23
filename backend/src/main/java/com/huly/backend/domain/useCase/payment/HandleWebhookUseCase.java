@@ -8,23 +8,31 @@ import com.huly.backend.domain.port.MercadoPagoPort;
 import com.huly.backend.domain.repository.payment.PaymentEventRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.service.payment.PlanService;
+import com.huly.backend.domain.exception.ResourceNotFoundException;
+import com.huly.backend.domain.model.shop.StoreItem;
+import com.huly.backend.domain.model.user.UserStoreItem;
+import com.huly.backend.domain.repository.StoreItemRepository;
+import com.huly.backend.domain.repository.UserStoreItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.Set;
+import java.time.Instant;
 
 @Slf4j
 @RequiredArgsConstructor
 public class HandleWebhookUseCase {
 
-    private static final Set<String> TERMINAL_FAILURE_STATUSES =
-            Set.of("rejected", "cancelled", "refunded", "charged_back");
+    private static final Set<String> TERMINAL_FAILURE_STATUSES = Set.of("rejected", "cancelled", "refunded",
+            "charged_back");
 
     private final PaymentEventRepository paymentEventRepository;
     private final MercadoPagoPort mercadoPagoPort;
     private final CoinService coinService;
     private final PlanService planService;
+    private final StoreItemRepository storeItemRepository;
+    private final UserStoreItemRepository userStoreItemRepository;
 
     @Transactional
     public void execute(Long mpPaymentId) {
@@ -36,7 +44,8 @@ public class HandleWebhookUseCase {
 
         MercadoPagoPaymentResult payment = mercadoPagoPort.getPayment(mpPaymentId);
         PaymentEvent event = resolveEvent(byPaymentId, payment.getExternalReference(), mpPaymentId);
-        if (event == null) return;
+        if (event == null)
+            return;
 
         if ("approved".equals(payment.getStatus())) {
             processApproved(event, mpPaymentId);
@@ -64,21 +73,47 @@ public class HandleWebhookUseCase {
         }
         if (event.getProductType() == ProductType.PLAN) {
             planService.activate(event.getUserId(), event.getProductId());
-            log.info("Payment {} APPROVED — activated plan from product {} for user {}", mpPaymentId, event.getProductId(), event.getUserId());
+            log.info("Payment {} APPROVED — activated plan from product {} for user {}", mpPaymentId,
+                    event.getProductId(), event.getUserId());
             Integer coins = event.getCoinsAmount();
             if (coins != null && coins > 0) {
                 coinService.credit(event.getUserId(), coins);
-                log.info("Payment {} APPROVED — credited {} bonus coins from plan to user {}", mpPaymentId, coins, event.getUserId());
+                log.info("Payment {} APPROVED — credited {} bonus coins from plan to user {}", mpPaymentId, coins,
+                        event.getUserId());
             }
-        } else {
+        }
+            else if (event.getProductType() == ProductType.STORE_ITEM) {
+            grantStoreItem(event, mpPaymentId);
+        } 
+        else {
             coinService.credit(event.getUserId(), event.getCoinsAmount());
-            log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(), event.getUserId());
+            log.info("Payment {} APPROVED — credited {} coins to user {}", mpPaymentId, event.getCoinsAmount(),
+                    event.getUserId());
         }
     }
 
     private void processFailed(PaymentEvent event, Long mpPaymentId, MercadoPagoPaymentResult payment) {
         String detail = payment.getStatus() + ": " + payment.getStatusDetail();
         paymentEventRepository.updateStatus(event.getId(), PaymentStatus.FAILED, mpPaymentId, detail);
-        log.info("Payment {} FAILED — status={} detail={}", mpPaymentId, payment.getStatus(), payment.getStatusDetail());
+        log.info("Payment {} FAILED — status={} detail={}", mpPaymentId, payment.getStatus(),
+                payment.getStatusDetail());
+    }
+
+      private void grantStoreItem(PaymentEvent event, Long mpPaymentId) {
+        if (userStoreItemRepository.isOwned(event.getUserId(), event.getStoreItemId())) {
+            log.info("Payment {} APPROVED — store item {} already owned by user {}, skipping grant",
+                    mpPaymentId, event.getStoreItemId(), event.getUserId());
+            return;
+        }
+        StoreItem item = storeItemRepository.findById(event.getStoreItemId())
+                .orElseThrow(() -> new ResourceNotFoundException("item", "id", event.getStoreItemId()));
+        userStoreItemRepository.save(UserStoreItem.builder()
+                .userId(event.getUserId())
+                .storeItem(item)
+                .equipped(false)
+                .acquiredAt(Instant.now())
+                .build());
+        log.info("Payment {} APPROVED — granted store item {} to user {}",
+                mpPaymentId, event.getStoreItemId(), event.getUserId());
     }
 }
