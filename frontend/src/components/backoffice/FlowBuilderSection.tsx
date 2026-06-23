@@ -46,7 +46,7 @@ export function FlowBuilderSection() {
             type="trigger"
             icon={<Zap className="h-5 w-5 text-amber-500 dark:text-amber-400" strokeWidth={2} />}
             label="Ansiedad detectada"
-            typeLabel="TRIGGER"
+            typeLabel="DISPARADOR"
             color="amber"
           />
           <div className="min-w-[24px] flex-1 border-t-2 border-dashed border-gray-200 dark:border-gray-800" />
@@ -54,7 +54,7 @@ export function FlowBuilderSection() {
             type="action"
             icon={<Sprout className="h-5 w-5 text-green-500 dark:text-green-400" strokeWidth={2} />}
             label="Mensaje empático"
-            typeLabel="ACCIÓN AI"
+            typeLabel="ACCIÓN IA"
             color="green"
           />
           <div className="min-w-[24px] flex-1 border-t-2 border-dashed border-gray-200 dark:border-gray-800" />
