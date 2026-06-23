@@ -13,6 +13,7 @@ public class PaymentEvent {
     private Long id;
     private Long userId;
     private Long productId;
+    private Long storeItemId;
     private String externalReference;
     private String mpPreferenceId;
     private Long mpPaymentId;

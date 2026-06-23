@@ -6,7 +6,10 @@ import com.huly.backend.infrastructure.repository.entity.UserPlanEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserPlanJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -25,6 +28,20 @@ public class UserPlanRepositoryImpl implements UserPlanRepository {
         return toDomain(jpaRepository.save(toEntity(plan)));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserPlan> findPlansNeedingExpiryReminder(Instant now, Instant threshold) {
+        return jpaRepository.findPlansNeedingExpiryReminder(now, threshold).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void markExpiryReminderSent(Long id, Instant expiresAt) {
+        jpaRepository.markExpiryReminderSent(id, expiresAt);
+    }
+
     private UserPlan toDomain(UserPlanEntity e) {
         return UserPlan.builder()
                 .id(e.getId())
@@ -33,6 +50,7 @@ public class UserPlanRepositoryImpl implements UserPlanRepository {
                 .planCode(e.getPlanCode())
                 .grantedAt(e.getGrantedAt())
                 .expiresAt(e.getExpiresAt())
+                .expiryReminderSentFor(e.getExpiryReminderSentFor())
                 .build();
     }
 
@@ -44,6 +62,7 @@ public class UserPlanRepositoryImpl implements UserPlanRepository {
                 .planCode(p.getPlanCode())
                 .grantedAt(p.getGrantedAt())
                 .expiresAt(p.getExpiresAt())
+                .expiryReminderSentFor(p.getExpiryReminderSentFor())
                 .build();
     }
 }

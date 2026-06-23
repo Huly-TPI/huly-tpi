@@ -1,3 +1,5 @@
+import seedIcon from '../../assets/garden/seedIcon.webp'
+import rewardsIcon from '../../assets/garden/rewardsIcon.webp'
 import dayBackgroundImage from '../../assets/garden/light-theme/background/day-background.webp'
 import dayMobileBackgroundImage from '../../assets/garden/light-theme/background/mobile/day-background.webp'
 import { useEffect, useState } from 'react'
@@ -18,6 +20,8 @@ import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import NotificationsPrompt from '../../components/Notifications/NotificationsPrompt/NotificationsPrompt'
 import StoreModal from '../../components/Shop/StoreModal'
+import RewardsModal from '../../components/RewardsModal/RewardsModal'
+import SeedShopModal from '../../components/SeedShopModal/SeedShopModal'
 import ComebackRewardModal from '../../components/Shop/ComebackRewardModal'
 import { ShoppingBag } from 'lucide-react'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
@@ -26,6 +30,8 @@ import { useTheme } from '../../context/theme'
 import { useAuth } from '../../context/auth'
 import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
 import { useInventory } from '../../hooks/store/useInventory'
+import { useUserCoins } from '../../hooks/shop/useUserCoins'
+import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
 import './Home.css'
@@ -70,7 +76,6 @@ const cloudElements: SceneElementDefinition[] = [
   createCloudElement('cloud-top-left', 'left-[7%] top-[5.5%] z-10 w-[10%] md:left-[8%] md:top-[2%] md:w-[8.8%] min-[1400px]:top-[1.2%]'),
   createCloudElement('cloud-upper-left', 'left-[28%] top-[3.8%] z-10 w-[22%] md:left-[22%] md:top-[8.5%] md:w-[13.2%] min-[1400px]:top-[7.2%]'),
   createCloudElement('cloud-center', 'left-[60%] top-[12%] z-10 w-[14.5%] md:left-[46.8%] md:top-[6.8%] md:w-[19.8%] min-[1400px]:top-[5.2%]'),
-  createCloudElement('cloud-right', 'left-[82%] top-[4.8%] z-10 w-[10%] md:left-[82.6%] md:top-[9.8%] md:w-[7.5%] min-[1400px]:top-[8.8%]'),
   createCloudElement('cloud-bottom-left', 'left-[15%] top-[16.5%] z-10 w-[20%] md:hidden md:left-[-3.2%] md:top-[30%] md:z-10 md:w-[7%]', 'top-full mt-1'),
   createCloudElement('cloud-bottom-right', 'left-[82%] top-[23%] z-10 w-[10%] md:hidden md:left-[88.2%] md:top-[39.5%] md:z-10 md:w-[10%]', 'top-full mt-1'),
 ]
@@ -143,12 +148,30 @@ const sceneElements = [...cloudElements, ...gardenElements]
 const cloudElementIds = cloudElements.map(element => element.id)
 const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds)
 
+let rewardAutoOpenedForUserId: number | null = null
+
 export default function Home() {
   const { theme: sceneTheme } = useTheme()
   const [isStoreOpen, setIsStoreOpen] = useState(false)
+  const [isRewardsOpen, setIsRewardsOpen] = useState(false)
+  const [isSeedShopOpen, setIsSeedShopOpen] = useState(false)
   const { inventory, refetch: refetchInventory } = useInventory()
+  const { coins, refresh: refreshCoins } = useUserCoins()
+  const { status: rewardsStatus } = useDailyRewards()
   const equippedByCategory = resolveEquippedImages(inventory)
   const { user } = useAuth()
+
+  useEffect(() => {
+    if (
+      user?.id &&
+      user.onboardingTutorialCompleted &&
+      rewardsStatus?.canClaimToday &&
+      rewardAutoOpenedForUserId !== user.id
+    ) {
+      rewardAutoOpenedForUserId = user.id
+      setIsRewardsOpen(true)
+    }
+  }, [user?.id, user?.onboardingTutorialCompleted, rewardsStatus?.canClaimToday])
   const {
     onboardingMode,
     onboardingStepIndex,
@@ -276,7 +299,38 @@ export default function Home() {
         </button>
       )}
 
+      {user?.onboardingTutorialCompleted && (
+        <div className="fixed top-16 right-4 z-40 select-none flex gap-2 items-start">
+          <button
+            type="button"
+            aria-label="Ver recompensas diarias"
+            onClick={() => setIsRewardsOpen(true)}
+            className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+          >
+            <img src={rewardsIcon} alt="Recompensas diarias" className="w-full h-auto scale-[0.97] origin-top" />
+            <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523] whitespace-nowrap">
+              Reclamar
+            </span>
+          </button>
+          <button
+            type="button"
+            aria-label="Abrir tienda de semillas"
+            onClick={() => setIsSeedShopOpen(true)}
+            className="relative w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+          >
+            <img src={seedIcon} alt="Semillas en colección" className="w-full h-auto" />
+            {coins !== null && (
+              <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523]">
+                {coins.toLocaleString('es-AR')}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
       <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
+      <RewardsModal isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} onClaimed={refreshCoins} />
+      <SeedShopModal isOpen={isSeedShopOpen} onClose={() => setIsSeedShopOpen(false)} />
 
       {user?.onboardingTutorialCompleted && <ComebackRewardModal />}
     </main>

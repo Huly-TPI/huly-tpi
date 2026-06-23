@@ -15,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.List;
 
 @RestController
@@ -68,7 +69,8 @@ public class StoreController {
                 item.getDescription(),
                 item.getCategory().name(),
                 item.getAssetKey(),
-                item.getPriceCoins());
+                item.getPriceCoins(),
+                item.getPrice());
     }
 
     private InventoryItemResponse toInventoryResponse(UserStoreItem owned) {
