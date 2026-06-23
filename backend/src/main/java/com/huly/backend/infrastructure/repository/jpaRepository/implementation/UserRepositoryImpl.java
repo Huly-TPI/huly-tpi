@@ -36,6 +36,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<AppUser> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);
     }
