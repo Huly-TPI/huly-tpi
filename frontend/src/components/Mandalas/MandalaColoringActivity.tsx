@@ -1,7 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import { useRef, useState } from "react";
-import mandalasScene from "../../assets/mandalas/mandalas-scene.svg";
+import mandalaBackgroundDark from "../../assets/mandalas/dark-theme/background/mandala-background-dark.webp";
+import mandalaBackgroundLight from "../../assets/mandalas/light-theme/background/mandala-background-light.webp";
+import mandalaEasel from "../../assets/mandalas/mi_atril.webp";
 import { useMandalaProgress } from "../../hooks/useMandalaProgress";
+import ThemeBackground from "../ThemeBackground/ThemeBackground";
 import MandalaCanvas, { type MandalaCanvasHandle } from "./MandalaCanvas";
 import MandalaToolbar from "./MandalaToolbar";
 import type { MandalaCatalogItem } from "./mandalaTypes";
@@ -49,12 +52,11 @@ export default function MandalaColoringActivity({
     >
       <div className="mandala-activity__scene-scroll">
         <div className="mandala-painting-scene">
-          <img
-            alt=""
-            aria-hidden="true"
-            className="mandala-scene-image"
-            draggable={false}
-            src={mandalasScene}
+          <ThemeBackground
+            lightSrc={mandalaBackgroundLight}
+            darkSrc={mandalaBackgroundDark}
+            lightAlt="Fondo de día para pintar mandalas"
+            darkAlt="Fondo nocturno para pintar mandalas"
           />
 
           <button
@@ -67,24 +69,34 @@ export default function MandalaColoringActivity({
             Galería
           </button>
 
-          <div className="mandala-easel-drawing-area">
-            {progressLoading ? (
-              <div className="mandala-canvas">
-                <div className="mandala-canvas__status" role="status">
-                  Cargando progreso...
+          <div className="mandala-easel-stage">
+            <img
+              alt=""
+              aria-hidden="true"
+              className="mandala-easel-image"
+              draggable={false}
+              src={mandalaEasel}
+            />
+
+            <div className="mandala-easel-drawing-area">
+              {progressLoading ? (
+                <div className="mandala-canvas">
+                  <div className="mandala-canvas__status" role="status">
+                    Cargando progreso...
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <MandalaCanvas
-                key={mandala.id}
-                ref={canvasRef}
-                brushSize={brushSize}
-                color={selectedColor}
-                initialPaintBlob={paintBlob}
-                mandalaSrc={mandala.src}
-                onPaintChange={saveProgress}
-              />
-            )}
+              ) : (
+                <MandalaCanvas
+                  key={mandala.id}
+                  ref={canvasRef}
+                  brushSize={brushSize}
+                  color={selectedColor}
+                  initialPaintBlob={paintBlob}
+                  mandalaSrc={mandala.src}
+                  onPaintChange={saveProgress}
+                />
+              )}
+            </div>
           </div>
 
           <div className="mandala-palette-overlay">

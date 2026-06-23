@@ -35,6 +35,14 @@ vi.mock('../../hooks/useMandalaProgress', () => ({
   useMandalaProgress: () => mockUseMandalaProgress(),
 }))
 
+vi.mock('../../context/theme', () => ({
+  useTheme: () => ({
+    theme: 'light',
+    setTheme: () => {},
+    toggleTheme: () => {},
+  }),
+}))
+
 vi.mock('../../components/Mandalas/MandalaCanvas', () => ({
   default: forwardRef(function MockMandalaCanvas(_, ref) {
     useImperativeHandle(ref, () => ({ clear: vi.fn() }))
@@ -73,6 +81,8 @@ describe('Mandalas page', () => {
     await user.click(screen.getAllByRole('button', { name: 'Pintar' })[0])
 
     expect(await screen.findByTestId('mandala-canvas')).toBeInTheDocument()
+    expect(screen.getByAltText('Fondo de día para pintar mandalas')).toHaveClass('theme-background--active')
+    expect(document.querySelector('.mandala-easel-image')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /elegir otro mandala/i })).toBeInTheDocument()
   })
 
