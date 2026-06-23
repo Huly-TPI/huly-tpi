@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RotateCcw } from "lucide-react";
 import { useRef, useState } from "react";
 import mandalaBackgroundDark from "../../assets/mandalas/dark-theme/background/mandala-background-dark.webp";
 import mandalaBackgroundLight from "../../assets/mandalas/light-theme/background/mandala-background-light.webp";
@@ -11,6 +11,8 @@ import type { MandalaCatalogItem } from "./mandalaTypes";
 import "./MandalaColoringActivity.css";
 
 const COLORS = [
+  "#EF4444", // Rojo
+  "#1A202C", // Negro
   "#8869AC",
   "#7BCDBA",
   "#80B8F0",
@@ -31,7 +33,7 @@ export default function MandalaColoringActivity({
   onBackToGallery,
 }: MandalaColoringActivityProps) {
   const canvasRef = useRef<MandalaCanvasHandle>(null);
-  const [brushSize, setBrushSize] = useState(22);
+  const [brushSize, setBrushSize] = useState(40);
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const {
     clearProgress,
@@ -66,7 +68,7 @@ export default function MandalaColoringActivity({
             type="button"
           >
             <ArrowLeft aria-hidden="true" size={18} />
-            Galería
+            Ir a galería
           </button>
 
           <div className="mandala-easel-stage">
@@ -97,6 +99,15 @@ export default function MandalaColoringActivity({
                 />
               )}
             </div>
+
+            <button
+              aria-label="Limpiar mandala"
+              className="mandala-canvas-clear-btn"
+              onClick={handleClear}
+              type="button"
+            >
+              <RotateCcw aria-hidden="true" size={28} />
+            </button>
           </div>
 
           <div className="mandala-palette-overlay">
@@ -104,7 +115,6 @@ export default function MandalaColoringActivity({
               brushSize={brushSize}
               colors={COLORS}
               onBrushSizeChange={setBrushSize}
-              onClear={handleClear}
               onColorChange={setSelectedColor}
               selectedColor={selectedColor}
             />

@@ -8,6 +8,8 @@ import { mandalaAssetByKey } from '../../components/Mandalas/mandalaAssets'
 
 const mockUseAvailableMandalas = vi.fn()
 const mockUseMandalaProgress = vi.fn()
+const mockUseAuth = vi.fn()
+
 const availableMandalas = [
   {
     id: 'mandala-01',
@@ -35,6 +37,10 @@ vi.mock('../../hooks/useMandalaProgress', () => ({
   useMandalaProgress: () => mockUseMandalaProgress(),
 }))
 
+vi.mock('../../context/auth', () => ({
+  useAuth: () => mockUseAuth(),
+}))
+
 vi.mock('../../context/theme', () => ({
   useTheme: () => ({
     theme: 'light',
@@ -52,6 +58,10 @@ vi.mock('../../components/Mandalas/MandalaCanvas', () => ({
 
 describe('Mandalas page', () => {
   beforeEach(() => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { id: 1, name: 'Test User' },
+    })
     mockUseAvailableMandalas.mockReturnValue({
       mandalas: availableMandalas,
       loading: false,
@@ -132,5 +142,27 @@ describe('Mandalas page', () => {
     )
 
     expect(screen.getByRole('alert')).toHaveTextContent(/no se pudieron cargar/i)
+  })
+
+  it('muestra AuthGateModal en vez del mensaje de error si el usuario no esta autenticado', () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      user: null,
+    })
+    mockUseAvailableMandalas.mockReturnValue({
+      mandalas: [],
+      loading: false,
+      error: 'No se pudieron cargar las mandalas disponibles.',
+      refetch: vi.fn(),
+    })
+
+    render(
+      <MemoryRouter>
+        <Mandalas />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('¡Necesitás una cuenta!')).toBeInTheDocument()
   })
 })

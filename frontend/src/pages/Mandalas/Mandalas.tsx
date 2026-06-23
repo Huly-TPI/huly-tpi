@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BackButton from "../../components/Buttons/BackButton/BackButton";
 import {
   MandalaColoringActivity,
@@ -6,12 +7,35 @@ import {
 } from "../../components/Mandalas";
 import type { MandalaCatalogItem } from "../../components/Mandalas/mandalaTypes";
 import { useAvailableMandalas } from "../../hooks/useAvailableMandalas";
+import { useAuth } from "../../context/auth";
+import AuthGateModal from "../../components/AuthGateModal/AuthGateModal";
+import ThemeBackground from "../../components/ThemeBackground/ThemeBackground";
+import mandalaEleccionBackgroundDark from "../../assets/mandalas/dark-theme/background/mandala-eleccion-background-dark.webp";
+import mandalaEleccionBackgroundLight from "../../assets/mandalas/light-theme/background/mandala-eleccion-background-light.webp";
 
 export default function Mandalas() {
   const [selectedMandala, setSelectedMandala] =
     useState<MandalaCatalogItem | null>(null);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [modalOpen, setModalOpen] = useState(true);
 
   const { mandalas, loading, error } = useAvailableMandalas();
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    navigate("/minigames");
+  };
+
+  const handleLogin = () => {
+    setModalOpen(false);
+    navigate("/login");
+  };
+
+  const handleRegister = () => {
+    setModalOpen(false);
+    navigate("/register");
+  };
 
   return (
     <main className="relative min-h-full w-full overflow-x-hidden">
@@ -23,15 +47,32 @@ export default function Mandalas() {
         />
       ) : (
         <>
+          <ThemeBackground
+            lightSrc={mandalaEleccionBackgroundLight}
+            darkSrc={mandalaEleccionBackgroundDark}
+            lightAlt="Fondo de día para selección de mandalas"
+            darkAlt="Fondo nocturno para selección de mandalas"
+          />
           {loading && (
             <div className="mandala-gallery" role="status">
               Cargando mandalas...
             </div>
           )}
           {!loading && error && (
-            <div className="mandala-gallery" role="alert">
-              {error}
-            </div>
+            <>
+              {isAuthenticated ? (
+                <div className="mandala-gallery" role="alert">
+                  {error}
+                </div>
+              ) : (
+                <AuthGateModal
+                  open={modalOpen}
+                  onClose={handleCloseModal}
+                  onLogin={handleLogin}
+                  onRegister={handleRegister}
+                />
+              )}
+            </>
           )}
           {!loading && !error && (
             <MandalaGallery
