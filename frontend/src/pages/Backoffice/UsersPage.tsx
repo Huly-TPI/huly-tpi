@@ -5,6 +5,8 @@ import { SectionCard } from '../../components/backoffice/SectionCard'
 import { Table, Column } from '../../components/backoffice/Table'
 import { Search, Eye, Check, X, CircleDollarSign } from 'lucide-react'
 import { mapEmotionToSpanish } from '../../types/ai'
+import { ErrorMessage } from '../../components/backoffice/ErrorMessage'
+
 
 export default function UsersPage() {
   const {
@@ -133,7 +135,10 @@ export default function UsersPage() {
           {loading ? (
             <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">Cargando usuarios...</div>
           ) : error ? (
-            <div className="py-8 text-center text-sm text-red-500">{error}</div>
+            <div className="py-8 flex justify-center">
+              <ErrorMessage message={error} />
+            </div>
+
           ) : filteredUsers.length === 0 ? (
             <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No se encontraron usuarios</div>
           ) : (

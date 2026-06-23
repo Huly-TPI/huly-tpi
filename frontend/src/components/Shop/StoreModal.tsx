@@ -2,9 +2,13 @@ import { useStoreItems } from '../../hooks/store/useStoreItems'
 import { useCosmeticActions } from '../../hooks/store/useCosmeticActions'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
 import { CosmeticCard } from './CosmeticCard'
-import { CoinsBadge } from './CoinsBadge'
 import { X } from 'lucide-react'
+import seedIcon from '../../assets/rewards/seed.webp'
 import type { InventoryItemResponse } from '../../api/store'
+import { InlineError } from '../feedback/InlineError'
+import { createStoreItemPreference } from '../../api/payment'
+import { useEffect, useRef } from 'react'
+
 interface StoreModalProps {
   isOpen: boolean
   onClose: () => void
@@ -17,6 +21,19 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
   const { items, loading: itemsLoading, error: itemsError } = useStoreItems()
   const { coins, refresh: refetchCoins } = useUserCoins()
   const { busyId, error: actionError, buy, equip, unequip } = useCosmeticActions()
+  const awaitingPaymentRef = useRef(false)
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (awaitingPaymentRef.current) {
+        awaitingPaymentRef.current = false
+        void Promise.all([refetchInventory(), refetchCoins()])
+      }
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refetchInventory, refetchCoins])
+
 
   if (!isOpen) return null
 
@@ -27,6 +44,21 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
     if (ok) {
       await Promise.all([refetchInventory(), refetchCoins()])
     }
+  }
+
+
+  const handleBuyWithMoney = (id: number) => {
+    awaitingPaymentRef.current = true
+    const popup = window.open('', '_blank')
+    createStoreItemPreference(String(id))
+      .then(({ initPoint }) => {
+        if (popup) popup.location.href = initPoint
+        else window.location.href = initPoint
+      })
+      .catch(() => {
+        awaitingPaymentRef.current = false
+        if (popup) popup.close()
+      })
   }
 
   const handleEquip = async (id: number) => {
@@ -50,7 +82,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
         role="dialog"
         aria-modal="true"
         aria-label="Tienda de decoración"
-       className="relative z-10 flex max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl"
+        className="relative z-10 flex max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl"
       >
         <div className="flex items-center justify-between gap-2 bg-[#4C7C64] px-4 py-3 text-white sm:px-5 sm:py-4">
           <div className="min-w-0">
@@ -58,7 +90,12 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
             <h2 className="font-nunito text-xl font-black leading-tight sm:text-2xl">Tienda</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {coins !== null && <CoinsBadge coins={coins} />}
+            {coins !== null && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-1.5">
+                <img src={seedIcon} alt="" aria-hidden="true" className="w-5 h-5 object-contain shrink-0" />
+                <span className="font-bold text-sm text-white">{coins.toLocaleString('es-AR')} semillas</span>
+              </div>
+            )}
             <button onClick={onClose} aria-label="Cerrar" className="rounded-full p-1.5 transition hover:bg-white/20">
               <X className="h-5 w-5" strokeWidth={2} />
             </button>
@@ -67,10 +104,9 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
 
         <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
           {(actionError || itemsError) && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700">
-              {actionError ?? itemsError}
-            </div>
+            <InlineError message={(actionError ?? itemsError) || ''} className="mb-4" />
           )}
+
           {itemsLoading ? (
             <p className="py-8 text-center text-sm text-[#4C7C64]">Cargando tienda...</p>
           ) : (
@@ -86,6 +122,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
                     busy={busyId === item.id}
                     disabled={busyId !== null}
                     onBuy={handleBuy}
+                    onBuyWithMoney={handleBuyWithMoney}
                     onEquip={handleEquip}
                     onUnequip={handleUnequip}
                   />

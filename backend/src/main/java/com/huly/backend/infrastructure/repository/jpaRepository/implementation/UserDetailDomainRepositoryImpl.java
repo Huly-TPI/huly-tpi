@@ -101,4 +101,19 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
         userDetailRepository.save(userDetail);
     }
 
+    @Override
+    public Optional<LocalDate> findLastLoginDate(Long userId) {
+        return userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .map(UserDetailEntity::getLastLoginDate);
+    }
+
+    @Override
+    @Transactional
+    public void updateLastLoginDate(Long userId, LocalDate date) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        userDetail.setLastLoginDate(date);
+        userDetailRepository.save(userDetail);
+    }
+
 }

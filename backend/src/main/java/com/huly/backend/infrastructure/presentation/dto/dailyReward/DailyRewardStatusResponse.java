@@ -7,6 +7,7 @@ public record DailyRewardStatusResponse(
         int currentStreak,
         int completedDays,
         boolean canClaimToday,
-        int nextDay
+        int nextDay,
+        boolean planBonusActive
 ) {
 }

@@ -11,6 +11,7 @@ import nightBackground from '../../assets/shared/dark-background.webp'
 import plotImg from '../../assets/challenges/plot.png'
 import mobilePlotImg from '../../assets/challenges/mobile/plot.png'
 import { useTheme } from '../../context/theme'
+import { InlineError } from '../../components/feedback/InlineError'
 
 const TOTAL_SLOTS = 12
 const HISTORY_SLOTS = TOTAL_SLOTS - 1
@@ -151,8 +152,8 @@ export default function Orchard() {
       )}
 
       {error && !loading && (
-        <div className="relative z-10 flex-1 flex items-center justify-center">
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>
+        <div className="relative z-10 flex-1 flex items-center justify-center px-4">
+          <InlineError message={error} className="max-w-md w-full" />
         </div>
       )}
 
