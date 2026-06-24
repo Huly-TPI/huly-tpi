@@ -30,10 +30,15 @@ public class ChatQuotaService {
     private final ProductRepository productRepository;
     private final ChatMessageRepository chatMessageRepository;
 
-    /** Cuota restante para el día y, cuando llega a 0, el mensaje de límite a mostrar. */
+    /** Cuota restante de mensajes para el día. */
     public record RemainingQuota(Integer remaining, String limitMessage) {}
 
+    /** Cuota restante de audios para el día. */
+    public record RemainingAudioQuota(Integer remaining, String limitMessage) {}
+
     private record QuotaInfo(Integer limit, boolean isPaidPlan) {}
+
+    private record AudioQuotaInfo(Integer limit) {}
 
     /**
      * Lanza {@link BusinessRuleException} (→ HTTP 400) si el usuario superó su tope diario.
@@ -85,5 +90,53 @@ public class ChatQuotaService {
                 ? "Alcanzaste el límite diario de " + quota.limit() + " mensajes de tu plan. Volvé a intentarlo mañana."
                 : "Alcanzaste el límite diario de " + quota.limit()
                         + " mensajes del plan gratuito. Suscribite a un plan para seguir usando el chat.";
+    }
+
+    /**
+     * Lanza {@link BusinessRuleException} (→ HTTP 400) si el usuario superó su límite diario de audios.
+     * No hace nada si su plan no tiene límite de audios (audio_daily_limit NULL = ilimitado).
+     * Usuarios sin plan activo no llegan aquí porque la UI bloquea el audio.
+     */
+    public void assertWithinAudioLimit(Long userId) {
+        AudioQuotaInfo quota = loadAudioQuotaInfo(userId);
+        if (quota.limit() == null) return;
+
+        Instant startOfDay = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
+        long usedToday = chatMessageRepository.countUserAudioMessagesSince(userId, startOfDay);
+        if (usedToday >= quota.limit()) {
+            throw new BusinessRuleException(
+                    "Alcanzaste el límite de " + quota.limit() + " audios diarios de tu plan. Volvé a intentarlo mañana.");
+        }
+    }
+
+    /**
+     * Devuelve los audios restantes para hoy y el mensaje de límite si llegó a 0.
+     * Llamar DESPUÉS de guardar el mensaje de audio.
+     */
+    public RemainingAudioQuota getRemainingAudioQuota(Long userId) {
+        AudioQuotaInfo quota = loadAudioQuotaInfo(userId);
+        if (quota.limit() == null) return new RemainingAudioQuota(null, null);
+
+        Instant startOfDay = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
+        long usedToday = chatMessageRepository.countUserAudioMessagesSince(userId, startOfDay);
+        int remaining = (int) Math.max(0, quota.limit() - usedToday);
+        String limitMessage = remaining == 0
+                ? "Alcanzaste el límite de " + quota.limit() + " audios diarios de tu plan. Volvé a intentarlo mañana."
+                : null;
+        return new RemainingAudioQuota(remaining, limitMessage);
+    }
+
+    private AudioQuotaInfo loadAudioQuotaInfo(Long userId) {
+        Instant now = Instant.now();
+        Optional<UserPlan> activePlan = userPlanRepository.findByUser(userId)
+                .filter(p -> p.isActive(now));
+        if (activePlan.isPresent()) {
+            Long productId = activePlan.get().getProductId();
+            Integer limit = productId == null
+                    ? null
+                    : productRepository.findById(productId).map(Product::getAudioDailyLimit).orElse(null);
+            return new AudioQuotaInfo(limit);
+        }
+        return new AudioQuotaInfo(null);
     }
 }

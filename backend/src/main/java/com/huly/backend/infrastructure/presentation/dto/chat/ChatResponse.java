@@ -25,7 +25,13 @@ public record ChatResponse(
         Integer remainingMessages,
 
         @JsonProperty("limit_message")
-        String limitMessage
+        String limitMessage,
+
+        @JsonProperty("remaining_audio_messages")
+        Integer remainingAudioMessages,
+
+        @JsonProperty("audio_limit_message")
+        String audioLimitMessage
 ) {
 
         public record SuggestedAction(

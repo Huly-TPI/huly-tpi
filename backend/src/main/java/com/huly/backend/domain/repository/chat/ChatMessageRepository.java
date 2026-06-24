@@ -20,6 +20,7 @@ public interface ChatMessageRepository {
 
     void updateChallengeDecision(String conversationId, Long userId, String title, String description, String decision);
 
-    /** Cantidad de mensajes enviados por el usuario (rol USER) desde el instante dado. */
     long countUserMessagesSince(Long userId, Instant since);
+
+    long countUserAudioMessagesSince(Long userId, Instant since);
 }
