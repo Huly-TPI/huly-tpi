@@ -19,7 +19,13 @@ public record ChatResponse(
         @JsonProperty("generated_challenge")
         GeneratedChallenge generatedChallenge,
 
-        Metadata metadata
+        Metadata metadata,
+
+        @JsonProperty("remaining_messages")
+        Integer remainingMessages,
+
+        @JsonProperty("limit_message")
+        String limitMessage
 ) {
 
         public record SuggestedAction(

@@ -285,6 +285,15 @@ export function useChatbot() {
         },
       ])
       shouldAutoScrollRef.current = true
+
+      if (response.remaining_messages === 0) {
+        const limitMsg =
+          response.limit_message ??
+          'Alcanzaste el límite diario de mensajes. Suscribite a un plan para seguir usando el chat.'
+        localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
+        localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, limitMsg)
+        setError(limitMsg)
+      }
     } catch (requestError) {
       if (requestError instanceof Error) {
         const errorMsg = requestError.message
@@ -346,6 +355,15 @@ export function useChatbot() {
         },
       ])
       shouldAutoScrollRef.current = true
+
+      if (response.remaining_messages === 0) {
+        const limitMsg =
+          response.limit_message ??
+          'Alcanzaste el límite diario de mensajes. Suscribite a un plan para seguir usando el chat.'
+        localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
+        localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, limitMsg)
+        setError(limitMsg)
+      }
     } catch (requestError) {
       if (requestError instanceof Error && requestError.name !== 'AbortError') {
         const errorMsg = requestError.message

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { RewardToast } from '../../components/Shop/RewardToast'
 import { useNavigate } from 'react-router-dom'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import { InlineError } from '../../components/feedback/InlineError'
@@ -60,12 +61,6 @@ export default function Challenges() {
   const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.RETO, {
     autoStart: true,
   })
-
-  useEffect(() => {
-    if (coinToast === null) return
-    const timer = setTimeout(() => setCoinToast(null), 3500)
-    return () => clearTimeout(timer)
-  }, [coinToast])
 
   useEffect(() => {
     userPlantsApi.getCurrent()
@@ -269,24 +264,11 @@ export default function Challenges() {
       )}
 
       {coinToast !== null && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-24 right-5 z-50 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#e6b800] px-5 py-4 shadow-xl text-white"
-        >
-          <span className="text-2xl" aria-hidden="true">🪙</span>
-          <div>
-            <p className="text-sm opacity-90 m-0">¡Reto completado!</p>
-            <p className="font-bold text-lg m-0">+{coinToast} monedas</p>
-          </div>
-          <button
-            aria-label="Cerrar"
-            onClick={() => setCoinToast(null)}
-            className="ml-1 rounded-full p-1.5 hover:bg-white/20 transition bg-transparent border-0 cursor-pointer text-white"
-          >
-            ✕
-          </button>
-        </div>
+        <RewardToast
+          coins={coinToast}
+          onClose={() => setCoinToast(null)}
+          message="¡Reto completado!"
+        />
       )}
     </div>
   )

@@ -14,7 +14,7 @@ class ChatResponseTest {
         ChatResponse.GeneratedChallenge challenge = new ChatResponse.GeneratedChallenge(
                 "Desafío del día", "Sal a caminar 10 minutos");
 
-        ChatResponse response = new ChatResponse("todo bien", "JOY", 8, action, challenge, metadata);
+        ChatResponse response = new ChatResponse("todo bien", "JOY", 8, action, challenge, metadata, null, null);
 
         assertThat(response.hulyReply()).isEqualTo("todo bien");
         assertThat(response.detectedEmotion()).isEqualTo("JOY");
@@ -61,7 +61,7 @@ class ChatResponseTest {
 
     @Test
     void chatResponse_shouldHandleNullOptionalFields() {
-        ChatResponse response = new ChatResponse("respuesta", null, null, null, null, null);
+        ChatResponse response = new ChatResponse("respuesta", null, null, null, null, null, null, null);
 
         assertThat(response.hulyReply()).isEqualTo("respuesta");
         assertThat(response.detectedEmotion()).isNull();

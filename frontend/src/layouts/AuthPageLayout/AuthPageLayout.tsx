@@ -3,6 +3,7 @@ import background from '../../assets/register/background.webp'
 import backgroundNight from '../../assets/register/background-night.webp'
 import defaultCharacter from '../../assets/register/huly.webp'
 import cardFrame from '../../assets/register/cardFrame.webp'
+import cardFrameLogin from '../../assets/register/cardFrame-login.webp'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 
 interface AuthPageLayoutProps {
@@ -10,10 +11,12 @@ interface AuthPageLayoutProps {
   reversed?: boolean
   characterImage?: string
   cardHeight?: string
+  variant?: 'default' | 'login'
 }
 
-export default function AuthPageLayout({ children, reversed = false, characterImage, cardHeight }: AuthPageLayoutProps) {
+export default function AuthPageLayout({ children, reversed = false, characterImage, cardHeight, variant = 'default' }: AuthPageLayoutProps) {
   const character = characterImage ?? defaultCharacter
+  const frame = variant === 'login' ? cardFrameLogin : cardFrame
   return (
     <div className="relative h-full flex items-center justify-center overflow-hidden">
       <ThemeBackground
@@ -34,7 +37,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
         <div
           className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-md"
           style={{
-            backgroundImage: `url(${cardFrame})`,
+            backgroundImage: `url(${frame})`,
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
             height: cardHeight,

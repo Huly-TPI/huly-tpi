@@ -6,6 +6,7 @@ export enum ActivityType {
   NUBE = 'NUBE',
   BURBUJA = 'BURBUJA',
   RETO = 'RETO',
+  ARENA_ZEN = 'ARENA_ZEN'
 }
 
 export interface RegisterActivitySessionRequest {

@@ -1,4 +1,6 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
+
+import com.huly.backend.domain.model.enums.ItemCategory;
 import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import com.huly.backend.infrastructure.repository.entity.StoreItemEntity;
@@ -47,5 +49,8 @@ public class UserStoreItemRepositoryImpl implements UserStoreItemRepository {
         userStoreItemJpaRepository.updateEquipped(userId, storeItemId, equipped);
     }
 
-    
+    @Override
+    public List<String> findAssetKeysByUserIdAndCategory(Long userId, ItemCategory category) {
+        return userStoreItemJpaRepository.findAssetKeysByUserIdAndCategory(userId, category);
+    }
 }
