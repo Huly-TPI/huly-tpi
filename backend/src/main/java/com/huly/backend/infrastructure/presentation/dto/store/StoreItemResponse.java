@@ -9,6 +9,7 @@ public record StoreItemResponse(
         String category,
         String assetKey,
         int priceCoins, 
-        BigDecimal price
+        BigDecimal price,
+        boolean premiumOnly
 ) {
 }

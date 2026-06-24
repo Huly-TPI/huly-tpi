@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.user.AudioSettings;
 import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.model.enums.UserRole;
@@ -11,6 +12,7 @@ import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
+import com.huly.backend.infrastructure.presentation.dto.user.UpdateAudioSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
@@ -85,6 +87,8 @@ class UserControllerTest {
         UserProfile profile = new UserProfile(user, true, false, true);
         when(getCurrentUserUseCase.execute(USER_ID)).thenReturn(profile);
         when(userDetailDomainRepository.findThemePreference(USER_ID)).thenReturn(ThemePreference.DARK);
+        when(userDetailDomainRepository.findAudioSettings(USER_ID))
+                .thenReturn(new AudioSettings(0.25, 0.45, 0.85));
 
         mockMvc.perform(get("/api/users/me"))
                 .andExpect(status().isOk())
@@ -95,7 +99,10 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.onBoardingCompleted").value(true))
                 .andExpect(jsonPath("$.onboardingTutorialCompleted").value(false))
                 .andExpect(jsonPath("$.profileOnboardingTutorialCompleted").value(true))
-                .andExpect(jsonPath("$.themePreference").value("DARK"));
+                .andExpect(jsonPath("$.themePreference").value("DARK"))
+                .andExpect(jsonPath("$.audioSettings.interfaceVolume").value(0.25))
+                .andExpect(jsonPath("$.audioSettings.ambientVolume").value(0.45))
+                .andExpect(jsonPath("$.audioSettings.minigameVolume").value(0.85));
     }
 
     @Test
@@ -127,6 +134,33 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateAudioSettings_shouldPersistVolumes_whenPrincipalIsValid() throws Exception {
+        UpdateAudioSettingsRequest req = new UpdateAudioSettingsRequest(0.2, 0.4, 0.6);
+        when(userDetailDomainRepository.updateAudioSettings(USER_ID, new AudioSettings(0.2, 0.4, 0.6)))
+                .thenReturn(new AudioSettings(0.2, 0.4, 0.6));
+
+        mockMvc.perform(put("/api/users/me/audio-settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.interfaceVolume").value(0.2))
+                .andExpect(jsonPath("$.ambientVolume").value(0.4))
+                .andExpect(jsonPath("$.minigameVolume").value(0.6));
+
+        verify(userDetailDomainRepository).updateAudioSettings(USER_ID, new AudioSettings(0.2, 0.4, 0.6));
+    }
+
+    @Test
+    void updateAudioSettings_shouldRejectInvalidVolumes() throws Exception {
+        UpdateAudioSettingsRequest req = new UpdateAudioSettingsRequest(1.2, 0.4, 0.6);
+
+        mockMvc.perform(put("/api/users/me/audio-settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

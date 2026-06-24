@@ -108,6 +108,10 @@ public class ChatUseCase {
 
         ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
         reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
+
+        if (isChallengeResponse(message))
+            reply = new ChatReply(reply.content(), reply.detectedEmotion(), reply.intensity(), reply.riskDetected(), reply.matchedWord(), reply.suggestedAction(), null);
+
         ChatReply finalReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
         finalReply = appendCommunicationStyleQuestionIfSafe(
                 finalReply,
@@ -421,6 +425,14 @@ public class ChatUseCase {
         String lower = withoutDiacritics.toLowerCase();
         String wordsOnly = NON_WORD.matcher(lower).replaceAll(" ");
         return MULTI_SPACE.matcher(wordsOnly).replaceAll(" ").trim();
+    }
+
+    private boolean isChallengeResponse(String message) {
+        if (message == null) {
+            return false;
+        }
+        String normalized = normalize(message);
+        return "acepto este reto".equals(normalized) || "rechazo este reto por ahora".equals(normalized);
     }
 
     private record ChatContext(

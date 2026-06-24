@@ -7,22 +7,24 @@ const mockUseStoreItems = vi.fn()
 const mockUseInventory = vi.fn()
 const mockUseCosmeticActions = vi.fn()
 const mockUseUserCoins = vi.fn()
+const mockUseMembership = vi.fn()
 
 vi.mock('../../hooks/store/useStoreItems', () => ({ useStoreItems: () => mockUseStoreItems() }))
 vi.mock('../../hooks/store/useInventory', () => ({ useInventory: () => mockUseInventory() }))
 vi.mock('../../hooks/store/useCosmeticActions', () => ({ useCosmeticActions: () => mockUseCosmeticActions() }))
 vi.mock('../../hooks/shop/useUserCoins', () => ({ useUserCoins: () => mockUseUserCoins() }))
+vi.mock('../../hooks/shop/useMembership', () => ({ useMembership: () => mockUseMembership() }))
 
 vi.mock('../../components/Shop/CosmeticCard', () => ({
 
-     CosmeticCard: ({ item }: { item: { name: string } }) => (
-    <div data-testid="cosmetic-card">{item.name}</div>
-  ),
+    CosmeticCard: ({ item }: { item: { name: string } }) => (
+        <div data-testid="cosmetic-card">{item.name}</div>
+    ),
 }))
 
 const makeItem = (id: number, name: string) => ({
-    id, 
-    name, 
+    id,
+    name,
     description: 'desc',
     category: 'HOUSE',
     assetKey: 'k',
@@ -36,36 +38,37 @@ describe('StoreModal', () => {
         mockUseInventory.mockReturnValue({ inventory: [], refetch: vi.fn() })
         mockUseCosmeticActions.mockReturnValue({ busyId: null, error: null, buy: vi.fn(), equip: vi.fn(), unequip: vi.fn() })
         mockUseUserCoins.mockReturnValue({ coins: 100, refresh: vi.fn() })
+        mockUseMembership.mockReturnValue({ membership: { active: false, planCode: null } })
     })
 
     it('no renderiza nada cuando isOpen es false', () => {
-        render(<StoreModal isOpen={false} onClose={() => {}} />)
+        render(<StoreModal isOpen={false} onClose={() => { }} />)
         expect(screen.queryByText('Tienda')).not.toBeInTheDocument()
     })
 
     it('muestra el titulo y el saldo de semillas', () => {
-        render(<StoreModal isOpen onClose={() => {}} />)
+        render(<StoreModal isOpen onClose={() => { }} />)
         expect(screen.getByText('Tienda')).toBeInTheDocument()
         expect(screen.getByText('100 semillas')).toBeInTheDocument()
     })
 
     it('renderiza una card por cada item', () => {
         mockUseStoreItems.mockReturnValue({ items: [makeItem(1, 'Casa rosa'), makeItem(2, 'Casa celeste')], loading: false, error: null })
-        render(<StoreModal isOpen onClose={() => {}} />)
+        render(<StoreModal isOpen onClose={() => { }} />)
 
         expect(screen.getAllByTestId('cosmetic-card')).toHaveLength(2)
     })
 
     it('muestra loading mientras carga el catalogo', () => {
         mockUseStoreItems.mockReturnValue({ items: [], loading: true, error: null })
-        render(<StoreModal isOpen onClose={() => {}} />)
+        render(<StoreModal isOpen onClose={() => { }} />)
 
         expect(screen.getByText('Cargando tienda...')).toBeInTheDocument()
     })
 
     it('muestra el error de una acción', () => {
         mockUseCosmeticActions.mockReturnValue({ busyId: null, error: 'Saldo de monedas insuficiente', buy: vi.fn(), equip: vi.fn() })
-        render(<StoreModal isOpen onClose={() => {}} />)
+        render(<StoreModal isOpen onClose={() => { }} />)
 
         expect(screen.getByText('Saldo de monedas insuficiente')).toBeInTheDocument()
     })
@@ -74,7 +77,7 @@ describe('StoreModal', () => {
         const onClose = vi.fn()
         render(<StoreModal isOpen onClose={onClose} />)
 
-                await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+        await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
 
         expect(onClose).toHaveBeenCalledOnce()
     })

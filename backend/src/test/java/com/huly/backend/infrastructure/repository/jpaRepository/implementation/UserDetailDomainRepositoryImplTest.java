@@ -2,6 +2,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.enums.ThemePreference;
+import com.huly.backend.domain.model.user.AudioSettings;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.UserDetailRepository;
@@ -109,6 +110,42 @@ class UserDetailDomainRepositoryImplTest {
     }
 
     @Test
+    void findAudioSettings_shouldReturnPersistedVolumes_whenUserDetailExists() {
+        UserDetailEntity entity = UserDetailEntity.builder()
+                .id(4L)
+                .interfaceVolume(0.25)
+                .ambientVolume(0.45)
+                .minigameVolume(0.85)
+                .build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(4L))
+                .thenReturn(Optional.of(entity));
+
+        AudioSettings result = userDetailDomainRepository.findAudioSettings(4L);
+
+        assertThat(result.interfaceVolume()).isEqualTo(0.25);
+        assertThat(result.ambientVolume()).isEqualTo(0.45);
+        assertThat(result.minigameVolume()).isEqualTo(0.85);
+    }
+
+    @Test
+    void findAudioSettings_shouldReturnDefaults_whenVolumesAreNull() {
+        UserDetailEntity entity = UserDetailEntity.builder()
+                .id(4L)
+                .interfaceVolume(null)
+                .ambientVolume(null)
+                .minigameVolume(null)
+                .build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(4L))
+                .thenReturn(Optional.of(entity));
+
+        AudioSettings result = userDetailDomainRepository.findAudioSettings(4L);
+
+        assertThat(result.interfaceVolume()).isEqualTo(0.7);
+        assertThat(result.ambientVolume()).isEqualTo(0.1);
+        assertThat(result.minigameVolume()).isEqualTo(1.0);
+    }
+
+    @Test
     void completeOnboarding_shouldSetAnswersAndMarkCompleted() {
         UserDetailEntity entity = UserDetailEntity.builder().id(1L).build();
         when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(1L))
@@ -190,6 +227,54 @@ class UserDetailDomainRepositoryImplTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userDetailDomainRepository.updateThemePreference(105L, ThemePreference.DARK))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void updateAudioSettings_shouldPersistVolumes() {
+        UserDetailEntity entity = UserDetailEntity.builder().id(5L).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(5L))
+                .thenReturn(Optional.of(entity));
+        when(userDetailRepository.save(entity)).thenReturn(entity);
+
+        AudioSettings result = userDetailDomainRepository.updateAudioSettings(
+                5L,
+                new AudioSettings(0.2, 0.4, 0.6)
+        );
+
+        ArgumentCaptor<UserDetailEntity> captor = ArgumentCaptor.forClass(UserDetailEntity.class);
+        verify(userDetailRepository).save(captor.capture());
+        assertThat(captor.getValue().getInterfaceVolume()).isEqualTo(0.2);
+        assertThat(captor.getValue().getAmbientVolume()).isEqualTo(0.4);
+        assertThat(captor.getValue().getMinigameVolume()).isEqualTo(0.6);
+        assertThat(result.interfaceVolume()).isEqualTo(0.2);
+        assertThat(result.ambientVolume()).isEqualTo(0.4);
+        assertThat(result.minigameVolume()).isEqualTo(0.6);
+    }
+
+    @Test
+    void updateAudioSettings_shouldClampVolumesBeforePersisting() {
+        UserDetailEntity entity = UserDetailEntity.builder().id(5L).build();
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(5L))
+                .thenReturn(Optional.of(entity));
+        when(userDetailRepository.save(entity)).thenReturn(entity);
+
+        AudioSettings result = userDetailDomainRepository.updateAudioSettings(
+                5L,
+                new AudioSettings(-1.0, 2.0, null)
+        );
+
+        assertThat(result.interfaceVolume()).isEqualTo(0.0);
+        assertThat(result.ambientVolume()).isEqualTo(1.0);
+        assertThat(result.minigameVolume()).isEqualTo(0.0);
+    }
+
+    @Test
+    void updateAudioSettings_shouldThrowNotFoundException_whenUserDetailNotFound() {
+        when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(105L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userDetailDomainRepository.updateAudioSettings(105L, new AudioSettings(0.2, 0.4, 0.6)))
                 .isInstanceOf(NotFoundException.class);
     }
 

@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS cloud_thought (
+    id         BIGSERIAL    PRIMARY KEY,
+    user_id    BIGINT       NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+    text       VARCHAR(100) NOT NULL,
+    status     VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    worked_on  BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);

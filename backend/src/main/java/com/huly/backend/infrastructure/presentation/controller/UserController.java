@@ -1,15 +1,18 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.user.UserProfile;
+import com.huly.backend.domain.model.user.AudioSettings;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
+import com.huly.backend.infrastructure.presentation.dto.user.AudioSettingsResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import com.huly.backend.infrastructure.presentation.dto.user.UpdateAudioSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +46,7 @@ public class UserController {
         Long userId = currentUserId(principal);
         UserProfile profile = getCurrentUserUseCase.execute(userId);
         ThemePreference themePreference = userDetailDomainRepository.findThemePreference(userId);
+        AudioSettings audioSettings = userDetailDomainRepository.findAudioSettings(userId);
 
         return ResponseEntity.ok(UserProfileResponse.builder()
                 .id(profile.user().getId())
@@ -53,6 +57,7 @@ public class UserController {
                 .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
                 .profileOnboardingTutorialCompleted(profile.profileOnboardingTutorialCompleted())
                 .themePreference(themePreference)
+                .audioSettings(toAudioSettingsResponse(audioSettings))
                 .build());
     }
 
@@ -90,10 +95,31 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/me/audio-settings")
+    public ResponseEntity<AudioSettingsResponse> updateAudioSettings(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody UpdateAudioSettingsRequest request
+    ) {
+        Long userId = currentUserId(principal);
+        AudioSettings updatedSettings = userDetailDomainRepository.updateAudioSettings(
+                userId,
+                new AudioSettings(request.interfaceVolume(), request.ambientVolume(), request.minigameVolume())
+        );
+        return ResponseEntity.ok(toAudioSettingsResponse(updatedSettings));
+    }
+
     private Long currentUserId(UserDetails principal) {
         if (principal == null) {
             throw new UnauthorizedException("Not authenticated");
         }
         return Long.parseLong(principal.getUsername());
+    }
+
+    private AudioSettingsResponse toAudioSettingsResponse(AudioSettings audioSettings) {
+        return new AudioSettingsResponse(
+                audioSettings.interfaceVolume(),
+                audioSettings.ambientVolume(),
+                audioSettings.minigameVolume()
+        );
     }
 }

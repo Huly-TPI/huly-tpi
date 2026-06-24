@@ -8,6 +8,7 @@ import type { InventoryItemResponse } from '../../api/store'
 import { InlineError } from '../feedback/InlineError'
 import { createStoreItemPreference } from '../../api/payment'
 import { useEffect, useRef } from 'react'
+import { useMembership } from '../../hooks/shop/useMembership'
 
 interface StoreModalProps {
   isOpen: boolean
@@ -26,6 +27,8 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
   const refetchCoins = refetchCoinsProp ?? refetchCoinsOwn
   const { busyId, error: actionError, buy, equip, unequip } = useCosmeticActions()
   const awaitingPaymentRef = useRef(false)
+  const { membership } = useMembership()
+  const userIsPremium = membership?.active === true && membership?.planCode === 'PREMIUM'
 
   useEffect(() => {
     const onFocus = () => {
@@ -80,7 +83,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <button type="button" aria-label="Cerrar tienda" className="absolute inset-0 cursor-default" onClick={onClose} />
       <div
         role="dialog"
@@ -129,6 +132,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
                     onBuyWithMoney={handleBuyWithMoney}
                     onEquip={handleEquip}
                     onUnequip={handleUnequip}
+                    userIsPremium={userIsPremium}
                   />
                 )
               })}

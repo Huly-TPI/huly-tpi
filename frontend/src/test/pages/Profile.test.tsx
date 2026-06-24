@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from '../../context/theme'
+import { AudioSettingsProvider } from '../../context/audioSettings'
 import Profile from '../../pages/Profile/Profile'
 import { completeProfileTutorial } from '../../api/onboarding'
 
@@ -46,7 +47,9 @@ describe('Profile', () => {
     return render(
       <ThemeProvider>
         <MemoryRouter>
-          <Profile />
+          <AudioSettingsProvider>
+            <Profile />
+          </AudioSettingsProvider>
         </MemoryRouter>
       </ThemeProvider>,
     )
@@ -72,10 +75,12 @@ describe('Profile', () => {
     render(
       <ThemeProvider>
         <MemoryRouter initialEntries={['/profile']}>
-          <Routes>
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/login" element={<h1>Vista Login</h1>} />
-          </Routes>
+          <AudioSettingsProvider>
+            <Routes>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/login" element={<h1>Vista Login</h1>} />
+            </Routes>
+          </AudioSettingsProvider>
         </MemoryRouter>
       </ThemeProvider>,
     )
@@ -117,10 +122,12 @@ describe('Profile', () => {
     render(
       <ThemeProvider>
         <MemoryRouter initialEntries={['/profile']}>
-          <Routes>
-            <Route path="/" element={<h1>Vista Jardin</h1>} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
+          <AudioSettingsProvider>
+            <Routes>
+              <Route path="/" element={<h1>Vista Jardin</h1>} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </AudioSettingsProvider>
         </MemoryRouter>
       </ThemeProvider>,
     )
@@ -181,5 +188,32 @@ describe('Profile', () => {
     renderProfile()
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('abre el modal de audio al hacer click en el equipo de musica', async () => {
+    const user = userEvent.setup()
+
+    renderProfile()
+
+    await user.click(screen.getByRole('button', { name: 'Musica' }))
+
+    expect(screen.getByRole('dialog', { name: 'Ambiente sonoro' })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: 'Volumen de interfaz' })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: 'Volumen de fondo' })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: 'Volumen de minijuegos' })).toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  })
+
+  it('permite cambiar el volumen desde el modal de audio', async () => {
+    const user = userEvent.setup()
+
+    renderProfile()
+
+    await user.click(screen.getByRole('button', { name: 'Musica' }))
+    const volumeSlider = screen.getByRole('slider', { name: 'Volumen de fondo' })
+
+    fireEvent.change(volumeSlider, { target: { value: '0.25' } })
+
+    expect(volumeSlider).toHaveValue('0.25')
   })
 })

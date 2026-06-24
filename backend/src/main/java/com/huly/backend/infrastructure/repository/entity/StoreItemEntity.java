@@ -33,7 +33,9 @@ public class StoreItemEntity {
     @Column(name = "price_coins", nullable = false)
     private int priceCoins;
     
-
     @Column(name = "price")
     private BigDecimal price;
+
+    @Column(name = "premium_only", nullable = false)
+    private boolean premiumOnly;
 }
