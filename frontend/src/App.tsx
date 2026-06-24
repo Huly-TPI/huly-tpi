@@ -29,8 +29,10 @@ import Privacy from './pages/Privacy/Privacy'
 import LanternActivity from './pages/Lanterns/Lanterns'
 
 import Unsubscribe from './pages/Unsubscribe/Unsubscribe'
+import { usePreloadImages } from './hooks/usePreloadImages'
 
 const App = () => {
+  usePreloadImages()
   return (
 
     <AuthProvider>

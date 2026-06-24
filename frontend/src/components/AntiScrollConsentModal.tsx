@@ -38,9 +38,10 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
   const [extId, setExtId] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkInstalled = () => {
+    const syncFromAttributes = () => {
       const installed = document.documentElement.hasAttribute('data-huly-antiscroll-installed')
       setIsInstalled(installed)
+
       if (installed) {
         const id = document.documentElement.getAttribute('data-huly-antiscroll-id')
         setExtId(id)
@@ -50,11 +51,27 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
 
         const consentAttr = document.documentElement.getAttribute('data-huly-antiscroll-consent')
         setConsent(consentAttr === 'true')
+        return
       }
+
+      setExtId(null)
     }
 
-    checkInstalled()
-    const interval = setInterval(checkInstalled, 500)
+    syncFromAttributes()
+
+    const observer = new MutationObserver(() => {
+      syncFromAttributes()
+    })
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: [
+        'data-huly-antiscroll-installed',
+        'data-huly-antiscroll-id',
+        'data-huly-antiscroll-enabled',
+        'data-huly-antiscroll-consent',
+      ],
+    })
 
     getExtensionSettings()
       .then((data) => {
@@ -71,12 +88,13 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
         setLoading(false)
       })
 
-    return () => clearInterval(interval)
+    return () => observer.disconnect()
   }, [])
 
   const handleToggleEnabled = async () => {
     const newEnabled = !isEnabled
     setIsEnabled(newEnabled)
+    document.documentElement.setAttribute('data-huly-antiscroll-enabled', newEnabled ? 'true' : 'false')
 
     if (settings) {
       const updated = { ...settings, enabled: newEnabled }
@@ -101,6 +119,7 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
   const handleToggleConsent = async () => {
     const newConsent = !consent
     setConsent(newConsent)
+    document.documentElement.setAttribute('data-huly-antiscroll-consent', newConsent ? 'true' : 'false')
 
     if (settings) {
       const updated = { ...settings, dataSharingConsent: newConsent }
@@ -127,8 +146,8 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-strong)] backdrop-blur-sm px-4 overflow-y-auto">
-      <div className="bg-[var(--surface-primary)] text-[var(--text-primary)] rounded-2xl shadow-xl p-8 max-w-md w-full text-center relative my-8">
+    <div className="fixed inset-0 z-[400] flex items-start justify-center overflow-y-auto bg-[var(--overlay-strong)] px-3 py-20 backdrop-blur-sm sm:px-4 sm:py-8">
+      <div className="relative my-auto w-full max-w-lg rounded-2xl bg-[var(--surface-primary)] p-6 text-center text-[var(--text-primary)] shadow-xl sm:p-8">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xl font-bold transition duration-150"
@@ -138,7 +157,7 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
         </button>
 
         <img src={colorLogo} alt="Huly" className="h-12 object-contain mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-[#8869AC] dark:text-violeta-claro mb-4">
+        <h2 className="mb-4 text-[1.9rem] font-bold text-[#8869AC] dark:text-violeta-claro max-[420px]:text-[1.7rem]">
           Pausa digital: Anti-Scroll
         </h2>
 
@@ -153,8 +172,8 @@ Activalo cuando quieras priorizar tu concentracion o desconectar del ruido, y ap
         {loading ? (
           <div className="text-sm text-[var(--text-secondary)] py-4">Cargando estado...</div>
         ) : (
-          <div className="space-y-4 border-t border-b border-[var(--border-soft)] py-4 mb-6">
-            <div className="flex items-center justify-between p-3 bg-[var(--surface-secondary)] rounded-xl gap-4">
+          <div className="mb-6 space-y-4 border-t border-b border-[var(--border-soft)] py-4">
+            <div className="flex items-center justify-between gap-4 rounded-xl bg-[var(--surface-secondary)] p-3">
               <div className="text-left">
                 <div className="font-semibold text-sm text-[var(--text-primary)]">
                   {isInstalled ? 'Extension anti-scroll' : 'Extension no instalada'}
@@ -177,7 +196,7 @@ Activalo cuando quieras priorizar tu concentracion o desconectar del ruido, y ap
               )}
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-[var(--surface-secondary)] rounded-xl gap-4">
+            <div className="flex items-center justify-between gap-4 rounded-xl bg-[var(--surface-secondary)] p-3">
               <div className="text-left">
                 <div className="font-semibold text-sm text-[var(--text-primary)]">
                   Recopilar estadisticas de bienestar
