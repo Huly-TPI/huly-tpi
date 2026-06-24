@@ -8,18 +8,22 @@ interface ChatbotComposerProps {
   input: string
   isSending: boolean
   disabled?: boolean
+  audioLockedForPlan?: boolean
   onInputChange: (value: string) => void
   onSend: () => void
   onSendAudio: (blob: Blob) => void
+  onAudioLockedClick?: () => void
 }
 
 export default function ChatbotComposer({
   input,
   isSending,
   disabled = false,
+  audioLockedForPlan = false,
   onInputChange,
   onSend,
-  onSendAudio
+  onSendAudio,
+  onAudioLockedClick,
 }: ChatbotComposerProps) {
   const [isRecorderActive, setIsRecorderActive] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -57,6 +61,8 @@ export default function ChatbotComposer({
           onSend={onSendAudio}
           disabled={isSending || disabled}
           onActiveChange={setIsRecorderActive}
+          lockedForPlan={audioLockedForPlan}
+          onLockedClick={onAudioLockedClick}
         />
         {!isRecorderActive && (
           <Button

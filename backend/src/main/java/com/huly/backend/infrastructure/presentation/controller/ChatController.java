@@ -52,7 +52,7 @@ public class ChatController {
         Long userId = getUserId(principal);
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
         ChatQuotaService.RemainingQuota quota = chatQuotaService.getRemainingQuota(userId);
-        return ResponseEntity.ok(toResponse(reply, quota));
+        return ResponseEntity.ok(toResponse(reply, quota, null, null));
     }
 
     @PostMapping(value = "/audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -61,9 +61,11 @@ public class ChatController {
             @RequestPart("audio") MultipartFile audio,
             @RequestParam("conversationId") String conversationId) {
         Long userId = getUserId(principal);
+        chatQuotaService.assertWithinAudioLimit(userId);
         ChatReply reply = audioChatUseCase.execute(audio, conversationId, userId);
         ChatQuotaService.RemainingQuota quota = chatQuotaService.getRemainingQuota(userId);
-        return ResponseEntity.ok(toResponse(reply, quota));
+        ChatQuotaService.RemainingAudioQuota audioQuota = chatQuotaService.getRemainingAudioQuota(userId);
+        return ResponseEntity.ok(toResponse(reply, quota, audioQuota.remaining(), audioQuota.limitMessage()));
     }
 
     @PostMapping("/challenge-decision")
@@ -100,7 +102,8 @@ public class ChatController {
         return Long.parseLong(principal.getUsername());
     }
 
-    private ChatResponse toResponse(ChatReply reply, ChatQuotaService.RemainingQuota quota) {
+    private ChatResponse toResponse(ChatReply reply, ChatQuotaService.RemainingQuota quota,
+                                    Integer remainingAudio, String audioLimitMessage) {
         String emotion = reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
         ChatResponse.Metadata metadata = reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
@@ -108,7 +111,8 @@ public class ChatController {
         ChatResponse.GeneratedChallenge challenge = reply.generatedChallenge() != null
                 ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
                 : null;
-        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), challenge, metadata, quota.remaining(), quota.limitMessage());
+        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()),
+                challenge, metadata, quota.remaining(), quota.limitMessage(), remainingAudio, audioLimitMessage);
     }
 
     private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {
