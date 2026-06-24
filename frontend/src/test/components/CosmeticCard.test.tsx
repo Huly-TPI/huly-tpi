@@ -11,6 +11,7 @@ const makeItem = (overrides = {}) => ({
     assetKey: 'house-pink',
     priceCoins: 50,
     price: null as number | null,
+    premiumOnly: false,
     ...overrides,
 })
 
@@ -18,7 +19,7 @@ const noop = () => { }
 
 describe('CosmeticCard', () => {
     it('muestra el nombre, descripción y precio', () => {
-        render(<CosmeticCard item={makeItem()} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} />)
+        render(<CosmeticCard item={makeItem()} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} userIsPremium={false} />)
         expect(screen.getByText('Casa rosa')).toBeInTheDocument()
         expect(screen.getByText('Pinta tu casa de rosa')).toBeInTheDocument()
         expect(screen.getByText('50 semillas')).toBeInTheDocument()
@@ -26,7 +27,7 @@ describe('CosmeticCard', () => {
 
     it('muestra Comprar cuando no lo tenés y llama onBuy con el id', async () => {
         const onBuy = vi.fn()
-        render(<CosmeticCard item={makeItem()} owned={false} equipped={false} busy={false} disabled={false} onBuy={onBuy} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} />)
+        render(<CosmeticCard item={makeItem()} owned={false} equipped={false} busy={false} disabled={false} onBuy={onBuy} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} userIsPremium={false} />)
 
         await userEvent.click(screen.getByRole('button', { name: 'Comprar' }))
 
@@ -35,7 +36,7 @@ describe('CosmeticCard', () => {
 
     it('muestra Equipar cuando lo tenés y llama onEquip con el id', async () => {
         const onEquip = vi.fn()
-        render(<CosmeticCard item={makeItem()} owned={true} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={onEquip} onUnequip={noop} />)
+        render(<CosmeticCard item={makeItem()} owned={true} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={onEquip} onUnequip={noop} userIsPremium={false} />)
 
         await userEvent.click(screen.getByRole('button', { name: 'Equipar' }))
 
@@ -44,19 +45,29 @@ describe('CosmeticCard', () => {
 
     it('muestra Quitar cuando esta equipado y llama onUnequip con el id', async () => {
         const onUnequip = vi.fn()
-        render(<CosmeticCard item={makeItem()} owned={true} equipped={true} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={onUnequip} />)
+        render(<CosmeticCard item={makeItem()} owned={true} equipped={true} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={onUnequip} userIsPremium={false} />)
         await userEvent.click(screen.getByRole('button', { name: /Quitar/ }))
         expect(onUnequip).toHaveBeenCalledWith(10)
     })
 
     it('muestra "Comprar con dinero" cuando el item tiene precio en dinero y llama onBuyWithMoney', async () => {
         const onBuyWithMoney = vi.fn()
-        render(<CosmeticCard item={makeItem({ price: 1000 })} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={onBuyWithMoney} onEquip={noop} onUnequip={noop} />)
+        render(<CosmeticCard item={makeItem({ price: 1000 })} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={onBuyWithMoney} onEquip={noop} onUnequip={noop} userIsPremium={false} />)
 
         await userEvent.click(screen.getByRole('button', { name: 'Comprar con MercadoPago' }))
 
         expect(onBuyWithMoney).toHaveBeenCalledWith(10)
     })
 
+    it('muestra badge "Solo premium" cuando el item es premiumOnly', () => {
+        render(<CosmeticCard item={makeItem({ premiumOnly: true })} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} userIsPremium={false} />)
+        expect(screen.getAllByText('Solo premium')).toHaveLength(2)
+    })
+
+    it('muestra botón deshabilitado cuando item es premiumOnly y usuario no es premium', () => {
+        render(<CosmeticCard item={makeItem({ premiumOnly: true })} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} userIsPremium={false} />)
+        const btn = screen.getByRole('button', { name: 'Solo premium' })
+        expect(btn).toBeDisabled()
+    })
 
 })

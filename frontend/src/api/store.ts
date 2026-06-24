@@ -8,6 +8,7 @@ export interface StoreItemResponse {
     assetKey: string
     priceCoins: number
     price: number | null
+    premiumOnly: boolean
 }
 
 export interface InventoryItemResponse {

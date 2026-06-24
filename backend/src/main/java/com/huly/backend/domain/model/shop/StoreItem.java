@@ -14,4 +14,6 @@ public class StoreItem {
     private final String assetKey;
     private final int priceCoins;
     private final BigDecimal price;
+     private final boolean premiumOnly;
 }
+
