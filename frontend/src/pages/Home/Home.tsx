@@ -155,7 +155,7 @@ export default function Home() {
   const [isStoreOpen, setIsStoreOpen] = useState(false)
   const [isRewardsOpen, setIsRewardsOpen] = useState(false)
   const [isSeedShopOpen, setIsSeedShopOpen] = useState(false)
-  const { inventory, refetch: refetchInventory } = useInventory()
+  const { inventory, loading: inventoryLoading, refetch: refetchInventory } = useInventory()
   const { coins, refresh: refreshCoins } = useUserCoins()
   const { status: rewardsStatus } = useDailyRewards()
   const equippedByCategory = resolveEquippedImages(inventory)
@@ -266,7 +266,7 @@ export default function Home() {
           className={`garden-scene__background garden-scene__background--mobile garden-scene__background--dark pointer-events-none select-none ${sceneTheme === 'dark' ? 'garden-scene__background--active' : ''}`}
         />
 
-        <div className="absolute inset-0">
+        <div className={`absolute inset-0 transition-opacity duration-300 ${inventoryLoading ? 'opacity-0' : 'opacity-100'}`}>
           {renderedSceneElements.map(element => (
             <SceneElement key={element.id} theme={sceneTheme} {...element} />
           ))}

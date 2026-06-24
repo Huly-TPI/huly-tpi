@@ -366,6 +366,28 @@ class ChatUseCaseTest {
         verify(chatConversationPreferenceRepository, never()).save(any());
     }
 
+    @Test
+    void processMessage_shouldNullifyChallenge_whenUserAcceptsChallenge() {
+        ChatReply.GeneratedChallenge generated = new ChatReply.GeneratedChallenge("Reto", "Haz algo");
+        ChatReply reply = new ChatReply("¡Qué bueno!", EmotionType.JOY, 5, false, null, null, generated);
+        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
+
+        ChatReply result = chatUseCase.execute("Acepto este reto", "conv-1", 1L);
+
+        assertThat(result.generatedChallenge()).isNull();
+    }
+
+    @Test
+    void processMessage_shouldNullifyChallenge_whenUserRejectsChallenge() {
+        ChatReply.GeneratedChallenge generated = new ChatReply.GeneratedChallenge("Reto", "Haz algo");
+        ChatReply reply = new ChatReply("No hay problema", EmotionType.JOY, 5, false, null, null, generated);
+        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
+
+        ChatReply result = chatUseCase.execute("Rechazo este reto por ahora", "conv-1", 1L);
+
+        assertThat(result.generatedChallenge()).isNull();
+    }
+
     private void givenDefaultSetup(String basePrompt, List<RiskWord> riskWords,
                                    String enrichedPrompt, List<ConversationMessage> history,
                                    ChatReply reply) {

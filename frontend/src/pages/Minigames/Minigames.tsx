@@ -131,7 +131,7 @@ const minigameElements: SceneElementDefinition[] = [
 
 export default function Minigames() {
     const { theme } = useTheme()
-    const { inventory } = useInventory()
+    const { inventory, loading: inventoryLoading } = useInventory()
     const equippedByCategory = resolveEquippedImages(inventory)
     const equippedTreeImage = equippedByCategory.TREE
     const homeReturnElement: SceneElementDefinition = {
@@ -186,7 +186,7 @@ export default function Minigames() {
                     </div>
                 ))}
 
-                <div className="absolute inset-0 z-10">
+                <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${inventoryLoading ? 'opacity-0' : 'opacity-100'}`}>
                     {sceneElements.map(element => (
                         <SceneElement key={element.id} theme={theme} {...element} />
                     ))}
