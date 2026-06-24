@@ -133,11 +133,11 @@ export default function Challenges() {
 
       <aside className="plant-zone relative z-10 flex-shrink-0 w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-hidden">
         <div className="plant-zone__info flex flex-col items-center gap-[0.6rem] w-full">
-          <h1 className="challenges-title text-2xl font-extrabold text-bosque m-0 text-center tracking-[-0.01em]">
+          <h1 className="challenges-title text-2xl font-extrabold text-bosque m-0 text-center tracking-[-0.01em] lg:text-[2rem]">
             Mis Retos
           </h1>
 
-          <div className="w-full max-w-[200px] text-center">
+          <div className="w-full max-w-[220px] text-center">
             <div
               className="h-[9px] bg-white/30 rounded-full overflow-hidden w-full"
               role="progressbar"
@@ -151,10 +151,10 @@ export default function Challenges() {
                 style={{ width: `${cyclePct}%` }}
               />
             </div>
-            <p className="text-[0.78rem] font-bold text-bosque mt-[0.2rem] m-0">{cyclePct}%</p>
+            <p className="text-[0.78rem] font-bold text-bosque mt-[0.2rem] m-0 lg:text-[0.95rem]">{cyclePct}%</p>
           </div>
 
-          <p className="challenges-plant-hint text-[0.72rem] text-bosque text-center max-w-[190px] m-0 italic leading-[1.4] pt-4">
+          <p className="challenges-plant-hint text-[0.72rem] text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
             {PLANT_HINTS[plantStage]}
           </p>
 
@@ -163,7 +163,7 @@ export default function Challenges() {
             onClick={() => navigate('/orchard')}
           >
             <img src={nurseryImg} alt="" aria-hidden="true" className="w-12 h-12 object-contain" />
-            <span className="text-sm font-semibold text-bosque">Ver Vivero</span>
+            <span className="text-sm font-semibold text-bosque lg:text-[1rem]">Ver Vivero</span>
           </button>
         </div>
 
@@ -216,7 +216,7 @@ export default function Challenges() {
                     </li>
                   ))
                 ) : (
-                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)]">
+                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)] lg:text-[0.9rem]">
                     Sembrá tus metas. ¡Creá un nuevo reto!
                   </li>
                 )}

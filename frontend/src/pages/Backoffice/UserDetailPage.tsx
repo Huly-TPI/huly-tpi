@@ -1,10 +1,11 @@
 import { useUsers } from '../../hooks/backoffice/useUsers'
 import { SectionCard } from '../../components/backoffice/SectionCard'
-import { ChevronLeft, ShieldAlert, Brain, Activity, DollarSign, Check, X, CircleDollarSign } from 'lucide-react'
+import { ChevronLeft, ShieldAlert, Brain, Activity, DollarSign, Check, X } from 'lucide-react'
 import { UsageTab } from './components/UsageTab'
 import { AiDiagnosticsTab } from './components/AiDiagnosticsTab'
 import { AntiScrollTab } from './components/AntiScrollTab'
 import { FinanceTab } from './components/FinanceTab'
+import seedIcon from '../../assets/rewards/seed.webp'
 
 export default function UserDetailPage() {
   const {
@@ -59,9 +60,9 @@ export default function UserDetailPage() {
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={2} />
           </button>
-          <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Detalle de usuario</h1>
+          <h1 className="text-[30px] lg:text-[34px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Detalle de usuario</h1>
         </div>
-        <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">Ver información general y estadísticas de navegación</p>
+        <p className="text-[16px] lg:text-[18px] text-[#A0AEC0] dark:text-gray-400">Ver información general y estadísticas de navegación</p>
       </div>
 
       {/* Main Grid: stretches to fill remaining height on lg+ */}
@@ -74,18 +75,18 @@ export default function UserDetailPage() {
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-violeta-claro/30 dark:bg-[#2A233C] text-[32px] font-black text-violeta dark:text-violeta-claro mb-3 shadow-inner">
                 {selectedUser.name ? selectedUser.name.charAt(0).toUpperCase() : 'u'}
               </div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 truncate w-full px-2">
+              <h2 className="text-xl lg:text-[24px] font-bold text-gray-800 dark:text-gray-100 truncate w-full px-2">
                 {selectedUser.name || 'sin nombre'}
               </h2>
-              <p className="text-sm text-gray-400 dark:text-gray-500 truncate w-full px-2">
+              <p className="text-sm lg:text-[15px] text-gray-400 dark:text-gray-500 truncate w-full px-2">
                 {selectedUser.email}
               </p>
             </div>
 
             <div className="space-y-4 border-t border-gray-50 dark:border-gray-800 pt-4">
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between items-center text-sm lg:text-[15px]">
                 <span className="font-semibold text-gray-400 dark:text-gray-555">Estado</span>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-5 ${
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs lg:text-[13px] font-bold leading-5 ${
                   selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVO'
                     ? 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
@@ -95,16 +96,16 @@ export default function UserDetailPage() {
                     : selectedUser.status.charAt(0).toUpperCase() + selectedUser.status.slice(1).toLowerCase()}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-semibold text-gray-400 dark:text-gray-555">Monedas</span>
+              <div className="flex justify-between items-center text-sm lg:text-[15px]">
+                <span className="font-semibold text-gray-400 dark:text-gray-555">Semillas</span>
                 <span className="inline-flex items-center gap-1 font-bold text-amber-500 dark:text-amber-400">
-                  <CircleDollarSign className="h-4 w-4" strokeWidth={2} />
+                  <img src={seedIcon} alt="" aria-hidden="true" className="h-4 w-4 object-contain shrink-0" />
                   {selectedUser.coins ?? 0}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between items-center text-sm lg:text-[15px]">
                 <span className="font-semibold text-gray-400 dark:text-gray-555">Plan</span>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-5 ${
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs lg:text-[13px] font-bold leading-5 ${
                   selectedUser.plan && selectedUser.plan !== 'Gratuito' && selectedUser.plan !== 'FREE'
                     ? 'bg-violeta-claro/30 dark:bg-[#2A233C] text-violeta dark:text-violeta-claro'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
@@ -112,7 +113,7 @@ export default function UserDetailPage() {
                   {selectedUser.plan}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between items-center text-sm lg:text-[15px]">
                 <span className="font-semibold text-gray-400 dark:text-gray-555">Antiscroll</span>
                 <span className={`inline-flex items-center font-bold ${selectedUser.antiScrollEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                   {selectedUser.antiScrollEnabled ? (
@@ -122,7 +123,7 @@ export default function UserDetailPage() {
                   )}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between items-center text-sm lg:text-[15px]">
                 <span className="font-semibold text-gray-400 dark:text-gray-555">Compartir datos (Antiscroll)</span>
                 <span className={`inline-flex items-center font-bold ${selectedUser.dataSharingConsent ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                   {selectedUser.dataSharingConsent ? (
@@ -143,7 +144,7 @@ export default function UserDetailPage() {
           <div className="flex gap-2 border-b border-gray-100 dark:border-gray-800/60 pb-3 overflow-x-auto shrink-0">
             <button
               onClick={() => setActiveTab('usage')}
-              className={`px-4 py-2.5 text-xs font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
+              className={`px-4 py-2.5 text-xs lg:text-[13px] font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'usage'
                   ? 'bg-violeta text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:bg-gray-55 dark:hover:bg-gray-800/50'
@@ -154,7 +155,7 @@ export default function UserDetailPage() {
             </button>
             <button
               onClick={() => setActiveTab('ai')}
-              className={`px-4 py-2.5 text-xs font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
+              className={`px-4 py-2.5 text-xs lg:text-[13px] font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'ai'
                   ? 'bg-violeta text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:bg-gray-55 dark:hover:bg-gray-800/50'
@@ -165,7 +166,7 @@ export default function UserDetailPage() {
             </button>
             <button
               onClick={() => setActiveTab('antiscroll')}
-              className={`px-4 py-2.5 text-xs font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
+              className={`px-4 py-2.5 text-xs lg:text-[13px] font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'antiscroll'
                   ? 'bg-violeta text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:bg-gray-55 dark:hover:bg-gray-800/50'
@@ -176,7 +177,7 @@ export default function UserDetailPage() {
             </button>
             <button
               onClick={() => setActiveTab('finance')}
-              className={`px-4 py-2.5 text-xs font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
+              className={`px-4 py-2.5 text-xs lg:text-[13px] font-bold rounded-xl transition duration-155 flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'finance'
                   ? 'bg-violeta text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:bg-gray-55 dark:hover:bg-gray-800/50'
