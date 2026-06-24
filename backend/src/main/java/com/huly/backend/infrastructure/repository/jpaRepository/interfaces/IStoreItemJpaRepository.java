@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 public interface IStoreItemJpaRepository extends JpaRepository<StoreItemEntity, Long> {
     List<StoreItemEntity> findByCategory(ItemCategory category);
+    List<StoreItemEntity> findAllByOrderByIdAsc();
 }

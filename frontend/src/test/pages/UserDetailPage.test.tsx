@@ -150,7 +150,7 @@ describe('UserDetailPage', () => {
     expect(screen.getAllByText('$49,99').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('Historial de Transacciones')).toBeInTheDocument()
     expect(screen.getByText('Premium Plan')).toBeInTheDocument()
-    expect(screen.getByText('APPROVED')).toBeInTheDocument()
+    expect(screen.getByText('APROBADO')).toBeInTheDocument()
   })
 
   it('muestra la pestaña de Antiscroll con estadísticas de navegación', () => {

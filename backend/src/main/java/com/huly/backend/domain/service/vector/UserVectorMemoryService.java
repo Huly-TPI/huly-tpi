@@ -31,10 +31,20 @@ public class UserVectorMemoryService {
 
     private static final List<VectorMemorySource> ALL_USER_MEMORY_SOURCES = List.of(
             VectorMemorySource.CHATBOT,
-            VectorMemorySource.GUIDED_CLOUDS,
+            VectorMemorySource.GUIDED_LANTERNS,
             VectorMemorySource.EMOTIONAL_JOURNAL,
             VectorMemorySource.ONBOARDING
     );
+
+    private static final String CREATED_FROM_USER_MESSAGE = "USER_MESSAGE";
+    private static final String USER_CHAT_MESSAGE = "USER_CHAT_MESSAGE";
+    private static final String GUIDED_LANTERN_INPUT = "GUIDED_LANTERN_INPUT";
+    private static final String EMOTIONAL_JOURNAL_ENTRY = "EMOTIONAL_JOURNAL_ENTRY";
+    private static final String USER_PROFILE_FACTS = "USER_PROFILE_FACTS";
+    private static final String RECOMMENDED_ACTIVITY = "RECOMMENDED_ACTIVITY";
+    private static final String ACTIVITY_RECOMMENDATION_DECISION = "ACTIVITY_RECOMMENDATION_DECISION";
+    private static final String GENERATED_CHALLENGE = "GENERATED_CHALLENGE";
+    private static final String CHALLENGE_DECISION = "CHALLENGE_DECISION";
 
     record PersonalitySummaryDto(String summary, String accepted, String rejected) {}
 

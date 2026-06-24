@@ -37,7 +37,7 @@ public class StoreItemRepositoryImplTest {
     @Test
     void findAll_shouldReturnMappedList() {
         StoreItemEntity entity = entity();
-        when(storeItemJpaRepository.findAll()).thenReturn(List.of(entity));
+        when(storeItemJpaRepository.findAllByOrderByIdAsc()).thenReturn(List.of(entity));
         List<StoreItem> result = storeItemRepository.findAll();
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(10L);

@@ -26,6 +26,13 @@ export interface UserProfile {
   onboardingTutorialCompleted?: boolean
   profileOnboardingTutorialCompleted?: boolean
   themePreference: 'LIGHT' | 'DARK'
+  audioSettings?: AudioSettings
+}
+
+export interface AudioSettings {
+  interfaceVolume: number
+  ambientVolume: number
+  minigameVolume: number
 }
 
 export const getMe = () => {
@@ -50,6 +57,10 @@ export const logout = () => {
 
 export const updateThemePreference = (themePreference: UserProfile['themePreference']) => {
   return api.put<void>('/users/me/theme', { themePreference })
+}
+
+export const updateAudioSettings = (audioSettings: AudioSettings) => {
+  return api.put<AudioSettings>('/users/me/audio-settings', audioSettings)
 }
 
 export const getUserCoins = () =>

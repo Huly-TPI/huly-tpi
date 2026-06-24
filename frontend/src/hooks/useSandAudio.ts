@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import { useAudioSettings } from '../context/audioSettings'
 
 interface SandAudioNodes {
   filter: BiquadFilterNode
@@ -22,8 +23,10 @@ const createNoiseBuffer = (context: AudioContext) => {
 }
 
 export const useSandAudio = () => {
+  const { minigameVolume } = useAudioSettings()
   const contextRef = useRef<AudioContext | null>(null)
   const nodesRef = useRef<SandAudioNodes | null>(null)
+  const effectiveVolume = minigameVolume
 
   const stop = useCallback(() => {
     const nodes = nodesRef.current
@@ -44,6 +47,7 @@ export const useSandAudio = () => {
   }, [])
 
   const start = useCallback(() => {
+    if (effectiveVolume <= 0) return
     if (nodesRef.current) return
 
     const context = contextRef.current ?? new AudioContext()
@@ -64,7 +68,7 @@ export const useSandAudio = () => {
     filter.frequency.setValueAtTime(720, now)
     filter.Q.setValueAtTime(0.7, now)
     gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.018, now + 0.05)
+    gain.gain.exponentialRampToValueAtTime(0.018 * effectiveVolume, now + 0.05)
 
     source.connect(filter)
     filter.connect(gain)
@@ -72,7 +76,7 @@ export const useSandAudio = () => {
     source.start()
 
     nodesRef.current = { source, filter, gain }
-  }, [])
+  }, [effectiveVolume])
 
   const update = useCallback((speed: number) => {
     const nodes = nodesRef.current
@@ -82,11 +86,25 @@ export const useSandAudio = () => {
     const normalizedSpeed = Math.min(Math.max(speed / 1.4, 0), 1)
     const now = context.currentTime
     const frequency = 620 + normalizedSpeed * 780
-    const volume = 0.012 + normalizedSpeed * 0.024
+    const volume = (0.012 + normalizedSpeed * 0.024) * effectiveVolume
 
     nodes.filter.frequency.setTargetAtTime(frequency, now, 0.035)
-    nodes.gain.gain.setTargetAtTime(volume, now, 0.025)
-  }, [])
+    nodes.gain.gain.setTargetAtTime(Math.max(0.0001, volume), now, 0.025)
+  }, [effectiveVolume])
+
+  useEffect(() => {
+    if (effectiveVolume <= 0) {
+      stop()
+      return
+    }
+
+    const nodes = nodesRef.current
+    const context = contextRef.current
+    if (!nodes || !context) return
+
+    const now = context.currentTime
+    nodes.gain.gain.setTargetAtTime(Math.max(0.0001, 0.018 * effectiveVolume), now, 0.04)
+  }, [effectiveVolume, stop])
 
   useEffect(
     () => () => {

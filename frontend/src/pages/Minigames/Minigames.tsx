@@ -8,6 +8,8 @@ import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import darkTreeImage from '../../assets/garden/dark-theme/tree.webp'
 import cloudImage from '../../assets/garden/light-theme/cloud.webp'
 import treeImage from '../../assets/garden/light-theme/tree.webp'
+import darkLanternImage from '../../assets/lanterns/dark-theme/lantern-dark.webp'
+import lanternImage from '../../assets/lanterns/ligth-theme/Lantern-Ligth.webp'
 import darkFishImage from '../../assets/minigames/dark-theme/fish.webp'
 import darkEaselImage from '../../assets/minigames/dark-theme/paddle.webp'
 // import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
@@ -27,31 +29,53 @@ import './Minigames.css'
 
 const FULL_WIDTH = 'w-full'
 const DEFAULT_HOTSPOT = 'left-[2%] top-[4%] h-[92%] w-[96%]'
-const CLOUD_HOTSPOT = 'left-[2%] top-[5%] h-[88%] w-[96%]'
 const RECT_CLIP_PATH = 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'
-const CLOUD_CLIP_PATH =
-    'polygon(1% 60%, 7% 38%, 22% 32%, 33% 12%, 57% 0%, 76% 18%, 84% 34%, 98% 41%, 100% 62%, 86% 72%, 74% 88%, 52% 96%, 30% 89%, 17% 79%, 5% 74%)'
 
-const createCloudElement = (
+interface DecorativeCloud {
+    id: string
+    placementClassName: string
+}
+
+const cloudElements: DecorativeCloud[] = [
+    { id: 'cloud-left',   placementClassName: 'left-[8%]  top-[16%] z-[5] w-[24%] md:left-[18%] md:top-[12%] md:w-[11%]' },
+    { id: 'cloud-center', placementClassName: 'left-[38%] top-[24%] z-[5] w-[28%] md:left-[45%] md:top-[7%]  md:w-[15%]' },
+    { id: 'cloud-right',  placementClassName: 'left-[64%] top-[18%] z-[5] w-[22%] md:left-[76%] md:top-[14%] md:w-[11%]' },
+]
+
+const createLanternElement = (
     id: string,
     placementClassName: string,
+    tooltipClassName = 'top-full mt-2',
 ): SceneElementDefinition => ({
     id,
-    title: 'Nubes que pasan',
-    imageAlt: 'Nubes que pasan',
-    image: { light: cloudImage, dark: darkCloudImage },
+    title: 'Farolitos que vuelan',
+    imageAlt: 'Farol del jardín para soltar pensamientos',
+    image: { light: lanternImage, dark: darkLanternImage },
     placementClassName,
     imageClassName: FULL_WIDTH,
-    hotspotClassName: CLOUD_HOTSPOT,
-    clipPath: CLOUD_CLIP_PATH,
-    tooltipClassName: 'top-full mt-2',
-    to: '/clouds',
+    hotspotClassName: DEFAULT_HOTSPOT,
+    clipPath: RECT_CLIP_PATH,
+    tooltipClassName,
+    to: '/lanterns',
 })
 
-const cloudElements: SceneElementDefinition[] = [
-    createCloudElement('cloud-left', 'left-[8%] top-[16%] z-10 w-[24%] md:left-[18%] md:top-[12%] md:w-[11%]'),
-    createCloudElement('cloud-center', 'left-[38%] top-[24%] z-10 w-[28%] md:left-[45%] md:top-[7%] md:w-[15%]'),
-    createCloudElement('cloud-right', 'left-[64%] top-[18%] z-10 w-[22%] md:left-[76%] md:top-[14%] md:w-[11%]'),
+const lanternElements: SceneElementDefinition[] = [
+    createLanternElement(
+        'lantern-top-left',
+        'left-[7%] top-[7%] z-10 w-[10%] md:left-[8%] md:top-[6%] md:w-[8.8%]',
+    ),
+    createLanternElement(
+        'lantern-upper-left',
+        'left-[25%] top-[9%] z-10 w-[22%] md:left-[29%] md:top-[9%] md:w-[11%]',
+    ),
+    createLanternElement(
+        'lantern-center',
+        'left-[47%] top-[1%] z-10 w-[24%] md:left-[56%] md:top-[1%] md:w-[12%]',
+    ),
+    createLanternElement(
+        'lantern-right',
+        'left-[82%] top-[9%] z-10 w-[10%] md:left-[82.6%] md:top-[9%] md:w-[7.5%]',
+    ),
 ]
 
 const minigameElements: SceneElementDefinition[] = [
@@ -107,7 +131,7 @@ const minigameElements: SceneElementDefinition[] = [
 
 export default function Minigames() {
     const { theme } = useTheme()
-    const { inventory } = useInventory()
+    const { inventory, loading: inventoryLoading } = useInventory()
     const equippedByCategory = resolveEquippedImages(inventory)
     const equippedTreeImage = equippedByCategory.TREE
     const homeReturnElement: SceneElementDefinition = {
@@ -122,10 +146,14 @@ export default function Minigames() {
         tooltipClassName: 'left-[24%] top-[14%] -translate-x-1/2',
         to: '/',
     }
-    const sceneElements = [...cloudElements, ...minigameElements, homeReturnElement]
+    const sceneElements = [...lanternElements, ...minigameElements, homeReturnElement]
+    const isDark = theme === 'dark'
 
     useEffect(() => {
-        const sources = new Set<string>([backgroundImage, mobileBackgroundImage, darkBackgroundImage, darkMobileBackgroundImage])
+        const sources = new Set<string>([
+            backgroundImage, mobileBackgroundImage, darkBackgroundImage, darkMobileBackgroundImage,
+            cloudImage, darkCloudImage,
+        ])
         for (const element of sceneElements) {
             sources.add(element.image.light)
             if (element.image.dark) sources.add(element.image.dark)
@@ -148,7 +176,17 @@ export default function Minigames() {
                     darkAlt="Fondo nocturno de minijuegos"
                 />
 
-                <div className="absolute inset-0 z-10">
+                {cloudElements.map(cloud => (
+                    <div
+                        key={cloud.id}
+                        aria-hidden="true"
+                        className={`absolute pointer-events-none select-none ${cloud.placementClassName}`}
+                    >
+                        <img src={isDark ? darkCloudImage : cloudImage} alt="" className="w-full" />
+                    </div>
+                ))}
+
+                <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${inventoryLoading ? 'opacity-0' : 'opacity-100'}`}>
                     {sceneElements.map(element => (
                         <SceneElement key={element.id} theme={theme} {...element} />
                     ))}
