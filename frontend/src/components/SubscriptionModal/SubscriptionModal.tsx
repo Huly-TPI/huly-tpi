@@ -200,19 +200,19 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
             Elegí el plan que mejor se adapte a vos
           </p>
 
-          <div className="flex justify-center items-stretch gap-2 sm:gap-3 mt-2 px-[1%]">
+          <div className="flex justify-center items-stretch gap-2 sm:gap-3 mt-2 px-[1%] flex-1 min-h-0">
             {plansLoading ? (
               <div className="flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <>
-                <div className="w-[28%] h-[clamp(260px,42vh,340px)]">
+                <div className="w-[28%] h-full">
                   <FreeCard isCurrentPlan={!activeProductId} />
                 </div>
 
                 {basicPlan && (
-                  <div className="w-[28%] h-[clamp(260px,42vh,340px)]">
+                  <div className="w-[28%] h-full">
                     <PaidCard
                       plan={basicPlan}
                       displayName={getDisplayName(basicPlan.planCode, basicPlan.name)}
@@ -235,7 +235,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                 )}
 
                 {premiumPlan && (
-                  <div className="w-[28%] h-[clamp(260px,42vh,340px)]">
+                  <div className="w-[28%] h-full">
                     <PaidCard
                       plan={premiumPlan}
                       displayName={getDisplayName(premiumPlan.planCode, premiumPlan.name)}
