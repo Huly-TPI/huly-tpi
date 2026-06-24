@@ -64,6 +64,7 @@ class ChatControllerTest {
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
         saveChallengeDecisionUseCase = mock(SaveChallengeDecisionUseCase.class);
         chatQuotaService = mock(ChatQuotaService.class);
+        when(chatQuotaService.getRemainingQuota(any())).thenReturn(new ChatQuotaService.RemainingQuota(null, null));
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
