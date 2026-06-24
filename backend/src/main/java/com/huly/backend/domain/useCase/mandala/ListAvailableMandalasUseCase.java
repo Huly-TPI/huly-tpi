@@ -48,10 +48,10 @@ public class ListAvailableMandalasUseCase {
                         .forEach(mandalaId -> sources.putIfAbsent(mandalaId, MandalaUnlockSource.SUBSCRIPTION)));
 
         return activeMandalas.stream()
-                .filter(mandala -> sources.containsKey(mandala.getId()))
                 .map(mandala -> AvailableMandala.builder()
                         .mandala(mandala)
                         .unlockSource(sources.get(mandala.getId()))
+                        .locked(!sources.containsKey(mandala.getId()))
                         .build())
                 .toList();
     }

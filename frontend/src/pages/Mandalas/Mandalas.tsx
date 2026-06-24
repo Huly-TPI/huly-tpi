@@ -5,9 +5,10 @@ import {
   MandalaColoringActivity,
   MandalaGallery,
 } from "../../components/Mandalas";
-import type { MandalaCatalogItem } from "../../components/Mandalas/mandalaTypes";
+import type { MandalaCatalogItem, MandalaAccessType } from "../../components/Mandalas/mandalaTypes";
 import { useAvailableMandalas } from "../../hooks/useAvailableMandalas";
 import { useAuth } from "../../context/auth";
+import { useSubscriptionModal } from "../../context/subscriptionModal";
 import AuthGateModal from "../../components/AuthGateModal/AuthGateModal";
 import ThemeBackground from "../../components/ThemeBackground/ThemeBackground";
 import mandalaEleccionBackgroundDark from "../../assets/mandalas/dark-theme/background/mandala-eleccion-background-dark.webp";
@@ -18,6 +19,15 @@ export default function Mandalas() {
     useState<MandalaCatalogItem | null>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { openSubscriptionModal } = useSubscriptionModal();
+
+  const handleLockedMandala = (accessType: MandalaAccessType) => {
+    if (accessType === 'purchasable') {
+      navigate('/shop')
+    } else {
+      openSubscriptionModal()
+    }
+  }
   const [modalOpen, setModalOpen] = useState(true);
 
   const {
@@ -90,6 +100,7 @@ export default function Mandalas() {
               last={last}
               onPageChange={setPage}
               onSelectMandala={setSelectedMandala}
+              onLockedMandala={handleLockedMandala}
               page={page}
               totalPages={totalPages}
             />

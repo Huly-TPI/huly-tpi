@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/auth'
 import { ToastProvider } from './context/toast'
+import { SubscriptionModalProvider } from './context/subscriptionModal'
 import AppLayout from './layouts/AppLayout'
 import BackofficeLayout from './layouts/BackofficeLayout'
 import BackofficeLogin from './pages/Backoffice/BackofficeLogin'
@@ -33,6 +34,7 @@ const App = () => {
   return (
 
     <AuthProvider>
+      <SubscriptionModalProvider>
       <ToastProvider>
         <Routes>
         <Route path="/backoffice/login" element={<BackofficeLogin />} />
@@ -68,6 +70,7 @@ const App = () => {
         </Route>
         </Routes>
       </ToastProvider>
+      </SubscriptionModalProvider>
     </AuthProvider>
   )
 }

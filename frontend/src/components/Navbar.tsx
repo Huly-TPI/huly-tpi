@@ -3,6 +3,7 @@ import { Menu, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, hasSessionFlag } from '../context/auth'
 import { useTheme } from '../context/theme'
+import { useSubscriptionModal } from '../context/subscriptionModal'
 import logo from '../assets/brand/monocromatico-menta-logo.png'
 import ThemeToggle from './ThemeToggle/ThemeToggle'
 import BadgeModal from './Badges/BadgeModal'
@@ -164,7 +165,7 @@ export default function Navbar() {
 
 function UserMenu({ name }: { name: string }) {
   const [open, setOpen] = useState(false)
-  const [subscriptionOpen, setSubscriptionOpen] = useState(false)
+  const { subscriptionOpen, openSubscriptionModal, closeSubscriptionModal } = useSubscriptionModal()
   const menuRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { logout } = useAuth()
@@ -207,7 +208,7 @@ function UserMenu({ name }: { name: string }) {
 
       <SubscriptionModal
         isOpen={subscriptionOpen}
-        onClose={() => setSubscriptionOpen(false)}
+        onClose={closeSubscriptionModal}
         onRefreshMembership={refreshMembership}
       />
 
@@ -227,7 +228,7 @@ function UserMenu({ name }: { name: string }) {
           <button
             type="button"
             role="menuitem"
-            onClick={() => { setOpen(false); setSubscriptionOpen(true) }}
+            onClick={() => { setOpen(false); openSubscriptionModal() }}
             className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100"
           >
             Suscripciones

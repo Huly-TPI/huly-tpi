@@ -91,7 +91,7 @@ public class PromptBuilderService {
 
     private void appendResponseInstructions(StringBuilder sb) {
         sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA ===");
-        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno para guiar tu respuesta, pero NO los menciones ni hagas referencia a ellos en huly_reply.");
+        sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno para guiar tu respuesta, pero NO los menciones ni hagas referencia a ellos en huly_reply. Nunca uses las palabras 'activación', 'activado' ni 'activada' en tu respuesta.");
         sb.append("\nRespondé SIEMPRE con un JSON válido con exactamente este formato (sin texto fuera del JSON):");
         sb.append("\n{");
         sb.append("\n  \"huly_reply\": \"<tu respuesta empática>\",");
@@ -177,7 +177,7 @@ public class PromptBuilderService {
         sb.append("\nRecomenda actividad solo si hay senales claras de malestar, ansiedad, tristeza, estres, sobrepensamiento, duelo, bloqueo emocional, baja motivacion o necesidad de regulacion.");
         sb.append("\nCRITICO: shouldRecommend debe ser FALSE cuando el usuario esta motivado, positivo, aspirando a algo o expresando un deseo constructivo, aunque 'podria beneficiarse' de una actividad. La recomendacion es para malestar activo, no para estados positivos. Si valence > 0 y dominance > 0, shouldRecommend debe ser false salvo que haya ademas una senal clara de malestar.");
         sb.append("\nUsa los recuerdos del usuario solo si son relevantes. Si el usuario venia bien y ahora expresa una recaida, reflejalo en intensidad y VAD.");
-        sb.append("\nEl VAD representa el estado emocional actual: valence negativo = malestar/tristeza, positivo = bienestar; arousal bajo = apagado/cansado, alto = activado/ansioso; dominance bajo = sin control/abrumado, alto = con control.");
+        sb.append("\nEl VAD representa el estado emocional actual: valence negativo = malestar/tristeza, positivo = bienestar; arousal bajo = apagado/cansado, alto = agitado/ansioso; dominance bajo = sin control/abrumado, alto = con control.");
         sb.append("\nUsa detectedEmotion con uno de estos valores reales del enum: ").append(buildEmotionList()).append(".");
         sb.append("\nSi pensarias en TRISTEZA, usa SADNESS; si pensarias en ANSIEDAD, usa ANXIETY; si pensarias en DUELO, usa GRIEF.");
         sb.append("\nconfidence e intensity deben estar entre 0.0 y 1.0. valence, arousal y dominance deben estar entre -1.0 y 1.0.");
