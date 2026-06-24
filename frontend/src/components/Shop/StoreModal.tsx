@@ -8,6 +8,7 @@ import type { InventoryItemResponse } from '../../api/store'
 import { InlineError } from '../feedback/InlineError'
 import { createStoreItemPreference } from '../../api/payment'
 import { useEffect, useRef } from 'react'
+import { useMembership } from '../../hooks/shop/useMembership'
 
 interface StoreModalProps {
   isOpen: boolean
@@ -26,6 +27,8 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
   const refetchCoins = refetchCoinsProp ?? refetchCoinsOwn
   const { busyId, error: actionError, buy, equip, unequip } = useCosmeticActions()
   const awaitingPaymentRef = useRef(false)
+  const { membership } = useMembership()
+  const userIsPremium = membership?.active === true && membership?.planCode === 'PREMIUM'
 
   useEffect(() => {
     const onFocus = () => {
@@ -129,6 +132,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
                     onBuyWithMoney={handleBuyWithMoney}
                     onEquip={handleEquip}
                     onUnequip={handleUnequip}
+                    userIsPremium={userIsPremium}
                   />
                 )
               })}

@@ -1,6 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.useCase.store.BuyStoreItemUseCase;
 import com.huly.backend.domain.useCase.store.EquipStoreItemUseCase;
@@ -26,8 +27,8 @@ public class StoreUseCaseConfig {
     @Bean
     public BuyStoreItemUseCase buyStoreItemUseCase(StoreItemRepository storeItemRepository,
                                                    UserStoreItemRepository userStoreItemRepository,
-                                                   CoinService coinService) {
-        return new BuyStoreItemUseCase(storeItemRepository, userStoreItemRepository, coinService);
+                                                   CoinService coinService, UserPlanRepository userPlanRepository) {
+        return new BuyStoreItemUseCase(storeItemRepository, userStoreItemRepository, coinService, userPlanRepository);
     }
 
     @Bean 

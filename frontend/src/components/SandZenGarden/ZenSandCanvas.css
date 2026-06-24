@@ -1,7 +1,10 @@
 .zen-sand {
+  --zen-sand-frame-max-width: min(100%, 96rem, calc((100dvh - 12.5rem) * 1.3333));
   width: min(98vw, 112rem);
   margin: 0 auto;
-  padding: clamp(4.75rem, 7vh, 6.25rem) clamp(0.5rem, 2vw, 2rem) 1.25rem;
+  min-height: calc(100dvh - 5rem);
+  padding: clamp(4.75rem, 7vh, 6.25rem) clamp(0.75rem, 2vw, 2rem)
+    clamp(1rem, 3vh, 2rem);
 }
 
 .zen-sand__header {
@@ -42,7 +45,7 @@
   --sand-area-width: 61.7%;
   --sand-area-height: 73.5%;
   position: relative;
-  width: min(100%, 105rem);
+  width: var(--zen-sand-frame-max-width);
   aspect-ratio: 1448 / 1086;
   margin: 0 auto;
   filter: drop-shadow(0 1.4rem 1.8rem rgba(0, 0, 0, 0.34));
@@ -83,7 +86,7 @@
 .zen-sand__export-button {
   position: absolute;
   z-index: 4;
-  top: 10.5%;
+  left: 82%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -105,12 +108,12 @@
 }
 
 .zen-sand__clear-button {
-  right: 15.2%;
+  top: 12%;
   color: #7a2f2f;
 }
 
 .zen-sand__export-button {
-  right: 20.2%;
+  top: 22%;
   color: #5f4a8b;
 }
 
@@ -176,6 +179,7 @@ html.dark .zen-sand__export-button:hover {
 @media (max-width: 640px) {
   .zen-sand {
     width: min(100vw, 46rem);
+    min-height: auto;
     padding: 4.5rem 0 0.75rem;
   }
 
@@ -193,17 +197,17 @@ html.dark .zen-sand__export-button:hover {
 
   .zen-sand__clear-button,
   .zen-sand__export-button {
-    top: 8.5%;
+    left: 82%;
     width: 2.55rem;
     height: 2.55rem;
   }
 
   .zen-sand__clear-button {
-    right: 10.5%;
+    top: 11%;
   }
 
   .zen-sand__export-button {
-    right: 18.8%;
+    top: 19%;
   }
 }
 

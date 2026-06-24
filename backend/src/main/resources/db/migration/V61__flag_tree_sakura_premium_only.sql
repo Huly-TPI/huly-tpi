@@ -1,0 +1,1 @@
+UPDATE store_item SET premium_only = true WHERE asset_key = 'tree-sakura';
