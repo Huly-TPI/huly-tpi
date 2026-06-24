@@ -13,7 +13,6 @@ import BackofficeNotFound from './pages/Backoffice/BackofficeNotFound'
 import Breathing from './pages/Breathing/Breathing'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Challenges from './pages/Challenges/Challenges'
-import CloudsActivity from './pages/CloudsActivity/CloudsActivity'
 import Diary from './pages/Diary/Diary.tsx'
 import Home from './pages/Home'
 import Login from './pages/Login/Login'
@@ -27,6 +26,8 @@ import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
 import Privacy from './pages/Privacy/Privacy'
+import LanternActivity from './pages/Lanterns/Lanterns'
+
 import Unsubscribe from './pages/Unsubscribe/Unsubscribe'
 import { usePreloadImages } from './hooks/usePreloadImages'
 
@@ -61,7 +62,7 @@ const App = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/guided-breathing" element={<Breathing />} />
-          <Route path="/clouds" element={<CloudsActivity />} />
+          <Route path="/lanterns" element={<LanternActivity />} />
           <Route path="/bubbles" element={<BubblesActivity />} />
           <Route path="/mandalas" element={<Mandalas />} />
           <Route path="/zen-sand-garden" element={<SandZenGarden />} />
