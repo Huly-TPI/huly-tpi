@@ -86,11 +86,10 @@ function PaidCard({
   onBuy,
 }: PaidCardProps) {
   const isCurrentPlan = activeProductId === plan.id
-  const blockedByOther = activeProductId !== null && !isCurrentPlan
-  const buttonDisabled = disabled || blockedByOther
+  const buttonDisabled = disabled
   const isBasic = buttonTheme === 'yellow'
 
-  const label = isCurrentPlan ? 'Renovar' : blockedByOther ? 'Plan activo' : `Elegir ${displayName}`
+  const label = `Elegir ${displayName}`
 
   const textColor = isBasic ? 'text-[#8f541f]' : 'text-[#5d3a80]'
   const checkBg = isBasic ? 'bg-[#f5a623]' : 'bg-[#8b5a8e]'
@@ -136,18 +135,19 @@ function PaidCard({
           ))}
         </ul>
 
-        <button
-          type="button"
-          onClick={() => onBuy(plan.id)}
-          disabled={buttonDisabled}
-          className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] ${buttonClass}`}
-        >
-          {buying ? 'Procesando…' : label}
-        </button>
-        {isCurrentPlan && (
-          <div className={`mt-1 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap ${buttonClass}`}>
+        {isCurrentPlan ? (
+          <div className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap ${buttonClass}`}>
             Plan actual
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onBuy(plan.id)}
+            disabled={buttonDisabled}
+            className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] ${buttonClass}`}
+          >
+            {buying ? 'Procesando…' : label}
+          </button>
         )}
       </div>
     </div>
@@ -207,12 +207,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
               </div>
             ) : (
               <>
-                <div className="w-[28%] h-[clamp(240px,40vh,320px)]">
+                <div className="w-[28%] h-[clamp(220px,38vh,290px)]">
                   <FreeCard isCurrentPlan={!activeProductId} />
                 </div>
 
                 {basicPlan && (
-                  <div className="w-[28%] h-[clamp(240px,40vh,320px)]">
+                  <div className="w-[28%] h-[clamp(220px,38vh,290px)]">
                     <PaidCard
                       plan={basicPlan}
                       displayName={getDisplayName(basicPlan.planCode, basicPlan.name)}
@@ -235,7 +235,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                 )}
 
                 {premiumPlan && (
-                  <div className="w-[28%] h-[clamp(240px,40vh,320px)]">
+                  <div className="w-[28%] h-[clamp(220px,38vh,290px)]">
                     <PaidCard
                       plan={premiumPlan}
                       displayName={getDisplayName(premiumPlan.planCode, premiumPlan.name)}
