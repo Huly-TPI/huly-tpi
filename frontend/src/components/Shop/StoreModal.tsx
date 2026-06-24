@@ -14,12 +14,16 @@ interface StoreModalProps {
   onClose: () => void
   inventory?: InventoryItemResponse[]
   refetchInventory?: () => Promise<void>
+  coins?: number | null
+  refetchCoins?: () => Promise<void>
 }
 
 
-export default function StoreModal({ isOpen, onClose, inventory = [], refetchInventory = async () => { } }: StoreModalProps) {
+export default function StoreModal({ isOpen, onClose, inventory = [], refetchInventory = async () => { }, coins: coinsProp, refetchCoins: refetchCoinsProp }: StoreModalProps) {
   const { items, loading: itemsLoading, error: itemsError } = useStoreItems()
-  const { coins, refresh: refetchCoins } = useUserCoins()
+  const { coins: coinsOwn, refresh: refetchCoinsOwn } = useUserCoins()
+  const coins = coinsProp !== undefined ? coinsProp : coinsOwn
+  const refetchCoins = refetchCoinsProp ?? refetchCoinsOwn
   const { busyId, error: actionError, buy, equip, unequip } = useCosmeticActions()
   const awaitingPaymentRef = useRef(false)
 

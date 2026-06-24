@@ -4,9 +4,9 @@ import modalBg from '../../assets/rewards/modal.webp'
 import cardBg from '../../assets/rewards/cardSeed.webp'
 import giftIcon from '../../assets/rewards/gift.webp'
 import brote from '../../assets/rewards/brote.webp'
-import seedIcon from '../../assets/rewards/seed.webp'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
 import type { DailyRewardDay } from '../../api/dailyRewards'
+import { RewardToast } from '../Shop/RewardToast'
 
 
 const MAX_STREAK_DAYS = 7
@@ -35,11 +35,6 @@ interface RewardCardProps {
   isToday: boolean
   claiming: boolean
   onClaim: () => void
-}
-
-interface ClaimToastProps {
-  coins: number
-  onDismiss: () => void
 }
 
 function getCardStatus(
@@ -112,42 +107,6 @@ function RewardCard({ day, cardStatus, isToday, claiming, onClaim }: RewardCardP
           </button>
         )}
       </div>
-    </div>
-  )
-}
-
-function ClaimToast({ coins, onDismiss }: ClaimToastProps) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="fixed bottom-24 right-5 max-[640px]:right-4 max-[640px]:left-4 z-[60] flex items-center justify-between gap-3 rounded-2xl bg-[#f3d8aa]/95 border border-[#b98a54] px-4 py-3 shadow-[0_6px_12px_rgba(91,60,24,0.25),inset_0_1px_0_rgba(255,255,255,0.45)] text-[#6b4a2a]"
-    >
-      <div className="flex items-center gap-2">
-        <img
-          src={seedIcon}
-          alt=""
-          aria-hidden="true"
-          className="w-10 h-10 object-contain shrink-0"
-        />
-
-        <div>
-          <p className="text-[12px] font-black m-0 leading-none">
-            ¡Recompensa reclamada!
-          </p>
-          <p className="text-[15px] font-black m-0 mt-1 leading-none">
-            +<span className="text-[#4d8a2d]">{coins} semillas</span>
-          </p>
-        </div>
-      </div>
-
-      <button
-        aria-label="Cerrar notificación"
-        onClick={onDismiss}
-        className="rounded-full p-1.5 bg-[#d9b77e]/60 hover:bg-[#c99d61]/70 text-[#7b5c3c] transition"
-      >
-        <X className="w-4 h-4" />
-      </button>
     </div>
   )
 }
@@ -302,7 +261,7 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
       </div>
 
       {toastCoins !== null && (
-        <ClaimToast coins={toastCoins} onDismiss={dismissToast} />
+        <RewardToast coins={toastCoins} onClose={dismissToast} />
       )}
     </div>
   )

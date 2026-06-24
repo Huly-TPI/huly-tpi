@@ -61,7 +61,7 @@ export default function Login() {
   }
 
   return (
-    <AuthPageLayout>
+    <AuthPageLayout variant="login">
       <AuthForm
         title="¡Bienvenido!"
         subtitle="Ingresá a tu jardín"
