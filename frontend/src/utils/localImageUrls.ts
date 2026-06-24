@@ -1,3 +1,5 @@
+import { criticalImageUrls } from './criticalImageUrls'
+
 const assetModules = import.meta.glob(
   '../assets/**/*.{webp,avif,png,jpg,jpeg,gif,svg}',
   { eager: true, query: '?url', import: 'default' },
@@ -18,3 +20,7 @@ const publicUrls = [
 ]
 
 export const localImageUrls: string[] = [...assetUrls, ...publicUrls]
+const criticalSet = new Set(criticalImageUrls)
+export const restImageUrls: string[] = localImageUrls.filter(
+  (url) => !criticalSet.has(url),
+)

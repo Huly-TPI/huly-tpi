@@ -1,14 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { renderHook, waitFor } from '@testing-library/react'
 import { usePreloadImages } from '../../hooks/usePreloadImages'
 import { preloadImages } from '../../utils/preloadImages'
-import { localImageUrls } from '../../utils/localImageUrls'
+import { criticalImageUrls } from '../../utils/criticalImageUrls'
+import { restImageUrls } from '../../utils/localImageUrls'
 
 vi.mock('../../utils/preloadImages', () => ({
   preloadImages: vi.fn().mockResolvedValue({ loaded: [], failed: [] }),
 }))
+vi.mock('../../utils/criticalImageUrls', () => ({
+  criticalImageUrls: ['critical-1.webp', 'critical-2.webp'],
+}))
 vi.mock('../../utils/localImageUrls', () => ({
-  localImageUrls: ['a.webp', 'b.webp', 'c.webp'],
+  localImageUrls: ['critical-1.webp', 'critical-2.webp', 'rest-1.webp'],
+  restImageUrls: ['rest-1.webp'],
 }))
 
 describe('usePreloadImages', () => {
@@ -24,22 +29,23 @@ describe('usePreloadImages', () => {
     vi.unstubAllGlobals()
   })
 
-  it('dispara la precarga de todas las imágenes locales al montar', () => {
+  it('precarga primero las imágenes críticas y después el resto', async () => {
     renderHook(() => usePreloadImages())
 
-    expect(preloadImages).toHaveBeenCalledTimes(1)
-    expect(preloadImages).toHaveBeenCalledWith(localImageUrls, expect.any(Object))
+    await waitFor(() => expect(preloadImages).toHaveBeenCalledTimes(2))
+    expect(preloadImages).toHaveBeenNthCalledWith(1, criticalImageUrls, expect.any(Object))
+    expect(preloadImages).toHaveBeenNthCalledWith(2, restImageUrls, expect.any(Object))
   })
 
-  it('usa el fallback con setTimeout si no existe requestIdleCallback', () => {
+  it('usa el fallback con setTimeout si no existe requestIdleCallback', async () => {
     vi.useFakeTimers()
     vi.stubGlobal('requestIdleCallback', undefined)
 
     renderHook(() => usePreloadImages())
     expect(preloadImages).not.toHaveBeenCalled()
 
-    vi.runAllTimers()
-    expect(preloadImages).toHaveBeenCalledTimes(1)
+    await vi.runAllTimersAsync()
+    expect(preloadImages).toHaveBeenCalledWith(criticalImageUrls, expect.any(Object))
 
     vi.useRealTimers()
   })

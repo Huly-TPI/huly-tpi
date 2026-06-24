@@ -1,11 +1,16 @@
 import { useEffect } from 'react'
 import { preloadImages } from '../utils/preloadImages'
 import { localImageUrls } from '../utils/localImageUrls'
+import { criticalImageUrls } from '../utils/criticalImageUrls'
+import { restImageUrls } from '../utils/localImageUrls'
 
 export function usePreloadImages(): void {
   useEffect(() => {
-    const start = () => {
-      void preloadImages(localImageUrls, { concurrency: 6, retries: 2 })
+     const start = () => {
+      void (async () => {
+        await preloadImages(criticalImageUrls, { concurrency: 8, retries: 2 })
+        await preloadImages(restImageUrls, { concurrency: 4, retries: 2 })
+      })()
     }
 
     const idle = (
