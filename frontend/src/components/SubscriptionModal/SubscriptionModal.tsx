@@ -183,9 +183,9 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label="Planes de suscripción" className="relative z-10 w-full max-w-[720px] max-[640px]:max-w-[390px]" onClick={e => e.stopPropagation()}>
-        <img src={modalBg} alt="" aria-hidden="true" className="w-full h-auto max-h-[80vh] object-contain select-none pointer-events-none block" draggable={false} />
+        <img src={modalBg} alt="" aria-hidden="true" className="w-full h-auto select-none pointer-events-none block" draggable={false} />
 
-        <div className="absolute inset-0 px-[8%] pt-[9%] pb-[6%] flex flex-col overflow-hidden">
+        <div className="absolute inset-0 px-[8%] pt-[9%] pb-[8%] flex flex-col overflow-hidden">
           <button onClick={onClose} aria-label="Cerrar planes de suscripción" className="absolute top-[3%] right-[3%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20">
             <X className="w-5 h-5" />
           </button>
@@ -207,12 +207,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
               </div>
             ) : (
               <>
-                <div className="w-[28%] h-[clamp(260px,45vh,360px)]">
+                <div className="w-[28%] h-[clamp(240px,40vh,320px)]">
                   <FreeCard isCurrentPlan={!activeProductId} />
                 </div>
 
                 {basicPlan && (
-                  <div className="w-[28%] h-[clamp(260px,45vh,360px)]">
+                  <div className="w-[28%] h-[clamp(240px,40vh,320px)]">
                     <PaidCard
                       plan={basicPlan}
                       displayName={getDisplayName(basicPlan.planCode, basicPlan.name)}
@@ -221,8 +221,9 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                       features={[
                         'Chatbot libre',
                         'Items exclusivos de la tienda',
-                        'Mandalas exclusivos (plan básico)',
+                        'Mandalas exclusivos',
                         '3 audios por día',
+                        '1.5x recompensas diarias',
                       ]}
                       buying={buyingId === basicPlan.id}
                       disabled={buyingId !== null}
@@ -234,7 +235,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                 )}
 
                 {premiumPlan && (
-                  <div className="w-[28%] h-[clamp(260px,45vh,360px)]">
+                  <div className="w-[28%] h-[clamp(240px,40vh,320px)]">
                     <PaidCard
                       plan={premiumPlan}
                       displayName={getDisplayName(premiumPlan.planCode, premiumPlan.name)}
