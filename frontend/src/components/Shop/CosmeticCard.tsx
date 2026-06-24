@@ -1,6 +1,7 @@
 import type { StoreItemResponse } from '../../api/store'
 import { cosmeticAssets } from '../Scene/cosmeticAssets'
 import { mandalaAssetByKey } from '../Mandalas/mandalaAssets'
+import seedIcon from '../../assets/shop-seed/1seed.webp'
 
 interface CosmeticCardProps {
   item: StoreItemResponse
@@ -35,7 +36,7 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
         </div>
       ) : (
         <div className="flex items-center gap-1">
-          <span aria-hidden="true" className="text-sm text-yellow-500">🌱</span>
+          <img src={seedIcon} alt="" aria-hidden="true" className="w-6 h-6 object-contain shrink-0" />
           <span className="text-xs font-semibold text-yellow-700">{item.priceCoins.toLocaleString('es-AR')} semillas</span>
         </div>
       )}
