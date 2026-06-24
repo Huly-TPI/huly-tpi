@@ -16,6 +16,8 @@ export type RequestOptions = Omit<RequestInit, 'body'> & {
   skipAuthRedirect?: boolean
 }
 
+type BinaryBody = Blob | ArrayBuffer
+
 export class SessionExpiredError extends Error {
   constructor() {
     super('Session expired')
@@ -84,17 +86,18 @@ async function request<T>(
   const { body, headers, skipAuthRedirect, ...rest } = options
   const token = getToken()
   const isFormData = body instanceof FormData
+  const isBinaryBody = body instanceof Blob || body instanceof ArrayBuffer
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     cache: 'no-store',
     credentials: 'include',
     headers: {
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(isFormData || isBinaryBody ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
+    body: body !== undefined ? (isFormData || isBinaryBody ? body as BodyInit : JSON.stringify(body)) : undefined,
   })
 
   if (
@@ -118,7 +121,7 @@ async function request<T>(
       errorBody?.message ||
       errorBody?.error ||
       `Error HTTP ${response.status}`
-    throw new ApiError(message, errorBody?.errors ?? {})
+    throw new ApiError(message, errorBody?.errors ?? {}, response.status)
   }
 
   const text = await response.text()
@@ -150,11 +153,53 @@ async function requestMultipart<T>(path: string, formData: FormData, retry = tru
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null)
     const message = errorBody?.message || errorBody?.error || `Error HTTP ${response.status}`
-    throw new ApiError(message, errorBody?.errors ?? {})
+    throw new ApiError(message, errorBody?.errors ?? {}, response.status)
   }
 
   const text = await response.text()
   return (text ? JSON.parse(text) : null) as T
+}
+
+async function requestBlob(path: string, options: RequestOptions = {}, retry = true): Promise<Blob> {
+  const { body, headers, skipAuthRedirect, ...rest } = options
+  const token = getToken()
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...rest,
+    cache: 'no-store',
+    credentials: 'include',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+    body: body as BinaryBody | undefined,
+  })
+
+  if (
+    response.status === 401 &&
+    retry &&
+    !skipAuthRedirect &&
+    path !== '/auth/refresh'
+  ) {
+    const newToken = await refreshAccessToken()
+    if (newToken) {
+      return requestBlob(path, options, false)
+    }
+    clearToken()
+    window.dispatchEvent(new CustomEvent('auth:expired'))
+    throw new SessionExpiredError()
+  }
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null)
+    const message =
+      errorBody?.message ||
+      errorBody?.error ||
+      `Error HTTP ${response.status}`
+    throw new ApiError(message, errorBody?.errors ?? {}, response.status)
+  }
+
+  return response.blob()
 }
 
 export const api = {
@@ -166,6 +211,18 @@ export const api = {
     requestMultipart<T>(path, formData, true, signal),
   put: <T>(path: string, body: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'PUT', body }),
+  putBlob: <T>(path: string, body: BinaryBody, options?: RequestOptions) =>
+    request<T>(path, {
+      ...options,
+      method: 'PUT',
+      body,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        ...options?.headers,
+      },
+    }),
+  getBlob: (path: string, options?: RequestOptions) =>
+    requestBlob(path, { ...options, method: 'GET' }),
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'PATCH', body }),
   delete: <T>(path: string, options?: RequestOptions) =>

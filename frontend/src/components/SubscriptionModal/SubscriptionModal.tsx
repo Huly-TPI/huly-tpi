@@ -221,9 +221,9 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                       features={[
                         'Chatbot libre',
                         'Items exclusivos de la tienda',
-                        'Mandalas exclusivos (plan básico)',
+                        'Mandalas exclusivos',
                         '3 audios por día',
-                        '1.5x recompensas',
+                        '1.5x recompensas diarias',
                       ]}
                       buying={buyingId === basicPlan.id}
                       disabled={buyingId !== null}
@@ -245,7 +245,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                       features={[
                         'Chatbot libre',
                         'Items exclusivos de la tienda',
-                        'Mandalas exclusivos Huly',
+                        'Mandalas exclusivos',
                         '1000 monedas',
                         'Audios libres',
                         '1.5x recompensas diarias',

@@ -30,36 +30,60 @@ public class ChatQuotaService {
     private final ProductRepository productRepository;
     private final ChatMessageRepository chatMessageRepository;
 
+    /** Cuota restante para el día y, cuando llega a 0, el mensaje de límite a mostrar. */
+    public record RemainingQuota(Integer remaining, String limitMessage) {}
+
+    private record QuotaInfo(Integer limit, boolean isPaidPlan) {}
+
     /**
      * Lanza {@link BusinessRuleException} (→ HTTP 400) si el usuario superó su tope diario.
      * No hace nada si su plan no tiene tope (chat_daily_limit NULL = ilimitado).
      */
     public void assertWithinLimit(Long userId) {
-        Instant now = Instant.now();
-        Optional<UserPlan> activePlan = userPlanRepository.findByUser(userId)
-                .filter(p -> p.isActive(now));
-
-        Integer limit;
-        if (activePlan.isPresent()) {
-            Long productId = activePlan.get().getProductId();
-            limit = productId == null
-                    ? null
-                    : productRepository.findById(productId).map(Product::getChatDailyLimit).orElse(null);
-        } else {
-            limit = FREE_DAILY_LIMIT;
-        }
-
-        if (limit == null) {
-            return; // plan sin tope (ilimitado)
-        }
+        QuotaInfo quota = loadQuotaInfo(userId);
+        if (quota.limit() == null) return;
 
         Instant startOfDay = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
         long usedToday = chatMessageRepository.countUserMessagesSince(userId, startOfDay);
-        if (usedToday >= limit) {
-            throw new BusinessRuleException(activePlan.isPresent()
-                    ? "Alcanzaste el límite diario de " + limit + " mensajes de tu plan. Volvé a intentarlo mañana."
-                    : "Alcanzaste el límite diario de " + limit
-                            + " mensajes del plan gratuito. Suscribite a un plan para seguir usando el chat.");
+        if (usedToday >= quota.limit()) {
+            throw new BusinessRuleException(buildLimitMessage(quota));
         }
+    }
+
+    /**
+     * Devuelve los mensajes restantes para hoy y el mensaje de límite si llegó a 0.
+     * Llamar DESPUÉS de guardar el mensaje (para reflejar el conteo actualizado).
+     * Retorna {@code remaining = null} si el plan es ilimitado.
+     */
+    public RemainingQuota getRemainingQuota(Long userId) {
+        QuotaInfo quota = loadQuotaInfo(userId);
+        if (quota.limit() == null) return new RemainingQuota(null, null);
+
+        Instant startOfDay = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
+        long usedToday = chatMessageRepository.countUserMessagesSince(userId, startOfDay);
+        int remaining = (int) Math.max(0, quota.limit() - usedToday);
+        String limitMessage = remaining == 0 ? buildLimitMessage(quota) : null;
+        return new RemainingQuota(remaining, limitMessage);
+    }
+
+    private QuotaInfo loadQuotaInfo(Long userId) {
+        Instant now = Instant.now();
+        Optional<UserPlan> activePlan = userPlanRepository.findByUser(userId)
+                .filter(p -> p.isActive(now));
+        if (activePlan.isPresent()) {
+            Long productId = activePlan.get().getProductId();
+            Integer limit = productId == null
+                    ? null
+                    : productRepository.findById(productId).map(Product::getChatDailyLimit).orElse(null);
+            return new QuotaInfo(limit, true);
+        }
+        return new QuotaInfo(FREE_DAILY_LIMIT, false);
+    }
+
+    private String buildLimitMessage(QuotaInfo quota) {
+        return quota.isPaidPlan()
+                ? "Alcanzaste el límite diario de " + quota.limit() + " mensajes de tu plan. Volvé a intentarlo mañana."
+                : "Alcanzaste el límite diario de " + quota.limit()
+                        + " mensajes del plan gratuito. Suscribite a un plan para seguir usando el chat.";
     }
 }

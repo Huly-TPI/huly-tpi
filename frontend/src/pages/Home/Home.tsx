@@ -293,9 +293,9 @@ export default function Home() {
           type="button"
           onClick={() => setIsStoreOpen(true)}
           aria-label="Abrir tienda"
-          className="fixed bottom-24 right-6 z-40 w-24 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+          className="fixed bottom-24 right-4 z-40 h-20 w-20 transition hover:scale-105 active:scale-95"
         >
-          <img src={storeButtonImage} alt="Abrir tienda" className="w-full h-auto" />
+          <img src={storeButtonImage} alt="Abrir tienda" className="h-full w-full object-contain" />
         </button>
       )}
 
@@ -328,7 +328,7 @@ export default function Home() {
         </div>
       )}
 
-      <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
+      <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} coins={coins} refetchCoins={refreshCoins} />
       <RewardsModal isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} onClaimed={refreshCoins} />
       <SeedShopModal isOpen={isSeedShopOpen} onClose={() => setIsSeedShopOpen(false)} />
 
