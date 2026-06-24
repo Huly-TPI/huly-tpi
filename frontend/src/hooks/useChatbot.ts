@@ -126,6 +126,7 @@ export function useChatbot() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [isLoadingOlderHistory, setIsLoadingOlderHistory] = useState(false)
   const [error, setError] = useState('')
+  const [audioLimitMessage, setAudioLimitMessage] = useState('')
   const { user } = useAuth()
   const conversationStorageKey = useMemo(
     () => getConversationStorageKey(user?.id),
@@ -176,24 +177,38 @@ export function useChatbot() {
     const loadHistory = async () => {
       setIsLoadingHistory(true)
 
-      const limitDate = localStorage.getItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`)
+      const userKey = user?.id ?? 'guest'
       const today = getTodayDateString()
-      if (limitDate === today) {
+
+      const chatLimitDate = localStorage.getItem(`huly:chat-limit-date:${userKey}`)
+      const audioLimitDate = localStorage.getItem(`huly:audio-limit-date:${userKey}`)
+      const needsMembershipCheck = chatLimitDate === today || audioLimitDate === today
+
+      if (needsMembershipCheck) {
+        let membership = null
         try {
-          const membership = await getMyMembership()
-          if (membership?.active) {
-            localStorage.removeItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`)
-            localStorage.removeItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`)
-          } else {
-            const limitMsg = localStorage.getItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`)
-            if (limitMsg) {
-              setError(limitMsg)
-            }
-          }
+          membership = await getMyMembership()
         } catch {
-          const limitMsg = localStorage.getItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`)
-          if (limitMsg) {
-            setError(limitMsg)
+          // red sin conexión: restaurar desde localStorage
+        }
+
+        if (chatLimitDate === today) {
+          if (membership?.active) {
+            localStorage.removeItem(`huly:chat-limit-date:${userKey}`)
+            localStorage.removeItem(`huly:chat-limit-message:${userKey}`)
+          } else {
+            const limitMsg = localStorage.getItem(`huly:chat-limit-message:${userKey}`)
+            if (limitMsg) setError(limitMsg)
+          }
+        }
+
+        if (audioLimitDate === today) {
+          if (membership?.active) {
+            localStorage.removeItem(`huly:audio-limit-date:${userKey}`)
+            localStorage.removeItem(`huly:audio-limit-message:${userKey}`)
+          } else {
+            const audioMsg = localStorage.getItem(`huly:audio-limit-message:${userKey}`)
+            if (audioMsg) setAudioLimitMessage(audioMsg)
           }
         }
       }
@@ -356,22 +371,38 @@ export function useChatbot() {
       ])
       shouldAutoScrollRef.current = true
 
+      const userKey = user?.id ?? 'guest'
       if (response.remaining_messages === 0) {
         const limitMsg =
           response.limit_message ??
           'Alcanzaste el límite diario de mensajes. Suscribite a un plan para seguir usando el chat.'
-        localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
-        localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, limitMsg)
+        localStorage.setItem(`huly:chat-limit-date:${userKey}`, getTodayDateString())
+        localStorage.setItem(`huly:chat-limit-message:${userKey}`, limitMsg)
         setError(limitMsg)
+      }
+      if (response.remaining_audio_messages === 0) {
+        const audioMsg =
+          response.audio_limit_message ??
+          'Alcanzaste el límite de audios diarios de tu plan. Volvé a intentarlo mañana.'
+        localStorage.setItem(`huly:audio-limit-date:${userKey}`, getTodayDateString())
+        localStorage.setItem(`huly:audio-limit-message:${userKey}`, audioMsg)
+        setAudioLimitMessage(audioMsg)
       }
     } catch (requestError) {
       if (requestError instanceof Error && requestError.name !== 'AbortError') {
         const errorMsg = requestError.message
+        const userKey = user?.id ?? 'guest'
         if (errorMsg.includes('Alcanzaste el límite diario')) {
-          localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
-          localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, errorMsg)
+          localStorage.setItem(`huly:chat-limit-date:${userKey}`, getTodayDateString())
+          localStorage.setItem(`huly:chat-limit-message:${userKey}`, errorMsg)
         }
-        setError(errorMsg)
+        if (errorMsg.includes('límite de') && errorMsg.includes('audios')) {
+          localStorage.setItem(`huly:audio-limit-date:${userKey}`, getTodayDateString())
+          localStorage.setItem(`huly:audio-limit-message:${userKey}`, errorMsg)
+          setAudioLimitMessage(errorMsg)
+        } else {
+          setError(errorMsg)
+        }
       }
     } finally {
       audioAbortRef.current = null
@@ -531,6 +562,8 @@ export function useChatbot() {
     isSending,
     isLoadingHistory,
     error,
+    setError,
+    audioLimitMessage,
     bottomRef,
     messagesContainerRef,
     isLoadingOlderHistory,
