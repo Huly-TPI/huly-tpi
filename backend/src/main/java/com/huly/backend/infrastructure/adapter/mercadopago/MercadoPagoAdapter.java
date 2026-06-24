@@ -60,7 +60,7 @@ public class MercadoPagoAdapter implements MercadoPagoPort {
 
             // Botón "Volver al sitio" + redirección automática tras el pago.
             if (frontendUrl != null && !frontendUrl.isBlank()) {
-                String shopUrl = frontendUrl + "/shop";
+                String shopUrl = frontendUrl;
                 builder.backUrls(PreferenceBackUrlsRequest.builder()
                         .success(shopUrl + "?payment=success")
                         .pending(shopUrl + "?payment=pending")

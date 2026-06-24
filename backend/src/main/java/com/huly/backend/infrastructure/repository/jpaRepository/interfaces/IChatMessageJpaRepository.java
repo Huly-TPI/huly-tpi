@@ -37,4 +37,7 @@ public interface IChatMessageJpaRepository extends JpaRepository<ChatMessageEnti
     );
 
     long countByChatSessionAppUserIdAndRoleAndCreatedAtAfter(Long userId, MessageRole role, Instant since);
+
+    long countByChatSessionAppUserIdAndRoleAndContentStartingWithAndCreatedAtAfter(
+            Long userId, MessageRole role, String contentPrefix, Instant since);
 }

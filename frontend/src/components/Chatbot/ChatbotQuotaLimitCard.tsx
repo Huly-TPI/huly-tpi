@@ -10,15 +10,19 @@ interface ChatbotQuotaLimitCardProps {
 export default function ChatbotQuotaLimitCard({ message, onClose }: ChatbotQuotaLimitCardProps) {
   const navigate = useNavigate()
 
-  // Detect if it is the free plan limit
   const isFreePlan = message.includes('plan gratuito')
+  const isAudioLock = message.includes('envío de audio')
+  const isAudioDailyLimit = message.includes('audios diarios')
+  const cardTitle = isAudioLock ? 'Función No Disponible'
+    : isAudioDailyLimit ? 'Límite de Audios Alcanzado'
+    : 'Límite Diario Alcanzado'
 
   return (
     <div className="w-full min-w-0 rounded-xl border border-violeta/30 bg-[var(--surface-accent)] p-3 sm:p-4 flex flex-col gap-3">
       <div>
         <p className="text-xs font-bold uppercase tracking-wide text-violeta flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-violeta animate-pulse" />
-          Límite Diario Alcanzado
+          {cardTitle}
         </p>
         <p className="mt-1 break-words text-xs leading-relaxed text-[var(--text-secondary)] sm:text-sm">
           {message}

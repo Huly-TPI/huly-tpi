@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
@@ -42,6 +43,7 @@ public class ChatController {
     private final AudioChatUseCase audioChatUseCase;
     private final ListChatHistoryUseCase listChatHistoryUseCase;
     private final SaveChallengeDecisionUseCase saveChallengeDecisionUseCase;
+    private final ChatQuotaService chatQuotaService;
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(
@@ -49,7 +51,8 @@ public class ChatController {
             @RequestBody @Valid ChatRequest request) {
         Long userId = getUserId(principal);
         ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
-        return ResponseEntity.ok(toResponse(reply));
+        ChatQuotaService.RemainingQuota quota = chatQuotaService.getRemainingQuota(userId);
+        return ResponseEntity.ok(toResponse(reply, quota, null, null));
     }
 
     @PostMapping(value = "/audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -58,8 +61,11 @@ public class ChatController {
             @RequestPart("audio") MultipartFile audio,
             @RequestParam("conversationId") String conversationId) {
         Long userId = getUserId(principal);
+        chatQuotaService.assertWithinAudioLimit(userId);
         ChatReply reply = audioChatUseCase.execute(audio, conversationId, userId);
-        return ResponseEntity.ok(toResponse(reply));
+        ChatQuotaService.RemainingQuota quota = chatQuotaService.getRemainingQuota(userId);
+        ChatQuotaService.RemainingAudioQuota audioQuota = chatQuotaService.getRemainingAudioQuota(userId);
+        return ResponseEntity.ok(toResponse(reply, quota, audioQuota.remaining(), audioQuota.limitMessage()));
     }
 
     @PostMapping("/challenge-decision")
@@ -96,7 +102,8 @@ public class ChatController {
         return Long.parseLong(principal.getUsername());
     }
 
-    private ChatResponse toResponse(ChatReply reply) {
+    private ChatResponse toResponse(ChatReply reply, ChatQuotaService.RemainingQuota quota,
+                                    Integer remainingAudio, String audioLimitMessage) {
         String emotion = reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
         ChatResponse.Metadata metadata = reply.riskDetected() != null
                 ? new ChatResponse.Metadata(reply.riskDetected(), reply.matchedWord())
@@ -104,7 +111,8 @@ public class ChatController {
         ChatResponse.GeneratedChallenge challenge = reply.generatedChallenge() != null
                 ? new ChatResponse.GeneratedChallenge(reply.generatedChallenge().title(), reply.generatedChallenge().description())
                 : null;
-        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()), challenge, metadata);
+        return new ChatResponse(reply.content(), emotion, reply.intensity(), toSuggestedAction(reply.suggestedAction()),
+                challenge, metadata, quota.remaining(), quota.limitMessage(), remainingAudio, audioLimitMessage);
     }
 
     private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {

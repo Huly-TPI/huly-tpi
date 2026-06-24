@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { getBackendOrigin } from '../../api/client'
 import type { UserGoalResponse } from '../../api/userGoals'
 import Button from '../Buttons/Button/Button'
+import seedIcon from '../../assets/rewards/seed.webp'
 
 interface GoalDetailPanelProps {
   goal: UserGoalResponse
@@ -68,12 +69,12 @@ export default function GoalDetailPanel({ goal, onClose, onComplete, onEdit, onD
           <div className="flex items-center gap-[0.5rem] mb-[0.4rem]">
             <span className="flex items-center gap-[0.2rem] text-[0.7rem] text-[#7a5c38]">
               Sin foto: <strong>{goal.coinsReward}</strong>
-              <span className="inline-block w-[0.75rem] h-[0.75rem] rounded-full bg-yellow-400 border border-yellow-500 flex-shrink-0" />
+              <img src={seedIcon} alt="semillas" className="inline-block w-[0.85rem] h-[0.85rem] object-contain flex-shrink-0" />
             </span>
             <span className="text-[#c5a87a] text-[0.65rem]">·</span>
             <span className="flex items-center gap-[0.2rem] text-[0.7rem] font-bold text-[#8a6c2a]">
               Con foto: <strong>{goal.coinsRewardWithImage}</strong>
-              <span className="inline-block w-[0.75rem] h-[0.75rem] rounded-full bg-yellow-400 border border-yellow-500 flex-shrink-0" />
+              <img src={seedIcon} alt="semillas" className="inline-block w-[0.85rem] h-[0.85rem] object-contain flex-shrink-0" />
             </span>
           </div>
           <button

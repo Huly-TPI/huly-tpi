@@ -7,6 +7,7 @@ import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
+import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
 import com.huly.backend.domain.useCase.chat.ListChatHistoryUseCase;
@@ -52,6 +53,7 @@ class ChatControllerTest {
     private AudioChatUseCase audioChatUseCase;
     private ListChatHistoryUseCase listChatHistoryUseCase;
     private SaveChallengeDecisionUseCase saveChallengeDecisionUseCase;
+    private ChatQuotaService chatQuotaService;
 
     private static final Long USER_ID = 1L;
 
@@ -61,6 +63,9 @@ class ChatControllerTest {
         audioChatUseCase = mock(AudioChatUseCase.class);
         listChatHistoryUseCase = mock(ListChatHistoryUseCase.class);
         saveChallengeDecisionUseCase = mock(SaveChallengeDecisionUseCase.class);
+        chatQuotaService = mock(ChatQuotaService.class);
+        when(chatQuotaService.getRemainingQuota(any())).thenReturn(new ChatQuotaService.RemainingQuota(null, null));
+        when(chatQuotaService.getRemainingAudioQuota(any())).thenReturn(new ChatQuotaService.RemainingAudioQuota(null, null));
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
@@ -70,7 +75,8 @@ class ChatControllerTest {
                 chatUseCase,
                 audioChatUseCase,
                 listChatHistoryUseCase,
-                saveChallengeDecisionUseCase
+                saveChallengeDecisionUseCase,
+                chatQuotaService
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())

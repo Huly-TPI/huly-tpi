@@ -56,6 +56,7 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .type(entity.getType())
                 .planCode(entity.getPlanCode())
                 .chatDailyLimit(entity.getChatDailyLimit())
+                .audioDailyLimit(entity.getAudioDailyLimit())
                 .build();
     }
 }

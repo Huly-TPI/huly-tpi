@@ -17,4 +17,5 @@ public class Product {
     private ProductType type;
     private String planCode;
     private Integer chatDailyLimit;
+    private Integer audioDailyLimit;
 }

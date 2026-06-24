@@ -26,6 +26,10 @@ export interface ChatResponseDto {
   suggested_action?: SuggestedActionDto | null
   generated_challenge?: GeneratedChallengeDto | null
   metadata?: ChatMetadataDto | null
+  remaining_messages?: number | null
+  limit_message?: string | null
+  remaining_audio_messages?: number | null
+  audio_limit_message?: string | null
 }
 
 export interface ChatRequestDto {

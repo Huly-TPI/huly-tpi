@@ -20,10 +20,10 @@ import darkCloudImage from '../../assets/garden/dark-theme/cloud.webp'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import NotificationsPrompt from '../../components/Notifications/NotificationsPrompt/NotificationsPrompt'
 import StoreModal from '../../components/Shop/StoreModal'
+import storeButtonImage from '../../assets/garden/store-button.webp'
 import RewardsModal from '../../components/RewardsModal/RewardsModal'
 import SeedShopModal from '../../components/SeedShopModal/SeedShopModal'
 import ComebackRewardModal from '../../components/Shop/ComebackRewardModal'
-import { ShoppingBag } from 'lucide-react'
 import SceneElement, { type SceneTheme } from '../../components/Scene/SceneElement/SceneElement'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useTheme } from '../../context/theme'
@@ -293,9 +293,9 @@ export default function Home() {
           type="button"
           onClick={() => setIsStoreOpen(true)}
           aria-label="Abrir tienda"
-          className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#4C7C64] text-2xl text-white shadow-lg transition hover:bg-[#3d6450] active:scale-95"
+          className="fixed bottom-24 right-4 z-40 h-20 w-20 transition hover:scale-105 active:scale-95"
         >
-          <ShoppingBag className="h-7 w-7" strokeWidth={2} />
+          <img src={storeButtonImage} alt="Abrir tienda" className="h-full w-full object-contain" />
         </button>
       )}
 
@@ -328,7 +328,7 @@ export default function Home() {
         </div>
       )}
 
-      <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} />
+      <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} inventory={inventory} refetchInventory={refetchInventory} coins={coins} refetchCoins={refreshCoins} />
       <RewardsModal isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} onClaimed={refreshCoins} />
       <SeedShopModal isOpen={isSeedShopOpen} onClose={() => setIsSeedShopOpen(false)} />
 

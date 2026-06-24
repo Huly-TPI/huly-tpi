@@ -16,6 +16,7 @@ import Challenges from './pages/Challenges/Challenges'
 import Diary from './pages/Diary/Diary.tsx'
 import Home from './pages/Home'
 import Login from './pages/Login/Login'
+import Mandalas from './pages/Mandalas/Mandalas'
 import Minigames from './pages/Minigames/Minigames'
 import NotFound from './pages/NotFound'
 import Onboarding from './pages/Onboarding/Onboarding'
@@ -61,6 +62,7 @@ const App = () => {
           <Route path="/guided-breathing" element={<Breathing />} />
           <Route path="/lanterns" element={<LanternActivity />} />
           <Route path="/bubbles" element={<BubblesActivity />} />
+          <Route path="/mandalas" element={<Mandalas />} />
           <Route path="/zen-sand-garden" element={<SandZenGarden />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />

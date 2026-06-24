@@ -161,7 +161,7 @@ export default function ChatbotMessages({
       )}
 
       {!!error && (
-        error.includes('Alcanzaste el límite diario') ? (
+        error.includes('Alcanzaste el límite diario') || error.includes('plan gratuito') || error.includes('audios diarios') ? (
           <ChatbotQuotaLimitCard message={error} onClose={onClose} />
         ) : (
           <p className="text-center text-xs text-red-500">{error}</p>
