@@ -15,4 +15,5 @@ public class UserProfileResponse {
     private Boolean onboardingTutorialCompleted;
     private Boolean profileOnboardingTutorialCompleted;
     private ThemePreference themePreference;
+    private AudioSettingsResponse audioSettings;
 }
