@@ -207,12 +207,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
               </div>
             ) : (
               <>
-                <div className="w-[28%] h-[clamp(220px,38vh,290px)]">
+                <div className="w-[28%] h-[clamp(260px,42vh,340px)]">
                   <FreeCard isCurrentPlan={!activeProductId} />
                 </div>
 
                 {basicPlan && (
-                  <div className="w-[28%] h-[clamp(220px,38vh,290px)]">
+                  <div className="w-[28%] h-[clamp(260px,42vh,340px)]">
                     <PaidCard
                       plan={basicPlan}
                       displayName={getDisplayName(basicPlan.planCode, basicPlan.name)}
@@ -235,7 +235,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                 )}
 
                 {premiumPlan && (
-                  <div className="w-[28%] h-[clamp(220px,38vh,290px)]">
+                  <div className="w-[28%] h-[clamp(260px,42vh,340px)]">
                     <PaidCard
                       plan={premiumPlan}
                       displayName={getDisplayName(premiumPlan.planCode, premiumPlan.name)}
