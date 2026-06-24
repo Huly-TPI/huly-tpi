@@ -29,7 +29,7 @@ export default function BadgeCard({ badge, unlocked }: BadgeCardProps) {
                     </div>
                 )}
             </div>
-            <p className={`text-center text-[11px] font-semibold leading-tight ${
+            <p className={`text-center text-[11px] font-semibold leading-tight lg:text-[13px] ${
                 unlocked ? 'text-[#6A4F8C]' : 'text-[#B0A0C0]'
             }`}>
                 {badge.name}
