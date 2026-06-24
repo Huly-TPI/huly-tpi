@@ -62,7 +62,7 @@ class UserVectorMemoryPortTest {
         assertThat(vectorMemoryPort.lastMultiSourceQuery.userId()).isEqualTo(1L);
         assertThat(vectorMemoryPort.lastMultiSourceQuery.sourceTypes()).containsExactly(
                 VectorMemorySource.CHATBOT,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
                 VectorMemorySource.EMOTIONAL_JOURNAL,
                 VectorMemorySource.ONBOARDING
         );
@@ -73,10 +73,10 @@ class UserVectorMemoryPortTest {
 
     @Test
     void findRelevantUserMemories_shouldSearchSpecificSource() {
-        service.findRelevantUserMemories(1L, VectorMemorySource.GUIDED_CLOUDS, "ansiedad");
+        service.findRelevantUserMemories(1L, VectorMemorySource.GUIDED_LANTERNS, "ansiedad");
 
         assertThat(vectorMemoryPort.lastSingleSourceQuery).isNotNull();
-        assertThat(vectorMemoryPort.lastSingleSourceQuery.sourceType()).isEqualTo(VectorMemorySource.GUIDED_CLOUDS);
+        assertThat(vectorMemoryPort.lastSingleSourceQuery.sourceType()).isEqualTo(VectorMemorySource.GUIDED_LANTERNS);
     }
 
     @Test

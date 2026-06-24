@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class VectorMemoryProperties {
 
     private Integer minContentLength = 12;
-    private Integer guidedCloudsMinContentLength = 3;
+    private Integer guidedLanternsMinContentLength = 3;
     private Integer maxContentLength = 4_000;
     private Integer defaultLimit = 5;
     private Integer maxLimit = 20;
@@ -23,12 +23,12 @@ public class VectorMemoryProperties {
         this.minContentLength = minContentLength;
     }
 
-    public Integer getGuidedCloudsMinContentLength() {
-        return guidedCloudsMinContentLength;
+    public Integer getGuidedLanternsMinContentLength() {
+        return guidedLanternsMinContentLength;
     }
 
-    public void setGuidedCloudsMinContentLength(Integer guidedCloudsMinContentLength) {
-        this.guidedCloudsMinContentLength = guidedCloudsMinContentLength;
+    public void setGuidedLanternsMinContentLength(Integer guidedLanternsMinContentLength) {
+        this.guidedLanternsMinContentLength = guidedLanternsMinContentLength;
     }
 
     public Integer getMaxContentLength() {

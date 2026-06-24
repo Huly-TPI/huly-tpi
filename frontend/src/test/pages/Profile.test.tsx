@@ -46,11 +46,11 @@ describe('Profile', () => {
   const renderProfile = () => {
     return render(
       <ThemeProvider>
-        <AudioSettingsProvider>
-          <MemoryRouter>
+        <MemoryRouter>
+          <AudioSettingsProvider>
             <Profile />
-          </MemoryRouter>
-        </AudioSettingsProvider>
+          </AudioSettingsProvider>
+        </MemoryRouter>
       </ThemeProvider>,
     )
   }
@@ -74,14 +74,14 @@ describe('Profile', () => {
 
     render(
       <ThemeProvider>
-        <AudioSettingsProvider>
-          <MemoryRouter initialEntries={['/profile']}>
+        <MemoryRouter initialEntries={['/profile']}>
+          <AudioSettingsProvider>
             <Routes>
               <Route path="/profile" element={<Profile />} />
               <Route path="/login" element={<h1>Vista Login</h1>} />
             </Routes>
-          </MemoryRouter>
-        </AudioSettingsProvider>
+          </AudioSettingsProvider>
+        </MemoryRouter>
       </ThemeProvider>,
     )
 
@@ -121,14 +121,14 @@ describe('Profile', () => {
 
     render(
       <ThemeProvider>
-        <AudioSettingsProvider>
-          <MemoryRouter initialEntries={['/profile']}>
+        <MemoryRouter initialEntries={['/profile']}>
+          <AudioSettingsProvider>
             <Routes>
               <Route path="/" element={<h1>Vista Jardin</h1>} />
               <Route path="/profile" element={<Profile />} />
             </Routes>
-          </MemoryRouter>
-        </AudioSettingsProvider>
+          </AudioSettingsProvider>
+        </MemoryRouter>
       </ThemeProvider>,
     )
 

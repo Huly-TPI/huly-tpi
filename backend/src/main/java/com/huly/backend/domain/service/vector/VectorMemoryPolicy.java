@@ -90,8 +90,8 @@ public class VectorMemoryPolicy {
     }
 
     private int effectiveMinLength(SaveVectorMemoryCommand command) {
-        if (command.sourceType() == VectorMemorySource.GUIDED_CLOUDS)
-            return properties.getGuidedCloudsMinContentLength();
+        if (command.sourceType() == VectorMemorySource.GUIDED_LANTERNS)
+            return properties.getGuidedLanternsMinContentLength();
 
         return properties.getMinContentLength();
     }

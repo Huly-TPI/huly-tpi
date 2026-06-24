@@ -53,7 +53,7 @@ public class EmotionalRecommendationService {
     private static final Map<ActivityType, String> TITLES = Map.of(
             ActivityType.RESPIRACION, "Respiracion guiada",
             ActivityType.DIARIO, "Diario emocional",
-            ActivityType.NUBE, "Nubes emocionales",
+            ActivityType.NUBE, "Farolitos que vuelan",
             ActivityType.BURBUJA, "Burbujas"
     );
 
