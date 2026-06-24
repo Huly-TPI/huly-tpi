@@ -1,6 +1,7 @@
 import { useLayoutEffect } from 'react'
 import hulySideImage from '../../assets/chatbot/huly-side.webp'
 import { useChatbot } from '../../hooks/useChatbot'
+import { useMembership } from '../../hooks/shop/useMembership'
 import BaseModal from '../Modal/BaseModal'
 import ChatbotComposer from './ChatbotComposer'
 import ChatbotHeader from './ChatbotHeader'
@@ -12,6 +13,9 @@ interface ChatbotModalProps {
 }
 
 export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
+  const { membership } = useMembership()
+  const isFreePlan = membership?.active === false
+
   const {
     messages,
     input,
@@ -19,6 +23,8 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     isSending,
     isLoadingHistory,
     error,
+    setError,
+    audioLimitMessage,
     bottomRef,
     messagesContainerRef,
     isLoadingOlderHistory,
@@ -30,6 +36,16 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     decideSuggestedAction,
     resetConversation,
   } = useChatbot()
+
+  const isAudioLocked = isFreePlan || !!audioLimitMessage
+
+  const handleAudioLockedClick = () => {
+    if (isFreePlan) {
+      setError('El envío de audio no está disponible en el plan gratuito. ¡Suscribite para acceder a esta función!')
+    } else if (audioLimitMessage) {
+      setError(audioLimitMessage)
+    }
+  }
   useLayoutEffect(() => {
     if (isOpen && !isLoadingHistory) {
       if (messagesContainerRef?.current) {
@@ -74,9 +90,11 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         input={input}
         isSending={isSending}
         disabled={!!error && error.includes('Alcanzaste el límite diario')}
+        audioLockedForPlan={isAudioLocked}
         onInputChange={setInput}
         onSend={() => void sendMessage()}
         onSendAudio={(blob) => void sendAudioMessage(blob)}
+        onAudioLockedClick={handleAudioLockedClick}
       />
     </BaseModal>
   )

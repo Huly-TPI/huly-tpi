@@ -40,4 +40,7 @@ public class ProductEntity {
 
     @Column(name = "chat_daily_limit")
     private Integer chatDailyLimit;
+
+    @Column(name = "audio_daily_limit")
+    private Integer audioDailyLimit;
 }

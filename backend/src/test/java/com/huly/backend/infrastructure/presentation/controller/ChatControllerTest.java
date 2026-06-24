@@ -65,6 +65,7 @@ class ChatControllerTest {
         saveChallengeDecisionUseCase = mock(SaveChallengeDecisionUseCase.class);
         chatQuotaService = mock(ChatQuotaService.class);
         when(chatQuotaService.getRemainingQuota(any())).thenReturn(new ChatQuotaService.RemainingQuota(null, null));
+        when(chatQuotaService.getRemainingAudioQuota(any())).thenReturn(new ChatQuotaService.RemainingAudioQuota(null, null));
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(

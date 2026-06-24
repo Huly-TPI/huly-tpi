@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Mic, SendHorizontal, Square, Trash2 } from 'lucide-react'
+import { Mic, SendHorizontal, Square, Trash2, Lock } from 'lucide-react'
 import AudioMessagePlayer from './AudioMessagePlayer'
 
 type RecorderState = 'idle' | 'recording' | 'recorded'
@@ -8,9 +8,11 @@ interface ChatbotAudioRecorderProps {
   onSend: (blob: Blob) => void
   disabled: boolean
   onActiveChange: (active: boolean) => void
+  lockedForPlan?: boolean
+  onLockedClick?: () => void
 }
 
-export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange }: ChatbotAudioRecorderProps) {
+export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange, lockedForPlan = false, onLockedClick }: ChatbotAudioRecorderProps) {
   const MAX_DURATION_SEC = 60
 
   const [state, setState] = useState<RecorderState>('idle')
@@ -87,6 +89,21 @@ export default function ChatbotAudioRecorder({ onSend, disabled, onActiveChange 
   }
 
   if (state === 'idle') {
+    if (lockedForPlan) {
+      return (
+        <button
+          type="button"
+          onClick={onLockedClick}
+          aria-label="Audio no disponible en plan gratuito"
+          title="Función exclusiva de planes de pago"
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color,opacity,box-shadow] duration-300 ease-in-out hover:bg-violeta/10 hover:text-violeta focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[#8869ac59]"
+        >
+          <Mic className="h-5 w-5 opacity-50" strokeWidth={2} />
+          <Lock className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 text-violeta" strokeWidth={2.5} />
+        </button>
+      )
+    }
+
     return (
       <button
         type="button"

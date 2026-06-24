@@ -65,6 +65,12 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
     }
 
     @Override
+    public long countUserAudioMessagesSince(Long userId, Instant since) {
+        return jpa.countByChatSessionAppUserIdAndRoleAndContentStartingWithAndCreatedAtAfter(
+                userId, MessageRole.USER, "[Mensaje de voz transcrito]", since);
+    }
+
+    @Override
     public void updateSuggestedActionDecision(Long userId, Long emotionalEventId, String decision) {
         if (userId == null || emotionalEventId == null || decision == null || decision.isBlank())
             return;
