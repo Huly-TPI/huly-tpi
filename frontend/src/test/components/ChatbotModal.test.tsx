@@ -3,6 +3,10 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import ChatbotModal from '../../components/Chatbot/ChatbotModal'
 
+vi.mock('../../hooks/shop/useMembership', () => ({
+  useMembership: () => ({ membership: null, error: null, refresh: vi.fn() }),
+}))
+
 vi.mock('../../hooks/useChatbot', () => ({
   useChatbot: () => ({
     messages: [],
