@@ -323,11 +323,11 @@ export default function Diary() {
 
         <div className="diary-content flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden" style={{ ...lineBackground }}>
           <div className="diary-left md:flex-1 md:min-h-0 px-2 py-5 flex flex-col">
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: '#649959' }}>
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3 lg:text-[11px]" style={{ color: '#649959' }}>
               Hoy
             </p>
 
-            <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#649959' }}>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 lg:text-[13px]" style={{ color: '#649959' }}>
               ¿Cómo me sentí hoy?
             </p>
             <div className="diary-mood-grid grid grid-cols-4 gap-x-2 gap-y-3 mb-5">
@@ -356,7 +356,7 @@ export default function Diary() {
                       {mood.emoji}
                     </div>
                     <span
-                      className={`text-[11px] ${isSelected ? 'font-semibold' : ''}`}
+                      className={`text-[11px] lg:text-[12px] ${isSelected ? 'font-semibold' : ''}`}
                       style={{ color: isSelected ? (isDark ? '#a7f3d0' : '#5f4a8a') : (isDark ? '#94a3b8' : '#7a5c38') }}
                     >
                       {mood.label}
@@ -366,7 +366,7 @@ export default function Diary() {
               })}
             </div>
 
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#8869AC' }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 lg:text-[11px]" style={{ color: '#8869AC' }}>
               Lo que pasa adentro
             </p>
             <textarea
@@ -391,7 +391,7 @@ export default function Diary() {
 
           <div className="diary-right md:flex-1 md:min-h-0 px-2 md:pl-6 md:pr-2 pt-5 pb-8 flex flex-col gap-5">
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0" style={{ color: '#8869AC' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: '#8869AC' }}>
                 ☁️ Un pensamiento que quiero soltar
               </p>
               <textarea
@@ -406,7 +406,7 @@ export default function Diary() {
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0" style={{ color: '#649959' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: '#649959' }}>
                 🌱 Algo que me salió bien hoy
               </p>
               <textarea
@@ -421,7 +421,7 @@ export default function Diary() {
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0" style={{ color: isDark ? '#F2C57C' : '#a07830' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: isDark ? '#F2C57C' : '#a07830' }}>
                 ☀️ Lo que quiero para mañana
               </p>
               <textarea

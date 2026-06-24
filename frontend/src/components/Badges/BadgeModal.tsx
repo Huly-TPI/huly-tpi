@@ -30,7 +30,7 @@ export default function BadgeModal({ isOpen, onClose }: BadgeModalProps) {
                     <div className="bg-gradient-to-r from-[#7A5A9E] to-[#9B7BBF] px-4 py-4 text-white sm:px-6 sm:py-5">
                         <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-60">Mi álbum de estampitas</p>
+                                <p className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-60 lg:text-[12px]">Mi álbum de estampitas</p>
                                 <h2 className="font-nunito text-2xl font-black leading-tight sm:text-3xl">Mis estampitas</h2>
                                 <div className="mt-2 flex items-center gap-3 sm:mt-3">
                                     <div className="h-2.5 w-32 overflow-hidden rounded-full bg-white/20 shadow-inner sm:h-3 sm:w-44">
@@ -92,4 +92,4 @@ export default function BadgeModal({ isOpen, onClose }: BadgeModalProps) {
             </div>
         </div>
     )
-}   
+}

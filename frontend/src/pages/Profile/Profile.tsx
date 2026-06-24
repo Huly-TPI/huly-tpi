@@ -6,6 +6,7 @@ import { completeProfileTutorial } from '../../api/onboarding'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
+import AudioSettingsModal from '../../components/Profile/AudioSettingsModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useSceneOnboarding } from '../../hooks/useSceneOnboarding'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
@@ -92,6 +93,7 @@ export default function Profile() {
   const { theme } = useTheme()
   const { isSubscribed, isLoading: pushLoading, isSupported, subscribe, unsubscribe } = usePushNotifications()
   const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
+  const [showAudioSettingsModal, setShowAudioSettingsModal] = useState(false)
   const {
     onboardingMode,
     onboardingStepIndex,
@@ -146,6 +148,15 @@ export default function Profile() {
         onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
           e.preventDefault()
           setShowAntiScrollModal(true)
+        },
+      }
+    }
+    if (element.id === 'music') {
+      return {
+        ...baseElement,
+        onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+          e.preventDefault()
+          setShowAudioSettingsModal(true)
         },
       }
     }
@@ -209,6 +220,9 @@ export default function Profile() {
       </div>
       {showAntiScrollModal && (
         <AntiScrollConsentModal onClose={() => setShowAntiScrollModal(false)} />
+      )}
+      {showAudioSettingsModal && (
+        <AudioSettingsModal onClose={() => setShowAudioSettingsModal(false)} />
       )}
     </main>
   )
