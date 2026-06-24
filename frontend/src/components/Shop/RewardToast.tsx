@@ -1,16 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { CircleDollarSign, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import seedIcon from '../../assets/rewards/seed.webp'
 
 interface RewardToastProps {
-  /** Monedas acreditadas a mostrar. */
   coins: number
-  /** Se llama al cerrar (manual o tras el auto-cierre). */
   onClose: () => void
-  /** Mensaje principal del toast. */
   message?: string
 }
 
-/** Toast dorado de "recompensa reclamada" (usado por daily reward y comeback). Se auto-cierra a los 3.5s. */
 export function RewardToast({ coins, onClose, message = '¡Recompensa reclamada!' }: RewardToastProps) {
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
@@ -24,19 +21,28 @@ export function RewardToast({ coins, onClose, message = '¡Recompensa reclamada!
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-24 right-5 z-50 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#e6b800] px-5 py-4 shadow-xl text-white"
+      className="fixed bottom-24 right-5 max-[640px]:right-4 max-[640px]:left-4 z-[60] flex items-center justify-between gap-3 rounded-2xl bg-[#f3d8aa]/95 border border-[#b98a54] px-4 py-3 shadow-[0_6px_12px_rgba(91,60,24,0.25),inset_0_1px_0_rgba(255,255,255,0.45)] text-[#6b4a2a]"
     >
-      <CircleDollarSign className="w-7 h-7 text-white" strokeWidth={2} aria-hidden="true" />
-      <div>
-        <p className="text-sm opacity-90 m-0">{message}</p>
-        <p className="font-bold text-lg m-0">+{coins} monedas</p>
+      <div className="flex items-center gap-2">
+        <img
+          src={seedIcon}
+          alt=""
+          aria-hidden="true"
+          className="w-10 h-10 object-contain shrink-0"
+        />
+        <div>
+          <p className="text-[12px] font-black m-0 leading-none">{message}</p>
+          <p className="text-[15px] font-black m-0 mt-1 leading-none">
+            +<span className="text-[#4d8a2d]">{coins} semillas</span>
+          </p>
+        </div>
       </div>
       <button
-        aria-label="Cerrar"
+        aria-label="Cerrar notificación"
         onClick={onClose}
-        className="ml-1 rounded-full p-1.5 hover:bg-white/20 transition bg-transparent border-0 cursor-pointer text-white"
+        className="rounded-full p-1.5 bg-[#d9b77e]/60 hover:bg-[#c99d61]/70 text-[#7b5c3c] transition"
       >
-        <X className="w-4 h-4" strokeWidth={2} />
+        <X className="w-4 h-4" />
       </button>
     </div>
   )
