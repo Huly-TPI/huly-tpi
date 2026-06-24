@@ -13,6 +13,7 @@ import AuthGateModal from "../../components/AuthGateModal/AuthGateModal";
 import ThemeBackground from "../../components/ThemeBackground/ThemeBackground";
 import mandalaEleccionBackgroundDark from "../../assets/mandalas/dark-theme/background/mandala-eleccion-background-dark.webp";
 import mandalaEleccionBackgroundLight from "../../assets/mandalas/light-theme/background/mandala-eleccion-background-light.webp";
+import StoreModal from "../../components/Shop/StoreModal";
 
 export default function Mandalas() {
   const [selectedMandala, setSelectedMandala] =
@@ -20,10 +21,11 @@ export default function Mandalas() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { openSubscriptionModal } = useSubscriptionModal();
+  const [isStoreOpen, setIsStoreOpen] = useState(false);
 
   const handleLockedMandala = (accessType: MandalaAccessType) => {
     if (accessType === 'purchasable') {
-      navigate('/shop')
+      setIsStoreOpen(true);
     } else {
       openSubscriptionModal()
     }
@@ -107,6 +109,7 @@ export default function Mandalas() {
           )}
         </>
       )}
+      <StoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} />
     </main>
   );
 }
