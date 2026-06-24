@@ -1,5 +1,6 @@
 package com.huly.backend.domain.useCase.store;
 
+import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.InsufficientCoinsException;
 import com.huly.backend.domain.model.shop.StoreItem;
@@ -7,6 +8,7 @@ import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.model.enums.ItemCategory;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
+
 @ExtendWith(MockitoExtension.class)
 class BuyStoreItemUseCaseTest {
 
@@ -34,13 +38,26 @@ class BuyStoreItemUseCaseTest {
     private UserStoreItemRepository userStoreItemRepository;
     @Mock
     private CoinService coinService;
+    @Mock
+    private UserPlanRepository userPlanRepository;
+    @Mock
+    private UserPlan userPlan;
+
     @InjectMocks
     private BuyStoreItemUseCase buyStoreItemUseCase;
 
     private StoreItem item() {
         return StoreItem.builder()
                 .id(10L).name("Casa rosa").description("Casa de color rosa")
-                .category(ItemCategory.HOUSE).assetKey("casa-rosa").priceCoins(50)
+                .category(ItemCategory.HOUSE).assetKey("casa-rosa").priceCoins(50).premiumOnly(false)
+                .build();
+    }
+
+    private StoreItem premiumItem() {
+        return StoreItem.builder()
+                .id(20L).name("Árbol Sakura").description("Árbol de sakura")
+                .category(ItemCategory.TREE).assetKey("tree-sakura").priceCoins(200)
+                .premiumOnly(true)
                 .build();
     }
 
@@ -84,6 +101,51 @@ class BuyStoreItemUseCaseTest {
 
         verify(userStoreItemRepository).save(any(UserStoreItem.class));
         verify(coinService).debit(1L, 50);
+    }
+
+    @Test
+    void buy_shouldThrowBusinessRule_whenPremiumItemAndUserHasNoPlan() {
+        when(storeItemRepository.findById(20L)).thenReturn(Optional.of(premiumItem()));
+        when(userStoreItemRepository.isOwned(1L, 20L)).thenReturn(false);
+        when(userPlanRepository.findByUser(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 20L))
+                .isInstanceOf(BusinessRuleException.class);
+        verifyNoInteractions(coinService);
+    }
+
+    @Test
+    void buy_shouldThrowBusinessRule_whenPremiumItemAndUserHasBasicPlan() {
+        when(storeItemRepository.findById(20L)).thenReturn(Optional.of(premiumItem()));
+        when(userStoreItemRepository.isOwned(1L, 20L)).thenReturn(false);
+        when(userPlanRepository.findByUser(1L)).thenReturn(Optional.of(userPlan));
+        when(userPlan.isActive(any(Instant.class))).thenReturn(true);
+        when(userPlan.getPlanCode()).thenReturn("BASIC");
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 20L))
+                .isInstanceOf(BusinessRuleException.class);
+        verifyNoInteractions(coinService);
+    }
+
+    @Test
+    void buy_shouldThrowBusinessRule_whenPremiumItemAndPlanExpired() {
+        when(storeItemRepository.findById(20L)).thenReturn(Optional.of(premiumItem()));
+        when(userStoreItemRepository.isOwned(1L, 20L)).thenReturn(false);
+        when(userPlanRepository.findByUser(1L)).thenReturn(Optional.of(userPlan));
+        when(userPlan.isActive(any(Instant.class))).thenReturn(false);
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 20L))
+                .isInstanceOf(BusinessRuleException.class);
+        verifyNoInteractions(coinService);
+    }
+
+    @Test
+    void buy_shouldDebitAndSave_whenPremiumItemAndUserHasPremiumPlan() {
+        when(storeItemRepository.findById(20L)).thenReturn(Optional.of(premiumItem()));
+        when(userStoreItemRepository.isOwned(1L, 20L)).thenReturn(false);
+        when(userPlanRepository.findByUser(1L)).thenReturn(Optional.of(userPlan));
+        when(userPlan.isActive(any(Instant.class))).thenReturn(true);
+        when(userPlan.getPlanCode()).thenReturn("PREMIUM");
+        buyStoreItemUseCase.execute(1L, 20L);
+        verify(coinService).debit(1L, 200);
+        verify(userStoreItemRepository).save(any(UserStoreItem.class));
     }
 
 }

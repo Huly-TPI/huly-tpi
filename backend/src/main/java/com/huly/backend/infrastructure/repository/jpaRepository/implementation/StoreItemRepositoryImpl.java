@@ -17,7 +17,7 @@ public class StoreItemRepositoryImpl implements StoreItemRepository {
     
     @Override
     public List<StoreItem> findAll() {
-         return jpaRepository.findAll().stream().map(this::toDomain).toList();
+         return jpaRepository.findAllByOrderByIdAsc().stream().map(this::toDomain).toList();
     }
 
     @Override
@@ -34,6 +34,7 @@ public class StoreItemRepositoryImpl implements StoreItemRepository {
                 .assetKey(entity.getAssetKey())
                 .priceCoins(entity.getPriceCoins())
                 .price(entity.getPrice())
+                .premiumOnly(entity.isPremiumOnly())
                 .build();
     }
     
