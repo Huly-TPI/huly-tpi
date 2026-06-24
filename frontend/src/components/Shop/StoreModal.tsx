@@ -83,7 +83,7 @@ export default function StoreModal({ isOpen, onClose, inventory = [], refetchInv
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <button type="button" aria-label="Cerrar tienda" className="absolute inset-0 cursor-default" onClick={onClose} />
       <div
         role="dialog"
