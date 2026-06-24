@@ -14,7 +14,7 @@ import {
   renderLineOverlay,
   type CanvasPoint,
   type MandalaAnalysis,
-} from '../components/Mandalas/mandalaCanvas'
+} from '../components/Mandalas/mandalaCanvasUtils'
 import { canvasToPngBlob } from '../utils/downloadImage'
 
 type PainterStatus = 'loading' | 'ready' | 'error'
