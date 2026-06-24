@@ -88,6 +88,36 @@ jobs:
         run: npm run build
 
 
+  # FRONTEND TESTS — SOLO PR A DEV
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request' &&
+      github.base_ref == 'dev'
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run frontend tests
+        run: npm test
+
+
   # BACKEND BUILD — TODAS LAS BRANCHES
 
   build-backend:
