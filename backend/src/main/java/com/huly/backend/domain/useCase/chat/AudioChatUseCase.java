@@ -46,9 +46,9 @@ public class AudioChatUseCase {
             // Solo arousal: es un feature acústico puro (energía, ritmo, intensidad)
             // independiente del idioma. Valence y dominance son poco fiables en español.
             double arousal = vad.arousal();
-            String arousalLabel = arousal >= 0.67 ? "muy activada/agitada"
-                                : arousal >= 0.34 ? "moderadamente activada"
-                                :                   "calmada";
+            String arousalLabel = arousal >= 0.67 ? "tensa/agitada"
+                                : arousal >= 0.34 ? "con cierta inquietud"
+                                :                   "tranquila/serena";
             return String.format(
                     "[Mensaje de voz transcrito]\n" +
                     "Transcripción: %s\n" +

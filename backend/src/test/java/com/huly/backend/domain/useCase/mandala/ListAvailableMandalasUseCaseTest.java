@@ -55,9 +55,11 @@ class ListAvailableMandalasUseCaseTest {
     void execute_withoutPlanOrPurchasesReturnsOnlyFreeMandalas() {
         var result = useCase.execute(USER_ID);
 
-        assertThat(result).extracting(item -> item.getMandala().getId())
+        assertThat(result).hasSize(21);
+        var unlocked = result.stream().filter(m -> !m.isLocked()).toList();
+        assertThat(unlocked).extracting(item -> item.getMandala().getId())
                 .containsExactly("mandala-01", "mandala-02");
-        assertThat(result).extracting("unlockSource")
+        assertThat(unlocked).extracting("unlockSource")
                 .containsExactly(MandalaUnlockSource.FREE, MandalaUnlockSource.FREE);
     }
 
@@ -69,11 +71,13 @@ class ListAvailableMandalasUseCaseTest {
 
         var result = useCase.execute(USER_ID);
 
-        assertThat(result).extracting(item -> item.getMandala().getId())
+        assertThat(result).hasSize(21);
+        var unlocked = result.stream().filter(m -> !m.isLocked()).toList();
+        assertThat(unlocked).extracting(item -> item.getMandala().getId())
                 .containsExactly("mandala-01", "mandala-02",
                         "mandala-03", "mandala-04", "mandala-05", "mandala-06", "mandala-07",
                         "mandala-08", "mandala-09", "mandala-10", "mandala-11", "mandala-12");
-        assertThat(result.get(2).getUnlockSource()).isEqualTo(MandalaUnlockSource.SUBSCRIPTION);
+        assertThat(unlocked.get(2).getUnlockSource()).isEqualTo(MandalaUnlockSource.SUBSCRIPTION);
     }
 
     @Test
@@ -84,7 +88,9 @@ class ListAvailableMandalasUseCaseTest {
 
         var result = useCase.execute(USER_ID);
 
-        assertThat(result).extracting(item -> item.getMandala().getId())
+        assertThat(result).hasSize(21);
+        var unlocked = result.stream().filter(m -> !m.isLocked()).toList();
+        assertThat(unlocked).extracting(item -> item.getMandala().getId())
                 .containsExactly("mandala-01", "mandala-02");
     }
 
@@ -95,9 +101,11 @@ class ListAvailableMandalasUseCaseTest {
 
         var result = useCase.execute(USER_ID);
 
-        assertThat(result).extracting(item -> item.getMandala().getId())
+        assertThat(result).hasSize(21);
+        var unlocked = result.stream().filter(m -> !m.isLocked()).toList();
+        assertThat(unlocked).extracting(item -> item.getMandala().getId())
                 .containsExactly("mandala-01", "mandala-02", "mandala-13");
-        assertThat(result.get(2).getUnlockSource()).isEqualTo(MandalaUnlockSource.PURCHASED);
+        assertThat(unlocked.get(2).getUnlockSource()).isEqualTo(MandalaUnlockSource.PURCHASED);
     }
 
     @Test
@@ -107,11 +115,11 @@ class ListAvailableMandalasUseCaseTest {
 
         var result = useCase.execute(USER_ID);
 
-        assertThat(result).extracting(item -> item.getMandala().getId())
+        assertThat(result).hasSize(21);
+        var unlocked = result.stream().filter(m -> !m.isLocked()).toList();
+        assertThat(unlocked).extracting(item -> item.getMandala().getId())
                 .containsExactly("mandala-01", "mandala-02");
     }
-
-
 
     @Test
     void execute_doesNotDuplicateFreeMandalaWhenAlsoInPlan() {
@@ -121,9 +129,11 @@ class ListAvailableMandalasUseCaseTest {
 
         var result = useCase.execute(USER_ID);
 
-        assertThat(result).extracting(item -> item.getMandala().getId())
+        assertThat(result).hasSize(21);
+        var unlocked = result.stream().filter(m -> !m.isLocked()).toList();
+        assertThat(unlocked).extracting(item -> item.getMandala().getId())
                 .containsExactly("mandala-01", "mandala-02", "mandala-03");
-        assertThat(result.get(0).getUnlockSource()).isEqualTo(MandalaUnlockSource.FREE);
+        assertThat(unlocked.get(0).getUnlockSource()).isEqualTo(MandalaUnlockSource.FREE);
     }
 
     @Test
@@ -138,19 +148,19 @@ class ListAvailableMandalasUseCaseTest {
                 .containsExactly("mandala-06", "mandala-07", "mandala-08", "mandala-09", "mandala-10");
         assertThat(result.getNumber()).isEqualTo(1);
         assertThat(result.getSize()).isEqualTo(5);
-        assertThat(result.getTotalElements()).isEqualTo(12);
-        assertThat(result.getTotalPages()).isEqualTo(3);
+        assertThat(result.getTotalElements()).isEqualTo(21);
+        assertThat(result.getTotalPages()).isEqualTo(5);
         assertThat(result.isFirst()).isFalse();
         assertThat(result.isLast()).isFalse();
     }
 
     @Test
     void execute_withPageableOutsideRangeReturnsEmptyPage() {
-        var result = useCase.execute(USER_ID, PageRequest.of(2, 5));
+        var result = useCase.execute(USER_ID, PageRequest.of(5, 5));
 
         assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isEqualTo(2);
-        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.getTotalElements()).isEqualTo(21);
+        assertThat(result.getTotalPages()).isEqualTo(5);
         assertThat(result.isLast()).isTrue();
     }
 

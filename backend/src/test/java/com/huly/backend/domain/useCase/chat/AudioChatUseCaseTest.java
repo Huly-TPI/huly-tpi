@@ -81,7 +81,7 @@ class AudioChatUseCaseTest {
         useCase.execute(audio, "conv-1", 1L);
 
         verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("calmada")),
+                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("tranquila/serena")),
                 any(),
                 any()
         );
@@ -98,7 +98,7 @@ class AudioChatUseCaseTest {
         useCase.execute(audio, "conv-1", 1L);
 
         verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("moderadamente activada")),
+                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("con cierta inquietud")),
                 any(),
                 any()
         );
@@ -115,7 +115,7 @@ class AudioChatUseCaseTest {
         useCase.execute(audio, "conv-1", 1L);
 
         verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("muy activada")),
+                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("tensa/agitada")),
                 any(),
                 any()
         );
