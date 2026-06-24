@@ -132,7 +132,7 @@ public class GetCloudRecommendationUseCase {
             return "breathing";
         }
         if (type == ActivityType.NUBE) {
-            return "clouds";
+            return "lanterns";
         }
         if (type == ActivityType.BURBUJA) {
             return "bubbles";
@@ -145,7 +145,7 @@ public class GetCloudRecommendationUseCase {
             return "/guided-breathing";
         }
         if (type == ActivityType.NUBE) {
-            return "/clouds";
+            return "/lanterns";
         }
         if (type == ActivityType.BURBUJA) {
             return "/bubbles";

@@ -46,6 +46,6 @@ Cada documento guarda metadata generica para filtrar por funcionalidad y usuario
 
 - `CHATBOT`
 - `EMOTIONAL_JOURNAL`
-- `GUIDED_CLOUDS`
+- `GUIDED_LANTERNS`
 
 Cada fuente puede tener su propia politica de memoria implementando `VectorMemorySourcePolicy`.

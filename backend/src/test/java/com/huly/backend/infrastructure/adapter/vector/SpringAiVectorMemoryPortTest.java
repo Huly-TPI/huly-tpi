@@ -99,13 +99,13 @@ class SpringAiVectorMemoryPortTest {
     }
 
     @Test
-    void saveMemory_shouldPersistShortGuidedCloudMessageUsingGuidedCloudThreshold() {
+    void saveMemory_shouldPersistShortGuidedLanternsMessageUsingGuidedLanternsThreshold() {
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
-                VectorMemorySource.GUIDED_CLOUDS,
-                "cloud-1",
-                "GUIDED_CLOUD_INPUT",
-                "GUIDED_CLOUD_INPUT",
+                VectorMemorySource.GUIDED_LANTERNS,
+                "lantern-1",
+                "GUIDED_LANTERNS_INPUT",
+                "GUIDED_LANTERNS_INPUT",
                 "ansiedad",
                 null,
                 null,

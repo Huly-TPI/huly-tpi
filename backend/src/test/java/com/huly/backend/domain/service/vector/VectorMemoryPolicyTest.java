@@ -89,11 +89,27 @@ class VectorMemoryPolicyTest {
     }
 
     @Test
-    void shouldRemember_shouldAcceptShortMessageIfWeBypassLengthCheck() {
-        properties.setGuidedCloudsMinContentLength(2);
+    void shouldRemember_shouldAcceptGuidedLanternsContentAboveMinLength() {
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
+                null,
+                null,
+                null,
+                "me siento muy triste hoy",
+                null,
+                null,
+                null
+        );
+
+        assertThat(policy.shouldRemember(command, "me siento muy triste hoy")).isTrue();
+    }
+
+    @Test
+    void shouldRemember_shouldRejectGuidedLanternsContentBelowMinLength() {
+        SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
+                1L,
+                VectorMemorySource.GUIDED_LANTERNS,
                 null,
                 null,
                 null,
@@ -103,15 +119,14 @@ class VectorMemoryPolicyTest {
                 null
         );
 
-        assertThat(policy.shouldRemember(command, "ab")).isTrue();
-        properties.setGuidedCloudsMinContentLength(3);
+        assertThat(policy.shouldRemember(command, "ab")).isFalse();
     }
 
     @Test
-    void shouldRemember_shouldAcceptShortGuidedCloudMessageUsingSourceSpecificMinimum() {
+    void shouldRemember_shouldAcceptShortGuidedLanternMessageUsingSourceSpecificMinimum() {
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
                 null,
                 null,
                 null,
@@ -125,10 +140,10 @@ class VectorMemoryPolicyTest {
     }
 
     @Test
-    void shouldRemember_shouldStillRejectVeryShortGuidedCloudMessage() {
+    void shouldRemember_shouldStillRejectVeryShortGuidedLanternMessage() {
         SaveVectorMemoryCommand command = new SaveVectorMemoryCommand(
                 1L,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
                 null,
                 null,
                 null,
