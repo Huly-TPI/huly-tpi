@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import type { AudioSettings as ApiAudioSettings, UserProfile } from '../api/auth'
 import { updateAudioSettings } from '../api/auth'
 import interfaceClickSound1 from '../assets/audio/ui/interface-click1.mp3'
@@ -39,6 +40,9 @@ const gardenLoopSounds = [gardenLoopSound1, gardenLoopSound2, gardenLoopSound3]
 
 const clampVolume = (volume: number) => Math.min(1, Math.max(0, volume))
 const isTestEnvironment = import.meta.env.MODE === 'test'
+
+const audioChannel = !isTestEnvironment && typeof BroadcastChannel !== 'undefined'
+  ? new BroadcastChannel('huly-audio-channel'): null
 
 const playAudio = (audio: HTMLAudioElement) => {
   if (isTestEnvironment) return
@@ -107,15 +111,21 @@ export function AudioSettingsProvider({ children }: AudioSettingsProviderProps) 
   const gardenAudioRef = useRef<HTMLAudioElement | null>(null)
   const hasUserInteractedRef = useRef(false)
 
+  const location = useLocation()
+  const isBackoffice = location.pathname.startsWith('/backoffice')
+
+  const tabIdRef = useRef(Math.random().toString(36).substring(2, 11))
+  const isMutedByOtherTabRef = useRef(false)
+
   const playClickFeedback = useCallback(() => {
-    if (settings.interfaceVolume <= 0) return
+    if (settings.interfaceVolume <= 0 || isBackoffice) return
 
     const audio = new Audio(getRandomItem(interfaceClickSounds))
     audio.volume = settings.interfaceVolume
     audio.currentTime = 0
 
     playAudio(audio)
-  }, [settings.interfaceVolume])
+  }, [settings.interfaceVolume, isBackoffice])
 
   const syncGardenAmbient = useCallback(() => {
     const audio = gardenAudioRef.current
@@ -123,13 +133,20 @@ export function AudioSettingsProvider({ children }: AudioSettingsProviderProps) 
 
     audio.volume = settings.ambientVolume
 
-    if (settings.ambientVolume <= 0 || !hasUserInteractedRef.current) {
+    if (
+      settings.ambientVolume <= 0 ||
+      !hasUserInteractedRef.current ||
+      isBackoffice ||
+      document.hidden ||
+      isMutedByOtherTabRef.current
+    ) {
       pauseAudio(audio)
       return
     }
 
     playAudio(audio)
-  }, [settings.ambientVolume])
+    audioChannel?.postMessage({ type: 'PLAY_AMBIENT', senderTabId: tabIdRef.current })
+  }, [settings.ambientVolume, isBackoffice])
 
   useEffect(() => {
     const audio = new Audio(getRandomItem(gardenLoopSounds))
@@ -168,11 +185,47 @@ export function AudioSettingsProvider({ children }: AudioSettingsProviderProps) 
   }, [])
 
   useEffect(() => {
+    if (!audioChannel) return
+
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        event.data &&
+        event.data.type === 'PLAY_AMBIENT' &&
+        event.data.senderTabId !== tabIdRef.current
+      ) {
+        isMutedByOtherTabRef.current = true
+        syncGardenAmbient()
+      }
+    }
+
+    audioChannel.addEventListener('message', handleMessage)
+    return () => {
+      audioChannel.removeEventListener('message', handleMessage)
+    }
+  }, [syncGardenAmbient])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        isMutedByOtherTabRef.current = false
+      }
+      syncGardenAmbient()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [syncGardenAmbient])
+
+  useEffect(() => {
     syncGardenAmbient()
   }, [syncGardenAmbient])
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
+      if (isBackoffice) return
+      isMutedByOtherTabRef.current = false
       hasUserInteractedRef.current = true
       syncGardenAmbient()
       if (!isInteractiveClickTarget(event.target)) return
@@ -181,7 +234,7 @@ export function AudioSettingsProvider({ children }: AudioSettingsProviderProps) 
 
     document.addEventListener('click', handleClick)
     return () => document.removeEventListener('click', handleClick)
-  }, [playClickFeedback, syncGardenAmbient])
+  }, [playClickFeedback, syncGardenAmbient, isBackoffice])
 
   const persistSettings = useCallback((nextSettings: AudioSettings) => {
     void updateAudioSettings(nextSettings).catch(() => undefined)

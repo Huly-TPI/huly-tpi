@@ -12,11 +12,11 @@ setupAntiScrollBridge()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
-      <AudioSettingsProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AudioSettingsProvider>
           <App />
-        </BrowserRouter>
-      </AudioSettingsProvider>
+        </AudioSettingsProvider>
+      </BrowserRouter>
     </ThemeProvider>
   </StrictMode>,
 )
