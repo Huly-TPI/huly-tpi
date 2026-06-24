@@ -40,8 +40,8 @@ describe('Minigames', () => {
   })
 
   it('renderiza las nubes como elementos decorativos sin links', () => {
-    renderWithRouter()
-    const clouds = screen.getAllByAltText('Nube decorativa')
+    const { container } = renderWithRouter()
+    const clouds = container.querySelectorAll('img[src*="cloud.webp"]')
     expect(clouds).toHaveLength(3)
     clouds.forEach(cloud => {
       expect(cloud.closest('a')).toBeNull()
@@ -62,13 +62,6 @@ describe('Minigames', () => {
     expect(screen.getByLabelText('Burbujas').closest('a')).toHaveAttribute('href', '/bubbles')
     expect(screen.getByLabelText('Colorear mandalas').closest('a')).toHaveAttribute('href', '/mandalas')
     expect(screen.getByLabelText('Arena zen').closest('a')).toHaveAttribute('href', '/zen-sand-garden')
-  })
-
-  it('renderiza las nubes navegables hacia la actividad de nubes', () => {
-    renderWithRouter()
-    const cloudLinks = screen.getAllByLabelText('Nubes que pasan')
-    expect(cloudLinks.length).toBe(3)
-    expect(cloudLinks[0].closest('a')).toHaveAttribute('href', '/clouds')
   })
 
   it('usa el arbol cosmetico equipado para volver al jardin', () => {
