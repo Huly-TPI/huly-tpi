@@ -124,7 +124,7 @@ export default function LanternsActivity() {
     if (!selectedLantern) return
     setLoading(true)
     try {
-      const rec = await api.post<RecommendationResponse>('/lanterns/recommendation', { thoughts: [selectedLantern.text] })
+      const rec = await api.post<RecommendationResponse>('/clouds/recommendation', { thoughts: [selectedLantern.text] })
       setRecommendation(rec)
       if (!selectedLantern.workedOn) {
         lanternsApi.markWorkedOn(selectedLantern.id).catch(() => {})

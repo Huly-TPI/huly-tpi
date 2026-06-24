@@ -1,24 +1,32 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
+import com.huly.backend.domain.model.CloudThought;
 import com.huly.backend.domain.model.cloudRecommendation.CloudRecommendation;
+import com.huly.backend.domain.model.enums.CloudStatus;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.useCase.cloud.CreateCloudThoughtUseCase;
+import com.huly.backend.domain.useCase.cloud.ListCloudThoughtsUseCase;
+import com.huly.backend.domain.useCase.cloud.MarkCloudWorkedOnUseCase;
+import com.huly.backend.domain.useCase.cloud.UpdateCloudStatusUseCase;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationRequest;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudRecommendationResponse;
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudThoughtRequest;
+import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.CloudThoughtResponse;
+import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.UpdateCloudStatusRequest;
+import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,17 +37,28 @@ public class CloudController {
 
     private final GetCloudRecommendationUseCase getCloudRecommendationUseCase;
     private final UserVectorMemoryService userVectorMemoryService;
+    private final CreateCloudThoughtUseCase createCloudThoughtUseCase;
+    private final ListCloudThoughtsUseCase listCloudThoughtsUseCase;
+    private final UpdateCloudStatusUseCase updateCloudStatusUseCase;
+    private final MarkCloudWorkedOnUseCase markCloudWorkedOnUseCase;
+
+    @GetMapping
+    public ResponseEntity<List<CloudThoughtResponse>> list(@AuthenticationPrincipal UserDetails principal) {
+        Long userId = getUserId(principal);
+        return ResponseEntity.ok(listCloudThoughtsUseCase.execute(userId).stream().map(this::toResponse).toList());
+    }
 
     @PostMapping("/thought")
-    public ResponseEntity<Void> saveThought(
+    public ResponseEntity<CloudThoughtResponse> saveThought(
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid CloudThoughtRequest request
     ) {
         Long userId = getUserId(principal);
+        CloudThought thought = createCloudThoughtUseCase.execute(userId, request.thought());
         String sessionId = UUID.randomUUID().toString();
         userVectorMemoryService.saveMemory(new SaveVectorMemoryCommand(
                 userId,
-                VectorMemorySource.GUIDED_CLOUDS,
+                VectorMemorySource.GUIDED_LANTERNS,
                 sessionId,
                 "GUIDED_CLOUD_INPUT",
                 "GUIDED_CLOUD_INPUT",
@@ -48,6 +67,35 @@ public class CloudController {
                 null,
                 Map.of("createdFrom", "USER_MESSAGE", "feature", "GUIDED_CLOUDS")
         ));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(thought));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> updateStatus(
+            @AuthenticationPrincipal UserDetails principal,
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateCloudStatusRequest request) {
+        Long userId = getUserId(principal);
+        CloudStatus newStatus;
+        try {
+            newStatus = CloudStatus.valueOf(request.status().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Estado inválido: " + request.status());
+        }
+        try {
+            updateCloudStatusUseCase.execute(id, userId, newStatus);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
+        }
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/worked-on")
+    public ResponseEntity<Void> markWorkedOn(
+            @AuthenticationPrincipal UserDetails principal,
+            @PathVariable Long id) {
+        Long userId = getUserId(principal);
+        markCloudWorkedOnUseCase.execute(id, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -74,5 +122,9 @@ public class CloudController {
             throw new UnauthorizedException("Not authenticated");
         }
         return Long.parseLong(principal.getUsername());
+    }
+
+    private CloudThoughtResponse toResponse(CloudThought thought) {
+        return new CloudThoughtResponse(thought.getId(), thought.getText(), thought.isWorkedOn(), thought.getCreatedAt());
     }
 }

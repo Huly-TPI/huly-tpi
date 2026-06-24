@@ -8,9 +8,9 @@ export interface LanternThought {
 }
 
 export const lanternsApi = {
-  list: () => api.get<LanternThought[]>('/lanterns'),
-  create: (text: string) => api.post<LanternThought>('/lanterns', { text }),
+  list: () => api.get<LanternThought[]>('/clouds'),
+  create: (text: string) => api.post<LanternThought>('/clouds/thought', { thought: text }),
   updateStatus: (id: number, status: 'COMPLETED' | 'CANCELLED') =>
-    api.patch<void>(`/lanterns/${id}/status`, { status }),
-  markWorkedOn: (id: number) => api.patch<void>(`/lanterns/${id}/worked-on`),
+    api.patch<void>(`/clouds/${id}/status`, { status }),
+  markWorkedOn: (id: number) => api.patch<void>(`/clouds/${id}/worked-on`),
 }
