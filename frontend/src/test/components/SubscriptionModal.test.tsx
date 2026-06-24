@@ -147,14 +147,14 @@ describe('SubscriptionModal', () => {
     it('muestra features exclusivas del plan Basico', () => {
       renderModal()
       expect(screen.getByText('3 audios por día')).toBeInTheDocument()
-      expect(screen.getByText('Mandalas exclusivos (plan básico)')).toBeInTheDocument()
+      expect(screen.getAllByText('Mandalas exclusivos').length).toBeGreaterThanOrEqual(1)
     })
 
     it('muestra features exclusivas del plan Huly', () => {
       renderModal()
       expect(screen.getByText('1000 monedas')).toBeInTheDocument()
       expect(screen.getByText('Audios libres')).toBeInTheDocument()
-      expect(screen.getByText('1.5x recompensas diarias')).toBeInTheDocument()
+      expect(screen.getAllByText('1.5x recompensas diarias').length).toBeGreaterThanOrEqual(1)
     })
 
     it('muestra features compartidas entre planes pagos', () => {
@@ -169,16 +169,17 @@ describe('SubscriptionModal', () => {
       expect(screen.getByRole('button', { name: 'Elegir Huly' })).toBeInTheDocument()
     })
 
-    it('muestra Renovar en el plan activo del usuario', () => {
+    it('muestra Plan actual en la card del plan activo del usuario', () => {
       mockUseMembership.mockReturnValue({ membership: BASIC_MEMBERSHIP, refresh: vi.fn() })
       renderModal()
-      expect(screen.getByRole('button', { name: 'Renovar' })).toBeInTheDocument()
+      expect(screen.getByText('Plan actual')).toBeInTheDocument()
     })
 
-    it('deshabilita el otro plan cuando el usuario ya tiene uno activo', () => {
+    it('no muestra botón de compra en el plan activo del usuario', () => {
       mockUseMembership.mockReturnValue({ membership: BASIC_MEMBERSHIP, refresh: vi.fn() })
       renderModal()
-      expect(screen.getByRole('button', { name: 'Plan activo' })).toBeDisabled()
+      expect(screen.queryByRole('button', { name: 'Elegir Basico' })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Elegir Huly' })).toBeInTheDocument()
     })
 
     it('muestra Plan actual en el plan activo del usuario', () => {

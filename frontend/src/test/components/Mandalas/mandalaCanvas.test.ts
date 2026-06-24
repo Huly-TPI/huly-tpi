@@ -4,7 +4,7 @@ import {
   dilateMap,
   floodFillExterior,
   type MandalaAnalysis,
-} from '../../../components/Mandalas/mandalaCanvas'
+} from '../../../components/Mandalas/mandalaCanvasUtils'
 
 const indexFor = (x: number, y: number, width: number) => y * width + x
 

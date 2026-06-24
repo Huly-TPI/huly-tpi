@@ -2,6 +2,7 @@ package com.huly.backend.domain.repository.user;
 
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.enums.ThemePreference;
+import com.huly.backend.domain.model.user.AudioSettings;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -11,10 +12,12 @@ public interface UserDetailDomainRepository {
     Optional<Boolean> findOnboardingTutorialCompleted(Long userId);
     Optional<Boolean> findProfileOnboardingTutorialCompleted(Long userId);
     ThemePreference findThemePreference(Long userId);
+    AudioSettings findAudioSettings(Long userId);
     void completeOnboarding(Long userId, String answer1, String answer2, String answer3);
     void completeTutorial(Long userId);
     void completeProfileTutorial(Long userId);
     void updateThemePreference(Long userId, ThemePreference themePreference);
+    AudioSettings updateAudioSettings(Long userId, AudioSettings audioSettings);
 
     /** Estado actual de la racha de recompensas diarias del usuario. */
     DailyClaimState findDailyClaimState(Long userId);

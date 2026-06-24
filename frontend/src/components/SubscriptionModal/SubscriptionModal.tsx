@@ -86,11 +86,10 @@ function PaidCard({
   onBuy,
 }: PaidCardProps) {
   const isCurrentPlan = activeProductId === plan.id
-  const blockedByOther = activeProductId !== null && !isCurrentPlan
-  const buttonDisabled = disabled || blockedByOther
+  const buttonDisabled = disabled
   const isBasic = buttonTheme === 'yellow'
 
-  const label = isCurrentPlan ? 'Renovar' : blockedByOther ? 'Plan activo' : `Elegir ${displayName}`
+  const label = `Elegir ${displayName}`
 
   const textColor = isBasic ? 'text-[#8f541f]' : 'text-[#5d3a80]'
   const checkBg = isBasic ? 'bg-[#f5a623]' : 'bg-[#8b5a8e]'
@@ -136,18 +135,19 @@ function PaidCard({
           ))}
         </ul>
 
-        <button
-          type="button"
-          onClick={() => onBuy(plan.id)}
-          disabled={buttonDisabled}
-          className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] ${buttonClass}`}
-        >
-          {buying ? 'Procesando…' : label}
-        </button>
-        {isCurrentPlan && (
-          <div className={`mt-1 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap ${buttonClass}`}>
+        {isCurrentPlan ? (
+          <div className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] whitespace-nowrap ${buttonClass}`}>
             Plan actual
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onBuy(plan.id)}
+            disabled={buttonDisabled}
+            className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] ${buttonClass}`}
+          >
+            {buying ? 'Procesando…' : label}
+          </button>
         )}
       </div>
     </div>
@@ -182,10 +182,10 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Planes de suscripción" className="relative z-10 w-full max-w-[820px] max-[640px]:max-w-[390px]" onClick={e => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Planes de suscripción" className="relative z-10 w-full max-w-[720px] max-[640px]:max-w-[390px]" onClick={e => e.stopPropagation()}>
         <img src={modalBg} alt="" aria-hidden="true" className="w-full h-auto select-none pointer-events-none block" draggable={false} />
 
-        <div className="absolute inset-0 px-[8%] pt-[9%] pb-[6%] flex flex-col overflow-hidden">
+        <div className="absolute inset-0 px-[8%] pt-[9%] pb-[8%] flex flex-col overflow-hidden">
           <button onClick={onClose} aria-label="Cerrar planes de suscripción" className="absolute top-[3%] right-[3%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20">
             <X className="w-5 h-5" />
           </button>
@@ -200,19 +200,19 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
             Elegí el plan que mejor se adapte a vos
           </p>
 
-          <div className="flex justify-center items-stretch gap-2 sm:gap-3 mt-2 px-[1%]">
+          <div className="flex justify-center items-stretch gap-2 sm:gap-3 mt-2 px-[1%] flex-1 min-h-0">
             {plansLoading ? (
               <div className="flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <>
-                <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
+                <div className="w-[28%] h-full">
                   <FreeCard isCurrentPlan={!activeProductId} />
                 </div>
 
                 {basicPlan && (
-                  <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
+                  <div className="w-[28%] h-full">
                     <PaidCard
                       plan={basicPlan}
                       displayName={getDisplayName(basicPlan.planCode, basicPlan.name)}
@@ -235,7 +235,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                 )}
 
                 {premiumPlan && (
-                  <div className="w-[28%] h-[clamp(290px,50vh,400px)]">
+                  <div className="w-[28%] h-full">
                     <PaidCard
                       plan={premiumPlan}
                       displayName={getDisplayName(premiumPlan.planCode, premiumPlan.name)}

@@ -28,8 +28,10 @@ import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
 import Privacy from './pages/Privacy/Privacy'
 import Unsubscribe from './pages/Unsubscribe/Unsubscribe'
+import { usePreloadImages } from './hooks/usePreloadImages'
 
 const App = () => {
+  usePreloadImages()
   return (
 
     <AuthProvider>

@@ -80,6 +80,18 @@ public class UserDetailEntity {
     private ThemePreference themePreference;
 
     @Builder.Default
+    @Column(name = "interface_volume", nullable = false)
+    private Double interfaceVolume = 0.7;
+
+    @Builder.Default
+    @Column(name = "ambient_volume", nullable = false)
+    private Double ambientVolume = 0.1;
+
+    @Builder.Default
+    @Column(name = "minigame_volume", nullable = false)
+    private Double minigameVolume = 1.0;
+
+    @Builder.Default
     @Column(name = "daily_reward_streak", nullable = false)
     private Integer dailyRewardStreak = 0;
 

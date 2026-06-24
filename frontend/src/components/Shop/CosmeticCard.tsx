@@ -1,6 +1,7 @@
 import type { StoreItemResponse } from '../../api/store'
 import { cosmeticAssets } from '../Scene/cosmeticAssets'
 import { mandalaAssetByKey } from '../Mandalas/mandalaAssets'
+import seedIcon from '../../assets/shop-seed/1seed.webp'
 
 interface CosmeticCardProps {
   item: StoreItemResponse
@@ -12,9 +13,10 @@ interface CosmeticCardProps {
   onBuyWithMoney: (id: number) => void
   onEquip: (id: number) => void
   onUnequip: (id: number) => void
+  userIsPremium: boolean
 }
 
-export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onBuyWithMoney, onEquip, onUnequip }: CosmeticCardProps) {
+export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onBuyWithMoney, onEquip, onUnequip, userIsPremium }: CosmeticCardProps) {
   let preview = cosmeticAssets[item.assetKey]?.light
   if (item.category === 'MANDALA') {
     preview = mandalaAssetByKey[item.assetKey]
@@ -24,6 +26,11 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
     <div className="flex flex-col gap-1.5 rounded-2xl border border-[#ACCCA4]/50 bg-white p-2.5 shadow-sm transition-shadow hover:shadow-md sm:gap-2 sm:p-3">
       {preview && (
         <img src={preview} alt={item.name} className="mx-auto h-14 w-14 object-contain sm:h-20 sm:w-20" />
+      )}
+      {item.premiumOnly && (
+        <span className="mt-0.5 inline-block rounded-full bg-[#8869AC]/15 px-2 py-0.5 text-[10px] font-semibold text-[#8869AC]">
+          Solo premium
+        </span>
       )}
       <div className="flex-1">
         <h3 className="font-nunito text-sm font-bold leading-tight text-[#4C7C64]">{item.name}</h3>
@@ -35,7 +42,7 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
         </div>
       ) : (
         <div className="flex items-center gap-1">
-          <span aria-hidden="true" className="text-sm text-yellow-500">🌱</span>
+          <img src={seedIcon} alt="" aria-hidden="true" className="w-6 h-6 object-contain shrink-0" />
           <span className="text-xs font-semibold text-yellow-700">{item.priceCoins.toLocaleString('es-AR')} semillas</span>
         </div>
       )}
@@ -75,6 +82,14 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
           className="w-full rounded-xl bg-[#4C7C64] py-2 text-xs font-semibold text-white transition-all hover:bg-[#3d6450] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Comprar con MercadoPago
+        </button>
+      ) : item.premiumOnly && !userIsPremium ? (
+        <button
+          type="button"
+          disabled
+          className="w-full rounded-xl bg-[#8869AC]/20 py-2 text-xs font-semibold text-[#8869AC] cursor-not-allowed"
+        >
+          Solo premium
         </button>
       ) : (
         <button
