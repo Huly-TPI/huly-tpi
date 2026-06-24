@@ -109,6 +109,7 @@ public class PromptBuilderService {
         sb.append("\n  c) El usuario expresa un deseo o aspiración concreto que se puede convertir en una acción pequeña y posible hoy (quiere conocer gente, retomar algo, probar algo nuevo).");
         sb.append("\n- El reto debe ser específico, alcanzable, relacionado con lo que el usuario está viviendo, y sin presión.");
         sb.append("\n- Si no se cumple ninguna condición (conversación casual, saludo, pregunta informativa), devolvé null.");
+        sb.append("\n- Si el usuario está aceptando o rechazando un reto anterior (por ejemplo, si su mensaje es 'Acepto este reto' o 'Rechazo este reto por ahora'), NO generes un nuevo reto: devolvé generated_challenge null.");
         sb.append("\n- Si generás un reto, presentalo de forma breve y natural dentro de huly_reply.");
         sb.append("\n- Si hay una ACTIVIDAD RECOMENDADA POR EL SISTEMA, no generes reto: devolvé generated_challenge null.");
         sb.append("\n- Formato cuando corresponde: { \"title\": \"<título corto>\", \"description\": \"<descripción accionable en 1-2 oraciones>\" }");
