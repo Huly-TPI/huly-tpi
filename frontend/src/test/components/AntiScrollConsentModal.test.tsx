@@ -141,4 +141,30 @@ describe('AntiScrollConsentModal', () => {
       expect.objectContaining({ type: 'SET_ENABLED', enabled: true }),
     )
   })
+
+  it('sincroniza el estado visual cuando la extension actualiza atributos del DOM', async () => {
+    document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true')
+    document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'false')
+    document.documentElement.setAttribute('data-huly-antiscroll-consent', 'false')
+
+    mockedGetSettings.mockResolvedValueOnce(defaultSettings)
+
+    render(<AntiScrollConsentModal onClose={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
+    })
+
+    const checkboxes = screen.getAllByRole('checkbox')
+    expect(checkboxes[0]).not.toBeChecked()
+    expect(checkboxes[1]).not.toBeChecked()
+
+    document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'true')
+    document.documentElement.setAttribute('data-huly-antiscroll-consent', 'true')
+
+    await waitFor(() => {
+      expect(checkboxes[0]).toBeChecked()
+      expect(checkboxes[1]).toBeChecked()
+    })
+  })
 })
