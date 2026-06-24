@@ -13,6 +13,8 @@ describe('MandalaGallery', () => {
       src: mandalaAssetByKey['mandala-01'],
       accessStatus: 'available' as const,
       unlockSource: 'free' as const,
+      accessType: 'free' as const,
+      isLocked: false,
     },
     {
       id: 'mandala-13',
@@ -21,6 +23,8 @@ describe('MandalaGallery', () => {
       src: mandalaAssetByKey['mandala-13'],
       accessStatus: 'available' as const,
       unlockSource: 'purchased' as const,
+      accessType: 'purchasable' as const,
+      isLocked: false,
     },
     {
       id: 'mandala-20',
@@ -29,6 +33,8 @@ describe('MandalaGallery', () => {
       src: mandalaAssetByKey['mandala-20'],
       accessStatus: 'included' as const,
       unlockSource: 'premiumPlan' as const,
+      accessType: 'subscription' as const,
+      isLocked: false,
     },
   ]
 

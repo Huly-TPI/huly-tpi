@@ -1,6 +1,7 @@
 import { api } from './client'
 
 export type MandalaUnlockSource = 'FREE' | 'PURCHASED' | 'SUBSCRIPTION'
+export type MandalaAccessType = 'FREE' | 'SUBSCRIPTION' | 'PURCHASABLE'
 
 export interface MandalaResponse {
   id: string
@@ -8,7 +9,9 @@ export interface MandalaResponse {
   description?: string
   assetKey: string
   displayOrder: number
-  unlockSource: MandalaUnlockSource
+  unlockSource: MandalaUnlockSource | null
+  accessType: MandalaAccessType
+  isLocked: boolean
 }
 
 export interface MandalaPageResponse {

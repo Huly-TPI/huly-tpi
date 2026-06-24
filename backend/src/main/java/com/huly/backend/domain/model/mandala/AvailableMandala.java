@@ -9,4 +9,5 @@ import lombok.Getter;
 public class AvailableMandala {
     private final Mandala mandala;
     private final MandalaUnlockSource unlockSource;
+    private final boolean locked;
 }

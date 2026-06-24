@@ -18,6 +18,8 @@ const availableMandalas = [
     src: mandalaAssetByKey['mandala-01'],
     accessStatus: 'available' as const,
     unlockSource: 'free' as const,
+    accessType: 'free' as const,
+    isLocked: false,
   },
   {
     id: 'mandala-13',
@@ -26,6 +28,8 @@ const availableMandalas = [
     src: mandalaAssetByKey['mandala-13'],
     accessStatus: 'available' as const,
     unlockSource: 'purchased' as const,
+    accessType: 'purchasable' as const,
+    isLocked: false,
   },
 ]
 
@@ -39,6 +43,10 @@ vi.mock('../../hooks/useMandalaProgress', () => ({
 
 vi.mock('../../context/auth', () => ({
   useAuth: () => mockUseAuth(),
+}))
+
+vi.mock('../../context/subscriptionModal', () => ({
+  useSubscriptionModal: () => ({ subscriptionOpen: false, openSubscriptionModal: vi.fn(), closeSubscriptionModal: vi.fn() }),
 }))
 
 vi.mock('../../context/theme', () => ({
@@ -100,7 +108,7 @@ describe('Mandalas page', () => {
     expect(await screen.findByTestId('mandala-canvas')).toBeInTheDocument()
     expect(screen.getByAltText('Fondo de día para pintar mandalas')).toHaveClass('theme-background--active')
     expect(document.querySelector('.mandala-easel-image')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /elegir otro mandala/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ir a galería/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /descargar mandala pintada/i })).toBeInTheDocument()
   })
 
@@ -115,7 +123,7 @@ describe('Mandalas page', () => {
 
     await user.click(screen.getAllByRole('button', { name: /elegir mandala/i })[0])
     await screen.findByTestId('mandala-canvas')
-    await user.click(screen.getByRole('button', { name: /elegir otro mandala/i }))
+    await user.click(screen.getByRole('button', { name: /ir a galería/i }))
 
     expect(screen.getAllByRole('button', { name: /elegir mandala/i })).toHaveLength(2)
   })

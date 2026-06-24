@@ -70,13 +70,14 @@
     z-index: 1;
     display: flex;
     width: min(100%, 118rem);
-    min-height: calc(100dvh - 4rem);
+    height: calc(100dvh - 4rem);
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(1rem, 3vh, 1.8rem);
+    gap: clamp(0.75rem, 2vh, 1.4rem);
     margin: 0 auto;
-    padding: clamp(5rem, 9vh, 6.75rem) clamp(1rem, 4vw, 2.5rem) 2rem;
+    overflow: hidden;
+    padding: clamp(3rem, 6vh, 4.5rem) clamp(1rem, 4vw, 2.5rem) 1.5rem;
 }
 
 .mandala-gallery--status::before {
@@ -187,6 +188,29 @@
 
 .mandala-card__badge--premium {
     background: #d1caef;
+}
+
+.mandala-card__badge--purchasable {
+    background: #f6b96f;
+}
+
+.mandala-card--locked .mandala-card__preview img {
+    filter: blur(2.5px) brightness(0.65);
+}
+
+.mandala-card__lock-overlay {
+    position: absolute;
+    top: 14%;
+    left: 22%;
+    z-index: 3;
+    display: flex;
+    width: 56%;
+    height: 72%;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    color: rgba(255, 255, 255, 0.92);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
 }
 
 .mandala-card:focus-visible,
@@ -554,7 +578,7 @@ html.dark .mandala-painting-scene .theme-background {
     top: 50%;
     left: 0;
     transform: translateY(-50%);
-    height: 60%;
+    height: 70%;
     width: 7.5rem;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 250, 244, 0.8));
     backdrop-filter: blur(20px);
@@ -566,6 +590,7 @@ html.dark .mandala-painting-scene .theme-background {
     flex-direction: column;
     align-items: center;
     padding: 2.5rem 0;
+    overflow: hidden;
 }
 
 .mandala-palette-overlay .mandala-toolbar {
@@ -579,6 +604,20 @@ html.dark .mandala-painting-scene .theme-background {
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.mandala-palette-overlay .mandala-toolbar__section:first-child {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
+    align-items: center;
 }
 
 .mandala-palette-overlay .mandala-toolbar__group {
@@ -588,8 +627,27 @@ html.dark .mandala-painting-scene .theme-background {
     align-items: center;
     background: transparent;
     border: none;
-    padding: 0;
+    padding: 0 0.25rem;
     width: auto;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(136, 105, 172, 0.35) transparent;
+    padding: 1rem;
+}
+
+.mandala-palette-overlay .mandala-toolbar__group::-webkit-scrollbar {
+    width: 3px;
+}
+
+.mandala-palette-overlay .mandala-toolbar__group::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mandala-palette-overlay .mandala-toolbar__group::-webkit-scrollbar-thumb {
+    background: rgba(136, 105, 172, 0.35);
+    border-radius: 999px;
 }
 
 .mandala-palette-overlay .mandala-toolbar__swatch {
@@ -618,6 +676,7 @@ html.dark .mandala-toolbar__divider {
     gap: 0.8rem;
     align-items: center;
     width: 100%;
+    padding: 1rem;
 }
 
 .mandala-toolbar__tool-btn {
@@ -865,6 +924,14 @@ html.dark .mandala-palette-overlay {
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
 }
 
+html.dark .mandala-palette-overlay .mandala-toolbar__group {
+    scrollbar-color: rgba(209, 202, 239, 0.3) transparent;
+}
+
+html.dark .mandala-palette-overlay .mandala-toolbar__group::-webkit-scrollbar-thumb {
+    background: rgba(209, 202, 239, 0.3);
+}
+
 html.dark .mandala-palette-overlay .mandala-toolbar {
     background: transparent;
     border: none;
@@ -1035,6 +1102,7 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
         gap: 0.5rem;
         justify-content: center;
         width: 100%;
+        padding: 1rem;
     }
 
     .mandala-toolbar__tool-btn {
@@ -1077,7 +1145,7 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
 
 @media (max-width: 520px) {
     .mandala-gallery {
-        padding-top: 4.75rem;
+        padding-top: 3rem;
     }
 
     .mandala-gallery__grid {
