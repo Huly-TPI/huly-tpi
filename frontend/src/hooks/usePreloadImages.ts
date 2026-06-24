@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { preloadImages } from '../utils/preloadImages'
-import { localImageUrls } from '../utils/localImageUrls'
 import { criticalImageUrls } from '../utils/criticalImageUrls'
 import { restImageUrls } from '../utils/localImageUrls'
 
