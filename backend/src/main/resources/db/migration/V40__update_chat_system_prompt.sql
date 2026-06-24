@@ -1,5 +1,3 @@
-ALTER TABLE chat_config ALTER COLUMN system_prompt TYPE TEXT;
-
 UPDATE chat_config
 SET system_prompt = 'Tu nombre es Huly.
 
