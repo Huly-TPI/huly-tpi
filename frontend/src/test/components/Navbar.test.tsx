@@ -19,6 +19,10 @@ vi.mock('../../hooks/shop/useMembership', () => ({
   useMembership: () => mockUseMembership(),
 }))
 
+vi.mock('../../context/subscriptionModal', () => ({
+  useSubscriptionModal: () => ({ subscriptionOpen: false, openSubscriptionModal: vi.fn(), closeSubscriptionModal: vi.fn() }),
+}))
+
 vi.mock('../../components/SubscriptionModal/SubscriptionModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <div role="dialog" aria-label="Planes de suscripción" /> : null,
