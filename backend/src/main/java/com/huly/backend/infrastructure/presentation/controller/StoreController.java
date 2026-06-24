@@ -70,7 +70,8 @@ public class StoreController {
                 item.getCategory().name(),
                 item.getAssetKey(),
                 item.getPriceCoins(),
-                item.getPrice());
+                item.getPrice(),
+                item.isPremiumOnly());
     }
 
     private InventoryItemResponse toInventoryResponse(UserStoreItem owned) {
