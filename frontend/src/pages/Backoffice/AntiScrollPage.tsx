@@ -64,7 +64,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Tasa de retorno al jardín</h2>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
                 Mide cuántos usuarios deciden pausar su navegación e ir a relajarse al jardín terapéutico.
               </p>
             </div>
@@ -123,7 +123,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Usuarios en la extensión</h2>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
                 Estado de adopción de la extensión y consentimientos de compartición de datos de bienestar.
               </p>
             </div>
@@ -176,7 +176,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Configuración de la extensión</h2>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
                 Personaliza el comportamiento global de la extensión anti-scroll.
               </p>
             </div>
@@ -253,7 +253,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Páginas más consumidas</h2>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
                 Dominios en los que los usuarios con seguimiento autorizado pasan la mayor cantidad de tiempo scrolleando.
               </p>
             </div>

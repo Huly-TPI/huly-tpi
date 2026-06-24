@@ -47,7 +47,7 @@ export default function BoardItem({ goal, onSelect, onComplete, darkMode = false
       onKeyDown={e => e.key === 'Enter' && onSelect(goal)}
       aria-label={`Ver detalles: ${goal.title}`}
     >
-      <span className={`board-item__title flex-1 text-[0.85rem] font-semibold leading-[1.35] break-words relative ${
+      <span className={`board-item__title flex-1 text-[0.85rem] lg:text-[0.92rem] font-semibold leading-[1.35] break-words relative ${
         darkMode
           ? isCompleted ? 'text-[#d4efdb]' : 'text-[#f1e5cb]'
           : isCompleted ? 'text-[#7a9c6e]' : 'text-[#3b2510]'
