@@ -1,7 +1,7 @@
 .zen-sand {
-  width: min(100%, 72rem);
+  width: min(98vw, 112rem);
   margin: 0 auto;
-  padding: clamp(5rem, 9vh, 7rem) clamp(1rem, 4vw, 3rem) 2rem;
+  padding: clamp(4.75rem, 7vh, 6.25rem) clamp(0.5rem, 2vw, 2rem) 1.25rem;
 }
 
 .zen-sand__header {
@@ -37,42 +37,96 @@
 }
 
 .zen-sand__frame {
+  --sand-area-top: 12.5%;
+  --sand-area-left: 19.1%;
+  --sand-area-width: 61.7%;
+  --sand-area-height: 73.5%;
   position: relative;
-  overflow: hidden;
-  padding: clamp(0.5rem, 1.5vw, 0.85rem);
-  border: 1px solid rgba(111, 76, 38, 0.28);
-  border-radius: clamp(1.15rem, 3vw, 2rem);
-  background:
-    linear-gradient(145deg, rgba(113, 73, 36, 0.92), rgba(75, 46, 25, 0.96)),
-    #704a29;
-  box-shadow:
-    /* 0 1.5rem 3rem rgba(64, 43, 25, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25), */
-    0 25px 25px -12px rgba(0, 0, 0, 0.55),
-    0 8px 10px /6px rgba(0, 0, 0 , 0.75),
-    inset 0 1px - rgba(255,2555,255, 0.25)
+  width: min(100%, 105rem);
+  aspect-ratio: 1448 / 1086;
+  margin: 0 auto;
+  filter: drop-shadow(0 1.4rem 1.8rem rgba(0, 0, 0, 0.34));
 }
 
-.zen-sand__frame::after {
+.zen-sand__frame-image {
   position: absolute;
-  inset: clamp(0.5rem, 1.5vw, 0.85rem);
-  border-radius: clamp(0.7rem, 2vw, 1.3rem);
-  box-shadow: inset 0 0 1.5rem rgba(83, 51, 24, 0.26);
-  content: '';
+  z-index: 1;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   pointer-events: none;
+  user-select: none;
 }
 
 .zen-sand__canvas {
   display: block;
-  width: 100%;
-  height: clamp(22rem, 58vh, 39rem);
-  border-radius: clamp(0.7rem, 2vw, 1.3rem);
+  position: absolute;
+  z-index: 2;
+  top: var(--sand-area-top);
+  left: var(--sand-area-left);
+  width: var(--sand-area-width);
+  height: var(--sand-area-height);
+  border-radius: 0.35rem;
   cursor: crosshair;
   touch-action: none;
   user-select: none;
 }
 
 .zen-sand__canvas:focus-visible {
+  outline: 3px solid rgba(136, 105, 172, 0.55);
+  outline-offset: 4px;
+}
+
+.zen-sand__clear-button,
+.zen-sand__export-button {
+  position: absolute;
+  z-index: 4;
+  top: 10.5%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(2.65rem, 4vw, 3.35rem);
+  height: clamp(2.65rem, 4vw, 3.35rem);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #7a2f2f;
+  cursor: pointer;
+  box-shadow:
+    0 0.75rem 1.4rem rgba(51, 31, 14, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.zen-sand__clear-button {
+  right: 15.2%;
+  color: #7a2f2f;
+}
+
+.zen-sand__export-button {
+  right: 20.2%;
+  color: #5f4a8b;
+}
+
+.zen-sand__clear-button:hover,
+.zen-sand__export-button:hover {
+  background: #b94242;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.zen-sand__export-button:hover {
+  background: #8869ac;
+}
+
+.zen-sand__clear-button:focus-visible,
+.zen-sand__export-button:focus-visible {
   outline: 3px solid rgba(136, 105, 172, 0.55);
   outline-offset: 4px;
 }
@@ -89,18 +143,40 @@ html.dark .zen-sand__eyebrow {
 }
 
 html.dark .zen-sand__frame {
-  border-color: rgba(233, 204, 146, 0.18);
+  filter: drop-shadow(0 1.4rem 1.9rem rgba(0, 0, 0, 0.5));
+}
+
+html.dark .zen-sand__clear-button,
+html.dark .zen-sand__export-button {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(23, 32, 51, 0.9);
   box-shadow:
-    /* 0 1.5rem 3rem rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16); */
-    0 25px 25px -12px rgba(0, 0, 0, 0.75),
-    0 8px 10px -6px rgba(0, 0, 0 , 0.95),
-    inset 0 1px 0 rgba(255,255,255, 0.25)
+    0 0.8rem 1.5rem rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+html.dark .zen-sand__clear-button {
+  color: #fecaca;
+}
+
+html.dark .zen-sand__export-button {
+  color: #d1caef;
+}
+
+html.dark .zen-sand__clear-button:hover {
+  background: #b94242;
+  color: white;
+}
+
+html.dark .zen-sand__export-button:hover {
+  background: #8869ac;
+  color: white;
 }
 
 @media (max-width: 640px) {
   .zen-sand {
-    padding-top: 4.75rem;
+    width: min(100vw, 46rem);
+    padding: 4.5rem 0 0.75rem;
   }
 
   .zen-sand__header {
@@ -109,9 +185,25 @@ html.dark .zen-sand__frame {
     gap: 1rem;
   }
 
-  .zen-sand__canvas {
-    height: min(58vh, 31rem);
-    min-height: 20rem;
+  .zen-sand__frame {
+    width: 124vw;
+    max-width: none;
+    transform: translateX(-8vw);
+  }
+
+  .zen-sand__clear-button,
+  .zen-sand__export-button {
+    top: 8.5%;
+    width: 2.55rem;
+    height: 2.55rem;
+  }
+
+  .zen-sand__clear-button {
+    right: 10.5%;
+  }
+
+  .zen-sand__export-button {
+    right: 18.8%;
   }
 }
 

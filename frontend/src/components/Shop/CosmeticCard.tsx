@@ -1,5 +1,6 @@
 import type { StoreItemResponse } from '../../api/store'
 import { cosmeticAssets } from '../Scene/cosmeticAssets'
+import { mandalaAssetByKey } from '../Mandalas/mandalaAssets'
 
 interface CosmeticCardProps {
   item: StoreItemResponse
@@ -14,7 +15,11 @@ interface CosmeticCardProps {
 }
 
 export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onBuyWithMoney, onEquip, onUnequip }: CosmeticCardProps) {
-  const preview = cosmeticAssets[item.assetKey]?.light
+  let preview = cosmeticAssets[item.assetKey]?.light
+  if (item.category === 'MANDALA') {
+    preview = mandalaAssetByKey[item.assetKey]
+  }
+
   return (
     <div className="flex flex-col gap-1.5 rounded-2xl border border-[#ACCCA4]/50 bg-white p-2.5 shadow-sm transition-shadow hover:shadow-md sm:gap-2 sm:p-3">
       {preview && (
@@ -44,14 +49,24 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
           {busy ? 'Quitando…' : 'Quitar'}
         </button>
       ) : owned ? (
-        <button
-          type="button"
-          onClick={() => onEquip(item.id)}
-          disabled={disabled}
-          className="w-full rounded-xl bg-[#8869AC] py-2 text-xs font-semibold text-white transition-all hover:bg-[#75588f] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {busy ? 'Equipando…' : 'Equipar'}
-        </button>
+        item.category === 'MANDALA' ? (
+          <button
+            type="button"
+            disabled
+            className="w-full rounded-xl bg-[#E9F1EA] py-2 text-xs font-semibold text-[#4C7C64] opacity-70 cursor-not-allowed"
+          >
+            Adquirido
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onEquip(item.id)}
+            disabled={disabled}
+            className="w-full rounded-xl bg-[#8869AC] py-2 text-xs font-semibold text-white transition-all hover:bg-[#75588f] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? 'Equipando…' : 'Equipar'}
+          </button>
+        )
       ) : item.price != null ? (
         <button
           type="button"
