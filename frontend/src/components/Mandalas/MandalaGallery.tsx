@@ -10,6 +10,7 @@ interface MandalaGalleryProps {
   last: boolean
   onPageChange: (page: number) => void
   onSelectMandala: (mandala: MandalaCatalogItem) => void
+  onLockedMandala?: (accessType: MandalaCatalogItem['accessType']) => void
 }
 
 export default function MandalaGallery({
@@ -20,12 +21,13 @@ export default function MandalaGallery({
   last,
   onPageChange,
   onSelectMandala,
+  onLockedMandala,
 }: MandalaGalleryProps) {
   return (
     <section className="mandala-gallery" aria-label="Seleccionar mandala">
       <div className="mandala-gallery__grid">
         {mandalas.map(mandala => (
-          <MandalaCard key={mandala.id} mandala={mandala} onSelect={onSelectMandala} />
+          <MandalaCard key={mandala.id} mandala={mandala} onSelect={onSelectMandala} onLockedClick={onLockedMandala} />
         ))}
       </div>
 

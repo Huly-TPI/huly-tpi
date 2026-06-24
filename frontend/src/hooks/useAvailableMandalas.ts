@@ -1,17 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
-import { mandalasApi, type MandalaResponse } from '../api/mandalas'
+import { mandalasApi, type MandalaAccessType, type MandalaResponse, type MandalaUnlockSource } from '../api/mandalas'
 import { mandalaAssetByKey } from '../components/Mandalas/mandalaAssets'
 import type { MandalaCatalogItem } from '../components/Mandalas/mandalaTypes'
 import { useAuth } from '../context/auth'
 
-function toAccessStatus(source: MandalaResponse['unlockSource']): MandalaCatalogItem['accessStatus'] {
+function toAccessStatus(source: MandalaUnlockSource): MandalaCatalogItem['accessStatus'] {
   return source === 'SUBSCRIPTION' ? 'included' : 'available'
 }
 
-function toUnlockSource(source: MandalaResponse['unlockSource']): MandalaCatalogItem['unlockSource'] {
+function toUnlockSource(source: MandalaUnlockSource): MandalaCatalogItem['unlockSource'] {
   if (source === 'FREE') return 'free'
   if (source === 'PURCHASED') return 'purchased'
   return 'premiumPlan'
+}
+
+function toAccessType(type: MandalaAccessType): MandalaCatalogItem['accessType'] {
+  if (type === 'FREE') return 'free'
+  if (type === 'PURCHASABLE') return 'purchasable'
+  return 'subscription'
 }
 
 function toCatalogItem(mandala: MandalaResponse): MandalaCatalogItem | null {
@@ -25,8 +31,10 @@ function toCatalogItem(mandala: MandalaResponse): MandalaCatalogItem | null {
     title: mandala.title,
     description: mandala.description,
     src,
-    accessStatus: toAccessStatus(mandala.unlockSource),
-    unlockSource: toUnlockSource(mandala.unlockSource),
+    accessStatus: mandala.unlockSource ? toAccessStatus(mandala.unlockSource) : 'included',
+    unlockSource: mandala.unlockSource ? toUnlockSource(mandala.unlockSource) : 'premiumPlan',
+    accessType: toAccessType(mandala.accessType),
+    isLocked: mandala.isLocked,
   }
 }
 

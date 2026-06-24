@@ -79,7 +79,9 @@ public class MandalaController {
                 availableMandala.getMandala().getDescription(),
                 availableMandala.getMandala().getAssetKey(),
                 availableMandala.getMandala().getDisplayOrder(),
-                availableMandala.getUnlockSource().name());
+                availableMandala.getUnlockSource() != null ? availableMandala.getUnlockSource().name() : null,
+                availableMandala.getMandala().getAccessType().name(),
+                availableMandala.isLocked());
     }
 
     private MandalaPageResponse toPageResponse(Page<AvailableMandala> page) {

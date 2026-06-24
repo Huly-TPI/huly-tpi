@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import { ThemeProvider } from '../../context/theme'
+import { SubscriptionModalProvider } from '../../context/subscriptionModal'
 import type { Membership } from '../../api/auth'
 
 /* ─── Mocks ─── */
@@ -18,6 +19,7 @@ const mockUseMembership = vi.fn()
 vi.mock('../../hooks/shop/useMembership', () => ({
   useMembership: () => mockUseMembership(),
 }))
+
 
 vi.mock('../../components/SubscriptionModal/SubscriptionModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) =>
@@ -38,11 +40,13 @@ const PREMIUM_MEMBERSHIP: Membership = { active: true, planCode: 'PREMIUM', prod
 
 const renderWithRouter = () =>
   render(
-    <ThemeProvider>
-      <MemoryRouter>
-        <Navbar />
-      </MemoryRouter>
-    </ThemeProvider>,
+    <SubscriptionModalProvider>
+      <ThemeProvider>
+        <MemoryRouter>
+          <Navbar />
+        </MemoryRouter>
+      </ThemeProvider>
+    </SubscriptionModalProvider>,
   )
 
 /* ─── Tests ─── */

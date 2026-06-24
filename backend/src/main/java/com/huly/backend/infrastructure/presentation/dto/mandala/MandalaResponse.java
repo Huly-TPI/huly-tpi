@@ -6,6 +6,8 @@ public record MandalaResponse(
         String description,
         String assetKey,
         int displayOrder,
-        String unlockSource
+        String unlockSource,
+        String accessType,
+        boolean isLocked
 ) {
 }

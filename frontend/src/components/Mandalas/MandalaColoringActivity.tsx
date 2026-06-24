@@ -1,4 +1,5 @@
-import { ArrowLeft, ImageDown, RotateCcw } from "lucide-react";
+import { ImageDown, RotateCcw } from "lucide-react";
+import galleryImage from "../../assets/mandalas/galery.webp";
 import { useRef, useState } from "react";
 import mandalaBackgroundDark from "../../assets/mandalas/dark-theme/background/mandala-background-dark.webp";
 import mandalaBackgroundLight from "../../assets/mandalas/light-theme/background/mandala-background-light.webp";
@@ -70,13 +71,12 @@ export default function MandalaColoringActivity({
           />
 
           <button
-            aria-label="Elegir otro mandala"
-            className="mandala-activity__back mandala-activity__back--scene"
+            aria-label="Ir a galería"
+            className="fixed top-20 right-4 z-50 h-20 w-20 transition hover:scale-105 active:scale-95"
             onClick={onBackToGallery}
             type="button"
           >
-            <ArrowLeft aria-hidden="true" size={18} />
-            Ir a galería
+            <img src={galleryImage} alt="Ir a galería" className="h-full w-full object-contain" />
           </button>
 
           <div className="mandala-easel-stage">

@@ -1,6 +1,6 @@
 import { Sparkles, CreditCard, ArrowRight } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import Button from '../Buttons/Button/Button'
+import { useSubscriptionModal } from '../../context/subscriptionModal'
 
 interface ChatbotQuotaLimitCardProps {
   message: string
@@ -8,7 +8,7 @@ interface ChatbotQuotaLimitCardProps {
 }
 
 export default function ChatbotQuotaLimitCard({ message, onClose }: ChatbotQuotaLimitCardProps) {
-  const navigate = useNavigate()
+  const { openSubscriptionModal } = useSubscriptionModal()
 
   const isFreePlan = message.includes('plan gratuito')
   const isAudioLock = message.includes('envío de audio')
@@ -34,7 +34,7 @@ export default function ChatbotQuotaLimitCard({ message, onClose }: ChatbotQuota
           type="button"
           onClick={() => {
             onClose()
-            navigate('/shop')
+            openSubscriptionModal()
           }}
           variant="primary"
           size="sm"
