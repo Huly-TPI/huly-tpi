@@ -1,0 +1,83 @@
+.not-found {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.not-found__bg {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 80%;
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+
+.not-found__bg--active {
+  opacity: 1;
+}
+
+.not-found__bg--desktop {
+  display: none;
+}
+
+.not-found__bg--mobile {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .not-found__bg--desktop {
+    display: block;
+  }
+
+  .not-found__bg--mobile {
+    display: none;
+  }
+}
+
+.not-found__character {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 65%;
+  z-index: 5;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .not-found__character {
+    height: 45%;
+  }
+}
+
+.not-found__button {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background-color: #9B6ACF;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.7rem 2rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: background-color 150ms ease, transform 150ms ease;
+  white-space: nowrap;
+}
+
+.not-found__button:hover {
+  background-color: #8A58C2;
+  transform: translateX(-50%) scale(1.04);
+}
+
+.not-found__button:active {
+  transform: translateX(-50%) scale(0.97);
+}
