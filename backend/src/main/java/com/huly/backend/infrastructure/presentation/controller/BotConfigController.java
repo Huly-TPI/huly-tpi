@@ -8,9 +8,11 @@ import com.huly.backend.infrastructure.presentation.dto.chatConfig.UpdateBotConf
 import com.huly.backend.infrastructure.presentation.dto.chatConfig.BotConfigResponse;
 import com.huly.backend.infrastructure.presentation.mapper.chatBotConfig.BotConfigPresentationMapper;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/admin/chat/config")
 public class BotConfigController {
@@ -19,13 +21,7 @@ public class BotConfigController {
     private final UpdateBotConfigUseCase updateBotConfigUseCase;
     private final BotConfigPresentationMapper botConfigPresentationMapper;
 
-    public BotConfigController(GetBotConfigUseCase getBotConfigUseCase,
-                               UpdateBotConfigUseCase updateBotConfigUseCase,
-                               BotConfigPresentationMapper botConfigPresentationMapper) {
-        this.getBotConfigUseCase = getBotConfigUseCase;
-        this.updateBotConfigUseCase = updateBotConfigUseCase;
-        this.botConfigPresentationMapper = botConfigPresentationMapper;
-    }
+
 
     @GetMapping
     public ResponseEntity<BotConfigResponse> getConfig() {
