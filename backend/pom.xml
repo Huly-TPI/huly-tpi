@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<spring-ai.version>2.0.0-M4</spring-ai.version>
+		<aws-sdk.version>2.31.16</aws-sdk.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -140,7 +141,12 @@
 			<artifactId>bcprov-jdk15on</artifactId>
 			<version>1.70</version>
 		</dependency>
-		
+		<!-- AWS SDK v2 - cliente S3 para subir archivos a Supabase Storage (endpoint S3-compatible) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+		</dependency>
+
 	</dependencies>
 	
 	<dependencyManagement>
@@ -149,6 +155,13 @@
 				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-bom</artifactId>
 				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>${aws-sdk.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
