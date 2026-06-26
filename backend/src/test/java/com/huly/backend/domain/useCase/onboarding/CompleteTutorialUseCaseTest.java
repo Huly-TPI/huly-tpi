@@ -1,10 +1,12 @@
 package com.huly.backend.domain.useCase.onboarding;
 
+import com.huly.backend.domain.dto.onboarding.CompleteTutorialRequest;
+import com.huly.backend.domain.mapper.onboarding.CompleteTutorialMapper;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -17,18 +19,23 @@ class CompleteTutorialUseCaseTest {
 
     @Mock private UserDetailDomainRepository userDetailDomainRepository;
 
-    @InjectMocks private CompleteTutorialUseCase completeTutorialUseCase;
+    private CompleteTutorialUseCase completeTutorialUseCase;
+
+    @BeforeEach
+    void setUp() {
+        completeTutorialUseCase = new CompleteTutorialUseCase(userDetailDomainRepository, new CompleteTutorialMapper());
+    }
 
     @Test
     void execute_shouldCompleteTutorial() {
-        completeTutorialUseCase.execute(1L);
+        completeTutorialUseCase.execute(new CompleteTutorialRequest(1L));
 
         verify(userDetailDomainRepository).completeTutorial(1L);
     }
 
     @Test
     void executeProfile_shouldCompleteProfileTutorial() {
-        completeTutorialUseCase.executeProfile(1L);
+        completeTutorialUseCase.executeProfile(new CompleteTutorialRequest(1L));
 
         verify(userDetailDomainRepository).completeProfileTutorial(1L);
     }
@@ -38,7 +45,7 @@ class CompleteTutorialUseCaseTest {
         doThrow(new NotFoundException("No se encontraron datos del usuario"))
                 .when(userDetailDomainRepository).completeTutorial(99L);
 
-        assertThatThrownBy(() -> completeTutorialUseCase.execute(99L))
+        assertThatThrownBy(() -> completeTutorialUseCase.execute(new CompleteTutorialRequest(99L)))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("No se encontraron datos del usuario");
     }

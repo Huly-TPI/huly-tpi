@@ -1,17 +1,17 @@
 package com.huly.backend.domain.useCase.store;
-import com.huly.backend.domain.model.shop.StoreItem;
+import com.huly.backend.domain.dto.store.ListStoreItemsResponse;
+import com.huly.backend.domain.mapper.store.ListStoreItemsMapper;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 public class ListStoreItemsUseCase {
 
     private final StoreItemRepository storeItemRepository;
-    
-    public List<StoreItem> execute() {
-        return storeItemRepository.findAll();
+    private final ListStoreItemsMapper mapper;
+
+    public ListStoreItemsResponse execute() {
+        return mapper.toResponse(storeItemRepository.findAll());
     }
-    
+
 }

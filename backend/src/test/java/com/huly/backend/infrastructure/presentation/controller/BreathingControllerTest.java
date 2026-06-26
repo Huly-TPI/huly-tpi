@@ -1,7 +1,9 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.breathingTechnique.BreathingTechnique;
+import com.huly.backend.domain.dto.BreathingSession.BreathingTechniqueItem;
+import com.huly.backend.domain.dto.BreathingSession.GetBreathingTechniquesResponse;
 import com.huly.backend.domain.useCase.BreathingSession.GetBreathingTechniquesUseCase;
+import com.huly.backend.infrastructure.presentation.mapper.breathing.BreathingPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,16 +25,17 @@ public class BreathingControllerTest {
     @BeforeEach
     void setUp() {
         getBreathingTechniquesUseCase = mock(GetBreathingTechniquesUseCase.class);
-        BreathingController controller = new BreathingController(getBreathingTechniquesUseCase);
+        BreathingController controller = new BreathingController(getBreathingTechniquesUseCase,
+                new BreathingPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
     void getAllBreathingTechniques_shouldReturnListOfTechniques() throws Exception {
-        List<BreathingTechnique> techniques = List.of(
-                BreathingTechnique.builder().id(1L).name("Diafragmática").inhaleSeconds(4).holdSeconds(0).exhaleSeconds(4).roundsInterval(1).rounds(4).build(),
-                BreathingTechnique.builder().id(2L).name("Cuadrada").inhaleSeconds(4).holdSeconds(4).exhaleSeconds(4).roundsInterval(1).rounds(4).build()
-        );
+        GetBreathingTechniquesResponse techniques = new GetBreathingTechniquesResponse(List.of(
+                new BreathingTechniqueItem(1L, "Diafragmática", null, 4, 0, 4, 1, 4),
+                new BreathingTechniqueItem(2L, "Cuadrada", null, 4, 4, 4, 1, 4)
+        ));
         when(getBreathingTechniquesUseCase.execute()).thenReturn(techniques);
 
         mockMvc.perform(get("/api/breathing/techniques"))
@@ -56,7 +59,8 @@ public class BreathingControllerTest {
 
     @Test
     void getAllBreathingTechniques_shouldReturnEmptyList_whenNoTechniques() throws Exception {
-        when(getBreathingTechniquesUseCase.execute()).thenReturn(List.of());
+        when(getBreathingTechniquesUseCase.execute())
+                .thenReturn(new GetBreathingTechniquesResponse(List.of()));
 
         mockMvc.perform(get("/api/breathing/techniques"))
                 .andExpect(status().isOk())

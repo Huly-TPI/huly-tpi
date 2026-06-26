@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.dto.userGoal.CompleteUserGoalRequest;
+import com.huly.backend.domain.dto.userGoal.CompleteUserGoalResponse;
+import com.huly.backend.domain.mapper.userGoal.CompleteUserGoalMapper;
 import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.user.UserPlant;
 import com.huly.backend.domain.model.enums.GoalStatus;
@@ -14,11 +17,11 @@ import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.domain.model.goals.ImageValidationResult;
 import com.huly.backend.domain.port.ImageValidationPort;
 import com.huly.backend.domain.service.userGoal.ImageStorageService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,8 +55,14 @@ class CompleteUserGoalUseCaseTest {
     @Mock
     private ImageValidationPort imageValidationPort;
 
-    @InjectMocks
     private CompleteUserGoalUseCase completeUserGoalUseCase;
+
+    @BeforeEach
+    void setUp() {
+        completeUserGoalUseCase = new CompleteUserGoalUseCase(
+                userGoalRepository, userPlantRepository, getOrCreateCurrentPlantUseCase,
+                coinService, imageStorageService, imageValidationPort, new CompleteUserGoalMapper());
+    }
 
     private UserGoal pendingGoal(Long id) {
         return UserGoal.builder()
@@ -83,16 +92,16 @@ class CompleteUserGoalUseCaseTest {
         UserGoal goal = pendingGoal(1L);
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
 
-        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(1L, null);
+        CompleteUserGoalResponse result = completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), null);
 
         ArgumentCaptor<UserGoal> captor = ArgumentCaptor.forClass(UserGoal.class);
         verify(userGoalRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(GoalStatus.COMPLETED);
-        assertThat(result.goal().getStatus()).isEqualTo(GoalStatus.COMPLETED);
+        assertThat(result.goal().status()).isEqualTo("COMPLETED");
     }
 
     @Test
@@ -100,22 +109,22 @@ class CompleteUserGoalUseCaseTest {
         UserGoal goal = pendingGoal(1L);
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
 
-        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(1L, null);
+        CompleteUserGoalResponse result = completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), null);
 
-        assertThat(result.goal().getId()).isEqualTo(1L);
-        assertThat(result.goal().getUserId()).isEqualTo(10L);
-        assertThat(result.goal().getTitle()).isEqualTo("Meta");
+        assertThat(result.goal().id()).isEqualTo(1L);
+        assertThat(result.goal().userId()).isEqualTo(10L);
+        assertThat(result.goal().title()).isEqualTo("Meta");
     }
 
     @Test
     void execute_shouldThrowNotFoundException_whenGoalDoesNotExist() {
         when(userGoalRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> completeUserGoalUseCase.execute(99L, null))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(new CompleteUserGoalRequest(99L), null))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(userGoalRepository, never()).save(any());
@@ -126,11 +135,11 @@ class CompleteUserGoalUseCaseTest {
         UserGoal goal = pendingGoal(1L);
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
 
-        completeUserGoalUseCase.execute(1L, null);
+        completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), null);
 
         verify(coinService).credit(10L, 10);
     }
@@ -140,12 +149,12 @@ class CompleteUserGoalUseCaseTest {
         UserGoal goal = pendingGoal(1L);
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
         MultipartFile image = mockImage("/api/user-goals/images/photo.jpg");
 
-        completeUserGoalUseCase.execute(1L, image);
+        completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image);
 
         verify(coinService).credit(10L, 25);
     }
@@ -155,14 +164,14 @@ class CompleteUserGoalUseCaseTest {
         UserGoal goal = pendingGoal(1L);
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
         MultipartFile image = mockImage("/api/user-goals/images/photo.jpg");
 
-        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(1L, image);
+        CompleteUserGoalResponse result = completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image);
 
-        assertThat(result.goal().getImageUrl()).isEqualTo("/api/user-goals/images/photo.jpg");
+        assertThat(result.goal().imageUrl()).isEqualTo("/api/user-goals/images/photo.jpg");
     }
 
     @Test
@@ -172,14 +181,14 @@ class CompleteUserGoalUseCaseTest {
                 .createdAt(Instant.now()).build();
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(completed));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
 
-        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(1L, null);
+        CompleteUserGoalResponse result = completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), null);
 
         verify(userGoalRepository, never()).save(any());
         verify(coinService, never()).credit(anyLong(), anyInt());
-        assertThat(result.goal().getStatus()).isEqualTo(GoalStatus.COMPLETED);
+        assertThat(result.goal().status()).isEqualTo("COMPLETED");
     }
 
     @Test
@@ -189,11 +198,11 @@ class CompleteUserGoalUseCaseTest {
                 .coinsReward(15).createdAt(Instant.now()).build();
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
 
-        completeUserGoalUseCase.execute(1L, null);
+        completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), null);
 
         verify(coinService).credit(10L, 15);
     }
@@ -205,12 +214,12 @@ class CompleteUserGoalUseCaseTest {
                 .coinsRewardWithImage(40).createdAt(Instant.now()).build();
         UserPlant plant = activePlant();
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(plant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(plant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(1L);
         MultipartFile image = mockImage("/api/user-goals/images/photo.jpg");
 
-        completeUserGoalUseCase.execute(1L, image);
+        completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image);
 
         verify(coinService).credit(10L, 40);
     }
@@ -224,13 +233,13 @@ class CompleteUserGoalUseCaseTest {
                 .status(PlantStatus.GROWING).startedAt(Instant.now()).build();
 
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
-        when(getOrCreateCurrentPlantUseCase.execute(10L)).thenReturn(currentPlant);
+        when(getOrCreateCurrentPlantUseCase.resolveCurrentPlant(10L)).thenReturn(currentPlant);
         when(userGoalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(5L);
         when(userPlantRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
         when(userPlantRepository.save(argThat((UserPlant plant) -> plant.getId() == null))).thenReturn(nextPlant);
 
-        CompleteUserGoalUseCase.Result result = completeUserGoalUseCase.execute(1L, null);
+        CompleteUserGoalResponse result = completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), null);
 
         InOrder inOrder = inOrder(userPlantRepository);
         inOrder.verify(userPlantRepository).countCompletedGoalsByPlantId(1L);
@@ -246,7 +255,7 @@ class CompleteUserGoalUseCaseTest {
         ));
 
         assertThat(result.harvestTriggered()).isTrue();
-        assertThat(result.currentPlant().getId()).isEqualTo(2L);
+        assertThat(result.currentPlant().id()).isEqualTo(2L);
     }
 
     @Test
@@ -257,7 +266,7 @@ class CompleteUserGoalUseCaseTest {
         when(image.isEmpty()).thenReturn(false);
         when(image.getSize()).thenReturn(6L * 1024 * 1024);
 
-        assertThatThrownBy(() -> completeUserGoalUseCase.execute(1L, image))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image))
                 .isInstanceOf(InvalidGoalImageException.class)
                 .hasMessage("La imagen no puede superar los 5 MB.");
 
@@ -273,7 +282,7 @@ class CompleteUserGoalUseCaseTest {
         when(image.isEmpty()).thenReturn(false);
         when(image.getContentType()).thenReturn("video/mp4");
 
-        assertThatThrownBy(() -> completeUserGoalUseCase.execute(1L, image))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image))
                 .isInstanceOf(InvalidGoalImageException.class);
 
         verify(userGoalRepository, never()).save(any());
@@ -288,7 +297,7 @@ class CompleteUserGoalUseCaseTest {
         when(image.isEmpty()).thenReturn(false);
         when(image.getContentType()).thenReturn(null);
 
-        assertThatThrownBy(() -> completeUserGoalUseCase.execute(1L, image))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image))
                 .isInstanceOf(InvalidGoalImageException.class);
 
         verify(userGoalRepository, never()).save(any());
@@ -306,7 +315,7 @@ class CompleteUserGoalUseCaseTest {
         when(imageValidationPort.validate(any(), any(), any(), any()))
                 .thenReturn(new ImageValidationResult(false, "La imagen no tiene relación con el reto"));
 
-        assertThatThrownBy(() -> completeUserGoalUseCase.execute(1L, image))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image))
                 .isInstanceOf(InvalidGoalImageException.class)
                 .hasMessage("La imagen no tiene relación con el reto");
 
@@ -325,7 +334,7 @@ class CompleteUserGoalUseCaseTest {
         when(imageValidationPort.validate(any(), any(), any(), any()))
                 .thenThrow(new ImageValidationUnavailableException("Servicio no disponible", new RuntimeException()));
 
-        assertThatThrownBy(() -> completeUserGoalUseCase.execute(1L, image))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image))
                 .isInstanceOf(ImageValidationUnavailableException.class);
 
         verify(userGoalRepository, never()).save(any());
@@ -341,7 +350,7 @@ class CompleteUserGoalUseCaseTest {
         when(image.getContentType()).thenReturn("image/jpeg");
         try { when(image.getBytes()).thenThrow(new IOException("Disco lleno")); } catch (Exception ignored) {}
 
-        assertThatThrownBy(() -> completeUserGoalUseCase.execute(1L, image))
+        assertThatThrownBy(() -> completeUserGoalUseCase.execute(new CompleteUserGoalRequest(1L), image))
                 .isInstanceOf(ImageValidationUnavailableException.class);
 
         verify(imageValidationPort, never()).validate(any(), any(), any(), any());

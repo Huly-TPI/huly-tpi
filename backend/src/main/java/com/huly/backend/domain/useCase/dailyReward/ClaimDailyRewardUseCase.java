@@ -2,6 +2,7 @@ package com.huly.backend.domain.useCase.dailyReward;
 
 import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardRequest;
 import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardResponse;
+import com.huly.backend.domain.mapper.dailyReward.ClaimDailyRewardMapper;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.DailyRewardAlreadyClaimedException;
 import com.huly.backend.domain.model.comebackReward.ComebackRewardPolicy;
@@ -28,6 +29,7 @@ public class ClaimDailyRewardUseCase {
     private final UserPlanRepository userPlanRepository;
     private final CoinService coinService;
     private final Clock clock;
+    private final ClaimDailyRewardMapper mapper;
 
     @Transactional
     public ClaimDailyRewardResponse execute(ClaimDailyRewardRequest request) {
@@ -63,7 +65,7 @@ public class ClaimDailyRewardUseCase {
             userDetailDomainRepository.updateLastLoginDate(userId, today);
         }
 
-        return new ClaimDailyRewardResponse(coins, cycleDay, newStreak);
+        return mapper.toResponse(coins, cycleDay, newStreak);
     }
 
     private int resolveCoins(List<DailyReward> cycle, int dayNumber) {

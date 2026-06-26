@@ -1,5 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.mapper.activities.ListActivitiesMapper;
+import com.huly.backend.domain.mapper.activities.RegisterActivitySessionMapper;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
@@ -11,12 +13,24 @@ import org.springframework.context.annotation.Configuration;
 public class ActivitiesUseCaseConfig {
 
     @Bean
-    public ListActivitiesUseCase listActivitiesUseCase(ActivityRepository activityRepository) {
-        return new ListActivitiesUseCase(activityRepository);
+    public ListActivitiesMapper listActivitiesMapper() {
+        return new ListActivitiesMapper();
     }
 
     @Bean
-    public RegisterActivitySessionUseCase registerActivitySessionUseCase(ActivitySessionRepository activitySessionRepository) {
-        return new RegisterActivitySessionUseCase(activitySessionRepository);
+    public RegisterActivitySessionMapper registerActivitySessionMapper() {
+        return new RegisterActivitySessionMapper();
+    }
+
+    @Bean
+    public ListActivitiesUseCase listActivitiesUseCase(ActivityRepository activityRepository,
+                                                       ListActivitiesMapper listActivitiesMapper) {
+        return new ListActivitiesUseCase(activityRepository, listActivitiesMapper);
+    }
+
+    @Bean
+    public RegisterActivitySessionUseCase registerActivitySessionUseCase(ActivitySessionRepository activitySessionRepository,
+                                                                         RegisterActivitySessionMapper registerActivitySessionMapper) {
+        return new RegisterActivitySessionUseCase(activitySessionRepository, registerActivitySessionMapper);
     }
 }

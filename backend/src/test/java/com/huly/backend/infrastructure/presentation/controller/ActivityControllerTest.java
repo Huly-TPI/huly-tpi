@@ -1,10 +1,12 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.dto.activities.ActivityItem;
+import com.huly.backend.domain.dto.activities.ListActivitiesResponse;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
 import com.huly.backend.domain.useCase.activities.RegisterActivitySessionUseCase;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.activities.ActivityPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +45,8 @@ class ActivityControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken(userDetails, null));
 
-        ActivityController activityController = new ActivityController(listActivitiesUseCase, registerActivitySessionUseCase);
+        ActivityController activityController = new ActivityController(
+                listActivitiesUseCase, registerActivitySessionUseCase, new ActivityPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(activityController)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -85,17 +88,11 @@ class ActivityControllerTest {
 
     @Test
     void getAllActivities_shouldReturnListOfActivities() throws Exception {
-        List<Activity> activities = List.of(
-                Activity.builder()
-                        .id(1L)
-                        .type(ActivityType.RESPIRACION)
-                        .valenceMin(-1.0).valenceMax(1.0)
-                        .arousalMin(-1.0).arousalMax(1.0)
-                        .dominanceMin(-1.0).dominanceMax(1.0)
-                        .effectValence(0.3).effectArousal(-0.2).effectDominance(0.1)
-                        .build()
-        );
-        when(listActivitiesUseCase.execute()).thenReturn(activities);
+        ListActivitiesResponse response = new ListActivitiesResponse(List.of(
+                new ActivityItem(1L, ActivityType.RESPIRACION,
+                        -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 0.3, -0.2, 0.1)
+        ));
+        when(listActivitiesUseCase.execute()).thenReturn(response);
 
         mockMvc.perform(get("/api/activities"))
                 .andExpect(status().isOk())
@@ -106,7 +103,7 @@ class ActivityControllerTest {
 
     @Test
     void getAllActivities_shouldReturn200WithEmptyListWhenNoActivities() throws Exception {
-        when(listActivitiesUseCase.execute()).thenReturn(List.of());
+        when(listActivitiesUseCase.execute()).thenReturn(new ListActivitiesResponse(List.of()));
 
         mockMvc.perform(get("/api/activities"))
                 .andExpect(status().isOk())

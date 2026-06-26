@@ -1,5 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.mapper.dailyReward.ClaimDailyRewardMapper;
+import com.huly.backend.domain.mapper.dailyReward.GetDailyRewardStatusMapper;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
@@ -19,17 +21,31 @@ public class DailyRewardUseCaseConfig {
     private static final ZoneId ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
 
     @Bean
+    public ClaimDailyRewardMapper claimDailyRewardMapper() {
+        return new ClaimDailyRewardMapper();
+    }
+
+    @Bean
+    public GetDailyRewardStatusMapper getDailyRewardStatusMapper() {
+        return new GetDailyRewardStatusMapper();
+    }
+
+    @Bean
     public ClaimDailyRewardUseCase claimDailyRewardUseCase(DailyRewardRepository dailyRewardRepository,
                                                            UserDetailDomainRepository userDetailDomainRepository,
                                                            UserPlanRepository userPlanRepository,
-                                                           CoinService coinService) {
-        return new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, coinService, Clock.system(ZONE));
+                                                           CoinService coinService,
+                                                           ClaimDailyRewardMapper claimDailyRewardMapper) {
+        return new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository,
+                coinService, Clock.system(ZONE), claimDailyRewardMapper);
     }
 
     @Bean
     public GetDailyRewardStatusUseCase getDailyRewardStatusUseCase(DailyRewardRepository dailyRewardRepository,
                                                                    UserDetailDomainRepository userDetailDomainRepository,
-                                                                   UserPlanRepository userPlanRepository) {
-        return new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, Clock.system(ZONE));
+                                                                   UserPlanRepository userPlanRepository,
+                                                                   GetDailyRewardStatusMapper getDailyRewardStatusMapper) {
+        return new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository,
+                Clock.system(ZONE), getDailyRewardStatusMapper);
     }
 }

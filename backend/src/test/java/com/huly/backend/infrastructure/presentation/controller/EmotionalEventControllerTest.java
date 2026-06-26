@@ -1,10 +1,10 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
-import com.huly.backend.domain.model.emotionalRecommendation.UpdateEmotionalEventFeedbackCommand;
-import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendationDecisionCommand;
+import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
+import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
+import com.huly.backend.domain.dto.emotionalEvent.UpdateEmotionalEventDecisionRequest;
+import com.huly.backend.domain.dto.emotionalEvent.UpdateEmotionalEventFeedbackRequest;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
@@ -12,7 +12,7 @@ import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventDecisi
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventFeedbackUseCase;
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventDecisionRequest;
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventFeedbackRequest;
-import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventRequest;
+import com.huly.backend.infrastructure.presentation.mapper.emotionalEvent.EmotionalEventPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -42,28 +42,30 @@ class EmotionalEventControllerTest {
         createUseCase = mock(CreateEmotionalEventUseCase.class);
         decisionUseCase = mock(UpdateEmotionalEventDecisionUseCase.class);
         feedbackUseCase = mock(UpdateEmotionalEventFeedbackUseCase.class);
-        EmotionalEventController controller = new EmotionalEventController(createUseCase, decisionUseCase, feedbackUseCase);
+        EmotionalEventController controller = new EmotionalEventController(
+                createUseCase, decisionUseCase, feedbackUseCase, new EmotionalEventPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
     void create_shouldReturn201WithCreatedEvent() throws Exception {
-        when(createUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(event());
-        EmotionalEventRequest request = new EmotionalEventRequest(
-                1L,
-                EmotionalEventSource.CHATBOT,
-                "Estoy muy ansioso",
-                "ANSIEDAD",
-                0.91,
-                -0.8,
-                0.9,
-                -0.7,
-                0.85,
-                "calmarme",
-                "Respira",
-                1L,
-                null
-        );
+        when(createUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(eventResponse());
+        com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventRequest request =
+                new com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventRequest(
+                        1L,
+                        EmotionalEventSource.CHATBOT,
+                        "Estoy muy ansioso",
+                        "ANSIEDAD",
+                        0.91,
+                        -0.8,
+                        0.9,
+                        -0.7,
+                        0.85,
+                        "calmarme",
+                        "Respira",
+                        1L,
+                        null
+                );
 
         mockMvc.perform(post("/api/emotional-events")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -76,11 +78,12 @@ class EmotionalEventControllerTest {
 
     @Test
     void create_shouldReturn400WhenDetectedEmotionIsBlank() throws Exception {
-        EmotionalEventRequest request = new EmotionalEventRequest(
-                1L, EmotionalEventSource.CHATBOT, "texto", " ",
-                0.8, -0.2, 0.2, 0.1, 0.5,
-                null, null, null, null
-        );
+        com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventRequest request =
+                new com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventRequest(
+                        1L, EmotionalEventSource.CHATBOT, "texto", " ",
+                        0.8, -0.2, 0.2, 0.1, 0.5,
+                        null, null, null, null
+                );
 
         mockMvc.perform(post("/api/emotional-events")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -90,11 +93,8 @@ class EmotionalEventControllerTest {
 
     @Test
     void updateDecision_shouldReturnUpdatedEvent() throws Exception {
-        EmotionalEvent updated = event().toBuilder()
-                .recommendationDecision(RecommendationDecision.ACCEPTED)
-                .chosenActivityId(1L)
-                .build();
-        when(decisionUseCase.execute(any(), any(UpdateRecommendationDecisionCommand.class))).thenReturn(updated);
+        when(decisionUseCase.execute(any(UpdateEmotionalEventDecisionRequest.class)))
+                .thenReturn(eventResponseWithDecision(RecommendationDecision.ACCEPTED, 1L));
 
         mockMvc.perform(patch("/api/emotional-events/10/decision")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,11 +107,8 @@ class EmotionalEventControllerTest {
 
     @Test
     void updateFeedback_shouldReturnUpdatedEvent() throws Exception {
-        EmotionalEvent updated = event().toBuilder()
-                .feedbackScore(4)
-                .feedbackText("Me siento mejor")
-                .build();
-        when(feedbackUseCase.execute(any(), any(UpdateEmotionalEventFeedbackCommand.class))).thenReturn(updated);
+        when(feedbackUseCase.execute(any(UpdateEmotionalEventFeedbackRequest.class)))
+                .thenReturn(eventResponseWithFeedback(4, "Me siento mejor"));
 
         mockMvc.perform(patch("/api/emotional-events/10/feedback")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -122,24 +119,50 @@ class EmotionalEventControllerTest {
                 .andExpect(jsonPath("$.feedbackText").value("Me siento mejor"));
     }
 
-    private EmotionalEvent event() {
+    private EmotionalEventResponse eventResponse() {
         Instant now = Instant.now();
-        return EmotionalEvent.builder()
-                .id(10L)
-                .userId(1L)
-                .source(EmotionalEventSource.CHATBOT)
-                .inputText("Estoy muy ansioso")
-                .detectedEmotion("ANSIEDAD")
-                .confidence(0.91)
-                .valence(-0.8)
-                .arousal(0.9)
-                .dominance(-0.7)
-                .intensity(0.85)
-                .userGoal("calmarme")
-                .generatedRecommendation("Respira")
-                .recommendedActivityId(1L)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+        return new EmotionalEventResponse(
+                10L,
+                1L,
+                EmotionalEventSource.CHATBOT,
+                "Estoy muy ansioso",
+                "ANSIEDAD",
+                0.91,
+                -0.8,
+                0.9,
+                -0.7,
+                0.85,
+                "calmarme",
+                "Respira",
+                1L,
+                null,
+                null,
+                null,
+                null,
+                now,
+                now
+        );
+    }
+
+    private EmotionalEventResponse eventResponseWithDecision(RecommendationDecision decision, Long chosenActivityId) {
+        EmotionalEventResponse base = eventResponse();
+        return new EmotionalEventResponse(
+                base.id(), base.userId(), base.source(), base.inputText(), base.detectedEmotion(),
+                base.confidence(), base.valence(), base.arousal(), base.dominance(), base.intensity(),
+                base.userGoal(), base.generatedRecommendation(), base.recommendedActivityId(),
+                chosenActivityId, decision, base.feedbackScore(), base.feedbackText(),
+                base.createdAt(), base.updatedAt()
+        );
+    }
+
+    private EmotionalEventResponse eventResponseWithFeedback(Integer feedbackScore, String feedbackText) {
+        EmotionalEventResponse base = eventResponse();
+        return new EmotionalEventResponse(
+                base.id(), base.userId(), base.source(), base.inputText(), base.detectedEmotion(),
+                base.confidence(), base.valence(), base.arousal(), base.dominance(), base.intensity(),
+                base.userGoal(), base.generatedRecommendation(), base.recommendedActivityId(),
+                base.chosenActivityId(), base.recommendationDecision(), feedbackScore, feedbackText,
+                base.createdAt(), base.updatedAt()
+        );
     }
 }

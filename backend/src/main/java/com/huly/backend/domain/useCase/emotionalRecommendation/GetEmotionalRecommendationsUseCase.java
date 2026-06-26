@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.emotionalRecommendation;
 
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsRequest;
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsResponse;
+import com.huly.backend.domain.mapper.emotionalRecommendation.GetEmotionalRecommendationsMapper;
 import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
@@ -27,14 +30,17 @@ public class GetEmotionalRecommendationsUseCase {
     private final ActivityRepository activityRepository;
     private final EmotionalEventRepository emotionalEventRepository;
     private final EmotionalRecommendationService recommendationService;
+    private final GetEmotionalRecommendationsMapper mapper;
 
-    public EmotionalRecommendationResult execute(EmotionalRecommendation query) {
+    public GetEmotionalRecommendationsResponse execute(GetEmotionalRecommendationsRequest request) {
+        EmotionalRecommendation query = mapper.toModel(request);
         validateVad(query.vad());
         validateRange("intensity", query.intensity(), MIN_INTENSITY, MAX_INTENSITY);
 
         List<Activity> activities = activityRepository.findAll();
         List<EmotionalEvent> userHistory = userHistory(query.userId());
-        return recommendationService.recommend(query, activities, userHistory);
+        EmotionalRecommendationResult result = recommendationService.recommend(query, activities, userHistory);
+        return mapper.toResponse(result);
     }
 
     private List<EmotionalEvent> userHistory(Long userId) {

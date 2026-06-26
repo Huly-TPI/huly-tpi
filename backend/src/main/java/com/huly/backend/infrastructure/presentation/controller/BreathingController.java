@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
-import com.huly.backend.domain.model.breathingTechnique.BreathingTechnique;
 import com.huly.backend.domain.useCase.BreathingSession.GetBreathingTechniquesUseCase;
 import com.huly.backend.infrastructure.presentation.dto.breathingTechniques.BreathingTechniqueResponse;
+import com.huly.backend.infrastructure.presentation.mapper.breathing.BreathingPresentationMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,29 +15,14 @@ import java.util.List;
 @RequestMapping("/api/breathing")
 @RequiredArgsConstructor
 @PreAuthorize("permitAll()")
-public class BreathingController { 
-     
+public class BreathingController {
+
      private final GetBreathingTechniquesUseCase getBreathingTechniquesUseCase;
+     private final BreathingPresentationMapper breathingPresentationMapper;
 
      @GetMapping("/techniques")
         public ResponseEntity<List<BreathingTechniqueResponse>> getAllBreathingTechniques() {
-            List<BreathingTechnique> techniques = getBreathingTechniquesUseCase.execute();
-            List<BreathingTechniqueResponse> response = techniques.stream()
-                    .map(this::toResponse)
-                    .toList();
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
+                    breathingPresentationMapper.toTechniqueResponses(getBreathingTechniquesUseCase.execute()));
         }
-
-    private BreathingTechniqueResponse toResponse(BreathingTechnique technique) {
-      return new BreathingTechniqueResponse(
-              technique.getId(),
-              technique.getName(),
-              technique.getDescription(),
-              technique.getInhaleSeconds(),
-              technique.getHoldSeconds(),
-              technique.getExhaleSeconds(),
-              technique.getRoundsInterval(),
-              technique.getRounds()
-      );
-}
 }

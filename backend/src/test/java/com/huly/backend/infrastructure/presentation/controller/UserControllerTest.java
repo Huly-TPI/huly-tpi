@@ -1,7 +1,10 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.user.UserPlan;
+import com.huly.backend.domain.dto.user.GetCurrentMembershipRequest;
+import com.huly.backend.domain.dto.user.GetCurrentMembershipResponse;
+import com.huly.backend.domain.dto.user.GetUserCoinsRequest;
+import com.huly.backend.domain.dto.user.GetUserCoinsResponse;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.user.AudioSettings;
 import com.huly.backend.domain.model.user.UserProfile;
@@ -15,6 +18,7 @@ import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateAudioSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.user.UserPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +33,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -64,7 +67,8 @@ class UserControllerTest {
                 getCurrentUserUseCase,
                 userDetailDomainRepository,
                 getUserCoinsUseCase,
-                getCurrentMembershipUseCase
+                getCurrentMembershipUseCase,
+                new UserPresentationMapper()
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
@@ -165,7 +169,8 @@ class UserControllerTest {
 
     @Test
     void getMyCoins_shouldReturnCoins_whenPrincipalIsValid() throws Exception {
-        when(getUserCoinsUseCase.execute(USER_ID)).thenReturn(750);
+        when(getUserCoinsUseCase.execute(new GetUserCoinsRequest(USER_ID)))
+                .thenReturn(new GetUserCoinsResponse(750));
 
         mockMvc.perform(get("/api/users/me/coins"))
                 .andExpect(status().isOk())
@@ -174,7 +179,8 @@ class UserControllerTest {
 
     @Test
     void getMyCoins_shouldReturnZero_whenUserHasNoCoins() throws Exception {
-        when(getUserCoinsUseCase.execute(USER_ID)).thenReturn(0);
+        when(getUserCoinsUseCase.execute(new GetUserCoinsRequest(USER_ID)))
+                .thenReturn(new GetUserCoinsResponse(0));
 
         mockMvc.perform(get("/api/users/me/coins"))
                 .andExpect(status().isOk())
@@ -184,12 +190,8 @@ class UserControllerTest {
     @Test
     void getMyMembership_shouldReturnActiveMembership_whenUserHasOne() throws Exception {
         Instant expiresAt = Instant.parse("2026-07-01T00:00:00Z");
-        UserPlan plan = UserPlan.builder()
-                .id(1L).userId(USER_ID).productId(7L).planCode("PREMIUM")
-                .grantedAt(Instant.parse("2026-06-01T00:00:00Z"))
-                .expiresAt(expiresAt)
-                .build();
-        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.of(plan));
+        when(getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(USER_ID)))
+                .thenReturn(new GetCurrentMembershipResponse(true, "PREMIUM", 7L, expiresAt));
 
         mockMvc.perform(get("/api/users/me/membership"))
                 .andExpect(status().isOk())
@@ -201,7 +203,8 @@ class UserControllerTest {
 
     @Test
     void getMyMembership_shouldReturnInactive_whenUserHasNoMembership() throws Exception {
-        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.empty());
+        when(getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(USER_ID)))
+                .thenReturn(GetCurrentMembershipResponse.inactive());
 
         mockMvc.perform(get("/api/users/me/membership"))
                 .andExpect(status().isOk())

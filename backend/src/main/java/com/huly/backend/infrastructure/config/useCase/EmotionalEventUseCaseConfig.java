@@ -1,5 +1,10 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.mapper.emotionalEvent.CreateEmotionalEventMapper;
+import com.huly.backend.domain.mapper.emotionalEvent.SaveUserEmotionalStateMapper;
+import com.huly.backend.domain.mapper.emotionalEvent.UpdateEmotionalEventDecisionMapper;
+import com.huly.backend.domain.mapper.emotionalEvent.UpdateEmotionalEventFeedbackMapper;
+import com.huly.backend.domain.mapper.emotionalRecommendation.GetEmotionalRecommendationsMapper;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chatBotConfig.EmotionalEventRepository;
@@ -18,35 +23,70 @@ import org.springframework.context.annotation.Configuration;
 public class EmotionalEventUseCaseConfig {
 
     @Bean
-    public CreateEmotionalEventUseCase createEmotionalEventUseCase(EmotionalEventRepository emotionalEventRepository, ActivityRepository activityRepository) {
-        return new CreateEmotionalEventUseCase(emotionalEventRepository, activityRepository);
+    public CreateEmotionalEventMapper createEmotionalEventMapper() {
+        return new CreateEmotionalEventMapper();
+    }
+
+    @Bean
+    public UpdateEmotionalEventDecisionMapper updateEmotionalEventDecisionMapper() {
+        return new UpdateEmotionalEventDecisionMapper();
+    }
+
+    @Bean
+    public UpdateEmotionalEventFeedbackMapper updateEmotionalEventFeedbackMapper() {
+        return new UpdateEmotionalEventFeedbackMapper();
+    }
+
+    @Bean
+    public SaveUserEmotionalStateMapper saveUserEmotionalStateMapper() {
+        return new SaveUserEmotionalStateMapper();
+    }
+
+    @Bean
+    public GetEmotionalRecommendationsMapper getEmotionalRecommendationsMapper() {
+        return new GetEmotionalRecommendationsMapper();
+    }
+
+    @Bean
+    public CreateEmotionalEventUseCase createEmotionalEventUseCase(EmotionalEventRepository emotionalEventRepository,
+                                                                  ActivityRepository activityRepository,
+                                                                  CreateEmotionalEventMapper createEmotionalEventMapper) {
+        return new CreateEmotionalEventUseCase(emotionalEventRepository, activityRepository, createEmotionalEventMapper);
     }
 
     @Bean
     public GetEmotionalRecommendationsUseCase getEmotionalRecommendationsUseCase(
             ActivityRepository activityRepository,
             EmotionalEventRepository emotionalEventRepository,
-            EmotionalRecommendationService emotionalRecommendationService
+            EmotionalRecommendationService emotionalRecommendationService,
+            GetEmotionalRecommendationsMapper getEmotionalRecommendationsMapper
     ) {
         return new GetEmotionalRecommendationsUseCase(
                 activityRepository,
                 emotionalEventRepository,
-                emotionalRecommendationService
+                emotionalRecommendationService,
+                getEmotionalRecommendationsMapper
         );
     }
 
     @Bean
-    public SaveUserEmotionalStateUseCase saveUserEmotionalStateUseCase(UserEmotionalStateRepository userEmotionalStateRepository) {
-        return new SaveUserEmotionalStateUseCase(userEmotionalStateRepository);
+    public SaveUserEmotionalStateUseCase saveUserEmotionalStateUseCase(UserEmotionalStateRepository userEmotionalStateRepository,
+                                                                       SaveUserEmotionalStateMapper saveUserEmotionalStateMapper) {
+        return new SaveUserEmotionalStateUseCase(userEmotionalStateRepository, saveUserEmotionalStateMapper);
     }
 
     @Bean
-    public UpdateEmotionalEventDecisionUseCase updateEmotionalEventDecisionUseCase(EmotionalEventRepository emotionalEventRepository, ActivityRepository activityRepository, UserVectorMemoryService userVectorMemoryService, ChatMessageRepository chatMessageRepository) {
-        return new UpdateEmotionalEventDecisionUseCase(emotionalEventRepository, activityRepository, userVectorMemoryService, chatMessageRepository);
+    public UpdateEmotionalEventDecisionUseCase updateEmotionalEventDecisionUseCase(EmotionalEventRepository emotionalEventRepository,
+                                                                                   ActivityRepository activityRepository,
+                                                                                   UserVectorMemoryService userVectorMemoryService,
+                                                                                   ChatMessageRepository chatMessageRepository,
+                                                                                   UpdateEmotionalEventDecisionMapper updateEmotionalEventDecisionMapper) {
+        return new UpdateEmotionalEventDecisionUseCase(emotionalEventRepository, activityRepository, userVectorMemoryService, chatMessageRepository, updateEmotionalEventDecisionMapper);
     }
 
     @Bean
-    public UpdateEmotionalEventFeedbackUseCase updateEmotionalEventFeedbackUseCase(EmotionalEventRepository emotionalEventRepository) {
-        return new UpdateEmotionalEventFeedbackUseCase(emotionalEventRepository);
+    public UpdateEmotionalEventFeedbackUseCase updateEmotionalEventFeedbackUseCase(EmotionalEventRepository emotionalEventRepository,
+                                                                                   UpdateEmotionalEventFeedbackMapper updateEmotionalEventFeedbackMapper) {
+        return new UpdateEmotionalEventFeedbackUseCase(emotionalEventRepository, updateEmotionalEventFeedbackMapper);
     }
 }

@@ -1,6 +1,12 @@
 package com.huly.backend.domain.useCase.mandala;
 
+import com.huly.backend.domain.dto.mandala.ClearMandalaProgressRequest;
+import com.huly.backend.domain.dto.mandala.GetMandalaProgressRequest;
+import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
+import com.huly.backend.domain.mapper.mandala.ClearMandalaProgressMapper;
+import com.huly.backend.domain.mapper.mandala.GetMandalaProgressMapper;
+import com.huly.backend.domain.mapper.mandala.SaveMandalaProgressMapper;
 import com.huly.backend.domain.model.enums.MandalaAccessType;
 import com.huly.backend.domain.model.enums.MandalaUnlockSource;
 import com.huly.backend.domain.model.mandala.AvailableMandala;
@@ -35,9 +41,12 @@ class MandalaProgressUseCaseTest {
     void setUp() {
         mandalaProgressRepository = mock(MandalaProgressRepository.class);
         listAvailableMandalasUseCase = mock(ListAvailableMandalasUseCase.class);
-        saveUseCase = new SaveMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase);
-        getUseCase = new GetMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase);
-        clearUseCase = new ClearMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase);
+        saveUseCase = new SaveMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+                new SaveMandalaProgressMapper());
+        getUseCase = new GetMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+                new GetMandalaProgressMapper());
+        clearUseCase = new ClearMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+                new ClearMandalaProgressMapper());
 
         when(listAvailableMandalasUseCase.execute(USER_ID)).thenReturn(List.of(availableMandala("mandala-01")));
     }
@@ -46,14 +55,15 @@ class MandalaProgressUseCaseTest {
     void saveProgress_persistsOnlyWhenMandalaIsAvailable() {
         byte[] paintBlob = "paint".getBytes();
 
-        saveUseCase.execute(USER_ID, "mandala-01", paintBlob);
+        saveUseCase.execute(new SaveMandalaProgressRequest(USER_ID, "mandala-01", paintBlob));
 
         verify(mandalaProgressRepository).save(any(MandalaProgress.class));
     }
 
     @Test
     void saveProgress_rejectsUnavailableMandala() {
-        assertThatThrownBy(() -> saveUseCase.execute(USER_ID, "mandala-99", "paint".getBytes()))
+        assertThatThrownBy(() -> saveUseCase.execute(
+                new SaveMandalaProgressRequest(USER_ID, "mandala-99", "paint".getBytes())))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Mandala no disponible");
         verify(mandalaProgressRepository, never()).save(any());
@@ -69,12 +79,13 @@ class MandalaProgressUseCaseTest {
                         .paintBlob(paintBlob)
                         .build()));
 
-        assertThat(getUseCase.execute(USER_ID, "mandala-01")).contains(paintBlob);
+        assertThat(getUseCase.execute(new GetMandalaProgressRequest(USER_ID, "mandala-01")).paintBlob())
+                .contains(paintBlob);
     }
 
     @Test
     void getProgress_rejectsUnavailableMandala() {
-        assertThatThrownBy(() -> getUseCase.execute(USER_ID, "mandala-99"))
+        assertThatThrownBy(() -> getUseCase.execute(new GetMandalaProgressRequest(USER_ID, "mandala-99")))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Mandala no disponible");
         verify(mandalaProgressRepository, never()).findByUserIdAndMandalaId(any(), any());
@@ -82,14 +93,14 @@ class MandalaProgressUseCaseTest {
 
     @Test
     void clearProgress_deletesOnlyWhenMandalaIsAvailable() {
-        clearUseCase.execute(USER_ID, "mandala-01");
+        clearUseCase.execute(new ClearMandalaProgressRequest(USER_ID, "mandala-01"));
 
         verify(mandalaProgressRepository).deleteByUserIdAndMandalaId(USER_ID, "mandala-01");
     }
 
     @Test
     void clearProgress_rejectsUnavailableMandala() {
-        assertThatThrownBy(() -> clearUseCase.execute(USER_ID, "mandala-99"))
+        assertThatThrownBy(() -> clearUseCase.execute(new ClearMandalaProgressRequest(USER_ID, "mandala-99")))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Mandala no disponible");
         verify(mandalaProgressRepository, never()).deleteByUserIdAndMandalaId(any(), any());

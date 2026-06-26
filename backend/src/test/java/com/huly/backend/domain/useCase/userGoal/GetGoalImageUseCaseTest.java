@@ -1,5 +1,6 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.dto.userGoal.GetGoalImageRequest;
 import com.huly.backend.domain.service.userGoal.ImageStorageService;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ class GetGoalImageUseCaseTest {
         when(imageStorageService.resolve("photo.jpg")).thenReturn(expected);
         GetGoalImageUseCase useCase = new GetGoalImageUseCase(imageStorageService);
 
-        assertThat(useCase.execute("photo.jpg")).isEqualTo(expected);
+        assertThat(useCase.execute(new GetGoalImageRequest("photo.jpg"))).isEqualTo(expected);
         verify(imageStorageService).resolve("photo.jpg");
     }
 }

@@ -14,6 +14,7 @@ import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateAudioSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
+import com.huly.backend.infrastructure.presentation.mapper.user.UserPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ public class UserController {
     private final UserDetailDomainRepository userDetailDomainRepository;
     private final GetUserCoinsUseCase getUserCoinsUseCase;
     private final GetCurrentMembershipUseCase getCurrentMembershipUseCase;
+    private final UserPresentationMapper userPresentationMapper;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -66,8 +68,9 @@ public class UserController {
             @AuthenticationPrincipal UserDetails principal
     ) {
         Long userId = currentUserId(principal);
-        int coins = getUserCoinsUseCase.execute(userId);
-        return ResponseEntity.ok(new CoinsResponse(coins));
+        CoinsResponse response = userPresentationMapper.toCoinsResponse(
+                getUserCoinsUseCase.execute(userPresentationMapper.toCoinsRequest(userId)));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me/membership")
@@ -75,13 +78,8 @@ public class UserController {
             @AuthenticationPrincipal UserDetails principal
     ) {
         Long userId = currentUserId(principal);
-        MembershipResponse response = getCurrentMembershipUseCase.execute(userId)
-                .map(p -> new MembershipResponse(
-                        true,
-                        p.getPlanCode(),
-                        p.getProductId() != null ? p.getProductId().toString() : null,
-                        p.getExpiresAt()))
-                .orElseGet(MembershipResponse::inactive);
+        MembershipResponse response = userPresentationMapper.toMembershipResponse(
+                getCurrentMembershipUseCase.execute(userPresentationMapper.toMembershipRequest(userId)));
         return ResponseEntity.ok(response);
     }
 

@@ -1,5 +1,11 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.mapper.userGoal.AcceptChallengeMapper;
+import com.huly.backend.domain.mapper.userGoal.AddUserGoalMapper;
+import com.huly.backend.domain.mapper.userGoal.CompleteUserGoalMapper;
+import com.huly.backend.domain.mapper.userGoal.DeleteUserGoalMapper;
+import com.huly.backend.domain.mapper.userGoal.GetUserGoalsMapper;
+import com.huly.backend.domain.mapper.userGoal.UpdateUserGoalMapper;
 import com.huly.backend.domain.port.ImageValidationPort;
 import com.huly.backend.domain.repository.user.UserGoalRepository;
 import com.huly.backend.domain.repository.UserPlantRepository;
@@ -20,13 +26,45 @@ import org.springframework.context.annotation.Configuration;
 public class UserGoalUseCaseConfig {
 
     @Bean
-    public AcceptChallengeUseCase acceptChallengeUseCase(UserGoalRepository userGoalRepository) {
-        return new AcceptChallengeUseCase(userGoalRepository);
+    public AcceptChallengeMapper acceptChallengeMapper() {
+        return new AcceptChallengeMapper();
     }
 
     @Bean
-    public AddUserGoalUseCase addUserGoalUseCase(UserGoalRepository userGoalRepository) {
-        return new AddUserGoalUseCase(userGoalRepository);
+    public AddUserGoalMapper addUserGoalMapper() {
+        return new AddUserGoalMapper();
+    }
+
+    @Bean
+    public UpdateUserGoalMapper updateUserGoalMapper() {
+        return new UpdateUserGoalMapper();
+    }
+
+    @Bean
+    public DeleteUserGoalMapper deleteUserGoalMapper() {
+        return new DeleteUserGoalMapper();
+    }
+
+    @Bean
+    public GetUserGoalsMapper getUserGoalsMapper() {
+        return new GetUserGoalsMapper();
+    }
+
+    @Bean
+    public CompleteUserGoalMapper completeUserGoalMapper() {
+        return new CompleteUserGoalMapper();
+    }
+
+    @Bean
+    public AcceptChallengeUseCase acceptChallengeUseCase(UserGoalRepository userGoalRepository,
+                                                         AcceptChallengeMapper acceptChallengeMapper) {
+        return new AcceptChallengeUseCase(userGoalRepository, acceptChallengeMapper);
+    }
+
+    @Bean
+    public AddUserGoalUseCase addUserGoalUseCase(UserGoalRepository userGoalRepository,
+                                                 AddUserGoalMapper addUserGoalMapper) {
+        return new AddUserGoalUseCase(userGoalRepository, addUserGoalMapper);
     }
 
     @Bean
@@ -36,9 +74,11 @@ public class UserGoalUseCaseConfig {
             GetOrCreateCurrentPlantUseCase getOrCreateCurrentPlantUseCase,
             CoinService coinService,
             ImageStorageService imageStorageService,
-            ImageValidationPort imageValidationPort) {
+            ImageValidationPort imageValidationPort,
+            CompleteUserGoalMapper completeUserGoalMapper) {
         return new CompleteUserGoalUseCase(userGoalRepository, userPlantRepository,
-                getOrCreateCurrentPlantUseCase, coinService, imageStorageService, imageValidationPort);
+                getOrCreateCurrentPlantUseCase, coinService, imageStorageService, imageValidationPort,
+                completeUserGoalMapper);
     }
 
     @Bean
@@ -47,17 +87,20 @@ public class UserGoalUseCaseConfig {
     }
 
     @Bean
-    public DeleteUserGoalUseCase deleteUserGoalUseCase(UserGoalRepository userGoalRepository) {
-        return new DeleteUserGoalUseCase(userGoalRepository);
+    public DeleteUserGoalUseCase deleteUserGoalUseCase(UserGoalRepository userGoalRepository,
+                                                       DeleteUserGoalMapper deleteUserGoalMapper) {
+        return new DeleteUserGoalUseCase(userGoalRepository, deleteUserGoalMapper);
     }
 
     @Bean
-    public GetUserGoalsByUserUseCase getUserGoalsByUserUseCase(UserGoalRepository userGoalRepository) {
-        return new GetUserGoalsByUserUseCase(userGoalRepository);
+    public GetUserGoalsByUserUseCase getUserGoalsByUserUseCase(UserGoalRepository userGoalRepository,
+                                                               GetUserGoalsMapper getUserGoalsMapper) {
+        return new GetUserGoalsByUserUseCase(userGoalRepository, getUserGoalsMapper);
     }
 
     @Bean
-    public UpdateUserGoalUseCase updateUserGoalUseCase(UserGoalRepository userGoalRepository) {
-        return new UpdateUserGoalUseCase(userGoalRepository);
+    public UpdateUserGoalUseCase updateUserGoalUseCase(UserGoalRepository userGoalRepository,
+                                                       UpdateUserGoalMapper updateUserGoalMapper) {
+        return new UpdateUserGoalUseCase(userGoalRepository, updateUserGoalMapper);
     }
 }

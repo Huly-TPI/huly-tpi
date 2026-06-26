@@ -2,6 +2,7 @@ package com.huly.backend.domain.useCase.dailyReward;
 
 import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusRequest;
 import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusResponse;
+import com.huly.backend.domain.mapper.dailyReward.GetDailyRewardStatusMapper;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
 import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
@@ -22,6 +23,7 @@ public class GetDailyRewardStatusUseCase {
     private final UserDetailDomainRepository userDetailDomainRepository;
     private final UserPlanRepository userPlanRepository;
     private final Clock clock;
+    private final GetDailyRewardStatusMapper mapper;
 
     public GetDailyRewardStatusResponse execute(GetDailyRewardStatusRequest request) {
         Long userId = request.userId();
@@ -49,6 +51,6 @@ public class GetDailyRewardStatusUseCase {
             }
         }
 
-        return new GetDailyRewardStatusResponse(cycle, currentStreak, completedDays, canClaimToday, nextDay, planBonusActive);
+        return mapper.toResponse(cycle, currentStreak, completedDays, canClaimToday, nextDay, planBonusActive);
     }
 }

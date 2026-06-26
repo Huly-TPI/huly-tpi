@@ -1,11 +1,13 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.dto.onboarding.GenerateOnboardingOptionsResponse;
 import com.huly.backend.domain.useCase.onboarding.CompleteOnboardingUseCase;
 import com.huly.backend.domain.useCase.onboarding.CompleteTutorialUseCase;
 import com.huly.backend.domain.useCase.onboarding.GenerateOnboardingOptionsUseCase;
 import com.huly.backend.infrastructure.presentation.controller.OnboardingController;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.onboarding.OnboardingPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -42,7 +45,8 @@ class OnboardingControllerTest {
         OnboardingController controller = new OnboardingController(
                 generateOnboardingOptionsUseCase,
                 completeOnboardingUseCase,
-                completeTutorialUseCase
+                completeTutorialUseCase,
+                new OnboardingPresentationMapper()
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -56,8 +60,9 @@ class OnboardingControllerTest {
 
     @Test
     void generateOptions_shouldReturn200WithOptions() throws Exception {
-        when(generateOnboardingOptionsUseCase.execute(2, "Desestresarme"))
-                .thenReturn(List.of("Meditar", "Caminar", "Respirar", "Leer"));
+        when(generateOnboardingOptionsUseCase.execute(argThat(req ->
+                req.step() == 2 && "Desestresarme".equals(req.previousAnswer()))))
+                .thenReturn(new GenerateOnboardingOptionsResponse(List.of("Meditar", "Caminar", "Respirar", "Leer")));
 
         mockMvc.perform(post("/api/onboarding/generate-options")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +91,11 @@ class OnboardingControllerTest {
                                         "answer3", "Meditar 5 minutos"))))
                 .andExpect(status().isNoContent());
 
-        verify(completeOnboardingUseCase).execute(USER_ID, "Desestresarme", "Meditar", "Meditar 5 minutos");
+        verify(completeOnboardingUseCase).execute(argThat(req ->
+                req.userId().equals(USER_ID)
+                        && "Desestresarme".equals(req.answer1())
+                        && "Meditar".equals(req.answer2())
+                        && "Meditar 5 minutos".equals(req.answer3())));
     }
 
     @Test
@@ -104,7 +113,7 @@ class OnboardingControllerTest {
         mockMvc.perform(post("/api/onboarding/tutorial/complete"))
                 .andExpect(status().isNoContent());
 
-        verify(completeTutorialUseCase).execute(USER_ID);
+        verify(completeTutorialUseCase).execute(argThat(req -> req.userId().equals(USER_ID)));
     }
 
     @Test
@@ -112,6 +121,6 @@ class OnboardingControllerTest {
         mockMvc.perform(post("/api/onboarding/profile-onboarding-tutorial/complete"))
                 .andExpect(status().isNoContent());
 
-        verify(completeTutorialUseCase).executeProfile(USER_ID);
+        verify(completeTutorialUseCase).executeProfile(argThat(req -> req.userId().equals(USER_ID)));
     }
 }

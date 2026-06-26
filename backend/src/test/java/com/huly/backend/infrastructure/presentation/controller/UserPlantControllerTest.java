@@ -1,14 +1,18 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.user.UserGoal;
-import com.huly.backend.domain.model.user.UserPlant;
-import com.huly.backend.domain.model.enums.GoalStatus;
-import com.huly.backend.domain.model.enums.PlantStatus;
-import com.huly.backend.domain.repository.UserPlantRepository;
+import com.huly.backend.domain.dto.userGoal.UserGoalItem;
+import com.huly.backend.domain.dto.userPlant.GetCurrentPlantRequest;
+import com.huly.backend.domain.dto.userPlant.GetCurrentPlantResponse;
+import com.huly.backend.domain.dto.userPlant.GetPlantGoalsRequest;
+import com.huly.backend.domain.dto.userPlant.GetPlantGoalsResponse;
+import com.huly.backend.domain.dto.userPlant.GetUserPlantsRequest;
+import com.huly.backend.domain.dto.userPlant.GetUserPlantsResponse;
+import com.huly.backend.domain.dto.userPlant.UserPlantItem;
 import com.huly.backend.domain.useCase.userPlant.GetOrCreateCurrentPlantUseCase;
 import com.huly.backend.domain.useCase.userPlant.GetPlantGoalsUseCase;
 import com.huly.backend.domain.useCase.userPlant.GetUserPlantsUseCase;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.userPlant.UserPlantPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +28,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -35,7 +40,6 @@ class UserPlantControllerTest {
     private GetOrCreateCurrentPlantUseCase getOrCreateCurrentPlantUseCase;
     private GetUserPlantsUseCase getUserPlantsUseCase;
     private GetPlantGoalsUseCase getPlantGoalsUseCase;
-    private UserPlantRepository userPlantRepository;
 
     private static final Long USER_ID = 1L;
 
@@ -44,7 +48,6 @@ class UserPlantControllerTest {
         getOrCreateCurrentPlantUseCase = mock(GetOrCreateCurrentPlantUseCase.class);
         getUserPlantsUseCase = mock(GetUserPlantsUseCase.class);
         getPlantGoalsUseCase = mock(GetPlantGoalsUseCase.class);
-        userPlantRepository = mock(UserPlantRepository.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
@@ -54,7 +57,7 @@ class UserPlantControllerTest {
                 getOrCreateCurrentPlantUseCase,
                 getUserPlantsUseCase,
                 getPlantGoalsUseCase,
-                userPlantRepository
+                new UserPlantPresentationMapper()
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -70,16 +73,11 @@ class UserPlantControllerTest {
 
     @Test
     void getCurrent_shouldReturnCurrentPlant() throws Exception {
-        UserPlant plant = UserPlant.builder()
-                .id(10L)
-                .userId(USER_ID)
-                .plantNumber(3)
-                .requiredGoals(5)
-                .status(PlantStatus.GROWING)
-                .startedAt(Instant.parse("2026-06-01T12:00:00Z"))
-                .completedGoalsCount(2L)
-                .build();
-        when(getOrCreateCurrentPlantUseCase.execute(USER_ID)).thenReturn(plant);
+        UserPlantItem plant = new UserPlantItem(
+                10L, 3, 5, 2L, "GROWING", Instant.parse("2026-06-01T12:00:00Z"), null);
+        when(getOrCreateCurrentPlantUseCase.execute(argThat((GetCurrentPlantRequest r) ->
+                r != null && USER_ID.equals(r.userId()))))
+                .thenReturn(new GetCurrentPlantResponse(plant));
 
         mockMvc.perform(get("/api/user-plants/current"))
                 .andExpect(status().isOk())
@@ -92,17 +90,12 @@ class UserPlantControllerTest {
 
     @Test
     void getAll_shouldReturnAllUserPlants() throws Exception {
-        UserPlant plant = UserPlant.builder()
-                .id(10L)
-                .userId(USER_ID)
-                .plantNumber(1)
-                .requiredGoals(5)
-                .status(PlantStatus.COMPLETED)
-                .startedAt(Instant.parse("2026-06-01T12:00:00Z"))
-                .completedAt(Instant.parse("2026-06-05T12:00:00Z"))
-                .build();
-        when(getUserPlantsUseCase.execute(USER_ID)).thenReturn(List.of(plant));
-        when(userPlantRepository.countCompletedGoalsByPlantId(10L)).thenReturn(5L);
+        UserPlantItem plant = new UserPlantItem(
+                10L, 1, 5, 5L, "COMPLETED",
+                Instant.parse("2026-06-01T12:00:00Z"), Instant.parse("2026-06-05T12:00:00Z"));
+        when(getUserPlantsUseCase.execute(argThat((GetUserPlantsRequest r) ->
+                r != null && USER_ID.equals(r.userId()))))
+                .thenReturn(new GetUserPlantsResponse(List.of(plant)));
 
         mockMvc.perform(get("/api/user-plants/me"))
                 .andExpect(status().isOk())
@@ -114,17 +107,12 @@ class UserPlantControllerTest {
 
     @Test
     void getGoals_shouldReturnPlantGoals() throws Exception {
-        UserGoal goal = UserGoal.builder()
-                .id(100L)
-                .userId(USER_ID)
-                .title("Meta de prueba")
-                .description("Descripción")
-                .status(GoalStatus.COMPLETED)
-                .createdAt(Instant.parse("2026-06-01T12:00:00Z"))
-                .coinsReward(10)
-                .coinsRewardWithImage(20)
-                .build();
-        when(getPlantGoalsUseCase.execute(10L)).thenReturn(List.of(goal));
+        UserGoalItem goal = new UserGoalItem(
+                100L, USER_ID, "Meta de prueba", "Descripción", "COMPLETED",
+                Instant.parse("2026-06-01T12:00:00Z"), null, null, 10, 20);
+        when(getPlantGoalsUseCase.execute(argThat((GetPlantGoalsRequest r) ->
+                r != null && Long.valueOf(10L).equals(r.plantId()))))
+                .thenReturn(new GetPlantGoalsResponse(10L, List.of(goal)));
 
         mockMvc.perform(get("/api/user-plants/10/goals"))
                 .andExpect(status().isOk())

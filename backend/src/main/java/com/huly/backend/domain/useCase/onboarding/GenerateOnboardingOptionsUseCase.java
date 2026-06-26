@@ -2,6 +2,9 @@ package com.huly.backend.domain.useCase.onboarding;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.dto.onboarding.GenerateOnboardingOptionsRequest;
+import com.huly.backend.domain.dto.onboarding.GenerateOnboardingOptionsResponse;
+import com.huly.backend.domain.mapper.onboarding.GenerateOnboardingOptionsMapper;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.port.LLMChatPort;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +18,14 @@ public class GenerateOnboardingOptionsUseCase {
 
     private final LLMChatPort llmChatPort;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final GenerateOnboardingOptionsMapper mapper;
 
-    public List<String> execute(Integer step, String previousAnswer) {
+    public GenerateOnboardingOptionsResponse execute(GenerateOnboardingOptionsRequest request) {
+        int step = request.step();
         String prompt = buildSystemPrompt(step);
-        String userMessage = buildUserMessage(step, previousAnswer);
+        String userMessage = buildUserMessage(step, request.previousAnswer());
         ChatReply reply = llmChatPort.chat(prompt, userMessage, List.of());
-        return parseOptions(reply.content());
+        return mapper.toResponse(parseOptions(reply.content()));
     }
 
         private String buildSystemPrompt(int step) {

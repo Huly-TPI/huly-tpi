@@ -1,18 +1,23 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.riskWord.RiskWord;
+import com.huly.backend.domain.dto.riskWord.CreateRiskWordRequest;
+import com.huly.backend.domain.dto.riskWord.CreateRiskWordResponse;
+import com.huly.backend.domain.dto.riskWord.DeleteRiskWordRequest;
+import com.huly.backend.domain.dto.riskWord.ListRiskWordsRequest;
+import com.huly.backend.domain.dto.riskWord.ListRiskWordsResponse;
+import com.huly.backend.domain.dto.riskWord.RiskWordItem;
+import com.huly.backend.domain.dto.riskWord.UpdateRiskWordRequest;
+import com.huly.backend.domain.dto.riskWord.UpdateRiskWordResponse;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.useCase.riskWord.CreateRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.DeleteRiskWordUseCase;
 import com.huly.backend.domain.useCase.riskWord.ListRiskWordsUseCase;
 import com.huly.backend.domain.useCase.riskWord.UpdateRiskWordUseCase;
 import com.huly.backend.infrastructure.presentation.dto.riskWord.RiskWordRequest;
+import com.huly.backend.infrastructure.presentation.mapper.riskWord.RiskWordPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -45,15 +50,17 @@ class RiskWordControllerTest {
 
         RiskWordController controller = new RiskWordController(
                 createRiskWordUseCase, updateRiskWordUseCase,
-                deleteRiskWordUseCase, listRiskWordsUseCase);
+                deleteRiskWordUseCase, listRiskWordsUseCase,
+                new RiskWordPresentationMapper());
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
     void create_shouldReturn201WithRiskWordResponse_whenRequestIsValid() throws Exception {
-        RiskWord saved = RiskWord.builder().id(1L).word("suicidio").description("desc").severity(RiskSeverity.HIGH).active(true).build();
-        when(createRiskWordUseCase.execute("suicidio", "desc", RiskSeverity.HIGH)).thenReturn(saved);
+        CreateRiskWordResponse saved = new CreateRiskWordResponse(1L, "suicidio", "desc", RiskSeverity.HIGH, true);
+        when(createRiskWordUseCase.execute(new CreateRiskWordRequest("suicidio", "desc", RiskSeverity.HIGH)))
+                .thenReturn(saved);
 
         RiskWordRequest request = new RiskWordRequest("suicidio", "desc", RiskSeverity.HIGH);
 
@@ -79,8 +86,9 @@ class RiskWordControllerTest {
 
     @Test
     void update_shouldReturn200WithUpdatedRiskWord_whenValid() throws Exception {
-        RiskWord updated = RiskWord.builder().id(1L).word("panico").severity(RiskSeverity.MEDIUM).active(true).build();
-        when(updateRiskWordUseCase.execute(eq(1L), eq("panico"), isNull(), eq(RiskSeverity.MEDIUM))).thenReturn(updated);
+        UpdateRiskWordResponse updated = new UpdateRiskWordResponse(1L, "panico", null, RiskSeverity.MEDIUM, true);
+        when(updateRiskWordUseCase.execute(new UpdateRiskWordRequest(1L, "panico", null, RiskSeverity.MEDIUM)))
+                .thenReturn(updated);
 
         RiskWordRequest request = new RiskWordRequest("panico", null, RiskSeverity.MEDIUM);
 
@@ -98,14 +106,16 @@ class RiskWordControllerTest {
         mockMvc.perform(delete("/api/risk-words/1"))
                 .andExpect(status().isNoContent());
 
-        verify(deleteRiskWordUseCase).execute(1L);
+        verify(deleteRiskWordUseCase).execute(new DeleteRiskWordRequest(1L));
     }
 
     @Test
     void list_shouldReturn200WithRiskWordPageResponse() throws Exception {
-        RiskWord word = RiskWord.builder().id(1L).word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
-        Page<RiskWord> page = new PageImpl<>(List.of(word));
-        when(listRiskWordsUseCase.execute(isNull(), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
+        ListRiskWordsResponse response = new ListRiskWordsResponse(
+                List.of(new RiskWordItem(1L, "suicidio", null, RiskSeverity.HIGH, true)),
+                0, 20, 1L, 1, true, true);
+        when(listRiskWordsUseCase.execute(new ListRiskWordsRequest(null, null, null, 0, 20)))
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/risk-words"))
                 .andExpect(status().isOk())
@@ -120,8 +130,10 @@ class RiskWordControllerTest {
 
     @Test
     void list_shouldReturn200WithEmptyContent_whenFiltersApplied() throws Exception {
-        Page<RiskWord> page = new PageImpl<>(List.of());
-        when(listRiskWordsUseCase.execute(eq("suicidio"), eq(true), eq("HIGH"), any(Pageable.class))).thenReturn(page);
+        ListRiskWordsResponse response = new ListRiskWordsResponse(
+                List.of(), 0, 20, 0L, 0, true, true);
+        when(listRiskWordsUseCase.execute(new ListRiskWordsRequest("suicidio", true, "HIGH", 0, 20)))
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/risk-words")
                         .param("word", "suicidio")
@@ -134,8 +146,8 @@ class RiskWordControllerTest {
 
     @Test
     void create_shouldSerializeNullSeverity_whenDomainHasNoSeverity() throws Exception {
-        RiskWord saved = RiskWord.builder().id(2L).word("estres").severity(null).active(true).build();
-        when(createRiskWordUseCase.execute(any(), any(), any())).thenReturn(saved);
+        CreateRiskWordResponse saved = new CreateRiskWordResponse(2L, "estres", null, null, true);
+        when(createRiskWordUseCase.execute(any(CreateRiskWordRequest.class))).thenReturn(saved);
 
         RiskWordRequest request = new RiskWordRequest("estres", null, RiskSeverity.LOW);
 
@@ -148,8 +160,10 @@ class RiskWordControllerTest {
 
     @Test
     void list_shouldReturn200_whenSeverityIsBlank() throws Exception {
-        Page<RiskWord> page = new PageImpl<>(List.of());
-        when(listRiskWordsUseCase.execute(isNull(), isNull(), eq(""), any(Pageable.class))).thenReturn(page);
+        ListRiskWordsResponse response = new ListRiskWordsResponse(
+                List.of(), 0, 20, 0L, 0, true, true);
+        when(listRiskWordsUseCase.execute(new ListRiskWordsRequest(null, null, "", 0, 20)))
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/risk-words").param("severity", ""))
                 .andExpect(status().isOk())

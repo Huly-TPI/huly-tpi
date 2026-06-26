@@ -1,6 +1,9 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
+import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
+import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
 import com.huly.backend.domain.exception.BusinessRuleException;
+import com.huly.backend.domain.mapper.emotionalEvent.CreateEmotionalEventMapper;
 import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.emotionalRecommendation.Vad;
@@ -15,8 +18,10 @@ public class CreateEmotionalEventUseCase {
 
     private final EmotionalEventRepository emotionalEventRepository;
     private final ActivityRepository activityRepository;
+    private final CreateEmotionalEventMapper mapper;
 
-    public EmotionalEvent execute(CreateEmotionalEventCommand command) {
+    public EmotionalEventResponse execute(CreateEmotionalEventRequest request) {
+        CreateEmotionalEventCommand command = mapper.toModel(request);
         validate(command);
         Instant now = Instant.now();
         EmotionalEvent event = EmotionalEvent.builder()
@@ -36,7 +41,7 @@ public class CreateEmotionalEventUseCase {
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
-        return emotionalEventRepository.save(event);
+        return mapper.toResponse(emotionalEventRepository.save(event));
     }
 
     private void validate(CreateEmotionalEventCommand command) {

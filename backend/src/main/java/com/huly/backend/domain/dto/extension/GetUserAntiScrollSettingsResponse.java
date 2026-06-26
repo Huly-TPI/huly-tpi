@@ -1,9 +1,12 @@
-package com.huly.backend.domain.useCase.extension;
+package com.huly.backend.domain.dto.extension;
 
 import lombok.Builder;
 
 import java.util.List;
 
+/**
+ * Respuesta de dominio con la configuracion anti-scroll de un usuario.
+ */
 @Builder
 public record GetUserAntiScrollSettingsResponse(
         boolean enabled,

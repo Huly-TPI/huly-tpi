@@ -1,14 +1,16 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
-import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsResponse;
+import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsResponse;
+import com.huly.backend.domain.dto.extension.SaveExtensionMetricsRequest;
+import com.huly.backend.domain.dto.extension.SaveUserAntiScrollSettingsRequest;
 import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveExtensionMetricsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveUserAntiScrollSettingsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.extension.AntiScrollSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionMetricRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.extension.ExtensionPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Collections;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -53,7 +56,8 @@ class ExtensionControllerTest {
         ExtensionController controller = new ExtensionController(
                 getUserAntiScrollSettingsUseCase,
                 saveUserAntiScrollSettingsUseCase,
-                saveExtensionMetricsUseCase
+                saveExtensionMetricsUseCase,
+                new ExtensionPresentationMapper()
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -80,7 +84,8 @@ class ExtensionControllerTest {
                 .termsAndConditions("dynamic terms")
                 .build();
 
-        when(getUserAntiScrollSettingsUseCase.execute(USER_ID)).thenReturn(settings);
+        when(getUserAntiScrollSettingsUseCase.execute(argThat(req -> req.userId().equals(USER_ID))))
+                .thenReturn(settings);
 
         mockMvc.perform(get("/api/extension/settings"))
                 .andExpect(status().isOk())
@@ -105,7 +110,8 @@ class ExtensionControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(saveUserAntiScrollSettingsUseCase).execute(eq(USER_ID), any(UserAntiScrollSettings.class));
+        verify(saveUserAntiScrollSettingsUseCase).execute(argThat((SaveUserAntiScrollSettingsRequest req) ->
+                req.userId().equals(USER_ID) && req.enabled() && req.pauseIntervalSeconds() == 20));
     }
 
     @Test
@@ -122,7 +128,8 @@ class ExtensionControllerTest {
                         .content(objectMapper.writeValueAsString(List.of(metricRequest))))
                 .andExpect(status().isOk());
 
-        verify(saveExtensionMetricsUseCase).execute(eq(USER_ID), anyList());
+        verify(saveExtensionMetricsUseCase).execute(argThat((SaveExtensionMetricsRequest req) ->
+                req.userId().equals(USER_ID) && req.metrics().size() == 1));
     }
 
     @Test
