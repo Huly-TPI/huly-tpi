@@ -1,15 +1,12 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardRequest;
-import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusRequest;
 import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusResponse;
-import com.huly.backend.domain.model.dailyReward.DailyRewardCycle;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;
 import com.huly.backend.infrastructure.presentation.dto.dailyReward.ClaimDailyRewardResponse;
-import com.huly.backend.infrastructure.presentation.dto.dailyReward.DailyRewardDayResponse;
 import com.huly.backend.infrastructure.presentation.dto.dailyReward.DailyRewardStatusResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+import com.huly.backend.infrastructure.presentation.mapper.dailyReward.DailyRewardPresentationMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,20 +20,20 @@ public class DailyRewardController {
 
     private final ClaimDailyRewardUseCase claimDailyRewardUseCase;
     private final GetDailyRewardStatusUseCase getDailyRewardStatusUseCase;
+    private final DailyRewardPresentationMapper mapper;
 
     @GetMapping("/status")
     public ResponseEntity<DailyRewardStatusResponse> getStatus(@AuthenticationPrincipal UserDetails principal) {
         Long userId = currentUserId(principal);
-        GetDailyRewardStatusResponse status = getDailyRewardStatusUseCase.execute(new GetDailyRewardStatusRequest(userId));
-        return ResponseEntity.ok(toResponse(status));
+        GetDailyRewardStatusResponse status = getDailyRewardStatusUseCase.execute(mapper.toStatusRequest(userId));
+        return ResponseEntity.ok(mapper.toStatusResponse(status));
     }
 
     @PostMapping("/claim")
     public ResponseEntity<ClaimDailyRewardResponse> claim(@AuthenticationPrincipal UserDetails principal) {
         Long userId = currentUserId(principal);
-        com.huly.backend.domain.dto.dailyReward.ClaimDailyRewardResponse claim =
-                claimDailyRewardUseCase.execute(new ClaimDailyRewardRequest(userId));
-        return ResponseEntity.ok(new ClaimDailyRewardResponse(claim.coins(), claim.dayNumber(), claim.newStreak()));
+        return ResponseEntity.ok(mapper.toClaimResponse(
+                claimDailyRewardUseCase.execute(mapper.toClaimRequest(userId))));
     }
 
     private Long currentUserId(UserDetails principal) {
@@ -48,20 +45,5 @@ public class DailyRewardController {
         } catch (NumberFormatException e) {
             throw new UnauthorizedException("Not authenticated");
         }
-    }
-
-    private DailyRewardStatusResponse toResponse(GetDailyRewardStatusResponse status) {
-        return new DailyRewardStatusResponse(
-                status.days().stream()
-                        .map(d -> new DailyRewardDayResponse(
-                                d.getDayNumber(),
-                                DailyRewardCycle.applyPlanBonus(d.getCoins(), status.planBonusActive())))
-                        .toList(),
-                status.currentStreak(),
-                status.completedDays(),
-                status.canClaimToday(),
-                status.nextDay(),
-                status.planBonusActive()
-        );
     }
 }

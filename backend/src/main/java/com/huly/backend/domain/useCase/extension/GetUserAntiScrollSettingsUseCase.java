@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.extension;
 
+import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsRequest;
+import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsResponse;
+import com.huly.backend.domain.mapper.extension.GetUserAntiScrollSettingsMapper;
 import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.extension.AntiScrollGlobalConfig;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
@@ -16,15 +19,17 @@ public class GetUserAntiScrollSettingsUseCase {
             List.of("twitter.com", "x.com", "instagram.com", "tiktok.com", "youtube.com", "facebook.com");
 
     private static final String DEFAULT_TERMS_AND_CONDITIONS =
-            "El modo anti-scroll es simplemente una herramienta para acompa\u00f1arte cuando sientas que necesit\u00e1s frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentraci\u00f3n o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. \u00a1Cero presiones, el ritmo lo marc\u00e1s vos!";
+            "El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!";
 
     private final UserAntiScrollSettingsRepository settingsRepository;
     private final AntiScrollGlobalConfigRepository antiScrollConfigRepository;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final String frontendUrl;
     private final String backendUrl;
+    private final GetUserAntiScrollSettingsMapper mapper;
 
-    public GetUserAntiScrollSettingsResponse execute(Long userId) {
+    public GetUserAntiScrollSettingsResponse execute(GetUserAntiScrollSettingsRequest request) {
+        Long userId = request.userId();
         AntiScrollGlobalConfig config = antiScrollConfigRepository.findFirst().orElse(null);
         int defaultIntervalSeconds = (config != null ? config.getDefaultPauseIntervalMinutes() : 20) * 60;
         String termsAndConditions = config != null ? config.getTermsAndConditions() : DEFAULT_TERMS_AND_CONDITIONS;
@@ -42,15 +47,13 @@ public class GetUserAntiScrollSettingsUseCase {
                 ? DEFAULT_MONITORED_DOMAINS
                 : settings.getMonitoredDomains();
 
-        return GetUserAntiScrollSettingsResponse.builder()
-                .enabled(settings.isEnabled())
-                .pauseIntervalSeconds(settings.getPauseIntervalSeconds())
-                .gardenUrl(frontendUrl + "/")
-                .backendUrl(backendUrl)
-                .monitoredDomains(monitoredDomains)
-                .dataSharingConsent(settings.isDataSharingConsent())
-                .userName(profile.user().getName())
-                .termsAndConditions(termsAndConditions)
-                .build();
+        return mapper.toResponse(
+                settings,
+                monitoredDomains,
+                frontendUrl + "/",
+                backendUrl,
+                profile.user().getName(),
+                termsAndConditions
+        );
     }
 }

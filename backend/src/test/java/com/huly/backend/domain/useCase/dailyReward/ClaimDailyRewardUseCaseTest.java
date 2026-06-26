@@ -52,7 +52,8 @@ class ClaimDailyRewardUseCaseTest {
     @BeforeEach
     void setUp() {
         Clock fixedClock = Clock.fixed(TODAY.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneId.from(ZoneOffset.UTC));
-        useCase = new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, coinService, fixedClock);
+        useCase = new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, coinService, fixedClock,
+                new com.huly.backend.domain.mapper.dailyReward.ClaimDailyRewardMapper());
     }
 
     private List<DailyReward> sevenDayCycle() {

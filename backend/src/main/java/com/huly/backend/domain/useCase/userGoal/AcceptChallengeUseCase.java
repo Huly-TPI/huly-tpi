@@ -1,28 +1,20 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.dto.userGoal.AcceptChallengeRequest;
+import com.huly.backend.domain.dto.userGoal.AcceptChallengeResponse;
+import com.huly.backend.domain.mapper.userGoal.AcceptChallengeMapper;
 import com.huly.backend.domain.model.user.UserGoal;
-import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.repository.user.UserGoalRepository;
 import lombok.RequiredArgsConstructor;
-
-import java.time.Instant;
 
 @RequiredArgsConstructor
 public class AcceptChallengeUseCase {
 
     private final UserGoalRepository userGoalRepository;
+    private final AcceptChallengeMapper mapper;
 
-    public UserGoal execute(Long userId, String title, String description, Long activityId) {
-       
-        UserGoal userGoal = UserGoal.builder()
-                .userId(userId)
-                .title(title)
-                .description(description)
-                .activityId(activityId)
-                .status(GoalStatus.PENDING)
-                .createdAt(Instant.now())
-                .build();
-
-        return userGoalRepository.save(userGoal);
+    public AcceptChallengeResponse execute(AcceptChallengeRequest request) {
+        UserGoal saved = userGoalRepository.save(mapper.toModel(request));
+        return mapper.toResponse(saved);
     }
 }

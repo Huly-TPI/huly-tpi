@@ -1,10 +1,17 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.shop.StoreItem;
-import com.huly.backend.domain.model.user.UserStoreItem;
+import com.huly.backend.domain.dto.store.BuyStoreItemRequest;
+import com.huly.backend.domain.dto.store.EquipStoreItemRequest;
+import com.huly.backend.domain.dto.store.GetUserInventoryRequest;
+import com.huly.backend.domain.dto.store.GetUserInventoryResponse;
+import com.huly.backend.domain.dto.store.InventoryItemView;
+import com.huly.backend.domain.dto.store.ListStoreItemsResponse;
+import com.huly.backend.domain.dto.store.StoreItemView;
+import com.huly.backend.domain.dto.store.UnequipStoreItemRequest;
 import com.huly.backend.domain.model.enums.ItemCategory;
 import com.huly.backend.domain.useCase.store.*;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.store.StorePresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +61,8 @@ class StoreControllerTest {
                                 getUserInventoryUseCase,
                                 buyStoreItemUseCase,
                                 equipStoreItemUseCase,
-                                unequipStoreItemUseCase);
+                                unequipStoreItemUseCase,
+                                new StorePresentationMapper());
 
                 mockMvc = MockMvcBuilders.standaloneSetup(storeController)
                                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
@@ -69,11 +77,10 @@ class StoreControllerTest {
 
         @Test
         void getItems_shouldReturnMappedCatalog() throws Exception {
-                StoreItem item = StoreItem.builder()
-                                .id(10L).name("Casa rosa").description("Casa de color rosa")
-                                .category(ItemCategory.HOUSE).assetKey("casa-rosa").priceCoins(50).price(new BigDecimal("1000.00"))
-                                .build();
-                when(listStoreItemsUseCase.execute()).thenReturn(List.of(item));
+                StoreItemView item = new StoreItemView(
+                                10L, "Casa rosa", "Casa de color rosa", ItemCategory.HOUSE, "casa-rosa",
+                                50, new BigDecimal("1000.00"), false);
+                when(listStoreItemsUseCase.execute()).thenReturn(new ListStoreItemsResponse(List.of(item)));
 
                 mockMvc.perform(get("/api/store/items"))
                                 .andExpect(status().isOk())
@@ -87,14 +94,10 @@ class StoreControllerTest {
 
         @Test
         void getInventory_shouldReturnMappedInventory() throws Exception {
-                StoreItem item = StoreItem.builder()
-                                .id(10L).name("Casa rosa").description("desc")
-                                .category(ItemCategory.HOUSE).assetKey("casa-rosa").priceCoins(50)
-                                .price(new BigDecimal("1000.00"))
-                                .build();
-                UserStoreItem owned = UserStoreItem.builder().id(1L).userId(USER_ID).storeItem(item).equipped(true)
-                                .build();
-                when(getUserInventoryUseCase.execute(USER_ID)).thenReturn(List.of(owned));
+                InventoryItemView item = new InventoryItemView(
+                                10L, "Casa rosa", ItemCategory.HOUSE, "casa-rosa", true);
+                when(getUserInventoryUseCase.execute(new GetUserInventoryRequest(USER_ID)))
+                                .thenReturn(new GetUserInventoryResponse(List.of(item)));
 
                 mockMvc.perform(get("/api/store/inventory"))
                                 .andExpect(status().isOk())
@@ -109,7 +112,7 @@ class StoreControllerTest {
                 mockMvc.perform(post("/api/store/items/10/buy"))
                                 .andExpect(status().isOk());
 
-                verify(buyStoreItemUseCase).execute(USER_ID, 10L);
+                verify(buyStoreItemUseCase).execute(new BuyStoreItemRequest(USER_ID, 10L));
         }
 
         @Test
@@ -117,7 +120,7 @@ class StoreControllerTest {
                 mockMvc.perform(post("/api/store/items/10/equip"))
                                 .andExpect(status().isOk());
 
-                verify(equipStoreItemUseCase).execute(USER_ID, 10L);
+                verify(equipStoreItemUseCase).execute(new EquipStoreItemRequest(USER_ID, 10L));
         }
 
         @Test
@@ -125,6 +128,6 @@ class StoreControllerTest {
                 mockMvc.perform(post("/api/store/items/10/unequip"))
                                 .andExpect(status().isOk());
 
-                verify(unequipStoreItemUseCase).execute(USER_ID, 10L);
+                verify(unequipStoreItemUseCase).execute(new UnequipStoreItemRequest(USER_ID, 10L));
         }
 }

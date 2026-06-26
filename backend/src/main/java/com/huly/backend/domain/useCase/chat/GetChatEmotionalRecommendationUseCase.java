@@ -1,10 +1,10 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
+import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
+import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
+import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsRequest;
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsResponse;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
@@ -82,27 +82,29 @@ public class GetChatEmotionalRecommendationUseCase {
             EmotionalAnalysisResult analysis
     ) {
         try {
-            EmotionalRecommendation query = new EmotionalRecommendation(
+            GetEmotionalRecommendationsRequest query = new GetEmotionalRecommendationsRequest(
                     userId,
-                    analysis.vad(),
+                    analysis.vad().valence(),
+                    analysis.vad().arousal(),
+                    analysis.vad().dominance(),
                     analysis.intensity(),
                     analysis.userGoal()
             );
-            EmotionalRecommendationResult result = recommendationsUseCase.execute(query);
+            GetEmotionalRecommendationsResponse result = recommendationsUseCase.execute(query);
             if (result.recommendations().isEmpty()) {
                 log.warn("Analisis solicito recomendacion pero no hay actividades disponibles userId={}", userId);
                 return ChatRecommendationOutcome.none(analysis);
             }
 
             EmotionalRecommendationItem recommendation = result.recommendations().get(0);
-            EmotionalEvent event = createEmotionalEventUseCase.execute(toEventCommand(
+            EmotionalEventResponse event = createEmotionalEventUseCase.execute(toEventRequest(
                     message,
                     userId,
                     analysis,
                     recommendation
             ));
             log.info("emotional_recommendation_created userId={} eventId={} activityId={} type={}",
-                    userId, event.getId(), recommendation.activityId(), recommendation.type());
+                    userId, event.id(), recommendation.activityId(), recommendation.type());
             return new ChatRecommendationOutcome(analysis, toSuggestedAction(recommendation, event));
         } catch (Exception e) {
             log.warn("emotional_recommendation_failed userId={} reason={}", userId, e.getMessage(), e);
@@ -129,13 +131,13 @@ public class GetChatEmotionalRecommendationUseCase {
         );
     }
 
-    private CreateEmotionalEventCommand toEventCommand(
+    private CreateEmotionalEventRequest toEventRequest(
             String message,
             Long userId,
             EmotionalAnalysisResult analysis,
             EmotionalRecommendationItem recommendation
     ) {
-        return new CreateEmotionalEventCommand(
+        return new CreateEmotionalEventRequest(
                 userId,
                 EmotionalEventSource.CHATBOT,
                 message,
@@ -152,14 +154,14 @@ public class GetChatEmotionalRecommendationUseCase {
         );
     }
 
-    private SuggestedChatAction toSuggestedAction(EmotionalRecommendationItem recommendation, EmotionalEvent event) {
+    private SuggestedChatAction toSuggestedAction(EmotionalRecommendationItem recommendation, EmotionalEventResponse event) {
         return new SuggestedChatAction(
                 recommendation.type(),
                 recommendation.activityId(),
                 recommendation.title(),
                 recommendation.description(),
                 ACTIVITIES_URL,
-                event.getId()
+                event.id()
         );
     }
 

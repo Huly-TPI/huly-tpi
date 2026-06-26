@@ -1,5 +1,10 @@
 package com.huly.backend.domain.useCase.mandala;
 
+import com.huly.backend.domain.dto.mandala.ListAvailableMandalasRequest;
+import com.huly.backend.domain.dto.mandala.ListAvailableMandalasResponse;
+import com.huly.backend.domain.dto.user.GetCurrentMembershipRequest;
+import com.huly.backend.domain.dto.user.GetCurrentMembershipResponse;
+import com.huly.backend.domain.mapper.mandala.ListAvailableMandalasMapper;
 import com.huly.backend.domain.model.enums.ItemCategory;
 import com.huly.backend.domain.model.enums.MandalaAccessType;
 import com.huly.backend.domain.model.enums.MandalaUnlockSource;
@@ -12,7 +17,9 @@ import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +34,7 @@ public class ListAvailableMandalasUseCase {
     private final MandalaPlanEntitlementRepository mandalaPlanEntitlementRepository;
     private final UserStoreItemRepository userStoreItemRepository;
     private final GetCurrentMembershipUseCase getCurrentMembershipUseCase;
+    private final ListAvailableMandalasMapper mapper;
 
     public List<AvailableMandala> execute(Long userId) {
         List<Mandala> activeMandalas = mandalaRepository.findAllActiveOrderByDisplayOrder();
@@ -43,9 +51,12 @@ public class ListAvailableMandalasUseCase {
             sources.putIfAbsent(mandalaId, MandalaUnlockSource.PURCHASED);
         }
 
-        getCurrentMembershipUseCase.execute(userId)
-                .ifPresent(plan -> mandalaPlanEntitlementRepository.findMandalaIdsByPlanCode(plan.getPlanCode())
-                        .forEach(mandalaId -> sources.putIfAbsent(mandalaId, MandalaUnlockSource.SUBSCRIPTION)));
+        GetCurrentMembershipResponse membership =
+                getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(userId));
+        if (membership.active()) {
+            mandalaPlanEntitlementRepository.findMandalaIdsByPlanCode(membership.planCode())
+                    .forEach(mandalaId -> sources.putIfAbsent(mandalaId, MandalaUnlockSource.SUBSCRIPTION));
+        }
 
         return activeMandalas.stream()
                 .map(mandala -> AvailableMandala.builder()
@@ -56,7 +67,12 @@ public class ListAvailableMandalasUseCase {
                 .toList();
     }
 
-    public Page<AvailableMandala> execute(Long userId, Pageable pageable) {
+    public ListAvailableMandalasResponse execute(ListAvailableMandalasRequest request) {
+        Pageable pageable = PageRequest.of(request.page(), request.size(), Sort.by("displayOrder").ascending());
+        return mapper.toResponse(paginate(request.userId(), pageable));
+    }
+
+    private Page<AvailableMandala> paginate(Long userId, Pageable pageable) {
         List<AvailableMandala> availableMandalas = execute(userId);
         long offset = pageable.getOffset();
         if (offset >= availableMandalas.size()) {

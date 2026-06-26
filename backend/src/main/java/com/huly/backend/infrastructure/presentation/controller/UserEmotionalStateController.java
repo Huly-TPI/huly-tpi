@@ -1,8 +1,9 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.user.UserEmotionalState;
 import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
 import com.huly.backend.infrastructure.presentation.dto.emotionalState.UserEmotionalStateRequest;
+import com.huly.backend.infrastructure.presentation.dto.emotionalState.UserEmotionalStateResponse;
+import com.huly.backend.infrastructure.presentation.mapper.emotionalEvent.UserEmotionalStatePresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,18 +16,14 @@ import org.springframework.web.bind.annotation.*;
 public class UserEmotionalStateController {
 
     private final SaveUserEmotionalStateUseCase saveUserEmotionalStateUseCase;
+    private final UserEmotionalStatePresentationMapper userEmotionalStatePresentationMapper;
 
     @PostMapping
-    public ResponseEntity<UserEmotionalState> save(@Valid @RequestBody UserEmotionalStateRequest request) {
-        UserEmotionalState savedState = saveUserEmotionalStateUseCase.execute(
-                request.userId(),
-                request.valence(),
-                request.arousal(),
-                request.dominance(),
-                request.intensity(),
-                request.source()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedState);
+    public ResponseEntity<UserEmotionalStateResponse> save(@Valid @RequestBody UserEmotionalStateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                userEmotionalStatePresentationMapper.toStateResponse(
+                        saveUserEmotionalStateUseCase.execute(
+                                userEmotionalStatePresentationMapper.toSaveRequest(request))));
     }
-    
+
 }

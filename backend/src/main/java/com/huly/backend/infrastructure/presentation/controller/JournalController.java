@@ -1,6 +1,5 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
 import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
@@ -8,6 +7,7 @@ import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryRequ
 import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryResponse;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+import com.huly.backend.infrastructure.presentation.mapper.journal.JournalPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,14 +25,13 @@ public class JournalController {
 
     private final CreateJournalEntryUseCase createJournalEntryUseCase;
     private final ListJournalEntriesUseCase listJournalEntriesUseCase;
+    private final JournalPresentationMapper journalPresentationMapper;
 
     @GetMapping
     public ResponseEntity<List<JournalEntryResponse>> list(@AuthenticationPrincipal UserDetails principal) {
         Long userId = getUserId(principal);
-        List<JournalEntryResponse> entries = listJournalEntriesUseCase.execute(userId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        List<JournalEntryResponse> entries = journalPresentationMapper.toJournalEntryResponses(
+                listJournalEntriesUseCase.execute(journalPresentationMapper.toListRequest(userId)));
 
         return ResponseEntity.ok(entries);
     }
@@ -54,14 +53,11 @@ public class JournalController {
 
         boolean useTextForAI = request.useTextForAI() == null || request.useTextForAI();
 
-        JournalEntry entry = createJournalEntryUseCase.execute(
-                userId,
-                request.content(),
-                mood,
-                useTextForAI
-        );
+        JournalEntryResponse response = journalPresentationMapper.toJournalEntryResponse(
+                createJournalEntryUseCase.execute(
+                        journalPresentationMapper.toCreateRequest(userId, request.content(), mood, useTextForAI)));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(entry));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     private Long getUserId(UserDetails principal) {
@@ -69,14 +65,5 @@ public class JournalController {
             throw new UnauthorizedException("Not authenticated");
         }
         return Long.parseLong(principal.getUsername());
-    }
-
-    private JournalEntryResponse toResponse(JournalEntry entry) {
-        return new JournalEntryResponse(
-                entry.getId(),
-                entry.getContent(),
-                entry.getMood() != null ? entry.getMood().name() : null,
-                entry.getCreatedAt()
-        );
     }
 }

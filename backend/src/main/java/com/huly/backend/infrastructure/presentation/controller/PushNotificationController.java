@@ -6,6 +6,7 @@ import com.huly.backend.domain.useCase.pushNotification.SavePushSubscriptionUseC
 import com.huly.backend.infrastructure.presentation.dto.pushNotification.PushSubscriptionStatusResponse;
 import com.huly.backend.infrastructure.presentation.dto.pushNotification.SubscribeRequest;
 import com.huly.backend.infrastructure.presentation.dto.pushNotification.UnsubscribeRequest;
+import com.huly.backend.infrastructure.presentation.mapper.pushNotification.PushNotificationPresentationMapper;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import lombok.RequiredArgsConstructor;
@@ -23,25 +24,26 @@ public class PushNotificationController {
     private final SavePushSubscriptionUseCase savePushSubscriptionUseCase;
     private final DeletePushSubscriptionUseCase deletePushSubscriptionUseCase;
     private final GetPushSubscriptionStatusUseCase getPushSubscriptionStatusUseCase;
+    private final PushNotificationPresentationMapper pushNotificationPresentationMapper;
 
     @PostMapping("/subscribe")
     public ResponseEntity<Void> subscribe(@RequestBody SubscribeRequest request) {
-        savePushSubscriptionUseCase.execute(request.getUserId(), request.getEndpoint(), request.getP256dh(),
-                request.getAuth());
+        savePushSubscriptionUseCase.execute(pushNotificationPresentationMapper.toSaveRequest(request));
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping("/unsubscribe")
     public ResponseEntity<Void> unsubscribe(@RequestBody UnsubscribeRequest request) {
-        deletePushSubscriptionUseCase.execute(request.getEndpoint());
+        deletePushSubscriptionUseCase.execute(pushNotificationPresentationMapper.toDeleteRequest(request));
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/status")
     public ResponseEntity<PushSubscriptionStatusResponse> status(@AuthenticationPrincipal UserDetails principal) {
         Long userId = Long.parseLong(principal.getUsername());
-        boolean subscribed = getPushSubscriptionStatusUseCase.execute(userId);
-        return ResponseEntity.ok(new PushSubscriptionStatusResponse(subscribed));
+        PushSubscriptionStatusResponse response = pushNotificationPresentationMapper.toStatusResponse(
+                getPushSubscriptionStatusUseCase.execute(pushNotificationPresentationMapper.toStatusRequest(userId)));
+        return ResponseEntity.ok(response);
     }
 
 }

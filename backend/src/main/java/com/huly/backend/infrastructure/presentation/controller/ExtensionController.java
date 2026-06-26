@@ -1,8 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.extension.ExtensionMetric;
-import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
-import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsResponse;
+import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsResponse;
 import com.huly.backend.domain.useCase.extension.GetUserAntiScrollSettingsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveExtensionMetricsUseCase;
 import com.huly.backend.domain.useCase.extension.SaveUserAntiScrollSettingsUseCase;
@@ -10,6 +8,7 @@ import com.huly.backend.infrastructure.presentation.dto.extension.ExtensionMetri
 import com.huly.backend.infrastructure.presentation.dto.extension.AntiScrollSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.extension.AntiScrollSettingsResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+import com.huly.backend.infrastructure.presentation.mapper.extension.ExtensionPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +26,16 @@ public class ExtensionController {
     private final GetUserAntiScrollSettingsUseCase getUserAntiScrollSettingsUseCase;
     private final SaveUserAntiScrollSettingsUseCase saveUserAntiScrollSettingsUseCase;
     private final SaveExtensionMetricsUseCase saveExtensionMetricsUseCase;
+    private final ExtensionPresentationMapper extensionPresentationMapper;
 
     @GetMapping("/settings")
     public ResponseEntity<AntiScrollSettingsResponse> getSettings(
             @AuthenticationPrincipal UserDetails principal
     ) {
         Long userId = getUserId(principal);
-        GetUserAntiScrollSettingsResponse settings = getUserAntiScrollSettingsUseCase.execute(userId);
-        return ResponseEntity.ok(toResponse(settings));
+        GetUserAntiScrollSettingsResponse settings = getUserAntiScrollSettingsUseCase.execute(
+                extensionPresentationMapper.toGetSettingsRequest(userId));
+        return ResponseEntity.ok(extensionPresentationMapper.toSettingsResponse(settings));
     }
 
     @PostMapping("/settings")
@@ -43,13 +44,8 @@ public class ExtensionController {
             @Valid @RequestBody AntiScrollSettingsRequest request
     ) {
         Long userId = getUserId(principal);
-        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
-                .enabled(request.isEnabled())
-                .pauseIntervalSeconds(request.getPauseIntervalSeconds())
-                .monitoredDomains(request.getMonitoredDomains())
-                .dataSharingConsent(request.isDataSharingConsent())
-                .build();
-        saveUserAntiScrollSettingsUseCase.execute(userId, settings);
+        saveUserAntiScrollSettingsUseCase.execute(
+                extensionPresentationMapper.toSaveSettingsRequest(userId, request));
         return ResponseEntity.ok().build();
     }
 
@@ -59,40 +55,15 @@ public class ExtensionController {
             @Valid @RequestBody List<ExtensionMetricRequest> requests
     ) {
         Long userId = getUserId(principal);
-        List<ExtensionMetric> metrics = requests.stream()
-                .map(this::toDomain)
-                .toList();
-        saveExtensionMetricsUseCase.execute(userId, metrics);
+        saveExtensionMetricsUseCase.execute(
+                extensionPresentationMapper.toSaveMetricsRequest(userId, requests));
         return ResponseEntity.ok().build();
     }
 
     private Long getUserId(UserDetails principal) {
-        if (principal == null) 
-            throw new UnauthorizedException("Not authenticated");       
+        if (principal == null)
+            throw new UnauthorizedException("Not authenticated");
 
         return Long.parseLong(principal.getUsername());
-    }
-
-    private AntiScrollSettingsResponse toResponse(GetUserAntiScrollSettingsResponse settings) {
-        return AntiScrollSettingsResponse.builder()
-                .enabled(settings.enabled())
-                .pauseIntervalSeconds(settings.pauseIntervalSeconds())
-                .gardenUrl(settings.gardenUrl())
-                .backendUrl(settings.backendUrl())
-                .monitoredDomains(settings.monitoredDomains())
-                .dataSharingConsent(settings.dataSharingConsent())
-                .userName(settings.userName())
-                .termsAndConditions(settings.termsAndConditions())
-                .build();
-    }
-
-    private ExtensionMetric toDomain(ExtensionMetricRequest request) {
-        return ExtensionMetric.builder()
-                .domain(request.getDomain())
-                .activeSeconds(request.getActiveSeconds())
-                .scrollCount(request.getScrollCount())
-                .modalsShown(request.getModalsShown())
-                .redirects(request.getRedirects())
-                .build();
     }
 }

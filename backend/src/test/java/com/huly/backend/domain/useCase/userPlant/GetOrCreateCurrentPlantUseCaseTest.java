@@ -1,12 +1,14 @@
 package com.huly.backend.domain.useCase.userPlant;
 
+import com.huly.backend.domain.dto.userPlant.GetCurrentPlantRequest;
+import com.huly.backend.domain.dto.userPlant.GetCurrentPlantResponse;
+import com.huly.backend.domain.mapper.userPlant.GetOrCreateCurrentPlantMapper;
 import com.huly.backend.domain.model.enums.PlantStatus;
 import com.huly.backend.domain.model.user.UserPlant;
 import com.huly.backend.domain.repository.UserPlantRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -25,11 +27,15 @@ class GetOrCreateCurrentPlantUseCaseTest {
     @Mock
     private UserPlantRepository userPlantRepository;
 
-    @InjectMocks
     private GetOrCreateCurrentPlantUseCase useCase;
 
+    @BeforeEach
+    void setUp() {
+        useCase = new GetOrCreateCurrentPlantUseCase(userPlantRepository, new GetOrCreateCurrentPlantMapper());
+    }
+
     @Test
-    void execute_shouldCreateFirstPlant_whenUserHasNoPlants() {
+    void resolveCurrentPlant_shouldCreateFirstPlant_whenUserHasNoPlants() {
         when(userPlantRepository.findLatestByUserIdAndStatus(USER_ID, PlantStatus.GROWING)).thenReturn(Optional.empty());
         when(userPlantRepository.findLatestByUserId(USER_ID)).thenReturn(Optional.empty());
         when(userPlantRepository.save(any(UserPlant.class))).thenAnswer(invocation -> {
@@ -39,7 +45,7 @@ class GetOrCreateCurrentPlantUseCaseTest {
         });
         when(userPlantRepository.countCompletedGoalsByPlantId(1L)).thenReturn(0L);
 
-        UserPlant result = useCase.execute(USER_ID);
+        UserPlant result = useCase.resolveCurrentPlant(USER_ID);
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getPlantNumber()).isEqualTo(1);
@@ -48,18 +54,33 @@ class GetOrCreateCurrentPlantUseCaseTest {
     }
 
     @Test
-    void execute_shouldReturnCurrentGrowingPlant_whenUserAlreadyHasOne() {
+    void resolveCurrentPlant_shouldReturnCurrentGrowingPlant_whenUserAlreadyHasOne() {
         UserPlant currentGrowingPlant = plant(2L, 2, PlantStatus.GROWING);
 
         when(userPlantRepository.findLatestByUserIdAndStatus(USER_ID, PlantStatus.GROWING))
                 .thenReturn(Optional.of(currentGrowingPlant));
         when(userPlantRepository.countCompletedGoalsByPlantId(2L)).thenReturn(3L);
 
-        UserPlant result = useCase.execute(USER_ID);
+        UserPlant result = useCase.resolveCurrentPlant(USER_ID);
 
         assertThat(result.getId()).isEqualTo(2L);
         assertThat(result.getStatus()).isEqualTo(PlantStatus.GROWING);
         assertThat(result.getCompletedGoalsCount()).isEqualTo(3L);
+    }
+
+    @Test
+    void execute_shouldReturnDomainResponse_withCurrentPlant() {
+        UserPlant currentGrowingPlant = plant(2L, 2, PlantStatus.GROWING);
+
+        when(userPlantRepository.findLatestByUserIdAndStatus(USER_ID, PlantStatus.GROWING))
+                .thenReturn(Optional.of(currentGrowingPlant));
+        when(userPlantRepository.countCompletedGoalsByPlantId(2L)).thenReturn(3L);
+
+        GetCurrentPlantResponse result = useCase.execute(new GetCurrentPlantRequest(USER_ID));
+
+        assertThat(result.plant().id()).isEqualTo(2L);
+        assertThat(result.plant().status()).isEqualTo("GROWING");
+        assertThat(result.plant().completedGoalsCount()).isEqualTo(3L);
     }
 
     private UserPlant plant(Long id, int plantNumber, PlantStatus status) {

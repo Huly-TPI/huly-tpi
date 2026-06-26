@@ -41,7 +41,8 @@ class DailyRewardControllerTest {
         claimDailyRewardUseCase = mock(ClaimDailyRewardUseCase.class);
         getDailyRewardStatusUseCase = mock(GetDailyRewardStatusUseCase.class);
 
-        DailyRewardController controller = new DailyRewardController(claimDailyRewardUseCase, getDailyRewardStatusUseCase);
+        DailyRewardController controller = new DailyRewardController(claimDailyRewardUseCase, getDailyRewardStatusUseCase,
+                new com.huly.backend.infrastructure.presentation.mapper.dailyReward.DailyRewardPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();

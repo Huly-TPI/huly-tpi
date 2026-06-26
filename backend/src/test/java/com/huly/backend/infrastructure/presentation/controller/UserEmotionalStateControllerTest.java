@@ -1,9 +1,11 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.user.UserEmotionalState;
+import com.huly.backend.domain.dto.emotionalEvent.SaveUserEmotionalStateRequest;
+import com.huly.backend.domain.dto.emotionalEvent.SaveUserEmotionalStateResponse;
 import com.huly.backend.domain.useCase.emotionalEvent.SaveUserEmotionalStateUseCase;
 import com.huly.backend.infrastructure.presentation.dto.emotionalState.UserEmotionalStateRequest;
+import com.huly.backend.infrastructure.presentation.mapper.emotionalEvent.UserEmotionalStatePresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -12,7 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -28,18 +30,16 @@ class UserEmotionalStateControllerTest {
     @BeforeEach
     void setUp() {
         saveUserEmotionalStateUseCase = mock(SaveUserEmotionalStateUseCase.class);
-        UserEmotionalStateController controller = new UserEmotionalStateController(saveUserEmotionalStateUseCase);
+        UserEmotionalStateController controller = new UserEmotionalStateController(
+                saveUserEmotionalStateUseCase, new UserEmotionalStatePresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
         }
 
-    @Test 
-    void save_shouldReturn201WithSavedState() throws Exception { 
-        UserEmotionalState savedState = UserEmotionalState.builder()
-                .id(1L).userId(10L).valence(0.5).arousal(-0.3)
-                .dominance(0.2).intensity(0.8)
-                .source("chatbot").timestamp(Instant.now())
-                .build();
-        when(saveUserEmotionalStateUseCase.execute(eq(10L), eq(0.5), eq(-0.3), eq(0.2), eq(0.8), eq("chatbot"))).thenReturn(savedState);
+    @Test
+    void save_shouldReturn201WithSavedState() throws Exception {
+        SaveUserEmotionalStateResponse savedState = new SaveUserEmotionalStateResponse(
+                1L, 10L, 0.5, -0.3, 0.2, 0.8, "chatbot", Instant.now());
+        when(saveUserEmotionalStateUseCase.execute(any(SaveUserEmotionalStateRequest.class))).thenReturn(savedState);
 
 
         UserEmotionalStateRequest request = new UserEmotionalStateRequest(
@@ -55,7 +55,7 @@ class UserEmotionalStateControllerTest {
     }
 
     @Test
-    void save_shouldReturn400WhenRequestIsInvalid() throws Exception { 
+    void save_shouldReturn400WhenRequestIsInvalid() throws Exception {
         UserEmotionalStateRequest invalidRequest = new UserEmotionalStateRequest(
                 null, 0.5, -0.3, 0.2, 0.8, "chatbot");
 
@@ -66,7 +66,7 @@ class UserEmotionalStateControllerTest {
     }
 
     @Test
-    void save_shouldReturn400WhenValenceIsOutOfRange() throws Exception { 
+    void save_shouldReturn400WhenValenceIsOutOfRange() throws Exception {
         UserEmotionalStateRequest invalidRequest = new UserEmotionalStateRequest(
                 10L, 1.5, -0.3, 0.2, 0.8, "chatbot");
 
@@ -76,8 +76,8 @@ class UserEmotionalStateControllerTest {
                         .andExpect(status().isBadRequest());
     }
 
-    @Test 
-    void save_shouldReturn400WhenSourceIsBlank() throws Exception { 
+    @Test
+    void save_shouldReturn400WhenSourceIsBlank() throws Exception {
         UserEmotionalStateRequest invalidRequest = new UserEmotionalStateRequest(
                 10L, 0.5, -0.3, 0.2, 0.8, "   ");
 
@@ -86,5 +86,5 @@ class UserEmotionalStateControllerTest {
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                         .andExpect(status().isBadRequest());
     }
-    
+
 }

@@ -1,17 +1,18 @@
 package com.huly.backend.domain.useCase.cloud;
 
-import com.huly.backend.domain.model.CloudThought;
+import com.huly.backend.domain.dto.cloud.ListCloudThoughtsRequest;
+import com.huly.backend.domain.dto.cloud.ListCloudThoughtsResponse;
+import com.huly.backend.domain.mapper.cloud.ListCloudThoughtsMapper;
 import com.huly.backend.domain.repository.CloudThoughtRepository;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 public class ListCloudThoughtsUseCase {
 
     private final CloudThoughtRepository cloudThoughtRepository;
+    private final ListCloudThoughtsMapper mapper;
 
-    public List<CloudThought> execute(Long userId) {
-        return cloudThoughtRepository.findAllByUserId(userId);
+    public ListCloudThoughtsResponse execute(ListCloudThoughtsRequest request) {
+        return mapper.toResponse(cloudThoughtRepository.findAllByUserId(request.userId()));
     }
 }

@@ -1,14 +1,15 @@
 package com.huly.backend.domain.useCase.BreathingSession;
-import com.huly.backend.domain.model.breathingTechnique.BreathingTechnique;
+import com.huly.backend.domain.dto.BreathingSession.GetBreathingTechniquesResponse;
+import com.huly.backend.domain.mapper.BreathingSession.GetBreathingTechniquesMapper;
 import com.huly.backend.domain.repository.breathingTechnique.BreathingTechniqueRepository;
 import lombok.RequiredArgsConstructor;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class GetBreathingTechniquesUseCase {
     private final BreathingTechniqueRepository breathingTechniqueRepository;
+    private final GetBreathingTechniquesMapper mapper;
 
-    public List<BreathingTechnique> execute() {
-        return breathingTechniqueRepository.findAll();
+    public GetBreathingTechniquesResponse execute() {
+        return mapper.toResponse(breathingTechniqueRepository.findAll());
     }
 }

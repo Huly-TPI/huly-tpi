@@ -1,7 +1,9 @@
 package com.huly.backend.domain.useCase.mandala;
 
+import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
+import com.huly.backend.domain.dto.mandala.SaveMandalaProgressResponse;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
-import com.huly.backend.domain.model.mandala.MandalaProgress;
+import com.huly.backend.domain.mapper.mandala.SaveMandalaProgressMapper;
 import com.huly.backend.domain.repository.mandala.MandalaProgressRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -10,15 +12,12 @@ public class SaveMandalaProgressUseCase {
 
     private final MandalaProgressRepository mandalaProgressRepository;
     private final ListAvailableMandalasUseCase listAvailableMandalasUseCase;
+    private final SaveMandalaProgressMapper mapper;
 
-    public void execute(Long userId, String mandalaId, byte[] paintBlob) {
-        validateAvailable(userId, mandalaId);
-        MandalaProgress progress = MandalaProgress.builder()
-                .userId(userId)
-                .mandalaId(mandalaId)
-                .paintBlob(paintBlob)
-                .build();
-        mandalaProgressRepository.save(progress);
+    public SaveMandalaProgressResponse execute(SaveMandalaProgressRequest request) {
+        validateAvailable(request.userId(), request.mandalaId());
+        mandalaProgressRepository.save(mapper.toModel(request));
+        return mapper.toResponse();
     }
 
     private void validateAvailable(Long userId, String mandalaId) {

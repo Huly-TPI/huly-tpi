@@ -1,4 +1,9 @@
 package com.huly.backend.infrastructure.config.useCase;
+import com.huly.backend.domain.mapper.store.BuyStoreItemMapper;
+import com.huly.backend.domain.mapper.store.EquipStoreItemMapper;
+import com.huly.backend.domain.mapper.store.GetUserInventoryMapper;
+import com.huly.backend.domain.mapper.store.ListStoreItemsMapper;
+import com.huly.backend.domain.mapper.store.UnequipStoreItemMapper;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
@@ -15,30 +20,61 @@ import org.springframework.context.annotation.Configuration;
 public class StoreUseCaseConfig {
 
     @Bean
-    public ListStoreItemsUseCase listStoreItemsUseCase(StoreItemRepository storeItemRepository) {
-        return new ListStoreItemsUseCase(storeItemRepository);
+    public ListStoreItemsMapper listStoreItemsMapper() {
+        return new ListStoreItemsMapper();
     }
 
     @Bean
-    public GetUserInventoryUseCase getUserInventoryUseCase(UserStoreItemRepository userStoreItemRepository) {
-        return new GetUserInventoryUseCase(userStoreItemRepository);
+    public GetUserInventoryMapper getUserInventoryMapper() {
+        return new GetUserInventoryMapper();
+    }
+
+    @Bean
+    public EquipStoreItemMapper equipStoreItemMapper() {
+        return new EquipStoreItemMapper();
+    }
+
+    @Bean
+    public UnequipStoreItemMapper unequipStoreItemMapper() {
+        return new UnequipStoreItemMapper();
+    }
+
+    @Bean
+    public BuyStoreItemMapper buyStoreItemMapper() {
+        return new BuyStoreItemMapper();
+    }
+
+    @Bean
+    public ListStoreItemsUseCase listStoreItemsUseCase(StoreItemRepository storeItemRepository,
+                                                       ListStoreItemsMapper listStoreItemsMapper) {
+        return new ListStoreItemsUseCase(storeItemRepository, listStoreItemsMapper);
+    }
+
+    @Bean
+    public GetUserInventoryUseCase getUserInventoryUseCase(UserStoreItemRepository userStoreItemRepository,
+                                                           GetUserInventoryMapper getUserInventoryMapper) {
+        return new GetUserInventoryUseCase(userStoreItemRepository, getUserInventoryMapper);
     }
 
     @Bean
     public BuyStoreItemUseCase buyStoreItemUseCase(StoreItemRepository storeItemRepository,
                                                    UserStoreItemRepository userStoreItemRepository,
-                                                   CoinService coinService, UserPlanRepository userPlanRepository) {
-        return new BuyStoreItemUseCase(storeItemRepository, userStoreItemRepository, coinService, userPlanRepository);
-    }
-
-    @Bean 
-    public EquipStoreItemUseCase equipStoreItemUseCase(StoreItemRepository storeItemRepository, UserStoreItemRepository userStoreItemRepository) {
-        return new EquipStoreItemUseCase(storeItemRepository, userStoreItemRepository);
+                                                   CoinService coinService, UserPlanRepository userPlanRepository,
+                                                   BuyStoreItemMapper buyStoreItemMapper) {
+        return new BuyStoreItemUseCase(storeItemRepository, userStoreItemRepository, coinService, userPlanRepository, buyStoreItemMapper);
     }
 
     @Bean
-    public UnequipStoreItemUseCase unequipStoreItemUseCase(UserStoreItemRepository userStoreItemRepository) {
-        return new UnequipStoreItemUseCase(userStoreItemRepository);
+    public EquipStoreItemUseCase equipStoreItemUseCase(StoreItemRepository storeItemRepository,
+                                                       UserStoreItemRepository userStoreItemRepository,
+                                                       EquipStoreItemMapper equipStoreItemMapper) {
+        return new EquipStoreItemUseCase(storeItemRepository, userStoreItemRepository, equipStoreItemMapper);
     }
-    
+
+    @Bean
+    public UnequipStoreItemUseCase unequipStoreItemUseCase(UserStoreItemRepository userStoreItemRepository,
+                                                           UnequipStoreItemMapper unequipStoreItemMapper) {
+        return new UnequipStoreItemUseCase(userStoreItemRepository, unequipStoreItemMapper);
+    }
+
 }

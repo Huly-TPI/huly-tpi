@@ -1,6 +1,9 @@
 package com.huly.backend.domain.useCase.store;
 
+import com.huly.backend.domain.dto.store.BuyStoreItemRequest;
+import com.huly.backend.domain.dto.store.BuyStoreItemResponse;
 import com.huly.backend.domain.exception.BusinessRuleException;
+import com.huly.backend.domain.mapper.store.BuyStoreItemMapper;
 import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.model.shop.StoreItem;
 import com.huly.backend.domain.model.user.UserStoreItem;
@@ -21,9 +24,12 @@ public class BuyStoreItemUseCase {
     private final UserStoreItemRepository userStoreItemRepository;
     private final CoinService coinService;
     private final UserPlanRepository userPlanRepository;
+    private final BuyStoreItemMapper mapper;
 
     @Transactional
-    public void execute(Long userId, Long storeItemId) {
+    public BuyStoreItemResponse execute(BuyStoreItemRequest request) {
+        Long userId = request.userId();
+        Long storeItemId = request.storeItemId();
         StoreItem item = storeItemRepository.findById(storeItemId)
                 .orElseThrow(() -> new NotFoundException("Item no encontrado " + storeItemId));
         if (userStoreItemRepository.isOwned(userId, storeItemId)) {
@@ -44,6 +50,7 @@ public class BuyStoreItemUseCase {
                 .equipped(false)
                 .acquiredAt(Instant.now()).build());
 
+        return mapper.toResponse(true);
     }
 
 }

@@ -1,10 +1,13 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
+import com.huly.backend.domain.dto.emotionalEvent.SaveUserEmotionalStateRequest;
+import com.huly.backend.domain.dto.emotionalEvent.SaveUserEmotionalStateResponse;
+import com.huly.backend.domain.mapper.emotionalEvent.SaveUserEmotionalStateMapper;
 import com.huly.backend.domain.model.user.UserEmotionalState;
 import com.huly.backend.domain.repository.user.UserEmotionalStateRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -17,12 +20,17 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SaveUserEmotionalStateUseCaseTest {
-    
+
     @Mock
     private UserEmotionalStateRepository repository;
 
-    @InjectMocks
     private SaveUserEmotionalStateUseCase saveUserEmotionalStateUseCase;
+
+    @BeforeEach
+    void setUp() {
+        saveUserEmotionalStateUseCase = new SaveUserEmotionalStateUseCase(
+                repository, new SaveUserEmotionalStateMapper());
+    }
 
     @Test
     void execute_shouldSaveAndReturnState() {
@@ -38,23 +46,23 @@ class SaveUserEmotionalStateUseCaseTest {
                 .build();
         when(repository.save(any(UserEmotionalState.class))).thenReturn(inputState);
 
-              UserEmotionalState result = saveUserEmotionalStateUseCase.execute(
-                10L, 0.5, -0.3, 0.2, 0.8, "chatbot");
+              SaveUserEmotionalStateResponse result = saveUserEmotionalStateUseCase.execute(
+                new SaveUserEmotionalStateRequest(10L, 0.5, -0.3, 0.2, 0.8, "chatbot"));
 
-        assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getUserId()).isEqualTo(10L);
-        assertThat(result.getSource()).isEqualTo("chatbot");
+        assertThat(result.id()).isEqualTo(1L);
+        assertThat(result.userId()).isEqualTo(10L);
+        assertThat(result.source()).isEqualTo("chatbot");
         verify(repository).save(any(UserEmotionalState.class));
     }
 
     @Test
-    void execute_shouldSetTimestampAutomatically() { 
+    void execute_shouldSetTimestampAutomatically() {
        when(repository.save(any(UserEmotionalState.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserEmotionalState result = saveUserEmotionalStateUseCase.execute(
-                10L, 0.5, -0.3, 0.2, 0.8, "diario");
+        SaveUserEmotionalStateResponse result = saveUserEmotionalStateUseCase.execute(
+                new SaveUserEmotionalStateRequest(10L, 0.5, -0.3, 0.2, 0.8, "diario"));
 
-                assertThat(result.getTimestamp()).isNotNull();
+                assertThat(result.timestamp()).isNotNull();
     }
-    
+
 }

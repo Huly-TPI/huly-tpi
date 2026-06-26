@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.lead;
 
+import com.huly.backend.domain.dto.lead.RegisterLeadRequest;
+import com.huly.backend.domain.mapper.lead.RegisterLeadMapper;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.model.enums.UserRole;
@@ -7,10 +9,10 @@ import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.exception.DuplicateResourceException;
 import com.huly.backend.domain.port.EmailPort;
 import com.huly.backend.domain.repository.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,7 +29,12 @@ class RegisterLeadUseCaseTest {
     @Mock private UserRepository userRepository;
     @Mock private EmailPort emailPort;
 
-    @InjectMocks private RegisterLeadUseCase registerLeadUseCase;
+    private RegisterLeadUseCase registerLeadUseCase;
+
+    @BeforeEach
+    void setUp() {
+        registerLeadUseCase = new RegisterLeadUseCase(userRepository, emailPort, new RegisterLeadMapper());
+    }
 
     @Test
     void execute_shouldSaveUserWithLeadRoleAndActiveStatus() {
@@ -35,7 +42,7 @@ class RegisterLeadUseCaseTest {
         when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().id(1L).build());
 
         ArgumentCaptor<AppUser> captor = ArgumentCaptor.forClass(AppUser.class);
-        registerLeadUseCase.execute("lead@huly.com", "hulyuser", SourceAction.LANDING);
+        registerLeadUseCase.execute(new RegisterLeadRequest("lead@huly.com", "hulyuser", SourceAction.LANDING));
 
         verify(userRepository).save(captor.capture());
         AppUser saved = captor.getValue();
@@ -49,7 +56,7 @@ class RegisterLeadUseCaseTest {
         when(userRepository.existsByEmail("lead@huly.com")).thenReturn(false);
         when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().id(42L).build());
 
-        registerLeadUseCase.execute("lead@huly.com", "hulyuser", SourceAction.JOURNAL);
+        registerLeadUseCase.execute(new RegisterLeadRequest("lead@huly.com", "hulyuser", SourceAction.JOURNAL));
 
         verify(userRepository).saveLeadDetail(42L, "hulyuser", SourceAction.JOURNAL);
     }
@@ -59,7 +66,7 @@ class RegisterLeadUseCaseTest {
         when(userRepository.existsByEmail("lead@huly.com")).thenReturn(false);
         when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().id(1L).build());
 
-        registerLeadUseCase.execute("lead@huly.com", "hulyuser", SourceAction.LANDING);
+        registerLeadUseCase.execute(new RegisterLeadRequest("lead@huly.com", "hulyuser", SourceAction.LANDING));
 
         verify(emailPort).sendWelcomeLead("lead@huly.com", "hulyuser");
     }
@@ -68,7 +75,8 @@ class RegisterLeadUseCaseTest {
     void execute_shouldThrowConflictException_whenEmailAlreadyExists() {
         when(userRepository.existsByEmail("existing@huly.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> registerLeadUseCase.execute("existing@huly.com", "hulyuser", SourceAction.LANDING))
+        assertThatThrownBy(() -> registerLeadUseCase.execute(
+                new RegisterLeadRequest("existing@huly.com", "hulyuser", SourceAction.LANDING)))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("Ya existe un lead con email");
     }
@@ -77,7 +85,8 @@ class RegisterLeadUseCaseTest {
     void execute_shouldNotSaveNorSendEmail_whenEmailAlreadyExists() {
         when(userRepository.existsByEmail("existing@huly.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> registerLeadUseCase.execute("existing@huly.com", "hulyuser", SourceAction.LANDING))
+        assertThatThrownBy(() -> registerLeadUseCase.execute(
+                new RegisterLeadRequest("existing@huly.com", "hulyuser", SourceAction.LANDING)))
                 .isInstanceOf(DuplicateResourceException.class);
 
         verify(userRepository, never()).save(any());

@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.onboarding;
 
+import com.huly.backend.domain.dto.onboarding.CompleteOnboardingRequest;
+import com.huly.backend.domain.mapper.onboarding.CompleteOnboardingMapper;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
@@ -11,7 +13,6 @@ import com.huly.backend.domain.service.vector.UserVectorMemoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.huly.backend.domain.useCase.badge.GrantBadgeUseCase;
@@ -32,15 +33,22 @@ class CompleteOnboardingUseCaseTest {
     @Mock private UserDetailDomainRepository userDetailDomainRepository;
     @Mock private UserVectorMemoryService userVectorMemoryService;
 
-    @InjectMocks private CompleteOnboardingUseCase completeOnboardingUseCase;
-
     @Mock
     private GrantBadgeUseCase grantBadgeUseCase;
+
+    private CompleteOnboardingUseCase completeOnboardingUseCase;
 
     private AppUser user;
 
     @BeforeEach
     void setUp() {
+        completeOnboardingUseCase = new CompleteOnboardingUseCase(
+                userRepository,
+                userDetailDomainRepository,
+                userVectorMemoryService,
+                grantBadgeUseCase,
+                new CompleteOnboardingMapper()
+        );
         user = AppUser.builder()
                 .id(1L)
                 .email("user@huly.com")
@@ -53,10 +61,10 @@ class CompleteOnboardingUseCaseTest {
     void execute_shouldCallCompleteOnboarding_whenUserExists() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        completeOnboardingUseCase.execute(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
+        completeOnboardingUseCase.execute(new CompleteOnboardingRequest(1L, "Desestresarme", "Meditar", "Meditar 5 minutos"));
 
         verify(userDetailDomainRepository).completeOnboarding(1L, "Desestresarme", "Meditar", "Meditar 5 minutos");
-        
+
         org.mockito.ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 org.mockito.ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
         verify(userVectorMemoryService).saveMemory(captor.capture());
@@ -68,7 +76,7 @@ class CompleteOnboardingUseCaseTest {
     void execute_shouldThrowNotFoundException_whenUserDoesNotExist() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> completeOnboardingUseCase.execute(999L, "A", "B", "C"))
+        assertThatThrownBy(() -> completeOnboardingUseCase.execute(new CompleteOnboardingRequest(999L, "A", "B", "C")))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -78,7 +86,7 @@ class CompleteOnboardingUseCaseTest {
         doThrow(new RuntimeException("Vector memory error"))
                 .when(userVectorMemoryService).saveMemory(any(SaveVectorMemoryCommand.class));
 
-        completeOnboardingUseCase.execute(1L, "A", "B", "C");
+        completeOnboardingUseCase.execute(new CompleteOnboardingRequest(1L, "A", "B", "C"));
 
         verify(userDetailDomainRepository).completeOnboarding(1L, "A", "B", "C");
     }

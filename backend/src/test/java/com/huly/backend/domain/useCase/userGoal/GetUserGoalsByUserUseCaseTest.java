@@ -1,11 +1,14 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.dto.userGoal.GetUserGoalsRequest;
+import com.huly.backend.domain.dto.userGoal.GetUserGoalsResponse;
+import com.huly.backend.domain.mapper.userGoal.GetUserGoalsMapper;
 import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.repository.user.UserGoalRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,56 +29,65 @@ class GetUserGoalsByUserUseCaseTest {
 
     @Mock private UserGoalRepository userGoalRepository;
 
-    @InjectMocks private GetUserGoalsByUserUseCase getUserGoalsByUserUseCase;
+    private GetUserGoalsByUserUseCase getUserGoalsByUserUseCase;
 
-    private final Pageable pageable = PageRequest.of(0, 5);
+    @BeforeEach
+    void setUp() {
+        getUserGoalsByUserUseCase = new GetUserGoalsByUserUseCase(userGoalRepository, new GetUserGoalsMapper());
+    }
 
     private UserGoal goal(GoalStatus status) {
         return UserGoal.builder().userId(1L).title("T").status(status).build();
     }
 
     @Test
-    void executeCompleted_shouldDelegateWithCompletedStatus() {
-        Page<UserGoal> expected = new PageImpl<>(List.of(goal(GoalStatus.COMPLETED)));
-        when(userGoalRepository.findByUserIdAndStatus(1L, GoalStatus.COMPLETED, pageable)).thenReturn(expected);
+    void execute_shouldReturnCompletedAndPendingPages() {
+        Page<UserGoal> completed = new PageImpl<>(List.of(goal(GoalStatus.COMPLETED)),
+                PageRequest.of(0, 5), 1);
+        Page<UserGoal> pending = new PageImpl<>(
+                List.of(goal(GoalStatus.PENDING), goal(GoalStatus.PENDING)),
+                PageRequest.of(0, 5), 2);
+        when(userGoalRepository.findByUserIdAndStatus(eq(1L), eq(GoalStatus.COMPLETED), any(Pageable.class)))
+                .thenReturn(completed);
+        when(userGoalRepository.findByUserIdAndStatus(eq(1L), eq(GoalStatus.PENDING), any(Pageable.class)))
+                .thenReturn(pending);
 
-        Page<UserGoal> result = getUserGoalsByUserUseCase.executeCompleted(1L, pageable);
+        GetUserGoalsResponse result = getUserGoalsByUserUseCase.execute(new GetUserGoalsRequest(1L, 0, 5));
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getStatus()).isEqualTo(GoalStatus.COMPLETED);
-        verify(userGoalRepository).findByUserIdAndStatus(1L, GoalStatus.COMPLETED, pageable);
+        assertThat(result.completados().content()).hasSize(1);
+        assertThat(result.completados().content().get(0).status()).isEqualTo("COMPLETED");
+        assertThat(result.completados().totalElements()).isEqualTo(1);
+        assertThat(result.completados().pageSize()).isEqualTo(5);
+        assertThat(result.pendientes().content()).hasSize(2);
+        assertThat(result.pendientes().totalElements()).isEqualTo(2);
+        verify(userGoalRepository).findByUserIdAndStatus(eq(1L), eq(GoalStatus.COMPLETED), any(Pageable.class));
+        verify(userGoalRepository).findByUserIdAndStatus(eq(1L), eq(GoalStatus.PENDING), any(Pageable.class));
     }
 
     @Test
-    void executePending_shouldDelegateWithPendingStatus() {
-        Page<UserGoal> expected = new PageImpl<>(List.of(goal(GoalStatus.PENDING), goal(GoalStatus.PENDING)));
-        when(userGoalRepository.findByUserIdAndStatus(1L, GoalStatus.PENDING, pageable)).thenReturn(expected);
+    void execute_shouldReturnEmptyPages_whenNoneFound() {
+        when(userGoalRepository.findByUserIdAndStatus(eq(2L), eq(GoalStatus.COMPLETED), any(Pageable.class)))
+                .thenReturn(Page.empty(PageRequest.of(0, 5)));
+        when(userGoalRepository.findByUserIdAndStatus(eq(2L), eq(GoalStatus.PENDING), any(Pageable.class)))
+                .thenReturn(Page.empty(PageRequest.of(0, 5)));
 
-        Page<UserGoal> result = getUserGoalsByUserUseCase.executePending(1L, pageable);
+        GetUserGoalsResponse result = getUserGoalsByUserUseCase.execute(new GetUserGoalsRequest(2L, 0, 5));
 
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getTotalElements()).isEqualTo(2);
-        verify(userGoalRepository).findByUserIdAndStatus(1L, GoalStatus.PENDING, pageable);
+        assertThat(result.completados().content()).isEmpty();
+        assertThat(result.completados().totalElements()).isZero();
+        assertThat(result.pendientes().content()).isEmpty();
     }
 
     @Test
-    void executeCompleted_shouldReturnEmptyPage_whenNoneFound() {
-        when(userGoalRepository.findByUserIdAndStatus(2L, GoalStatus.COMPLETED, pageable))
-                .thenReturn(Page.empty(pageable));
+    void execute_shouldUsePageAndSizeFromRequest() {
+        when(userGoalRepository.findByUserIdAndStatus(eq(1L), eq(GoalStatus.COMPLETED), any(Pageable.class)))
+                .thenReturn(Page.empty(PageRequest.of(1, 3)));
+        when(userGoalRepository.findByUserIdAndStatus(eq(1L), eq(GoalStatus.PENDING), any(Pageable.class)))
+                .thenReturn(Page.empty(PageRequest.of(1, 3)));
 
-        Page<UserGoal> result = getUserGoalsByUserUseCase.executeCompleted(2L, pageable);
+        GetUserGoalsResponse result = getUserGoalsByUserUseCase.execute(new GetUserGoalsRequest(1L, 1, 3));
 
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isZero();
-    }
-
-    @Test
-    void executePending_shouldReturnEmptyPage_whenNoneFound() {
-        when(userGoalRepository.findByUserIdAndStatus(2L, GoalStatus.PENDING, pageable))
-                .thenReturn(Page.empty(pageable));
-
-        Page<UserGoal> result = getUserGoalsByUserUseCase.executePending(2L, pageable);
-
-        assertThat(result.getContent()).isEmpty();
+        assertThat(result.completados().pageNumber()).isEqualTo(1);
+        assertThat(result.completados().pageSize()).isEqualTo(3);
     }
 }

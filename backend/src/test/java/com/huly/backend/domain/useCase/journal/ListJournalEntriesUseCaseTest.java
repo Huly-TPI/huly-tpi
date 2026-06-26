@@ -1,11 +1,15 @@
 package com.huly.backend.domain.useCase.journal;
 
+import com.huly.backend.domain.dto.journal.JournalEntryItem;
+import com.huly.backend.domain.dto.journal.ListJournalEntriesRequest;
+import com.huly.backend.domain.dto.journal.ListJournalEntriesResponse;
+import com.huly.backend.domain.mapper.journal.ListJournalEntriesMapper;
 import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.repository.journal.JournalEntryRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,8 +27,13 @@ class ListJournalEntriesUseCaseTest {
     @Mock
     private JournalEntryRepository journalEntryRepository;
 
-    @InjectMocks
     private ListJournalEntriesUseCase listJournalEntriesUseCase;
+
+    @BeforeEach
+    void setUp() {
+        listJournalEntriesUseCase = new ListJournalEntriesUseCase(
+                journalEntryRepository, new ListJournalEntriesMapper());
+    }
 
     @Test
     void execute_shouldReturnEntriesFromRepository() {
@@ -38,11 +47,11 @@ class ListJournalEntriesUseCaseTest {
 
         when(journalEntryRepository.findAllByUserId(userId)).thenReturn(expected);
 
-        List<JournalEntry> result = listJournalEntriesUseCase.execute(userId);
+        ListJournalEntriesResponse result = listJournalEntriesUseCase.execute(new ListJournalEntriesRequest(userId));
 
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getId()).isEqualTo(2L);
-        assertThat(result.get(1).getId()).isEqualTo(1L);
+        assertThat(result.entries()).hasSize(2);
+        assertThat(result.entries().get(0).id()).isEqualTo(2L);
+        assertThat(result.entries().get(1).id()).isEqualTo(1L);
         verify(journalEntryRepository).findAllByUserId(userId);
     }
 
@@ -52,9 +61,9 @@ class ListJournalEntriesUseCaseTest {
 
         when(journalEntryRepository.findAllByUserId(userId)).thenReturn(List.of());
 
-        List<JournalEntry> result = listJournalEntriesUseCase.execute(userId);
+        ListJournalEntriesResponse result = listJournalEntriesUseCase.execute(new ListJournalEntriesRequest(userId));
 
-        assertThat(result).isEmpty();
+        assertThat(result.entries()).isEmpty();
         verify(journalEntryRepository).findAllByUserId(userId);
     }
 
@@ -64,7 +73,7 @@ class ListJournalEntriesUseCaseTest {
 
         when(journalEntryRepository.findAllByUserId(userId)).thenReturn(List.of());
 
-        listJournalEntriesUseCase.execute(userId);
+        listJournalEntriesUseCase.execute(new ListJournalEntriesRequest(userId));
 
         verify(journalEntryRepository).findAllByUserId(userId);
     }
@@ -79,10 +88,10 @@ class ListJournalEntriesUseCaseTest {
 
         when(journalEntryRepository.findAllByUserId(userId)).thenReturn(List.of(entryWithoutMood));
 
-        List<JournalEntry> result = listJournalEntriesUseCase.execute(userId);
+        ListJournalEntriesResponse result = listJournalEntriesUseCase.execute(new ListJournalEntriesRequest(userId));
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getMood()).isNull();
+        assertThat(result.entries()).hasSize(1);
+        assertThat(result.entries().get(0).mood()).isNull();
     }
 
     @Test
@@ -92,7 +101,7 @@ class ListJournalEntriesUseCaseTest {
         when(journalEntryRepository.findAllByUserId(userId))
                 .thenThrow(new RuntimeException("error de repositorio"));
 
-        assertThatThrownBy(() -> listJournalEntriesUseCase.execute(userId))
+        assertThatThrownBy(() -> listJournalEntriesUseCase.execute(new ListJournalEntriesRequest(userId)))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("error de repositorio");
     }

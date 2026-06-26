@@ -1,10 +1,14 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.badge.Badge;
-import com.huly.backend.domain.model.user.UserBadge;
+import com.huly.backend.domain.dto.badge.BadgeItem;
+import com.huly.backend.domain.dto.badge.GetAllBadgesResponse;
+import com.huly.backend.domain.dto.badge.GetUserBadgesRequest;
+import com.huly.backend.domain.dto.badge.GetUserBadgesResponse;
+import com.huly.backend.domain.dto.badge.UserBadgeItem;
 import com.huly.backend.domain.useCase.badge.GetAllBadgesUseCase;
 import com.huly.backend.domain.useCase.badge.GetUserBadgesUseCase;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.badge.BadgePresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -38,11 +41,11 @@ class BadgeControllerTest {
         getAllBadgesUseCase = mock(GetAllBadgesUseCase.class);
         getUserBadgesUseCase = mock(GetUserBadgesUseCase.class);
 
-        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
+        UserDetails userDetails = new User(String.valueOf(USER_ID), "", java.util.Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken(userDetails, null));
 
-        BadgeController badgeController = new BadgeController(getAllBadgesUseCase, getUserBadgesUseCase);
+        BadgeController badgeController = new BadgeController(getAllBadgesUseCase, getUserBadgesUseCase, new BadgePresentationMapper());
 
         mockMvc = MockMvcBuilders.standaloneSetup(badgeController)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
@@ -57,14 +60,15 @@ class BadgeControllerTest {
 
     @Test
     void getAllBadges_shouldReturnMappedBadgeList() throws Exception {
-        Badge badge = Badge.builder()
-                .id(1L)
-                .code("PRIMER PASO")
-                .name("Primer paso")
-                .description("Empezaste tu camino.")
-                .imageUrl("badge_primer_paso.webp")
-                .build();
-        when(getAllBadgesUseCase.execute()).thenReturn(List.of(badge));
+        BadgeItem badge = new BadgeItem(
+                1L,
+                "PRIMER PASO",
+                "Primer paso",
+                "Empezaste tu camino.",
+                "badge_primer_paso.webp",
+                null
+        );
+        when(getAllBadgesUseCase.execute()).thenReturn(new GetAllBadgesResponse(List.of(badge)));
 
         mockMvc.perform(get("/api/badges"))
                 .andExpect(status().isOk())
@@ -76,7 +80,7 @@ class BadgeControllerTest {
 
     @Test
     void getAllBadges_shouldReturnEmptyList_whenNoBadgesExist() throws Exception {
-        when(getAllBadgesUseCase.execute()).thenReturn(List.of());
+        when(getAllBadgesUseCase.execute()).thenReturn(new GetAllBadgesResponse(List.of()));
 
         mockMvc.perform(get("/api/badges"))
                 .andExpect(status().isOk())
@@ -86,18 +90,21 @@ class BadgeControllerTest {
 
     @Test
     void getMyBadges_shouldReturnUserBadges() throws Exception {
-        Badge badge = Badge.builder()
-                .id(1L)
-                .code("PRIMER PASO")
-                .name("Primer paso")
-                .build();
-        UserBadge userBadge = UserBadge.builder()
-                .id(1L)
-                .userId(USER_ID)
-                .badge(badge)
-                .obtainedAt(Instant.parse("2026-01-01T00:00:00Z"))
-                .build();
-        when(getUserBadgesUseCase.execute(USER_ID)).thenReturn(List.of(userBadge));
+        BadgeItem badge = new BadgeItem(
+                1L,
+                "PRIMER PASO",
+                "Primer paso",
+                null,
+                null,
+                null
+        );
+        UserBadgeItem userBadge = new UserBadgeItem(
+                1L,
+                badge,
+                Instant.parse("2026-01-01T00:00:00Z")
+        );
+        when(getUserBadgesUseCase.execute(any(GetUserBadgesRequest.class)))
+                .thenReturn(new GetUserBadgesResponse(List.of(userBadge)));
 
         mockMvc.perform(get("/api/badges/my"))
                 .andExpect(status().isOk())
@@ -109,7 +116,8 @@ class BadgeControllerTest {
 
     @Test
     void getMyBadges_shouldReturnEmptyList_whenUserHasNoBadges() throws Exception {
-        when(getUserBadgesUseCase.execute(USER_ID)).thenReturn(List.of());
+        when(getUserBadgesUseCase.execute(any(GetUserBadgesRequest.class)))
+                .thenReturn(new GetUserBadgesResponse(List.of()));
 
         mockMvc.perform(get("/api/badges/my"))
                 .andExpect(status().isOk())

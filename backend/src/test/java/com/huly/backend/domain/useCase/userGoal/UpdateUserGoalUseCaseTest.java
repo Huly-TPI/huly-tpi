@@ -1,12 +1,15 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.dto.userGoal.UpdateUserGoalRequest;
+import com.huly.backend.domain.dto.userGoal.UpdateUserGoalResponse;
+import com.huly.backend.domain.mapper.userGoal.UpdateUserGoalMapper;
 import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.repository.user.UserGoalRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,8 +26,12 @@ class UpdateUserGoalUseCaseTest {
     @Mock
     private UserGoalRepository userGoalRepository;
 
-    @InjectMocks
     private UpdateUserGoalUseCase updateUserGoalUseCase;
+
+    @BeforeEach
+    void setUp() {
+        updateUserGoalUseCase = new UpdateUserGoalUseCase(userGoalRepository, new UpdateUserGoalMapper());
+    }
 
     @Test
     void execute_shouldUpdateFieldsAndReturnSavedGoal() {
@@ -38,11 +45,12 @@ class UpdateUserGoalUseCaseTest {
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(userGoalRepository.save(any(UserGoal.class))).thenReturn(saved);
 
-        UserGoal result = updateUserGoalUseCase.execute(1L, "Nuevo", "New", 2L);
+        UpdateUserGoalResponse result = updateUserGoalUseCase.execute(
+                new UpdateUserGoalRequest(1L, "Nuevo", "New", 2L));
 
-        assertThat(result.getTitle()).isEqualTo("Nuevo");
-        assertThat(result.getDescription()).isEqualTo("New");
-        assertThat(result.getActivityId()).isEqualTo(2L);
+        assertThat(result.goal().title()).isEqualTo("Nuevo");
+        assertThat(result.goal().description()).isEqualTo("New");
+        assertThat(result.goal().activityId()).isEqualTo(2L);
         verify(userGoalRepository).save(existing);
     }
 
@@ -55,17 +63,19 @@ class UpdateUserGoalUseCaseTest {
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(userGoalRepository.save(any(UserGoal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UserGoal result = updateUserGoalUseCase.execute(1L, "Nuevo", null, null);
+        UpdateUserGoalResponse result = updateUserGoalUseCase.execute(
+                new UpdateUserGoalRequest(1L, "Nuevo", null, null));
 
-        assertThat(result.getActivityId()).isNull();
-        assertThat(result.getDescription()).isNull();
+        assertThat(result.goal().activityId()).isNull();
+        assertThat(result.goal().description()).isNull();
     }
 
     @Test
     void execute_shouldThrowNotFoundException_whenGoalDoesNotExist() {
         when(userGoalRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> updateUserGoalUseCase.execute(99L, "T", null, null))
+        assertThatThrownBy(() -> updateUserGoalUseCase.execute(
+                new UpdateUserGoalRequest(99L, "T", null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(userGoalRepository, never()).save(any());
