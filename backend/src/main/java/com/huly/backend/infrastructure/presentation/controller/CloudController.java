@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.CloudThought;
-import com.huly.backend.domain.model.cloudRecommendation.CloudRecommendation;
+import com.huly.backend.domain.dto.cloud.CreateCloudThoughtResponse;
+import com.huly.backend.domain.dto.cloudRecommendation.GetCloudRecommendationResponse;
 import com.huly.backend.domain.model.enums.CloudStatus;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
@@ -18,6 +18,8 @@ import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.Clou
 import com.huly.backend.infrastructure.presentation.dto.cloudRecommendation.UpdateCloudStatusRequest;
 import com.huly.backend.infrastructure.presentation.exception.BadRequestException;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+import com.huly.backend.infrastructure.presentation.mapper.cloud.CloudPresentationMapper;
+import com.huly.backend.infrastructure.presentation.mapper.cloudRecommendation.CloudRecommendationPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,11 +43,14 @@ public class CloudController {
     private final ListCloudThoughtsUseCase listCloudThoughtsUseCase;
     private final UpdateCloudStatusUseCase updateCloudStatusUseCase;
     private final MarkCloudWorkedOnUseCase markCloudWorkedOnUseCase;
+    private final CloudPresentationMapper cloudPresentationMapper;
+    private final CloudRecommendationPresentationMapper cloudRecommendationPresentationMapper;
 
     @GetMapping
     public ResponseEntity<List<CloudThoughtResponse>> list(@AuthenticationPrincipal UserDetails principal) {
         Long userId = getUserId(principal);
-        return ResponseEntity.ok(listCloudThoughtsUseCase.execute(userId).stream().map(this::toResponse).toList());
+        return ResponseEntity.ok(cloudPresentationMapper.toThoughtResponses(
+                listCloudThoughtsUseCase.execute(cloudPresentationMapper.toListRequest(userId))));
     }
 
     @PostMapping("/thought")
@@ -54,7 +59,8 @@ public class CloudController {
             @RequestBody @Valid CloudThoughtRequest request
     ) {
         Long userId = getUserId(principal);
-        CloudThought thought = createCloudThoughtUseCase.execute(userId, request.thought());
+        CreateCloudThoughtResponse thought = createCloudThoughtUseCase.execute(
+                cloudPresentationMapper.toCreateRequest(userId, request.thought()));
         String sessionId = UUID.randomUUID().toString();
         userVectorMemoryService.saveMemory(new SaveVectorMemoryCommand(
                 userId,
@@ -67,7 +73,8 @@ public class CloudController {
                 null,
                 Map.of("createdFrom", "USER_MESSAGE", "feature", "GUIDED_CLOUDS")
         ));
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(thought));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(cloudPresentationMapper.toThoughtResponse(thought));
     }
 
     @PatchMapping("/{id}/status")
@@ -83,7 +90,8 @@ public class CloudController {
             throw new BadRequestException("Estado inválido: " + request.status());
         }
         try {
-            updateCloudStatusUseCase.execute(id, userId, newStatus);
+            updateCloudStatusUseCase.execute(
+                    cloudPresentationMapper.toUpdateStatusRequest(id, userId, newStatus));
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());
         }
@@ -95,7 +103,8 @@ public class CloudController {
             @AuthenticationPrincipal UserDetails principal,
             @PathVariable Long id) {
         Long userId = getUserId(principal);
-        markCloudWorkedOnUseCase.execute(id, userId);
+        markCloudWorkedOnUseCase.execute(
+                cloudPresentationMapper.toMarkWorkedOnRequest(id, userId));
         return ResponseEntity.noContent().build();
     }
 
@@ -104,17 +113,12 @@ public class CloudController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid CloudRecommendationRequest request
     ) {
-        CloudRecommendation recommendation = getCloudRecommendationUseCase.execute(
-                request.thoughts(),
-                getUserId(principal)
-        );
-        return ResponseEntity.ok(new CloudRecommendationResponse(
-                recommendation.activityType(),
-                recommendation.actionId(),
-                recommendation.title(),
-                recommendation.description(),
-                recommendation.redirectUrl()
-        ));
+        GetCloudRecommendationResponse recommendation = getCloudRecommendationUseCase.execute(
+                cloudRecommendationPresentationMapper.toRecommendationRequest(
+                        request.thoughts(),
+                        getUserId(principal)));
+        return ResponseEntity.ok(
+                cloudRecommendationPresentationMapper.toRecommendationResponse(recommendation));
     }
 
     private Long getUserId(UserDetails principal) {
@@ -122,9 +126,5 @@ public class CloudController {
             throw new UnauthorizedException("Not authenticated");
         }
         return Long.parseLong(principal.getUsername());
-    }
-
-    private CloudThoughtResponse toResponse(CloudThought thought) {
-        return new CloudThoughtResponse(thought.getId(), thought.getText(), thought.isWorkedOn(), thought.getCreatedAt());
     }
 }

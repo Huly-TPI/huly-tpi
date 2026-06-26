@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.userPlant;
 
+import com.huly.backend.domain.dto.userPlant.GetCurrentPlantRequest;
+import com.huly.backend.domain.dto.userPlant.GetCurrentPlantResponse;
+import com.huly.backend.domain.mapper.userPlant.GetOrCreateCurrentPlantMapper;
 import com.huly.backend.domain.model.user.UserPlant;
 import com.huly.backend.domain.model.enums.PlantStatus;
 import com.huly.backend.domain.repository.UserPlantRepository;
@@ -13,9 +16,19 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GetOrCreateCurrentPlantUseCase {
 
     private final UserPlantRepository userPlantRepository;
+    private final GetOrCreateCurrentPlantMapper mapper;
 
     @Transactional
-    public UserPlant execute(Long userId) {
+    public GetCurrentPlantResponse execute(GetCurrentPlantRequest request) {
+        return mapper.toResponse(resolveCurrentPlant(request.userId()));
+    }
+
+    /**
+     * Resuelve la planta actual del usuario devolviendo el modelo de dominio vivo.
+     * Lo usa internamente {@code CompleteUserGoalUseCase}, que necesita mutar la entidad.
+     */
+    @Transactional
+    public UserPlant resolveCurrentPlant(Long userId) {
         UserPlant plant = userPlantRepository.findLatestByUserIdAndStatus(userId, PlantStatus.GROWING)
                 .orElseGet(() -> createNextPlant(userId));
         plant.setCompletedGoalsCount(userPlantRepository.countCompletedGoalsByPlantId(plant.getId()));

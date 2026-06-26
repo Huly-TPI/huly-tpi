@@ -1,13 +1,12 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.dto.comebackReward.ClaimComebackRewardRequest;
-import com.huly.backend.domain.dto.comebackReward.GetComebackRewardStatusRequest;
 import com.huly.backend.domain.dto.comebackReward.GetComebackRewardStatusResponse;
 import com.huly.backend.domain.useCase.comebackReward.ClaimComebackRewardUseCase;
 import com.huly.backend.domain.useCase.comebackReward.GetComebackRewardStatusUseCase;
 import com.huly.backend.infrastructure.presentation.dto.comebackReward.ClaimComebackRewardResponse;
 import com.huly.backend.infrastructure.presentation.dto.comebackReward.ComebackRewardStatusResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+import com.huly.backend.infrastructure.presentation.mapper.comebackReward.ComebackRewardPresentationMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,22 +20,20 @@ public class ComebackRewardController {
 
     private final GetComebackRewardStatusUseCase getComebackRewardStatusUseCase;
     private final ClaimComebackRewardUseCase claimComebackRewardUseCase;
+    private final ComebackRewardPresentationMapper mapper;
 
     @GetMapping("/status")
     public ResponseEntity<ComebackRewardStatusResponse> getStatus(@AuthenticationPrincipal UserDetails principal) {
         Long userId = currentUserId(principal);
-        GetComebackRewardStatusResponse status = getComebackRewardStatusUseCase.execute(new GetComebackRewardStatusRequest(userId));
-        return ResponseEntity.ok(new ComebackRewardStatusResponse(
-                status.available(), status.daysInactive(), status.coins(), status.thresholdDays()));
+        GetComebackRewardStatusResponse status = getComebackRewardStatusUseCase.execute(mapper.toStatusRequest(userId));
+        return ResponseEntity.ok(mapper.toStatusResponse(status));
     }
 
     @PostMapping("/claim")
     public ResponseEntity<ClaimComebackRewardResponse> claim(@AuthenticationPrincipal UserDetails principal) {
         Long userId = currentUserId(principal);
-        com.huly.backend.domain.dto.comebackReward.ClaimComebackRewardResponse result =
-                claimComebackRewardUseCase.execute(new ClaimComebackRewardRequest(userId));
-        return ResponseEntity.ok(new ClaimComebackRewardResponse(
-                result.granted(), result.coins(), result.daysInactive()));
+        return ResponseEntity.ok(mapper.toClaimResponse(
+                claimComebackRewardUseCase.execute(mapper.toClaimRequest(userId))));
     }
 
     private Long currentUserId(UserDetails principal) {

@@ -1,11 +1,14 @@
 package com.huly.backend.domain.useCase.pushNotification;
 
+import com.huly.backend.domain.dto.pushNotification.SavePushSubscriptionRequest;
+import com.huly.backend.domain.dto.pushNotification.SavePushSubscriptionResponse;
+import com.huly.backend.domain.mapper.pushNotification.SavePushSubscriptionMapper;
 import com.huly.backend.domain.model.PushSubscription;
 import com.huly.backend.domain.repository.PushSubscriptionRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -15,12 +18,16 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SavePushSubscriptionUseCaseTest {
-    
-    @Mock 
+
+    @Mock
     private PushSubscriptionRepository repository;
 
-    @InjectMocks
     private SavePushSubscriptionUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        useCase = new SavePushSubscriptionUseCase(repository, new SavePushSubscriptionMapper());
+    }
 
     @Test
     void execute_shouldSaveSubscription_whenEndpointDoesNotExist() {
@@ -30,19 +37,23 @@ class SavePushSubscriptionUseCaseTest {
         when(repository.save(any())).thenReturn(saved);
 
         ArgumentCaptor<PushSubscription> captor = ArgumentCaptor.forClass(PushSubscription.class);
-        PushSubscription result = useCase.execute(10L, "https://fcm.example.com/abc", "key123", "auth123");
+        SavePushSubscriptionResponse result = useCase.execute(
+                new SavePushSubscriptionRequest(10L, "https://fcm.example.com/abc", "key123", "auth123"));
 
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getUserId()).isEqualTo(10L);
         assertThat(captor.getValue().getEndpoint()).isEqualTo("https://fcm.example.com/abc");
         assertThat(captor.getValue().getCreatedAt()).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.saved()).isTrue();
+        assertThat(result.id()).isEqualTo(1L);
     }
 
-    @Test 
+    @Test
     void execute_shouldNotSave_whenEndpointAlreadyExists() {
         when(repository.existsByEndpoint("https://fcm.example.com/abc")).thenReturn(true);
-        useCase.execute(10L, "https://fcm.example.com/abc", "key123", "auth123");
+        SavePushSubscriptionResponse result = useCase.execute(
+                new SavePushSubscriptionRequest(10L, "https://fcm.example.com/abc", "key123", "auth123"));
+        assertThat(result.saved()).isFalse();
         verify(repository, never()).save(any());
     }
 

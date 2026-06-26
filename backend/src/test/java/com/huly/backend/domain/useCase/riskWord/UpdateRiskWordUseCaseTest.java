@@ -1,12 +1,15 @@
 package com.huly.backend.domain.useCase.riskWord;
 
+import com.huly.backend.domain.dto.riskWord.UpdateRiskWordRequest;
+import com.huly.backend.domain.dto.riskWord.UpdateRiskWordResponse;
+import com.huly.backend.domain.mapper.riskWord.UpdateRiskWordMapper;
 import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.service.chat.RiskWordService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,8 +25,12 @@ class UpdateRiskWordUseCaseTest {
     @Mock
     private RiskWordService riskWordService;
 
-    @InjectMocks
     private UpdateRiskWordUseCase updateRiskWordUseCase;
+
+    @BeforeEach
+    void setUp() {
+        updateRiskWordUseCase = new UpdateRiskWordUseCase(riskWordService, new UpdateRiskWordMapper());
+    }
 
     @Test
     void execute_shouldBuildRiskWordAndDelegateToService() {
@@ -31,7 +38,7 @@ class UpdateRiskWordUseCaseTest {
         when(riskWordService.update(eq(1L), any(RiskWord.class))).thenReturn(updated);
 
         ArgumentCaptor<RiskWord> captor = ArgumentCaptor.forClass(RiskWord.class);
-        updateRiskWordUseCase.execute(1L, "panico", "desc", RiskSeverity.MEDIUM);
+        updateRiskWordUseCase.execute(new UpdateRiskWordRequest(1L, "panico", "desc", RiskSeverity.MEDIUM));
 
         verify(riskWordService).update(eq(1L), captor.capture());
         RiskWord captured = captor.getValue();
@@ -45,8 +52,9 @@ class UpdateRiskWordUseCaseTest {
         RiskWord updated = RiskWord.builder().id(1L).word("panico").severity(RiskSeverity.MEDIUM).active(true).build();
         when(riskWordService.update(eq(1L), any(RiskWord.class))).thenReturn(updated);
 
-        RiskWord result = updateRiskWordUseCase.execute(1L, "panico", null, RiskSeverity.MEDIUM);
+        UpdateRiskWordResponse result = updateRiskWordUseCase.execute(
+                new UpdateRiskWordRequest(1L, "panico", null, RiskSeverity.MEDIUM));
 
-        assertThat(result.getWord()).isEqualTo("panico");
+        assertThat(result.word()).isEqualTo("panico");
     }
 }

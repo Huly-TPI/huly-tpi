@@ -1,13 +1,14 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
+import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsRequest;
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsResponse;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.emotionalRecommendation.EmotionalRecommendationRequest;
+import com.huly.backend.infrastructure.presentation.mapper.emotionalRecommendation.EmotionalRecommendationPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,8 @@ class EmotionalRecommendationControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken(userDetails, null)
         );
-        EmotionalRecommendationController controller = new EmotionalRecommendationController(useCase);
+        EmotionalRecommendationController controller = new EmotionalRecommendationController(
+                useCase, new EmotionalRecommendationPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
@@ -63,7 +65,7 @@ class EmotionalRecommendationControllerTest {
 
     @Test
     void recommend_shouldReturnOrderedRecommendations() throws Exception {
-        EmotionalRecommendationResult result = new EmotionalRecommendationResult(
+        GetEmotionalRecommendationsResponse result = new GetEmotionalRecommendationsResponse(
                 List.of(new EmotionalRecommendationItem(
                         1L,
                         ActivityType.RESPIRACION,
@@ -74,7 +76,7 @@ class EmotionalRecommendationControllerTest {
                 )),
                 false
         );
-        when(useCase.execute(any(EmotionalRecommendation.class))).thenReturn(result);
+        when(useCase.execute(any(GetEmotionalRecommendationsRequest.class))).thenReturn(result);
 
         EmotionalRecommendationRequest request = new EmotionalRecommendationRequest(
                 1L,
@@ -97,8 +99,8 @@ class EmotionalRecommendationControllerTest {
                 .andExpect(jsonPath("$.recommendations[0].activityId").value(1L))
                 .andExpect(jsonPath("$.recommendations[0].type").value("RESPIRACION"));
 
-        ArgumentCaptor<EmotionalRecommendation> queryCaptor =
-                ArgumentCaptor.forClass(EmotionalRecommendation.class);
+        ArgumentCaptor<GetEmotionalRecommendationsRequest> queryCaptor =
+                ArgumentCaptor.forClass(GetEmotionalRecommendationsRequest.class);
         verify(useCase).execute(queryCaptor.capture());
         assertThat(queryCaptor.getValue().userId()).isEqualTo(AUTHENTICATED_USER_ID);
     }

@@ -1,9 +1,5 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
-import com.huly.backend.domain.model.emotionalRecommendation.UpdateEmotionalEventFeedbackCommand;
-import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventDecisionUseCase;
 import com.huly.backend.domain.useCase.emotionalEvent.UpdateEmotionalEventFeedbackUseCase;
@@ -11,6 +7,7 @@ import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.Emotional
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventFeedbackRequest;
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventRequest;
 import com.huly.backend.infrastructure.presentation.dto.emotionalEvent.EmotionalEventResponse;
+import com.huly.backend.infrastructure.presentation.mapper.emotionalEvent.EmotionalEventPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,11 +27,14 @@ public class EmotionalEventController {
     private final CreateEmotionalEventUseCase createEmotionalEventUseCase;
     private final UpdateEmotionalEventDecisionUseCase updateDecisionUseCase;
     private final UpdateEmotionalEventFeedbackUseCase updateFeedbackUseCase;
+    private final EmotionalEventPresentationMapper emotionalEventPresentationMapper;
 
     @PostMapping
     public ResponseEntity<EmotionalEventResponse> create(@Valid @RequestBody EmotionalEventRequest request) {
-        EmotionalEvent created = createEmotionalEventUseCase.execute(toCommand(request));
-        return ResponseEntity.status(HttpStatus.CREATED).body(EmotionalEventResponse.from(created));
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                emotionalEventPresentationMapper.toEventResponse(
+                        createEmotionalEventUseCase.execute(
+                                emotionalEventPresentationMapper.toCreateRequest(request))));
     }
 
     @PatchMapping("/{id}/decision")
@@ -42,11 +42,10 @@ public class EmotionalEventController {
             @PathVariable Long id,
             @Valid @RequestBody EmotionalEventDecisionRequest request
     ) {
-        EmotionalEvent updated = updateDecisionUseCase.execute(
-                id,
-                new UpdateRecommendationDecisionCommand(request.decision(), request.chosenActivityId())
-        );
-        return ResponseEntity.ok(EmotionalEventResponse.from(updated));
+        return ResponseEntity.ok(
+                emotionalEventPresentationMapper.toEventResponse(
+                        updateDecisionUseCase.execute(
+                                emotionalEventPresentationMapper.toDecisionRequest(id, request))));
     }
 
     @PatchMapping("/{id}/feedback")
@@ -54,28 +53,9 @@ public class EmotionalEventController {
             @PathVariable Long id,
             @Valid @RequestBody EmotionalEventFeedbackRequest request
     ) {
-        EmotionalEvent updated = updateFeedbackUseCase.execute(
-                id,
-                new UpdateEmotionalEventFeedbackCommand(request.feedbackScore(), request.feedbackText())
-        );
-        return ResponseEntity.ok(EmotionalEventResponse.from(updated));
-    }
-
-    private CreateEmotionalEventCommand toCommand(EmotionalEventRequest request) {
-        return new CreateEmotionalEventCommand(
-                request.userId(),
-                request.source(),
-                request.inputText(),
-                request.detectedEmotion(),
-                request.confidence(),
-                request.valence(),
-                request.arousal(),
-                request.dominance(),
-                request.intensity(),
-                request.userGoal(),
-                request.generatedRecommendation(),
-                request.recommendedActivityId(),
-                request.chosenActivityId()
-        );
+        return ResponseEntity.ok(
+                emotionalEventPresentationMapper.toEventResponse(
+                        updateFeedbackUseCase.execute(
+                                emotionalEventPresentationMapper.toFeedbackRequest(id, request))));
     }
 }

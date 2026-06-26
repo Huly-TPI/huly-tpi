@@ -1,12 +1,14 @@
 package com.huly.backend.domain.useCase.badge;
 
+import com.huly.backend.domain.dto.badge.GetUserBadgesRequest;
+import com.huly.backend.domain.dto.badge.GetUserBadgesResponse;
+import com.huly.backend.domain.mapper.badge.GetUserBadgesMapper;
 import com.huly.backend.domain.model.badge.Badge;
 import com.huly.backend.domain.model.user.UserBadge;
 import com.huly.backend.domain.repository.user.UserBadgeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -21,12 +23,12 @@ import static org.mockito.Mockito.*;
 class GetUserBadgesUseCaseTest {
     @Mock
     private UserBadgeRepository userBadgeRepository;
-    @InjectMocks
     private GetUserBadgesUseCase getUserBadgesUseCase;
     private UserBadge userBadge;
 
     @BeforeEach
     void setUp() {
+        getUserBadgesUseCase = new GetUserBadgesUseCase(userBadgeRepository, new GetUserBadgesMapper());
         userBadge = UserBadge.builder()
                 .id(1L)
                 .userId(1L)
@@ -39,9 +41,9 @@ class GetUserBadgesUseCaseTest {
     void execute_shouldReturnUserBadges_whenUserExists() {
         when(userBadgeRepository.findAllByUserId(1L)).thenReturn(List.of(userBadge));
 
-        List<UserBadge> result = getUserBadgesUseCase.execute(1L);
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getBadge().getCode()).isEqualTo("PRIMER_PASO");
+        GetUserBadgesResponse result = getUserBadgesUseCase.execute(new GetUserBadgesRequest(1L));
+        assertThat(result.badges()).hasSize(1);
+        assertThat(result.badges().get(0).badge().code()).isEqualTo("PRIMER_PASO");
         verify(userBadgeRepository).findAllByUserId(1L);
     }
 
@@ -49,8 +51,8 @@ class GetUserBadgesUseCaseTest {
     void execute_shouldReturnEmptyList_whenUserHasNoBadges() {
         when(userBadgeRepository.findAllByUserId(1L)).thenReturn(List.of());
 
-        List<UserBadge> result = getUserBadgesUseCase.execute(1L);
-        assertThat(result).isEmpty();
+        GetUserBadgesResponse result = getUserBadgesUseCase.execute(new GetUserBadgesRequest(1L));
+        assertThat(result.badges()).isEmpty();
     }
 
 }

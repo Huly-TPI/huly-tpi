@@ -1,17 +1,17 @@
 package com.huly.backend.domain.useCase.activities;
 
-import lombok.RequiredArgsConstructor;
-
-import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.dto.activities.ListActivitiesResponse;
+import com.huly.backend.domain.mapper.activities.ListActivitiesMapper;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ListActivitiesUseCase {
 
-     private final ActivityRepository activityRepository; 
+     private final ActivityRepository activityRepository;
+     private final ListActivitiesMapper mapper;
 
-      public List<Activity> execute() {
-        return activityRepository.findAll();
+      public ListActivitiesResponse execute() {
+        return mapper.toResponse(activityRepository.findAll());
         }
 }

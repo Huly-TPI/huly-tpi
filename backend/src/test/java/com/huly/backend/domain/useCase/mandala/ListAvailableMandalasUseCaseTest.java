@@ -1,23 +1,23 @@
 package com.huly.backend.domain.useCase.mandala;
 
+import com.huly.backend.domain.dto.mandala.ListAvailableMandalasRequest;
+import com.huly.backend.domain.dto.mandala.ListAvailableMandalasResponse;
+import com.huly.backend.domain.dto.user.GetCurrentMembershipRequest;
+import com.huly.backend.domain.dto.user.GetCurrentMembershipResponse;
+import com.huly.backend.domain.mapper.mandala.ListAvailableMandalasMapper;
 import com.huly.backend.domain.model.enums.ItemCategory;
 import com.huly.backend.domain.model.enums.MandalaAccessType;
 import com.huly.backend.domain.model.enums.MandalaUnlockSource;
 import com.huly.backend.domain.model.mandala.Mandala;
-import com.huly.backend.domain.model.shop.StoreItem;
-import com.huly.backend.domain.model.user.UserPlan;
-import com.huly.backend.domain.model.user.UserStoreItem;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import com.huly.backend.domain.repository.mandala.MandalaPlanEntitlementRepository;
 import com.huly.backend.domain.repository.mandala.MandalaRepository;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,11 +44,13 @@ class ListAvailableMandalasUseCaseTest {
                 mandalaRepository,
                 mandalaPlanEntitlementRepository,
                 userStoreItemRepository,
-                getCurrentMembershipUseCase);
+                getCurrentMembershipUseCase,
+                new ListAvailableMandalasMapper());
 
         when(mandalaRepository.findAllActiveOrderByDisplayOrder()).thenReturn(catalog());
         when(userStoreItemRepository.findAssetKeysByUserIdAndCategory(USER_ID, ItemCategory.MANDALA)).thenReturn(List.of());
-        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.empty());
+        when(getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(USER_ID)))
+                .thenReturn(GetCurrentMembershipResponse.inactive());
     }
 
     @Test
@@ -65,7 +67,8 @@ class ListAvailableMandalasUseCaseTest {
 
     @Test
     void execute_withActivePlanReturnsSubscriptionPack() {
-        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.of(activePlan("BASIC")));
+        when(getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(USER_ID)))
+                .thenReturn(activePlan("BASIC"));
         when(mandalaPlanEntitlementRepository.findMandalaIdsByPlanCode("BASIC"))
                 .thenReturn(subscriptionPackIds());
 
@@ -82,7 +85,8 @@ class ListAvailableMandalasUseCaseTest {
 
     @Test
     void execute_withExpiredPlanReturnsOnlyFreeMandalas() {
-        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.empty());
+        when(getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(USER_ID)))
+                .thenReturn(GetCurrentMembershipResponse.inactive());
         when(mandalaPlanEntitlementRepository.findMandalaIdsByPlanCode("BASIC"))
                 .thenReturn(subscriptionPackIds());
 
@@ -123,7 +127,8 @@ class ListAvailableMandalasUseCaseTest {
 
     @Test
     void execute_doesNotDuplicateFreeMandalaWhenAlsoInPlan() {
-        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.of(activePlan("PREMIUM")));
+        when(getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(USER_ID)))
+                .thenReturn(activePlan("PREMIUM"));
         when(mandalaPlanEntitlementRepository.findMandalaIdsByPlanCode("PREMIUM"))
                 .thenReturn(List.of("mandala-01", "mandala-03"));
 
@@ -138,30 +143,31 @@ class ListAvailableMandalasUseCaseTest {
 
     @Test
     void execute_withPageableReturnsRequestedSliceAndMetadata() {
-        when(getCurrentMembershipUseCase.execute(USER_ID)).thenReturn(Optional.of(activePlan("BASIC")));
+        when(getCurrentMembershipUseCase.execute(new GetCurrentMembershipRequest(USER_ID)))
+                .thenReturn(activePlan("BASIC"));
         when(mandalaPlanEntitlementRepository.findMandalaIdsByPlanCode("BASIC"))
                 .thenReturn(subscriptionPackIds());
 
-        var result = useCase.execute(USER_ID, PageRequest.of(1, 5));
+        ListAvailableMandalasResponse result = useCase.execute(new ListAvailableMandalasRequest(USER_ID, 1, 5));
 
-        assertThat(result.getContent()).extracting(item -> item.getMandala().getId())
+        assertThat(result.content()).extracting(item -> item.id())
                 .containsExactly("mandala-06", "mandala-07", "mandala-08", "mandala-09", "mandala-10");
-        assertThat(result.getNumber()).isEqualTo(1);
-        assertThat(result.getSize()).isEqualTo(5);
-        assertThat(result.getTotalElements()).isEqualTo(21);
-        assertThat(result.getTotalPages()).isEqualTo(5);
-        assertThat(result.isFirst()).isFalse();
-        assertThat(result.isLast()).isFalse();
+        assertThat(result.pageNumber()).isEqualTo(1);
+        assertThat(result.pageSize()).isEqualTo(5);
+        assertThat(result.totalElements()).isEqualTo(21);
+        assertThat(result.totalPages()).isEqualTo(5);
+        assertThat(result.first()).isFalse();
+        assertThat(result.last()).isFalse();
     }
 
     @Test
     void execute_withPageableOutsideRangeReturnsEmptyPage() {
-        var result = useCase.execute(USER_ID, PageRequest.of(5, 5));
+        ListAvailableMandalasResponse result = useCase.execute(new ListAvailableMandalasRequest(USER_ID, 5, 5));
 
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isEqualTo(21);
-        assertThat(result.getTotalPages()).isEqualTo(5);
-        assertThat(result.isLast()).isTrue();
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isEqualTo(21);
+        assertThat(result.totalPages()).isEqualTo(5);
+        assertThat(result.last()).isTrue();
     }
 
     private List<Mandala> catalog() {
@@ -185,21 +191,6 @@ class ListAvailableMandalasUseCaseTest {
                 .toList();
     }
 
-    private UserStoreItem ownedMandala(String assetKey) {
-        StoreItem storeItem = StoreItem.builder()
-                .id(10L)
-                .name("Mandala")
-                .description("desc")
-                .category(ItemCategory.MANDALA)
-                .assetKey(assetKey)
-                .priceCoins(100)
-                .build();
-        return UserStoreItem.builder()
-                .userId(USER_ID)
-                .storeItem(storeItem)
-                .build();
-    }
-
     private Mandala mandala(String id, MandalaAccessType accessType, Integer priceCoins) {
         return Mandala.builder()
                 .id(id)
@@ -213,11 +204,7 @@ class ListAvailableMandalasUseCaseTest {
                 .build();
     }
 
-    private UserPlan activePlan(String planCode) {
-        return UserPlan.builder()
-                .userId(USER_ID)
-                .planCode(planCode)
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .build();
+    private GetCurrentMembershipResponse activePlan(String planCode) {
+        return new GetCurrentMembershipResponse(true, planCode, null, Instant.now().plusSeconds(3600));
     }
 }

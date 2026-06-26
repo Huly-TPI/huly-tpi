@@ -1,8 +1,17 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.CloudThought;
-import com.huly.backend.domain.model.cloudRecommendation.CloudRecommendation;
+import com.huly.backend.domain.dto.cloud.CloudThoughtItem;
+import com.huly.backend.domain.dto.cloud.CreateCloudThoughtRequest;
+import com.huly.backend.domain.dto.cloud.CreateCloudThoughtResponse;
+import com.huly.backend.domain.dto.cloud.ListCloudThoughtsRequest;
+import com.huly.backend.domain.dto.cloud.ListCloudThoughtsResponse;
+import com.huly.backend.domain.dto.cloud.MarkCloudWorkedOnRequest;
+import com.huly.backend.domain.dto.cloud.MarkCloudWorkedOnResponse;
+import com.huly.backend.domain.dto.cloud.UpdateCloudStatusRequest;
+import com.huly.backend.domain.dto.cloud.UpdateCloudStatusResponse;
+import com.huly.backend.domain.dto.cloudRecommendation.GetCloudRecommendationRequest;
+import com.huly.backend.domain.dto.cloudRecommendation.GetCloudRecommendationResponse;
 import com.huly.backend.domain.model.enums.CloudStatus;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
@@ -12,6 +21,8 @@ import com.huly.backend.domain.useCase.cloud.MarkCloudWorkedOnUseCase;
 import com.huly.backend.domain.useCase.cloud.UpdateCloudStatusUseCase;
 import com.huly.backend.domain.useCase.cloudRecommendation.GetCloudRecommendationUseCase;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.cloud.CloudPresentationMapper;
+import com.huly.backend.infrastructure.presentation.mapper.cloudRecommendation.CloudRecommendationPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,7 +81,9 @@ class CloudControllerTest {
                 createCloudThoughtUseCase,
                 listCloudThoughtsUseCase,
                 updateCloudStatusUseCase,
-                markCloudWorkedOnUseCase);
+                markCloudWorkedOnUseCase,
+                new CloudPresentationMapper(),
+                new CloudRecommendationPresentationMapper());
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
@@ -87,7 +100,8 @@ class CloudControllerTest {
 
     @Test
     void list_shouldReturn200WithEmptyList_whenNoThoughts() throws Exception {
-        when(listCloudThoughtsUseCase.execute(USER_ID)).thenReturn(List.of());
+        when(listCloudThoughtsUseCase.execute(any(ListCloudThoughtsRequest.class)))
+                .thenReturn(new ListCloudThoughtsResponse(List.of()));
 
         mockMvc.perform(get("/api/clouds"))
                 .andExpect(status().isOk())
@@ -97,11 +111,9 @@ class CloudControllerTest {
 
     @Test
     void list_shouldReturn200WithThoughts_whenThoughtsExist() throws Exception {
-        CloudThought thought = CloudThought.builder()
-                .id(1L).userId(USER_ID).text("me siento ansioso")
-                .status(CloudStatus.ACTIVE).workedOn(false).createdAt(Instant.now())
-                .build();
-        when(listCloudThoughtsUseCase.execute(USER_ID)).thenReturn(List.of(thought));
+        CloudThoughtItem item = new CloudThoughtItem(1L, "me siento ansioso", false, Instant.now());
+        when(listCloudThoughtsUseCase.execute(any(ListCloudThoughtsRequest.class)))
+                .thenReturn(new ListCloudThoughtsResponse(List.of(item)));
 
         mockMvc.perform(get("/api/clouds"))
                 .andExpect(status().isOk())
@@ -114,11 +126,9 @@ class CloudControllerTest {
 
     @Test
     void saveThought_shouldReturn201WithBody_whenThoughtIsValid() throws Exception {
-        CloudThought thought = CloudThought.builder()
-                .id(1L).userId(USER_ID).text("me siento ansioso")
-                .status(CloudStatus.ACTIVE).workedOn(false).createdAt(Instant.now())
-                .build();
-        when(createCloudThoughtUseCase.execute(eq(USER_ID), eq("me siento ansioso"))).thenReturn(thought);
+        CreateCloudThoughtResponse response =
+                new CreateCloudThoughtResponse(1L, "me siento ansioso", false, Instant.now());
+        when(createCloudThoughtUseCase.execute(any(CreateCloudThoughtRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/clouds/thought")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,11 +140,9 @@ class CloudControllerTest {
 
     @Test
     void saveThought_shouldSaveToVectorMemory_withCorrectUserId() throws Exception {
-        CloudThought thought = CloudThought.builder()
-                .id(1L).userId(USER_ID).text("me siento ansioso")
-                .status(CloudStatus.ACTIVE).workedOn(false).createdAt(Instant.now())
-                .build();
-        when(createCloudThoughtUseCase.execute(any(), any())).thenReturn(thought);
+        CreateCloudThoughtResponse response =
+                new CreateCloudThoughtResponse(1L, "me siento ansioso", false, Instant.now());
+        when(createCloudThoughtUseCase.execute(any(CreateCloudThoughtRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/clouds/thought")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -168,10 +176,9 @@ class CloudControllerTest {
 
     @Test
     void updateStatus_shouldReturn204_whenStatusIsCompleted() throws Exception {
-        CloudThought thought = CloudThought.builder()
-                .id(1L).userId(USER_ID).text("pensamiento").status(CloudStatus.ACTIVE)
-                .workedOn(false).createdAt(Instant.now()).build();
-        when(updateCloudStatusUseCase.execute(eq(1L), eq(USER_ID), eq(CloudStatus.COMPLETED))).thenReturn(thought);
+        UpdateCloudStatusResponse response =
+                new UpdateCloudStatusResponse(1L, "pensamiento", CloudStatus.COMPLETED, false, Instant.now());
+        when(updateCloudStatusUseCase.execute(any(UpdateCloudStatusRequest.class))).thenReturn(response);
 
         mockMvc.perform(patch("/api/clouds/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -181,10 +188,9 @@ class CloudControllerTest {
 
     @Test
     void updateStatus_shouldReturn204_whenStatusIsCancelled() throws Exception {
-        CloudThought thought = CloudThought.builder()
-                .id(1L).userId(USER_ID).text("pensamiento").status(CloudStatus.ACTIVE)
-                .workedOn(false).createdAt(Instant.now()).build();
-        when(updateCloudStatusUseCase.execute(eq(1L), eq(USER_ID), eq(CloudStatus.CANCELLED))).thenReturn(thought);
+        UpdateCloudStatusResponse response =
+                new UpdateCloudStatusResponse(1L, "pensamiento", CloudStatus.CANCELLED, false, Instant.now());
+        when(updateCloudStatusUseCase.execute(any(UpdateCloudStatusRequest.class))).thenReturn(response);
 
         mockMvc.perform(patch("/api/clouds/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -212,23 +218,29 @@ class CloudControllerTest {
 
     @Test
     void markWorkedOn_shouldReturn204_whenThoughtExists() throws Exception {
-        doNothing().when(markCloudWorkedOnUseCase).execute(1L, USER_ID);
+        when(markCloudWorkedOnUseCase.execute(any(MarkCloudWorkedOnRequest.class)))
+                .thenReturn(new MarkCloudWorkedOnResponse(1L));
 
         mockMvc.perform(patch("/api/clouds/1/worked-on"))
                 .andExpect(status().isNoContent());
 
-        verify(markCloudWorkedOnUseCase).execute(1L, USER_ID);
+        ArgumentCaptor<MarkCloudWorkedOnRequest> captor =
+                ArgumentCaptor.forClass(MarkCloudWorkedOnRequest.class);
+        verify(markCloudWorkedOnUseCase).execute(captor.capture());
+        assertThat(captor.getValue().id()).isEqualTo(1L);
+        assertThat(captor.getValue().userId()).isEqualTo(USER_ID);
     }
 
     // ── POST /api/clouds/recommendation ──────────────────────────────────────
 
     @Test
     void getRecommendation_shouldReturn200WithDiaryRecommendation_whenRequestIsValid() throws Exception {
-        CloudRecommendation recommendation = new CloudRecommendation(
+        GetCloudRecommendationResponse recommendation = new GetCloudRecommendationResponse(
                 "diary", "diary", "Escribí en tu diario",
                 "Plasmar tus emociones puede ayudarte.", "/diary"
         );
-        when(getCloudRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(recommendation);
+        when(getCloudRecommendationUseCase.execute(any(GetCloudRecommendationRequest.class)))
+                .thenReturn(recommendation);
 
         mockMvc.perform(post("/api/clouds/recommendation")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -259,14 +271,18 @@ class CloudControllerTest {
 
     @Test
     void getRecommendation_shouldDelegateThoughtsToUseCase() throws Exception {
-        when(getCloudRecommendationUseCase.execute(any(), eq(USER_ID))).thenReturn(
-                new CloudRecommendation("diary", "diary", "Título", "Desc.", "/diary"));
+        when(getCloudRecommendationUseCase.execute(any(GetCloudRecommendationRequest.class)))
+                .thenReturn(new GetCloudRecommendationResponse("diary", "diary", "Título", "Desc.", "/diary"));
 
         mockMvc.perform(post("/api/clouds/recommendation")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of("no puedo dejar de pensar")))))
                 .andExpect(status().isOk());
 
-        verify(getCloudRecommendationUseCase).execute(List.of("no puedo dejar de pensar"), USER_ID);
+        ArgumentCaptor<GetCloudRecommendationRequest> captor =
+                ArgumentCaptor.forClass(GetCloudRecommendationRequest.class);
+        verify(getCloudRecommendationUseCase).execute(captor.capture());
+        assertThat(captor.getValue().thoughts()).isEqualTo(List.of("no puedo dejar de pensar"));
+        assertThat(captor.getValue().userId()).isEqualTo(USER_ID);
     }
 }

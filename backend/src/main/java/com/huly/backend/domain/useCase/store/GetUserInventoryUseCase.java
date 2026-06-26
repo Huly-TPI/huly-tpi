@@ -1,16 +1,18 @@
 package com.huly.backend.domain.useCase.store;
-import com.huly.backend.domain.model.user.UserStoreItem;
+import com.huly.backend.domain.dto.store.GetUserInventoryRequest;
+import com.huly.backend.domain.dto.store.GetUserInventoryResponse;
+import com.huly.backend.domain.mapper.store.GetUserInventoryMapper;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import lombok.RequiredArgsConstructor;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class GetUserInventoryUseCase {
 
     private final UserStoreItemRepository userStoreItemRepository;
-    
-    public List<UserStoreItem> execute(Long userId) {
-        return userStoreItemRepository.findAllByUserId(userId);
+    private final GetUserInventoryMapper mapper;
+
+    public GetUserInventoryResponse execute(GetUserInventoryRequest request) {
+        return mapper.toResponse(userStoreItemRepository.findAllByUserId(request.userId()));
     }
-    
+
 }

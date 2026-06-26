@@ -1,10 +1,12 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.chat.ChatConfig;
+import com.huly.backend.domain.dto.chatBotConfig.GetBotConfigResponse;
+import com.huly.backend.domain.dto.chatBotConfig.UpdateBotConfigResponse;
 import com.huly.backend.domain.useCase.chatBotConfig.GetBotConfigUseCase;
 import com.huly.backend.domain.useCase.chatBotConfig.UpdateBotConfigUseCase;
 import com.huly.backend.infrastructure.presentation.dto.chatConfig.UpdateBotConfigRequest;
+import com.huly.backend.infrastructure.presentation.mapper.chatBotConfig.BotConfigPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -31,13 +33,14 @@ class BotConfigControllerTest {
     void setUp() {
         getBotConfigUseCase = mock(GetBotConfigUseCase.class);
         updateBotConfigUseCase = mock(UpdateBotConfigUseCase.class);
-        BotConfigController controller = new BotConfigController(getBotConfigUseCase, updateBotConfigUseCase);
+        BotConfigController controller = new BotConfigController(
+                getBotConfigUseCase, updateBotConfigUseCase, new BotConfigPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
     void getConfig_shouldReturn200WithCurrentConfig() throws Exception {
-        ChatConfig config = new ChatConfig(1L, true, "mi prompt", true, false);
+        GetBotConfigResponse config = new GetBotConfigResponse(1L, true, "mi prompt", true, false);
         when(getBotConfigUseCase.execute()).thenReturn(config);
 
         mockMvc.perform(get("/api/admin/chat/config"))
@@ -51,7 +54,7 @@ class BotConfigControllerTest {
 
     @Test
     void getConfig_shouldReturn200WithNullFields_whenConfigHasNulls() throws Exception {
-        ChatConfig config = ChatConfig.builder().id(null).riskDetectionEnabled(null).systemPrompt(null).build();
+        GetBotConfigResponse config = new GetBotConfigResponse(null, null, null, null, null);
         when(getBotConfigUseCase.execute()).thenReturn(config);
 
         mockMvc.perform(get("/api/admin/chat/config"))
@@ -62,7 +65,7 @@ class BotConfigControllerTest {
 
     @Test
     void updateConfig_shouldReturn200WithUpdatedConfig_whenRequestIsValid() throws Exception {
-        ChatConfig updated = new ChatConfig(1L, false, "nuevo", false, true);
+        UpdateBotConfigResponse updated = new UpdateBotConfigResponse(1L, false, "nuevo", false, true);
         when(updateBotConfigUseCase.execute(any())).thenReturn(updated);
 
         UpdateBotConfigRequest request = new UpdateBotConfigRequest(false, "nuevo", false, true);

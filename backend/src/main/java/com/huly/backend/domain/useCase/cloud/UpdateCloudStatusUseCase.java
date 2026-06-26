@@ -1,6 +1,9 @@
 package com.huly.backend.domain.useCase.cloud;
 
+import com.huly.backend.domain.dto.cloud.UpdateCloudStatusRequest;
+import com.huly.backend.domain.dto.cloud.UpdateCloudStatusResponse;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
+import com.huly.backend.domain.mapper.cloud.UpdateCloudStatusMapper;
 import com.huly.backend.domain.model.CloudThought;
 import com.huly.backend.domain.model.enums.CloudStatus;
 import com.huly.backend.domain.repository.CloudThoughtRepository;
@@ -10,18 +13,21 @@ import lombok.RequiredArgsConstructor;
 public class UpdateCloudStatusUseCase {
 
     private final CloudThoughtRepository cloudThoughtRepository;
+    private final UpdateCloudStatusMapper mapper;
 
-    public CloudThought execute(Long id, Long userId, CloudStatus newStatus) {
-        CloudThought thought = cloudThoughtRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("CloudThought", "id", id));
+    public UpdateCloudStatusResponse execute(UpdateCloudStatusRequest request) {
+        CloudThought thought = cloudThoughtRepository.findByIdAndUserId(request.id(), request.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("CloudThought", "id", request.id()));
 
         if (thought.getStatus() != CloudStatus.ACTIVE) {
             throw new IllegalStateException("Solo se puede cambiar el estado de una nube activa");
         }
+        CloudStatus newStatus = request.newStatus();
         if (newStatus != CloudStatus.COMPLETED && newStatus != CloudStatus.CANCELLED) {
             throw new IllegalArgumentException("Transición de estado no permitida: " + newStatus);
         }
 
-        return cloudThoughtRepository.updateStatus(id, newStatus);
+        CloudThought updated = cloudThoughtRepository.updateStatus(request.id(), newStatus);
+        return mapper.toResponse(updated);
     }
 }

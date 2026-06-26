@@ -1,14 +1,17 @@
 package com.huly.backend.domain.useCase.journal;
 
+import com.huly.backend.domain.dto.journal.CreateJournalEntryRequest;
+import com.huly.backend.domain.dto.journal.CreateJournalEntryResponse;
+import com.huly.backend.domain.mapper.journal.CreateJournalEntryMapper;
 import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.repository.journal.JournalEntryRepository;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,8 +30,13 @@ class CreateJournalEntryUseCaseTest {
     @Mock
     private UserVectorMemoryService userVectorMemoryService;
 
-    @InjectMocks
     private CreateJournalEntryUseCase createJournalEntryUseCase;
+
+    @BeforeEach
+    void setUp() {
+        createJournalEntryUseCase = new CreateJournalEntryUseCase(
+                journalEntryRepository, userVectorMemoryService, new CreateJournalEntryMapper());
+    }
 
     private static final String JSON_CONTENT =
             "{\"adentro\":\"Lo de adentro\",\"pensamiento\":\"Mi pensamiento\",\"bien\":\"Algo bien\",\"manana\":\"Para mañana\"}";
@@ -50,7 +58,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, "Hoy me sentí bien", Mood.HAPPY))
                 .thenReturn(buildEntry(10L, "Hoy me sentí bien", Mood.HAPPY));
 
-        createJournalEntryUseCase.execute(1L, "Hoy me sentí bien", Mood.HAPPY, true);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, "Hoy me sentí bien", Mood.HAPPY, true));
 
         verify(journalEntryRepository).save(1L, "Hoy me sentí bien", Mood.HAPPY);
     }
@@ -60,9 +68,13 @@ class CreateJournalEntryUseCaseTest {
         JournalEntry expected = buildEntry(10L, "Hoy me sentí bien", Mood.CALM);
         when(journalEntryRepository.save(1L, "Hoy me sentí bien", Mood.CALM)).thenReturn(expected);
 
-        JournalEntry result = createJournalEntryUseCase.execute(1L, "Hoy me sentí bien", Mood.CALM, true);
+        CreateJournalEntryResponse result =
+                createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, "Hoy me sentí bien", Mood.CALM, true));
 
-        assertThat(result).isSameAs(expected);
+        assertThat(result.id()).isEqualTo(expected.getId());
+        assertThat(result.content()).isEqualTo(expected.getContent());
+        assertThat(result.mood()).isEqualTo(expected.getMood());
+        assertThat(result.createdAt()).isEqualTo(expected.getCreatedAt());
     }
 
     @Test
@@ -70,7 +82,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(2L, "Entrada de prueba", Mood.ANXIOUS))
                 .thenReturn(buildEntry(5L, "Entrada de prueba", Mood.ANXIOUS));
 
-        createJournalEntryUseCase.execute(2L, "Entrada de prueba", Mood.ANXIOUS, true);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(2L, "Entrada de prueba", Mood.ANXIOUS, true));
 
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
@@ -88,9 +100,10 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, "Sin mood", null))
                 .thenReturn(buildEntry(1L, "Sin mood", null));
 
-        JournalEntry result = createJournalEntryUseCase.execute(1L, "Sin mood", null, true);
+        CreateJournalEntryResponse result =
+                createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, "Sin mood", null, true));
 
-        assertThat(result.getMood()).isNull();
+        assertThat(result.mood()).isNull();
         verify(journalEntryRepository).save(1L, "Sin mood", null);
     }
 
@@ -100,7 +113,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
 
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, true);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, JSON_CONTENT, Mood.HAPPY, true));
 
         ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
@@ -114,7 +127,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
 
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, true);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, JSON_CONTENT, Mood.HAPPY, true));
 
         ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
@@ -127,7 +140,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, null))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, null));
 
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null, true);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, JSON_CONTENT, null, true));
 
         ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
@@ -145,7 +158,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, plainContent, null))
                 .thenReturn(buildEntry(10L, plainContent, null));
 
-        createJournalEntryUseCase.execute(1L, plainContent, null, true);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, plainContent, null, true));
 
         ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
@@ -158,7 +171,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.HAPPY))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.HAPPY));
 
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.HAPPY, false);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, JSON_CONTENT, Mood.HAPPY, false));
 
         ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
@@ -175,7 +188,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, Mood.CALM))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, Mood.CALM));
 
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, Mood.CALM, false);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, JSON_CONTENT, Mood.CALM, false));
 
         ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
@@ -188,7 +201,7 @@ class CreateJournalEntryUseCaseTest {
         when(journalEntryRepository.save(1L, JSON_CONTENT, null))
                 .thenReturn(buildEntry(10L, JSON_CONTENT, null));
 
-        createJournalEntryUseCase.execute(1L, JSON_CONTENT, null, true);
+        createJournalEntryUseCase.execute(new CreateJournalEntryRequest(1L, JSON_CONTENT, null, true));
 
         ArgumentCaptor<SaveVectorMemoryCommand> captor =
                 ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);

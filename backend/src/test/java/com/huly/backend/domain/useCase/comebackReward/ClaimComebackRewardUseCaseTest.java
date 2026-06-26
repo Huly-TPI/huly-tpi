@@ -37,7 +37,8 @@ class ClaimComebackRewardUseCaseTest {
     @BeforeEach
     void setUp() {
         Clock fixedClock = Clock.fixed(TODAY.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneId.from(ZoneOffset.UTC));
-        useCase = new ClaimComebackRewardUseCase(userDetailDomainRepository, coinService, fixedClock);
+        useCase = new ClaimComebackRewardUseCase(userDetailDomainRepository, coinService, fixedClock,
+                new com.huly.backend.domain.mapper.comebackReward.ClaimComebackRewardMapper());
     }
 
     @Test

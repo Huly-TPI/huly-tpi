@@ -1,7 +1,10 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
+import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
+import com.huly.backend.domain.dto.emotionalEvent.UpdateEmotionalEventDecisionRequest;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
+import com.huly.backend.domain.mapper.emotionalEvent.UpdateEmotionalEventDecisionMapper;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
 import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
@@ -23,8 +26,11 @@ public class UpdateEmotionalEventDecisionUseCase {
     private final ActivityRepository activityRepository;
     private final UserVectorMemoryService userVectorMemoryService;
     private final ChatMessageRepository chatMessageRepository;
+    private final UpdateEmotionalEventDecisionMapper mapper;
 
-    public EmotionalEvent execute(Long eventId, UpdateRecommendationDecisionCommand command) {
+    public EmotionalEventResponse execute(UpdateEmotionalEventDecisionRequest request) {
+        Long eventId = request.eventId();
+        UpdateRecommendationDecisionCommand command = mapper.toModel(request);
         if (command.decision() == null) {
             throw new BusinessRuleException("decision es obligatoria");
         }
@@ -82,7 +88,7 @@ public class UpdateEmotionalEventDecisionUseCase {
                     )
             ));
         }
-        return saved;
+        return mapper.toResponse(saved);
     }
 
     private Long resolveChosenActivityId(EmotionalEvent event, UpdateRecommendationDecisionCommand command) {

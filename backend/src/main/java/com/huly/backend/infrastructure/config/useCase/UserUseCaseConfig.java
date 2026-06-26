@@ -1,5 +1,7 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.mapper.user.GetCurrentMembershipMapper;
+import com.huly.backend.domain.mapper.user.GetUserCoinsMapper;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
@@ -11,12 +13,24 @@ import org.springframework.context.annotation.Configuration;
 public class UserUseCaseConfig {
 
     @Bean
-    public GetUserCoinsUseCase getUserCoinsUseCase(UserRepository userRepository) {
-        return new GetUserCoinsUseCase(userRepository);
+    public GetUserCoinsMapper getUserCoinsMapper() {
+        return new GetUserCoinsMapper();
     }
 
     @Bean
-    public GetCurrentMembershipUseCase getCurrentMembershipUseCase(UserPlanRepository userPlanRepository) {
-        return new GetCurrentMembershipUseCase(userPlanRepository);
+    public GetCurrentMembershipMapper getCurrentMembershipMapper() {
+        return new GetCurrentMembershipMapper();
+    }
+
+    @Bean
+    public GetUserCoinsUseCase getUserCoinsUseCase(UserRepository userRepository,
+                                                   GetUserCoinsMapper getUserCoinsMapper) {
+        return new GetUserCoinsUseCase(userRepository, getUserCoinsMapper);
+    }
+
+    @Bean
+    public GetCurrentMembershipUseCase getCurrentMembershipUseCase(UserPlanRepository userPlanRepository,
+                                                                   GetCurrentMembershipMapper getCurrentMembershipMapper) {
+        return new GetCurrentMembershipUseCase(userPlanRepository, getCurrentMembershipMapper);
     }
 }

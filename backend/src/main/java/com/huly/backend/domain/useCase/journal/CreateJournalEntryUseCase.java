@@ -2,6 +2,9 @@ package com.huly.backend.domain.useCase.journal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.dto.journal.CreateJournalEntryRequest;
+import com.huly.backend.domain.dto.journal.CreateJournalEntryResponse;
+import com.huly.backend.domain.mapper.journal.CreateJournalEntryMapper;
 import com.huly.backend.domain.model.journal.JournalEntry;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
@@ -19,8 +22,14 @@ public class CreateJournalEntryUseCase {
 
     private final JournalEntryRepository journalEntryRepository;
     private final UserVectorMemoryService userVectorMemoryService;
+    private final CreateJournalEntryMapper mapper;
 
-    public JournalEntry execute(Long userId, String content, Mood mood, boolean useTextForAI) {
+    public CreateJournalEntryResponse execute(CreateJournalEntryRequest request) {
+        Long userId = request.userId();
+        String content = request.content();
+        Mood mood = request.mood();
+        boolean useTextForAI = request.useTextForAI();
+
         JournalEntry entry = journalEntryRepository.save(userId, content, mood);
         String sourceId = entry.getId() != null ? entry.getId().toString() : null;
         userVectorMemoryService.saveMemory(new SaveVectorMemoryCommand(
@@ -34,7 +43,7 @@ public class CreateJournalEntryUseCase {
                 sourceId,
                 Map.of("createdFrom", "USER_MESSAGE", "feature", "EMOTIONAL_JOURNAL")
         ));
-        return entry;
+        return mapper.toResponse(entry);
     }
 
     private String buildVectorContent(String content, Mood mood, boolean useTextForAI) {

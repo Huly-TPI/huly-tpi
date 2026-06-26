@@ -1,7 +1,9 @@
 package com.huly.backend.domain.useCase.riskWord;
 
+import com.huly.backend.domain.dto.riskWord.UpdateRiskWordRequest;
+import com.huly.backend.domain.dto.riskWord.UpdateRiskWordResponse;
+import com.huly.backend.domain.mapper.riskWord.UpdateRiskWordMapper;
 import com.huly.backend.domain.model.riskWord.RiskWord;
-import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.service.chat.RiskWordService;
 import lombok.RequiredArgsConstructor;
 
@@ -14,22 +16,16 @@ import lombok.RequiredArgsConstructor;
 public class UpdateRiskWordUseCase {
 
     private final RiskWordService riskWordService;
+    private final UpdateRiskWordMapper mapper;
 
     /**
      * Construye el objeto de dominio con los nuevos datos y lo pasa al servicio para su actualización.
      *
-     * @param id          identificador de la palabra de riesgo a actualizar
-     * @param word        nuevo valor de la palabra
-     * @param description nueva descripción (puede ser {@code null})
-     * @param severity    nuevo nivel de severidad
+     * @param request datos de la palabra de riesgo a actualizar
      * @return la palabra de riesgo actualizada
      */
-    public RiskWord execute(Long id, String word, String description, RiskSeverity severity) {
-        RiskWord riskWord = RiskWord.builder()
-                .word(word)
-                .description(description)
-                .severity(severity)
-                .build();
-        return riskWordService.update(id, riskWord);
+    public UpdateRiskWordResponse execute(UpdateRiskWordRequest request) {
+        RiskWord updated = riskWordService.update(request.id(), mapper.toModel(request));
+        return mapper.toResponse(updated);
     }
 }

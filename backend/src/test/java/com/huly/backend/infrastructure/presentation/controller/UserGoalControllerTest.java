@@ -3,21 +3,23 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.huly.backend.domain.model.user.UserGoal;
-import com.huly.backend.domain.model.user.UserPlant;
-import com.huly.backend.domain.model.enums.GoalStatus;
-import com.huly.backend.domain.model.enums.PlantStatus;
+import com.huly.backend.domain.dto.userGoal.AcceptChallengeResponse;
+import com.huly.backend.domain.dto.userGoal.AddUserGoalResponse;
+import com.huly.backend.domain.dto.userGoal.CompleteUserGoalResponse;
+import com.huly.backend.domain.dto.userGoal.GetUserGoalsRequest;
+import com.huly.backend.domain.dto.userGoal.GetUserGoalsResponse;
+import com.huly.backend.domain.dto.userGoal.UpdateUserGoalResponse;
+import com.huly.backend.domain.dto.userGoal.UserGoalItem;
+import com.huly.backend.domain.dto.userGoal.UserGoalPage;
+import com.huly.backend.domain.dto.userPlant.UserPlantItem;
 import com.huly.backend.domain.useCase.userGoal.*;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalUpdateRequest;
+import com.huly.backend.infrastructure.presentation.mapper.userGoal.UserGoalPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -73,7 +75,7 @@ class UserGoalControllerTest {
         UserGoalController controller = new UserGoalController(acceptChallengeUseCase,
                 addUserGoalUseCase, getUserGoalsByUserUseCase,
                 deleteUserGoalUseCase, updateUserGoalUseCase, completeUserGoalUseCase,
-                getGoalImageUseCase);
+                getGoalImageUseCase, new UserGoalPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
@@ -88,16 +90,22 @@ class UserGoalControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    private UserGoal goal(Long id, String title, GoalStatus status) {
-        return UserGoal.builder()
-                .id(id).userId(USER_ID).title(title).description("D")
-                .status(status).activityId(1L).createdAt(Instant.now()).build();
+    private UserGoalItem goalItem(Long id, String title, String status) {
+        return new UserGoalItem(id, USER_ID, title, "D", status, Instant.now(), 1L, null, 10, 25);
+    }
+
+    private UserGoalPage page(List<UserGoalItem> content, int pageNumber, int pageSize, long totalElements) {
+        int totalPages = pageSize == 0 ? 0 : (int) Math.ceil((double) totalElements / pageSize);
+        return new UserGoalPage(content, pageNumber, pageSize, totalElements, totalPages, pageNumber == 0,
+                pageNumber >= Math.max(totalPages - 1, 0));
     }
 
     @Test
     void add_shouldReturn201_whenRequestIsValid() throws Exception {
-        when(addUserGoalUseCase.execute(eq(USER_ID), eq("Respirar"), eq("Desc"), eq(2L)))
-                .thenReturn(goal(1L, "Respirar", GoalStatus.PENDING));
+        when(addUserGoalUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && "Respirar".equals(r.title())
+                        && "Desc".equals(r.description()) && Long.valueOf(2L).equals(r.activityId()))))
+                .thenReturn(new AddUserGoalResponse(goalItem(1L, "Respirar", "PENDING")));
 
         mockMvc.perform(post("/api/user-goals")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -110,8 +118,9 @@ class UserGoalControllerTest {
 
     @Test
     void add_shouldReturn201_withNullActivityId() throws Exception {
-        when(addUserGoalUseCase.execute(eq(USER_ID), eq("Respirar"), isNull(), isNull()))
-                .thenReturn(goal(1L, "Respirar", GoalStatus.PENDING));
+        when(addUserGoalUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && r.description() == null && r.activityId() == null)))
+                .thenReturn(new AddUserGoalResponse(goalItem(1L, "Respirar", "PENDING")));
 
         mockMvc.perform(post("/api/user-goals")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -129,15 +138,10 @@ class UserGoalControllerTest {
 
     @Test
     void listByUser_shouldReturn200WithPaginatedCompletadosAndPendientes() throws Exception {
-        Page<UserGoal> completadosPage = new PageImpl<>(
-                List.of(goal(1L, "Completado", GoalStatus.COMPLETED)),
-                PageRequest.of(0, 5), 1);
-        Page<UserGoal> pendientesPage = new PageImpl<>(
-                List.of(goal(2L, "Pendiente", GoalStatus.PENDING)),
-                PageRequest.of(0, 5), 1);
-
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(USER_ID), any(Pageable.class))).thenReturn(completadosPage);
-        when(getUserGoalsByUserUseCase.executePending(eq(USER_ID), any(Pageable.class))).thenReturn(pendientesPage);
+        GetUserGoalsResponse response = new GetUserGoalsResponse(
+                page(List.of(goalItem(1L, "Completado", "COMPLETED")), 0, 5, 1),
+                page(List.of(goalItem(2L, "Pendiente", "PENDING")), 0, 5, 1));
+        when(getUserGoalsByUserUseCase.execute(any(GetUserGoalsRequest.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/user-goals/me"))
                 .andExpect(status().isOk())
@@ -150,10 +154,11 @@ class UserGoalControllerTest {
 
     @Test
     void listByUser_shouldUseSizeAndPageParams() throws Exception {
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(USER_ID), any(Pageable.class)))
-                .thenReturn(Page.empty(PageRequest.of(1, 3)));
-        when(getUserGoalsByUserUseCase.executePending(eq(USER_ID), any(Pageable.class)))
-                .thenReturn(Page.empty(PageRequest.of(1, 3)));
+        GetUserGoalsResponse response = new GetUserGoalsResponse(
+                page(List.of(), 1, 3, 0),
+                page(List.of(), 1, 3, 0));
+        when(getUserGoalsByUserUseCase.execute(argThat(r -> r != null && r.page() == 1 && r.size() == 3)))
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/user-goals/me").param("page", "1").param("size", "3"))
                 .andExpect(status().isOk())
@@ -163,10 +168,10 @@ class UserGoalControllerTest {
 
     @Test
     void listByUser_shouldReturn200WithEmptyPages_whenNoGoals() throws Exception {
-        when(getUserGoalsByUserUseCase.executeCompleted(eq(USER_ID), any(Pageable.class)))
-                .thenReturn(Page.empty());
-        when(getUserGoalsByUserUseCase.executePending(eq(USER_ID), any(Pageable.class)))
-                .thenReturn(Page.empty());
+        GetUserGoalsResponse response = new GetUserGoalsResponse(
+                page(List.of(), 0, 5, 0),
+                page(List.of(), 0, 5, 0));
+        when(getUserGoalsByUserUseCase.execute(any(GetUserGoalsRequest.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/user-goals/me"))
                 .andExpect(status().isOk())
@@ -176,8 +181,10 @@ class UserGoalControllerTest {
 
     @Test
     void update_shouldReturn200_whenRequestIsValid() throws Exception {
-        when(updateUserGoalUseCase.execute(eq(1L), eq("Nuevo"), eq("Desc"), eq(2L)))
-                .thenReturn(goal(1L, "Nuevo", GoalStatus.PENDING));
+        when(updateUserGoalUseCase.execute(argThat(r ->
+                r != null && Long.valueOf(1L).equals(r.id()) && "Nuevo".equals(r.title())
+                        && "Desc".equals(r.description()) && Long.valueOf(2L).equals(r.activityId()))))
+                .thenReturn(new UpdateUserGoalResponse(goalItem(1L, "Nuevo", "PENDING")));
 
         mockMvc.perform(put("/api/user-goals/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -200,20 +207,18 @@ class UserGoalControllerTest {
         mockMvc.perform(delete("/api/user-goals/1"))
                 .andExpect(status().isNoContent());
 
-        verify(deleteUserGoalUseCase).execute(1L);
+        verify(deleteUserGoalUseCase).execute(argThat(r -> r != null && Long.valueOf(1L).equals(r.id())));
     }
 
-    private CompleteUserGoalUseCase.Result completeResult(Long goalId) {
-        UserPlant plant = UserPlant.builder()
-                .id(1L).userId(USER_ID).plantNumber(1).requiredGoals(5)
-                .completedGoalsCount(1L).status(PlantStatus.GROWING).startedAt(Instant.now()).build();
-        return new CompleteUserGoalUseCase.Result(goal(goalId, "Meta", GoalStatus.COMPLETED), false, null, plant);
+    private CompleteUserGoalResponse completeResponse(Long goalId) {
+        UserPlantItem plant = new UserPlantItem(1L, 1, 5, 1L, "GROWING", Instant.now(), null);
+        return new CompleteUserGoalResponse(goalItem(goalId, "Meta", "COMPLETED"), false, null, plant);
     }
 
     @Test
     void complete_shouldReturn200WithCompletedStatus_whenGoalExists() throws Exception {
-        when(completeUserGoalUseCase.execute(eq(1L), isNull()))
-                .thenReturn(completeResult(1L));
+        when(completeUserGoalUseCase.execute(argThat(r -> r != null && Long.valueOf(1L).equals(r.id())), isNull()))
+                .thenReturn(completeResponse(1L));
 
         mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user-goals/1/complete"))
                 .andExpect(status().isOk())
@@ -223,18 +228,18 @@ class UserGoalControllerTest {
 
     @Test
     void complete_shouldDelegateToUseCase_withCorrectId() throws Exception {
-        when(completeUserGoalUseCase.execute(eq(42L), isNull()))
-                .thenReturn(completeResult(42L));
+        when(completeUserGoalUseCase.execute(argThat(r -> r != null && Long.valueOf(42L).equals(r.id())), isNull()))
+                .thenReturn(completeResponse(42L));
 
         mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user-goals/42/complete"))
                 .andExpect(status().isOk());
 
-        verify(completeUserGoalUseCase).execute(42L, null);
+        verify(completeUserGoalUseCase).execute(argThat(r -> r != null && Long.valueOf(42L).equals(r.id())), isNull());
     }
 
     @Test
     void getImage_shouldReturn404_whenFileDoesNotExist() throws Exception {
-        when(getGoalImageUseCase.execute("missing.jpg"))
+        when(getGoalImageUseCase.execute(argThat(r -> r != null && "missing.jpg".equals(r.filename()))))
                 .thenReturn(Path.of("nonexistent-xyz-dir", "missing.jpg"));
 
         mockMvc.perform(get("/api/user-goals/images/missing.jpg"))
@@ -245,7 +250,8 @@ class UserGoalControllerTest {
     void getImage_shouldReturn200WithImageContent_whenFileExists() throws Exception, IOException {
         Path imageFile = tempDir.resolve("photo.jpg");
         Files.write(imageFile, new byte[]{1, 2, 3});
-        when(getGoalImageUseCase.execute("photo.jpg")).thenReturn(imageFile);
+        when(getGoalImageUseCase.execute(argThat(r -> r != null && "photo.jpg".equals(r.filename()))))
+                .thenReturn(imageFile);
 
         mockMvc.perform(get("/api/user-goals/images/photo.jpg"))
                 .andExpect(status().isOk())
@@ -256,7 +262,8 @@ class UserGoalControllerTest {
     void getImage_shouldReturn200WithPngContentType_whenFilenameIsPng() throws Exception, IOException {
         Path imageFile = tempDir.resolve("photo.png");
         Files.write(imageFile, new byte[]{1, 2, 3});
-        when(getGoalImageUseCase.execute("photo.png")).thenReturn(imageFile);
+        when(getGoalImageUseCase.execute(argThat(r -> r != null && "photo.png".equals(r.filename()))))
+                .thenReturn(imageFile);
 
         mockMvc.perform(get("/api/user-goals/images/photo.png"))
                 .andExpect(status().isOk())
@@ -267,7 +274,8 @@ class UserGoalControllerTest {
     void getImage_shouldReturn200WithGifContentType_whenFilenameIsGif() throws Exception, IOException {
         Path imageFile = tempDir.resolve("anim.gif");
         Files.write(imageFile, new byte[]{1, 2, 3});
-        when(getGoalImageUseCase.execute("anim.gif")).thenReturn(imageFile);
+        when(getGoalImageUseCase.execute(argThat(r -> r != null && "anim.gif".equals(r.filename()))))
+                .thenReturn(imageFile);
 
         mockMvc.perform(get("/api/user-goals/images/anim.gif"))
                 .andExpect(status().isOk())

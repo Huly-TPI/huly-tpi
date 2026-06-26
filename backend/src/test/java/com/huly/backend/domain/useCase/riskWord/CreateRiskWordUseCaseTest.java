@@ -1,12 +1,15 @@
 package com.huly.backend.domain.useCase.riskWord;
 
+import com.huly.backend.domain.dto.riskWord.CreateRiskWordRequest;
+import com.huly.backend.domain.dto.riskWord.CreateRiskWordResponse;
+import com.huly.backend.domain.mapper.riskWord.CreateRiskWordMapper;
 import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
 import com.huly.backend.domain.service.chat.RiskWordService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -21,8 +24,12 @@ class CreateRiskWordUseCaseTest {
     @Mock
     private RiskWordService riskWordService;
 
-    @InjectMocks
     private CreateRiskWordUseCase createRiskWordUseCase;
+
+    @BeforeEach
+    void setUp() {
+        createRiskWordUseCase = new CreateRiskWordUseCase(riskWordService, new CreateRiskWordMapper());
+    }
 
     @Test
     void execute_shouldBuildRiskWordWithActiveTrueAndDelegateToService() {
@@ -30,7 +37,7 @@ class CreateRiskWordUseCaseTest {
         when(riskWordService.create(any(RiskWord.class))).thenReturn(saved);
 
         ArgumentCaptor<RiskWord> captor = ArgumentCaptor.forClass(RiskWord.class);
-        createRiskWordUseCase.execute("suicidio", "desc", RiskSeverity.HIGH);
+        createRiskWordUseCase.execute(new CreateRiskWordRequest("suicidio", "desc", RiskSeverity.HIGH));
 
         verify(riskWordService).create(captor.capture());
         RiskWord captured = captor.getValue();
@@ -46,8 +53,9 @@ class CreateRiskWordUseCaseTest {
         RiskWord saved = RiskWord.builder().id(1L).word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
         when(riskWordService.create(any(RiskWord.class))).thenReturn(saved);
 
-        RiskWord result = createRiskWordUseCase.execute("suicidio", null, RiskSeverity.HIGH);
+        CreateRiskWordResponse result = createRiskWordUseCase.execute(
+                new CreateRiskWordRequest("suicidio", null, RiskSeverity.HIGH));
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.id()).isEqualTo(1L);
     }
 }

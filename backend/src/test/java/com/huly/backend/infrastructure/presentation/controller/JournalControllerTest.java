@@ -3,12 +3,17 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.huly.backend.domain.model.journal.JournalEntry;
+import com.huly.backend.domain.dto.journal.CreateJournalEntryRequest;
+import com.huly.backend.domain.dto.journal.CreateJournalEntryResponse;
+import com.huly.backend.domain.dto.journal.JournalEntryItem;
+import com.huly.backend.domain.dto.journal.ListJournalEntriesRequest;
+import com.huly.backend.domain.dto.journal.ListJournalEntriesResponse;
 import com.huly.backend.domain.model.enums.Mood;
 import com.huly.backend.domain.useCase.journal.CreateJournalEntryUseCase;
 import com.huly.backend.domain.useCase.journal.ListJournalEntriesUseCase;
 import com.huly.backend.infrastructure.presentation.dto.journal.JournalEntryRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.journal.JournalPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +60,7 @@ class JournalControllerTest {
                 new TestingAuthenticationToken(userDetails, null));
 
         JournalController controller = new JournalController(
-                createJournalEntryUseCase, listJournalEntriesUseCase);
+                createJournalEntryUseCase, listJournalEntriesUseCase, new JournalPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -67,17 +72,19 @@ class JournalControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    private JournalEntry buildEntry(Long id, String content, Mood mood) {
-        return JournalEntry.builder()
-                .id(id).userId(USER_ID).journalId(1L)
-                .content(content).mood(mood).createdAt(Instant.now())
-                .build();
+    private CreateJournalEntryResponse buildResponse(Long id, String content, Mood mood) {
+        return new CreateJournalEntryResponse(id, content, mood, Instant.now());
+    }
+
+    private JournalEntryItem buildItem(Long id, String content, Mood mood) {
+        return new JournalEntryItem(id, content, mood, Instant.now());
     }
 
     @Test
     void create_shouldReturn201_whenRequestHasValidContentAndMood() throws Exception {
-        when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Hoy me sentí bien"), eq(Mood.HAPPY), anyBoolean()))
-                .thenReturn(buildEntry(10L, "Hoy me sentí bien", Mood.HAPPY));
+        when(createJournalEntryUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && "Hoy me sentí bien".equals(r.content()) && r.mood() == Mood.HAPPY)))
+                .thenReturn(buildResponse(10L, "Hoy me sentí bien", Mood.HAPPY));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -90,8 +97,9 @@ class JournalControllerTest {
 
     @Test
     void create_shouldReturn201_whenMoodIsNull() throws Exception {
-        when(createJournalEntryUseCase.execute(eq(USER_ID), eq("Solo escribir"), eq(null), anyBoolean()))
-                .thenReturn(buildEntry(10L, "Solo escribir", null));
+        when(createJournalEntryUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && "Solo escribir".equals(r.content()) && r.mood() == null)))
+                .thenReturn(buildResponse(10L, "Solo escribir", null));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,8 +110,9 @@ class JournalControllerTest {
 
     @Test
     void create_shouldReturn201_whenMoodIsLowercase() throws Exception {
-        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), eq(Mood.SAD), anyBoolean()))
-                .thenReturn(buildEntry(10L, "Hoy fue difícil", Mood.SAD));
+        when(createJournalEntryUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && r.mood() == Mood.SAD)))
+                .thenReturn(buildResponse(10L, "Hoy fue difícil", Mood.SAD));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,8 +146,9 @@ class JournalControllerTest {
 
     @Test
     void create_shouldPassUseTextForAITrueToUseCase_whenFieldIsTrue() throws Exception {
-        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(true)))
-                .thenReturn(buildEntry(10L, "Contenido", Mood.HAPPY));
+        when(createJournalEntryUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && r.useTextForAI())))
+                .thenReturn(buildResponse(10L, "Contenido", Mood.HAPPY));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -148,8 +158,9 @@ class JournalControllerTest {
 
     @Test
     void create_shouldPassUseTextForAIFalseToUseCase_whenFieldIsFalse() throws Exception {
-        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(false)))
-                .thenReturn(buildEntry(10L, "Contenido", Mood.HAPPY));
+        when(createJournalEntryUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && !r.useTextForAI())))
+                .thenReturn(buildResponse(10L, "Contenido", Mood.HAPPY));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -159,8 +170,9 @@ class JournalControllerTest {
 
     @Test
     void create_shouldDefaultToTrueForUseTextForAI_whenFieldIsNull() throws Exception {
-        when(createJournalEntryUseCase.execute(eq(USER_ID), any(), any(), eq(true)))
-                .thenReturn(buildEntry(10L, "Contenido", null));
+        when(createJournalEntryUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && r.useTextForAI())))
+                .thenReturn(buildResponse(10L, "Contenido", null));
 
         mockMvc.perform(post("/api/journal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -170,10 +182,11 @@ class JournalControllerTest {
 
     @Test
     void list_shouldReturn200WithEntries_whenUserHasEntries() throws Exception {
-        when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of(
-                buildEntry(2L, "Segunda entrada", Mood.CALM),
-                buildEntry(1L, "Primera entrada", Mood.HAPPY)
-        ));
+        when(listJournalEntriesUseCase.execute(argThat(r -> r != null && USER_ID.equals(r.userId()))))
+                .thenReturn(new ListJournalEntriesResponse(List.of(
+                        buildItem(2L, "Segunda entrada", Mood.CALM),
+                        buildItem(1L, "Primera entrada", Mood.HAPPY)
+                )));
 
         mockMvc.perform(get("/api/journal"))
                 .andExpect(status().isOk())
@@ -186,7 +199,8 @@ class JournalControllerTest {
 
     @Test
     void list_shouldReturn200WithEmptyList_whenUserHasNoEntries() throws Exception {
-        when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of());
+        when(listJournalEntriesUseCase.execute(argThat(r -> r != null && USER_ID.equals(r.userId()))))
+                .thenReturn(new ListJournalEntriesResponse(List.of()));
 
         mockMvc.perform(get("/api/journal"))
                 .andExpect(status().isOk())
@@ -195,9 +209,10 @@ class JournalControllerTest {
 
     @Test
     void list_shouldReturn200WithNullMood_whenEntryHasNoMood() throws Exception {
-        when(listJournalEntriesUseCase.execute(USER_ID)).thenReturn(List.of(
-                buildEntry(1L, "Sin mood", null)
-        ));
+        when(listJournalEntriesUseCase.execute(argThat(r -> r != null && USER_ID.equals(r.userId()))))
+                .thenReturn(new ListJournalEntriesResponse(List.of(
+                        buildItem(1L, "Sin mood", null)
+                )));
 
         mockMvc.perform(get("/api/journal"))
                 .andExpect(status().isOk())

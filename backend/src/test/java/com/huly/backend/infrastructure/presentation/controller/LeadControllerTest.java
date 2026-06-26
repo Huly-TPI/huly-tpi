@@ -1,10 +1,12 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.dto.lead.RegisterLeadRequest;
 import com.huly.backend.domain.model.enums.SourceAction;
 import com.huly.backend.domain.useCase.lead.RegisterLeadUseCase;
 import com.huly.backend.infrastructure.presentation.dto.lead.LeadRequestDto;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
+import com.huly.backend.infrastructure.presentation.mapper.lead.LeadPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -25,7 +27,7 @@ class LeadControllerTest {
     @BeforeEach
     void setUp() {
         registerLeadUseCase = mock(RegisterLeadUseCase.class);
-        LeadController controller = new LeadController(registerLeadUseCase);
+        LeadController controller = new LeadController(registerLeadUseCase, new LeadPresentationMapper());
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -42,7 +44,7 @@ class LeadControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Registro exitoso"));
 
-        verify(registerLeadUseCase).execute("lead@huly.com", "hulyuser", SourceAction.LANDING);
+        verify(registerLeadUseCase).execute(new RegisterLeadRequest("lead@huly.com", "hulyuser", SourceAction.LANDING));
     }
 
     @Test
@@ -54,7 +56,7 @@ class LeadControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest());
 
-        verify(registerLeadUseCase, never()).execute(any(), any(), any());
+        verify(registerLeadUseCase, never()).execute(any());
     }
 
     @Test
@@ -66,6 +68,6 @@ class LeadControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest());
 
-        verify(registerLeadUseCase, never()).execute(any(), any(), any());
+        verify(registerLeadUseCase, never()).execute(any());
     }
 }

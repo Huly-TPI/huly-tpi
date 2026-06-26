@@ -1,13 +1,16 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.dto.userGoal.DeleteUserGoalRequest;
+import com.huly.backend.domain.dto.userGoal.DeleteUserGoalResponse;
+import com.huly.backend.domain.mapper.userGoal.DeleteUserGoalMapper;
 import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.enums.GoalStatus;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.repository.user.UserGoalRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -24,8 +27,12 @@ class DeleteUserGoalUseCaseTest {
     @Mock
     private UserGoalRepository userGoalRepository;
 
-    @InjectMocks
     private DeleteUserGoalUseCase deleteUserGoalUseCase;
+
+    @BeforeEach
+    void setUp() {
+        deleteUserGoalUseCase = new DeleteUserGoalUseCase(userGoalRepository, new DeleteUserGoalMapper());
+    }
 
     private UserGoal pendingGoal(Long id) {
         return UserGoal.builder()
@@ -37,12 +44,14 @@ class DeleteUserGoalUseCaseTest {
     void execute_shouldCancelGoal_whenItExists() {
         UserGoal goal = pendingGoal(1L);
         when(userGoalRepository.findById(1L)).thenReturn(Optional.of(goal));
+        when(userGoalRepository.save(any(UserGoal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        deleteUserGoalUseCase.execute(1L);
+        DeleteUserGoalResponse result = deleteUserGoalUseCase.execute(new DeleteUserGoalRequest(1L));
 
         ArgumentCaptor<UserGoal> captor = ArgumentCaptor.forClass(UserGoal.class);
         verify(userGoalRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(GoalStatus.CANCELLED);
+        assertThat(result.id()).isEqualTo(1L);
         verify(userGoalRepository, never()).deleteById(any());
     }
 
@@ -50,7 +59,7 @@ class DeleteUserGoalUseCaseTest {
     void execute_shouldThrowNotFoundException_whenGoalDoesNotExist() {
         when(userGoalRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> deleteUserGoalUseCase.execute(99L))
+        assertThatThrownBy(() -> deleteUserGoalUseCase.execute(new DeleteUserGoalRequest(99L)))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(userGoalRepository, never()).save(any());

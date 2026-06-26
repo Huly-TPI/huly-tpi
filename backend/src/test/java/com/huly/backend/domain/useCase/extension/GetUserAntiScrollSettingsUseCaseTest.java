@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.extension;
 
+import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsRequest;
+import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsResponse;
+import com.huly.backend.domain.mapper.extension.GetUserAntiScrollSettingsMapper;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
@@ -46,7 +49,8 @@ class GetUserAntiScrollSettingsUseCaseTest {
                 antiScrollConfigRepository,
                 getCurrentUserUseCase,
                 "http://localhost:5173",
-                "http://localhost:8080"
+                "http://localhost:8080",
+                new GetUserAntiScrollSettingsMapper()
         );
     }
 
@@ -61,7 +65,7 @@ class GetUserAntiScrollSettingsUseCaseTest {
 
         when(settingsRepository.findByUserId(1L)).thenReturn(Optional.of(existingSettings));
 
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(1L);
+        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(1L));
 
         assertThat(result).isNotNull();
         assertThat(result.enabled()).isFalse();
@@ -77,7 +81,7 @@ class GetUserAntiScrollSettingsUseCaseTest {
     void execute_shouldReturnDefaultSettings_whenSettingsDoNotExist() {
         when(settingsRepository.findByUserId(2L)).thenReturn(Optional.empty());
 
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(2L);
+        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(2L));
 
         assertThat(result).isNotNull();
         assertThat(result.enabled()).isTrue();
@@ -97,7 +101,7 @@ class GetUserAntiScrollSettingsUseCaseTest {
         when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.of(config));
         when(settingsRepository.findByUserId(3L)).thenReturn(Optional.empty());
 
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(3L);
+        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(3L));
 
         assertThat(result).isNotNull();
         assertThat(result.pauseIntervalSeconds()).isEqualTo(2100);
@@ -115,7 +119,7 @@ class GetUserAntiScrollSettingsUseCaseTest {
 
         when(settingsRepository.findByUserId(4L)).thenReturn(Optional.of(existingSettings));
 
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(4L);
+        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(4L));
 
         assertThat(result).isNotNull();
         assertThat(result.pauseIntervalSeconds()).isEqualTo(45);
