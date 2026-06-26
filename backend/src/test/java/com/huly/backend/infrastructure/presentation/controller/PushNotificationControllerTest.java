@@ -1,8 +1,13 @@
 package com.huly.backend.infrastructure.presentation.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huly.backend.domain.dto.pushNotification.DeletePushSubscriptionRequest;
+import com.huly.backend.domain.dto.pushNotification.GetPushSubscriptionStatusRequest;
+import com.huly.backend.domain.dto.pushNotification.GetPushSubscriptionStatusResponse;
+import com.huly.backend.domain.dto.pushNotification.SavePushSubscriptionRequest;
 import com.huly.backend.domain.useCase.pushNotification.DeletePushSubscriptionUseCase;
 import com.huly.backend.domain.useCase.pushNotification.GetPushSubscriptionStatusUseCase;
 import com.huly.backend.domain.useCase.pushNotification.SavePushSubscriptionUseCase;
+import com.huly.backend.infrastructure.presentation.mapper.pushNotification.PushNotificationPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +51,8 @@ class PushNotificationControllerTest {
                 new PushNotificationController(
                         savePushSubscriptionUseCase,
                         deletePushSubscriptionUseCase,
-                        getPushSubscriptionStatusUseCase))
+                        getPushSubscriptionStatusUseCase,
+                        new PushNotificationPresentationMapper()))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
     }
@@ -68,7 +74,8 @@ class PushNotificationControllerTest {
                 .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isCreated());
 
-        verify(savePushSubscriptionUseCase).execute(eq(1L), eq("https://fcm.example.com/1"), eq("key1"), eq("auth123"));
+        verify(savePushSubscriptionUseCase).execute(
+                eq(new SavePushSubscriptionRequest(1L, "https://fcm.example.com/1", "key1", "auth123")));
     }
 
     @Test
@@ -80,12 +87,14 @@ class PushNotificationControllerTest {
                 .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isNoContent());
 
-        verify(deletePushSubscriptionUseCase).execute(eq("https://fcm.example.com/1"));
+        verify(deletePushSubscriptionUseCase).execute(
+                eq(new DeletePushSubscriptionRequest("https://fcm.example.com/1")));
     }
 
     @Test
     void status_shouldReturnSuscribedTrue_whenUserHasSuscription() throws Exception {
-        when(getPushSubscriptionStatusUseCase.execute(USER_ID)).thenReturn(true);
+        when(getPushSubscriptionStatusUseCase.execute(new GetPushSubscriptionStatusRequest(USER_ID)))
+                .thenReturn(new GetPushSubscriptionStatusResponse(true));
 
         mockMvc.perform(get("/api/pushNotification/status"))
                 .andExpect(status().isOk())
@@ -94,7 +103,8 @@ class PushNotificationControllerTest {
 
     @Test
     void status_shouldReturnSuscribedFalse_whenUserHasNotSuscription() throws Exception {
-        when(getPushSubscriptionStatusUseCase.execute(USER_ID)).thenReturn(false);
+        when(getPushSubscriptionStatusUseCase.execute(new GetPushSubscriptionStatusRequest(USER_ID)))
+                .thenReturn(new GetPushSubscriptionStatusResponse(false));
 
         mockMvc.perform(get("/api/pushNotification/status"))
                 .andExpect(status().isOk())

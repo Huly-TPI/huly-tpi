@@ -1,8 +1,10 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
+import com.huly.backend.domain.dto.lead.RegisterLeadResponse;
 import com.huly.backend.domain.useCase.lead.RegisterLeadUseCase;
 import com.huly.backend.infrastructure.presentation.dto.lead.LeadRequestDto;
 import com.huly.backend.infrastructure.presentation.dto.lead.LeadResponseDto;
+import com.huly.backend.infrastructure.presentation.mapper.lead.LeadPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,10 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class LeadController {
 
     private final RegisterLeadUseCase registerLeadUseCase;
+    private final LeadPresentationMapper leadPresentationMapper;
 
     @PostMapping
     public ResponseEntity<LeadResponseDto> register(@Valid @RequestBody LeadRequestDto request) {
-        registerLeadUseCase.execute(request.email(), request.nickname(), request.sourceAction());
-        return ResponseEntity.status(HttpStatus.CREATED).body(new LeadResponseDto("Registro exitoso"));
+        RegisterLeadResponse response = registerLeadUseCase.execute(leadPresentationMapper.toRegisterRequest(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(leadPresentationMapper.toLeadResponse(response));
     }
 }

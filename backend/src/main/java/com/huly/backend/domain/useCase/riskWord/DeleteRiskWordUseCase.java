@@ -1,5 +1,6 @@
 package com.huly.backend.domain.useCase.riskWord;
 
+import com.huly.backend.domain.dto.riskWord.DeleteRiskWordRequest;
 import com.huly.backend.domain.service.chat.RiskWordService;
 import lombok.RequiredArgsConstructor;
 
@@ -14,11 +15,11 @@ public class DeleteRiskWordUseCase {
     private final RiskWordService riskWordService;
 
     /**
-     * Elimina la palabra de riesgo correspondiente al id indicado.
+     * Elimina la palabra de riesgo correspondiente al pedido indicado.
      *
-     * @param id identificador de la palabra de riesgo a eliminar
+     * @param request pedido con el identificador de la palabra de riesgo a eliminar
      */
-    public void execute(Long id) {
-        riskWordService.delete(id);
+    public void execute(DeleteRiskWordRequest request) {
+        riskWordService.delete(request.id());
     }
 }

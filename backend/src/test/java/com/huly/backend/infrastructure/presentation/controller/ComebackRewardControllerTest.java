@@ -39,7 +39,8 @@ class ComebackRewardControllerTest {
         getComebackRewardStatusUseCase = mock(GetComebackRewardStatusUseCase.class);
         claimComebackRewardUseCase = mock(ClaimComebackRewardUseCase.class);
 
-        ComebackRewardController controller = new ComebackRewardController(getComebackRewardStatusUseCase, claimComebackRewardUseCase);
+        ComebackRewardController controller = new ComebackRewardController(getComebackRewardStatusUseCase, claimComebackRewardUseCase,
+                new com.huly.backend.infrastructure.presentation.mapper.comebackReward.ComebackRewardPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();

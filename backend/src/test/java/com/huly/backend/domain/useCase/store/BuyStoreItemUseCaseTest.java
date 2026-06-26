@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.store;
 
+import com.huly.backend.domain.dto.store.BuyStoreItemRequest;
+import com.huly.backend.domain.mapper.store.BuyStoreItemMapper;
 import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.exception.BusinessRuleException;
 import com.huly.backend.domain.exception.InsufficientCoinsException;
@@ -11,9 +13,9 @@ import com.huly.backend.domain.repository.UserStoreItemRepository;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -43,8 +45,13 @@ class BuyStoreItemUseCaseTest {
     @Mock
     private UserPlan userPlan;
 
-    @InjectMocks
     private BuyStoreItemUseCase buyStoreItemUseCase;
+
+    @BeforeEach
+    void setUp() {
+        buyStoreItemUseCase = new BuyStoreItemUseCase(
+                storeItemRepository, userStoreItemRepository, coinService, userPlanRepository, new BuyStoreItemMapper());
+    }
 
     private StoreItem item() {
         return StoreItem.builder()
@@ -64,7 +71,7 @@ class BuyStoreItemUseCaseTest {
     @Test
     void buy_shouldThrowNotFound_whenItemDoesNotExist() {
         when(storeItemRepository.findById(10L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 10L))
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 10L)))
                 .isInstanceOf(NotFoundException.class);
 
         verifyNoInteractions(coinService);
@@ -74,7 +81,7 @@ class BuyStoreItemUseCaseTest {
     void buy_shouldThrownBusinessRule_whenAlreadyOwned() {
         when(storeItemRepository.findById(10L)).thenReturn(Optional.of(item()));
         when(userStoreItemRepository.isOwned(1L, 10L)).thenReturn(true);
-        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 10L))
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 10L)))
                 .isInstanceOf(BusinessRuleException.class);
 
         verifyNoInteractions(coinService);
@@ -87,7 +94,7 @@ class BuyStoreItemUseCaseTest {
         when(userStoreItemRepository.isOwned(1L, 10L)).thenReturn(false);
         doThrow(new InsufficientCoinsException("Saldo insuficiente"))
                 .when(coinService).debit(1L, 50);
-        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 10L))
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 10L)))
                 .isInstanceOf(InsufficientCoinsException.class);
 
         verify(userStoreItemRepository, never()).save(any());
@@ -97,7 +104,7 @@ class BuyStoreItemUseCaseTest {
     void buy_shouldDebitAndRegisterOwnership_whenValid() {
         when(storeItemRepository.findById(10L)).thenReturn(Optional.of(item()));
         when(userStoreItemRepository.isOwned(1L, 10L)).thenReturn(false);
-        buyStoreItemUseCase.execute(1L, 10L);
+        buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 10L));
 
         verify(userStoreItemRepository).save(any(UserStoreItem.class));
         verify(coinService).debit(1L, 50);
@@ -108,7 +115,7 @@ class BuyStoreItemUseCaseTest {
         when(storeItemRepository.findById(20L)).thenReturn(Optional.of(premiumItem()));
         when(userStoreItemRepository.isOwned(1L, 20L)).thenReturn(false);
         when(userPlanRepository.findByUser(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 20L))
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 20L)))
                 .isInstanceOf(BusinessRuleException.class);
         verifyNoInteractions(coinService);
     }
@@ -120,7 +127,7 @@ class BuyStoreItemUseCaseTest {
         when(userPlanRepository.findByUser(1L)).thenReturn(Optional.of(userPlan));
         when(userPlan.isActive(any(Instant.class))).thenReturn(true);
         when(userPlan.getPlanCode()).thenReturn("BASIC");
-        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 20L))
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 20L)))
                 .isInstanceOf(BusinessRuleException.class);
         verifyNoInteractions(coinService);
     }
@@ -131,7 +138,7 @@ class BuyStoreItemUseCaseTest {
         when(userStoreItemRepository.isOwned(1L, 20L)).thenReturn(false);
         when(userPlanRepository.findByUser(1L)).thenReturn(Optional.of(userPlan));
         when(userPlan.isActive(any(Instant.class))).thenReturn(false);
-        assertThatThrownBy(() -> buyStoreItemUseCase.execute(1L, 20L))
+        assertThatThrownBy(() -> buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 20L)))
                 .isInstanceOf(BusinessRuleException.class);
         verifyNoInteractions(coinService);
     }
@@ -143,7 +150,7 @@ class BuyStoreItemUseCaseTest {
         when(userPlanRepository.findByUser(1L)).thenReturn(Optional.of(userPlan));
         when(userPlan.isActive(any(Instant.class))).thenReturn(true);
         when(userPlan.getPlanCode()).thenReturn("PREMIUM");
-        buyStoreItemUseCase.execute(1L, 20L);
+        buyStoreItemUseCase.execute(new BuyStoreItemRequest(1L, 20L));
         verify(coinService).debit(1L, 200);
         verify(userStoreItemRepository).save(any(UserStoreItem.class));
     }

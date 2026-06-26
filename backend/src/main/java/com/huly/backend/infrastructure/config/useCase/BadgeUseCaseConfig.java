@@ -1,5 +1,8 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.mapper.badge.GetAllBadgesMapper;
+import com.huly.backend.domain.mapper.badge.GetUserBadgesMapper;
+import com.huly.backend.domain.mapper.badge.GrantBadgeMapper;
 import com.huly.backend.domain.repository.badge.BadgeRepository;
 import com.huly.backend.domain.repository.user.UserBadgeRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
@@ -13,17 +16,35 @@ import org.springframework.context.annotation.Configuration;
 public class BadgeUseCaseConfig {
 
     @Bean
-    public GetAllBadgesUseCase getAllBadgesUseCase(BadgeRepository badgeRepository) {
-        return new GetAllBadgesUseCase(badgeRepository);
+    public GetAllBadgesMapper getAllBadgesMapper() {
+        return new GetAllBadgesMapper();
     }
 
     @Bean
-    public GetUserBadgesUseCase getUserBadgesUseCase(UserBadgeRepository userBadgeRepository) {
-        return new GetUserBadgesUseCase(userBadgeRepository);
+    public GetUserBadgesMapper getUserBadgesMapper() {
+        return new GetUserBadgesMapper();
     }
 
     @Bean
-    public GrantBadgeUseCase grantBadgeUseCase(BadgeRepository badgeRepository, UserBadgeRepository userBadgeRepository, UserRepository userRepository) {
-        return new GrantBadgeUseCase(badgeRepository, userBadgeRepository, userRepository);
+    public GrantBadgeMapper grantBadgeMapper() {
+        return new GrantBadgeMapper();
+    }
+
+    @Bean
+    public GetAllBadgesUseCase getAllBadgesUseCase(BadgeRepository badgeRepository,
+                                                   GetAllBadgesMapper getAllBadgesMapper) {
+        return new GetAllBadgesUseCase(badgeRepository, getAllBadgesMapper);
+    }
+
+    @Bean
+    public GetUserBadgesUseCase getUserBadgesUseCase(UserBadgeRepository userBadgeRepository,
+                                                     GetUserBadgesMapper getUserBadgesMapper) {
+        return new GetUserBadgesUseCase(userBadgeRepository, getUserBadgesMapper);
+    }
+
+    @Bean
+    public GrantBadgeUseCase grantBadgeUseCase(BadgeRepository badgeRepository, UserBadgeRepository userBadgeRepository, UserRepository userRepository,
+                                               GrantBadgeMapper grantBadgeMapper) {
+        return new GrantBadgeUseCase(badgeRepository, userBadgeRepository, userRepository, grantBadgeMapper);
     }
 }

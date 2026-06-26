@@ -1,11 +1,13 @@
 package com.huly.backend.domain.useCase.chatConfig;
 
+import com.huly.backend.domain.dto.chatBotConfig.GetBotConfigResponse;
+import com.huly.backend.domain.mapper.chatBotConfig.GetBotConfigMapper;
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.service.chat.BotConfigService;
 import com.huly.backend.domain.useCase.chatBotConfig.GetBotConfigUseCase;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -20,17 +22,23 @@ class GetBotConfigUseCaseTest {
     @Mock
     private BotConfigService botConfigService;
 
-    @InjectMocks
     private GetBotConfigUseCase getBotConfigUseCase;
+
+    @BeforeEach
+    void setUp() {
+        getBotConfigUseCase = new GetBotConfigUseCase(botConfigService, new GetBotConfigMapper());
+    }
 
     @Test
     void execute_shouldDelegateToServiceAndReturnConfig() {
         ChatConfig config = ChatConfig.builder().id(1L).riskDetectionEnabled(true).systemPrompt("prompt").build();
         when(botConfigService.getConfig()).thenReturn(config);
 
-        ChatConfig result = getBotConfigUseCase.execute();
+        GetBotConfigResponse result = getBotConfigUseCase.execute();
 
-        assertThat(result).isEqualTo(config);
+        assertThat(result.id()).isEqualTo(1L);
+        assertThat(result.riskDetectionEnabled()).isTrue();
+        assertThat(result.systemPrompt()).isEqualTo("prompt");
         verify(botConfigService).getConfig();
     }
 

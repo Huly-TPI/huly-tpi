@@ -1,8 +1,11 @@
 package com.huly.backend.domain.useCase.userGoal;
 
+import com.huly.backend.domain.dto.userGoal.CompleteUserGoalRequest;
+import com.huly.backend.domain.dto.userGoal.CompleteUserGoalResponse;
 import com.huly.backend.domain.exception.ImageValidationUnavailableException;
 import com.huly.backend.domain.exception.InvalidGoalImageException;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
+import com.huly.backend.domain.mapper.userGoal.CompleteUserGoalMapper;
 import com.huly.backend.domain.model.goals.ImageValidationResult;
 import com.huly.backend.domain.model.user.UserGoal;
 import com.huly.backend.domain.model.user.UserPlant;
@@ -36,18 +39,17 @@ public class CompleteUserGoalUseCase {
     private final CoinService coinService;
     private final ImageStorageService imageStorageService;
     private final ImageValidationPort imageValidationPort;
-
-    public record Result(UserGoal goal, boolean harvestTriggered, Integer harvestedPlantNumber, UserPlant currentPlant) {}
+    private final CompleteUserGoalMapper mapper;
 
     @Transactional
-    public Result execute(Long id, MultipartFile image) {
-        UserGoal goal = userGoalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("UserGoal", "id", id));
+    public CompleteUserGoalResponse execute(CompleteUserGoalRequest request, MultipartFile image) {
+        UserGoal goal = userGoalRepository.findById(request.id())
+                .orElseThrow(() -> new ResourceNotFoundException("UserGoal", "id", request.id()));
 
         if (goal.getStatus() == GoalStatus.COMPLETED) {
-            UserPlant current = getOrCreateCurrentPlantUseCase.execute(goal.getUserId());
+            UserPlant current = getOrCreateCurrentPlantUseCase.resolveCurrentPlant(goal.getUserId());
             long count = userPlantRepository.countCompletedGoalsByPlantId(current.getId());
-            return new Result(goal, false, null, withCount(current, count));
+            return mapper.toResponse(goal, false, null, withCount(current, count));
         }
 
         String imageUrl = null;
@@ -57,7 +59,7 @@ public class CompleteUserGoalUseCase {
             imageUrl = validateAndSave(image, goal);
         }
 
-        UserPlant currentPlant = getOrCreateCurrentPlantUseCase.execute(goal.getUserId());
+        UserPlant currentPlant = getOrCreateCurrentPlantUseCase.resolveCurrentPlant(goal.getUserId());
 
         goal.setStatus(GoalStatus.COMPLETED);
         goal.setImageUrl(imageUrl);
@@ -85,10 +87,10 @@ public class CompleteUserGoalUseCase {
                     .startedAt(Instant.now())
                     .build());
 
-            return new Result(savedGoal, true, currentPlant.getPlantNumber(), withCount(nextPlant, 0));
+            return mapper.toResponse(savedGoal, true, currentPlant.getPlantNumber(), withCount(nextPlant, 0));
         }
 
-        return new Result(savedGoal, false, null, withCount(currentPlant, completedCount));
+        return mapper.toResponse(savedGoal, false, null, withCount(currentPlant, completedCount));
     }
 
     private UserPlant withCount(UserPlant plant, long count) {

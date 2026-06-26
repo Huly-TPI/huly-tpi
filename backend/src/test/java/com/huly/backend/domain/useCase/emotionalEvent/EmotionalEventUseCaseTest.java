@@ -1,9 +1,13 @@
 package com.huly.backend.domain.useCase.emotionalEvent;
 
-import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
+import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
+import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
+import com.huly.backend.domain.dto.emotionalEvent.UpdateEmotionalEventDecisionRequest;
+import com.huly.backend.domain.dto.emotionalEvent.UpdateEmotionalEventFeedbackRequest;
+import com.huly.backend.domain.mapper.emotionalEvent.CreateEmotionalEventMapper;
+import com.huly.backend.domain.mapper.emotionalEvent.UpdateEmotionalEventDecisionMapper;
+import com.huly.backend.domain.mapper.emotionalEvent.UpdateEmotionalEventFeedbackMapper;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
-import com.huly.backend.domain.model.emotionalRecommendation.UpdateEmotionalEventFeedbackCommand;
-import com.huly.backend.domain.model.emotionalRecommendation.UpdateRecommendationDecisionCommand;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
@@ -40,13 +44,16 @@ class EmotionalEventUseCaseTest {
         activityRepository = mock(ActivityRepository.class);
         chatMessageRepository = mock(ChatMessageRepository.class);
         userVectorMemoryService = mock(UserVectorMemoryService.class);
-        createUseCase = new CreateEmotionalEventUseCase(emotionalEventRepository, activityRepository);
+        createUseCase = new CreateEmotionalEventUseCase(
+                emotionalEventRepository, activityRepository, new CreateEmotionalEventMapper());
         decisionUseCase = new UpdateEmotionalEventDecisionUseCase(
                 emotionalEventRepository,
                 activityRepository,
                 userVectorMemoryService,
-                chatMessageRepository);
-        feedbackUseCase = new UpdateEmotionalEventFeedbackUseCase(emotionalEventRepository);
+                chatMessageRepository,
+                new UpdateEmotionalEventDecisionMapper());
+        feedbackUseCase = new UpdateEmotionalEventFeedbackUseCase(
+                emotionalEventRepository, new UpdateEmotionalEventFeedbackMapper());
     }
 
     @Test
@@ -54,18 +61,18 @@ class EmotionalEventUseCaseTest {
         when(activityRepository.existsById(1L)).thenReturn(true);
         when(emotionalEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        EmotionalEvent result = createUseCase.execute(validCreateCommand());
+        EmotionalEventResponse result = createUseCase.execute(validCreateRequest());
 
-        assertThat(result.getSource()).isEqualTo(EmotionalEventSource.CHATBOT);
-        assertThat(result.getDetectedEmotion()).isEqualTo("ANSIEDAD");
-        assertThat(result.getRecommendedActivityId()).isEqualTo(1L);
-        assertThat(result.getCreatedAt()).isNotNull();
+        assertThat(result.source()).isEqualTo(EmotionalEventSource.CHATBOT);
+        assertThat(result.detectedEmotion()).isEqualTo("ANSIEDAD");
+        assertThat(result.recommendedActivityId()).isEqualTo(1L);
+        assertThat(result.createdAt()).isNotNull();
         verify(emotionalEventRepository).save(any(EmotionalEvent.class));
     }
 
     @Test
     void create_shouldValidateVadConfidenceAndIntensityRanges() {
-        CreateEmotionalEventCommand invalid = new CreateEmotionalEventCommand(
+        CreateEmotionalEventRequest invalid = new CreateEmotionalEventRequest(
                 1L, EmotionalEventSource.CHATBOT, "texto", "ANSIEDAD",
                 1.2, -0.8, 0.9, -0.7, 0.85,
                 "calmarme", "Respira", null, null
@@ -85,13 +92,12 @@ class EmotionalEventUseCaseTest {
         when(activityRepository.existsById(1L)).thenReturn(true);
         when(emotionalEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        EmotionalEvent result = decisionUseCase.execute(
-                10L,
-                new UpdateRecommendationDecisionCommand(RecommendationDecision.ACCEPTED, null)
+        EmotionalEventResponse result = decisionUseCase.execute(
+                new UpdateEmotionalEventDecisionRequest(10L, RecommendationDecision.ACCEPTED, null)
         );
 
-        assertThat(result.getRecommendationDecision()).isEqualTo(RecommendationDecision.ACCEPTED);
-        assertThat(result.getChosenActivityId()).isEqualTo(1L);
+        assertThat(result.recommendationDecision()).isEqualTo(RecommendationDecision.ACCEPTED);
+        assertThat(result.chosenActivityId()).isEqualTo(1L);
     }
 
     @Test
@@ -99,13 +105,12 @@ class EmotionalEventUseCaseTest {
         when(emotionalEventRepository.findById(10L)).thenReturn(Optional.of(persistedEvent()));
         when(emotionalEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        EmotionalEvent result = decisionUseCase.execute(
-                10L,
-                new UpdateRecommendationDecisionCommand(RecommendationDecision.IGNORED, 1L)
+        EmotionalEventResponse result = decisionUseCase.execute(
+                new UpdateEmotionalEventDecisionRequest(10L, RecommendationDecision.IGNORED, 1L)
         );
 
-        assertThat(result.getRecommendationDecision()).isEqualTo(RecommendationDecision.IGNORED);
-        assertThat(result.getChosenActivityId()).isNull();
+        assertThat(result.recommendationDecision()).isEqualTo(RecommendationDecision.IGNORED);
+        assertThat(result.chosenActivityId()).isNull();
     }
 
     @Test
@@ -114,13 +119,12 @@ class EmotionalEventUseCaseTest {
         when(activityRepository.existsById(4L)).thenReturn(true);
         when(emotionalEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        EmotionalEvent result = decisionUseCase.execute(
-                10L,
-                new UpdateRecommendationDecisionCommand(RecommendationDecision.CHOSE_OTHER, 4L)
+        EmotionalEventResponse result = decisionUseCase.execute(
+                new UpdateEmotionalEventDecisionRequest(10L, RecommendationDecision.CHOSE_OTHER, 4L)
         );
 
-        assertThat(result.getRecommendationDecision()).isEqualTo(RecommendationDecision.CHOSE_OTHER);
-        assertThat(result.getChosenActivityId()).isEqualTo(4L);
+        assertThat(result.recommendationDecision()).isEqualTo(RecommendationDecision.CHOSE_OTHER);
+        assertThat(result.chosenActivityId()).isEqualTo(4L);
     }
 
     @Test
@@ -128,8 +132,7 @@ class EmotionalEventUseCaseTest {
         when(emotionalEventRepository.findById(10L)).thenReturn(Optional.of(persistedEvent()));
 
         assertThatThrownBy(() -> decisionUseCase.execute(
-                10L,
-                new UpdateRecommendationDecisionCommand(RecommendationDecision.CHOSE_OTHER, null)
+                new UpdateEmotionalEventDecisionRequest(10L, RecommendationDecision.CHOSE_OTHER, null)
         )).isInstanceOf(BusinessRuleException.class);
     }
 
@@ -138,17 +141,16 @@ class EmotionalEventUseCaseTest {
         when(emotionalEventRepository.findById(10L)).thenReturn(Optional.of(persistedEvent()));
         when(emotionalEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        EmotionalEvent result = feedbackUseCase.execute(
-                10L,
-                new UpdateEmotionalEventFeedbackCommand(4, "Me siento un poco mas tranquilo")
+        EmotionalEventResponse result = feedbackUseCase.execute(
+                new UpdateEmotionalEventFeedbackRequest(10L, 4, "Me siento un poco mas tranquilo")
         );
 
-        assertThat(result.getFeedbackScore()).isEqualTo(4);
-        assertThat(result.getFeedbackText()).isEqualTo("Me siento un poco mas tranquilo");
+        assertThat(result.feedbackScore()).isEqualTo(4);
+        assertThat(result.feedbackText()).isEqualTo("Me siento un poco mas tranquilo");
     }
 
-    private CreateEmotionalEventCommand validCreateCommand() {
-        return new CreateEmotionalEventCommand(
+    private CreateEmotionalEventRequest validCreateRequest() {
+        return new CreateEmotionalEventRequest(
                 1L,
                 EmotionalEventSource.CHATBOT,
                 "Estoy muy ansioso",

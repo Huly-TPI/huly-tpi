@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.user;
 
+import com.huly.backend.domain.dto.user.GetUserCoinsRequest;
+import com.huly.backend.domain.dto.user.GetUserCoinsResponse;
+import com.huly.backend.domain.mapper.user.GetUserCoinsMapper;
 import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -7,8 +10,9 @@ import lombok.RequiredArgsConstructor;
 public class GetUserCoinsUseCase {
 
     private final UserRepository userRepository;
+    private final GetUserCoinsMapper mapper;
 
-    public int execute(Long userId) {
-        return userRepository.getCoins(userId);
+    public GetUserCoinsResponse execute(GetUserCoinsRequest request) {
+        return mapper.toResponse(userRepository.getCoins(request.userId()));
     }
 }

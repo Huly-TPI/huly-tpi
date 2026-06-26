@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.cloudRecommendation;
 
+import com.huly.backend.domain.dto.cloudRecommendation.GetCloudRecommendationRequest;
+import com.huly.backend.domain.dto.cloudRecommendation.GetCloudRecommendationResponse;
+import com.huly.backend.domain.mapper.cloudRecommendation.GetCloudRecommendationMapper;
 import com.huly.backend.domain.model.cloudRecommendation.CloudRecommendation;
 import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
@@ -31,6 +34,7 @@ public class GetCloudRecommendationUseCase {
     private final EmotionalRecommendationService recommendationService;
     private final ActivityRepository activityRepository;
     private final EmotionalEventRepository emotionalEventRepository;
+    private final GetCloudRecommendationMapper mapper;
 
     public GetCloudRecommendationUseCase(
             @Value("classpath:/prompts/cloud-analysis.st") org.springframework.core.io.Resource cloudAnalysisPrompt,
@@ -39,7 +43,8 @@ public class GetCloudRecommendationUseCase {
             ChatEmotionalRecommendationPolicy recommendationPolicy,
             EmotionalRecommendationService recommendationService,
             ActivityRepository activityRepository,
-            EmotionalEventRepository emotionalEventRepository) {
+            EmotionalEventRepository emotionalEventRepository,
+            GetCloudRecommendationMapper mapper) {
         this.cloudAnalysisPrompt = cloudAnalysisPrompt;
         this.emotionalAnalysisPort = emotionalAnalysisPort;
         this.promptBuilderService = promptBuilderService;
@@ -47,13 +52,12 @@ public class GetCloudRecommendationUseCase {
         this.recommendationService = recommendationService;
         this.activityRepository = activityRepository;
         this.emotionalEventRepository = emotionalEventRepository;
+        this.mapper = mapper;
     }
 
-    public CloudRecommendation execute(List<String> thoughts) {
-        return execute(thoughts, null);
-    }
-
-    public CloudRecommendation execute(List<String> thoughts, Long userId) {
+    public GetCloudRecommendationResponse execute(GetCloudRecommendationRequest request) {
+        List<String> thoughts = request.thoughts();
+        Long userId = request.userId();
         String userMessage = String.join("\n", thoughts);
         try {
             EmotionalAnalysisResult analysis = analyze(userMessage);
@@ -71,13 +75,13 @@ public class GetCloudRecommendationUseCase {
                     userHistory(userId)
             );
             if (result.recommendations().isEmpty()) {
-                return fallback();
+                return mapper.toResponse(fallback());
             }
 
-            return toCloudRecommendation(result.recommendations().get(0));
+            return mapper.toResponse(toCloudRecommendation(result.recommendations().get(0)));
         } catch (Exception e) {
             log.warn("Error al procesar recomendación, usando fallback.", e);
-            return fallback();
+            return mapper.toResponse(fallback());
         }
     }
 

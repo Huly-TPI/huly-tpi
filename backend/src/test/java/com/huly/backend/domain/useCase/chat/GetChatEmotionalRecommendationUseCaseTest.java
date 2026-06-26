@@ -1,10 +1,10 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.emotionalRecommendation.CreateEmotionalEventCommand;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalEvent;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
-import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
+import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
+import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
+import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsRequest;
+import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsResponse;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
@@ -13,6 +13,7 @@ import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
+import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
@@ -93,20 +94,12 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 0.95,
                 "Recomendada para procesar la emocion"
         );
-        EmotionalEvent saved = EmotionalEvent.builder()
-                .id(50L)
-                .userId(3L)
-                .source(EmotionalEventSource.CHATBOT)
-                .detectedEmotion("GRIEF")
-                .recommendedActivityId(7L)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
+        EmotionalEventResponse saved = eventResponse(50L, 3L, 7L);
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
-                .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
-        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
+        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
+                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
+        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
 
         ChatRecommendationOutcome outcome = useCase.execute(
                 "estoy decaido, se murio mi perro",
@@ -122,18 +115,18 @@ class GetChatEmotionalRecommendationUseCaseTest {
         assertThat(outcome.suggestedAction().activityId()).isEqualTo(7L);
         assertThat(outcome.suggestedAction().emotionalEventId()).isEqualTo(50L);
 
-        ArgumentCaptor<EmotionalRecommendation> queryCaptor =
-                ArgumentCaptor.forClass(EmotionalRecommendation.class);
+        ArgumentCaptor<GetEmotionalRecommendationsRequest> queryCaptor =
+                ArgumentCaptor.forClass(GetEmotionalRecommendationsRequest.class);
         verify(recommendationsUseCase).execute(queryCaptor.capture());
         assertThat(queryCaptor.getValue().userId()).isEqualTo(3L);
-        assertThat(queryCaptor.getValue().vad().valence()).isEqualTo(-0.85);
-        assertThat(queryCaptor.getValue().vad().arousal()).isEqualTo(0.35);
-        assertThat(queryCaptor.getValue().vad().dominance()).isEqualTo(-0.75);
+        assertThat(queryCaptor.getValue().valence()).isEqualTo(-0.85);
+        assertThat(queryCaptor.getValue().arousal()).isEqualTo(0.35);
+        assertThat(queryCaptor.getValue().dominance()).isEqualTo(-0.75);
 
-        ArgumentCaptor<CreateEmotionalEventCommand> commandCaptor =
-                ArgumentCaptor.forClass(CreateEmotionalEventCommand.class);
+        ArgumentCaptor<CreateEmotionalEventRequest> commandCaptor =
+                ArgumentCaptor.forClass(CreateEmotionalEventRequest.class);
         verify(createEmotionalEventUseCase).execute(commandCaptor.capture());
-        CreateEmotionalEventCommand command = commandCaptor.getValue();
+        CreateEmotionalEventRequest command = commandCaptor.getValue();
         assertThat(command.source()).isEqualTo(EmotionalEventSource.CHATBOT);
         assertThat(command.inputText()).isEqualTo("estoy decaido, se murio mi perro");
         assertThat(command.detectedEmotion()).isEqualTo("GRIEF");
@@ -166,15 +159,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 0.91,
                 "Recomendada para procesar la emocion"
         );
-        EmotionalEvent saved = EmotionalEvent.builder()
-                .id(60L)
-                .userId(1L)
-                .source(EmotionalEventSource.CHATBOT)
-                .detectedEmotion("GRIEF")
-                .recommendedActivityId(2L)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
+        EmotionalEventResponse saved = eventResponse(60L, 1L, 2L);
         ChatReply conversationalReply = new ChatReply(
                 "Siento mucho lo de Rocky",
                 EmotionType.GRIEF,
@@ -184,9 +169,9 @@ class GetChatEmotionalRecommendationUseCaseTest {
         );
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
-                .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
-        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
+        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
+                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
+        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
 
         ChatRecommendationOutcome outcome = useCase.execute(
                 "Estoy decaido, se murio Rocky y no se como procesarlo. Me siento sin fuerzas.",
@@ -204,8 +189,8 @@ class GetChatEmotionalRecommendationUseCaseTest {
         assertThat(outcome.analysis().detectedEmotion()).isEqualTo(EmotionType.GRIEF);
         assertThat(outcome.analysis().valence()).isEqualTo(-0.85);
 
-        ArgumentCaptor<CreateEmotionalEventCommand> commandCaptor =
-                ArgumentCaptor.forClass(CreateEmotionalEventCommand.class);
+        ArgumentCaptor<CreateEmotionalEventRequest> commandCaptor =
+                ArgumentCaptor.forClass(CreateEmotionalEventRequest.class);
         verify(createEmotionalEventUseCase).execute(commandCaptor.capture());
         assertThat(commandCaptor.getValue().detectedEmotion()).isEqualTo("GRIEF");
         assertThat(commandCaptor.getValue().userGoal()).contains("duelo");
@@ -226,8 +211,8 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 "calmarme",
                 "estres claro"
         ));
-        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
-                .thenReturn(new EmotionalRecommendationResult(List.of(), false));
+        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
+                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(), false));
 
         ChatRecommendationOutcome outcome = useCase.execute(
                 "estoy muy estresado",
@@ -263,20 +248,12 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 0.88,
                 "Puede ayudar a empezar"
         );
-        EmotionalEvent saved = EmotionalEvent.builder()
-                .id(70L)
-                .userId(1L)
-                .source(EmotionalEventSource.CHATBOT)
-                .detectedEmotion("NEUTRAL")
-                .recommendedActivityId(4L)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
+        EmotionalEventResponse saved = eventResponse(70L, 1L, 4L);
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(EmotionalRecommendation.class)))
-                .thenReturn(new EmotionalRecommendationResult(List.of(item), false));
-        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventCommand.class))).thenReturn(saved);
+        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
+                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
+        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
 
         ChatRecommendationOutcome outcome = useCase.execute(
                 "dame una recomendacion de actividad",
@@ -292,6 +269,31 @@ class GetChatEmotionalRecommendationUseCaseTest {
         assertThat(outcome.suggestedAction().activityId()).isEqualTo(4L);
         assertThat(outcome.analysis().shouldRecommend()).isTrue();
         assertThat(outcome.analysis().userGoal()).isEqualTo("recibir una actividad de bienestar");
+    }
+
+    private EmotionalEventResponse eventResponse(Long id, Long userId, Long recommendedActivityId) {
+        Instant now = Instant.now();
+        return new EmotionalEventResponse(
+                id,
+                userId,
+                EmotionalEventSource.CHATBOT,
+                null,
+                "GRIEF",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                recommendedActivityId,
+                null,
+                (RecommendationDecision) null,
+                null,
+                null,
+                now,
+                now
+        );
     }
 
     private VectorMemory memory(String content) {

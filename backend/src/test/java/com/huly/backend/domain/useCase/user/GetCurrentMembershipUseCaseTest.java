@@ -1,10 +1,13 @@
 package com.huly.backend.domain.useCase.user;
 
+import com.huly.backend.domain.dto.user.GetCurrentMembershipRequest;
+import com.huly.backend.domain.dto.user.GetCurrentMembershipResponse;
+import com.huly.backend.domain.mapper.user.GetCurrentMembershipMapper;
 import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,7 +22,12 @@ import static org.mockito.Mockito.when;
 class GetCurrentMembershipUseCaseTest {
 
     @Mock private UserPlanRepository userPlanRepository;
-    @InjectMocks private GetCurrentMembershipUseCase useCase;
+    private GetCurrentMembershipUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        useCase = new GetCurrentMembershipUseCase(userPlanRepository, new GetCurrentMembershipMapper());
+    }
 
     @Test
     void execute_shouldReturnMembership_whenActive() {
@@ -30,15 +38,14 @@ class GetCurrentMembershipUseCaseTest {
                 .build();
         when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(plan));
 
-        Optional<UserPlan> result = useCase.execute(10L);
+        GetCurrentMembershipResponse result = useCase.execute(new GetCurrentMembershipRequest(10L));
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getPlanCode()).isEqualTo("PREMIUM");
-        assertThat(result.get().getUserId()).isEqualTo(10L);
+        assertThat(result.active()).isTrue();
+        assertThat(result.planCode()).isEqualTo("PREMIUM");
     }
 
     @Test
-    void execute_shouldReturnEmpty_whenMembershipExpired() {
+    void execute_shouldReturnInactive_whenMembershipExpired() {
         UserPlan expired = UserPlan.builder()
                 .id(1L).userId(10L).planCode("PREMIUM")
                 .grantedAt(Instant.now().minus(60, ChronoUnit.DAYS))
@@ -46,17 +53,17 @@ class GetCurrentMembershipUseCaseTest {
                 .build();
         when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(expired));
 
-        Optional<UserPlan> result = useCase.execute(10L);
+        GetCurrentMembershipResponse result = useCase.execute(new GetCurrentMembershipRequest(10L));
 
-        assertThat(result).isEmpty();
+        assertThat(result.active()).isFalse();
     }
 
     @Test
-    void execute_shouldReturnEmpty_whenUserHasNoMembership() {
+    void execute_shouldReturnInactive_whenUserHasNoMembership() {
         when(userPlanRepository.findByUser(10L)).thenReturn(Optional.empty());
 
-        Optional<UserPlan> result = useCase.execute(10L);
+        GetCurrentMembershipResponse result = useCase.execute(new GetCurrentMembershipRequest(10L));
 
-        assertThat(result).isEmpty();
+        assertThat(result.active()).isFalse();
     }
 }
