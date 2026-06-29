@@ -27,6 +27,13 @@ public class PlanService {
      * si es un plan distinto, está vencido o no tenía, arranca desde ahora y sobrescribe
      * la fila (cambia plan_code), garantizando un único plan activo a la vez.
      */
+    /** True si el usuario tiene un plan/membresía vigente en el instante dado. */
+    public boolean hasActivePlan(Long userId, Instant asOf) {
+        return userPlanRepository.findByUser(userId)
+                .filter(p -> p.isActive(asOf))
+                .isPresent();
+    }
+
     public void activate(Long userId, Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("producto", "id", productId));

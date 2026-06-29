@@ -1,6 +1,7 @@
 package com.huly.backend.domain.model.dailyReward;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Reglas del ciclo de recompensas diarias.
@@ -28,6 +29,42 @@ public final class DailyRewardCycle {
     public static boolean isAlive(DailyClaimState state, LocalDate today) {
         LocalDate last = state.lastClaimDate();
         return last != null && (last.equals(today) || last.equals(today.minusDays(1)));
+    }
+
+    /** Racha vigente a mostrar: la racha del estado si sigue viva, o 0 si se rompió. */
+    public static int currentStreak(DailyClaimState state, LocalDate today) {
+        return isAlive(state, today) ? state.streak() : 0;
+    }
+
+    /**
+     * Monedas que corresponden a un día del ciclo (1..N) según la config.
+     * Si la config no tuviera ese día (N variable / huecos) cae al primer día.
+     * Precondición: {@code cycle} no vacío.
+     */
+    public static int coinsForDay(List<DailyReward> cycle, int cycleDay) {
+        return cycle.stream()
+                .filter(r -> r.getDayNumber() == cycleDay)
+                .findFirst()
+                .map(DailyReward::getCoins)
+                .orElseGet(() -> cycle.get(0).getCoins());
+    }
+
+    /**
+     * Progreso del ciclo dado el estado, la fecha de hoy, el largo del ciclo y si aún puede
+     * reclamar hoy. Si puede reclamar, el próximo día es el que reclamaría y los completos son
+     * los anteriores; si ya reclamó hoy, no hay próximo día y los completos son hasta su racha.
+     * Si no hay ciclo configurado devuelve cero/cero.
+     */
+    public static CycleProgress progress(DailyClaimState state, LocalDate today,
+                                         int cycleLength, boolean canClaimToday) {
+        if (cycleLength <= 0) {
+            return new CycleProgress(0, 0);
+        }
+        if (canClaimToday) {
+            int nextDay = cycleDay(nextStreak(state, today), cycleLength);
+            return new CycleProgress(nextDay, nextDay - 1);
+        }
+        return new CycleProgress(0, cycleDay(state.streak(), cycleLength));
     }
 
     /**
