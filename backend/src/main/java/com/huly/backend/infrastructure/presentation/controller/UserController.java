@@ -3,8 +3,10 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.user.AudioSettings;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
+import com.huly.backend.domain.useCase.user.ChangePasswordUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
+import com.huly.backend.infrastructure.presentation.dto.user.ChangePasswordRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
@@ -36,6 +38,7 @@ public class UserController {
     private final GetUserCoinsUseCase getUserCoinsUseCase;
     private final GetCurrentMembershipUseCase getCurrentMembershipUseCase;
     private final UserPresentationMapper userPresentationMapper;
+    private final ChangePasswordUseCase changePasswordUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -104,6 +107,16 @@ public class UserController {
                 new AudioSettings(request.interfaceVolume(), request.ambientVolume(), request.minigameVolume())
         );
         return ResponseEntity.ok(toAudioSettingsResponse(updatedSettings));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        Long userId = currentUserId(principal);
+        changePasswordUseCase.execute(userId, request.currentPassword(), request.newPassword());
+        return ResponseEntity.noContent().build();
     }
 
     private Long currentUserId(UserDetails principal) {

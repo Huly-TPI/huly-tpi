@@ -44,4 +44,8 @@ public interface AppUserRepository extends JpaRepository<AppUserEntity, Long> {
     @Query("UPDATE AppUserEntity u SET u.coins = u.coins - :amount WHERE u.id = :userId AND u.coins >= :amount")
     int debitCoins(@Param("userId") Long userId, @Param("amount") int amount);
 
+    @Modifying
+    @Query("UPDATE AppUserEntity u SET u.password = :password WHERE u.id = :userId")
+    void updatePassword(@Param("userId") Long userId, @Param("password") String password);
+
 }
