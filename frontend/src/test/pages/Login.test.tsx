@@ -292,5 +292,19 @@ describe('Login', () => {
             await user.click(screen.getByRole('button', { name: 'Reenviar' }))
             expect(screen.getByText('Recuperar contraseña')).toBeInTheDocument()
         })
+
+        it('el botón de restablecer está habilitado al entrar al paso reset', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            expect(screen.getByRole('button', { name: 'Restablecer contraseña' })).toBeEnabled()
+        })
+
+        it('muestra errores de validación al enviar el formulario vacío', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+            expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
+            expect(mockResetPassword).not.toHaveBeenCalled()
+        })
     })
 })

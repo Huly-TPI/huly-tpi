@@ -97,6 +97,21 @@ class RequestPasswordResetUseCaseTest {
     }
 
     @Test
+    void execute_shouldGenerateTokenWithValidFormat() {
+        AppUser user = buildUser();
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+
+        ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
+        when(passwordResetTokenRepository.save(tokenCaptor.capture())).thenAnswer(i -> i.getArgument(0));
+
+        useCase.execute(EMAIL);
+
+        String token = tokenCaptor.getValue().getToken();
+        assertThat(token).hasSize(6);
+        assertThat(token).matches("[ABCDEFGHJKMNPQRSTUVWXYZ23456789]+");
+    }
+
+    @Test
     void execute_shouldThrowResourceNotFound_whenEmailDoesNotExist() {
         when(userRepository.findByEmail("missing@huly.com")).thenReturn(Optional.empty());
 
