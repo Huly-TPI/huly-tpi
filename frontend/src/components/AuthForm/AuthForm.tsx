@@ -144,6 +144,12 @@ export default function AuthForm({
           <InlineError message={apiError} className="mt-1" />
         )}
 
+        {successMessage && (
+        <p className="mt-3 text-center text-sm font-semibold text-[#4C7C64]">
+          {successMessage}
+        </p>
+        )}
+        
         {onTermsChange !== undefined && (
           <label className="mt-1 flex items-center gap-2 cursor-pointer select-none">
             <input
@@ -190,11 +196,6 @@ export default function AuthForm({
         )}
       </form>
 
-      {successMessage && (
-        <p className="mt-3 text-center text-sm font-semibold text-[#4C7C64]">
-          {successMessage}
-        </p>
-      )}
 
       {switchText && switchLabel && onSwitchMode && (
         <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66]">

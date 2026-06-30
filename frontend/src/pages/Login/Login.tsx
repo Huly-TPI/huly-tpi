@@ -52,6 +52,7 @@ export default function Login() {
   const resetForm = useForm({ token: '', newPassword: '' }, RESET_RULES)
 
   const goTo = (target: Step) => {
+    setLoading(false)
     setApiError(null)
     setSuccessMessage(null)
     setStep(target)
@@ -107,8 +108,8 @@ export default function Login() {
     try {
       await resetPassword(resetForm.values.token, resetForm.values.newPassword)
       loginForm.setFieldErrors({})
-      setSuccessMessage('¡Contraseña actualizada! Podés iniciar sesión.')
       goTo('login')
+      setSuccessMessage('¡Contraseña actualizada! Podés iniciar sesión.')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error inesperado'
       setApiError(
