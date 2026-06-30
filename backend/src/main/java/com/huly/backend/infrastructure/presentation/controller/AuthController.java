@@ -7,10 +7,14 @@ import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
 import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
 import com.huly.backend.domain.useCase.auth.RegisterUseCase;
+import com.huly.backend.domain.useCase.auth.RequestPasswordResetUseCase;
+import com.huly.backend.domain.useCase.auth.ResetPasswordUseCase;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
+import com.huly.backend.infrastructure.presentation.dto.auth.ForgotPasswordRequest;
 import com.huly.backend.infrastructure.presentation.dto.auth.LoginRequest;
 import com.huly.backend.infrastructure.presentation.dto.auth.LoginResponse;
 import com.huly.backend.infrastructure.presentation.dto.auth.RegisterRequest;
+import com.huly.backend.infrastructure.presentation.dto.auth.ResetPasswordRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +38,8 @@ public class AuthController {
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final TokenPort tokenPort;
+    private final RequestPasswordResetUseCase requestPasswordResetUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
@@ -97,6 +103,22 @@ public class AuthController {
                 .body(LoginResponse.builder()
                         .accessToken(tokens.getAccessToken())
                         .build());
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+        requestPasswordResetUseCase.execute(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+        resetPasswordUseCase.execute(request.token(), request.newPassword());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/logout")

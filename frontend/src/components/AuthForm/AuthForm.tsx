@@ -30,6 +30,8 @@ interface AuthFormProps {
   onSwitchMode?: () => void
   termsAccepted?: boolean
   onTermsChange?: (accepted: boolean) => void
+  onForgotPassword?: () => void
+  successMessage?: string | null
 }
 
 export default function AuthForm({
@@ -49,6 +51,8 @@ export default function AuthForm({
   onSwitchMode,
   termsAccepted,
   onTermsChange,
+  onForgotPassword,
+  successMessage,
 }: AuthFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -172,7 +176,23 @@ export default function AuthForm({
         >
           {submitLabel}
         </Button>
+
+        {onForgotPassword && (
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="mt-1 w-full text-center text-sm text-[#8c7b66] hover:text-[#4C7C64] hover:underline focus-visible:outline-none focus-visible:underline underline-offset-4 transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        )}
       </form>
+
+      {successMessage && (
+        <p className="mt-3 text-center text-sm font-semibold text-[#4C7C64]">
+          {successMessage}
+        </p>
+      )}
 
       {switchText && switchLabel && onSwitchMode && (
         <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66]">
