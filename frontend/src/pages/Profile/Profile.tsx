@@ -7,6 +7,7 @@ import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboa
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
 import AudioSettingsModal from '../../components/Profile/AudioSettingsModal'
+import ChangePasswordModal from '../../components/Profile/ChangePasswordModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useSceneOnboarding } from '../../hooks/useSceneOnboarding'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
@@ -94,6 +95,7 @@ export default function Profile() {
   const { isSubscribed, isLoading: pushLoading, isSupported, subscribe, unsubscribe } = usePushNotifications()
   const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
   const [showAudioSettingsModal, setShowAudioSettingsModal] = useState(false)
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
   const {
     onboardingMode,
     onboardingStepIndex,
@@ -142,6 +144,15 @@ export default function Profile() {
         }
       : element
 
+    if (element.id === 'chest') {
+      return {
+        ...baseElement,
+        onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+          e.preventDefault()
+          setShowChangePasswordModal(true)
+        },
+      }
+    }
     if (element.id === 'clock') {
       return {
         ...baseElement,
@@ -223,6 +234,9 @@ export default function Profile() {
       )}
       {showAudioSettingsModal && (
         <AudioSettingsModal onClose={() => setShowAudioSettingsModal(false)} />
+      )}
+      {showChangePasswordModal && (
+        <ChangePasswordModal onClose={() => setShowChangePasswordModal(false)} />
       )}
     </main>
   )

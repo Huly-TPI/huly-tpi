@@ -81,3 +81,6 @@ export const forgotPassword = (email: string) =>
 
 export const resetPassword = (token: string, newPassword: string) =>
   api.post<void>('/auth/reset-password', { token, newPassword }, { skipAuthRedirect: true })
+
+export const changePassword = (currentPassword: string, newPassword: string) =>
+  api.put<void>('/users/me/password', { currentPassword, newPassword })

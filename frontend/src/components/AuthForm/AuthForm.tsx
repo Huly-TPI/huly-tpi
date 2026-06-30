@@ -15,6 +15,7 @@ export interface AuthFormField {
 
 interface AuthFormProps {
   title: string
+  titleClassName?: string
   subtitle?: string
   fields: AuthFormField[]
   values: Record<string, string>
@@ -36,6 +37,7 @@ interface AuthFormProps {
 
 export default function AuthForm({
   title,
+  titleClassName,
   subtitle,
   fields,
   values,
@@ -108,7 +110,7 @@ export default function AuthForm({
 
   return (
     <div className="w-full font-nunito">
-      <h2 className="mt-8 mb-2 text-center text-2xl md:text-3xl font-bold text-[#4C7C64]">
+      <h2 className={`mt-8 mb-2 text-center text-2xl md:text-3xl font-bold ${titleClassName ?? 'text-[#4C7C64]'}`}>
         {title}
       </h2>
 
