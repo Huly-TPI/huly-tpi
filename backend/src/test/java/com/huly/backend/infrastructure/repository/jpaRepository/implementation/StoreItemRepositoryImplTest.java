@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 import java.math.BigDecimal;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +33,14 @@ public class StoreItemRepositoryImplTest {
                 .id(10L).name("Casa rosa").description("Casa de color rosa")
                 .category(ItemCategory.HOUSE).assetKey("casa-rosa").priceCoins(50)
                 .price(new BigDecimal("1000.00"))
+                .build();
+    }
+
+    private StoreItem domainItem() {
+        return StoreItem.builder()
+                .id(10L).name("Casa nueva").description("desc")
+                .category(ItemCategory.HOUSE).priceCoins(80)
+                .imageUrl("https://x/store/light-theme/u.webp")
                 .build();
     }
 
@@ -62,6 +72,20 @@ public class StoreItemRepositoryImplTest {
         when(storeItemJpaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThat(storeItemRepository.findById(99L)).isEmpty();
+    }
+
+    @Test 
+    void save_shouldPersistAndReturnMappedItem() {
+            when(storeItemJpaRepository.save(any(StoreItemEntity.class))).thenReturn(entity());
+            StoreItem result = storeItemRepository.save(domainItem());
+            assertThat(result.getId()).isEqualTo(10L);
+            assertThat(result.getName()).isEqualTo("Casa rosa");
+    }
+
+    @Test 
+    void deleteById_shouldCallRepository() {
+        storeItemRepository.deleteById(5L);
+        verify(storeItemJpaRepository).deleteById(5L);
     }
 
 }
