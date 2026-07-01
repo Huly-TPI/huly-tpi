@@ -28,14 +28,14 @@ describe('registerActivitySession', () => {
       new Response(null, { status: 200 }),
     )
 
-    await registerActivitySession({ activityType: ActivityType.RESPIRACION })
+    await registerActivitySession({ activityType: ActivityType.BREATHING })
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringMatching(/\/api\/activities\/sessions$/),
       expect.objectContaining({
         method: 'POST',
         credentials: 'include',
-        body: JSON.stringify({ activityType: ActivityType.RESPIRACION }),
+        body: JSON.stringify({ activityType: ActivityType.BREATHING }),
       }),
     )
   })
@@ -46,7 +46,7 @@ describe('registerActivitySession', () => {
     )
 
     await registerActivitySession(
-      { activityType: ActivityType.RESPIRACION },
+      { activityType: ActivityType.BREATHING },
       { keepalive: true },
     )
 
@@ -68,7 +68,7 @@ describe('registerActivitySession', () => {
 
     await expect(
       registerActivitySession({
-        activityType: ActivityType.BURBUJA,
+        activityType: ActivityType.BUBBLE,
       }),
     ).rejects.toThrow('Session expired')
   })

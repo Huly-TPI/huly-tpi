@@ -37,7 +37,7 @@ vi.mock('../../hooks/useUserGoals', () => ({
 vi.mock('../../api/activities', () => ({
   registerActivitySession: vi.fn().mockResolvedValue({}),
   ActivityType: {
-    RETO: 'RETO',
+    CHALLENGE: 'CHALLENGE',
   },
 }))
 
@@ -184,7 +184,7 @@ describe('Challenges', () => {
     })
   })
 
-  it('registra una sola sesión al salir aunque cree varios retos en la misma visita', async () => {
+  it('no registra sesión al salir si solo creó retos sin completarlos', async () => {
     const nowSpy = vi.spyOn(Date, 'now')
     nowSpy.mockReturnValue(new Date('2025-01-01T10:00:00Z').getTime())
 
@@ -202,10 +202,7 @@ describe('Challenges', () => {
     unmount()
 
     await waitFor(() => {
-      expect(registerActivitySession).toHaveBeenCalledTimes(1)
-      expect(registerActivitySession).toHaveBeenCalledWith({
-        activityType: 'RETO',
-      }, { keepalive: true })
+      expect(registerActivitySession).not.toHaveBeenCalled()
     })
 
     nowSpy.mockRestore()
@@ -228,7 +225,7 @@ describe('Challenges', () => {
     await waitFor(() => {
       expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7, undefined)
       expect(registerActivitySession).toHaveBeenCalledWith({
-        activityType: 'RETO',
+        activityType: 'CHALLENGE',
       }, undefined)
     })
 

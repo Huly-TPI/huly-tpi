@@ -88,7 +88,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
         );
         EmotionalRecommendationItem item = new EmotionalRecommendationItem(
                 7L,
-                ActivityType.DIARIO,
+                ActivityType.DIARY,
                 "Diario emocional",
                 "Un espacio para ordenar pensamientos",
                 0.95,
@@ -153,7 +153,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
         );
         EmotionalRecommendationItem item = new EmotionalRecommendationItem(
                 2L,
-                ActivityType.DIARIO,
+                ActivityType.DIARY,
                 "Diario emocional",
                 "Un espacio para ordenar pensamientos",
                 0.91,
@@ -242,7 +242,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
         );
         EmotionalRecommendationItem item = new EmotionalRecommendationItem(
                 4L,
-                ActivityType.RESPIRACION,
+                ActivityType.BREATHING,
                 "Respiracion guiada",
                 "Una practica breve para regularte",
                 0.88,

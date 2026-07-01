@@ -7,7 +7,7 @@ import { registerActivitySession } from '../../api/activities'
 vi.mock('../../api/activities', () => ({
   registerActivitySession: vi.fn().mockResolvedValue({}),
   ActivityType: {
-    RESPIRACION: 'RESPIRACION',
+    BREATHING: 'BREATHING',
   },
 }))
 
@@ -166,7 +166,7 @@ describe('BreathingGuide', () => {
 
     expect(screen.getByText(/respiración guiada/i)).toBeInTheDocument()
     expect(registerActivitySession).toHaveBeenCalledWith({
-      activityType: 'RESPIRACION',
+      activityType: 'BREATHING',
     }, undefined)
   })
 

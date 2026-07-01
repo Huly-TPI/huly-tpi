@@ -257,7 +257,7 @@ describe('Register', () => {
         expect(mockedRegister).not.toHaveBeenCalled()
     })
 
-    it('bloquea nombre con nÃºmeros', async () => {
+    it('bloquea nombre con números', async () => {
         const { user } = renderWithRouter()
 
         await user.type(screen.getByPlaceholderText('Nombre'), 'Mili123')

@@ -62,7 +62,7 @@ describe('useChatbot', () => {
           role: 'ASSISTANT',
           content: 'hola yo',
           suggested_action: {
-            type: 'RESPIRACION',
+            type: 'BREATHING',
             action_id: '7',
             title: 'Respiracion guiada',
             description: 'Respira con calma',
@@ -101,7 +101,7 @@ describe('useChatbot', () => {
         content: 'hola yo',
         detected_emotion: undefined,
         suggested_action: {
-          type: 'RESPIRACION',
+          type: 'BREATHING',
           action_id: '7',
           title: 'Respiracion guiada',
           description: 'Respira con calma',

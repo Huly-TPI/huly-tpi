@@ -41,7 +41,7 @@ public class ActivityController {
          try {
              Long userId = Long.valueOf(principal.getUsername());
              registerActivitySessionUseCase.execute(
-                     activityPresentationMapper.toRegisterRequest(userId, request.getActivityType()));
+                     activityPresentationMapper.toRegisterRequest(userId, request.getActivityType(), request.getContextId()));
          } catch (NumberFormatException e) {
              throw new UnauthorizedException("Not authenticated");
          }

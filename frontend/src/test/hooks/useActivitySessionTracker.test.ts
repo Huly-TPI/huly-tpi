@@ -6,11 +6,13 @@ import * as activitiesApi from '../../api/activities'
 
 vi.mock('../../api/activities', () => ({
   ActivityType: {
-    RESPIRACION: 'RESPIRACION',
-    DIARIO: 'DIARIO',
-    NUBE: 'NUBE',
-    BURBUJA: 'BURBUJA',
-    RETO: 'RETO',
+    BREATHING: 'BREATHING',
+    DIARY: 'DIARY',
+    LANTERN: 'LANTERN',
+    BUBBLE: 'BUBBLE',
+    CHALLENGE: 'CHALLENGE',
+    ZEN_GARDEN: 'ZEN_GARDEN',
+    MANDALA: 'MANDALA',
   },
   registerActivitySession: vi.fn(),
 }))
@@ -26,7 +28,7 @@ describe('useActivitySessionTracker', () => {
 
   it('startSession establece el timestamp de inicio', () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA),
+      useActivitySessionTracker(ActivityType.BUBBLE),
     )
 
     act(() => {
@@ -44,7 +46,7 @@ describe('useActivitySessionTracker', () => {
     })
 
     expect(mockedRegister).toHaveBeenCalledWith(
-      { activityType: ActivityType.BURBUJA },
+      { activityType: ActivityType.BUBBLE, contextId: undefined },
       undefined,
     )
   })
@@ -54,7 +56,7 @@ describe('useActivitySessionTracker', () => {
     dateNowSpy.mockReturnValue(100_000)
 
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA, { minDurationSeconds: 5 }),
+      useActivitySessionTracker(ActivityType.BUBBLE, { minDurationSeconds: 5 }),
     )
 
     act(() => {
@@ -84,7 +86,7 @@ describe('useActivitySessionTracker', () => {
 
   it('markConditionMet establece la condición', () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA),
+      useActivitySessionTracker(ActivityType.BUBBLE),
     )
 
     act(() => {
@@ -112,7 +114,7 @@ describe('useActivitySessionTracker', () => {
 
   it('saveSession llama a registerActivitySession cuando las condiciones se cumplen', async () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.RESPIRACION),
+      useActivitySessionTracker(ActivityType.BREATHING),
     )
 
     act(() => {
@@ -126,14 +128,14 @@ describe('useActivitySessionTracker', () => {
 
     expect(mockedRegister).toHaveBeenCalledOnce()
     expect(mockedRegister).toHaveBeenCalledWith(
-      { activityType: ActivityType.RESPIRACION },
+      { activityType: ActivityType.BREATHING, contextId: undefined },
       undefined,
     )
   })
 
   it('saveSession no llama si no se inició la sesión', async () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA),
+      useActivitySessionTracker(ActivityType.BUBBLE),
     )
 
     act(() => {
@@ -149,7 +151,7 @@ describe('useActivitySessionTracker', () => {
 
   it('saveSession no llama si ya fue guardada', async () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA),
+      useActivitySessionTracker(ActivityType.BUBBLE),
     )
 
     act(() => {
@@ -173,7 +175,7 @@ describe('useActivitySessionTracker', () => {
 
   it('saveSession no llama si la condición no se cumplió', async () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA),
+      useActivitySessionTracker(ActivityType.BUBBLE),
     )
 
     act(() => {
@@ -191,7 +193,7 @@ describe('useActivitySessionTracker', () => {
     vi.spyOn(Date, 'now').mockReturnValue(100_000)
 
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA, {
+      useActivitySessionTracker(ActivityType.BUBBLE, {
         minDurationSeconds: 60,
       }),
     )
@@ -215,7 +217,7 @@ describe('useActivitySessionTracker', () => {
     vi.spyOn(Date, 'now').mockReturnValue(100_000)
 
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA, {
+      useActivitySessionTracker(ActivityType.BUBBLE, {
         minDurationSeconds: 60,
       }),
     )
@@ -234,7 +236,7 @@ describe('useActivitySessionTracker', () => {
 
   it('autoStart activa startSession al montar', async () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA, { autoStart: true }),
+      useActivitySessionTracker(ActivityType.BUBBLE, { autoStart: true }),
     )
 
     // Since autoStart triggers startSession on mount, we should be
@@ -252,7 +254,7 @@ describe('useActivitySessionTracker', () => {
 
   it('stopSession reinicia todos los estados', async () => {
     const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BURBUJA),
+      useActivitySessionTracker(ActivityType.BUBBLE),
     )
 
     act(() => {

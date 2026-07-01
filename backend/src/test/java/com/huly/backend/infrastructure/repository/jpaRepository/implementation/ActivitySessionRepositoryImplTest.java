@@ -40,7 +40,7 @@ class ActivitySessionRepositoryImplTest {
         Instant now = Instant.now();
         ActivitySession session = ActivitySession.builder()
                 .userId(userId)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(now)
                 .build();
 
@@ -50,7 +50,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity savedEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(now)
                 .build();
 
@@ -62,7 +62,7 @@ class ActivitySessionRepositoryImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(10L);
         assertThat(result.getUserId()).isEqualTo(userId);
-        assertThat(result.getActivityType()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(result.getActivityType()).isEqualTo(ActivityType.BREATHING);
         verify(appUserRepository).getReferenceById(userId);
         verify(activitySessionJpaRepository).save(any(ActivitySessionEntity.class));
     }
@@ -76,7 +76,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -87,7 +87,7 @@ class ActivitySessionRepositoryImplTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(10L);
         assertThat(result.get(0).getUserId()).isEqualTo(userId);
-        assertThat(result.get(0).getActivityType()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(result.get(0).getActivityType()).isEqualTo(ActivityType.BREATHING);
         verify(activitySessionJpaRepository).findByUserId(userId);
     }
 
@@ -100,7 +100,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -124,7 +124,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -147,7 +147,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -169,7 +169,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -191,7 +191,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -224,7 +224,7 @@ class ActivitySessionRepositoryImplTest {
         ActivitySessionEntity sessionEntity = ActivitySessionEntity.builder()
                 .id(10L)
                 .user(userEntity)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
