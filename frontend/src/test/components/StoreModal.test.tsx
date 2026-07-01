@@ -22,14 +22,29 @@ vi.mock('../../components/Shop/CosmeticCard', () => ({
     ),
 }))
 
-const makeItem = (id: number, name: string) => ({
+const makeItem = (id: number, name: string, category = 'HOUSE', extra: object = {}) => ({
     id,
     name,
     description: 'desc',
-    category: 'HOUSE',
+    category,
     assetKey: 'k',
-    priceCoins: 50
+    priceCoins: 50,
+    price: null,
+    premiumOnly: false,
+    ...extra,
 })
+
+const setItems = (...items: object[]) => mockUseStoreItems.mockReturnValue({ items, loading: false, error: null })
+
+const renderModal = () => render(<StoreModal isOpen onClose={() => { }} />)
+
+const clickFilter = (name: string) => userEvent.click(screen.getByRole('button', { name }))
+
+const mixedItems = () => [
+    makeItem(1, 'Casa semillas', 'HOUSE'),
+    makeItem(2, 'Casa premium', 'HOUSE', { premiumOnly: true }),
+    makeItem(3, 'Casa dinero', 'HOUSE', { price: 1000 })
+]
 
 describe('StoreModal', () => {
     beforeEach(() => {
@@ -82,4 +97,79 @@ describe('StoreModal', () => {
         expect(onClose).toHaveBeenCalledOnce()
     })
 
+    it('sin filtros activos muestra todos los items', () => {
+        setItems(...mixedItems())
+        renderModal()
+
+        expect(screen.getAllByTestId('cosmetic-card')).toHaveLength(3)
+    })
+
+    it('filtrar por "Con dinero" mostrando solo items con preicos en pesos', async () => {
+        setItems(...mixedItems())
+        renderModal()
+
+        await clickFilter('Con dinero')
+
+        expect(screen.getByText('Casa dinero')).toBeInTheDocument()
+        expect(screen.queryByText('Casa semillas')).not.toBeInTheDocument()
+        expect(screen.queryByText('Casa premium')).not.toBeInTheDocument()
+    })
+
+    it('permite combinar varios filtros a la vez (semillas + premium)', async () => {
+        setItems(...mixedItems())
+        renderModal()
+
+        await clickFilter('Con semillas')
+        await clickFilter('Solo premium')
+
+        expect(screen.getByText('Casa premium')).toBeInTheDocument()
+        expect(screen.queryByText('Casa semillas')).toBeInTheDocument()
+        expect(screen.queryByText('Casa dinero')).not.toBeInTheDocument()
+    })
+
+    it('muestra una pestaña por cada categoria con items', () => {
+        setItems(
+            makeItem(1, 'Casa rosa', 'HOUSE'),
+            makeItem(2, 'Diario rosa', 'NOTEBOOK'),
+            makeItem(3, 'Árbol sakura', 'TREE'),
+        )
+        renderModal()
+
+        expect(screen.getByRole('tab', { name: 'Casas' })).toBeInTheDocument()
+        expect(screen.getByRole('tab', { name: 'Diarios' })).toBeInTheDocument()
+        expect(screen.getByRole('tab', { name: 'Árboles' })).toBeInTheDocument()
+    })
+
+    it('no muestra pestaña de categorias sin items', () => {
+        setItems(makeItem(1, 'Casa rosa', 'HOUSE'))
+        renderModal()
+
+        expect(screen.getByRole('tab', { name: 'Casas' })).toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'Diarios' })).not.toBeInTheDocument()
+    })
+
+    it('la pestaña "Todos" muestra items de todas las categorias', () => {
+        setItems(
+            makeItem(1, 'Casa rosa', 'HOUSE'),
+            makeItem(2, 'Diario rosa', 'NOTEBOOK'),
+        )
+        renderModal()
+
+        expect(screen.getByRole('tab', { name: 'Todos' })).toBeInTheDocument()
+        expect(screen.getByText('Casa rosa')).toBeInTheDocument()
+        expect(screen.getByText('Diario rosa')).toBeInTheDocument()
+    })
+
+    it('cambia de categoria al clickear otra pestaña', async () => {
+        setItems(
+            makeItem(1, 'Casa rosa', 'HOUSE'),
+            makeItem(2, 'Diario rosa', 'NOTEBOOK'),
+        )
+        renderModal()
+
+        await userEvent.click(screen.getByRole('tab', { name: 'Casas' }))
+
+        expect(screen.getByText('Casa rosa')).toBeInTheDocument()
+        expect(screen.queryByText('Diario rosa')).not.toBeInTheDocument()
+    })
 })
