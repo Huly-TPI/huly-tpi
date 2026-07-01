@@ -214,7 +214,7 @@ describe('Login', () => {
             await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
             await user.click(screen.getByRole('button', { name: 'Enviar código' }))
             await waitFor(() => {
-                expect(screen.getByText('Nueva contraseña')).toBeInTheDocument()
+                expect(screen.getByRole('heading', { name: 'Nueva contraseña' })).toBeInTheDocument()
             })
         })
 
@@ -242,7 +242,7 @@ describe('Login', () => {
             await user.click(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }))
             await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
             await user.click(screen.getByRole('button', { name: 'Enviar código' }))
-            await screen.findByText('Nueva contraseña')
+            await screen.findByRole('heading', { name: 'Nueva contraseña' })
         }
 
         it('muestra el formulario de nueva contraseña', async () => {
