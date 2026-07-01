@@ -9,6 +9,8 @@ import com.huly.backend.domain.repository.UserStoreItemRepository;
 import com.huly.backend.domain.repository.mandala.MandalaPlanEntitlementRepository;
 import com.huly.backend.domain.repository.mandala.MandalaProgressRepository;
 import com.huly.backend.domain.repository.mandala.MandalaRepository;
+import com.huly.backend.domain.repository.user.UserPlanRepository;
+import com.huly.backend.domain.service.mandala.MandalaService;
 import com.huly.backend.domain.useCase.mandala.ClearMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.mandala.GetMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.mandala.GetMandalaSessionStatusUseCase;
@@ -64,38 +66,53 @@ public class MandalaUseCaseConfig {
     @Bean
     public SaveMandalaProgressUseCase saveMandalaProgressUseCase(
             MandalaProgressRepository mandalaProgressRepository,
-            ListAvailableMandalasUseCase listAvailableMandalasUseCase,
+            MandalaService mandalaService,
             SaveMandalaProgressMapper saveMandalaProgressMapper) {
-        return new SaveMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+        return new SaveMandalaProgressUseCase(mandalaProgressRepository, mandalaService,
                 saveMandalaProgressMapper);
     }
 
     @Bean
     public GetMandalaProgressUseCase getMandalaProgressUseCase(
             MandalaProgressRepository mandalaProgressRepository,
-            ListAvailableMandalasUseCase listAvailableMandalasUseCase,
+            MandalaService mandalaService,
             GetMandalaProgressMapper getMandalaProgressMapper) {
-        return new GetMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+        return new GetMandalaProgressUseCase(mandalaProgressRepository, mandalaService,
                 getMandalaProgressMapper);
     }
 
     @Bean
     public ClearMandalaProgressUseCase clearMandalaProgressUseCase(
             MandalaProgressRepository mandalaProgressRepository,
-            ListAvailableMandalasUseCase listAvailableMandalasUseCase,
+            MandalaService mandalaService,
             ClearMandalaProgressMapper clearMandalaProgressMapper) {
-        return new ClearMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+        return new ClearMandalaProgressUseCase(mandalaProgressRepository, mandalaService,
                 clearMandalaProgressMapper);
     }
 
     @Bean
     public GetMandalaSessionStatusUseCase getMandalaSessionStatusUseCase(
             MandalaProgressRepository mandalaProgressRepository,
-            ListAvailableMandalasUseCase listAvailableMandalasUseCase,
+            MandalaService mandalaService,
             GetMandalaSessionStatusMapper getMandalaSessionStatusMapper) {
         return new GetMandalaSessionStatusUseCase(
                 mandalaProgressRepository,
-                listAvailableMandalasUseCase,
+                mandalaService,
                 getMandalaSessionStatusMapper);
     }
+
+    @Bean
+    public MandalaService mandalaService(
+            MandalaRepository mandalaRepository,
+            MandalaPlanEntitlementRepository mandalaPlanEntitlementRepository,
+            UserStoreItemRepository userStoreItemRepository,
+            UserPlanRepository userPlanRepository) {
+        return new MandalaService(
+                mandalaRepository,
+                mandalaPlanEntitlementRepository,
+                userStoreItemRepository,
+                userPlanRepository);
+    }
+
+
 }

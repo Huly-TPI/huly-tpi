@@ -2,22 +2,19 @@ package com.huly.backend.domain.useCase.mandala;
 
 import com.huly.backend.domain.dto.mandala.ClearMandalaProgressRequest;
 import com.huly.backend.domain.dto.mandala.GetMandalaProgressRequest;
+import com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusRequest;
 import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.mapper.mandala.ClearMandalaProgressMapper;
 import com.huly.backend.domain.mapper.mandala.GetMandalaProgressMapper;
 import com.huly.backend.domain.mapper.mandala.GetMandalaSessionStatusMapper;
 import com.huly.backend.domain.mapper.mandala.SaveMandalaProgressMapper;
-import com.huly.backend.domain.model.enums.MandalaAccessType;
-import com.huly.backend.domain.model.enums.MandalaUnlockSource;
-import com.huly.backend.domain.model.mandala.AvailableMandala;
-import com.huly.backend.domain.model.mandala.Mandala;
 import com.huly.backend.domain.model.mandala.MandalaProgress;
 import com.huly.backend.domain.repository.mandala.MandalaProgressRepository;
+import com.huly.backend.domain.service.mandala.MandalaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,13 +24,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 
 class MandalaProgressUseCaseTest {
 
     private static final Long USER_ID = 7L;
 
     private MandalaProgressRepository mandalaProgressRepository;
-    private ListAvailableMandalasUseCase listAvailableMandalasUseCase;
+    private MandalaService mandalaService;
     private SaveMandalaProgressUseCase saveUseCase;
     private GetMandalaProgressUseCase getUseCase;
     private GetMandalaSessionStatusUseCase getSessionStatusUseCase;
@@ -42,19 +41,21 @@ class MandalaProgressUseCaseTest {
     @BeforeEach
     void setUp() {
         mandalaProgressRepository = mock(MandalaProgressRepository.class);
-        listAvailableMandalasUseCase = mock(ListAvailableMandalasUseCase.class);
-        saveUseCase = new SaveMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+        mandalaService = mock(MandalaService.class);
+        saveUseCase = new SaveMandalaProgressUseCase(mandalaProgressRepository, mandalaService,
                 new SaveMandalaProgressMapper());
-        getUseCase = new GetMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+        getUseCase = new GetMandalaProgressUseCase(mandalaProgressRepository, mandalaService,
                 new GetMandalaProgressMapper());
         getSessionStatusUseCase = new GetMandalaSessionStatusUseCase(
                 mandalaProgressRepository,
-                listAvailableMandalasUseCase,
+                mandalaService,
                 new GetMandalaSessionStatusMapper());
-        clearUseCase = new ClearMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
+        clearUseCase = new ClearMandalaProgressUseCase(mandalaProgressRepository, mandalaService,
                 new ClearMandalaProgressMapper());
 
-        when(listAvailableMandalasUseCase.execute(USER_ID)).thenReturn(List.of(availableMandala("mandala-01")));
+        doNothing().when(mandalaService).validateMandalaAvailability(USER_ID, "mandala-01");
+        doThrow(new ResourceNotFoundException("Mandala no disponible"))
+                .when(mandalaService).validateMandalaAvailability(USER_ID, "mandala-99");
     }
 
     @Test
@@ -124,22 +125,7 @@ class MandalaProgressUseCaseTest {
                         .build()));
 
         assertThat(getSessionStatusUseCase.execute(
-                new com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusRequest(USER_ID, "mandala-01"))
+                new GetMandalaSessionStatusRequest(USER_ID, "mandala-01"))
                 .sessionRegistered()).isTrue();
-    }
-
-    private AvailableMandala availableMandala(String id) {
-        return AvailableMandala.builder()
-                .mandala(Mandala.builder()
-                        .id(id)
-                        .title(id)
-                        .description("desc")
-                        .assetKey(id)
-                        .displayOrder(1)
-                        .active(true)
-                        .accessType(MandalaAccessType.FREE)
-                        .build())
-                .unlockSource(MandalaUnlockSource.FREE)
-                .build();
     }
 }
