@@ -212,7 +212,7 @@ class ChatMessageRepositoryImplTest {
     @Test
     void updateSuggestedActionDecision_shouldUpdateDecision_whenMessageExists() {
         SuggestedActionEmbeddable suggestedAction = SuggestedActionEmbeddable.builder()
-                .type("RESPIRACION")
+                .type("BREATHING")
                 .emotionalEventId(15L)
                 .decision("PENDING")
                 .build();

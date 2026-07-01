@@ -1,7 +1,7 @@
 import { api } from './client'
 
 export interface SuggestedActionDto {
-  type: 'RESPIRACION' | 'DIARIO' | 'NUBE' | 'BURBUJA' | string
+  type: 'BREATHING' | 'DIARY' | 'LANTERN' | 'BUBBLE' | string
   action_id: string
   title: string
   description: string

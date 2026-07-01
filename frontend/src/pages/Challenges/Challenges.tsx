@@ -58,7 +58,7 @@ export default function Challenges() {
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
 
-  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.RETO, {
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.CHALLENGE, {
     autoStart: true,
   })
 

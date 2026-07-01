@@ -245,7 +245,7 @@ class ChatUseCaseTest {
     void processMessage_shouldAttachSuggestedActionFromEmotionalRecommendation() {
         ChatReply reply = new ChatReply("te acompaño", EmotionType.SADNESS, 8, false, null);
         SuggestedChatAction action = new SuggestedChatAction(
-                ActivityType.DIARIO,
+                ActivityType.DIARY,
                 2L,
                 "Diario emocional",
                 "Un espacio para ordenar pensamientos",
@@ -278,7 +278,7 @@ class ChatUseCaseTest {
     void processMessage_shouldForceActivityRecommendation_whenUserExplicitlyRequestsActivity() {
         ChatReply reply = new ChatReply("te recomiendo escribir", EmotionType.CALM, 4, false, null);
         SuggestedChatAction action = new SuggestedChatAction(
-                ActivityType.DIARIO,
+                ActivityType.DIARY,
                 2L,
                 "Diario emocional",
                 "Un espacio para ordenar pensamientos",

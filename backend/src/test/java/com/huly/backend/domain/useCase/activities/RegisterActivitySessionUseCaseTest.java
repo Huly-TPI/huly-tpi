@@ -42,7 +42,7 @@ class RegisterActivitySessionUseCaseTest {
     @Test
     void execute_shouldSaveActivitySession() {
         Long userId = 1L;
-        ActivityType type = ActivityType.RESPIRACION;
+        ActivityType type = ActivityType.BREATHING;
 
         ActivitySession expectedSession = ActivitySession.builder()
                 .id(100L)

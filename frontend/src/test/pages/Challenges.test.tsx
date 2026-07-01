@@ -37,7 +37,7 @@ vi.mock('../../hooks/useUserGoals', () => ({
 vi.mock('../../api/activities', () => ({
   registerActivitySession: vi.fn().mockResolvedValue({}),
   ActivityType: {
-    RETO: 'RETO',
+    CHALLENGE: 'CHALLENGE',
   },
 }))
 
@@ -204,7 +204,7 @@ describe('Challenges', () => {
     await waitFor(() => {
       expect(registerActivitySession).toHaveBeenCalledTimes(1)
       expect(registerActivitySession).toHaveBeenCalledWith({
-        activityType: 'RETO',
+        activityType: 'CHALLENGE',
       }, { keepalive: true })
     })
 
@@ -228,7 +228,7 @@ describe('Challenges', () => {
     await waitFor(() => {
       expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7, undefined)
       expect(registerActivitySession).toHaveBeenCalledWith({
-        activityType: 'RETO',
+        activityType: 'CHALLENGE',
       }, undefined)
     })
 

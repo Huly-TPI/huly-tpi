@@ -44,12 +44,12 @@ export function UsageTab({
   const distribution = activities.activityDistribution
 
   const counts: Record<ActivityType, number> = {
-    [ActivityType.RESPIRACION]: distribution['RESPIRACION'] || 0,
-    [ActivityType.DIARIO]: distribution['DIARIO'] || 0,
-    [ActivityType.NUBE]: distribution['NUBE'] || 0,
-    [ActivityType.BURBUJA]: distribution['BURBUJA'] || 0,
-    [ActivityType.RETO]: distribution['RETO'] || 0,
-    [ActivityType.ARENA_ZEN]: distribution['ARENA_ZEN'] || 0,
+    [ActivityType.BREATHING]: distribution['BREATHING'] || 0,
+    [ActivityType.DIARY]: distribution['DIARY'] || 0,
+    [ActivityType.LANTERN]: distribution['LANTERN'] || 0,
+    [ActivityType.BUBBLE]: distribution['BUBBLE'] || 0,
+    [ActivityType.CHALLENGE]: distribution['CHALLENGE'] || 0,
+    [ActivityType.ZEN_GARDEN]: distribution['ZEN_GARDEN'] || 0,
     [ActivityType.MANDALA]: distribution['MANDALA'] || 0,
   }
   const maxCount = Math.max(...Object.values(counts), 1)

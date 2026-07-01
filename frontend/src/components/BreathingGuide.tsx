@@ -80,7 +80,7 @@ export function BreathingGuide({ techniques = DEFAULT_BREATHING_TECHNIQUES, huly
     const [currentRound, setCurrentRound] = useState(1)
     const [isPaused, setIsPaused] = useState(false)
 
-    const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(ActivityType.RESPIRACION, {
+    const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(ActivityType.BREATHING, {
         minDurationSeconds: 10,
     })
 

@@ -46,7 +46,7 @@ const BubblesActivity = () => {
   const nextIdRef = useRef(INITIAL_BUBBLES.length)
   const { requireAuth } = useAuthGate()
 
-  const { startSession, markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.BURBUJA, {
+  const { startSession, markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.BUBBLE, {
     autoStart: false
   })
 

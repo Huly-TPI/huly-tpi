@@ -46,7 +46,11 @@ vi.mock('../../context/auth', () => ({
 }))
 
 vi.mock('../../context/subscriptionModal', () => ({
-  useSubscriptionModal: () => ({ subscriptionOpen: false, openSubscriptionModal: vi.fn(), closeSubscriptionModal: vi.fn() }),
+  useSubscriptionModal: () => ({
+    subscriptionOpen: false,
+    openSubscriptionModal: vi.fn(),
+    closeSubscriptionModal: vi.fn(),
+  }),
 }))
 
 vi.mock('../../context/theme', () => ({
@@ -106,9 +110,9 @@ describe('Mandalas page', () => {
     await user.click(screen.getAllByRole('button', { name: /elegir mandala/i })[0])
 
     expect(await screen.findByTestId('mandala-canvas')).toBeInTheDocument()
-    expect(screen.getByAltText('Fondo de día para pintar mandalas')).toHaveClass('theme-background--active')
+    expect(screen.getByAltText('Fondo de dia para pintar mandalas')).toHaveClass('theme-background--active')
     expect(document.querySelector('.mandala-easel-image')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /ir a galería/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ir a galeria/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /descargar mandala pintada/i })).toBeInTheDocument()
   })
 
@@ -123,7 +127,7 @@ describe('Mandalas page', () => {
 
     await user.click(screen.getAllByRole('button', { name: /elegir mandala/i })[0])
     await screen.findByTestId('mandala-canvas')
-    await user.click(screen.getByRole('button', { name: /ir a galería/i }))
+    await user.click(screen.getByRole('button', { name: /ir a galeria/i }))
 
     expect(screen.getAllByRole('button', { name: /elegir mandala/i })).toHaveLength(2)
   })

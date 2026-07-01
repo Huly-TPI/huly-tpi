@@ -51,17 +51,17 @@ public class EmotionalRecommendationService {
     );
 
     private static final Map<ActivityType, String> TITLES = Map.of(
-            ActivityType.RESPIRACION, "Respiracion guiada",
-            ActivityType.DIARIO, "Diario emocional",
-            ActivityType.NUBE, "Farolitos que vuelan",
-            ActivityType.BURBUJA, "Burbujas"
+            ActivityType.BREATHING, "Respiracion guiada",
+            ActivityType.DIARY, "Diario emocional",
+            ActivityType.LANTERN, "Farolitos que vuelan",
+            ActivityType.BUBBLE, "Burbujas"
     );
 
     private static final Map<ActivityType, String> DESCRIPTIONS = Map.of(
-            ActivityType.RESPIRACION, "Una practica breve para bajar la activacion y recuperar calma.",
-            ActivityType.DIARIO, "Un espacio para ordenar pensamientos y entender lo que sentis.",
-            ActivityType.NUBE, "Un ejercicio visual para soltar pensamientos que pesan.",
-            ActivityType.BURBUJA, "Una actividad liviana para cambiar el foco con suavidad."
+            ActivityType.BREATHING, "Una practica breve para bajar la activacion y recuperar calma.",
+            ActivityType.DIARY, "Un espacio para ordenar pensamientos y entender lo que sentis.",
+            ActivityType.LANTERN, "Un ejercicio visual para soltar pensamientos que pesan.",
+            ActivityType.BUBBLE, "Una actividad liviana para cambiar el foco con suavidad."
     );
 
     private static final Set<String> BREATHING_GOALS = Set.of(
@@ -224,10 +224,10 @@ public class EmotionalRecommendationService {
             return 0.0;
         }
         return switch (type) {
-            case RESPIRACION -> containsAny(normalizedGoal, BREATHING_GOALS) ? 1.0 : 0.0;
-            case DIARIO -> containsAny(normalizedGoal, JOURNAL_GOALS) ? 1.0 : 0.0;
-            case NUBE -> containsAny(normalizedGoal, CLOUD_GOALS) ? 1.0 : 0.0;
-            case BURBUJA -> containsAny(normalizedGoal, BUBBLE_GOALS) ? 1.0 : 0.0;
+            case BREATHING -> containsAny(normalizedGoal, BREATHING_GOALS) ? 1.0 : 0.0;
+            case DIARY -> containsAny(normalizedGoal, JOURNAL_GOALS) ? 1.0 : 0.0;
+            case LANTERN -> containsAny(normalizedGoal, CLOUD_GOALS) ? 1.0 : 0.0;
+            case BUBBLE -> containsAny(normalizedGoal, BUBBLE_GOALS) ? 1.0 : 0.0;
             default -> 0.0;
         };
     }
@@ -240,13 +240,13 @@ public class EmotionalRecommendationService {
         if (query.intensity() < HIGH_INTENSITY_THRESHOLD) {
             return 0.0;
         }
-        if (type == ActivityType.RESPIRACION && query.vad().arousal() > HIGH_AROUSAL_THRESHOLD) {
+        if (type == ActivityType.BREATHING && query.vad().arousal() > HIGH_AROUSAL_THRESHOLD) {
             return 1.0;
         }
-        if (type == ActivityType.NUBE && query.vad().valence() < CLOUD_LOW_VALENCE_THRESHOLD) {
+        if (type == ActivityType.LANTERN && query.vad().valence() < CLOUD_LOW_VALENCE_THRESHOLD) {
             return 0.7;
         }
-        if (type == ActivityType.DIARIO && query.vad().arousal() <= JOURNAL_MAX_AROUSAL) {
+        if (type == ActivityType.DIARY && query.vad().arousal() <= JOURNAL_MAX_AROUSAL) {
             return 0.6;
         }
         return 0.2;
@@ -256,14 +256,14 @@ public class EmotionalRecommendationService {
         if (fallbackUsed) {
             return "Fallback por falta de coincidencia exacta en rangos VAD; se ordeno por efectos esperados y objetivo.";
         }
-        if (activity.getType() == ActivityType.RESPIRACION
+        if (activity.getType() == ActivityType.BREATHING
                 && query.vad().arousal() > HIGH_AROUSAL_THRESHOLD) {
             return "Recomendada porque el arousal es alto y la actividad ayuda a reducir activacion.";
         }
-        if (activity.getType() == ActivityType.DIARIO) {
+        if (activity.getType() == ActivityType.DIARY) {
             return "Recomendada para ordenar pensamientos y procesar la emocion detectada.";
         }
-        if (activity.getType() == ActivityType.NUBE) {
+        if (activity.getType() == ActivityType.LANTERN) {
             return "Recomendada para soltar pensamientos y bajar carga emocional.";
         }
         return "Recomendada por compatibilidad con el estado emocional y sus efectos esperados.";

@@ -28,7 +28,7 @@ public class ActivityRepositoryImplTest {
     void findAll_shouldReturnMappedDomainList() { 
         ActivityEntity entity = ActivityEntity.builder() 
         .id(1L)
-        .type(ActivityType.RESPIRACION)
+        .type(ActivityType.BREATHING)
         .valenceMin(-1.0).valenceMax(1.0)
         .arousalMin(-1.0).arousalMax(1.0)
         .dominanceMin(-1.0).dominanceMax(1.0)
@@ -41,7 +41,7 @@ public class ActivityRepositoryImplTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);
-        assertThat(result.get(0).getType()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(result.get(0).getType()).isEqualTo(ActivityType.BREATHING);
         assertThat(result.get(0).getValenceMin()).isEqualTo(-1.0);
         verify(activityJpaRepository).findAll();
     }

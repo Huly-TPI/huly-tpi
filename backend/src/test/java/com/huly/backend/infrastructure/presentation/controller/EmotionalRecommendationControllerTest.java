@@ -68,7 +68,7 @@ class EmotionalRecommendationControllerTest {
         GetEmotionalRecommendationsResponse result = new GetEmotionalRecommendationsResponse(
                 List.of(new EmotionalRecommendationItem(
                         1L,
-                        ActivityType.RESPIRACION,
+                        ActivityType.BREATHING,
                         "Respiracion guiada",
                         "Descripcion",
                         0.92,
@@ -97,7 +97,7 @@ class EmotionalRecommendationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.fallbackUsed").value(false))
                 .andExpect(jsonPath("$.recommendations[0].activityId").value(1L))
-                .andExpect(jsonPath("$.recommendations[0].type").value("RESPIRACION"));
+                .andExpect(jsonPath("$.recommendations[0].type").value("BREATHING"));
 
         ArgumentCaptor<GetEmotionalRecommendationsRequest> queryCaptor =
                 ArgumentCaptor.forClass(GetEmotionalRecommendationsRequest.class);

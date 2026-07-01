@@ -41,12 +41,12 @@ public class GetUserActivitiesUseCase {
                 : activitySessionRepository.countByUserIdAndCreatedAtAfter(userId, today.atStartOfDay(zone).toInstant());
 
         Map<String, Integer> distribution = new HashMap<>();
-        distribution.put("RESPIRACION", 0);
-        distribution.put("DIARIO", 0);
-        distribution.put("NUBE", 0);
-        distribution.put("BURBUJA", 0);
-        distribution.put("RETO", 0);
-        distribution.put("ARENA_ZEN", 0);
+        distribution.put("BREATHING", 0);
+        distribution.put("DIARY", 0);
+        distribution.put("LANTERN", 0);
+        distribution.put("BUBBLE", 0);
+        distribution.put("CHALLENGE", 0);
+        distribution.put("ZEN_GARDEN", 0);
         distribution.put("MANDALA", 0);
 
         for (ActivitySession session : filteredSessions) {

@@ -1,12 +1,12 @@
 import { api, type RequestOptions } from './client'
 
 export enum ActivityType {
-  RESPIRACION = 'RESPIRACION',
-  DIARIO = 'DIARIO',
-  NUBE = 'NUBE',
-  BURBUJA = 'BURBUJA',
-  RETO = 'RETO',
-  ARENA_ZEN = 'ARENA_ZEN',
+  BREATHING = 'BREATHING',
+  DIARY = 'DIARY',
+  LANTERN = 'LANTERN',
+  BUBBLE = 'BUBBLE',
+  CHALLENGE = 'CHALLENGE',
+  ZEN_GARDEN = 'ZEN_GARDEN',
   MANDALA = 'MANDALA',
 }
 

@@ -11,7 +11,7 @@ function SandZenGarden() {
 
   const {theme} = useTheme()
   const isDark  = theme === 'dark';
-  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.ARENA_ZEN, {
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.ZEN_GARDEN, {
     autoStart: true,
     minDurationSeconds: 10,
   })

@@ -63,14 +63,14 @@ describe('UserDetailPage', () => {
       setActivityTimeframe: vi.fn(),
       activities: {
         todayActivitiesCount: 5,
-        favoriteActivity: 'BURBUJA',
+        favoriteActivity: 'BUBBLE',
         averageSessionsText: '12 sesiones/semana',
         activityDistribution: {
-          BURBUJA: 8,
-          RESPIRACION: 4,
+          BUBBLE: 8,
+          BREATHING: 4,
         },
         activitySessions: [
-          { id: 1, activityType: 'BURBUJA', createdAt: '2026-06-15T00:00:00Z' },
+          { id: 1, activityType: 'BUBBLE', createdAt: '2026-06-15T00:00:00Z' },
         ],
       },
     } as any)

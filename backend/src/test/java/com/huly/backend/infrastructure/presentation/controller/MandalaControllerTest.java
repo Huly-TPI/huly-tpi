@@ -6,6 +6,7 @@ import com.huly.backend.domain.dto.mandala.GetMandalaProgressResponse;
 import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
 import com.huly.backend.domain.useCase.mandala.ClearMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.mandala.GetMandalaProgressUseCase;
+import com.huly.backend.domain.useCase.mandala.GetMandalaSessionStatusUseCase;
 import com.huly.backend.domain.useCase.mandala.ListAvailableMandalasUseCase;
 import com.huly.backend.domain.useCase.mandala.SaveMandalaProgressUseCase;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
@@ -42,6 +43,7 @@ class MandalaControllerTest {
     private ListAvailableMandalasUseCase listAvailableMandalasUseCase;
     private SaveMandalaProgressUseCase saveMandalaProgressUseCase;
     private GetMandalaProgressUseCase getMandalaProgressUseCase;
+    private GetMandalaSessionStatusUseCase getMandalaSessionStatusUseCase;
     private ClearMandalaProgressUseCase clearMandalaProgressUseCase;
 
     @BeforeEach
@@ -49,13 +51,15 @@ class MandalaControllerTest {
         listAvailableMandalasUseCase = mock(ListAvailableMandalasUseCase.class);
         saveMandalaProgressUseCase = mock(SaveMandalaProgressUseCase.class);
         getMandalaProgressUseCase = mock(GetMandalaProgressUseCase.class);
+        getMandalaSessionStatusUseCase = mock(GetMandalaSessionStatusUseCase.class);
         clearMandalaProgressUseCase = mock(ClearMandalaProgressUseCase.class);
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(userDetails, null));
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new MandalaController(listAvailableMandalasUseCase, saveMandalaProgressUseCase,
-                        getMandalaProgressUseCase, clearMandalaProgressUseCase, new MandalaPresentationMapper()))
+                        getMandalaProgressUseCase, getMandalaSessionStatusUseCase, clearMandalaProgressUseCase,
+                        new MandalaPresentationMapper()))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
