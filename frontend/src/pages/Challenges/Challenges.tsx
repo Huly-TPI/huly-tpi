@@ -81,8 +81,7 @@ export default function Challenges() {
 
   const handleCreate = useCallback(async (data: { title: string; description: string }) => {
     await createGoal({ title: data.title, description: data.description || undefined })
-    markConditionMet()
-  }, [createGoal, markConditionMet])
+  }, [createGoal])
 
   const handleUpdate = useCallback(async (id: number, data: { title: string; description: string }) => {
     await updateGoal(id, { title: data.title, description: data.description || undefined })

@@ -11,6 +11,8 @@ import { useTheme } from '../../context/theme'
 import { useAuthGate } from '../../context/authGate'
 import { api } from '../../api/client'
 import { lanternsApi } from '../../api/lanterns'
+import { ActivityType } from '../../api/activities'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import Button from '../../components/Buttons/Button/Button'
 import './Lanterns.css'
 
@@ -51,6 +53,11 @@ export default function LanternsActivity() {
   const isDark = theme === 'dark'
   const { requireAuth } = useAuthGate()
 
+  const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(
+    ActivityType.LANTERN,
+    { autoStart: true }
+  )
+
   const [lanterns, setLanterns] = useState<Lantern[]>([])
   const [inputText, setInputText] = useState('')
   const [animatingId, setAnimatingId] = useState<number | null>(null)
@@ -90,12 +97,13 @@ export default function LanternsActivity() {
         setAnimatingId(created.id)
         setLanterns(prev => [created, ...prev].slice(0, MAX_LANTERNS))
         setSelectedIndex(0)
+        markConditionMet()
         setTimeout(() => setAnimatingId(null), 800)
       } catch {
         setInputText(trimmed)
       }
     })
-  }, [inputText, lanterns.length, requireAuth])
+  }, [inputText, lanterns.length, requireAuth, markConditionMet])
 
   const removeLantern = useCallback((idToRemove: number) => {
     setLanterns(prev => prev.filter(l => l.id !== idToRemove))
@@ -110,15 +118,20 @@ export default function LanternsActivity() {
     if (!selectedLantern) return
     const id = selectedLantern.id
     removeLantern(id)
+    markConditionMet()
     lanternsApi.updateStatus(id, 'CANCELLED').catch(() => {})
-  }, [selectedLantern, removeLantern])
+  }, [selectedLantern, removeLantern, markConditionMet])
 
   const handleCompletar = useCallback(() => {
     if (!selectedLantern) return
     const id = selectedLantern.id
     removeLantern(id)
+    markConditionMet()
+    void saveSession()
+    stopSession()
+    startSession()
     lanternsApi.updateStatus(id, 'COMPLETED').catch(() => {})
-  }, [selectedLantern, removeLantern])
+  }, [selectedLantern, removeLantern, markConditionMet, saveSession, stopSession, startSession])
 
   const handleTrabajar = useCallback(async () => {
     if (!selectedLantern) return
