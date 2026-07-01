@@ -11,4 +11,6 @@ public class RegisterActivitySessionRequest {
 
     @NotNull(message = "El tipo de actividad es obligatorio")
     private ActivityType activityType;
+
+    private String contextId;
 }

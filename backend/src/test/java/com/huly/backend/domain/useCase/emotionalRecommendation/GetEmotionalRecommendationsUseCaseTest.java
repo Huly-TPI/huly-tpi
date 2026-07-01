@@ -51,7 +51,7 @@ class GetEmotionalRecommendationsUseCaseTest {
         List<Activity> activities = List.of(Activity.builder().id(1L).build());
         EmotionalRecommendationResult expected = new EmotionalRecommendationResult(
                 List.of(new EmotionalRecommendationItem(
-                        1L, ActivityType.RESPIRACION, "Respiracion", "Descripcion", 0.9, "razon")),
+                        1L, ActivityType.BREATHING, "Respiracion", "Descripcion", 0.9, "razon")),
                 false);
         when(activityRepository.findAll()).thenReturn(activities);
         when(recommendationService.recommend(query, activities, List.of())).thenReturn(expected);
@@ -61,7 +61,7 @@ class GetEmotionalRecommendationsUseCaseTest {
         assertThat(result.fallbackUsed()).isFalse();
         assertThat(result.recommendations()).hasSize(1);
         assertThat(result.recommendations().get(0).activityId()).isEqualTo(1L);
-        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.BREATHING);
         verifyNoInteractions(emotionalEventRepository);
         verify(recommendationService).recommend(query, activities, List.of());
     }

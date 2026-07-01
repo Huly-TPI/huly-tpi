@@ -16,8 +16,8 @@ import java.util.List;
 @Component
 public class ActivityPresentationMapper {
 
-    public RegisterActivitySessionRequest toRegisterRequest(Long userId, ActivityType activityType) {
-        return new RegisterActivitySessionRequest(userId, activityType);
+    public RegisterActivitySessionRequest toRegisterRequest(Long userId, ActivityType activityType, String contextId) {
+        return new RegisterActivitySessionRequest(userId, activityType, contextId);
     }
 
     public List<ActivityResponse> toActivityResponses(ListActivitiesResponse response) {

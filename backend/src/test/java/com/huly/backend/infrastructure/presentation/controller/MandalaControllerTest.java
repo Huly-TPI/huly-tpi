@@ -3,9 +3,12 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.dto.mandala.ClearMandalaProgressRequest;
 import com.huly.backend.domain.dto.mandala.GetMandalaProgressRequest;
 import com.huly.backend.domain.dto.mandala.GetMandalaProgressResponse;
+import com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusRequest;
+import com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusResponse;
 import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
 import com.huly.backend.domain.useCase.mandala.ClearMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.mandala.GetMandalaProgressUseCase;
+import com.huly.backend.domain.useCase.mandala.GetMandalaSessionStatusUseCase;
 import com.huly.backend.domain.useCase.mandala.ListAvailableMandalasUseCase;
 import com.huly.backend.domain.useCase.mandala.SaveMandalaProgressUseCase;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
@@ -42,6 +45,7 @@ class MandalaControllerTest {
     private ListAvailableMandalasUseCase listAvailableMandalasUseCase;
     private SaveMandalaProgressUseCase saveMandalaProgressUseCase;
     private GetMandalaProgressUseCase getMandalaProgressUseCase;
+    private GetMandalaSessionStatusUseCase getMandalaSessionStatusUseCase;
     private ClearMandalaProgressUseCase clearMandalaProgressUseCase;
 
     @BeforeEach
@@ -49,13 +53,15 @@ class MandalaControllerTest {
         listAvailableMandalasUseCase = mock(ListAvailableMandalasUseCase.class);
         saveMandalaProgressUseCase = mock(SaveMandalaProgressUseCase.class);
         getMandalaProgressUseCase = mock(GetMandalaProgressUseCase.class);
+        getMandalaSessionStatusUseCase = mock(GetMandalaSessionStatusUseCase.class);
         clearMandalaProgressUseCase = mock(ClearMandalaProgressUseCase.class);
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(userDetails, null));
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new MandalaController(listAvailableMandalasUseCase, saveMandalaProgressUseCase,
-                        getMandalaProgressUseCase, clearMandalaProgressUseCase, new MandalaPresentationMapper()))
+                        getMandalaProgressUseCase, getMandalaSessionStatusUseCase, clearMandalaProgressUseCase,
+                        new MandalaPresentationMapper()))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -117,5 +123,15 @@ class MandalaControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(clearMandalaProgressUseCase).execute(new ClearMandalaProgressRequest(USER_ID, "mandala-01"));
+    }
+
+    @Test
+    void getSessionStatus_returnsStatusSuccessfully() throws Exception {
+        when(getMandalaSessionStatusUseCase.execute(new GetMandalaSessionStatusRequest(USER_ID, "mandala-01")))
+                .thenReturn(new GetMandalaSessionStatusResponse(true));
+
+        mockMvc.perform(get("/api/mandalas/mandala-01/session-status"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"sessionRegistered\":true}"));
     }
 }

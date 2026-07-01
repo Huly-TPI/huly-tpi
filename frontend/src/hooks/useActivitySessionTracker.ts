@@ -4,6 +4,7 @@ import { ActivityType, registerActivitySession } from '../api/activities'
 interface ActivitySessionTrackerOptions {
   minDurationSeconds?: number
   autoStart?: boolean
+  contextId?: string
 }
 
 export function useActivitySessionTracker(
@@ -44,12 +45,18 @@ export function useActivitySessionTracker(
 
       isSavedRef.current = true
       try {
-        await registerActivitySession({ activityType }, options)
+        await registerActivitySession(
+          {
+            activityType,
+            contextId: trackerOptions?.contextId,
+          },
+          options,
+        )
       } catch (error) {
         if (!options?.keepalive) isSavedRef.current = false
       }
     },
-    [activityType, trackerOptions?.minDurationSeconds],
+    [activityType, trackerOptions?.contextId, trackerOptions?.minDurationSeconds],
   )
 
   useEffect(() => {
