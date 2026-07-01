@@ -14,6 +14,7 @@ import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.mapper.chat.ChatMapper;
 import com.huly.backend.domain.useCase.chat.*;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
@@ -75,6 +76,11 @@ public class ChatUseCaseConfig {
     }
 
     @Bean
+    public ChatMapper chatMapper() {
+        return new ChatMapper();
+    }
+
+    @Bean
     public ChatUseCase chatUseCase(
             LLMChatPort llmChatPort,
             ChatMemoryPort chatMemoryPort,
@@ -86,7 +92,8 @@ public class ChatUseCaseConfig {
             ChatQuotaService chatQuotaService,
             UserRepository userRepository,
             ChatConversationPreferenceRepository chatConversationPreferenceRepository,
-            HandleChatPreferencesUseCase handleChatPreferencesUseCase
+            HandleChatPreferencesUseCase handleChatPreferencesUseCase,
+            ChatMapper chatMapper
     ) {
         return new ChatUseCase(
                 llmChatPort,
@@ -99,7 +106,8 @@ public class ChatUseCaseConfig {
                 chatQuotaService,
                 userRepository,
                 chatConversationPreferenceRepository,
-                handleChatPreferencesUseCase
+                handleChatPreferencesUseCase,
+                chatMapper
         );
     }
 

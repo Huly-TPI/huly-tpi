@@ -20,12 +20,14 @@ import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.mapper.chat.ChatMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -59,6 +61,7 @@ class ChatUseCaseTest {
     @Mock private UserRepository userRepository;
     @Mock private ChatConversationPreferenceRepository chatConversationPreferenceRepository;
     @Mock private HandleChatPreferencesUseCase handleChatPreferencesUseCase;
+    @Spy private ChatMapper mapper = new ChatMapper();
 
     @InjectMocks
     private ChatUseCase chatUseCase;
