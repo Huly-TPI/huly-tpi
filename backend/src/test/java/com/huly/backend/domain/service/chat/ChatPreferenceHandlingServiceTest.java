@@ -12,7 +12,6 @@ import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
-import com.huly.backend.domain.useCase.chat.InitializeChatPreferencesUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ class ChatPreferenceHandlingServiceTest {
 
     @Mock private ChatConversationPreferenceRepository preferenceRepository;
     @Mock private ChatPreferenceExtractionPort extractionPort;
-    @Mock private InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
+    @Mock private ChatPreferenceInitializationService chatPreferenceInitializationService;
     @Mock private ChatMemoryPort chatMemoryPort;
     @Mock private ChatQuotaService chatQuotaService;
     @Mock private ChatConfigRepository chatConfigRepository;
@@ -48,7 +47,7 @@ class ChatPreferenceHandlingServiceTest {
         service = new ChatPreferenceHandlingService(
                 preferenceRepository,
                 extractionPort,
-                initializeChatPreferencesUseCase,
+                chatPreferenceInitializationService,
                 chatMemoryPort,
                 chatQuotaService,
                 chatConfigRepository);

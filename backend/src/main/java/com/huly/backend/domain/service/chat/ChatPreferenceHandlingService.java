@@ -16,7 +16,6 @@ import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
-import com.huly.backend.domain.useCase.chat.InitializeChatPreferencesUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,7 @@ public class ChatPreferenceHandlingService {
 
     private final ChatConversationPreferenceRepository preferenceRepository;
     private final ChatPreferenceExtractionPort extractionPort;
-    private final InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
+    private final ChatPreferenceInitializationService chatPreferenceInitializationService;
     private final ChatMemoryPort chatMemoryPort;
     private final ChatQuotaService chatQuotaService;
     private final ChatConfigRepository chatConfigRepository;
@@ -45,7 +44,7 @@ public class ChatPreferenceHandlingService {
         if (storedPreference.isEmpty()) {
             chatQuotaService.assertWithinLimit(userId);
             ChatOnboardingInitialization initialization =
-                    initializeChatPreferencesUseCase.execute(userId, conversationId);
+                    chatPreferenceInitializationService.initialize(userId, conversationId);
             return Boolean.TRUE.equals(initialization.initialized())
                     ? ChatPreferenceHandlingResult.handled(
                             ChatReply.of(initialization.assistantMessage()))

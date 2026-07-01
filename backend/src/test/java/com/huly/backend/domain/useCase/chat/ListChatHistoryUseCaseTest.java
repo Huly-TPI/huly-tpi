@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
+import com.huly.backend.domain.service.chat.ChatPreferenceInitializationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,7 +29,7 @@ class ListChatHistoryUseCaseTest {
     @Mock
     private ChatMessageRepository chatMessageRepository;
     @Mock
-    private InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
+    private ChatPreferenceInitializationService chatPreferenceInitializationService;
 
     @InjectMocks
     private ListChatHistoryUseCase listChatHistoryUseCase;
@@ -48,7 +49,7 @@ class ListChatHistoryUseCaseTest {
         assertThat(result).isEqualTo(expected);
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).content()).isEqualTo("hola");
-        verify(initializeChatPreferencesUseCase).execute(userId, conversationId);
+        verify(chatPreferenceInitializationService).initialize(userId, conversationId);
         verify(chatMessageRepository).findByConversationIdAndUserId(conversationId, userId, pageable);
     }
 
@@ -64,7 +65,7 @@ class ListChatHistoryUseCaseTest {
         Page<ChatMessage> result = listChatHistoryUseCase.execute(conversationId, userId, pageable);
 
         assertThat(result).isEmpty();
-        verify(initializeChatPreferencesUseCase).execute(userId, conversationId);
+        verify(chatPreferenceInitializationService).initialize(userId, conversationId);
         verify(chatMessageRepository).findByConversationIdAndUserId(conversationId, userId, pageable);
     }
 

@@ -10,6 +10,7 @@ import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationService;
 import com.huly.backend.domain.service.chat.ChatPreferenceHandlingService;
+import com.huly.backend.domain.service.chat.ChatPreferenceInitializationService;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
@@ -20,21 +21,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class ChatUseCaseConfig {
-
-    @Bean
-    public InitializeChatPreferencesUseCase initializeChatPreferencesUseCase(
-            ChatConversationPreferenceRepository preferenceRepository,
-            UserRepository userRepository,
-            ChatMemoryPort chatMemoryPort,
-            ChatConfigRepository chatConfigRepository
-    ) {
-        return new InitializeChatPreferencesUseCase(
-                preferenceRepository,
-                userRepository,
-                chatMemoryPort,
-                chatConfigRepository
-        );
-    }
 
     @Bean
     public ChatMapper chatMapper() {
@@ -83,11 +69,11 @@ public class ChatUseCaseConfig {
     @Bean
     public ListChatHistoryUseCase listChatHistoryUseCase(
             ChatMessageRepository chatMessageRepository,
-            InitializeChatPreferencesUseCase initializeChatPreferencesUseCase
+            ChatPreferenceInitializationService chatPreferenceInitializationService
     ) {
         return new ListChatHistoryUseCase(
                 chatMessageRepository,
-                initializeChatPreferencesUseCase
+                chatPreferenceInitializationService
         );
     }
 
