@@ -13,8 +13,11 @@ import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
+import com.huly.backend.domain.useCase.user.ChangePasswordUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
+import com.huly.backend.infrastructure.presentation.dto.user.ChangePasswordRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateAudioSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
@@ -49,6 +52,7 @@ class UserControllerTest {
     private UserDetailDomainRepository userDetailDomainRepository;
     private GetUserCoinsUseCase getUserCoinsUseCase;
     private GetCurrentMembershipUseCase getCurrentMembershipUseCase;
+    private ChangePasswordUseCase changePasswordUseCase;
 
     private static final Long USER_ID = 1L;
 
@@ -58,6 +62,7 @@ class UserControllerTest {
         userDetailDomainRepository = mock(UserDetailDomainRepository.class);
         getUserCoinsUseCase = mock(GetUserCoinsUseCase.class);
         getCurrentMembershipUseCase = mock(GetCurrentMembershipUseCase.class);
+        changePasswordUseCase = mock(ChangePasswordUseCase.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
@@ -68,7 +73,8 @@ class UserControllerTest {
                 userDetailDomainRepository,
                 getUserCoinsUseCase,
                 getCurrentMembershipUseCase,
-                new UserPresentationMapper()
+                new UserPresentationMapper(),
+                changePasswordUseCase
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
@@ -212,5 +218,49 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.planCode").isEmpty())
                 .andExpect(jsonPath("$.productId").isEmpty())
                 .andExpect(jsonPath("$.expiresAt").isEmpty());
+    }
+
+    @Test
+    void changePassword_shouldReturn204_whenRequestIsValid() throws Exception {
+        ChangePasswordRequest req = new ChangePasswordRequest("currentPass", "newPass123");
+
+        mockMvc.perform(put("/api/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isNoContent());
+
+        verify(changePasswordUseCase).execute(USER_ID, "currentPass", "newPass123");
+    }
+
+    @Test
+    void changePassword_shouldReturn401_whenCurrentPasswordIsWrong() throws Exception {
+        ChangePasswordRequest req = new ChangePasswordRequest("wrongPass", "newPass123");
+        doThrow(new InvalidCredentialsException("Current password is incorrect"))
+                .when(changePasswordUseCase).execute(USER_ID, "wrongPass", "newPass123");
+
+        mockMvc.perform(put("/api/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void changePassword_shouldReturn400_whenCurrentPasswordIsBlank() throws Exception {
+        ChangePasswordRequest req = new ChangePasswordRequest("", "newPass123");
+
+        mockMvc.perform(put("/api/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void changePassword_shouldReturn400_whenNewPasswordIsTooShort() throws Exception {
+        ChangePasswordRequest req = new ChangePasswordRequest("currentPass", "abc");
+
+        mockMvc.perform(put("/api/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
     }
 }

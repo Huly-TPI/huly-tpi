@@ -5,15 +5,26 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Login from '../../pages/Login/Login'
 import { ApiError } from '../../api/apiError'
 import { ThemeProvider } from '../../context/theme'
+import { forgotPassword, resetPassword } from '../../api/auth'
 
 const mockLogin = vi.fn()
 vi.mock('../../context/auth', () => ({
     useAuth: () => ({ login: mockLogin }),
 }))
 
+vi.mock('../../api/auth', () => ({
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
+}))
+
+const mockForgotPassword = vi.mocked(forgotPassword)
+const mockResetPassword = vi.mocked(resetPassword)
+
 describe('Login', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mockForgotPassword.mockResolvedValue(undefined)
+        mockResetPassword.mockResolvedValue(undefined)
     })
 
     const getSubmitButton = () => screen.getByRole('button', { name: 'Iniciar sesión' })
@@ -160,5 +171,140 @@ describe('Login', () => {
         await user.click(getSubmitButton())
 
         expect(screen.getByRole('button', { name: 'Ingresando...' })).toBeDisabled()
+    })
+
+    it('muestra el link de olvidaste tu contraseña en el paso login', () => {
+        renderWithRouter()
+        expect(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' })).toBeInTheDocument()
+    })
+
+    describe('paso forgot password', () => {
+        const goToForgot = async (user: ReturnType<typeof userEvent.setup>) => {
+            await user.click(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }))
+        }
+
+        it('muestra el formulario de recupero al clickear olvidaste tu contraseña', async () => {
+            const { user } = renderWithRouter()
+            await goToForgot(user)
+            expect(screen.getByText('Recuperar contraseña')).toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Enviar código' })).toBeInTheDocument()
+        })
+
+        it('muestra error de validación si el email está vacío', async () => {
+            const { user } = renderWithRouter()
+            await goToForgot(user)
+            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
+            expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
+            expect(mockForgotPassword).not.toHaveBeenCalled()
+        })
+
+        it('llama a forgotPassword con el email ingresado', async () => {
+            const { user } = renderWithRouter()
+            await goToForgot(user)
+            await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
+            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
+            await waitFor(() => {
+                expect(mockForgotPassword).toHaveBeenCalledWith('user@huly.com')
+            })
+        })
+
+        it('avanza al paso reset al enviar el email correctamente', async () => {
+            const { user } = renderWithRouter()
+            await goToForgot(user)
+            await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
+            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
+            await waitFor(() => {
+                expect(screen.getByRole('heading', { name: 'Nueva contraseña' })).toBeInTheDocument()
+            })
+        })
+
+        it('muestra error si el email no existe', async () => {
+            mockForgotPassword.mockRejectedValueOnce(new Error('No existe una cuenta con ese email'))
+            const { user } = renderWithRouter()
+            await goToForgot(user)
+            await user.type(screen.getByPlaceholderText('Email'), 'missing@huly.com')
+            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
+            await waitFor(() => {
+                expect(screen.getByText('No existe una cuenta con ese email')).toBeInTheDocument()
+            })
+        })
+
+        it('vuelve al login al clickear Volver', async () => {
+            const { user } = renderWithRouter()
+            await goToForgot(user)
+            await user.click(screen.getByRole('button', { name: 'Volver' }))
+            expect(screen.getByText('¡Bienvenido!')).toBeInTheDocument()
+        })
+    })
+
+    describe('paso reset password', () => {
+        const goToReset = async (user: ReturnType<typeof userEvent.setup>) => {
+            await user.click(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }))
+            await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
+            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
+            await screen.findByRole('heading', { name: 'Nueva contraseña' })
+        }
+
+        it('muestra el formulario de nueva contraseña', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            expect(screen.getByPlaceholderText('Código recibido por email')).toBeInTheDocument()
+            expect(screen.getByPlaceholderText('Nueva contraseña')).toBeInTheDocument()
+        })
+
+        it('llama a resetPassword con el token y la nueva contraseña', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            await user.type(screen.getByPlaceholderText('Código recibido por email'), 'uuid-token-123')
+            await user.type(screen.getByPlaceholderText('Nueva contraseña'), 'newPass123')
+            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+            await waitFor(() => {
+                expect(mockResetPassword).toHaveBeenCalledWith('uuid-token-123', 'newPass123')
+            })
+        })
+
+        it('vuelve al login con mensaje de éxito al restablecer la contraseña', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            await user.type(screen.getByPlaceholderText('Código recibido por email'), 'uuid-token-123')
+            await user.type(screen.getByPlaceholderText('Nueva contraseña'), 'newPass123')
+            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+            await waitFor(() => {
+                expect(screen.getByText('¡Contraseña actualizada! Podés iniciar sesión.')).toBeInTheDocument()
+            })
+        })
+
+        it('muestra error si el token es inválido o expiró', async () => {
+            mockResetPassword.mockRejectedValueOnce(new Error('Token inválido o expirado'))
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            await user.type(screen.getByPlaceholderText('Código recibido por email'), 'bad-token')
+            await user.type(screen.getByPlaceholderText('Nueva contraseña'), 'newPass123')
+            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+            await waitFor(() => {
+                expect(screen.getByText('El código es inválido o ya expiró')).toBeInTheDocument()
+            })
+        })
+
+        it('navega al paso forgot al clickear Reenviar', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            await user.click(screen.getByRole('button', { name: 'Reenviar' }))
+            expect(screen.getByText('Recuperar contraseña')).toBeInTheDocument()
+        })
+
+        it('el botón de restablecer está habilitado al entrar al paso reset', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            expect(screen.getByRole('button', { name: 'Restablecer contraseña' })).toBeEnabled()
+        })
+
+        it('muestra errores de validación al enviar el formulario vacío', async () => {
+            const { user } = renderWithRouter()
+            await goToReset(user)
+            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+            expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
+            expect(mockResetPassword).not.toHaveBeenCalled()
+        })
     })
 })

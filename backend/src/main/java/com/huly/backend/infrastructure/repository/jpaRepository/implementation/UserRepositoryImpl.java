@@ -126,6 +126,12 @@ public class UserRepositoryImpl implements UserRepository {
         jpaRepository.disableReengagementEmails(userId);
     }
 
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void updatePassword(Long userId, String encodedPassword) {
+        jpaRepository.updatePassword(userId, encodedPassword);
+    }
+
     private AppUser toDomain(AppUserEntity entity) {
         String name = entity.getUserDetails() != null
                 ? entity.getUserDetails().stream()
