@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huly.backend.domain.model.auth.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.port.TokenPort;
+import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.useCase.auth.*;
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
@@ -34,6 +35,8 @@ class AuthControllerTest {
     private RefreshTokenUseCase refreshTokenUseCase;
     private LogoutUseCase logoutUseCase;
     private TokenPort tokenPort;
+    private RequestPasswordResetUseCase requestPasswordResetUseCase;
+    private ResetPasswordUseCase resetPasswordUseCase;
 
     @BeforeEach
     void setUp() {
@@ -43,9 +46,12 @@ class AuthControllerTest {
         refreshTokenUseCase = mock(RefreshTokenUseCase.class);
         logoutUseCase = mock(LogoutUseCase.class);
         tokenPort = mock(TokenPort.class);
+        requestPasswordResetUseCase = mock(RequestPasswordResetUseCase.class);
+        resetPasswordUseCase = mock(ResetPasswordUseCase.class);
 
         AuthController controller = new AuthController(
-                loginUseCase, adminLoginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenPort);
+                loginUseCase, adminLoginUseCase, registerUseCase, refreshTokenUseCase, logoutUseCase, tokenPort,
+                requestPasswordResetUseCase, resetPasswordUseCase);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -242,5 +248,87 @@ class AuthControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(logoutUseCase).execute(null);
+    }
+
+    @Test
+    void forgotPassword_shouldReturn204_whenEmailExists() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "user@huly.com"))))
+                .andExpect(status().isNoContent());
+
+        verify(requestPasswordResetUseCase).execute("user@huly.com");
+    }
+
+    @Test
+    void forgotPassword_shouldReturn404_whenEmailDoesNotExist() throws Exception {
+        doThrow(new ResourceNotFoundException("No existe una cuenta con ese email"))
+                .when(requestPasswordResetUseCase).execute("missing@huly.com");
+
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "missing@huly.com"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void forgotPassword_shouldReturn400_whenEmailIsInvalid() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "not-an-email"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void forgotPassword_shouldReturn400_whenEmailIsBlank() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", ""))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void resetPassword_shouldReturn204_whenTokenIsValid() throws Exception {
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("token", "valid-uuid-token", "newPassword", "newPass123"))))
+                .andExpect(status().isNoContent());
+
+        verify(resetPasswordUseCase).execute("valid-uuid-token", "newPass123");
+    }
+
+    @Test
+    void resetPassword_shouldReturn404_whenTokenIsInvalidOrExpired() throws Exception {
+        doThrow(new ResourceNotFoundException("Token inválido o expirado"))
+                .when(resetPasswordUseCase).execute("bad-token", "newPass123");
+
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("token", "bad-token", "newPassword", "newPass123"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void resetPassword_shouldReturn400_whenTokenIsBlank() throws Exception {
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("token", "", "newPassword", "newPass123"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void resetPassword_shouldReturn400_whenNewPasswordIsTooShort() throws Exception {
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("token", "valid-uuid-token", "newPassword", "abc"))))
+                .andExpect(status().isBadRequest());
     }
 }

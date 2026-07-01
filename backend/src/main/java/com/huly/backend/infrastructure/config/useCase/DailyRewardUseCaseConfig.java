@@ -4,8 +4,9 @@ import com.huly.backend.domain.mapper.dailyReward.ClaimDailyRewardMapper;
 import com.huly.backend.domain.mapper.dailyReward.GetDailyRewardStatusMapper;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
-import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.service.payment.CoinService;
+import com.huly.backend.domain.service.payment.PlanService;
+import com.huly.backend.domain.service.user.UserActivityService;
 import com.huly.backend.domain.useCase.dailyReward.ClaimDailyRewardUseCase;
 import com.huly.backend.domain.useCase.dailyReward.GetDailyRewardStatusUseCase;
 import org.springframework.context.annotation.Bean;
@@ -33,19 +34,20 @@ public class DailyRewardUseCaseConfig {
     @Bean
     public ClaimDailyRewardUseCase claimDailyRewardUseCase(DailyRewardRepository dailyRewardRepository,
                                                            UserDetailDomainRepository userDetailDomainRepository,
-                                                           UserPlanRepository userPlanRepository,
+                                                           PlanService planService,
+                                                           UserActivityService userActivityService,
                                                            CoinService coinService,
                                                            ClaimDailyRewardMapper claimDailyRewardMapper) {
-        return new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository,
-                coinService, Clock.system(ZONE), claimDailyRewardMapper);
+        return new ClaimDailyRewardUseCase(dailyRewardRepository, userDetailDomainRepository, planService,
+                userActivityService, coinService, Clock.system(ZONE), claimDailyRewardMapper);
     }
 
     @Bean
     public GetDailyRewardStatusUseCase getDailyRewardStatusUseCase(DailyRewardRepository dailyRewardRepository,
                                                                    UserDetailDomainRepository userDetailDomainRepository,
-                                                                   UserPlanRepository userPlanRepository,
+                                                                   PlanService planService,
                                                                    GetDailyRewardStatusMapper getDailyRewardStatusMapper) {
-        return new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository,
+        return new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, planService,
                 Clock.system(ZONE), getDailyRewardStatusMapper);
     }
 }

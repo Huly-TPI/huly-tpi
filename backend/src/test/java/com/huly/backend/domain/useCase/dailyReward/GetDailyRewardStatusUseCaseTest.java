@@ -4,26 +4,26 @@ import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusRequest;
 import com.huly.backend.domain.dto.dailyReward.GetDailyRewardStatusResponse;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
-import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.repository.rewards.DailyRewardRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
-import com.huly.backend.domain.repository.user.UserPlanRepository;
+import com.huly.backend.domain.service.payment.PlanService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,15 +39,126 @@ class GetDailyRewardStatusUseCaseTest {
     private UserDetailDomainRepository userDetailDomainRepository;
 
     @Mock
-    private UserPlanRepository userPlanRepository;
+    private PlanService planService;
 
     private GetDailyRewardStatusUseCase useCase;
 
     @BeforeEach
     void setUp() {
         Clock fixedClock = Clock.fixed(TODAY.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneId.from(ZoneOffset.UTC));
-        useCase = new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, userPlanRepository, fixedClock,
+        useCase = new GetDailyRewardStatusUseCase(dailyRewardRepository, userDetailDomainRepository, planService, fixedClock,
                 new com.huly.backend.domain.mapper.dailyReward.GetDailyRewardStatusMapper());
+    }
+
+    @Test
+    @DisplayName("Devuelve todo en cero cuando no hay recompensas configuradas")
+    void executeShouldReturnZerosWhenNoRewardsConfigured() {
+        givenClaimState(0, null);
+        givenNoConfiguredCycle();
+
+        GetDailyRewardStatusResponse status = status();
+
+        assertThat(status.days()).isEmpty();
+        thenStatusWas(status, true, 0, 0, 0);
+    }
+
+    @Test
+    @DisplayName("Reporta el próximo día y la racha viva cuando es consecutivo y puede reclamar")
+    void executeShouldReportNextDayAndAliveStreakWhenConsecutiveAndCanClaim() {
+        givenClaimState(3, TODAY.minusDays(1));
+        givenConfiguredCycle();
+
+        GetDailyRewardStatusResponse status = status();
+
+        thenStatusWas(status, true, 3, 4, 3);
+    }
+
+    @Test
+    @DisplayName("Reinicia la racha cuando se salteó un día")
+    void executeShouldResetStreakWhenADayWasMissed() {
+        givenClaimState(3, TODAY.minusDays(2));
+        givenConfiguredCycle();
+
+        GetDailyRewardStatusResponse status = status();
+
+        // racha rota -> no viva (currentStreak 0)
+        thenStatusWas(status, true, 0, 1, 0);
+    }
+
+    @Test
+    @DisplayName("Arranca en el Día 1 cuando es el primer reclamo")
+    void executeShouldStartAtDayOneWhenFirstClaim() {
+        givenClaimState(0, null);
+        givenConfiguredCycle();
+
+        GetDailyRewardStatusResponse status = status();
+
+        thenStatusWas(status, true, 0, 1, 0);
+    }
+
+    @Test
+    @DisplayName("Marca los días completos cuando ya reclamó hoy")
+    void executeShouldMarkCompletedDaysWhenAlreadyClaimedToday() {
+        givenClaimState(3, TODAY);
+        givenConfiguredCycle();
+
+        GetDailyRewardStatusResponse status = status();
+
+        thenStatusWas(status, false, 3, 0, 3);
+    }
+
+    @Test
+    @DisplayName("Usa la posición del ciclo cuando ya reclamó hoy tras reiniciar el ciclo")
+    void executeShouldUseCyclePositionWhenAlreadyClaimedTodayAfterWrap() {
+        givenClaimState(8, TODAY);
+        givenConfiguredCycle();
+
+        GetDailyRewardStatusResponse status = status();
+
+        // cycleDay(8, 7) = 1
+        thenStatusWas(status, false, 8, 0, 1);
+    }
+
+    @Test
+    @DisplayName("No reporta bonus cuando el usuario no tiene plan")
+    void executeShouldReportNoBonusWhenUserHasNoPlan() {
+        givenClaimState(0, null);
+        givenConfiguredCycle();
+
+        GetDailyRewardStatusResponse status = status();
+
+        thenPlanBonus(status, false);
+    }
+
+    @Test
+    @DisplayName("Reporta bonus cuando el usuario tiene un plan activo")
+    void executeShouldReportBonusWhenUserHasActivePlan() {
+        givenClaimState(0, null);
+        givenConfiguredCycle();
+        givenActivePlan();
+
+        GetDailyRewardStatusResponse status = status();
+
+        thenPlanBonus(status, true);
+    }
+
+    // --- arrange ---
+
+    private void givenClaimState(int streak, LocalDate lastClaimDate) {
+        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
+                .thenReturn(new DailyClaimState(streak, lastClaimDate));
+    }
+
+    private void givenConfiguredCycle() {
+        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
+    }
+
+    private void givenNoConfiguredCycle() {
+        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(List.of());
+    }
+
+    private void givenActivePlan() {
+        when(planService.hasActivePlan(eq(USER_ID), any())).thenReturn(true);
     }
 
     private List<DailyReward> sevenDayCycle() {
@@ -57,109 +168,24 @@ class GetDailyRewardStatusUseCaseTest {
                 .toList();
     }
 
-    @Test
-    void execute_shouldReturnZeros_whenNoRewardsConfigured() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID)).thenReturn(new DailyClaimState(0, null));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(List.of());
+    // --- act ---
 
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.days()).isEmpty();
-        assertThat(status.currentStreak()).isEqualTo(0);
-        assertThat(status.completedDays()).isEqualTo(0);
-        assertThat(status.canClaimToday()).isTrue();
-        assertThat(status.nextDay()).isEqualTo(0);
+    private GetDailyRewardStatusResponse status() {
+        return useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
     }
 
-    @Test
-    void execute_shouldReportNextDayAndAliveStreak_whenConsecutiveAndCanClaim() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
-                .thenReturn(new DailyClaimState(3, TODAY.minusDays(1)));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
+    // --- assert ---
 
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.canClaimToday()).isTrue();
-        assertThat(status.currentStreak()).isEqualTo(3);
-        assertThat(status.nextDay()).isEqualTo(4);
-        assertThat(status.completedDays()).isEqualTo(3);
+    /** Verifica los campos de progreso del estado (si puede reclamar, racha vigente, próximo día y días completos). */
+    private void thenStatusWas(GetDailyRewardStatusResponse status, boolean canClaimToday,
+                               int currentStreak, int nextDay, int completedDays) {
+        assertThat(status.canClaimToday()).isEqualTo(canClaimToday);
+        assertThat(status.currentStreak()).isEqualTo(currentStreak);
+        assertThat(status.nextDay()).isEqualTo(nextDay);
+        assertThat(status.completedDays()).isEqualTo(completedDays);
     }
 
-    @Test
-    void execute_shouldResetStreak_whenADayWasMissed() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
-                .thenReturn(new DailyClaimState(3, TODAY.minusDays(2)));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
-
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.canClaimToday()).isTrue();
-        assertThat(status.currentStreak()).isEqualTo(0); // racha rota -> no viva
-        assertThat(status.nextDay()).isEqualTo(1);
-        assertThat(status.completedDays()).isEqualTo(0);
-    }
-
-    @Test
-    void execute_shouldStartAtDayOne_whenFirstClaim() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID)).thenReturn(new DailyClaimState(0, null));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
-
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.currentStreak()).isEqualTo(0);
-        assertThat(status.nextDay()).isEqualTo(1);
-        assertThat(status.completedDays()).isEqualTo(0);
-    }
-
-    @Test
-    void execute_shouldMarkCompletedDays_whenAlreadyClaimedToday() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
-                .thenReturn(new DailyClaimState(3, TODAY));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
-
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.canClaimToday()).isFalse();
-        assertThat(status.currentStreak()).isEqualTo(3);
-        assertThat(status.completedDays()).isEqualTo(3);
-        assertThat(status.nextDay()).isEqualTo(0);
-    }
-
-    @Test
-    void execute_shouldUseCyclePosition_whenAlreadyClaimedTodayAfterWrap() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID))
-                .thenReturn(new DailyClaimState(8, TODAY));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
-
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.canClaimToday()).isFalse();
-        assertThat(status.currentStreak()).isEqualTo(8);
-        assertThat(status.completedDays()).isEqualTo(1); // cycleDay(8, 7) = 1
-    }
-
-    @Test
-    void execute_shouldReportNoBonus_whenUserHasNoPlan() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID)).thenReturn(new DailyClaimState(0, null));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
-
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.planBonusActive()).isFalse();
-    }
-
-    @Test
-    void execute_shouldReportBonus_whenUserHasActivePlan() {
-        when(userDetailDomainRepository.findDailyClaimState(USER_ID)).thenReturn(new DailyClaimState(0, null));
-        when(dailyRewardRepository.findAllOrderByDay()).thenReturn(sevenDayCycle());
-        UserPlan activePlan = UserPlan.builder()
-                .userId(USER_ID)
-                .expiresAt(Instant.parse("2026-12-31T00:00:00Z"))
-                .build();
-        when(userPlanRepository.findByUser(USER_ID)).thenReturn(Optional.of(activePlan));
-
-        GetDailyRewardStatusResponse status = useCase.execute(new GetDailyRewardStatusRequest(USER_ID));
-
-        assertThat(status.planBonusActive()).isTrue();
+    private void thenPlanBonus(GetDailyRewardStatusResponse status, boolean expected) {
+        assertThat(status.planBonusActive()).isEqualTo(expected);
     }
 }

@@ -181,4 +181,34 @@ describe('AuthForm', () => {
         render(<AuthForm {...defaultProps} />)
         expect(screen.getByRole('button', { name: 'Mostrar contraseña' })).toBeInTheDocument()
     })
+
+    it('renderiza el link de olvidaste tu contraseña cuando se pasa onForgotPassword', () => {
+        render(<AuthForm {...defaultProps} onForgotPassword={vi.fn()} />)
+        expect(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' })).toBeInTheDocument()
+    })
+
+    it('no renderiza el link de olvidaste tu contraseña si no se pasa onForgotPassword', () => {
+        render(<AuthForm {...defaultProps} />)
+        expect(screen.queryByRole('button', { name: '¿Olvidaste tu contraseña?' })).not.toBeInTheDocument()
+    })
+
+    it('llama a onForgotPassword al hacer click en el link', async () => {
+        const onForgotPassword = vi.fn()
+        const user = userEvent.setup()
+        render(<AuthForm {...defaultProps} onForgotPassword={onForgotPassword} />)
+
+        await user.click(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }))
+
+        expect(onForgotPassword).toHaveBeenCalledOnce()
+    })
+
+    it('muestra el mensaje de éxito cuando se pasa successMessage', () => {
+        render(<AuthForm {...defaultProps} successMessage="¡Contraseña actualizada!" />)
+        expect(screen.getByText('¡Contraseña actualizada!')).toBeInTheDocument()
+    })
+
+    it('no muestra mensaje de éxito si successMessage es null', () => {
+        render(<AuthForm {...defaultProps} successMessage={null} />)
+        expect(screen.queryByText('¡Contraseña actualizada!')).not.toBeInTheDocument()
+    })
 })

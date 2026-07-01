@@ -23,9 +23,11 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
   }
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-2xl border border-[#ACCCA4]/50 bg-white p-2.5 shadow-sm transition-shadow hover:shadow-md sm:gap-2 sm:p-3">
-      {preview && (
-        <img src={preview} alt={item.name} className="mx-auto h-14 w-14 object-contain sm:h-20 sm:w-20" />
+        <div className="flex flex-col gap-1.5 rounded-2xl border border-[#ACCCA4]/50 bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:gap-2 sm:p-3">
+        {preview && (
+        <div className="mx-auto flex h-20 w-full items-center justify-center rounded-xl bg-gradient-to-b from-[#E9F1EA]/70 to-transparent sm:h-24">
+          <img src={preview} alt={item.name} className="h-14 w-14 object-contain sm:h-20 sm:w-20" />
+        </div>
       )}
       {item.premiumOnly && (
         <span className="mt-0.5 inline-block rounded-full bg-[#8869AC]/15 px-2 py-0.5 text-[10px] lg:text-[11px] font-semibold text-[#8869AC]">

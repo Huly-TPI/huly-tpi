@@ -18,6 +18,14 @@ vi.mock('../../api/onboarding', () => ({
   completeProfileTutorial: vi.fn(),
 }))
 
+vi.mock('../../api/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../api/auth')>()
+  return {
+    ...actual,
+    changePassword: vi.fn(),
+  }
+})
+
 const authenticatedUser = {
   id: 1,
   name: 'Jimena Alvarez',
@@ -215,5 +223,29 @@ describe('Profile', () => {
     fireEvent.change(volumeSlider, { target: { value: '0.25' } })
 
     expect(volumeSlider).toHaveValue('0.25')
+  })
+
+  it('abre el modal de cambio de contraseña al hacer click en el Baúl', async () => {
+    const user = userEvent.setup()
+
+    renderProfile()
+
+    await user.click(screen.getByRole('button', { name: 'Baúl' }))
+
+    expect(screen.getByRole('dialog', { name: 'Cambiar contraseña' })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Contraseña actual')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Nueva contraseña')).toBeInTheDocument()
+  })
+
+  it('cierra el modal de cambio de contraseña al hacer click en el botón cerrar', async () => {
+    const user = userEvent.setup()
+
+    renderProfile()
+
+    await user.click(screen.getByRole('button', { name: 'Baúl' }))
+    expect(screen.getByRole('dialog', { name: 'Cambiar contraseña' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar modal' }))
+    expect(screen.queryByRole('dialog', { name: 'Cambiar contraseña' })).not.toBeInTheDocument()
   })
 })

@@ -3,12 +3,20 @@ package com.huly.backend.domain.model.dailyReward;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DailyRewardCycleTest {
 
     private static final LocalDate TODAY = LocalDate.of(2026, 6, 12);
+
+    private static List<DailyReward> sevenDayCycle() {
+        int[] coins = {10, 15, 20, 25, 30, 40, 100};
+        return java.util.stream.IntStream.rangeClosed(1, 7)
+                .mapToObj(d -> DailyReward.builder().id((long) d).dayNumber(d).coins(coins[d - 1]).build())
+                .toList();
+    }
 
     // --- isAlive ---
 
@@ -102,5 +110,76 @@ class DailyRewardCycleTest {
         assertThat(DailyRewardCycle.applyPlanBonus(15, true)).isEqualTo(23);
         // 25 * 1.5 = 37.5 -> 38
         assertThat(DailyRewardCycle.applyPlanBonus(25, true)).isEqualTo(38);
+    }
+
+    // --- currentStreak ---
+
+    @Test
+    void currentStreak_shouldBeStreak_whenAlive() {
+        assertThat(DailyRewardCycle.currentStreak(new DailyClaimState(3, TODAY.minusDays(1)), TODAY)).isEqualTo(3);
+    }
+
+    @Test
+    void currentStreak_shouldBeZero_whenStreakBroken() {
+        assertThat(DailyRewardCycle.currentStreak(new DailyClaimState(3, TODAY.minusDays(2)), TODAY)).isEqualTo(0);
+    }
+
+    @Test
+    void currentStreak_shouldBeZero_whenNeverClaimed() {
+        assertThat(DailyRewardCycle.currentStreak(new DailyClaimState(0, null), TODAY)).isEqualTo(0);
+    }
+
+    // --- coinsForDay ---
+
+    @Test
+    void coinsForDay_shouldReturnCoinsOfThatDay_whenPresent() {
+        assertThat(DailyRewardCycle.coinsForDay(sevenDayCycle(), 4)).isEqualTo(25);
+        assertThat(DailyRewardCycle.coinsForDay(sevenDayCycle(), 7)).isEqualTo(100);
+    }
+
+    @Test
+    void coinsForDay_shouldFallbackToFirstDay_whenDayMissingFromConfig() {
+        List<DailyReward> gapped = List.of(
+                DailyReward.builder().id(1L).dayNumber(1).coins(10).build(),
+                DailyReward.builder().id(2L).dayNumber(5).coins(99).build());
+        // El día 2 no existe en la config -> cae al primer día (10).
+        assertThat(DailyRewardCycle.coinsForDay(gapped, 2)).isEqualTo(10);
+    }
+
+    // --- progress ---
+
+    @Test
+    void progress_shouldBeZeros_whenCycleEmpty() {
+        CycleProgress p = DailyRewardCycle.progress(new DailyClaimState(3, TODAY.minusDays(1)), TODAY, 0, true);
+        assertThat(p.nextDay()).isEqualTo(0);
+        assertThat(p.completedDays()).isEqualTo(0);
+    }
+
+    @Test
+    void progress_shouldReportNextDayAndCompleted_whenCanClaimConsecutive() {
+        CycleProgress p = DailyRewardCycle.progress(new DailyClaimState(3, TODAY.minusDays(1)), TODAY, 7, true);
+        assertThat(p.nextDay()).isEqualTo(4);
+        assertThat(p.completedDays()).isEqualTo(3);
+    }
+
+    @Test
+    void progress_shouldStartAtDayOne_whenCanClaimFirstTime() {
+        CycleProgress p = DailyRewardCycle.progress(new DailyClaimState(0, null), TODAY, 7, true);
+        assertThat(p.nextDay()).isEqualTo(1);
+        assertThat(p.completedDays()).isEqualTo(0);
+    }
+
+    @Test
+    void progress_shouldHaveNoNextDay_whenAlreadyClaimedToday() {
+        CycleProgress p = DailyRewardCycle.progress(new DailyClaimState(3, TODAY), TODAY, 7, false);
+        assertThat(p.nextDay()).isEqualTo(0);
+        assertThat(p.completedDays()).isEqualTo(3);
+    }
+
+    @Test
+    void progress_shouldUseCyclePosition_whenAlreadyClaimedAfterWrap() {
+        CycleProgress p = DailyRewardCycle.progress(new DailyClaimState(8, TODAY), TODAY, 7, false);
+        assertThat(p.nextDay()).isEqualTo(0);
+        assertThat(p.completedDays()).isEqualTo(1); // cycleDay(8, 7) = 1
     }
 }

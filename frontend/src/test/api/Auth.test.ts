@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { register, login, logout, backofficeLogin } from '../../api/auth'
+import { register, login, logout, backofficeLogin, changePassword } from '../../api/auth'
 import type { RegisterRequest, LoginRequest } from '../../api/auth'
 import { api } from '../../api/client'
 import { ApiError } from '../../api/apiError'
@@ -7,10 +7,12 @@ import { ApiError } from '../../api/apiError'
 vi.mock('../../api/client', () => ({
     api: {
         post: vi.fn(),
+        put: vi.fn(),
     },
 }))
 
 const mockedPost = vi.mocked(api.post)
+const mockedPut = vi.mocked(api.put)
 
 const validRegisterRequest: RegisterRequest = {
     name: 'Mili',
@@ -145,5 +147,40 @@ describe('logout', () => {
         mockedPost.mockRejectedValueOnce(new Error('Sin conexión'))
 
         await expect(logout()).rejects.toThrow('Sin conexión')
+    })
+})
+
+describe('changePassword', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
+
+    it('llama a PUT /users/me/password con la contraseña actual y la nueva', async () => {
+        mockedPut.mockResolvedValueOnce(undefined)
+
+        await changePassword('currentPass123', 'newPass456')
+
+        expect(mockedPut).toHaveBeenCalledWith('/users/me/password', {
+            currentPassword: 'currentPass123',
+            newPassword: 'newPass456',
+        })
+    })
+
+    it('resuelve sin valor cuando el cambio es exitoso', async () => {
+        mockedPut.mockResolvedValueOnce(undefined)
+
+        await expect(changePassword('currentPass123', 'newPass456')).resolves.toBeUndefined()
+    })
+
+    it('propaga el error si la contraseña actual es incorrecta', async () => {
+        mockedPut.mockRejectedValueOnce(new Error('Current password is incorrect'))
+
+        await expect(changePassword('wrongPass', 'newPass456')).rejects.toThrow('Current password is incorrect')
+    })
+
+    it('propaga el error ante fallas del servidor', async () => {
+        mockedPut.mockRejectedValueOnce(new Error('Internal server error'))
+
+        await expect(changePassword('currentPass123', 'newPass456')).rejects.toThrow('Internal server error')
     })
 })
