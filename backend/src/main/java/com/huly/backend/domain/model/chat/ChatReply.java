@@ -11,6 +11,11 @@ public record ChatReply(
         SuggestedChatAction suggestedAction,
         GeneratedChallenge generatedChallenge
 ) {
+    private static final String REQUESTED_CHALLENGE_INTRO =
+            "Te propongo un reto simple para empezar: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta.";
+    private static final String REQUESTED_CHALLENGE_SUFFIX =
+            " Te propongo este reto: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta.";
+
     public record GeneratedChallenge(String title, String description) {
 
         public static GeneratedChallenge defaultActionChallenge() {
@@ -19,6 +24,13 @@ public record ChatReply(
                     "Elegí una acción simple que puedas hacer en los próximos 10 minutos "
                             + "y realizala sin buscar que salga perfecta."
             );
+        }
+
+        /**
+         * Indica si el reto generado tiene datos suficientes para ser recordado.
+         */
+        public boolean isRememberable() {
+            return title != null && !title.isBlank();
         }
     }
 
@@ -65,6 +77,18 @@ public record ChatReply(
 
     public ChatReply withoutGeneratedChallenge() {
         return withGeneratedChallenge(null);
+    }
+
+    /**
+     * Devuelve una copia con el reto de acción por defecto: si no hay contenido usa el texto
+     * introductorio, y si ya hay contenido le agrega la propuesta de reto al final.
+     */
+    public ChatReply withRequestedActionChallenge() {
+        String next = content == null || content.isBlank()
+                ? REQUESTED_CHALLENGE_INTRO
+                : content + REQUESTED_CHALLENGE_SUFFIX;
+        return withContent(next)
+                .withGeneratedChallenge(GeneratedChallenge.defaultActionChallenge());
     }
 
     /**

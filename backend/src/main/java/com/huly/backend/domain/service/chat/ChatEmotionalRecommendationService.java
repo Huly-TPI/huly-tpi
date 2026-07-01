@@ -1,41 +1,37 @@
-package com.huly.backend.domain.useCase.chat;
+package com.huly.backend.domain.service.chat;
 
-import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
 import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
 import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
 import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsRequest;
 import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsResponse;
+import com.huly.backend.domain.mapper.chat.ChatMapper;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
-import com.huly.backend.domain.model.chat.SuggestedChatAction;
-import com.huly.backend.domain.model.enums.EmotionalEventSource;
-import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
-import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
-import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
-public class GetChatEmotionalRecommendationUseCase {
-
-    private static final String ACTIVITIES_URL = "/api/activities";
+public class ChatEmotionalRecommendationService {
 
     private final EmotionalAnalysisPort emotionalAnalysisPort;
     private final PromptBuilderService promptBuilderService;
     private final ChatEmotionalRecommendationPolicy recommendationPolicy;
     private final GetEmotionalRecommendationsUseCase recommendationsUseCase;
     private final CreateEmotionalEventUseCase createEmotionalEventUseCase;
+    private final ChatMapper mapper;
 
-    public ChatRecommendationOutcome execute(
+    public ChatRecommendationOutcome recommend(
             String message,
             Long userId,
             String basePrompt,
@@ -97,15 +93,11 @@ public class GetChatEmotionalRecommendationUseCase {
             }
 
             EmotionalRecommendationItem recommendation = result.recommendations().get(0);
-            EmotionalEventResponse event = createEmotionalEventUseCase.execute(toEventRequest(
-                    message,
-                    userId,
-                    analysis,
-                    recommendation
-            ));
+            EmotionalEventResponse event = createEmotionalEventUseCase.execute(
+                    mapper.toCreateEmotionalEventRequest(message, userId, analysis, recommendation));
             log.info("emotional_recommendation_created userId={} eventId={} activityId={} type={}",
                     userId, event.id(), recommendation.activityId(), recommendation.type());
-            return new ChatRecommendationOutcome(analysis, toSuggestedAction(recommendation, event));
+            return new ChatRecommendationOutcome(analysis, mapper.toSuggestedAction(recommendation, event));
         } catch (Exception e) {
             log.warn("emotional_recommendation_failed userId={} reason={}", userId, e.getMessage(), e);
             return ChatRecommendationOutcome.none(analysis);
@@ -129,51 +121,5 @@ public class GetChatEmotionalRecommendationUseCase {
                 analysis.intensity(),
                 analysis.shortReason()
         );
-    }
-
-    private CreateEmotionalEventRequest toEventRequest(
-            String message,
-            Long userId,
-            EmotionalAnalysisResult analysis,
-            EmotionalRecommendationItem recommendation
-    ) {
-        return new CreateEmotionalEventRequest(
-                userId,
-                EmotionalEventSource.CHATBOT,
-                message,
-                emotionName(analysis),
-                analysis.confidence(),
-                analysis.valence(),
-                analysis.arousal(),
-                analysis.dominance(),
-                analysis.intensity(),
-                analysis.userGoal(),
-                generatedRecommendationText(recommendation),
-                recommendation.activityId(),
-                null
-        );
-    }
-
-    private SuggestedChatAction toSuggestedAction(EmotionalRecommendationItem recommendation, EmotionalEventResponse event) {
-        return new SuggestedChatAction(
-                recommendation.type(),
-                recommendation.activityId(),
-                recommendation.title(),
-                recommendation.description(),
-                ACTIVITIES_URL,
-                event.id()
-        );
-    }
-
-    private String generatedRecommendationText(EmotionalRecommendationItem recommendation) {
-        String reason = recommendation.reason() == null || recommendation.reason().isBlank()
-                ? ""
-                : " " + recommendation.reason();
-        return recommendation.title() + ": " + recommendation.description() + reason;
-    }
-
-    private String emotionName(EmotionalAnalysisResult analysis) {
-        EmotionType emotion = analysis.detectedEmotion() == null ? EmotionType.NEUTRAL : analysis.detectedEmotion();
-        return emotion.name();
     }
 }

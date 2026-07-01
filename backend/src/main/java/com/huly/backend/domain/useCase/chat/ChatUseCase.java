@@ -12,6 +12,8 @@ import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationService;
+import com.huly.backend.domain.service.chat.ChatPreferenceHandlingService;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
@@ -21,6 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * Caso de uso principal del chatbot. Resuelve primero un posible cambio de preferencia
+ * (nombre/estilo) y, si la conversación continúa, arma el contexto, evalúa si corresponde
+ * recomendar una actividad, genera la respuesta del LLM y persiste el turno.
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class ChatUseCase {
@@ -31,16 +38,17 @@ public class ChatUseCase {
     private final RiskWordRepository riskWordRepository;
     private final PromptBuilderService promptBuilderService;
     private final UserVectorMemoryService userVectorMemoryService;
-    private final GetChatEmotionalRecommendationUseCase getChatEmotionalRecommendationUseCase;
+    private final ChatEmotionalRecommendationService chatEmotionalRecommendationService;
     private final ChatQuotaService chatQuotaService;
     private final UserRepository userRepository;
     private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
-    private final HandleChatPreferencesUseCase handleChatPreferencesUseCase;
+    private final ChatPreferenceHandlingService chatPreferenceHandlingService;
     private final ChatMapper mapper;
 
+    // Punto de entrada del chat: atiende cambios de preferencia y, si sigue, procesa el mensaje.
     public ChatReply execute(String message, String conversationId, Long userId) {
         ChatPreferenceHandlingResult preferenceResult =
-                handleChatPreferencesUseCase.execute(userId, conversationId, message);
+                chatPreferenceHandlingService.handle(userId, conversationId, message);
         if (!preferenceResult.continueConversation()) {
             return preferenceResult.directReply();
         }
@@ -55,6 +63,7 @@ public class ChatUseCase {
                 userIntent);
     }
 
+    // Pipeline del mensaje: cuota → contexto → recomendación → respuesta → persistencia.
     private ChatReply processMessage(
             String message,
             String conversationId,
@@ -63,39 +72,37 @@ public class ChatUseCase {
             ChatUserIntent userIntent) {
         chatQuotaService.assertWithinLimit(userId);
         ChatContext context = loadChatContext(message, conversationId, userId);
-        ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(
-                message,
-                userId,
-                context,
-                userIntent);
-        SuggestedChatAction suggestedAction = recommendationOutcome != null
-                ? recommendationOutcome.suggestedAction()
-                : null;
-        context = context.withSystemPrompt(buildSystemPrompt(context, suggestedAction, userIntent));
-
-        ChatReply reply = llmChatPort.chat(context.systemPrompt(), message, context.history());
-        reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
-
-        if (ChatUserIntent.isChallengeResponse(message)) {
-            reply = reply.withoutGeneratedChallenge();
-        }
-
-        ChatReply finalReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
-        finalReply = appendCommunicationStyleQuestionIfSafe(
-                finalReply,
-                userId,
-                offerCommunicationStyleWhenSafe);
-        saveConversationExchange(conversationId, message, finalReply, userId);
-
-        rememberChatMessage(userId, conversationId, message);
-
+        ChatRecommendationOutcome recommendationOutcome = evaluateRecommendation(message, userId, context, userIntent);
+        ChatReply reply = generateReply(context, message, userIntent, recommendationOutcome);
+        ChatReply recommendedReply = applyRecommendationOutcome(conversationId, userId, reply, recommendationOutcome);
+        ChatReply finalReply = appendCommunicationStyleQuestionIfSafe(recommendedReply, userId, offerCommunicationStyleWhenSafe);
+        recordConversationTurn(conversationId, message, finalReply, userId);
         return finalReply;
     }
 
+    // Genera la respuesta del LLM con el prompt enriquecido y ajusta el reto según el intent.
+    private ChatReply generateReply(
+            ChatContext context,
+            String message,
+            ChatUserIntent userIntent,
+            ChatRecommendationOutcome recommendationOutcome) {
+        SuggestedChatAction suggestedAction = recommendationOutcome != null
+                ? recommendationOutcome.suggestedAction()
+                : null;
+        ChatContext enriched = context.withSystemPrompt(buildSystemPrompt(context, suggestedAction, userIntent));
+        ChatReply reply = llmChatPort.chat(enriched.systemPrompt(), message, enriched.history());
+        reply = ensureRequestedChallenge(reply, userIntent, suggestedAction);
+        return ChatUserIntent.isChallengeResponse(message)
+                ? reply.withoutGeneratedChallenge()
+                : reply;
+    }
+
+    // Guarda el mensaje del usuario en la memoria vectorial.
     private void rememberChatMessage(Long userId, String conversationId, String message) {
         userVectorMemoryService.saveMemory(mapper.toUserMemoryCommand(userId, conversationId, message));
     }
 
+    // Decide si corresponde recomendar una actividad emocional (salvo pedido explícito de reto).
     private ChatRecommendationOutcome evaluateRecommendation(
             String message,
             Long userId,
@@ -104,7 +111,7 @@ public class ChatUseCase {
         if (userIntent == ChatUserIntent.CHALLENGE_REQUEST) {
             return ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral());
         }
-        return getChatEmotionalRecommendationUseCase.execute(
+        return chatEmotionalRecommendationService.recommend(
                 message,
                 userId,
                 context.basePrompt(),
@@ -114,6 +121,7 @@ public class ChatUseCase {
                 userIntent == ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST);
     }
 
+    // Reúne prompt base, memorias, palabras de riesgo, historial y personalización.
     private ChatContext loadChatContext(String message, String conversationId, Long userId) {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
@@ -123,6 +131,7 @@ public class ChatUseCase {
         return new ChatContext(basePrompt, null, riskWords, memories, history, personalization);
     }
 
+    // Arma el system prompt enriquecido que se le envía al LLM.
     private String buildSystemPrompt(
             ChatContext context,
             SuggestedChatAction suggestedAction,
@@ -136,24 +145,24 @@ public class ChatUseCase {
                 context.personalization());
     }
 
+    // Trae el nombre registrado y las preferencias de conversación del usuario.
     private ChatPersonalizationContext loadPersonalizationContext(Long userId) {
         String registeredName = userRepository.findById(userId)
                 .map(AppUser::getName)
                 .orElse(null);
         ChatConversationPreference preference =
                 chatConversationPreferenceRepository.findByUserId(userId).orElse(null);
-        return new ChatPersonalizationContext(
-                registeredName,
-                preference != null ? preference.getPreferredName() : null,
-                preference != null ? preference.getCommunicationStyle() : null);
+        return ChatPersonalizationContext.from(registeredName, preference);
     }
 
+    // Prompt base configurado (cadena vacía si no hay configuración).
     private String basePrompt() {
         return chatConfigRepository.findFirst()
                 .map(ChatConfig::getSystemPrompt)
                 .orElse("");
     }
 
+    // Agrega la pregunta de estilo de comunicación si la respuesta es segura y quedó pendiente.
     private ChatReply appendCommunicationStyleQuestionIfSafe(
             ChatReply reply,
             Long userId,
@@ -174,6 +183,7 @@ public class ChatUseCase {
         return reply.appendContent(CommunicationStyle.QUESTION_TEXT);
     }
 
+    // Aplica el resultado de la recomendación a la reply y persiste la memoria correspondiente.
     private ChatReply applyRecommendationOutcome(
             String conversationId,
             Long userId,
@@ -191,14 +201,16 @@ public class ChatUseCase {
         return enriched.withSuggestedAction(outcome.suggestedAction()).withoutGeneratedChallenge();
     }
 
+    // Persiste el reto generado en la memoria vectorial si es recordable.
     private void rememberGeneratedChallenge(Long userId, String conversationId, ChatReply.GeneratedChallenge challenge) {
-        if (challenge == null || challenge.title() == null || challenge.title().isBlank()) {
+        if (challenge == null || !challenge.isRememberable()) {
             return;
         }
         userVectorMemoryService.saveMemory(
                 mapper.toGeneratedChallengeCommand(userId, conversationId, challenge));
     }
 
+    // Persiste en la memoria vectorial la actividad recomendada.
     private void rememberRecommendedActivity(Long userId, String conversationId, Long emotionalEventId, SuggestedChatAction action) {
         if (action == null) {
             return;
@@ -207,6 +219,7 @@ public class ChatUseCase {
                 mapper.toRecommendedActivityCommand(userId, conversationId, emotionalEventId, action));
     }
 
+    // Garantiza un reto por defecto cuando el usuario lo pidió y no se generó ninguno.
     private ChatReply ensureRequestedChallenge(
             ChatReply reply,
             ChatUserIntent userIntent,
@@ -216,14 +229,10 @@ public class ChatUseCase {
                 || reply.generatedChallenge() != null) {
             return reply;
         }
-
-        String content = reply.content() == null || reply.content().isBlank()
-                ? "Te propongo un reto simple para empezar: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta."
-                : reply.content() + " Te propongo este reto: elegí una acción pequeña que puedas hacer en los próximos 10 minutos y hacela sin buscar que salga perfecta.";
-        return reply.withContent(content)
-                .withGeneratedChallenge(ChatReply.GeneratedChallenge.defaultActionChallenge());
+        return reply.withRequestedActionChallenge();
     }
 
+    // Adjunta a la reply la emoción e intensidad detectadas cuando son aprovechables.
     private ChatReply applyAnalysisMetadata(ChatReply reply, EmotionalAnalysisResult analysis) {
         if (analysis == null || !analysis.hasUsableEmotion()) {
             return reply;
@@ -231,11 +240,19 @@ public class ChatUseCase {
         return reply.withEmotionalMetadata(analysis.detectedEmotion(), analysis.chatIntensity());
     }
 
+    // Registra el turno completo: historial de conversación + memoria del usuario.
+    private void recordConversationTurn(String conversationId, String message, ChatReply reply, Long userId) {
+        saveConversationExchange(conversationId, message, reply, userId);
+        rememberChatMessage(userId, conversationId, message);
+    }
+
+    // Guarda en el historial tanto el mensaje del usuario como el del asistente.
     private void saveConversationExchange(String conversationId, String message, ChatReply reply, Long userId) {
         saveUserMessage(conversationId, message, reply, userId);
         saveAssistantMessage(conversationId, reply, userId);
     }
 
+    // Guarda el mensaje del usuario en el historial (tolerante a errores).
     private void saveUserMessage(String conversationId, String message, ChatReply reply, Long userId) {
         try {
             chatMemoryPort.addMessage(conversationId, mapper.toUserMessage(message, reply), userId);
@@ -244,6 +261,7 @@ public class ChatUseCase {
         }
     }
 
+    // Guarda el mensaje del asistente en el historial (tolerante a errores).
     private void saveAssistantMessage(String conversationId, ChatReply reply, Long userId) {
         try {
             chatMemoryPort.addMessage(conversationId, mapper.toAssistantMessage(reply), userId);
@@ -252,6 +270,7 @@ public class ChatUseCase {
         }
     }
 
+    // Contexto inmutable que se acumula durante el procesamiento del mensaje.
     private record ChatContext(
             String basePrompt,
             String systemPrompt,

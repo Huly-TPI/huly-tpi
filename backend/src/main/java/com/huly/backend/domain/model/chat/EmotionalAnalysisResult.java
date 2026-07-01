@@ -44,4 +44,12 @@ public record EmotionalAnalysisResult(
     public Integer chatIntensity() {
         return (int) Math.round(Math.max(0.0, Math.min(1.0, intensity)) * 10.0);
     }
+
+    /**
+     * Nombre de la emoción detectada, con {@link EmotionType#NEUTRAL} por defecto.
+     */
+    public String emotionName() {
+        EmotionType emotion = detectedEmotion == null ? EmotionType.NEUTRAL : detectedEmotion;
+        return emotion.name();
+    }
 }

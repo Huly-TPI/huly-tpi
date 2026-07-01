@@ -1,8 +1,13 @@
 package com.huly.backend.domain.mapper.chat;
 
+import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
+import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
+import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
+import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.VectorMemorySource;
@@ -21,6 +26,7 @@ public class ChatMapper {
     private static final String USER_CHAT_MESSAGE = "USER_CHAT_MESSAGE";
     private static final String RECOMMENDED_ACTIVITY = "RECOMMENDED_ACTIVITY";
     private static final String GENERATED_CHALLENGE = "GENERATED_CHALLENGE";
+    private static final String ACTIVITIES_URL = "/api/activities";
 
     public SaveVectorMemoryCommand toUserMemoryCommand(Long userId, String conversationId, String message) {
         return new SaveVectorMemoryCommand(
@@ -110,5 +116,45 @@ public class ChatMapper {
                 reply.generatedChallenge(),
                 null,
                 null);
+    }
+
+    public CreateEmotionalEventRequest toCreateEmotionalEventRequest(
+            String message,
+            Long userId,
+            EmotionalAnalysisResult analysis,
+            EmotionalRecommendationItem recommendation) {
+        return new CreateEmotionalEventRequest(
+                userId,
+                EmotionalEventSource.CHATBOT,
+                message,
+                analysis.emotionName(),
+                analysis.confidence(),
+                analysis.valence(),
+                analysis.arousal(),
+                analysis.dominance(),
+                analysis.intensity(),
+                analysis.userGoal(),
+                generatedRecommendationText(recommendation),
+                recommendation.activityId(),
+                null);
+    }
+
+    public SuggestedChatAction toSuggestedAction(
+            EmotionalRecommendationItem recommendation,
+            EmotionalEventResponse event) {
+        return new SuggestedChatAction(
+                recommendation.type(),
+                recommendation.activityId(),
+                recommendation.title(),
+                recommendation.description(),
+                ACTIVITIES_URL,
+                event.id());
+    }
+
+    private String generatedRecommendationText(EmotionalRecommendationItem recommendation) {
+        String reason = recommendation.reason() == null || recommendation.reason().isBlank()
+                ? ""
+                : " " + recommendation.reason();
+        return recommendation.title() + ": " + recommendation.description() + reason;
     }
 }
