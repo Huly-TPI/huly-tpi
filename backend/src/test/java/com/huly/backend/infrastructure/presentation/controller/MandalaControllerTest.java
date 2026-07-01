@@ -3,6 +3,8 @@ package com.huly.backend.infrastructure.presentation.controller;
 import com.huly.backend.domain.dto.mandala.ClearMandalaProgressRequest;
 import com.huly.backend.domain.dto.mandala.GetMandalaProgressRequest;
 import com.huly.backend.domain.dto.mandala.GetMandalaProgressResponse;
+import com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusRequest;
+import com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusResponse;
 import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
 import com.huly.backend.domain.useCase.mandala.ClearMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.mandala.GetMandalaProgressUseCase;
@@ -121,5 +123,15 @@ class MandalaControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(clearMandalaProgressUseCase).execute(new ClearMandalaProgressRequest(USER_ID, "mandala-01"));
+    }
+
+    @Test
+    void getSessionStatus_returnsStatusSuccessfully() throws Exception {
+        when(getMandalaSessionStatusUseCase.execute(new GetMandalaSessionStatusRequest(USER_ID, "mandala-01")))
+                .thenReturn(new GetMandalaSessionStatusResponse(true));
+
+        mockMvc.perform(get("/api/mandalas/mandala-01/session-status"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"sessionRegistered\":true}"));
     }
 }
