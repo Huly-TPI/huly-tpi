@@ -6,11 +6,13 @@ export enum ActivityType {
   NUBE = 'NUBE',
   BURBUJA = 'BURBUJA',
   RETO = 'RETO',
-  ARENA_ZEN = 'ARENA_ZEN'
+  ARENA_ZEN = 'ARENA_ZEN',
+  MANDALA = 'MANDALA',
 }
 
 export interface RegisterActivitySessionRequest {
   activityType: ActivityType
+  contextId?: string
 }
 
 export const registerActivitySession = (

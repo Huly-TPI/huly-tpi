@@ -2,6 +2,7 @@ package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.mapper.mandala.ClearMandalaProgressMapper;
 import com.huly.backend.domain.mapper.mandala.GetMandalaProgressMapper;
+import com.huly.backend.domain.mapper.mandala.GetMandalaSessionStatusMapper;
 import com.huly.backend.domain.mapper.mandala.ListAvailableMandalasMapper;
 import com.huly.backend.domain.mapper.mandala.SaveMandalaProgressMapper;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
@@ -10,6 +11,7 @@ import com.huly.backend.domain.repository.mandala.MandalaProgressRepository;
 import com.huly.backend.domain.repository.mandala.MandalaRepository;
 import com.huly.backend.domain.useCase.mandala.ClearMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.mandala.GetMandalaProgressUseCase;
+import com.huly.backend.domain.useCase.mandala.GetMandalaSessionStatusUseCase;
 import com.huly.backend.domain.useCase.mandala.ListAvailableMandalasUseCase;
 import com.huly.backend.domain.useCase.mandala.SaveMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
@@ -37,6 +39,11 @@ public class MandalaUseCaseConfig {
     @Bean
     public ClearMandalaProgressMapper clearMandalaProgressMapper() {
         return new ClearMandalaProgressMapper();
+    }
+
+    @Bean
+    public GetMandalaSessionStatusMapper getMandalaSessionStatusMapper() {
+        return new GetMandalaSessionStatusMapper();
     }
 
     @Bean
@@ -79,5 +86,16 @@ public class MandalaUseCaseConfig {
             ClearMandalaProgressMapper clearMandalaProgressMapper) {
         return new ClearMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
                 clearMandalaProgressMapper);
+    }
+
+    @Bean
+    public GetMandalaSessionStatusUseCase getMandalaSessionStatusUseCase(
+            MandalaProgressRepository mandalaProgressRepository,
+            ListAvailableMandalasUseCase listAvailableMandalasUseCase,
+            GetMandalaSessionStatusMapper getMandalaSessionStatusMapper) {
+        return new GetMandalaSessionStatusUseCase(
+                mandalaProgressRepository,
+                listAvailableMandalasUseCase,
+                getMandalaSessionStatusMapper);
     }
 }

@@ -50,6 +50,7 @@ export function UsageTab({
     [ActivityType.BURBUJA]: distribution['BURBUJA'] || 0,
     [ActivityType.RETO]: distribution['RETO'] || 0,
     [ActivityType.ARENA_ZEN]: distribution['ARENA_ZEN'] || 0,
+    [ActivityType.MANDALA]: distribution['MANDALA'] || 0,
   }
   const maxCount = Math.max(...Object.values(counts), 1)
 
@@ -116,7 +117,7 @@ export function UsageTab({
             </select>
           </div>
         </div>
-        <div className={`space-y-4 transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className={`grid gap-4 md:grid-cols-2 transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
           {(Object.entries(counts) as [ActivityType, number][]).map(([key, count]) => {
             const pct = (count / maxCount) * 100
             const metadata = ACTIVITY_METADATA[key]

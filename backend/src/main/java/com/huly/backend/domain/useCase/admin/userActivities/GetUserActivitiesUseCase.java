@@ -46,6 +46,8 @@ public class GetUserActivitiesUseCase {
         distribution.put("NUBE", 0);
         distribution.put("BURBUJA", 0);
         distribution.put("RETO", 0);
+        distribution.put("ARENA_ZEN", 0);
+        distribution.put("MANDALA", 0);
 
         for (ActivitySession session : filteredSessions) {
             String typeName = Objects.requireNonNull(session.getActivityType(), "ActivitySession activityType is required").name();

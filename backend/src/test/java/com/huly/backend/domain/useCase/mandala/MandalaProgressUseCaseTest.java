@@ -6,6 +6,7 @@ import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
 import com.huly.backend.domain.exception.ResourceNotFoundException;
 import com.huly.backend.domain.mapper.mandala.ClearMandalaProgressMapper;
 import com.huly.backend.domain.mapper.mandala.GetMandalaProgressMapper;
+import com.huly.backend.domain.mapper.mandala.GetMandalaSessionStatusMapper;
 import com.huly.backend.domain.mapper.mandala.SaveMandalaProgressMapper;
 import com.huly.backend.domain.model.enums.MandalaAccessType;
 import com.huly.backend.domain.model.enums.MandalaUnlockSource;
@@ -35,6 +36,7 @@ class MandalaProgressUseCaseTest {
     private ListAvailableMandalasUseCase listAvailableMandalasUseCase;
     private SaveMandalaProgressUseCase saveUseCase;
     private GetMandalaProgressUseCase getUseCase;
+    private GetMandalaSessionStatusUseCase getSessionStatusUseCase;
     private ClearMandalaProgressUseCase clearUseCase;
 
     @BeforeEach
@@ -45,6 +47,10 @@ class MandalaProgressUseCaseTest {
                 new SaveMandalaProgressMapper());
         getUseCase = new GetMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
                 new GetMandalaProgressMapper());
+        getSessionStatusUseCase = new GetMandalaSessionStatusUseCase(
+                mandalaProgressRepository,
+                listAvailableMandalasUseCase,
+                new GetMandalaSessionStatusMapper());
         clearUseCase = new ClearMandalaProgressUseCase(mandalaProgressRepository, listAvailableMandalasUseCase,
                 new ClearMandalaProgressMapper());
 
@@ -77,6 +83,7 @@ class MandalaProgressUseCaseTest {
                         .userId(USER_ID)
                         .mandalaId("mandala-01")
                         .paintBlob(paintBlob)
+                        .sessionRegistered(false)
                         .build()));
 
         assertThat(getUseCase.execute(new GetMandalaProgressRequest(USER_ID, "mandala-01")).paintBlob())
@@ -104,6 +111,21 @@ class MandalaProgressUseCaseTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Mandala no disponible");
         verify(mandalaProgressRepository, never()).deleteByUserIdAndMandalaId(any(), any());
+    }
+
+    @Test
+    void getSessionStatus_returnsStoredFlagForAvailableMandala() {
+        when(mandalaProgressRepository.findByUserIdAndMandalaId(USER_ID, "mandala-01"))
+                .thenReturn(Optional.of(MandalaProgress.builder()
+                        .userId(USER_ID)
+                        .mandalaId("mandala-01")
+                        .paintBlob("paint".getBytes())
+                        .sessionRegistered(true)
+                        .build()));
+
+        assertThat(getSessionStatusUseCase.execute(
+                new com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusRequest(USER_ID, "mandala-01"))
+                .sessionRegistered()).isTrue();
     }
 
     private AvailableMandala availableMandala(String id) {

@@ -6,5 +6,6 @@ public enum ActivityType {
     NUBE,
     BURBUJA,
     RETO,
-    ARENA_ZEN
+    ARENA_ZEN,
+    MANDALA
 }

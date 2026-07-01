@@ -28,6 +28,9 @@ public class MandalaProgressEntity {
     @Column(name = "paint_blob", nullable = false)
     private byte[] paintBlob;
 
+    @Column(name = "session_registered", nullable = false)
+    private boolean sessionRegistered;
+
     @Column(name = "updated_at", nullable = false)
     @UpdateTimestamp
     private LocalDateTime updatedAt;

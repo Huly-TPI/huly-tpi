@@ -11,6 +11,8 @@ vi.mock('../../api/activities', () => ({
     NUBE: 'NUBE',
     BURBUJA: 'BURBUJA',
     RETO: 'RETO',
+    ARENA_ZEN: 'ARENA_ZEN',
+    MANDALA: 'MANDALA',
   },
   registerActivitySession: vi.fn(),
 }))
@@ -44,7 +46,7 @@ describe('useActivitySessionTracker', () => {
     })
 
     expect(mockedRegister).toHaveBeenCalledWith(
-      { activityType: ActivityType.BURBUJA },
+      { activityType: ActivityType.BURBUJA, contextId: undefined },
       undefined,
     )
   })
@@ -126,7 +128,7 @@ describe('useActivitySessionTracker', () => {
 
     expect(mockedRegister).toHaveBeenCalledOnce()
     expect(mockedRegister).toHaveBeenCalledWith(
-      { activityType: ActivityType.RESPIRACION },
+      { activityType: ActivityType.RESPIRACION, contextId: undefined },
       undefined,
     )
   })
