@@ -69,11 +69,13 @@ public class ChatUseCaseConfig {
     @Bean
     public ListChatHistoryUseCase listChatHistoryUseCase(
             ChatMessageRepository chatMessageRepository,
-            ChatPreferenceInitializationService chatPreferenceInitializationService
+            ChatPreferenceInitializationService chatPreferenceInitializationService,
+            ChatMapper chatMapper
     ) {
         return new ListChatHistoryUseCase(
                 chatMessageRepository,
-                chatPreferenceInitializationService
+                chatPreferenceInitializationService,
+                chatMapper
         );
     }
 

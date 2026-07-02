@@ -1,8 +1,11 @@
 package com.huly.backend.domain.mapper.chat;
 
+import com.huly.backend.domain.dto.chat.ChatHistoryResponse;
+import com.huly.backend.domain.dto.chat.ChatReplyResponse;
 import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
 import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
 import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
@@ -137,6 +140,31 @@ public class ChatMapper {
                 generatedRecommendationText(recommendation),
                 recommendation.activityId(),
                 null);
+    }
+
+    public ChatReplyResponse toChatReplyResponse(ChatReply reply) {
+        return new ChatReplyResponse(
+                reply.content(),
+                reply.detectedEmotion(),
+                reply.intensity(),
+                reply.riskDetected(),
+                reply.matchedWord(),
+                reply.suggestedAction(),
+                reply.generatedChallenge());
+    }
+
+    public ChatHistoryResponse.Message toHistoryMessage(ChatMessage message) {
+        return new ChatHistoryResponse.Message(
+                message.id(),
+                message.role(),
+                message.content(),
+                message.riskDetected(),
+                message.detectedEmotion(),
+                message.createdAt(),
+                message.suggestedAction(),
+                message.generatedChallenge(),
+                message.suggestedActionDecision(),
+                message.challengeDecision());
     }
 
     public SuggestedChatAction toSuggestedAction(

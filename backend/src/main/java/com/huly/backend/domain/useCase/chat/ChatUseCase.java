@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.chat;
 
+import com.huly.backend.domain.dto.chat.ChatMessageRequest;
+import com.huly.backend.domain.dto.chat.ChatReplyResponse;
 import com.huly.backend.domain.mapper.chat.ChatMapper;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.riskWord.RiskWord;
@@ -46,21 +48,25 @@ public class ChatUseCase {
     private final ChatMapper mapper;
 
     // Punto de entrada del chat: atiende cambios de preferencia y, si sigue, procesa el mensaje.
-    public ChatReply execute(String message, String conversationId, Long userId) {
+    public ChatReplyResponse execute(ChatMessageRequest request) {
+        Long userId = request.userId();
+        String conversationId = request.conversationId();
+        String message = request.message();
+
         ChatPreferenceHandlingResult preferenceResult =
                 chatPreferenceHandlingService.handle(userId, conversationId, message);
         if (!preferenceResult.continueConversation()) {
-            return preferenceResult.directReply();
+            return mapper.toChatReplyResponse(preferenceResult.directReply());
         }
 
         ChatUserIntent userIntent = ChatUserIntent.detect(message);
-
-        return processMessage(
+        ChatReply reply = processMessage(
                 message,
                 conversationId,
                 userId,
                 preferenceResult.offerCommunicationStyleWhenSafe(),
                 userIntent);
+        return mapper.toChatReplyResponse(reply);
     }
 
     // Pipeline del mensaje: cuota → contexto → recomendación → respuesta → persistencia.
