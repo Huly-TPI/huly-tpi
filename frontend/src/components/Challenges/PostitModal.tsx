@@ -18,7 +18,7 @@ export interface PostitModalProps {
 }
 
 const inputBase =
-  'w-full box-border border-0 border-b border-b-[rgba(92,61,30,0.25)] bg-transparent px-0 py-1 font-sans text-[#3b2510] outline-none leading-[1.45] mb-[0.85rem] transition-[border-color] duration-150'
+  'w-full box-border border-0 border-b border-b-[rgba(92,61,30,0.25)] bg-transparent px-0 py-1 font-sans text-[#3b2510] outline-none leading-[1.45] mb-[0.85rem] transition-[border-color] duration-150 [color-scheme:light]'
 
 export default function PostitModal({
   initialMode,
