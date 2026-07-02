@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Huly Pausa Digital",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Una pausa para tu bienestar digital con Huly.",
   "permissions": [
     "storage",
