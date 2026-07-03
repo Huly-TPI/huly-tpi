@@ -1,4 +1,5 @@
 import type { InventoryItemResponse } from '../../api/store'
+import { getBackendOrigin } from '../../api/client'
 import housePinkLight from '../../assets/garden/light-theme/house-pink.webp'
 import housePinkDark from '../../assets/garden/dark-theme/house-pink.webp'
 import houseBlueLight from '../../assets/garden/light-theme/house-blue.webp'
@@ -11,6 +12,7 @@ import treeBlueLight from '../../assets/garden/light-theme/tree-blue.webp'
 import treeBlueDark from '../../assets/garden/dark-theme/tree-blue.webp'
 import treeSakuraLight from '../../assets/garden/light-theme/tree-sakura.webp'
 import treeSakuraDark from '../../assets/garden/dark-theme/tree-sakura.webp'
+
 
 export interface CosmeticImage {
   light: string
@@ -26,13 +28,18 @@ export const cosmeticAssets: Record<string, CosmeticImage> = {
   'tree-blue': { light: treeBlueLight, dark: treeBlueDark },
 }
 
+const resolveUrl = (u: string) => u.startsWith('http') ? u : `${getBackendOrigin()}${u}`
+
 export function resolveEquippedImages(
   inventory: InventoryItemResponse[],
   assets: Record<string, CosmeticImage> = cosmeticAssets,
 ): Record<string, CosmeticImage> {
   const result: Record<string, CosmeticImage> = {}
   for (const item of inventory) {
-    if (item.equipped && assets[item.assetKey]) {
+    if (!item.equipped) continue
+    if (item.imageUrlLight && item.imageUrlDark) {
+      result[item.category] = { light: resolveUrl(item.imageUrlLight), dark: resolveUrl(item.imageUrlDark) }
+    } else if (item.assetKey && assets[item.assetKey]) {
       result[item.category] = assets[item.assetKey]
     }
   }

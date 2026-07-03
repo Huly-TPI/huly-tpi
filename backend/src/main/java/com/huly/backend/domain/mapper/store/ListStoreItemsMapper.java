@@ -27,7 +27,8 @@ public class ListStoreItemsMapper {
                 item.getAssetKey(),
                 item.getPriceCoins(),
                 item.getPrice(),
-                item.isPremiumOnly()
+                item.isPremiumOnly(), 
+                item.getImageUrl()
         );
     }
 }

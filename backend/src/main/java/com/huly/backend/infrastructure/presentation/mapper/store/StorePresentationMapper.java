@@ -49,7 +49,9 @@ public class StorePresentationMapper {
                 .toList();
     }
 
-    private StoreItemResponse toStoreItemResponse(StoreItemView item) {
+    public StoreItemResponse toStoreItemResponse(StoreItemView item) {
+        String light = item.imageUrl();
+        String dark = light == null ? null : light.replace("/light-theme/", "/dark-theme/");
         return new StoreItemResponse(
                 item.id(),
                 item.name(),
@@ -58,17 +60,23 @@ public class StorePresentationMapper {
                 item.assetKey(),
                 item.priceCoins(),
                 item.price(),
-                item.premiumOnly()
-        );
+                item.premiumOnly(),
+                light,
+                dark
+            );
     }
 
     private InventoryItemResponse toInventoryResponse(InventoryItemView item) {
+        String light = item.imageUrl();
+        String dark = light == null ? null : light.replace("/light-theme/", "/dark-theme/");
         return new InventoryItemResponse(
                 item.storeItemId(),
                 item.name(),
                 item.category().name(),
                 item.assetKey(),
-                item.equipped()
-        );
+                item.equipped(),  
+                light, 
+                dark
+            );  
     }
 }
