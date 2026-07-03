@@ -9,11 +9,11 @@ const remove = vi.fn()
 
 vi.mock('../../api/store', () => ({ storeApi: { getItems: () => getItems() } }))
 vi.mock('../../api/adminStore', () => ({
-  adminStoreApi: {
-    create: (...a: unknown[]) => create(...a),
-    update: (...a: unknown[]) => update(...a),
-    remove: (...a: unknown[]) => remove(...a),
-  },
+    adminStoreApi: {
+        create: (...a: unknown[]) => create(...a),
+        update: (...a: unknown[]) => update(...a),
+        remove: (...a: unknown[]) => remove(...a),
+    },
 }))
 
 
@@ -69,4 +69,17 @@ describe('useStoreProducts', () => {
 
         expect(remove).toHaveBeenCalledWith(1)
     })
+
+    it('update llama a la api, recarga y devuelve true', async () => {
+        update.mockResolvedValue(undefined)
+        const { result } = renderHook(() => useStoreProducts())
+        await waitFor(() => expect(result.current.loading).toBe(false))
+
+        let ok: boolean | undefined
+        await act(async () => { ok = await result.current.update(5, {} as never) })
+
+        expect(update).toHaveBeenCalledWith(5, {})
+        expect(ok).toBe(true)
+    })
+
 })
