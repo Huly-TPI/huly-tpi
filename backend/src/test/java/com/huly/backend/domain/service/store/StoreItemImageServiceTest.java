@@ -29,7 +29,7 @@ class StoreItemImageServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(fileStoragePort.upload(any(), anyString(), anyString())).thenReturn("http://x/light");
+        when(fileStoragePort.upload(any(), anyString(), any())).thenReturn("http://x/light");
     }
 
     private List<String> uploadedKeys(String contentType) {
@@ -72,6 +72,11 @@ class StoreItemImageServiceTest {
     @Test
     void uploadThemePair_shouldUseNoExtension_whenContentTypeUnknown() {
         assertThat(uploadedKeys("image/gif").get(0)).doesNotContain(".");
+    }
+
+    @Test
+    void uploadThemePair_shouldUseNoExtension_whenContentTypeNull() {
+        assertThat(uploadedKeys(null).get(0)).doesNotContain(".");
     }
 
 }
