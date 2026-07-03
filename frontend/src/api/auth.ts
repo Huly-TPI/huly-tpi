@@ -75,3 +75,12 @@ export interface Membership {
 
 export const getMyMembership = () =>
   api.get<Membership>('/users/me/membership')
+
+export const forgotPassword = (email: string) =>
+  api.post<void>('/auth/forgot-password', { email }, { skipAuthRedirect: true })
+
+export const resetPassword = (token: string, newPassword: string) =>
+  api.post<void>('/auth/reset-password', { token, newPassword }, { skipAuthRedirect: true })
+
+export const changePassword = (currentPassword: string, newPassword: string) =>
+  api.put<void>('/users/me/password', { currentPassword, newPassword })

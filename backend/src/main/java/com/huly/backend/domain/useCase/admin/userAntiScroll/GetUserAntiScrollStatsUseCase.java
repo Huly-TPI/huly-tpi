@@ -155,10 +155,15 @@ public class GetUserAntiScrollStatsUseCase {
             return false;
         }
 
-        String normalizedMetricDomain = normalizeDomain(metricDomain);
+        String currentClean = stripCountrySuffix(normalizeDomain(metricDomain));
         return monitoredDomains.stream()
                 .map(this::normalizeDomain)
-                .anyMatch(monitored -> normalizedMetricDomain.equals(monitored));
+                .map(this::stripCountrySuffix)
+                .anyMatch(monitoredClean -> currentClean.equals(monitoredClean));
+    }
+
+    private String stripCountrySuffix(String domain) {
+        return domain.replaceAll("\\.(com|org|net|edu|gov|co)\\.[a-zA-Z]{2}$", ".$1");
     }
 
     private String normalizeDomain(String value) {

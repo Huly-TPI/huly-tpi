@@ -1,7 +1,9 @@
 package com.huly.backend.infrastructure.config.useCase;
 
+import com.huly.backend.domain.port.EmailPort;
 import com.huly.backend.domain.port.PasswordHasherPort;
 import com.huly.backend.domain.port.TokenPort;
+import com.huly.backend.domain.repository.auth.PasswordResetTokenRepository;
 import com.huly.backend.domain.repository.auth.RefreshTokenRepository;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
@@ -11,6 +13,8 @@ import com.huly.backend.domain.useCase.auth.LoginUseCase;
 import com.huly.backend.domain.useCase.auth.LogoutUseCase;
 import com.huly.backend.domain.useCase.auth.RefreshTokenUseCase;
 import com.huly.backend.domain.useCase.auth.RegisterUseCase;
+import com.huly.backend.domain.useCase.auth.RequestPasswordResetUseCase;
+import com.huly.backend.domain.useCase.auth.ResetPasswordUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -51,5 +55,19 @@ public class AuthUseCaseConfig {
     @Bean
     public GetCurrentUserUseCase getCurrentUserUseCase(UserRepository userRepository, UserDetailDomainRepository userDetailDomainRepository) {
         return new GetCurrentUserUseCase(userRepository, userDetailDomainRepository);
+    }
+
+    @Bean
+    public RequestPasswordResetUseCase requestPasswordResetUseCase(UserRepository userRepository,
+                                                                   PasswordResetTokenRepository passwordResetTokenRepository,
+                                                                   EmailPort emailPort) {
+        return new RequestPasswordResetUseCase(userRepository, passwordResetTokenRepository, emailPort);
+    }
+
+    @Bean
+    public ResetPasswordUseCase resetPasswordUseCase(UserRepository userRepository,
+                                                     PasswordResetTokenRepository passwordResetTokenRepository,
+                                                     PasswordHasherPort passwordHasherPort) {
+        return new ResetPasswordUseCase(userRepository, passwordResetTokenRepository, passwordHasherPort);
     }
 }

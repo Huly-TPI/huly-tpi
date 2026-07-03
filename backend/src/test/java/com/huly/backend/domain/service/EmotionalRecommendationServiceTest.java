@@ -28,7 +28,7 @@ class EmotionalRecommendationServiceTest {
 
         assertThat(result.fallbackUsed()).isFalse();
         assertThat(result.recommendations()).isNotEmpty();
-        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.BREATHING);
     }
 
     @Test
@@ -40,14 +40,14 @@ class EmotionalRecommendationServiceTest {
 
         assertThat(result.fallbackUsed()).isFalse();
         assertThat(result.recommendations().get(0).type())
-                .isIn(ActivityType.DIARIO, ActivityType.NUBE);
+                .isIn(ActivityType.DIARY, ActivityType.LANTERN);
     }
 
     @Test
     void recommend_shouldUseFallbackWhenNoActivityMatchesVadRanges() {
         List<Activity> activities = List.of(
-                activity(1L, ActivityType.RESPIRACION, -1.0, -0.9, -1.0, -0.9, -1.0, -0.9, 0.3, -0.3, 0.1),
-                activity(2L, ActivityType.DIARIO, -1.0, -0.9, -1.0, -0.9, -1.0, -0.9, 0.35, -0.1, 0.2)
+                activity(1L, ActivityType.BREATHING, -1.0, -0.9, -1.0, -0.9, -1.0, -0.9, 0.3, -0.3, 0.1),
+                activity(2L, ActivityType.DIARY, -1.0, -0.9, -1.0, -0.9, -1.0, -0.9, 0.35, -0.1, 0.2)
         );
 
         EmotionalRecommendationResult result = service.recommend(
@@ -78,7 +78,7 @@ class EmotionalRecommendationServiceTest {
                 defaultActivities()
         );
 
-        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.DIARIO);
+        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.DIARY);
     }
 
     @Test
@@ -106,14 +106,14 @@ class EmotionalRecommendationServiceTest {
         EmotionalRecommendation query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
         List<Activity> activities = defaultActivities();
 
-        double baseScore = scoreFor(service.recommend(query, activities), ActivityType.DIARIO);
+        double baseScore = scoreFor(service.recommend(query, activities), ActivityType.DIARY);
         EmotionalRecommendationResult result = service.recommend(
                 query,
                 activities,
                 List.of(event(RecommendationDecision.ACCEPTED, 2L, 2L, null))
         );
 
-        assertThat(scoreFor(result, ActivityType.DIARIO)).isGreaterThan(baseScore);
+        assertThat(scoreFor(result, ActivityType.DIARY)).isGreaterThan(baseScore);
     }
 
     @Test
@@ -121,14 +121,14 @@ class EmotionalRecommendationServiceTest {
         EmotionalRecommendation query = query(-0.7, 0.8, -0.6, 0.8, "calmarme");
         List<Activity> activities = defaultActivities();
 
-        double baseScore = scoreFor(service.recommend(query, activities), ActivityType.RESPIRACION);
+        double baseScore = scoreFor(service.recommend(query, activities), ActivityType.BREATHING);
         EmotionalRecommendationResult result = service.recommend(
                 query,
                 activities,
                 List.of(event(RecommendationDecision.IGNORED, 1L, null, null))
         );
 
-        assertThat(scoreFor(result, ActivityType.RESPIRACION)).isLessThan(baseScore);
+        assertThat(scoreFor(result, ActivityType.BREATHING)).isLessThan(baseScore);
     }
 
     @Test
@@ -142,10 +142,10 @@ class EmotionalRecommendationServiceTest {
                 List.of(event(RecommendationDecision.CHOSE_OTHER, 1L, 2L, null))
         );
 
-        assertThat(scoreFor(result, ActivityType.DIARIO))
-                .isGreaterThan(scoreFor(service.recommend(query, activities), ActivityType.DIARIO));
-        assertThat(scoreFor(result, ActivityType.RESPIRACION))
-                .isLessThan(scoreFor(service.recommend(query, activities), ActivityType.RESPIRACION));
+        assertThat(scoreFor(result, ActivityType.DIARY))
+                .isGreaterThan(scoreFor(service.recommend(query, activities), ActivityType.DIARY));
+        assertThat(scoreFor(result, ActivityType.BREATHING))
+                .isLessThan(scoreFor(service.recommend(query, activities), ActivityType.BREATHING));
     }
 
     @Test
@@ -165,8 +165,8 @@ class EmotionalRecommendationServiceTest {
                 List.of(event(null, 2L, null, 1))
         );
 
-        assertThat(scoreFor(highFeedback, ActivityType.DIARIO)).isGreaterThan(scoreFor(base, ActivityType.DIARIO));
-        assertThat(scoreFor(lowFeedback, ActivityType.DIARIO)).isLessThan(scoreFor(base, ActivityType.DIARIO));
+        assertThat(scoreFor(highFeedback, ActivityType.DIARY)).isGreaterThan(scoreFor(base, ActivityType.DIARY));
+        assertThat(scoreFor(lowFeedback, ActivityType.DIARY)).isLessThan(scoreFor(base, ActivityType.DIARY));
     }
 
     @Test
@@ -184,8 +184,8 @@ class EmotionalRecommendationServiceTest {
                 )
         );
 
-        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.RESPIRACION);
-        assertThat(scoreFor(result, ActivityType.DIARIO) - scoreFor(service.recommend(query, activities), ActivityType.DIARIO))
+        assertThat(result.recommendations().get(0).type()).isEqualTo(ActivityType.BREATHING);
+        assertThat(scoreFor(result, ActivityType.DIARY) - scoreFor(service.recommend(query, activities), ActivityType.DIARY))
                 .isLessThanOrEqualTo(0.15);
     }
 
@@ -229,10 +229,10 @@ class EmotionalRecommendationServiceTest {
 
     private List<Activity> defaultActivities() {
         return List.of(
-                activity(1L, ActivityType.RESPIRACION, -1.0, 0.3, 0.6, 1.0, -1.0, 1.0, 0.30, -0.30, 0.10),
-                activity(2L, ActivityType.DIARIO, -1.0, 0.0, -0.5, 0.5, -0.5, 1.0, 0.35, -0.10, 0.20),
-                activity(3L, ActivityType.NUBE, -1.0, 0.2, -0.3, 1.0, -1.0, 1.0, 0.20, -0.20, 0.10),
-                activity(4L, ActivityType.BURBUJA, -1.0, 0.3, -1.0, 1.0, -1.0, 0.5, 0.25, 0.05, 0.10)
+                activity(1L, ActivityType.BREATHING, -1.0, 0.3, 0.6, 1.0, -1.0, 1.0, 0.30, -0.30, 0.10),
+                activity(2L, ActivityType.DIARY, -1.0, 0.0, -0.5, 0.5, -0.5, 1.0, 0.35, -0.10, 0.20),
+                activity(3L, ActivityType.LANTERN, -1.0, 0.2, -0.3, 1.0, -1.0, 1.0, 0.20, -0.20, 0.10),
+                activity(4L, ActivityType.BUBBLE, -1.0, 0.3, -1.0, 1.0, -1.0, 0.5, 0.25, 0.05, 0.10)
         );
     }
 

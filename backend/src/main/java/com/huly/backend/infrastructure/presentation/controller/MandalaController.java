@@ -2,9 +2,11 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.useCase.mandala.ClearMandalaProgressUseCase;
 import com.huly.backend.domain.useCase.mandala.GetMandalaProgressUseCase;
+import com.huly.backend.domain.useCase.mandala.GetMandalaSessionStatusUseCase;
 import com.huly.backend.domain.useCase.mandala.ListAvailableMandalasUseCase;
 import com.huly.backend.domain.useCase.mandala.SaveMandalaProgressUseCase;
 import com.huly.backend.infrastructure.presentation.dto.mandala.MandalaPageResponse;
+import com.huly.backend.infrastructure.presentation.dto.mandala.MandalaSessionStatusResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import com.huly.backend.infrastructure.presentation.mapper.mandala.MandalaPresentationMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class MandalaController {
     private final ListAvailableMandalasUseCase listAvailableMandalasUseCase;
     private final SaveMandalaProgressUseCase saveMandalaProgressUseCase;
     private final GetMandalaProgressUseCase getMandalaProgressUseCase;
+    private final GetMandalaSessionStatusUseCase getMandalaSessionStatusUseCase;
     private final ClearMandalaProgressUseCase clearMandalaProgressUseCase;
     private final MandalaPresentationMapper mandalaPresentationMapper;
 
@@ -59,6 +62,16 @@ public class MandalaController {
         return mandalaPresentationMapper.toProgressResponse(
                 getMandalaProgressUseCase.execute(
                         mandalaPresentationMapper.toGetRequest(userId, mandalaId)));
+    }
+
+    @GetMapping("/{id}/session-status")
+    public ResponseEntity<MandalaSessionStatusResponse> getSessionStatus(
+            @AuthenticationPrincipal UserDetails principal,
+            @PathVariable("id") String mandalaId) {
+        Long userId = currentUserId(principal);
+        return ResponseEntity.ok(mandalaPresentationMapper.toSessionStatusResponse(
+                getMandalaSessionStatusUseCase.execute(
+                        mandalaPresentationMapper.toStatusRequest(userId, mandalaId))));
     }
 
     @DeleteMapping("/{id}/progress")

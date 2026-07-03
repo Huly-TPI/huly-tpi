@@ -3,12 +3,15 @@ package com.huly.backend.infrastructure.presentation.mapper.mandala;
 import com.huly.backend.domain.dto.mandala.ClearMandalaProgressRequest;
 import com.huly.backend.domain.dto.mandala.GetMandalaProgressRequest;
 import com.huly.backend.domain.dto.mandala.GetMandalaProgressResponse;
+import com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusRequest;
+import com.huly.backend.domain.dto.mandala.GetMandalaSessionStatusResponse;
 import com.huly.backend.domain.dto.mandala.ListAvailableMandalasRequest;
 import com.huly.backend.domain.dto.mandala.ListAvailableMandalasResponse;
 import com.huly.backend.domain.dto.mandala.MandalaItem;
 import com.huly.backend.domain.dto.mandala.SaveMandalaProgressRequest;
 import com.huly.backend.infrastructure.presentation.dto.mandala.MandalaPageResponse;
 import com.huly.backend.infrastructure.presentation.dto.mandala.MandalaResponse;
+import com.huly.backend.infrastructure.presentation.dto.mandala.MandalaSessionStatusResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +38,10 @@ public class MandalaPresentationMapper {
         return new ClearMandalaProgressRequest(userId, mandalaId);
     }
 
+    public GetMandalaSessionStatusRequest toStatusRequest(Long userId, String mandalaId) {
+        return new GetMandalaSessionStatusRequest(userId, mandalaId);
+    }
+
     public MandalaPageResponse toPageResponse(ListAvailableMandalasResponse response) {
         return new MandalaPageResponse(
                 response.content().stream().map(this::toMandalaResponse).toList(),
@@ -51,6 +58,10 @@ public class MandalaPresentationMapper {
         return response.paintBlob()
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    public MandalaSessionStatusResponse toSessionStatusResponse(GetMandalaSessionStatusResponse response) {
+        return new MandalaSessionStatusResponse(response.sessionRegistered());
     }
 
     private MandalaResponse toMandalaResponse(MandalaItem item) {

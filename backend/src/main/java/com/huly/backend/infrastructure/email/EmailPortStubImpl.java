@@ -26,4 +26,9 @@ public class EmailPortStubImpl implements EmailPort {
     public void sendPlanExpiryReminder(String to, long daysLeft, Instant expiresAt) {
         log.info("[EMAIL-STUB] Aviso vencimiento → to={} daysLeft={} expiresAt={}", to, daysLeft, expiresAt);
     }
+
+    @Override
+    public void sendPasswordReset(String to, String token) {
+        log.info("[EMAIL-STUB] Recupero de contraseña → to={} token={}", to, token);
+    }
 }

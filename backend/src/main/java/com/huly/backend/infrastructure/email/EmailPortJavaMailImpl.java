@@ -308,6 +308,128 @@ public class EmailPortJavaMailImpl implements EmailPort {
         """.formatted(diasTexto, expiresAtFormatted);
   }
 
+  @Override
+  public void sendPasswordReset(String to, String token) {
+    try {
+      MimeMessage message = mailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+      helper.setTo(to);
+      helper.setFrom("hulycomunicaciones@gmail.com", "Huly");
+      helper.setSubject("Recuperá tu contraseña de Huly");
+      helper.setText(buildPasswordResetHtml(token), true);
+      helper.addInline("logo", new ClassPathResource("email/logo.png"));
+      mailSender.send(message);
+      log.info("[MAIL] Email de recupero de contraseña enviado → to={}", to);
+    } catch (Exception e) {
+      log.error("[MAIL] Error enviando recupero de contraseña a {} — {}", to, e.getMessage());
+    }
+  }
+
+  private String buildPasswordResetHtml(String token) {
+    return """
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8"/>
+          <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+        </head>
+        <body style="margin:0;padding:0;background-color:#f0eeff;font-family:Arial,Helvetica,sans-serif;">
+          <table width="100%%" cellpadding="0" cellspacing="0" border="0"
+                 style="background-color:#f0eeff;padding:40px 16px;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0"
+                       style="max-width:600px;width:100%%;background-color:#ffffff;
+                              border-radius:20px;overflow:hidden;
+                              box-shadow:0 8px 32px rgba(108,71,255,0.14);">
+
+                  <!-- Header -->
+                  <tr>
+                    <td align="center"
+                        style="background:linear-gradient(135deg,#5c34ef 0%%,#9b7aff 100%%);
+                               padding:36px 40px 28px;">
+                      <img src="cid:logo" alt="Huly" width="150"
+                           style="display:block;max-width:150px;height:auto;"/>
+                    </td>
+                  </tr>
+
+                  <!-- Band -->
+                  <tr>
+                    <td style="background:#6c47ff;padding:14px 48px;">
+                      <p style="margin:0;font-size:13px;color:#ddd4ff;letter-spacing:1.5px;
+                                 text-transform:uppercase;font-weight:600;">
+                        Recupero de contraseña
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding:40px 48px 32px;">
+                      <h1 style="margin:0 0 16px;font-size:26px;color:#1a1040;font-weight:700;
+                                  line-height:1.3;">
+                        ¿Olvidaste tu contraseña?
+                      </h1>
+                      <p style="margin:0 0 24px;font-size:16px;color:#4a4a6a;line-height:1.7;">
+                        Usá el siguiente código para restablecer tu contraseña.
+                        Es válido por <strong>15 minutos</strong>.
+                      </p>
+
+                      <!-- Token box -->
+                      <table cellpadding="0" cellspacing="0" border="0" width="100%%">
+                        <tr>
+                          <td align="center"
+                              style="background-color:#f0eeff;border-radius:12px;
+                                     padding:24px 32px;">
+                            <p style="margin:0;font-size:13px;color:#6c47ff;
+                                       letter-spacing:1px;font-weight:600;
+                                       text-transform:uppercase;margin-bottom:12px;">
+                              Tu código de verificación
+                            </p>
+                            <p style="margin:0;font-size:15px;color:#1a1040;
+                                       font-family:monospace;font-weight:700;
+                                       word-break:break-all;letter-spacing:1px;">
+                              %s
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="margin:28px 0 0;font-size:14px;color:#9090b0;line-height:1.6;">
+                        Si no solicitaste este cambio, podés ignorar este email.
+                        Tu contraseña actual no fue modificada.
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Divider -->
+                  <tr>
+                    <td style="padding:0 48px;">
+                      <div style="border-top:1px solid #eeebff;"></div>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td style="padding:28px 48px 36px;text-align:center;">
+                      <p style="margin:0 0 2px;font-size:13px;color:#9090b0;">Con cariño,</p>
+                      <p style="margin:0 0 18px;font-size:16px;font-weight:700;color:#6c47ff;">
+                        El equipo de Huly
+                      </p>
+                      <p style="margin:0;font-size:11px;color:#c8c8dc;">
+                        &copy; 2026 Huly &mdash; Todos los derechos reservados.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        """.formatted(token);
+  }
+
   private static final String EMAIL_BODY = """
           <!DOCTYPE html>
           <html lang="es">

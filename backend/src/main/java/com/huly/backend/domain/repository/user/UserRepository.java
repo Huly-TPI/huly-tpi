@@ -22,4 +22,5 @@ public interface UserRepository {
     List<AppUser> findAllNonAdmins();
     Optional<AppUser> findByUnsubscribeToken(String unsubscribeToken);
     void disableReengagementEmails(Long userId);
+    void updatePassword(Long userId, String encodedPassword);
 }

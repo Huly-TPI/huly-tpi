@@ -22,3 +22,8 @@ export const normalizeDomain = (value: string): string => {
 
   return `${secondLast}.${last}`;
 };
+
+export const stripCountrySuffix = (domain: string): string => {
+  return domain.replace(/\.(com|org|net|edu|gov|co)\.[a-z]{2}$/i, '.$1');
+};
+

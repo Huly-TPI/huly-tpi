@@ -135,6 +135,31 @@ class PlanServiceTest {
         verify(userPlanRepository, never()).save(any());
     }
 
+    @Test
+    void hasActivePlan_shouldBeTrue_whenPlanNotExpired() {
+        Instant now = Instant.now();
+        UserPlan active = UserPlan.builder().userId(42L).expiresAt(now.plus(5, ChronoUnit.DAYS)).build();
+        when(userPlanRepository.findByUser(42L)).thenReturn(Optional.of(active));
+
+        assertThat(planService.hasActivePlan(42L, now)).isTrue();
+    }
+
+    @Test
+    void hasActivePlan_shouldBeFalse_whenPlanExpired() {
+        Instant now = Instant.now();
+        UserPlan expired = UserPlan.builder().userId(42L).expiresAt(now.minus(1, ChronoUnit.DAYS)).build();
+        when(userPlanRepository.findByUser(42L)).thenReturn(Optional.of(expired));
+
+        assertThat(planService.hasActivePlan(42L, now)).isFalse();
+    }
+
+    @Test
+    void hasActivePlan_shouldBeFalse_whenNoMembership() {
+        when(userPlanRepository.findByUser(42L)).thenReturn(Optional.empty());
+
+        assertThat(planService.hasActivePlan(42L, Instant.now())).isFalse();
+    }
+
     private UserPlan captureSaved() {
         ArgumentCaptor<UserPlan> captor = ArgumentCaptor.forClass(UserPlan.class);
         verify(userPlanRepository).save(captor.capture());

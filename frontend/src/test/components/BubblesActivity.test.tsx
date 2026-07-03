@@ -111,7 +111,7 @@ describe('BubblesActivity component', () => {
 
     // Verify the hook was called with the correct arguments
     expect(mockedUseTracker).toHaveBeenCalledWith(
-      'BURBUJA',
+      'BUBBLE',
       expect.objectContaining({ autoStart: false }),
     )
   })

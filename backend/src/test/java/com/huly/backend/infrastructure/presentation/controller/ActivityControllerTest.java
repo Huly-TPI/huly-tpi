@@ -62,7 +62,7 @@ class ActivityControllerTest {
     void registerSession_shouldReturn200() throws Exception {
         String json = """
                 {
-                    "activityType": "RESPIRACION"
+                    "activityType": "BREATHING"
                 }
                 """;
 
@@ -76,7 +76,7 @@ class ActivityControllerTest {
     void registerChallengeSession_shouldReturn200() throws Exception {
         String json = """
                 {
-                    "activityType": "RETO"
+                    "activityType": "CHALLENGE"
                 }
                 """;
 
@@ -89,7 +89,7 @@ class ActivityControllerTest {
     @Test
     void getAllActivities_shouldReturnListOfActivities() throws Exception {
         ListActivitiesResponse response = new ListActivitiesResponse(List.of(
-                new ActivityItem(1L, ActivityType.RESPIRACION,
+                new ActivityItem(1L, ActivityType.BREATHING,
                         -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 0.3, -0.2, 0.1)
         ));
         when(listActivitiesUseCase.execute()).thenReturn(response);
@@ -97,7 +97,7 @@ class ActivityControllerTest {
         mockMvc.perform(get("/api/activities"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].type").value("RESPIRACION"))
+                .andExpect(jsonPath("$[0].type").value("BREATHING"))
                 .andExpect(jsonPath("$[0].effectValence").value(0.3));
     }
 

@@ -35,7 +35,7 @@ class ListActivitiesUseCaseTest {
         List<Activity> activities = List.of(
             Activity.builder()
             .id(1L)
-            .type(ActivityType.RESPIRACION)
+            .type(ActivityType.BREATHING)
             .valenceMin(-1.0).valenceMax(1.0)
             .arousalMin(-1.0).arousalMax(1.0)
             .dominanceMin(-1.0).dominanceMax(1.0)
@@ -46,7 +46,7 @@ class ListActivitiesUseCaseTest {
 
         ListActivitiesResponse result = listActivitiesUseCase.execute();
         assertThat(result.activities()).hasSize(1);
-        assertThat(result.activities().get(0).type()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(result.activities().get(0).type()).isEqualTo(ActivityType.BREATHING);
         verify(activityRepository).findAll();
         }
 

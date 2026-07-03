@@ -238,18 +238,18 @@ class AdminUserControllerTest {
     @Test
     void getUserActivities_shouldReturnActivities() throws Exception {
         com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse session =
-                new com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse(1L, "RESPIRACION", java.time.Instant.now());
-        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(session), 5L, "RESPIRACION", "1.5", java.util.Map.of("RESPIRACION", 5));
+                new com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse(1L, "BREATHING", java.time.Instant.now());
+        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(session), 5L, "BREATHING", "1.5", java.util.Map.of("BREATHING", 5));
         when(getUserActivitiesUseCase.execute(any())).thenReturn(result);
 
         mockMvc.perform(get("/api/admin/users/2/statistics/activities"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.todayActivitiesCount").value(5))
                 .andExpect(jsonPath("$.activitySessions[0].id").value(1))
-                .andExpect(jsonPath("$.activitySessions[0].activityType").value("RESPIRACION"))
-                .andExpect(jsonPath("$.favoriteActivity").value("RESPIRACION"))
+                .andExpect(jsonPath("$.activitySessions[0].activityType").value("BREATHING"))
+                .andExpect(jsonPath("$.favoriteActivity").value("BREATHING"))
                 .andExpect(jsonPath("$.averageSessionsText").value("1.5"))
-                .andExpect(jsonPath("$.activityDistribution.RESPIRACION").value(5));
+                .andExpect(jsonPath("$.activityDistribution.BREATHING").value(5));
     }
 
     @Test

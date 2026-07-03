@@ -46,13 +46,13 @@ interface ChatbotMessagesProps {
 
 function getSuggestedActionRoute(type: string, actionUrl: string) {
   switch (type) {
-    case 'RESPIRACION':
+    case 'BREATHING':
       return '/guided-breathing'
-    case 'DIARIO':
+    case 'DIARY':
       return '/diary'
-    case 'NUBE':
+    case 'LANTERN':
       return '/lanterns'
-    case 'BURBUJA':
+    case 'BUBBLE':
       return '/bubbles'
     default:
       return actionUrl.startsWith('/api/') ? '/' : actionUrl

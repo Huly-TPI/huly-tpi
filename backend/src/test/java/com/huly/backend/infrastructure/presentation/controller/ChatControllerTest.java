@@ -132,7 +132,7 @@ class ChatControllerTest {
     @Test
     void chat_shouldReturnSuggestedAction_whenRecommendationExists() throws Exception {
         SuggestedChatAction action = new SuggestedChatAction(
-                ActivityType.DIARIO,
+                ActivityType.DIARY,
                 2L,
                 "Diario emocional",
                 "Un espacio para ordenar pensamientos",
@@ -146,7 +146,7 @@ class ChatControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new ChatRequest("estoy triste", "conv-2"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.suggested_action.type").value("DIARIO"))
+                .andExpect(jsonPath("$.suggested_action.type").value("DIARY"))
                 .andExpect(jsonPath("$.suggested_action.action_id").value("2"))
                 .andExpect(jsonPath("$.suggested_action.title").value("Diario emocional"))
                 .andExpect(jsonPath("$.suggested_action.emotional_event_id").value(15));
@@ -213,7 +213,7 @@ class ChatControllerTest {
     @Test
     void getHistory_shouldReturnCardsAndDecisions_whenAssistantMessageIncludesThem() throws Exception {
         SuggestedChatAction action = new SuggestedChatAction(
-                ActivityType.RESPIRACION,
+                ActivityType.BREATHING,
                 4L,
                 "Respiracion guiada",
                 "Respira lento",
@@ -238,7 +238,7 @@ class ChatControllerTest {
 
         mockMvc.perform(get("/api/chat/conv-1/messages"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].suggested_action.type").value("RESPIRACION"))
+                .andExpect(jsonPath("$.content[0].suggested_action.type").value("BREATHING"))
                 .andExpect(jsonPath("$.content[0].suggested_action.emotional_event_id").value(12))
                 .andExpect(jsonPath("$.content[0].generated_challenge.title").value("Reto breve"))
                 .andExpect(jsonPath("$.content[0].suggested_action_decision").value("accepted"))
