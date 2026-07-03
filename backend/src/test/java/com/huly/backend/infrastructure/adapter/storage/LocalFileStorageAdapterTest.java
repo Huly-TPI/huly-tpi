@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class LocalFileStorageAdapterTest {
 
@@ -45,6 +46,16 @@ public class LocalFileStorageAdapterTest {
         ReflectionTestUtils.setField(adapter, "publicPath", "/api/store/images/");
         String url = adapter.upload(new byte[] { 1 }, "light-theme/y.webp", "image/webp");
         assertThat(url).isEqualTo("/api/store/images/light-theme/y.webp");
+    }
+
+    @Test
+    void upload_shouldThrowIllegalState_whenWriteFails() throws IOException {
+        Path notADir = tempDir.resolve("not-a-dir");
+        Files.writeString(notADir, "x");
+        ReflectionTestUtils.setField(adapter, "uploadsDir", notADir.toString());
+
+        assertThatThrownBy(() -> adapter.upload(new byte[] { 1 }, "light-theme/x.webp", "image/webp"))
+                .isInstanceOf(IllegalStateException.class);
     }
 
 }

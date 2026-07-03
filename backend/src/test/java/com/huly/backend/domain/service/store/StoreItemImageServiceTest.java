@@ -54,19 +54,24 @@ class StoreItemImageServiceTest {
         assertThat(result).isEqualTo("http://x/light");
     }
 
-    @Test 
-    void uploadThemePair_shouldMapPngContentTypeToExtension(){
+    @Test
+    void uploadThemePair_shouldMapPngContentTypeToExtension() {
         assertThat(uploadedKeys("image/png").get(0)).endsWith(".png");
     }
 
     @Test
-    void uploadThemePair_shouldMapJpegContentTypeToExtension(){
+    void uploadThemePair_shouldMapJpegContentTypeToExtension() {
         assertThat(uploadedKeys("image/jpeg").get(0)).endsWith(".jpg");
     }
 
     @Test
-    void uploadThemePair_shouldMapWebpContentTypeToExtension(){
+    void uploadThemePair_shouldMapWebpContentTypeToExtension() {
         assertThat(uploadedKeys("image/webp").get(0)).endsWith(".webp");
+    }
+
+    @Test
+    void uploadThemePair_shouldUseNoExtension_whenContentTypeUnknown() {
+        assertThat(uploadedKeys("image/gif").get(0)).doesNotContain(".");
     }
 
 }

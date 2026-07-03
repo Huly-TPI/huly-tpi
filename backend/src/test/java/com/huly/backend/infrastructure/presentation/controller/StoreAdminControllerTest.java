@@ -105,4 +105,24 @@ class StoreAdminControllerTest {
         verify(deleteStoreItemUseCase).execute(any());
     }
 
+    @Test
+    void update_shouldWork_withoutNewImages() throws Exception {
+        when(updateStoreItemUseCase.execute(any())).thenReturn(view(5L));
+
+        mockMvc.perform(multipart("/api/admin/store/items/5")
+                .param("name", "Casa editada")
+                .param("description", "desc")
+                .param("category", "HOUSE")
+                .param("priceCoins", "90")
+                .param("premiumOnly", "false")
+                .with(req -> {
+                    req.setMethod("PUT");
+                    return req;
+                }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5));
+
+        verify(updateStoreItemUseCase).execute(any());
+    }
+
 }
