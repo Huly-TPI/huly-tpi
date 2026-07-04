@@ -1,6 +1,7 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.dto.chat.ChatMessageRequest;
+import com.huly.backend.domain.dto.chat.ChatReplyResponse;
 import com.huly.backend.domain.port.AudioTranscriptionPort;
 import com.huly.backend.domain.port.AudioTranscriptionPort.AudioTranscriptionResult;
 import com.huly.backend.domain.port.AudioTranscriptionPort.VadResult;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -40,17 +42,22 @@ class AudioChatUseCaseTest {
         return audio;
     }
 
+    private ChatReplyResponse reply(String content) {
+        return new ChatReplyResponse(content, null, null, null, null, null, null);
+    }
+
     @Test
     void execute_shouldDelegateToChatUseCaseWithFormattedMessage() throws IOException {
         MultipartFile audio = mockAudio("recording.webm");
         VadResult vad = new VadResult(0.5, 0.5, 0.5);
         AudioTranscriptionResult result = new AudioTranscriptionResult("hola mundo", vad, "neutral", "es");
         when(audioTranscriptionPort.transcribe(any(), eq("recording.webm"))).thenReturn(result);
-        when(chatUseCase.execute(any(), eq("conv-1"), eq(1L))).thenReturn(ChatReply.of("respuesta"));
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(reply("respuesta"));
 
         useCase.execute(audio, "conv-1", 1L);
 
-        verify(chatUseCase).execute(any(), eq("conv-1"), eq(1L));
+        verify(chatUseCase).execute(argThat(req ->
+                "conv-1".equals(req.conversationId()) && req.userId().equals(1L)));
     }
 
     @Test
@@ -59,15 +66,11 @@ class AudioChatUseCaseTest {
         VadResult vad = new VadResult(0.5, 0.5, 0.5);
         AudioTranscriptionResult result = new AudioTranscriptionResult("texto de prueba", vad, "neutral", "es");
         when(audioTranscriptionPort.transcribe(any(), any())).thenReturn(result);
-        when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(reply("ok"));
 
         useCase.execute(audio, "conv-1", 1L);
 
-        verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("texto de prueba")),
-                any(),
-                any()
-        );
+        verify(chatUseCase).execute(argThat(req -> req.message().contains("texto de prueba")));
     }
 
     @Test
@@ -76,15 +79,11 @@ class AudioChatUseCaseTest {
         VadResult vad = new VadResult(0.2, 0.5, 0.5);
         AudioTranscriptionResult result = new AudioTranscriptionResult("algo", vad, "neutral", "es");
         when(audioTranscriptionPort.transcribe(any(), any())).thenReturn(result);
-        when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(reply("ok"));
 
         useCase.execute(audio, "conv-1", 1L);
 
-        verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("tranquila/serena")),
-                any(),
-                any()
-        );
+        verify(chatUseCase).execute(argThat(req -> req.message().contains("tranquila/serena")));
     }
 
     @Test
@@ -93,15 +92,11 @@ class AudioChatUseCaseTest {
         VadResult vad = new VadResult(0.5, 0.5, 0.5);
         AudioTranscriptionResult result = new AudioTranscriptionResult("algo", vad, "neutral", "es");
         when(audioTranscriptionPort.transcribe(any(), any())).thenReturn(result);
-        when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(reply("ok"));
 
         useCase.execute(audio, "conv-1", 1L);
 
-        verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("con cierta inquietud")),
-                any(),
-                any()
-        );
+        verify(chatUseCase).execute(argThat(req -> req.message().contains("con cierta inquietud")));
     }
 
     @Test
@@ -110,15 +105,11 @@ class AudioChatUseCaseTest {
         VadResult vad = new VadResult(0.8, 0.5, 0.5);
         AudioTranscriptionResult result = new AudioTranscriptionResult("algo", vad, "neutral", "es");
         when(audioTranscriptionPort.transcribe(any(), any())).thenReturn(result);
-        when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(reply("ok"));
 
         useCase.execute(audio, "conv-1", 1L);
 
-        verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("tensa/agitada")),
-                any(),
-                any()
-        );
+        verify(chatUseCase).execute(argThat(req -> req.message().contains("tensa/agitada")));
     }
 
     @Test
@@ -126,15 +117,11 @@ class AudioChatUseCaseTest {
         MultipartFile audio = mockAudio("audio.webm");
         AudioTranscriptionResult result = new AudioTranscriptionResult("", null, "neutral", "es");
         when(audioTranscriptionPort.transcribe(any(), any())).thenReturn(result);
-        when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(reply("ok"));
 
         useCase.execute(audio, "conv-1", 1L);
 
-        verify(chatUseCase).execute(
-                org.mockito.ArgumentMatchers.argThat(msg -> msg.contains("sin contenido reconocible")),
-                any(),
-                any()
-        );
+        verify(chatUseCase).execute(argThat(req -> req.message().contains("sin contenido reconocible")));
     }
 
     @Test
@@ -144,7 +131,7 @@ class AudioChatUseCaseTest {
         when(audio.getOriginalFilename()).thenReturn(null);
         AudioTranscriptionResult result = new AudioTranscriptionResult("hola", null, "neutral", "es");
         when(audioTranscriptionPort.transcribe(any(), eq("audio.webm"))).thenReturn(result);
-        when(chatUseCase.execute(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(reply("ok"));
 
         useCase.execute(audio, "conv-1", 1L);
 
@@ -166,11 +153,11 @@ class AudioChatUseCaseTest {
         MultipartFile audio = mockAudio("audio.webm");
         VadResult vad = new VadResult(0.4, 0.5, 0.6);
         AudioTranscriptionResult result = new AudioTranscriptionResult("texto", vad, "happy", "es");
-        ChatReply expected = ChatReply.of("respuesta del bot");
+        ChatReplyResponse expected = reply("respuesta del bot");
         when(audioTranscriptionPort.transcribe(any(), any())).thenReturn(result);
-        when(chatUseCase.execute(any(), any(), any())).thenReturn(expected);
+        when(chatUseCase.execute(any(ChatMessageRequest.class))).thenReturn(expected);
 
-        ChatReply actual = useCase.execute(audio, "conv-1", 1L);
+        ChatReplyResponse actual = useCase.execute(audio, "conv-1", 1L);
 
         assertThat(actual).isEqualTo(expected);
     }

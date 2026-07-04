@@ -1,4 +1,4 @@
-package com.huly.backend.domain.useCase.chat;
+package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
@@ -11,6 +11,7 @@ import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -28,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class InitializeChatPreferencesUseCaseTest {
+class ChatPreferenceInitializationServiceTest {
 
     @Mock
     private ChatConversationPreferenceRepository preferenceRepository;
@@ -39,17 +40,18 @@ class InitializeChatPreferencesUseCaseTest {
     @Mock
     private ChatConfigRepository chatConfigRepository;
     @InjectMocks
-    private InitializeChatPreferencesUseCase useCase;
+    private ChatPreferenceInitializationService service;
 
     @Test
-    void execute_shouldCreateGreetingWithRegisteredNameAndPersistItAsAssistantMessage() {
+    @DisplayName("Crea el saludo con el nombre registrado y lo persiste como mensaje del asistente")
+    void initializeShouldCreateGreetingWithRegisteredNameAndPersistItAsAssistantMessage() {
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(AppUser.builder().id(1L).name("Sergio").build()));
         when(chatConfigRepository.findFirst())
                 .thenReturn(Optional.of(new ChatConfig(1L, true, "prompt", true, true)));
 
-        ChatOnboardingInitialization result = useCase.execute(1L, "conv-1");
+        ChatOnboardingInitialization result = service.initialize(1L, "conv-1");
 
         assertThat(result.initialized()).isTrue();
         assertThat(result.assistantMessage())
@@ -71,7 +73,8 @@ class InitializeChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldNotDuplicateGreeting_whenPreferencesAlreadyExist() {
+    @DisplayName("No duplica el saludo cuando la preferencia ya existe")
+    void initializeShouldNotDuplicateGreetingWhenPreferencesAlreadyExist() {
         ChatConversationPreference existing = ChatConversationPreference.builder()
                 .id(10L)
                 .userId(1L)
@@ -79,7 +82,7 @@ class InitializeChatPreferencesUseCaseTest {
                 .build();
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(existing));
 
-        ChatOnboardingInitialization result = useCase.execute(1L, "conv-1");
+        ChatOnboardingInitialization result = service.initialize(1L, "conv-1");
 
         assertThat(result.initialized()).isFalse();
         assertThat(result.assistantMessage()).isNull();
@@ -88,14 +91,15 @@ class InitializeChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldAskStyleDirectlyWhenNameQuestionIsDisabled() {
+    @DisplayName("Pregunta el estilo directamente cuando la pregunta del nombre está deshabilitada")
+    void initializeShouldAskStyleDirectlyWhenNameQuestionIsDisabled() {
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(AppUser.builder().id(1L).name("Sergio").build()));
         when(chatConfigRepository.findFirst())
                 .thenReturn(Optional.of(new ChatConfig(1L, true, "prompt", false, true)));
 
-        ChatOnboardingInitialization result = useCase.execute(1L, "conv-1");
+        ChatOnboardingInitialization result = service.initialize(1L, "conv-1");
 
         assertThat(result.assistantMessage())
                 .contains("Hola Sergio")
@@ -108,14 +112,15 @@ class InitializeChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldCreateGeneralGreetingWhenBothQuestionsAreDisabled() {
+    @DisplayName("Crea un saludo general cuando ambas preguntas están deshabilitadas")
+    void initializeShouldCreateGeneralGreetingWhenBothQuestionsAreDisabled() {
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(AppUser.builder().id(1L).name("Sergio").build()));
         when(chatConfigRepository.findFirst())
                 .thenReturn(Optional.of(new ChatConfig(1L, true, "prompt", false, false)));
 
-        ChatOnboardingInitialization result = useCase.execute(1L, "conv-1");
+        ChatOnboardingInitialization result = service.initialize(1L, "conv-1");
 
         assertThat(result.assistantMessage())
                 .contains("En qué te puedo ayudar")

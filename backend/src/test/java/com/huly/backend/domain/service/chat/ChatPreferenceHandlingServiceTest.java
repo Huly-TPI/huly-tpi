@@ -1,4 +1,4 @@
-package com.huly.backend.domain.useCase.chat;
+package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.model.chat.ChatConfig;
 import com.huly.backend.domain.model.chat.ChatConversationPreference;
@@ -12,8 +12,8 @@ import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
-import com.huly.backend.domain.service.chat.ChatQuotaService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -31,23 +31,23 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class HandleChatPreferencesUseCaseTest {
+class ChatPreferenceHandlingServiceTest {
 
     @Mock private ChatConversationPreferenceRepository preferenceRepository;
     @Mock private ChatPreferenceExtractionPort extractionPort;
-    @Mock private InitializeChatPreferencesUseCase initializeChatPreferencesUseCase;
+    @Mock private ChatPreferenceInitializationService chatPreferenceInitializationService;
     @Mock private ChatMemoryPort chatMemoryPort;
     @Mock private ChatQuotaService chatQuotaService;
     @Mock private ChatConfigRepository chatConfigRepository;
 
-    private HandleChatPreferencesUseCase useCase;
+    private ChatPreferenceHandlingService service;
 
     @BeforeEach
     void setUp() {
-        useCase = new HandleChatPreferencesUseCase(
+        service = new ChatPreferenceHandlingService(
                 preferenceRepository,
                 extractionPort,
-                initializeChatPreferencesUseCase,
+                chatPreferenceInitializationService,
                 chatMemoryPort,
                 chatQuotaService,
                 chatConfigRepository);
@@ -56,13 +56,14 @@ class HandleChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldSavePreferredNameAndAskForCommunicationStyle() {
+    @DisplayName("Guarda el nombre preferido y pregunta por el estilo de comunicación")
+    void handleShouldSavePreferredNameAndAskForCommunicationStyle() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
         when(extractionPort.extract("Sergito", ChatPreferenceExpectedField.PREFERRED_NAME))
                 .thenReturn(result("Sergito", null, ChatPreferenceMessageType.PREFERENCE_ONLY));
 
-        ChatPreferenceHandlingResult result = useCase.execute(1L, "conv-1", "Sergito");
+        ChatPreferenceHandlingResult result = service.handle(1L, "conv-1", "Sergito");
 
         assertThat(result.continueConversation()).isFalse();
         assertThat(result.directReply().content())
@@ -77,7 +78,8 @@ class HandleChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldSaveNameAndContinueForMixedMessage() {
+    @DisplayName("Guarda el nombre y continúa la conversación en un mensaje mixto")
+    void handleShouldSaveNameAndContinueForMixedMessage() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
         when(extractionPort.extract(
@@ -86,7 +88,7 @@ class HandleChatPreferencesUseCaseTest {
                 .thenReturn(result("Crack", null, ChatPreferenceMessageType.MIXED));
 
         ChatPreferenceHandlingResult result =
-                useCase.execute(1L, "conv-1", "Llamame crack y estoy triste");
+                service.handle(1L, "conv-1", "Llamame crack y estoy triste");
 
         assertThat(result.continueConversation()).isTrue();
         assertThat(result.offerCommunicationStyleWhenSafe()).isTrue();
@@ -101,7 +103,8 @@ class HandleChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldSkipOnboardingWhenMessageDoesNotAnswerNameQuestion() {
+    @DisplayName("Salta el onboarding cuando el mensaje no responde a la pregunta del nombre")
+    void handleShouldSkipOnboardingWhenMessageDoesNotAnswerNameQuestion() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
         when(extractionPort.extract(
@@ -110,7 +113,7 @@ class HandleChatPreferencesUseCaseTest {
                 .thenThrow(new RuntimeException("API Error")); // Simulating fallback to detection and unrelated result
 
         ChatPreferenceHandlingResult result =
-                useCase.execute(1L, "conv-1", "Necesito hablar de algo");
+                service.handle(1L, "conv-1", "Necesito hablar de algo");
 
         assertThat(result.continueConversation()).isTrue();
         ArgumentCaptor<ChatConversationPreference> captor =
@@ -121,7 +124,8 @@ class HandleChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldSaveCommunicationStyleAndCompleteOnboarding() {
+    @DisplayName("Guarda el estilo de comunicación y completa el onboarding")
+    void handleShouldSaveCommunicationStyleAndCompleteOnboarding() {
         ChatConversationPreference preference = ChatConversationPreference.builder()
                 .id(10L)
                 .userId(1L)
@@ -134,7 +138,7 @@ class HandleChatPreferencesUseCaseTest {
         when(extractionPort.extract("informal", ChatPreferenceExpectedField.COMMUNICATION_STYLE))
                 .thenReturn(result(null, CommunicationStyle.INFORMAL, ChatPreferenceMessageType.PREFERENCE_ONLY));
 
-        ChatPreferenceHandlingResult result = useCase.execute(1L, "conv-1", "informal");
+        ChatPreferenceHandlingResult result = service.handle(1L, "conv-1", "informal");
 
         assertThat(result.continueConversation()).isFalse();
         assertThat(result.directReply().content()).contains("estilo informal");
@@ -146,12 +150,13 @@ class HandleChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldKeepPendingStyleUntilAResponseCanOfferIt() {
+    @DisplayName("Mantiene el estilo pendiente hasta que una respuesta pueda ofrecerlo")
+    void handleShouldKeepPendingStyleUntilAResponseCanOfferIt() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
                 .updatePreferredName("Crack", Instant.now());
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
 
-        ChatPreferenceHandlingResult result = useCase.execute(1L, "conv-1", "Estoy muy mal");
+        ChatPreferenceHandlingResult result = service.handle(1L, "conv-1", "Estoy muy mal");
 
         assertThat(result.continueConversation()).isTrue();
         assertThat(result.offerCommunicationStyleWhenSafe()).isTrue();
@@ -159,7 +164,8 @@ class HandleChatPreferencesUseCaseTest {
     }
 
     @Test
-    void execute_shouldApplyBothPreferencesFromOneMessage() {
+    @DisplayName("Aplica ambas preferencias a partir de un solo mensaje")
+    void handleShouldApplyBothPreferencesFromOneMessage() {
         ChatConversationPreference preference = preference(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
         when(preferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
         when(extractionPort.extract(
@@ -171,7 +177,7 @@ class HandleChatPreferencesUseCaseTest {
                         ChatPreferenceMessageType.PREFERENCE_ONLY));
 
         ChatPreferenceHandlingResult result =
-                useCase.execute(1L, "conv-1", "Decime Crack y hablame directo");
+                service.handle(1L, "conv-1", "Decime Crack y hablame directo");
 
         assertThat(result.directReply().content())
                 .contains("Crack")

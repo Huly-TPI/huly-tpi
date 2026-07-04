@@ -1,10 +1,11 @@
-package com.huly.backend.domain.useCase.chat;
+package com.huly.backend.domain.service.chat;
 
 import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
 import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
 import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
 import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsRequest;
 import com.huly.backend.domain.dto.emotionalRecommendation.GetEmotionalRecommendationsResponse;
+import com.huly.backend.domain.mapper.chat.ChatMapper;
 import com.huly.backend.domain.model.chat.ChatRecommendationOutcome;
 import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.ConversationMessage;
@@ -16,11 +17,10 @@ import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import com.huly.backend.domain.model.vector.VectorMemory;
 import com.huly.backend.domain.port.EmotionalAnalysisPort;
-import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
-import com.huly.backend.domain.service.chat.PromptBuilderService;
 import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
 import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -34,13 +34,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class GetChatEmotionalRecommendationUseCaseTest {
+class ChatEmotionalRecommendationServiceTest {
 
     private EmotionalAnalysisPort emotionalAnalysisPort;
     private PromptBuilderService promptBuilderService;
     private GetEmotionalRecommendationsUseCase recommendationsUseCase;
     private CreateEmotionalEventUseCase createEmotionalEventUseCase;
-    private GetChatEmotionalRecommendationUseCase useCase;
+    private ChatEmotionalRecommendationService service;
 
     @BeforeEach
     void setUp() {
@@ -48,24 +48,26 @@ class GetChatEmotionalRecommendationUseCaseTest {
         promptBuilderService = mock(PromptBuilderService.class);
         recommendationsUseCase = mock(GetEmotionalRecommendationsUseCase.class);
         createEmotionalEventUseCase = mock(CreateEmotionalEventUseCase.class);
-        useCase = new GetChatEmotionalRecommendationUseCase(
+        service = new ChatEmotionalRecommendationService(
                 emotionalAnalysisPort,
                 promptBuilderService,
                 new ChatEmotionalRecommendationPolicy(),
                 recommendationsUseCase,
-                createEmotionalEventUseCase
+                createEmotionalEventUseCase,
+                new ChatMapper()
         );
     }
 
     @Test
-    void evaluate_shouldNotRecommendOrCreateEvent_whenAnalysisSaysNo() {
+    @DisplayName("No recomienda ni crea evento cuando el análisis indica que no")
+    void recommendShouldNotRecommendOrCreateEventWhenAnalysisSaysNo() {
         List<VectorMemory> memories = List.of(memory("me ayuda escribir"));
         List<ConversationMessage> history = List.of(ConversationMessage.of(MessageRole.USER, "hola"));
         when(promptBuilderService.buildEmotionalAnalysisPrompt("base", memories)).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze("analysis prompt", "hola", history))
                 .thenReturn(new EmotionalAnalysisResult(false, EmotionType.NEUTRAL, 0.8, 0.0, 0.0, 0.0, 0.1, null, null));
 
-        ChatRecommendationOutcome outcome = useCase.execute("hola", 1L, "base", memories, history, null, false);
+        ChatRecommendationOutcome outcome = service.recommend("hola", 1L, "base", memories, history, null, false);
 
         assertThat(outcome.suggestedAction()).isNull();
         assertThat(outcome.analysis().shouldRecommend()).isFalse();
@@ -74,7 +76,8 @@ class GetChatEmotionalRecommendationUseCaseTest {
     }
 
     @Test
-    void evaluate_shouldRecommendTopActivityAndCreateChatbotEmotionalEvent() {
+    @DisplayName("Recomienda la actividad principal y crea el evento emocional del chatbot")
+    void recommendShouldRecommendTopActivityAndCreateChatbotEmotionalEvent() {
         EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
                 true,
                 EmotionType.GRIEF,
@@ -101,7 +104,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
 
-        ChatRecommendationOutcome outcome = useCase.execute(
+        ChatRecommendationOutcome outcome = service.recommend(
                 "estoy decaido, se murio mi perro",
                 3L,
                 "base",
@@ -139,7 +142,8 @@ class GetChatEmotionalRecommendationUseCaseTest {
     }
 
     @Test
-    void evaluate_shouldOverrideFalseAnalysis_whenConversationDetectsHighIntensityGrief() {
+    @DisplayName("Sobrescribe el análisis negativo cuando la conversación detecta duelo de alta intensidad")
+    void recommendShouldOverrideFalseAnalysisWhenConversationDetectsHighIntensityGrief() {
         EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
                 false,
                 EmotionType.NEUTRAL,
@@ -173,7 +177,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
 
-        ChatRecommendationOutcome outcome = useCase.execute(
+        ChatRecommendationOutcome outcome = service.recommend(
                 "Estoy decaido, se murio Rocky y no se como procesarlo. Me siento sin fuerzas.",
                 1L,
                 "base",
@@ -198,7 +202,8 @@ class GetChatEmotionalRecommendationUseCaseTest {
     }
 
     @Test
-    void evaluate_shouldNotCreateEvent_whenRecommendationListIsEmpty() {
+    @DisplayName("No crea evento cuando la lista de recomendaciones está vacía")
+    void recommendShouldNotCreateEventWhenRecommendationListIsEmpty() {
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
         when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(new EmotionalAnalysisResult(
                 true,
@@ -214,7 +219,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
         when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
                 .thenReturn(new GetEmotionalRecommendationsResponse(List.of(), false));
 
-        ChatRecommendationOutcome outcome = useCase.execute(
+        ChatRecommendationOutcome outcome = service.recommend(
                 "estoy muy estresado",
                 1L,
                 "base",
@@ -228,7 +233,8 @@ class GetChatEmotionalRecommendationUseCaseTest {
     }
 
     @Test
-    void evaluate_shouldRecommend_whenUserExplicitlyRequestsActivityEvenIfAnalysisSaysNo() {
+    @DisplayName("Recomienda cuando el usuario pide explícitamente una actividad aunque el análisis diga que no")
+    void recommendShouldRecommendWhenUserExplicitlyRequestsActivityEvenIfAnalysisSaysNo() {
         EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
                 false,
                 EmotionType.NEUTRAL,
@@ -255,7 +261,7 @@ class GetChatEmotionalRecommendationUseCaseTest {
                 .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
         when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
 
-        ChatRecommendationOutcome outcome = useCase.execute(
+        ChatRecommendationOutcome outcome = service.recommend(
                 "dame una recomendacion de actividad",
                 1L,
                 "base",
