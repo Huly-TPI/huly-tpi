@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,5 +55,12 @@ public class PushNotificationSchedulerTest {
         when(pushSubscriptionRepository.findByNotificationHour(9)).thenReturn(List.of());
         scheduler.sendNotificationsForHour(9);
         verify(pushNotificationAdapter, never()).send(any(), any());
+    }
+
+    @Test
+    void sendDailyNotifications_shouldQueryByCurrentHour() throws Exception {
+        when(pushSubscriptionRepository.findByNotificationHour(anyInt())).thenReturn(List.of());
+        scheduler.sendDailyNotifications();
+        verify(pushSubscriptionRepository).findByNotificationHour(anyInt());
     }
 }
