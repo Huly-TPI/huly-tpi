@@ -1,13 +1,18 @@
 package com.huly.backend.domain.mapper.chat;
 
+import com.huly.backend.domain.dto.chat.ChatHistoryResponse;
+import com.huly.backend.domain.dto.chat.ChatReplyResponse;
 import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
 import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
 import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
+import com.huly.backend.domain.model.chat.ChatMessage;
+import com.huly.backend.domain.model.chat.ChatReply;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
 import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionalEventSource;
 import com.huly.backend.domain.model.enums.EmotionType;
+import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,6 +88,44 @@ class ChatMapperTest {
         assertThat(action.description()).isEqualTo("Un espacio para ordenar");
         assertThat(action.actionUrl()).isEqualTo("/api/activities");
         assertThat(action.emotionalEventId()).isEqualTo(50L);
+    }
+
+    @Test
+    @DisplayName("Convierte la ChatReply de dominio en su DTO de respuesta")
+    void toChatReplyResponseShouldMirrorReplyData() {
+        SuggestedChatAction action = new SuggestedChatAction(
+                ActivityType.DIARY, 7L, "Diario", "desc", "/api/activities", 50L);
+        ChatReply.GeneratedChallenge challenge = new ChatReply.GeneratedChallenge("Reto", "Hacé algo");
+        ChatReply reply = new ChatReply("hola", EmotionType.JOY, 8, true, "palabra", action, challenge);
+
+        ChatReplyResponse response = mapper.toChatReplyResponse(reply);
+
+        assertThat(response.content()).isEqualTo("hola");
+        assertThat(response.detectedEmotion()).isEqualTo(EmotionType.JOY);
+        assertThat(response.intensity()).isEqualTo(8);
+        assertThat(response.riskDetected()).isTrue();
+        assertThat(response.matchedWord()).isEqualTo("palabra");
+        assertThat(response.suggestedAction()).isEqualTo(action);
+        assertThat(response.generatedChallenge()).isEqualTo(challenge);
+    }
+
+    @Test
+    @DisplayName("Convierte el ChatMessage de dominio en el mensaje del historial")
+    void toHistoryMessageShouldMirrorMessageData() {
+        Instant now = Instant.now();
+        ChatMessage message = new ChatMessage(
+                3L, MessageRole.ASSISTANT, "resp", false, EmotionType.CALM, now,
+                null, null, "ACCEPTED", "REJECTED");
+
+        ChatHistoryResponse.Message result = mapper.toHistoryMessage(message);
+
+        assertThat(result.id()).isEqualTo(3L);
+        assertThat(result.role()).isEqualTo(MessageRole.ASSISTANT);
+        assertThat(result.content()).isEqualTo("resp");
+        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.CALM);
+        assertThat(result.createdAt()).isEqualTo(now);
+        assertThat(result.suggestedActionDecision()).isEqualTo("ACCEPTED");
+        assertThat(result.challengeDecision()).isEqualTo("REJECTED");
     }
 
     private EmotionalAnalysisResult analysis(

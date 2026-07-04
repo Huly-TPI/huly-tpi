@@ -1,5 +1,7 @@
 package com.huly.backend.domain.useCase.chat;
 
+import com.huly.backend.domain.dto.chat.ChatMessageRequest;
+import com.huly.backend.domain.dto.chat.ChatReplyResponse;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.chat.*;
@@ -37,7 +39,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -86,9 +87,9 @@ class ChatUseCaseTest {
         when(chatPreferenceHandlingService.handle(42L, "conv-1", "decime Checho"))
                 .thenReturn(ChatPreferenceHandlingResult.handled(expected));
 
-        ChatReply result = chatUseCase.execute("decime Checho", "conv-1", 42L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(42L, "conv-1", "decime Checho"));
 
-        assertThat(result).isEqualTo(expected);
+        assertThat(result.content()).isEqualTo("Listo, te voy a decir Checho.");
         verify(chatPreferenceHandlingService).handle(42L, "conv-1", "decime Checho");
         verifyNoInteractions(llmChatPort);
     }
@@ -99,9 +100,11 @@ class ChatUseCaseTest {
         ChatReply expected = new ChatReply("respuesta", EmotionType.JOY, 8, false, null);
         givenDefaultSetup("prompt base", List.of(), "prompt enriquecido", List.of(), expected);
 
-        ChatReply result = chatUseCase.execute("hola", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "hola"));
 
-        assertThat(result).isEqualTo(expected);
+        assertThat(result.content()).isEqualTo("respuesta");
+        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.JOY);
+        assertThat(result.intensity()).isEqualTo(8);
     }
 
     @Test
@@ -114,7 +117,7 @@ class ChatUseCaseTest {
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
-        chatUseCase.execute("msg", "conv-1", 1L);
+        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
 
         verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any(), any(), any(), any(), any());
     }
@@ -129,7 +132,7 @@ class ChatUseCaseTest {
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
-        chatUseCase.execute("msg", "conv-1", 1L);
+        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
 
         verify(promptBuilderService).buildEnrichedPrompt(eq(""), any(), any(), any(), any(), any());
     }
@@ -155,7 +158,7 @@ class ChatUseCaseTest {
                 .thenReturn("personalizado");
         when(llmChatPort.chat("personalizado", "msg", List.of())).thenReturn(ChatReply.of("ok"));
 
-        chatUseCase.execute("msg", "conv-1", 1L);
+        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
 
         ArgumentCaptor<ChatPersonalizationContext> personalizationCaptor =
                 ArgumentCaptor.forClass(ChatPersonalizationContext.class);
@@ -177,7 +180,7 @@ class ChatUseCaseTest {
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
-        chatUseCase.execute("msg", "conv-1", 1L);
+        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
 
         verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any(), any(), any());
     }
@@ -193,7 +196,7 @@ class ChatUseCaseTest {
         when(chatMemoryPort.getHistory("conv-abc", 1L)).thenReturn(history);
         when(llmChatPort.chat(any(), any(), eq(history))).thenReturn(ChatReply.of("ok"));
 
-        chatUseCase.execute("msg", "conv-abc", 1L);
+        chatUseCase.execute(new ChatMessageRequest(1L, "conv-abc", "msg"));
 
         verify(chatMemoryPort).getHistory("conv-abc", 1L);
         verify(llmChatPort).chat(any(), eq("msg"), eq(history));
@@ -205,7 +208,7 @@ class ChatUseCaseTest {
         ChatReply reply = new ChatReply("respuesta", EmotionType.SADNESS, 6, true, "suicidio");
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
 
-        chatUseCase.execute("me siento mal", "conv-1", 5L);
+        chatUseCase.execute(new ChatMessageRequest(5L, "conv-1", "me siento mal"));
 
         ArgumentCaptor<ConversationMessage> captor = ArgumentCaptor.forClass(ConversationMessage.class);
         verify(chatMemoryPort, times(2)).addMessage(eq("conv-1"), captor.capture(), eq(5L));
@@ -224,7 +227,7 @@ class ChatUseCaseTest {
         ChatReply reply = new ChatReply("todo va a estar bien", EmotionType.JOY, 7, false, null);
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
 
-        chatUseCase.execute("hola", "conv-1", 1L);
+        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "hola"));
 
         ArgumentCaptor<ConversationMessage> captor = ArgumentCaptor.forClass(ConversationMessage.class);
         verify(chatMemoryPort, times(2)).addMessage(eq("conv-1"), captor.capture(), eq(1L));
@@ -245,7 +248,7 @@ class ChatUseCaseTest {
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
         when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
 
-        chatUseCase.execute("msg", "conv-1", 1L);
+        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
 
         verify(userVectorMemoryService).findRelevantUserMemories(1L, "msg");
 
@@ -284,7 +287,7 @@ class ChatUseCaseTest {
         when(chatEmotionalRecommendationService.recommend(any(), any(), any(), any(), any(), any(), eq(false)))
                 .thenReturn(new ChatRecommendationOutcome(analysis, action));
 
-        ChatReply result = chatUseCase.execute("estoy decaido", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "estoy decaido"));
 
         assertThat(result.suggestedAction()).isEqualTo(action);
         assertThat(result.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
@@ -307,7 +310,7 @@ class ChatUseCaseTest {
         when(chatEmotionalRecommendationService.recommend(any(), any(), any(), any(), any(), any(), eq(true)))
                 .thenReturn(new ChatRecommendationOutcome(EmotionalAnalysisResult.neutral(), action));
 
-        ChatReply result = chatUseCase.execute("dame una recomendacion de actividad", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "dame una recomendacion de actividad"));
 
         assertThat(result.suggestedAction()).isEqualTo(action);
         verify(chatEmotionalRecommendationService).recommend(any(), any(), any(), any(), any(), any(), eq(true));
@@ -321,7 +324,7 @@ class ChatUseCaseTest {
         ChatReply reply = new ChatReply("claro", EmotionType.MOTIVATION, 5, false, null);
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
 
-        ChatReply result = chatUseCase.execute("quiero un reto", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "quiero un reto"));
 
         assertThat(result.generatedChallenge()).isNotNull();
         assertThat(result.generatedChallenge().title()).isEqualTo("Reto de accion pequena");
@@ -349,7 +352,7 @@ class ChatUseCaseTest {
                 List.of(),
                 new ChatReply("Todo bien por acá.", EmotionType.JOY, 3, false, null));
 
-        ChatReply result = chatUseCase.execute("qué onda", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "qué onda"));
 
         assertThat(result.content())
                 .contains("Todo bien por acá.")
@@ -381,7 +384,7 @@ class ChatUseCaseTest {
                 List.of(),
                 new ChatReply("Estoy acá para acompañarte.", EmotionType.SADNESS, 9, true, "riesgo"));
 
-        ChatReply result = chatUseCase.execute("estoy muy mal", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "estoy muy mal"));
 
         assertThat(result.content()).doesNotContain("Cómo te gustaría");
         verify(chatConversationPreferenceRepository, never()).save(any());
@@ -394,7 +397,7 @@ class ChatUseCaseTest {
         ChatReply reply = new ChatReply("¡Qué bueno!", EmotionType.JOY, 5, false, null, null, generated);
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
 
-        ChatReply result = chatUseCase.execute("Acepto este reto", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "Acepto este reto"));
 
         assertThat(result.generatedChallenge()).isNull();
     }
@@ -406,7 +409,7 @@ class ChatUseCaseTest {
         ChatReply reply = new ChatReply("No hay problema", EmotionType.JOY, 5, false, null, null, generated);
         givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
 
-        ChatReply result = chatUseCase.execute("Rechazo este reto por ahora", "conv-1", 1L);
+        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "Rechazo este reto por ahora"));
 
         assertThat(result.generatedChallenge()).isNull();
     }

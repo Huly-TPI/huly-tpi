@@ -1,5 +1,8 @@
 package com.huly.backend.domain.useCase.chat;
 
+import com.huly.backend.domain.dto.chat.ChatHistoryRequest;
+import com.huly.backend.domain.dto.chat.ChatHistoryResponse;
+import com.huly.backend.domain.mapper.chat.ChatMapper;
 import com.huly.backend.domain.model.chat.ChatMessage;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
@@ -9,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -20,6 +24,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +36,8 @@ class ListChatHistoryUseCaseTest {
     private ChatMessageRepository chatMessageRepository;
     @Mock
     private ChatPreferenceInitializationService chatPreferenceInitializationService;
+    @Spy
+    private ChatMapper mapper = new ChatMapper();
 
     @InjectMocks
     private ListChatHistoryUseCase listChatHistoryUseCase;
@@ -38,44 +46,43 @@ class ListChatHistoryUseCaseTest {
     void execute_shouldDelegateToRepositoryAndReturnPage() {
         String conversationId = "conv-1";
         Long userId = 1L;
-        Pageable pageable = PageRequest.of(0, 10);
         ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.NEUTRAL, Instant.now(), null, null, null, null);
-        Page<ChatMessage> expected = new PageImpl<>(List.of(msg), pageable, 1);
+        Page<ChatMessage> expected = new PageImpl<>(List.of(msg), PageRequest.of(0, 10), 1);
 
-        when(chatMessageRepository.findByConversationIdAndUserId(conversationId, userId, pageable)).thenReturn(expected);
+        when(chatMessageRepository.findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class)))
+                .thenReturn(expected);
 
-        Page<ChatMessage> result = listChatHistoryUseCase.execute(conversationId, userId, pageable);
+        ChatHistoryResponse result = listChatHistoryUseCase.execute(new ChatHistoryRequest(userId, conversationId, 0, 10));
 
-        assertThat(result).isEqualTo(expected);
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).content()).isEqualTo("hola");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).content()).isEqualTo("hola");
+        assertThat(result.totalElements()).isEqualTo(1);
         verify(chatPreferenceInitializationService).initialize(userId, conversationId);
-        verify(chatMessageRepository).findByConversationIdAndUserId(conversationId, userId, pageable);
+        verify(chatMessageRepository).findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class));
     }
 
     @Test
     void execute_shouldReturnEmptyPageWhenNoMessages() {
         String conversationId = "conv-sin-mensajes";
         Long userId = 1L;
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ChatMessage> emptyPage = Page.empty(pageable);
+        Page<ChatMessage> emptyPage = Page.empty(PageRequest.of(0, 10));
 
-        when(chatMessageRepository.findByConversationIdAndUserId(conversationId, userId, pageable)).thenReturn(emptyPage);
+        when(chatMessageRepository.findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class)))
+                .thenReturn(emptyPage);
 
-        Page<ChatMessage> result = listChatHistoryUseCase.execute(conversationId, userId, pageable);
+        ChatHistoryResponse result = listChatHistoryUseCase.execute(new ChatHistoryRequest(userId, conversationId, 0, 10));
 
-        assertThat(result).isEmpty();
+        assertThat(result.content()).isEmpty();
         verify(chatPreferenceInitializationService).initialize(userId, conversationId);
-        verify(chatMessageRepository).findByConversationIdAndUserId(conversationId, userId, pageable);
+        verify(chatMessageRepository).findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class));
     }
 
     @Test
     void execute_shouldPropagateExceptionFromRepository() {
-        Pageable pageable = PageRequest.of(0, 10);
-        when(chatMessageRepository.findByConversationIdAndUserId("conv-err", 1L, pageable))
+        when(chatMessageRepository.findByConversationIdAndUserId(eq("conv-err"), eq(1L), any(Pageable.class)))
                 .thenThrow(new RuntimeException("error de repositorio"));
 
-        assertThatThrownBy(() -> listChatHistoryUseCase.execute("conv-err", 1L, pageable))
+        assertThatThrownBy(() -> listChatHistoryUseCase.execute(new ChatHistoryRequest(1L, "conv-err", 0, 10)))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("error de repositorio");
     }
