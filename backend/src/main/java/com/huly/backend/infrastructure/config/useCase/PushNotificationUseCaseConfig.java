@@ -9,6 +9,7 @@ import com.huly.backend.domain.useCase.pushNotification.DeletePushSubscriptionUs
 import com.huly.backend.domain.useCase.pushNotification.SavePushSubscriptionUseCase;
 import com.huly.backend.domain.useCase.pushNotification.GetPushSubscriptionStatusUseCase;
 import com.huly.backend.domain.useCase.pushNotification.UnsubscribeFromEmailsUseCase;
+import com.huly.backend.domain.useCase.pushNotification.UpdateNotificationHourUseCase;
 import com.huly.backend.domain.repository.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,5 +63,11 @@ public class PushNotificationUseCaseConfig {
             UserRepository userRepository,
             UnsubscribeFromEmailsMapper unsubscribeFromEmailsMapper) {
         return new UnsubscribeFromEmailsUseCase(userRepository, unsubscribeFromEmailsMapper);
+    }
+
+    @Bean
+    public UpdateNotificationHourUseCase updateNotificationHourUseCase(
+            PushSubscriptionRepository pushNotificationRepository) {
+        return new UpdateNotificationHourUseCase(pushNotificationRepository);
     }
 }

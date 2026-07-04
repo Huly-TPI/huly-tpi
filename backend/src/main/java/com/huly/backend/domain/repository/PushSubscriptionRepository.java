@@ -9,5 +9,7 @@ public interface PushSubscriptionRepository {
     void deleteByEndpoint(String endpoint);
     boolean existsByEndpoint(String endpoint);
     List<PushSubscription> findAll();
-    Optional<PushSubscription> findByUserId(Long userId);   
+    Optional<PushSubscription> findByUserId(Long userId);  
+    List<PushSubscription> findByNotificationHour(int hour);
+    void updateNotificationHourByUserId(Long userId, int hour); 
 }

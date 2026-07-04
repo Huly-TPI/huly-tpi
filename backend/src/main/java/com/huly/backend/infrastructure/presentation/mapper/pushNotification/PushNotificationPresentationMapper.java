@@ -9,10 +9,6 @@ import com.huly.backend.infrastructure.presentation.dto.pushNotification.Subscri
 import com.huly.backend.infrastructure.presentation.dto.pushNotification.UnsubscribeRequest;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper de presentacion para el feature de push notifications:
- * traduce entre los DTOs web y los DTOs de dominio.
- */
 @Component
 public class PushNotificationPresentationMapper {
 
@@ -21,8 +17,7 @@ public class PushNotificationPresentationMapper {
                 request.getUserId(),
                 request.getEndpoint(),
                 request.getP256dh(),
-                request.getAuth()
-        );
+                request.getAuth());
     }
 
     public DeletePushSubscriptionRequest toDeleteRequest(UnsubscribeRequest request) {
@@ -34,6 +29,6 @@ public class PushNotificationPresentationMapper {
     }
 
     public PushSubscriptionStatusResponse toStatusResponse(GetPushSubscriptionStatusResponse response) {
-        return new PushSubscriptionStatusResponse(response.subscribed());
+        return new PushSubscriptionStatusResponse(response.subscribed(), response.notificationHour());
     }
 }

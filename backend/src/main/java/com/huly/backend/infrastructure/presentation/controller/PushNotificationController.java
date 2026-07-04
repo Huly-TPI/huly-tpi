@@ -1,5 +1,6 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
+import com.huly.backend.domain.dto.pushNotification.UpdateNotificationHourRequest;
 import com.huly.backend.domain.useCase.pushNotification.DeletePushSubscriptionUseCase;
 import com.huly.backend.domain.useCase.pushNotification.GetPushSubscriptionStatusUseCase;
 import com.huly.backend.domain.useCase.pushNotification.SavePushSubscriptionUseCase;
@@ -7,6 +8,9 @@ import com.huly.backend.infrastructure.presentation.dto.pushNotification.PushSub
 import com.huly.backend.infrastructure.presentation.dto.pushNotification.SubscribeRequest;
 import com.huly.backend.infrastructure.presentation.dto.pushNotification.UnsubscribeRequest;
 import com.huly.backend.infrastructure.presentation.mapper.pushNotification.PushNotificationPresentationMapper;
+import com.huly.backend.domain.useCase.pushNotification.UpdateNotificationHourUseCase;
+import jakarta.validation.Valid;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,7 @@ public class PushNotificationController {
     private final DeletePushSubscriptionUseCase deletePushSubscriptionUseCase;
     private final GetPushSubscriptionStatusUseCase getPushSubscriptionStatusUseCase;
     private final PushNotificationPresentationMapper pushNotificationPresentationMapper;
+    private final UpdateNotificationHourUseCase updateNotificationHourUseCase;
 
     @PostMapping("/subscribe")
     public ResponseEntity<Void> subscribe(@RequestBody SubscribeRequest request) {
@@ -44,6 +49,14 @@ public class PushNotificationController {
         PushSubscriptionStatusResponse response = pushNotificationPresentationMapper.toStatusResponse(
                 getPushSubscriptionStatusUseCase.execute(pushNotificationPresentationMapper.toStatusRequest(userId)));
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/hour")
+    public ResponseEntity<Void> updateHour(@AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody UpdateNotificationHourRequest request) {
+        Long userId = Long.parseLong(principal.getUsername());
+        updateNotificationHourUseCase.execute(userId, request.hour());
+        return ResponseEntity.noContent().build();
     }
 
 }
