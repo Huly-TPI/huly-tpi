@@ -10,6 +10,7 @@ public record InventoryItemView(
         String name,
         ItemCategory category,
         String assetKey,
-        boolean equipped
+        boolean equipped,
+        String imageUrl
 ) {
 }

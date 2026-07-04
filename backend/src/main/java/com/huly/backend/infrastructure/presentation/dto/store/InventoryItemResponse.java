@@ -5,6 +5,8 @@ public record InventoryItemResponse(
         String name,
         String category,
         String assetKey,
-        boolean equipped
+        boolean equipped,
+        String imageUrlLight, 
+        String imageUrlDark
 ) {
 }

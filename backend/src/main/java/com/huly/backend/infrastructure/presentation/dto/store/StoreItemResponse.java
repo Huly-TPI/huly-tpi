@@ -10,6 +10,8 @@ public record StoreItemResponse(
         String assetKey,
         int priceCoins, 
         BigDecimal price,
-        boolean premiumOnly
+        boolean premiumOnly, 
+        String imageUrlLight, 
+        String imageUrlDark
 ) {
 }

@@ -12,6 +12,8 @@ const makeItem = (overrides = {}) => ({
     priceCoins: 50,
     price: null as number | null,
     premiumOnly: false,
+    imageUrlLight: null as string | null,
+    imageUrlDark: null as string | null,
     ...overrides,
 })
 
@@ -68,6 +70,12 @@ describe('CosmeticCard', () => {
         render(<CosmeticCard item={makeItem({ premiumOnly: true })} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} userIsPremium={false} />)
         const btn = screen.getByRole('button', { name: 'Solo premium' })
         expect(btn).toBeDisabled()
+    })
+
+    it('usa la imagen subida cuando el item tiene imageUrlLight', () => {
+        render(<CosmeticCard item={makeItem({ imageUrlLight: 'http://cdn/light-theme/u.webp' })} owned={false} equipped={false} busy={false} disabled={false} onBuy={noop} onBuyWithMoney={noop} onEquip={noop} onUnequip={noop} userIsPremium={false} />)
+        const img = screen.getByAltText('Casa rosa') as HTMLImageElement
+        expect(img.src).toContain('http://cdn/light-theme/u.webp')
     })
 
 })

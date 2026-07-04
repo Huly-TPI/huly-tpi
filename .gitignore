@@ -159,3 +159,6 @@ dist/
 # ========================
 antiscroll-extension/node_modules/
 antiscroll-extension/dist/
+
+# UPLOADS 
+uploads/

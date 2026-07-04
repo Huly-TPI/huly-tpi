@@ -79,7 +79,7 @@ class StoreControllerTest {
         void getItems_shouldReturnMappedCatalog() throws Exception {
                 StoreItemView item = new StoreItemView(
                                 10L, "Casa rosa", "Casa de color rosa", ItemCategory.HOUSE, "casa-rosa",
-                                50, new BigDecimal("1000.00"), false);
+                                50, new BigDecimal("1000.00"), false, null);
                 when(listStoreItemsUseCase.execute()).thenReturn(new ListStoreItemsResponse(List.of(item)));
 
                 mockMvc.perform(get("/api/store/items"))
@@ -95,7 +95,7 @@ class StoreControllerTest {
         @Test
         void getInventory_shouldReturnMappedInventory() throws Exception {
                 InventoryItemView item = new InventoryItemView(
-                                10L, "Casa rosa", ItemCategory.HOUSE, "casa-rosa", true);
+                                10L, "Casa rosa", ItemCategory.HOUSE, "casa-rosa", true, null);
                 when(getUserInventoryUseCase.execute(new GetUserInventoryRequest(USER_ID)))
                                 .thenReturn(new GetUserInventoryResponse(List.of(item)));
 
