@@ -4,7 +4,7 @@ import com.huly.backend.domain.dto.chat.ChatHistoryRequest;
 import com.huly.backend.domain.dto.chat.ChatHistoryResponse;
 import com.huly.backend.domain.dto.chat.ChatMessageRequest;
 import com.huly.backend.domain.dto.chat.ChatReplyResponse;
-import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.dto.chat.SuggestedActionResponse;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
@@ -115,7 +115,7 @@ public class ChatController {
                 challenge, metadata, quota.remaining(), quota.limitMessage(), remainingAudio, audioLimitMessage);
     }
 
-    private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {
+    private ChatResponse.SuggestedAction toSuggestedAction(SuggestedActionResponse action) {
         if (action == null) {
             return null;
         }

@@ -105,8 +105,11 @@ class ChatMapperTest {
         assertThat(response.intensity()).isEqualTo(8);
         assertThat(response.riskDetected()).isTrue();
         assertThat(response.matchedWord()).isEqualTo("palabra");
-        assertThat(response.suggestedAction()).isEqualTo(action);
-        assertThat(response.generatedChallenge()).isEqualTo(challenge);
+        assertThat(response.suggestedAction().type()).isEqualTo(ActivityType.DIARY);
+        assertThat(response.suggestedAction().activityId()).isEqualTo(7L);
+        assertThat(response.suggestedAction().emotionalEventId()).isEqualTo(50L);
+        assertThat(response.generatedChallenge().title()).isEqualTo("Reto");
+        assertThat(response.generatedChallenge().description()).isEqualTo("Hacé algo");
     }
 
     @Test

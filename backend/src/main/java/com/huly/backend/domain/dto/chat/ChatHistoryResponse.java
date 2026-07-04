@@ -1,7 +1,5 @@
 package com.huly.backend.domain.dto.chat;
 
-import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 
@@ -10,7 +8,7 @@ import java.util.List;
 
 /**
  * Response de dominio del historial de chat: los mensajes de la página más los metadatos de
- * paginación, sin exponer {@code Page} ni el modelo {@code ChatMessage}.
+ * paginación, con DTOs propios (sin exponer {@code Page} ni tipos del model).
  */
 public record ChatHistoryResponse(
         List<Message> content,
@@ -28,8 +26,8 @@ public record ChatHistoryResponse(
             Boolean riskDetected,
             EmotionType detectedEmotion,
             Instant createdAt,
-            SuggestedChatAction suggestedAction,
-            ChatReply.GeneratedChallenge generatedChallenge,
+            SuggestedActionResponse suggestedAction,
+            GeneratedChallengeResponse generatedChallenge,
             String suggestedActionDecision,
             String challengeDecision
     ) {

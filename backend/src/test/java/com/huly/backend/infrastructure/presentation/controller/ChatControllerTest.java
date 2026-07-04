@@ -5,8 +5,8 @@ import com.huly.backend.domain.dto.chat.ChatHistoryRequest;
 import com.huly.backend.domain.dto.chat.ChatHistoryResponse;
 import com.huly.backend.domain.dto.chat.ChatMessageRequest;
 import com.huly.backend.domain.dto.chat.ChatReplyResponse;
-import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.dto.chat.GeneratedChallengeResponse;
+import com.huly.backend.domain.dto.chat.SuggestedActionResponse;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
@@ -134,7 +134,7 @@ class ChatControllerTest {
 
     @Test
     void chat_shouldReturnSuggestedAction_whenRecommendationExists() throws Exception {
-        SuggestedChatAction action = new SuggestedChatAction(
+        SuggestedActionResponse action = new SuggestedActionResponse(
                 ActivityType.DIARY,
                 2L,
                 "Diario emocional",
@@ -220,7 +220,7 @@ class ChatControllerTest {
 
     @Test
     void getHistory_shouldReturnCardsAndDecisions_whenAssistantMessageIncludesThem() throws Exception {
-        SuggestedChatAction action = new SuggestedChatAction(
+        SuggestedActionResponse action = new SuggestedActionResponse(
                 ActivityType.BREATHING,
                 4L,
                 "Respiracion guiada",
@@ -228,7 +228,7 @@ class ChatControllerTest {
                 "/guided-breathing",
                 12L
         );
-        ChatReply.GeneratedChallenge challenge = new ChatReply.GeneratedChallenge("Reto breve", "Tomate cinco minutos");
+        GeneratedChallengeResponse challenge = new GeneratedChallengeResponse("Reto breve", "Tomate cinco minutos");
         ChatHistoryResponse.Message msg = new ChatHistoryResponse.Message(
                 3L,
                 MessageRole.ASSISTANT,

@@ -2,6 +2,8 @@ package com.huly.backend.domain.mapper.chat;
 
 import com.huly.backend.domain.dto.chat.ChatHistoryResponse;
 import com.huly.backend.domain.dto.chat.ChatReplyResponse;
+import com.huly.backend.domain.dto.chat.GeneratedChallengeResponse;
+import com.huly.backend.domain.dto.chat.SuggestedActionResponse;
 import com.huly.backend.domain.dto.emotionalEvent.CreateEmotionalEventRequest;
 import com.huly.backend.domain.dto.emotionalEvent.EmotionalEventResponse;
 import com.huly.backend.domain.dto.emotionalRecommendation.EmotionalRecommendationItem;
@@ -149,8 +151,8 @@ public class ChatMapper {
                 reply.intensity(),
                 reply.riskDetected(),
                 reply.matchedWord(),
-                reply.suggestedAction(),
-                reply.generatedChallenge());
+                toSuggestedActionResponse(reply.suggestedAction()),
+                toGeneratedChallengeResponse(reply.generatedChallenge()));
     }
 
     public ChatHistoryResponse.Message toHistoryMessage(ChatMessage message) {
@@ -161,10 +163,30 @@ public class ChatMapper {
                 message.riskDetected(),
                 message.detectedEmotion(),
                 message.createdAt(),
-                message.suggestedAction(),
-                message.generatedChallenge(),
+                toSuggestedActionResponse(message.suggestedAction()),
+                toGeneratedChallengeResponse(message.generatedChallenge()),
                 message.suggestedActionDecision(),
                 message.challengeDecision());
+    }
+
+    private SuggestedActionResponse toSuggestedActionResponse(SuggestedChatAction action) {
+        if (action == null) {
+            return null;
+        }
+        return new SuggestedActionResponse(
+                action.type(),
+                action.activityId(),
+                action.title(),
+                action.description(),
+                action.actionUrl(),
+                action.emotionalEventId());
+    }
+
+    private GeneratedChallengeResponse toGeneratedChallengeResponse(ChatReply.GeneratedChallenge challenge) {
+        if (challenge == null) {
+            return null;
+        }
+        return new GeneratedChallengeResponse(challenge.title(), challenge.description());
     }
 
     public SuggestedChatAction toSuggestedAction(

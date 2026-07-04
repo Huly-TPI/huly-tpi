@@ -289,7 +289,8 @@ class ChatUseCaseTest {
 
         ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "estoy decaido"));
 
-        assertThat(result.suggestedAction()).isEqualTo(action);
+        assertThat(result.suggestedAction().type()).isEqualTo(ActivityType.DIARY);
+        assertThat(result.suggestedAction().activityId()).isEqualTo(2L);
         assertThat(result.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
         assertThat(result.intensity()).isEqualTo(9);
     }
@@ -312,7 +313,8 @@ class ChatUseCaseTest {
 
         ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "dame una recomendacion de actividad"));
 
-        assertThat(result.suggestedAction()).isEqualTo(action);
+        assertThat(result.suggestedAction().type()).isEqualTo(ActivityType.DIARY);
+        assertThat(result.suggestedAction().activityId()).isEqualTo(2L);
         verify(chatEmotionalRecommendationService).recommend(any(), any(), any(), any(), any(), any(), eq(true));
         verify(promptBuilderService).buildEnrichedPrompt(
                 any(), any(), any(), eq(action), eq(ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST), any());

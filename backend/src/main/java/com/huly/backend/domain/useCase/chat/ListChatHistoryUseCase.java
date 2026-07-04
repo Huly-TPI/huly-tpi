@@ -22,8 +22,10 @@ public class ListChatHistoryUseCase {
 
     public ChatHistoryResponse execute(ChatHistoryRequest request) {
         chatPreferenceInitializationService.initialize(request.userId(), request.conversationId());
+        int safePage = Math.max(0, request.page());
+        int safeSize = Math.max(1, request.size());
         PageRequest pageable = PageRequest.of(
-                request.page(), request.size(), Sort.by("createdAt").descending());
+                safePage, safeSize, Sort.by("createdAt").descending());
         Page<ChatMessage> page = chatMessageRepository.findByConversationIdAndUserId(
                 request.conversationId(), request.userId(), pageable);
         return toHistoryResponse(page);

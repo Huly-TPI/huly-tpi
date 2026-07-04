@@ -69,7 +69,6 @@ public class AnthropicChatAdapter implements LLMChatPort {
                 }
             }
 
-            
             ChatReplyDto dto = chatClient.prompt()
                     .system(systemPrompt)
                     .messages(messages)

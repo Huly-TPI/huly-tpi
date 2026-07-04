@@ -25,6 +25,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -75,6 +76,18 @@ class ListChatHistoryUseCaseTest {
         assertThat(result.content()).isEmpty();
         verify(chatPreferenceInitializationService).initialize(userId, conversationId);
         verify(chatMessageRepository).findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class));
+    }
+
+    @Test
+    void execute_shouldNormalizeInvalidPagination() {
+        when(chatMessageRepository.findByConversationIdAndUserId(eq("conv-1"), eq(1L), any(Pageable.class)))
+                .thenReturn(Page.empty(PageRequest.of(0, 1)));
+
+        ChatHistoryResponse result = listChatHistoryUseCase.execute(new ChatHistoryRequest(1L, "conv-1", -1, 0));
+
+        assertThat(result.content()).isEmpty();
+        verify(chatMessageRepository).findByConversationIdAndUserId(eq("conv-1"), eq(1L),
+                argThat(pageable -> pageable.getPageNumber() == 0 && pageable.getPageSize() == 1));
     }
 
     @Test
