@@ -15,4 +15,6 @@ public class PushSubscription {
      private String p256dh;
      private String auth;
      private LocalDateTime createdAt;
+     @Builder.Default
+     private int notificationHour = 9;
 }

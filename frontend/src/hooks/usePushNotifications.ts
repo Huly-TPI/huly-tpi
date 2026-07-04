@@ -24,6 +24,7 @@ export function usePushNotifications() {
 
     const [isSubscribed, setIsSubscribed] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const [notificationHour, setNotificationHour] = useState(9)
 
     useEffect(() => {
         if (!isSupported) {
@@ -38,7 +39,10 @@ export function usePushNotifications() {
         }
         setIsLoading(true)
         pushNotificationsApi.getStatus()
-            .then(status => setIsSubscribed(status.subscribed))
+            .then(status => {
+                setIsSubscribed(status.subscribed)
+                setNotificationHour(status.notificationHour)
+            })
             .catch(() => { })
             .finally(() => setIsLoading(false))
     }, [isSupported, user?.id])
@@ -92,12 +96,22 @@ export function usePushNotifications() {
         }
     }, [isSupported])
 
+    const updateHour = useCallback(async (hour: number) => {
+        setNotificationHour(hour)
+        try {
+            await pushNotificationsApi.updateHour(hour)
+        } catch (err) {
+            console.error('Error al actualizar la hora de notificaciones', err)
+        }
+    }, [])
+
     return {
         isSubscribed,
         isLoading,
         isSupported,
         subscribe,
         unsubscribe,
-
+        notificationHour,
+        updateHour,
     }
 }

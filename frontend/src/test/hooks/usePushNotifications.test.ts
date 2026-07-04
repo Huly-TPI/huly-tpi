@@ -8,6 +8,7 @@ vi.mock('../../api/pushNotifications', () => ({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
         getStatus: vi.fn(),
+        updateHour: vi.fn(),
     },
 }))
 
@@ -21,6 +22,7 @@ const mockedSubscribe = vi.mocked(pushNotificationsApi.subscribe)
 const mockedUnsubscribe = vi.mocked(pushNotificationsApi.unsubscribe)
 const mockedGetStatus = vi.mocked(pushNotificationsApi.getStatus)
 const mockRequestPermission = vi.fn()
+const mockedUpdateHour = vi.mocked(pushNotificationsApi.updateHour)
 
 const mockPushSub = {
     endpoint: 'https://push.example.com/sub',
@@ -47,7 +49,7 @@ describe('usePushNotifications', () => {
     beforeEach(() => {
         vi.clearAllMocks()
         mockRequestPermission.mockResolvedValue('granted')
-        mockedGetStatus.mockResolvedValue({ subscribed: false })
+        mockedGetStatus.mockResolvedValue({ subscribed: false, notificationHour: 9 })
         mockPushManager.getSubscription.mockResolvedValue(null)
         Object.defineProperty(navigator, 'serviceWorker', { value: mockServiceWorker, configurable: true })
         Object.defineProperty(window, 'PushManager', { value: {}, configurable: true })
@@ -73,14 +75,14 @@ describe('usePushNotifications', () => {
 
 
     it('isSuscribed es false cuando no hay suscripción existente', async () => {
-        mockedGetStatus.mockResolvedValue({ subscribed: false })
+        mockedGetStatus.mockResolvedValue({ subscribed: false, notificationHour: 9 })
         const { result } = renderHook(() => usePushNotifications())
         await waitFor(() => expect(result.current.isLoading).toBe(false))
         expect(result.current.isSubscribed).toBe(false)
     })
 
     it('isSuscribed es true cuando ya existe una suscripción', async () => {
-        mockedGetStatus.mockResolvedValue({ subscribed: true })
+        mockedGetStatus.mockResolvedValue({ subscribed: true, notificationHour: 9 })
         const { result } = renderHook(() => usePushNotifications())
         await waitFor(() => expect(result.current.isLoading).toBe(false))
         expect(result.current.isSubscribed).toBe(true)
@@ -158,6 +160,24 @@ describe('usePushNotifications', () => {
         expect(mockedUnsubscribe).toHaveBeenCalledWith('https://push.example.com/sub')
         expect(mockPushSub.unsubscribe).toHaveBeenCalled()
         expect(result.current.isSubscribed).toBe(false)
+    })
+
+    it('carga la hora de notificación del status', async () => {
+        mockedGetStatus.mockResolvedValue({ subscribed: true, notificationHour: 20 })
+        const { result } = renderHook(() => usePushNotifications())
+        await waitFor(() => expect(result.current.isLoading).toBe(false))
+        expect(result.current.notificationHour).toBe(20)
+    })
+
+    it('updateHour actualiza el estado y llama a la api', async () => {
+        mockedUpdateHour.mockResolvedValue(undefined as never)
+        const { result } = renderHook(() => usePushNotifications())
+        await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+        await act(async () => { await result.current.updateHour(21) })
+
+        expect(mockedUpdateHour).toHaveBeenCalledWith(21)
+        expect(result.current.notificationHour).toBe(21)
     })
 
 })
