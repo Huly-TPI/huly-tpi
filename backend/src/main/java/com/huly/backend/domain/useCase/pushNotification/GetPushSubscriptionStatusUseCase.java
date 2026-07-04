@@ -13,6 +13,8 @@ public class GetPushSubscriptionStatusUseCase {
     private final GetPushSubscriptionStatusMapper mapper;
 
     public GetPushSubscriptionStatusResponse execute(GetPushSubscriptionStatusRequest request) {
-        return mapper.toResponse(pushSubscriptionRepository.findByUserId(request.userId()).isPresent());
+        var sub = pushSubscriptionRepository.findByUserId(request.userId());
+        return mapper.toResponse(sub.isPresent(),
+                sub.map(com.huly.backend.domain.model.PushSubscription::getNotificationHour).orElse(9));
     }
 }

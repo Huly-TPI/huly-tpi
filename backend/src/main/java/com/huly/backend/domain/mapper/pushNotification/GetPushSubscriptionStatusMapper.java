@@ -7,7 +7,7 @@ import com.huly.backend.domain.dto.pushNotification.GetPushSubscriptionStatusRes
  */
 public class GetPushSubscriptionStatusMapper {
 
-    public GetPushSubscriptionStatusResponse toResponse(boolean subscribed) {
-        return new GetPushSubscriptionStatusResponse(subscribed);
+    public GetPushSubscriptionStatusResponse toResponse(boolean subscribed, int notificationHour) {
+        return new GetPushSubscriptionStatusResponse(subscribed, notificationHour);
     }
 }

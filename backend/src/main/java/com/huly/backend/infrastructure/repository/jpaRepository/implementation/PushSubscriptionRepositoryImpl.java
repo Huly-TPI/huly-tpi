@@ -1,4 +1,5 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
+
 import com.huly.backend.domain.model.PushSubscription;
 import com.huly.backend.domain.repository.PushSubscriptionRepository;
 import com.huly.backend.infrastructure.repository.entity.PushSubscriptionEntity;
@@ -41,16 +42,28 @@ public class PushSubscriptionRepositoryImpl implements PushSubscriptionRepositor
         return jpaRepository.findByUserId(userId).map(this::toDomain);
     }
 
+    @Override
+    public List<PushSubscription> findByNotificationHour(int hour) {
+        return jpaRepository.findByNotificationHour(hour).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public void updateNotificationHourByUserId(Long userId, int hour) {
+        jpaRepository.updateNotificationHourByUserId(userId, hour);
+    }
+
     private PushSubscriptionEntity toEntity(PushSubscription d) {
         return PushSubscriptionEntity.builder().id(d.getId()).userId(d.getUserId())
-        .endpoint(d.getEndpoint()).p256dh(d.getP256dh()).auth(d.getAuth()).build();
+                .endpoint(d.getEndpoint()).p256dh(d.getP256dh()).auth(d.getAuth())
+                .notificationHour(d.getNotificationHour())
+                .build();
     }
 
     private PushSubscription toDomain(PushSubscriptionEntity e) {
         return PushSubscription.builder().id(e.getId()).userId(e.getUserId()).endpoint(e.getEndpoint())
-        .p256dh(e.getP256dh()).auth(e.getAuth()).build();
+                .p256dh(e.getP256dh()).auth(e.getAuth())
+                .notificationHour(e.getNotificationHour())
+                .build();
     }
 
-
-    
 }

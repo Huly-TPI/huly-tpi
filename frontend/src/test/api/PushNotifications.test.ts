@@ -6,11 +6,13 @@ vi.mock('../../api/client', () => ({
     api: {
         post: vi.fn(),
         delete: vi.fn(),
+        put: vi.fn(),
     },
 }))
 
 const mockedPost = vi.mocked(api.post)
 const mockedDelete = vi.mocked(api.delete)
+const mockedPut = vi.mocked(api.put)
 
 describe('pushNotificationsApi', () => {
     beforeEach(() => {
@@ -43,4 +45,11 @@ describe('pushNotificationsApi', () => {
 
         })
     })
+
+    it('updateHour llama PUT /pushNotification/hour con la hora', async () => {
+        mockedPut.mockResolvedValueOnce(undefined as never)
+        await pushNotificationsApi.updateHour(20)
+        expect(mockedPut).toHaveBeenCalledWith('/pushNotification/hour', { hour: 20 })
+    })
+
 })
