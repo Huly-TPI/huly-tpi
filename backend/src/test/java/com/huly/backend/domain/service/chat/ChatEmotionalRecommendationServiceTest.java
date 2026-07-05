@@ -95,7 +95,8 @@ class ChatEmotionalRecommendationServiceTest {
                 "Diario emocional",
                 "Un espacio para ordenar pensamientos",
                 0.95,
-                "Recomendada para procesar la emocion"
+                "Recomendada para procesar la emocion",
+                "/diary"
         );
         EmotionalEventResponse saved = eventResponse(50L, 3L, 7L);
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
@@ -161,7 +162,8 @@ class ChatEmotionalRecommendationServiceTest {
                 "Diario emocional",
                 "Un espacio para ordenar pensamientos",
                 0.91,
-                "Recomendada para procesar la emocion"
+                "Recomendada para procesar la emocion",
+                "/diary"
         );
         EmotionalEventResponse saved = eventResponse(60L, 1L, 2L);
         ChatReply conversationalReply = new ChatReply(
@@ -252,7 +254,8 @@ class ChatEmotionalRecommendationServiceTest {
                 "Respiracion guiada",
                 "Una practica breve para regularte",
                 0.88,
-                "Puede ayudar a empezar"
+                "Puede ayudar a empezar",
+                "/guided-breathing"
         );
         EmotionalEventResponse saved = eventResponse(70L, 1L, 4L);
         when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");

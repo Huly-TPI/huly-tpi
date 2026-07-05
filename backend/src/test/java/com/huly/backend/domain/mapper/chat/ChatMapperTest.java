@@ -86,7 +86,7 @@ class ChatMapperTest {
         assertThat(action.activityId()).isEqualTo(7L);
         assertThat(action.title()).isEqualTo("Diario emocional");
         assertThat(action.description()).isEqualTo("Un espacio para ordenar");
-        assertThat(action.actionUrl()).isEqualTo("/api/activities");
+        assertThat(action.actionUrl()).isEqualTo("/diary");
         assertThat(action.emotionalEventId()).isEqualTo(50L);
     }
 
@@ -146,7 +146,7 @@ class ChatMapperTest {
             String description,
             String reason) {
         return new EmotionalRecommendationItem(
-                activityId, ActivityType.DIARY, title, description, 0.9, reason);
+                activityId, ActivityType.DIARY, title, description, 0.9, reason, "/diary");
     }
 
     private EmotionalEventResponse eventResponse(Long id) {

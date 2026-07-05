@@ -51,7 +51,7 @@ class GetEmotionalRecommendationsUseCaseTest {
         List<Activity> activities = List.of(Activity.builder().id(1L).build());
         EmotionalRecommendationResult expected = new EmotionalRecommendationResult(
                 List.of(new EmotionalRecommendationItem(
-                        1L, ActivityType.BREATHING, "Respiracion", "Descripcion", 0.9, "razon")),
+                        1L, ActivityType.BREATHING, "Respiracion", "Descripcion", 0.9, "razon", "/guided-breathing")),
                 false);
         when(activityRepository.findAll()).thenReturn(activities);
         when(recommendationService.recommend(query, activities, List.of())).thenReturn(expected);

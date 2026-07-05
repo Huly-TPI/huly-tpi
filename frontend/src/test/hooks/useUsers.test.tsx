@@ -86,7 +86,8 @@ describe('useUsers', () => {
       todayActivitiesCount: 0,
       favoriteActivity: null,
       averageSessionsText: 'Sin registros',
-      activityDistribution: {}
+      activityDistribution: {},
+      activityNames: {}
     })
     mockedGetUserAiDiagnostics.mockResolvedValue({
       aiMemories: [],

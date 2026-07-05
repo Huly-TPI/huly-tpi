@@ -10,6 +10,7 @@ import AntiScrollPage from './pages/Backoffice/AntiScrollPage'
 import DashboardPage from './pages/Backoffice/DashboardPage'
 import UsersPage from './pages/Backoffice/UsersPage'
 import UserDetailPage from './pages/Backoffice/UserDetailPage'
+import ActivitiesPage from './pages/Backoffice/ActivitiesPage'
 import BackofficeNotFound from './pages/Backoffice/BackofficeNotFound'
 import ProductsPage from './pages/Backoffice/ProductsPage'
 import Breathing from './pages/Breathing/Breathing'
@@ -36,7 +37,6 @@ import { usePreloadImages } from './hooks/usePreloadImages'
 const App = () => {
   usePreloadImages()
   return (
-
     <AuthProvider>
       <SubscriptionModalProvider>
         <ToastProvider>
@@ -47,6 +47,7 @@ const App = () => {
               <Route index element={<DashboardPage />} />
               <Route path="chatbot" element={<ChatbotPage />} />
               <Route path="antiscroll" element={<AntiScrollPage />} />
+              <Route path="actividades" element={<ActivitiesPage />} />
               <Route path="usuarios" element={<UsersPage />} />
               <Route path="usuarios/:id" element={<UserDetailPage />} />
               <Route path="productos" element={<ProductsPage />} />

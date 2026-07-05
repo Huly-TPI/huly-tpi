@@ -69,8 +69,12 @@ describe('UserDetailPage', () => {
           BUBBLE: 8,
           BREATHING: 4,
         },
+        activityNames: {
+          BUBBLE: 'Burbujas relajantes',
+          BREATHING: 'Respiración guiada',
+        },
         activitySessions: [
-          { id: 1, activityType: 'BUBBLE', createdAt: '2026-06-15T00:00:00Z' },
+          { id: 1, activityType: 'BUBBLE', activityName: 'Burbujas relajantes', createdAt: '2026-06-15T00:00:00Z' },
         ],
       },
     } as any)
@@ -80,11 +84,11 @@ describe('UserDetailPage', () => {
     expect(screen.getByText('Sesiones de hoy')).toBeInTheDocument()
     expect(screen.getByText('5')).toBeInTheDocument()
     expect(screen.getByText('Módulo favorito')).toBeInTheDocument()
-    expect(screen.getAllByText('Reventar Burbujas').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Burbujas relajantes').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('12')).toBeInTheDocument()
     expect(screen.getByText('sesiones/semana')).toBeInTheDocument()
     expect(screen.getByText('Distribución de Uso de Funcionalidades')).toBeInTheDocument()
-    expect(screen.getByText('8 veces')).toBeInTheDocument()
+    expect(screen.getByText('8 sesiones')).toBeInTheDocument()
     expect(screen.getByText('Historial de uso reciente')).toBeInTheDocument()
   })
 

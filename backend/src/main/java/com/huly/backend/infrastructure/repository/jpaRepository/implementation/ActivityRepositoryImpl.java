@@ -3,8 +3,11 @@ import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IActivityJpaRepository;
+import com.huly.backend.infrastructure.repository.mapper.ActivityMapper;
 import org.springframework.stereotype.Component;
 import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -12,12 +15,13 @@ import lombok.RequiredArgsConstructor;
 public class ActivityRepositoryImpl implements ActivityRepository {
     
     private final IActivityJpaRepository activityJpaRepository;
+    private final ActivityMapper activityMapper;
 
      @Override
     public List<Activity> findAll() {
         return activityJpaRepository.findAll()
                 .stream()
-                .map(this::mapToDomain)
+                .map(activityMapper::toDomain)
                 .toList();
                 }
 
@@ -26,22 +30,15 @@ public class ActivityRepositoryImpl implements ActivityRepository {
         return activityJpaRepository.existsById(id);
     }
 
-    private Activity mapToDomain(ActivityEntity entity) {
-        return Activity.builder()
-                .id(entity.getId())
-                .type(entity.getType())
-                .valenceMin(entity.getValenceMin())
-                .valenceMax(entity.getValenceMax())
-                .arousalMin(entity.getArousalMin())
-                .arousalMax(entity.getArousalMax())
-                .dominanceMin(entity.getDominanceMin())
-                .dominanceMax(entity.getDominanceMax())
-                .effectValence(entity.getEffectValence())
-                .effectArousal(entity.getEffectArousal())
-                .effectDominance(entity.getEffectDominance())
-                .build(
-        );
+    @Override
+    public Optional<Activity> findById(Long id) {
+        return activityJpaRepository.findById(id).map(activityMapper::toDomain);
     }
 
-    
+    @Override
+    public Activity save(Activity activity) {
+        ActivityEntity entity = activityMapper.toEntity(activity);
+        ActivityEntity saved = activityJpaRepository.save(entity);
+        return activityMapper.toDomain(saved);
+    }
 }

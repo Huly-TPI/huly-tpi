@@ -1,7 +1,9 @@
 package com.huly.backend.domain.useCase.admin.userActivities;
 
+import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.model.activity.ActivitySession;
 import com.huly.backend.domain.model.enums.Timeframe;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ public class GetUserActivitiesUseCase {
 
     private final UserRepository userRepository;
     private final ActivitySessionRepository activitySessionRepository;
+    private final ActivityRepository activityRepository;
 
     public GetUserActivitiesResponse execute(GetUserActivitiesRequest request) {
         Long userId = request.userId();
@@ -92,16 +95,33 @@ public class GetUserActivitiesUseCase {
             }
         }
 
+        Map<String, String> activityNamesMap = new HashMap<>();
+
+        try {
+            List<Activity> activitiesList = activityRepository.findAll();
+            for (Activity act : activitiesList) {
+                if (act.getType() != null && act.getTitle() != null) {
+                    activityNamesMap.put(act.getType().name(), act.getTitle());
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
         List<ActivitySession> recentSessions = timeframeStart == null
                 ? activitySessionRepository.findRecentByUserId(userId, 5)
                 : activitySessionRepository.findRecentByUserIdAndCreatedAtAfter(userId, timeframeStart, 5);
 
         List<ActivitySessionResponse> activitySessions = recentSessions.stream()
-                .map(session -> new ActivitySessionResponse(
-                        session.getId(),
-                        Objects.requireNonNull(session.getActivityType(), "ActivitySession activityType is required").name(),
-                        session.getCreatedAt()
-                    ))
+                .map(session -> {
+                    String typeName = Objects.requireNonNull(session.getActivityType(), "ActivitySession activityType is required").name();
+                    String displayName = activityNamesMap.getOrDefault(typeName, typeName);
+                    return new ActivitySessionResponse(
+                            session.getId(),
+                            typeName,
+                            displayName,
+                            session.getCreatedAt()
+                    );
+                })
                 .toList();
 
         return new GetUserActivitiesResponse(
@@ -109,7 +129,8 @@ public class GetUserActivitiesUseCase {
                 todayActivitiesCount,
                 favoriteActivity,
                 averageSessionsText,
-                distribution
+                distribution,
+                activityNamesMap
         );
     }
 }

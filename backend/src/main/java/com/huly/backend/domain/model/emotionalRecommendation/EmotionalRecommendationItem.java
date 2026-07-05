@@ -8,5 +8,6 @@ public record EmotionalRecommendationItem(
         String title,
         String description,
         double score,
-        String reason
+        String reason,
+        String routePath
 ) {}

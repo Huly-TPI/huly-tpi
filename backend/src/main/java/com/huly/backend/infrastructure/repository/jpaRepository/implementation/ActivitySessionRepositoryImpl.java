@@ -102,6 +102,23 @@ public class ActivitySessionRepositoryImpl implements ActivitySessionRepository 
                 .map(this::toDomain);
     }
 
+    @Override
+    public List<ActivitySession> findAll() {
+        return activitySessionJpaRepository.findAll().stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<ActivitySession> findAllAfter(java.time.Instant start) {
+        if (start == null)
+            return findAll();
+
+        return activitySessionJpaRepository.findByCreatedAtAfter(start).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private ActivitySession toDomain(ActivitySessionEntity saved) {
         return ActivitySession.builder()
                 .id(saved.getId())
