@@ -1,4 +1,5 @@
 import { api, type RequestOptions } from './client'
+import { Wind, NotebookText, Sparkles, Bubbles, Swords, Shell, Brush } from 'lucide-react'
 
 export enum ActivityType {
   BREATHING = 'BREATHING',
@@ -8,6 +9,16 @@ export enum ActivityType {
   CHALLENGE = 'CHALLENGE',
   ZEN_GARDEN = 'ZEN_GARDEN',
   MANDALA = 'MANDALA',
+}
+
+export const ACTIVITY_ICONS: Record<ActivityType, any> = {
+  [ActivityType.BREATHING]: Wind,
+  [ActivityType.DIARY]: NotebookText,
+  [ActivityType.LANTERN]: Sparkles,
+  [ActivityType.BUBBLE]: Bubbles,
+  [ActivityType.CHALLENGE]: Swords,
+  [ActivityType.ZEN_GARDEN]: Shell,
+  [ActivityType.MANDALA]: Brush,
 }
 
 export interface RegisterActivitySessionRequest {

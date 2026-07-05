@@ -44,21 +44,6 @@ interface ChatbotMessagesProps {
   onScroll?: UIEventHandler<HTMLElement>
 }
 
-function getSuggestedActionRoute(type: string, actionUrl: string) {
-  switch (type) {
-    case 'BREATHING':
-      return '/guided-breathing'
-    case 'DIARY':
-      return '/diary'
-    case 'LANTERN':
-      return '/lanterns'
-    case 'BUBBLE':
-      return '/bubbles'
-    default:
-      return actionUrl.startsWith('/api/') ? '/' : actionUrl
-  }
-}
-
 export default function ChatbotMessages({
   messages,
   isSending,
@@ -125,10 +110,7 @@ export default function ChatbotMessages({
                 <ChatbotSuggestedActionCard
                   title={message.suggested_action.title}
                   description={message.suggested_action.description}
-                  actionUrl={getSuggestedActionRoute(
-                    message.suggested_action.type,
-                    message.suggested_action.action_url,
-                  )}
+                  actionUrl={message.suggested_action.action_url}
                   onClose={onClose}
                   decision={message.suggestedActionDecision}
                   isLoading={message.suggestedActionDecisionLoading}

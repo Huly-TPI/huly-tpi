@@ -24,6 +24,14 @@ import org.springframework.context.annotation.Configuration;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 
 import com.huly.backend.domain.repository.user.UserPlanRepository;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
+import com.huly.backend.domain.useCase.admin.activities.GetAdminActivitiesUseCase;
+import com.huly.backend.domain.useCase.admin.activities.UpdateActivityConfigUseCase;
+import com.huly.backend.domain.useCase.admin.activities.GetActivitiesKpiUseCase;
+import com.huly.backend.domain.useCase.admin.activities.GetActivityPopularityUseCase;
+import com.huly.backend.domain.useCase.admin.activities.GetActivityCorrelationUseCase;
+import com.huly.backend.domain.useCase.admin.activities.GetActivityImpactUseCase;
+import com.huly.backend.domain.mapper.activities.UpdateActivityConfigMapper;
 
 @Configuration
 public class AdminUseCaseConfig {
@@ -103,5 +111,56 @@ public class AdminUseCaseConfig {
             AntiScrollGlobalConfigRepository antiScrollConfigRepository
     ) {
         return new UpdateAntiScrollGlobalConfigUseCase(antiScrollConfigRepository);
+    }
+
+    @Bean
+    public GetAdminActivitiesUseCase getAdminActivitiesUseCase(ActivityRepository activityRepository) {
+        return new GetAdminActivitiesUseCase(activityRepository);
+    }
+
+    @Bean
+    public UpdateActivityConfigMapper updateActivityConfigMapper() {
+        return new UpdateActivityConfigMapper();
+    }
+
+    @Bean
+    public UpdateActivityConfigUseCase updateActivityConfigUseCase(
+            ActivityRepository activityRepository,
+            UpdateActivityConfigMapper updateActivityConfigMapper
+    ) {
+        return new UpdateActivityConfigUseCase(activityRepository, updateActivityConfigMapper);
+    }
+
+    @Bean
+    public GetActivitiesKpiUseCase getActivitiesKpiUseCase(
+            ActivityRepository activityRepository,
+            EmotionalEventRepository emotionalEventRepository,
+            ActivitySessionRepository activitySessionRepository
+    ) {
+        return new GetActivitiesKpiUseCase(activityRepository, emotionalEventRepository, activitySessionRepository);
+    }
+
+    @Bean
+    public GetActivityPopularityUseCase getActivityPopularityUseCase(
+            ActivityRepository activityRepository,
+            ActivitySessionRepository activitySessionRepository
+    ) {
+        return new GetActivityPopularityUseCase(activityRepository, activitySessionRepository);
+    }
+
+    @Bean
+    public GetActivityCorrelationUseCase getActivityCorrelationUseCase(
+            ActivityRepository activityRepository,
+            EmotionalEventRepository emotionalEventRepository
+    ) {
+        return new GetActivityCorrelationUseCase(activityRepository, emotionalEventRepository);
+    }
+
+    @Bean
+    public GetActivityImpactUseCase getActivityImpactUseCase(
+            ActivityRepository activityRepository,
+            EmotionalEventRepository emotionalEventRepository
+    ) {
+        return new GetActivityImpactUseCase(activityRepository, emotionalEventRepository);
     }
 }

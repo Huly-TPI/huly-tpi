@@ -72,7 +72,8 @@ class EmotionalRecommendationControllerTest {
                         "Respiracion guiada",
                         "Descripcion",
                         0.92,
-                        "Recomendada por arousal alto"
+                        "Recomendada por arousal alto",
+                        "/guided-breathing"
                 )),
                 false
         );

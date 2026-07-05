@@ -146,7 +146,7 @@ class ChatMapperTest {
             String description,
             String reason) {
         return new EmotionalRecommendationItem(
-                activityId, ActivityType.DIARY, title, description, 0.9, reason);
+                activityId, ActivityType.DIARY, title, description, 0.9, reason, "/diary");
     }
 
     private EmotionalEventResponse eventResponse(Long id) {

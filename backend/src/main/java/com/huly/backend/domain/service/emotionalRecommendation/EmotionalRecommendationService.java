@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Calculates deterministic activity rankings from VAD state and recommendation context.
@@ -50,39 +52,7 @@ public class EmotionalRecommendationService {
             5, 1.00
     );
 
-    private static final Map<ActivityType, String> TITLES = Map.of(
-            ActivityType.BREATHING, "Respiracion guiada",
-            ActivityType.DIARY, "Diario emocional",
-            ActivityType.LANTERN, "Farolitos que vuelan",
-            ActivityType.BUBBLE, "Burbujas"
-    );
 
-    private static final Map<ActivityType, String> DESCRIPTIONS = Map.of(
-            ActivityType.BREATHING, "Una practica breve para bajar la activacion y recuperar calma.",
-            ActivityType.DIARY, "Un espacio para ordenar pensamientos y entender lo que sentis.",
-            ActivityType.LANTERN, "Un ejercicio visual para soltar pensamientos que pesan.",
-            ActivityType.BUBBLE, "Una actividad liviana para cambiar el foco con suavidad."
-    );
-
-    private static final Set<String> BREATHING_GOALS = Set.of(
-            "calmar", "calmarme", "calmarse", "relajar", "relajarme", "relajarse",
-            "ansiedad", "ansioso", "ansiosa", "dormir", "estres", "stress",
-            "respirar", "tranquilizar", "tranquilizarme", "tranquilizarse"
-    );
-
-    private static final Set<String> JOURNAL_GOALS = Set.of(
-            "reflexionar", "entender", "escribir", "ordenar", "pensamientos", "diario",
-            "procesar", "comprender", "claridad", "aclarar"
-    );
-
-    private static final Set<String> CLOUD_GOALS = Set.of(
-            "soltar", "visualizar", "nubes", "nube", "liberar", "rumiar", "rumia"
-    );
-
-    private static final Set<String> BUBBLE_GOALS = Set.of(
-            "juego", "jugar", "liviano", "liviana", "distraer", "distraerme", "distraerse",
-            "burbujas", "burbuja", "desconectar", "despejarme"
-    );
 
     /**
      * Ranks activities according to VAD compatibility, expected effects, user goal and intensity.
@@ -131,7 +101,7 @@ public class EmotionalRecommendationService {
     ) {
         double rangeScore = fallbackUsed ? 0.0 : rangeScore(query.vad(), activity);
         double effectScore = effectScore(query.vad(), activity);
-        double goalScore = goalScore(query.userGoal(), activity.getType());
+        double goalScore = goalScore(query.userGoal(), activity);
         double intensityScore = intensityScore(query, activity.getType());
 
         double score = (rangeScore * RANGE_WEIGHT)
@@ -143,10 +113,11 @@ public class EmotionalRecommendationService {
         return new EmotionalRecommendationItem(
                 activity.getId(),
                 activity.getType(),
-                titleFor(activity.getType()),
-                descriptionFor(activity.getType()),
+                activity.getTitle(),
+                activity.getDescription(),
                 roundScore(adjustedScore),
-                reason(query, activity, fallbackUsed)
+                reason(query, activity, fallbackUsed),
+                activity.getRoutePath()
         );
     }
 
@@ -215,21 +186,16 @@ public class EmotionalRecommendationService {
         return (valence + arousal + dominance) / 3.0;
     }
 
-    private double goalScore(String userGoal, ActivityType type) {
-        if (type == null) {
+    private double goalScore(String userGoal, Activity activity) {
+        if (activity == null || activity.getGoalKeywords() == null || activity.getGoalKeywords().isBlank()) {
             return 0.0;
         }
         String normalizedGoal = normalize(userGoal);
         if (normalizedGoal.isBlank()) {
             return 0.0;
         }
-        return switch (type) {
-            case BREATHING -> containsAny(normalizedGoal, BREATHING_GOALS) ? 1.0 : 0.0;
-            case DIARY -> containsAny(normalizedGoal, JOURNAL_GOALS) ? 1.0 : 0.0;
-            case LANTERN -> containsAny(normalizedGoal, CLOUD_GOALS) ? 1.0 : 0.0;
-            case BUBBLE -> containsAny(normalizedGoal, BUBBLE_GOALS) ? 1.0 : 0.0;
-            default -> 0.0;
-        };
+        Set<String> keywords = new HashSet<>(Arrays.asList(activity.getGoalKeywords().split(",")));
+        return containsAny(normalizedGoal, keywords) ? 1.0 : 0.0;
     }
 
     private boolean containsAny(String value, Set<String> keywords) {
@@ -240,33 +206,31 @@ public class EmotionalRecommendationService {
         if (query.intensity() < HIGH_INTENSITY_THRESHOLD) {
             return 0.0;
         }
-        if (type == ActivityType.BREATHING && query.vad().arousal() > HIGH_AROUSAL_THRESHOLD) {
-            return 1.0;
-        }
-        if (type == ActivityType.LANTERN && query.vad().valence() < CLOUD_LOW_VALENCE_THRESHOLD) {
-            return 0.7;
-        }
-        if (type == ActivityType.DIARY && query.vad().arousal() <= JOURNAL_MAX_AROUSAL) {
-            return 0.6;
-        }
-        return 0.2;
+        return switch (type) {
+            case BREATHING -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD ? 1.0 : 0.2;
+            case LANTERN -> query.vad().valence() < CLOUD_LOW_VALENCE_THRESHOLD ? 0.7 : 0.2;
+            case DIARY -> query.vad().arousal() <= JOURNAL_MAX_AROUSAL ? 0.6 : 0.2;
+            case ZEN_GARDEN -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD ? 0.9 : 0.2;
+            case MANDALA -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD ? 0.8 : 0.2;
+            default -> 0.2;
+        };
     }
 
     private String reason(EmotionalRecommendation query, Activity activity, boolean fallbackUsed) {
         if (fallbackUsed) {
             return "Fallback por falta de coincidencia exacta en rangos VAD; se ordeno por efectos esperados y objetivo.";
         }
-        if (activity.getType() == ActivityType.BREATHING
-                && query.vad().arousal() > HIGH_AROUSAL_THRESHOLD) {
-            return "Recomendada porque el arousal es alto y la actividad ayuda a reducir activacion.";
-        }
-        if (activity.getType() == ActivityType.DIARY) {
-            return "Recomendada para ordenar pensamientos y procesar la emocion detectada.";
-        }
-        if (activity.getType() == ActivityType.LANTERN) {
-            return "Recomendada para soltar pensamientos y bajar carga emocional.";
-        }
-        return "Recomendada por compatibilidad con el estado emocional y sus efectos esperados.";
+        return switch (activity.getType()) {
+            case BREATHING -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD
+                    ? "Recomendada porque el arousal es alto y la actividad ayuda a reducir activacion."
+                    : "Recomendada por compatibilidad con el estado emocional y sus efectos esperados.";
+            case DIARY -> "Recomendada para ordenar pensamientos y procesar la emocion detectada.";
+            case LANTERN -> "Recomendada para soltar pensamientos y bajar carga emocional.";
+            case ZEN_GARDEN -> "Recomendada para calmar la mente a traves de dibujos en la arena.";
+            case MANDALA -> "Recomendada para centrar la atencion coloreando formas complejas.";
+            case CHALLENGE -> "Recomendada para activarte mediante un reto adaptado a tu estado actual.";
+            default -> "Recomendada por compatibilidad con el estado emocional y sus efectos esperados.";
+        };
     }
 
     private String normalize(String value) {
@@ -276,22 +240,6 @@ public class EmotionalRecommendationService {
         String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "");
         return normalized.toLowerCase(Locale.ROOT);
-    }
-
-    private String titleFor(ActivityType type) {
-        if (type == null) {
-            return "Actividad";
-        }
-        return TITLES.getOrDefault(type, humanize(type.name()));
-    }
-
-    private String descriptionFor(ActivityType type) {
-        return DESCRIPTIONS.getOrDefault(type, "Actividad sugerida por compatibilidad con el estado emocional actual.");
-    }
-
-    private String humanize(String value) {
-        String normalized = value.toLowerCase(Locale.ROOT).replace('_', ' ');
-        return normalized.substring(0, 1).toUpperCase(Locale.ROOT) + normalized.substring(1);
     }
 
     private double roundScore(double score) {
