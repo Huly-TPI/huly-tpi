@@ -72,17 +72,17 @@ export default function ActivitiesPage() {
   } = useAdminActivities()
 
   return (
-    <div className="flex flex-col gap-6 text-gray-800 dark:text-gray-100">
+    <div className="flex flex-col gap-6 text-gray-800 dark:text-gray-100 animate-fadeIn h-[calc(100vh-160px)] min-h-0">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[30px] font-extrabold leading-tight text-[#8869AC]">Actividades</h1>
-        <p className="text-sm text-gray-400 dark:text-gray-400">
+      <div className="flex flex-col gap-1 shrink-0">
+        <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Actividades</h1>
+        <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">
           Monitorea el rendimiento e interactividad de las actividades — ajusta sus disparadores VAD
         </p>
       </div>
 
       {/* Tabs and Timeframe selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
         <div className="flex gap-2 rounded-2xl bg-white/40 dark:bg-gray-900/20 p-1 self-start shadow-sm border border-gray-100 dark:border-gray-800/40">
           <button
             onClick={() => setActiveTab('metrics')}
@@ -110,7 +110,7 @@ export default function ActivitiesPage() {
 
         {activeTab === 'metrics' && (
           <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="text-xs font-bold text-gray-400 dark:text-gray-550 uppercase tracking-wider">Período:</span>
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-555 uppercase tracking-wider">Período:</span>
             <select
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value as 'total' | 'month' | 'week' | 'today')}
@@ -127,19 +127,21 @@ export default function ActivitiesPage() {
       </div>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
+        <div className="flex h-64 items-center justify-center shrink-0">
           <span className="text-gray-500 text-sm font-semibold animate-pulse">Cargando datos...</span>
         </div>
       ) : activeTab === 'metrics' ? (
-        <ActivitiesMetricsTab
-          kpis={kpis}
-          popularity={popularity}
-          correlation={correlation}
-          impact={impact}
-          configs={configs}
-          activityIcons={ACTIVITY_ICONS}
-          activityThemes={ACTIVITY_THEMES}
-        />
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          <ActivitiesMetricsTab
+            kpis={kpis}
+            popularity={popularity}
+            correlation={correlation}
+            impact={impact}
+            configs={configs}
+            activityIcons={ACTIVITY_ICONS}
+            activityThemes={ACTIVITY_THEMES}
+          />
+        </div>
       ) : (
         <ActivitiesConfigTab
           configs={configs}

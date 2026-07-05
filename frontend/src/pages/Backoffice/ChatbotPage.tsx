@@ -16,10 +16,10 @@ export default function ChatbotPage() {
   const clearToast = risk.error ? risk.clearError : botConfig.clearError
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 animate-fadeIn">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[30px] font-extrabold leading-tight text-[#8869AC]">Chatbot</h1>
-        <p className="text-[16px] text-[#A0AEC0]">
+        <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Chatbot</h1>
+        <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">
           Configuración emocional, automatización terapéutica y monitoreo inteligente
         </p>
       </div>

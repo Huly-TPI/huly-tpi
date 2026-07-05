@@ -172,7 +172,7 @@ export default function ActivitiesConfigTab({
   ]
 
   return (
-    <SectionCard>
+    <SectionCard className="bg-white dark:bg-[#172033] flex-1 min-h-0 flex flex-col">
       <CardHeader title="Configuración de Rangos VAD y Parámetros" />
       <Table
         data={configs}

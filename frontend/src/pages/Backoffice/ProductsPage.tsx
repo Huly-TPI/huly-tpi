@@ -20,11 +20,11 @@ export default function ProductsPage() {
     const closeForm = () => { setShowForm(false); setEditing(null) }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 animate-fadeIn">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-[30px] font-extrabold leading-tight text-[#8869AC]">Productos de la tienda</h1>
-                    <p className="text-[16px] text-[#A0AEC0]">Alta, edición y baja de los cosméticos de la tienda</p>
+                    <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Productos de la tienda</h1>
+                    <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">Alta, edición y baja de los cosméticos de la tienda</p>
                 </div>
                 <Button variant="primary" onClick={openCreate}>
                     <Plus className="h-4 w-4" strokeWidth={2} /> Nuevo producto
