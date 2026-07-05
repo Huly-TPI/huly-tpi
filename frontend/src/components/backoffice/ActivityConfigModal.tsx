@@ -3,7 +3,7 @@ import Modal from './Modal'
 import { AdminActivityConfig } from '../../api/adminActivities'
 import Button from '../Buttons/Button/Button'
 import { Smile, Star, Save, CirclePlay } from 'lucide-react'
-import { ACTIVITY_ICONS } from '../../api/activities'
+import { ACTIVITY_ICONS } from './activities/activityUiMetadata'
 
 interface ActivityConfigModalProps {
   isOpen: boolean

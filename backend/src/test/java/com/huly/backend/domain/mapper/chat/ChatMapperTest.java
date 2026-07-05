@@ -86,7 +86,7 @@ class ChatMapperTest {
         assertThat(action.activityId()).isEqualTo(7L);
         assertThat(action.title()).isEqualTo("Diario emocional");
         assertThat(action.description()).isEqualTo("Un espacio para ordenar");
-        assertThat(action.actionUrl()).isEqualTo("/api/activities");
+        assertThat(action.actionUrl()).isEqualTo("/diary");
         assertThat(action.emotionalEventId()).isEqualTo(50L);
     }
 

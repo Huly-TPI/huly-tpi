@@ -1,7 +1,7 @@
 import { BarChart3, Settings } from 'lucide-react'
 import { useAdminActivities } from '../../components/backoffice/activities/useAdminActivities'
 import ActivityConfigModal from '../../components/backoffice/ActivityConfigModal'
-import { ACTIVITY_ICONS, ACTIVITY_THEMES } from '../../api/activities'
+import { ACTIVITY_ICONS, ACTIVITY_THEMES } from '../../components/backoffice/activities/activityUiMetadata'
 import PageHeader from '../../components/backoffice/PageHeader'
 
 // Import extracted tab components

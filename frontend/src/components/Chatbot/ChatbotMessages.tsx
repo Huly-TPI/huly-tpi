@@ -29,6 +29,27 @@ import { type ChatbotMessage } from './chatbotTypes'
 import ChatMessageBubble from './ChatMessageBubble'
 import ChatbotQuotaLimitCard from './ChatbotQuotaLimitCard'
 
+function getSuggestedActionRoute(type: string, actionUrl: string) {
+  switch (type) {
+    case 'BREATHING':
+      return '/guided-breathing'
+    case 'DIARY':
+      return '/diary'
+    case 'LANTERN':
+      return '/lanterns'
+    case 'BUBBLE':
+      return '/bubbles'
+    case 'CHALLENGE':
+      return '/challenges'
+    case 'ZEN_GARDEN':
+      return '/zen-sand-garden'
+    case 'MANDALA':
+      return '/mandalas'
+    default:
+      return actionUrl.startsWith('/api/') ? '/' : actionUrl
+  }
+}
+
 interface ChatbotMessagesProps {
   messages: ChatbotMessage[]
   isSending: boolean
@@ -110,7 +131,10 @@ export default function ChatbotMessages({
                 <ChatbotSuggestedActionCard
                   title={message.suggested_action.title}
                   description={message.suggested_action.description}
-                  actionUrl={message.suggested_action.action_url}
+                  actionUrl={getSuggestedActionRoute(
+                    message.suggested_action.type,
+                    message.suggested_action.action_url,
+                  )}
                   onClose={onClose}
                   decision={message.suggestedActionDecision}
                   isLoading={message.suggestedActionDecisionLoading}

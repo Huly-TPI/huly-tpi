@@ -1,4 +1,5 @@
-import { ActivityType, ACTIVITY_ICONS, ACTIVITY_THEMES } from '../../../api/activities'
+import { ActivityType } from '../../../api/activities'
+import { ACTIVITY_ICONS, ACTIVITY_THEMES } from '../../../components/backoffice/activities/activityUiMetadata'
 import { Activity, Calendar, CirclePlay } from 'lucide-react'
 import { UserActivitiesResponse } from '../../../api/admin'
 import { Timeframe } from '../../../types/timeframe'

@@ -197,7 +197,7 @@ public class ChatMapper {
                 recommendation.activityId(),
                 recommendation.title(),
                 recommendation.description(),
-                ACTIVITIES_URL,
+                recommendation.routePath(),
                 event.id());
     }
 
