@@ -22,16 +22,6 @@ interface ActivitiesMetricsTabProps {
   activityThemes: Record<string, { bg: string; text: string; bar: string; bullet: string }>
 }
 
-const ACTIVITY_NAMES_ES: Record<string, string> = {
-  BREATHING: 'Respiración guiada',
-  DIARY: 'Diario emocional',
-  LANTERN: 'Farolitos de papel',
-  BUBBLE: 'Burbujas relajantes',
-  CHALLENGE: 'Reto diario',
-  ZEN_GARDEN: 'Jardín Zen de arena',
-  MANDALA: 'Mandalas para colorear',
-}
-
 export default function ActivitiesMetricsTab({
   kpis,
   popularity,
@@ -57,7 +47,11 @@ export default function ActivitiesMetricsTab({
 
         <KPICard
           title="Actividad Más Popular"
-          value={kpis.topActivity.type ? (ACTIVITY_NAMES_ES[kpis.topActivity.type] || kpis.topActivity.type) : 'Sin registros'}
+          value={
+            kpis.topActivity.type 
+              ? (configs.find(c => c.type === kpis.topActivity.type)?.title || kpis.topActivity.type) 
+              : 'Sin registros'
+          }
           description={
             kpis.topActivity.type
               ? `${kpis.topActivity.sessions.toLocaleString('es-ES')} sesiones`

@@ -45,6 +45,7 @@ public class AdminPresentationMapper {
                 .map(s -> ActivitySessionDto.builder()
                         .id(s.id())
                         .activityType(s.activityType())
+                        .activityName(s.activityName())
                         .createdAt(s.createdAt())
                         .build())
                 .toList();
@@ -55,6 +56,7 @@ public class AdminPresentationMapper {
                 .favoriteActivity(result.favoriteActivity())
                 .averageSessionsText(result.averageSessionsText())
                 .activityDistribution(result.activityDistribution())
+                .activityNames(result.activityNames())
                 .build();
     }
 

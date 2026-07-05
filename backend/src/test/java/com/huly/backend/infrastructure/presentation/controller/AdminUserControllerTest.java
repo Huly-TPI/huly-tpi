@@ -13,6 +13,7 @@ import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGloba
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigRequest;
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
+import com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesResponse;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
@@ -237,9 +238,16 @@ class AdminUserControllerTest {
 
     @Test
     void getUserActivities_shouldReturnActivities() throws Exception {
-        com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse session =
-                new com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse(1L, "BREATHING", java.time.Instant.now());
-        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(session), 5L, "BREATHING", "1.5", java.util.Map.of("BREATHING", 5));
+        ActivitySessionResponse session =
+                new ActivitySessionResponse(1L, "BREATHING", "Respiración guiada", java.time.Instant.now());
+        GetUserActivitiesResponse result = new GetUserActivitiesResponse(
+                java.util.List.of(session), 
+                5L, 
+                "BREATHING", 
+                "1.5", 
+                java.util.Map.of("BREATHING", 5),
+                java.util.Map.of("BREATHING", "Respiración guiada")
+        );
         when(getUserActivitiesUseCase.execute(any())).thenReturn(result);
 
         mockMvc.perform(get("/api/admin/users/2/statistics/activities"))
@@ -247,14 +255,16 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$.todayActivitiesCount").value(5))
                 .andExpect(jsonPath("$.activitySessions[0].id").value(1))
                 .andExpect(jsonPath("$.activitySessions[0].activityType").value("BREATHING"))
+                .andExpect(jsonPath("$.activitySessions[0].activityName").value("Respiración guiada"))
                 .andExpect(jsonPath("$.favoriteActivity").value("BREATHING"))
                 .andExpect(jsonPath("$.averageSessionsText").value("1.5"))
-                .andExpect(jsonPath("$.activityDistribution.BREATHING").value(5));
+                .andExpect(jsonPath("$.activityDistribution.BREATHING").value(5))
+                .andExpect(jsonPath("$.activityNames.BREATHING").value("Respiración guiada"));
     }
 
     @Test
     void getUserActivities_withSpecificTimeframe_shouldPassConvertedTimeframeToUseCase() throws Exception {
-        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null);
+        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null, java.util.Map.of());
         when(getUserActivitiesUseCase.execute(eq(new GetUserActivitiesRequest(2L, Timeframe.WEEK)))).thenReturn(result);
 
         mockMvc.perform(get("/api/admin/users/2/statistics/activities").param("timeframe", "week"))

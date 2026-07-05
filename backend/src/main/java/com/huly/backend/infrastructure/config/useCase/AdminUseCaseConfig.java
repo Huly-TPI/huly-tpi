@@ -68,9 +68,10 @@ public class AdminUseCaseConfig {
     @Bean
     public GetUserActivitiesUseCase getUserActivitiesUseCase(
             UserRepository userRepository,
-            ActivitySessionRepository activitySessionRepository
+            ActivitySessionRepository activitySessionRepository,
+            ActivityRepository activityRepository
     ) {
-        return new GetUserActivitiesUseCase(userRepository, activitySessionRepository);
+        return new GetUserActivitiesUseCase(userRepository, activitySessionRepository, activityRepository);
     }
 
     @Bean

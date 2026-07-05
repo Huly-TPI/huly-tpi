@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.activity.ActivitySession;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.Timeframe;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
@@ -30,13 +31,30 @@ class GetUserActivitiesUseCaseTest {
 
     private UserRepository userRepository;
     private ActivitySessionRepository activitySessionRepository;
+    private ActivityRepository activityRepository;
     private GetUserActivitiesUseCase useCase;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
         activitySessionRepository = mock(ActivitySessionRepository.class);
-        useCase = new GetUserActivitiesUseCase(userRepository, activitySessionRepository);
+        activityRepository = mock(com.huly.backend.domain.repository.activity.ActivityRepository.class);
+        
+        com.huly.backend.domain.model.activity.Activity breathing = com.huly.backend.domain.model.activity.Activity.builder()
+                .type(ActivityType.BREATHING)
+                .title("Respiración guiada")
+                .build();
+        com.huly.backend.domain.model.activity.Activity diary = com.huly.backend.domain.model.activity.Activity.builder()
+                .type(ActivityType.DIARY)
+                .title("Diario emocional")
+                .build();
+        com.huly.backend.domain.model.activity.Activity bubble = com.huly.backend.domain.model.activity.Activity.builder()
+                .type(ActivityType.BUBBLE)
+                .title("Burbujas relajantes")
+                .build();
+        when(activityRepository.findAll()).thenReturn(List.of(breathing, diary, bubble));
+
+        useCase = new GetUserActivitiesUseCase(userRepository, activitySessionRepository, activityRepository);
     }
 
     @Test
@@ -68,9 +86,11 @@ class GetUserActivitiesUseCaseTest {
         assertThat(response.favoriteActivity()).isEqualTo("BREATHING");
         assertThat(response.averageSessionsText()).isEqualTo("1 sesión hoy");
         assertThat(response.activityDistribution()).containsEntry("BREATHING", 1);
+        assertThat(response.activityNames()).containsEntry("BREATHING", "Respiración guiada");
         assertThat(response.activitySessions()).singleElement().satisfies(item -> {
             assertThat(item.id()).isEqualTo(10L);
             assertThat(item.activityType()).isEqualTo("BREATHING");
+            assertThat(item.activityName()).isEqualTo("Respiración guiada");
             assertThat(item.createdAt()).isEqualTo(now);
         });
     }
