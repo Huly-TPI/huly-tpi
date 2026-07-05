@@ -2,6 +2,7 @@ import { BarChart3, Settings } from 'lucide-react'
 import { useAdminActivities } from '../../components/backoffice/activities/useAdminActivities'
 import ActivityConfigModal from '../../components/backoffice/ActivityConfigModal'
 import { ActivityType, ACTIVITY_ICONS } from '../../api/activities'
+import PageHeader from '../../components/backoffice/PageHeader'
 
 // Import extracted tab components
 import ActivitiesMetricsTab from '../../components/backoffice/activities/ActivitiesMetricsTab'
@@ -73,13 +74,10 @@ export default function ActivitiesPage() {
 
   return (
     <div className="flex flex-col gap-6 text-gray-800 dark:text-gray-100 animate-fadeIn h-[calc(100vh-160px)] min-h-0">
-      {/* Header */}
-      <div className="flex flex-col gap-1 shrink-0">
-        <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Actividades</h1>
-        <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">
-          Monitorea el rendimiento e interactividad de las actividades — ajusta sus disparadores VAD
-        </p>
-      </div>
+      <PageHeader 
+        title="Actividades" 
+        subtitle="Monitorea el rendimiento e interactividad de las actividades — ajusta sus disparadores VAD"
+      />
 
       {/* Tabs and Timeframe selector */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">

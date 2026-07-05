@@ -5,6 +5,7 @@ import type { StoreItemResponse } from '../../api/store'
 import { Toast } from '../../components/backoffice/Toast'
 import { StoreProductForm } from '../../components/backoffice/StoreProductForm'
 import Button from '../../components/Buttons/Button/Button'
+import PageHeader from '../../components/backoffice/PageHeader'
 
 const CATEGORY_LABELS: Record<string, string> = {
     HOUSE: 'Casa', NOTEBOOK: 'Diario', TREE: 'Árbol', MANDALA: 'Mandala',
@@ -20,16 +21,16 @@ export default function ProductsPage() {
     const closeForm = () => { setShowForm(false); setEditing(null) }
 
     return (
-        <div className="flex flex-col gap-4 animate-fadeIn">
-            <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Productos de la tienda</h1>
-                    <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">Alta, edición y baja de los cosméticos de la tienda</p>
-                </div>
-                <Button variant="primary" onClick={openCreate}>
-                    <Plus className="h-4 w-4" strokeWidth={2} /> Nuevo producto
-                </Button>
-            </div>
+        <div className="flex flex-col gap-6 animate-fadeIn">
+            <PageHeader 
+                title="Productos de la tienda"
+                subtitle="Alta, edición y baja de los cosméticos de la tienda"
+                action={
+                    <Button variant="primary" onClick={openCreate}>
+                        <Plus className="h-4 w-4" strokeWidth={2} /> Nuevo producto
+                    </Button>
+                }
+            />
 
             {loading ? (
                 <p className="py-8 text-center text-sm text-[#A0AEC0]">Cargando productos...</p>

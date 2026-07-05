@@ -7,6 +7,7 @@ import { Search, Eye, Check, X } from 'lucide-react'
 import { mapEmotionToSpanish } from '../../types/ai'
 import { ErrorMessage } from '../../components/backoffice/ErrorMessage'
 import seedIcon from '../../assets/rewards/seed.webp'
+import PageHeader from '../../components/backoffice/PageHeader'
 
 
 export default function UsersPage() {
@@ -93,7 +94,7 @@ export default function UsersPage() {
           onClick={() => {
             navigate(`/backoffice/usuarios/${u.id}`)
           }}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-550 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-555 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
           aria-label={`Ver detalles de ${u.name}`}
         >
           <Eye className="h-5 w-5" strokeWidth={2} />
@@ -103,13 +104,11 @@ export default function UsersPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-4 animate-fadeIn h-[calc(100vh-160px)] min-h-0">
-      <div className="flex flex-col gap-0.5 shrink-0">
-        <h1 className="text-[30px] lg:text-[34px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Usuarios</h1>
-        <p className="text-[16px] lg:text-[18px] text-[#A0AEC0] dark:text-gray-400">
-          Administra los usuarios registrados en el sistema y visualiza sus consentimientos y configuraciones de extensión.
-        </p>
-      </div>
+    <div className="flex flex-col gap-6 animate-fadeIn h-[calc(100vh-160px)] min-h-0">
+      <PageHeader 
+        title="Usuarios" 
+        subtitle="Administra los usuarios registrados en el sistema y visualiza sus consentimientos y configuraciones de extensión."
+      />
 
       <SectionCard className="bg-white dark:bg-[#172033] flex-1 min-h-0 flex flex-col">
         <div className="flex flex-col gap-4 flex-1 min-h-0">
