@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { register, login, logout, backofficeLogin, changePassword } from '../../api/auth'
+import { register, login, logout, backofficeLogin, changePassword, getAccountSettings, updateAccountSettings } from '../../api/auth'
 import type { RegisterRequest, LoginRequest } from '../../api/auth'
 import { api } from '../../api/client'
 import { ApiError } from '../../api/apiError'
 
 vi.mock('../../api/client', () => ({
     api: {
+        get: vi.fn(),
         post: vi.fn(),
         put: vi.fn(),
     },
 }))
 
+const mockedGet = vi.mocked(api.get)
 const mockedPost = vi.mocked(api.post)
 const mockedPut = vi.mocked(api.put)
 
@@ -182,5 +184,36 @@ describe('changePassword', () => {
         mockedPut.mockRejectedValueOnce(new Error('Internal server error'))
 
         await expect(changePassword('currentPass123', 'newPass456')).rejects.toThrow('Internal server error')
+    })
+})
+
+describe('accountSettings', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
+
+    it('getAccountSettings llama a GET /users/me/settings', async () => {
+        mockedGet.mockResolvedValueOnce({
+            name: 'Mili',
+            email: 'mili@mail.com',
+            birthDate: '2000-01-15',
+        })
+
+        const response = await getAccountSettings()
+
+        expect(mockedGet).toHaveBeenCalledWith('/users/me/settings')
+        expect(response.email).toBe('mili@mail.com')
+    })
+
+    it('updateAccountSettings llama a PUT /users/me/settings con los datos permitidos', async () => {
+        const request = { name: 'Mili', birthDate: '2000-01-15' }
+        mockedPut.mockResolvedValueOnce({
+            ...request,
+            email: 'mili@mail.com',
+        })
+
+        await updateAccountSettings(request)
+
+        expect(mockedPut).toHaveBeenCalledWith('/users/me/settings', request)
     })
 })

@@ -6,6 +6,7 @@ import { completeProfileTutorial } from '../../api/onboarding'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
+import AccountSettingsModal from '../../components/Profile/AccountSettingsModal'
 import AudioSettingsModal from '../../components/Profile/AudioSettingsModal'
 import ChangePasswordModal from '../../components/Profile/ChangePasswordModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
@@ -92,11 +93,12 @@ function getFirstName(name: string): string {
 }
 
 export default function Profile() {
-  const { user, loading } = useAuth()
+  const { user, loading, refreshUser } = useAuth()
   const { theme } = useTheme()
   const { isSubscribed, isLoading: pushLoading, isSupported, subscribe, unsubscribe, notificationHour, updateHour } = usePushNotifications()
   const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
   const [showAudioSettingsModal, setShowAudioSettingsModal] = useState(false)
+  const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false)
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
   const [showNotifModal, setShowNotifModal] = useState(false)
   const {
@@ -153,6 +155,15 @@ export default function Profile() {
         onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
           e.preventDefault()
           setShowChangePasswordModal(true)
+        },
+      }
+    }
+    if (element.id === 'mirror') {
+      return {
+        ...baseElement,
+        onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+          e.preventDefault()
+          setShowAccountSettingsModal(true)
         },
       }
     }
@@ -235,9 +246,11 @@ export default function Profile() {
       {showAntiScrollModal && (
         <AntiScrollConsentModal onClose={() => setShowAntiScrollModal(false)} />
       )}
-      ...
-      {showAntiScrollModal && (
-        <AntiScrollConsentModal onClose={() => setShowAntiScrollModal(false)} />
+      {showAccountSettingsModal && (
+        <AccountSettingsModal
+          onClose={() => setShowAccountSettingsModal(false)}
+          onSaved={refreshUser}
+        />
       )}
       {showAudioSettingsModal && (
         <AudioSettingsModal onClose={() => setShowAudioSettingsModal(false)} />

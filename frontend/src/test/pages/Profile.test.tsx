@@ -6,6 +6,7 @@ import { ThemeProvider } from '../../context/theme'
 import { AudioSettingsProvider } from '../../context/audioSettings'
 import Profile from '../../pages/Profile/Profile'
 import { completeProfileTutorial } from '../../api/onboarding'
+import { getAccountSettings, updateAccountSettings } from '../../api/auth'
 
 const mockUseAuth = vi.fn()
 const mockRefreshUser = vi.fn()
@@ -23,6 +24,8 @@ vi.mock('../../api/auth', async (importOriginal) => {
   return {
     ...actual,
     changePassword: vi.fn(),
+    getAccountSettings: vi.fn(),
+    updateAccountSettings: vi.fn(),
   }
 })
 
@@ -49,6 +52,16 @@ describe('Profile', () => {
     })
     vi.mocked(completeProfileTutorial).mockResolvedValue(undefined)
     mockRefreshUser.mockResolvedValue(authenticatedUser)
+    vi.mocked(getAccountSettings).mockResolvedValue({
+      name: 'Jimena',
+      email: 'jimena@mail.com',
+      birthDate: '2000-01-15',
+    })
+    vi.mocked(updateAccountSettings).mockResolvedValue({
+      name: 'Jime',
+      email: 'jimena@mail.com',
+      birthDate: '2000-01-15',
+    })
   })
 
   const renderProfile = () => {
@@ -247,5 +260,60 @@ describe('Profile', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cerrar modal' }))
     expect(screen.queryByRole('dialog', { name: 'Cambiar contraseña' })).not.toBeInTheDocument()
+  })
+
+  it('abre la configuracion de cuenta desde el espejo y carga datos del backend', async () => {
+    const user = userEvent.setup()
+
+    renderProfile()
+
+    await user.click(screen.getByRole('button', { name: 'Espejo' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Configuración de cuenta' })).toBeInTheDocument()
+    expect(getAccountSettings).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('Estos son los datos básicos de tu perfil. Tu correo se muestra como referencia y no se edita desde acá.')).not.toBeInTheDocument()
+    const emailInput = screen.getByLabelText('Correo electrónico')
+    const nameInput = screen.getByLabelText('Nombre')
+    const birthDateInput = screen.getByLabelText('Fecha de nacimiento')
+    expect(emailInput.compareDocumentPosition(nameInput)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(nameInput.compareDocumentPosition(birthDateInput)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(nameInput).toHaveValue('Jimena')
+    expect(emailInput).toHaveValue('jimena@mail.com')
+    expect(emailInput).toHaveAttribute('readonly')
+    expect(birthDateInput).toHaveValue('2000-01-15')
+    expect(document.querySelector('#account-last-name')).not.toBeInTheDocument()
+  })
+
+  it('guarda los cambios de configuracion y refresca el perfil', async () => {
+    const user = userEvent.setup()
+
+    renderProfile()
+
+    await user.click(screen.getByRole('button', { name: 'Espejo' }))
+    const nameInput = await screen.findByLabelText('Nombre')
+    await user.clear(nameInput)
+    await user.type(nameInput, 'Jime')
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(updateAccountSettings).toHaveBeenCalledWith({
+      name: 'Jime',
+      birthDate: '2000-01-15',
+    })
+    expect(mockRefreshUser).toHaveBeenCalledTimes(1)
+    expect(await screen.findByText('Tus datos se guardaron correctamente.')).toBeInTheDocument()
+  })
+
+  it('muestra validaciones del formulario de configuracion de cuenta', async () => {
+    const user = userEvent.setup()
+
+    renderProfile()
+
+    await user.click(screen.getByRole('button', { name: 'Espejo' }))
+    const nameInput = await screen.findByLabelText('Nombre')
+    await user.clear(nameInput)
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(screen.getByText('Ingresá tu nombre')).toBeInTheDocument()
+    expect(updateAccountSettings).not.toHaveBeenCalled()
   })
 })
