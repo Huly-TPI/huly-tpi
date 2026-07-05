@@ -12,6 +12,9 @@ import treeBlueLight from '../../assets/garden/light-theme/tree-blue.webp'
 import treeBlueDark from '../../assets/garden/dark-theme/tree-blue.webp'
 import treeSakuraLight from '../../assets/garden/light-theme/tree-sakura.webp'
 import treeSakuraDark from '../../assets/garden/dark-theme/tree-sakura.webp'
+import purpleShirt from '../../assets/avatar/remera-violeta.webp'
+import whiteSneakers from '../../assets/avatar/par-zapatilla-blanca.webp'
+import blueCap from '../../assets/avatar/vicera-azul.webp'
 
 
 export interface CosmeticImage {
@@ -26,6 +29,9 @@ export const cosmeticAssets: Record<string, CosmeticImage> = {
   'notebook-blue': { light: notebookBlueLight, dark: notebookBlueDark },
   'tree-sakura': { light: treeSakuraLight, dark: treeSakuraDark },
   'tree-blue': { light: treeBlueLight, dark: treeBlueDark },
+  'remera-violeta': { light: purpleShirt, dark: purpleShirt },
+  'zapatillas-blancas': { light: whiteSneakers, dark: whiteSneakers },
+  'vicera-azul': { light: blueCap, dark: blueCap },
 }
 
 const resolveUrl = (u: string) => u.startsWith('http') ? u : `${getBackendOrigin()}${u}`

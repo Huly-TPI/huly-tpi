@@ -37,8 +37,6 @@ import { useDailyRewards } from "../../hooks/shop/useDailyRewards";
 import { resolveEquippedImages } from "../../components/Scene/cosmeticAssets";
 import { createHomeOnboardingSteps } from "./homeOnboardingSteps";
 import "./Home.css";
-import HulyAvatar from "../../components/HulyAvatar/HulyAvatar";
-import { getEquippedAvatarItems } from "../../components/HulyAvatar/avatarEquip";
 
 const THEME_BEHAVIOR: Record<
   SceneTheme,
@@ -195,7 +193,6 @@ export default function Home() {
   const { coins, refresh: refreshCoins } = useUserCoins();
   const { status: rewardsStatus } = useDailyRewards();
   const equippedByCategory = resolveEquippedImages(inventory);
-  const equippedAvatarItems = getEquippedAvatarItems(inventory);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -413,10 +410,6 @@ export default function Home() {
       />
 
       {user?.onboardingTutorialCompleted && <ComebackRewardModal />}
-
-      <div className="fixed bottom-4 left-4 z-40 h-40 w-40">
-        <HulyAvatar equippedItems={equippedAvatarItems} />
-      </div>
     </main>
   );
 }
