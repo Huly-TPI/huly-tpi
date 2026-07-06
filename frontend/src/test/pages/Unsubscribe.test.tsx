@@ -1,24 +1,32 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it } from 'vitest'
+import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Unsubscribe from '../../pages/Unsubscribe/Unsubscribe'
-
-function renderWithStatus(status: string) {
-    render(
-        <MemoryRouter initialEntries={[`/unsubscribe?status=${status}`]}>
-            <Unsubscribe />
-        </MemoryRouter>
-    )
-}
+import { verifyTextPresent } from '../testHelpers'
 
 describe('Unsubscribe', () => {
     it('muestra la confirmación cuando status es ok', () => {
         renderWithStatus('ok')
-        expect(screen.getByText(/te diste de baja/i)).toBeInTheDocument()
+        verifySuccessMessageVisible()
     })
 
     it('muestra el error cuando status es error', () => {
         renderWithStatus('error')
-        expect(screen.getByText(/no pudimos/i)).toBeInTheDocument()
+        verifyErrorMessageVisible()
     })
+    const renderWithStatus = (status: string) => {
+        render(
+            <MemoryRouter initialEntries={[`/unsubscribe?status=${status}`]}>
+                <Unsubscribe />
+            </MemoryRouter>
+        )
+    }
+
+    const verifySuccessMessageVisible = () => {
+        verifyTextPresent('Listo, te diste de baja')
+    }
+
+    const verifyErrorMessageVisible = () => {
+        verifyTextPresent('No pudimos procesar tu baja')
+    }
 })

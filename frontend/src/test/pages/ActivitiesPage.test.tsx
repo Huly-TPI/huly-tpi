@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ActivitiesPage from '../../pages/Backoffice/ActivitiesPage'
+import { verifyTextPresent, clearAllMocks } from '../testHelpers'
 
 const mockHook = {
   activeTab: 'metrics',
@@ -39,7 +40,7 @@ vi.mock('../../components/backoffice/ActivityConfigModal', () => ({
 
 describe('ActivitiesPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     mockHook.activeTab = 'metrics'
     mockHook.timeframe = 'month'
     mockHook.loading = false
@@ -47,49 +48,113 @@ describe('ActivitiesPage', () => {
   })
 
   it('renderiza la cabecera, pestañas y selector de periodo', () => {
-    render(<ActivitiesPage />)
-    expect(screen.getByText('Actividades')).toBeInTheDocument()
-    expect(screen.getByText('Rendimiento y Métricas')).toBeInTheDocument()
-    expect(screen.getByText('Configuración Dinámica')).toBeInTheDocument()
-    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    renderActivitiesPage()
+    verifyHeaderTabsAndPeriodSelector()
   })
 
   it('muestra estado cargando cuando loading es true', () => {
-    mockHook.loading = true
-    render(<ActivitiesPage />)
-    expect(screen.getByText('Cargando datos...')).toBeInTheDocument()
+    setupLoadingState(true)
+    renderActivitiesPage()
+    verifyLoadingStateVisible()
   })
 
   it('renderiza la pestaña de métricas por defecto', () => {
-    render(<ActivitiesPage />)
-    expect(screen.getByTestId('metrics-tab')).toBeInTheDocument()
-    expect(screen.queryByTestId('config-tab')).not.toBeInTheDocument()
+    renderActivitiesPage()
+    verifyMetricsTabVisible()
+    verifyConfigTabNotVisible()
   })
 
   it('renderiza la pestaña de configuración si activeTab es config', () => {
-    mockHook.activeTab = 'config'
-    render(<ActivitiesPage />)
-    expect(screen.getByTestId('config-tab')).toBeInTheDocument()
-    expect(screen.queryByTestId('metrics-tab')).not.toBeInTheDocument()
+    setupActiveTab('config')
+    renderActivitiesPage()
+    verifyConfigTabVisible()
+    verifyMetricsTabNotVisible()
   })
 
-  it('cambia de pestaña al hacer click en Configuración Dinámica', async () => {
-    render(<ActivitiesPage />)
-    const configBtn = screen.getByRole('button', { name: /Configuración Dinámica/ })
-    await userEvent.click(configBtn)
-    expect(mockHook.setActiveTab).toHaveBeenCalledWith('config')
+  it('cambia de pestaña al hacer click en Configuración Dinámica', () => {
+    renderActivitiesPage()
+    return clickConfigTabButton().then(() => {
+      verifySetActiveTabCalledWith('config')
+    })
   })
 
-  it('cambia el periodo al seleccionar otra opcion en el combobox', async () => {
-    render(<ActivitiesPage />)
-    const select = screen.getByRole('combobox')
-    await userEvent.selectOptions(select, 'today')
-    expect(mockHook.setTimeframe).toHaveBeenCalledWith('today')
+  it('cambia el periodo al seleccionar otra opcion en el combobox', () => {
+    renderActivitiesPage()
+    return selectTimeframeOption('today').then(() => {
+      verifySetTimeframeCalledWith('today')
+    })
   })
 
   it('muestra el modal de edicion cuando editingConfig está seteado', () => {
-    mockHook.editingConfig = { id: 1, title: 'Respiracion' }
-    render(<ActivitiesPage />)
-    expect(screen.getByTestId('config-modal')).toBeInTheDocument()
+    setupEditingConfig({ id: 1, title: 'Respiracion' })
+    renderActivitiesPage()
+    verifyConfigModalVisible()
   })
+
+  /* helpers */
+
+  const renderActivitiesPage = () => {
+    render(<ActivitiesPage />)
+  }
+
+  const setupLoadingState = (loading: boolean) => {
+    mockHook.loading = loading
+  }
+
+  const setupActiveTab = (tab: string) => {
+    mockHook.activeTab = tab
+  }
+
+  const setupEditingConfig = (config: any) => {
+    mockHook.editingConfig = config
+  }
+
+  const verifyHeaderTabsAndPeriodSelector = () => {
+    verifyTextPresent('Actividades')
+    verifyTextPresent('Rendimiento y Métricas')
+    verifyTextPresent('Configuración Dinámica')
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
+  }
+
+  const verifyLoadingStateVisible = () => {
+    verifyTextPresent('Cargando datos...')
+  }
+
+  const verifyMetricsTabVisible = () => {
+    expect(screen.getByTestId('metrics-tab')).toBeInTheDocument()
+  }
+
+  const verifyConfigTabNotVisible = () => {
+    expect(screen.queryByTestId('config-tab')).not.toBeInTheDocument()
+  }
+
+  const verifyConfigTabVisible = () => {
+    expect(screen.getByTestId('config-tab')).toBeInTheDocument()
+  }
+
+  const verifyMetricsTabNotVisible = () => {
+    expect(screen.queryByTestId('metrics-tab')).not.toBeInTheDocument()
+  }
+
+  const clickConfigTabButton = () => {
+    const configBtn = screen.getByRole('button', { name: 'Configuración Dinámica' })
+    return userEvent.click(configBtn)
+  }
+
+  const verifySetActiveTabCalledWith = (tab: string) => {
+    expect(mockHook.setActiveTab).toHaveBeenCalledWith(tab)
+  }
+
+  const selectTimeframeOption = (option: string) => {
+    const select = screen.getByRole('combobox')
+    return userEvent.selectOptions(select, option)
+  }
+
+  const verifySetTimeframeCalledWith = (timeframe: string) => {
+    expect(mockHook.setTimeframe).toHaveBeenCalledWith(timeframe)
+  }
+
+  const verifyConfigModalVisible = () => {
+    expect(screen.getByTestId('config-modal')).toBeInTheDocument()
+  }
 })

@@ -1,3 +1,4 @@
+import { clearAllMocks } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { usePreloadImages } from '../../hooks/usePreloadImages'
@@ -16,9 +17,11 @@ vi.mock('../../utils/localImageUrls', () => ({
   restImageUrls: ['rest-1.webp'],
 }))
 
+const mockedPreloadImages = vi.mocked(preloadImages)
+
 describe('usePreloadImages', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     vi.stubGlobal('requestIdleCallback', (cb: () => void) => {
       cb()
       return 1
@@ -29,24 +32,62 @@ describe('usePreloadImages', () => {
     vi.unstubAllGlobals()
   })
 
-  it('precarga primero las imágenes críticas y después el resto', async () => {
-    renderHook(() => usePreloadImages())
-
-    await waitFor(() => expect(preloadImages).toHaveBeenCalledTimes(2))
-    expect(preloadImages).toHaveBeenNthCalledWith(1, criticalImageUrls, expect.any(Object))
-    expect(preloadImages).toHaveBeenNthCalledWith(2, restImageUrls, expect.any(Object))
+  it('precarga primero las imágenes críticas y después el resto', () => {
+    setupHook()
+    return waitForPreloadImagesCalledTimes(2).then(() => {
+      verifyPreloadImagesCalledWithAtIndex(1, criticalImageUrls)
+      verifyPreloadImagesCalledWithAtIndex(2, restImageUrls)
+    })
   })
 
-  it('usa el fallback con setTimeout si no existe requestIdleCallback', async () => {
+  it('usa el fallback con setTimeout si no existe requestIdleCallback', () => {
+    setupFakeTimers()
+    setupRequestIdleCallbackUndefined()
+    setupHook()
+    verifyPreloadImagesNotCalled()
+    return runFakeTimers().then(() => {
+      verifyPreloadImagesCalledWith(criticalImageUrls)
+      restoreRealTimers()
+    })
+  })
+
+  /* helpers */
+
+  const setupHook = () => {
+    renderHook(() => usePreloadImages())
+  }
+
+  const setupFakeTimers = () => {
     vi.useFakeTimers()
-    vi.stubGlobal('requestIdleCallback', undefined)
+  }
 
-    renderHook(() => usePreloadImages())
-    expect(preloadImages).not.toHaveBeenCalled()
-
-    await vi.runAllTimersAsync()
-    expect(preloadImages).toHaveBeenCalledWith(criticalImageUrls, expect.any(Object))
-
+  const restoreRealTimers = () => {
     vi.useRealTimers()
-  })
+  }
+
+  const setupRequestIdleCallbackUndefined = () => {
+    vi.stubGlobal('requestIdleCallback', undefined)
+  }
+
+  const runFakeTimers = () => {
+    return vi.runAllTimersAsync()
+  }
+
+  const waitForPreloadImagesCalledTimes = (times: number) => {
+    return waitFor(() => {
+      expect(mockedPreloadImages).toHaveBeenCalledTimes(times)
+    })
+  }
+
+  const verifyPreloadImagesCalledWithAtIndex = (index: number, urls: string[]) => {
+    expect(mockedPreloadImages).toHaveBeenNthCalledWith(index, urls, expect.any(Object))
+  }
+
+  const verifyPreloadImagesNotCalled = () => {
+    expect(mockedPreloadImages).not.toHaveBeenCalled()
+  }
+
+  const verifyPreloadImagesCalledWith = (urls: string[]) => {
+    expect(mockedPreloadImages).toHaveBeenCalledWith(urls, expect.any(Object))
+  }
 })

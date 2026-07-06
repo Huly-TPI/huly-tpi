@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import UserDetailPage from '../../pages/Backoffice/UserDetailPage'
 import { useUsers } from '../../hooks/backoffice/useUsers'
+import { verifyTextPresent, clearAllMocks } from '../testHelpers'
 
 vi.mock('../../hooks/backoffice/useUsers', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../hooks/backoffice/useUsers')>()
@@ -25,36 +26,70 @@ const mockUser = {
 
 describe('UserDetailPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
   })
 
   it('muestra spinner de carga cuando no hay usuario seleccionado', () => {
-    mockedUseUsers.mockReturnValue({
-      selectedUser: null,
-    } as any)
-
-    render(<UserDetailPage />)
-    expect(screen.getByText('Cargando información del usuario...')).toBeInTheDocument()
+    setupHookWithSelectedUser(null)
+    renderUserDetailPage()
+    verifyLoadingSpinnerVisible()
   })
 
   it('renderiza la información del perfil del usuario en el sidebar', () => {
+    setupHookWithSelectedUserAndTab(mockUser, 'usage')
+    renderUserDetailPage()
+    verifyUserProfileInfoInSidebar('John Doe', 'john@example.com', 'Activo')
+  })
+
+  it('muestra la pestaña de Uso y Actividades con estadísticas', () => {
+    setupHookWithUsageTab(mockUser)
+    renderUserDetailPage()
+    verifyUsageAndActivitiesStats()
+  })
+
+  it('muestra la pestaña de IA y Decisiones con diagnósticos', () => {
+    setupHookWithAITab(mockUser)
+    renderUserDetailPage()
+    verifyAIDiagnosticsVisible()
+  })
+
+  it('muestra la pestaña de Métricas Financieras con ingresos', () => {
+    setupHookWithFinanceTab(mockUser)
+    renderUserDetailPage()
+    verifyFinancialMetricsVisible()
+  })
+
+  it('muestra la pestaña de Antiscroll con estadísticas de navegación', () => {
+    setupHookWithAntiScrollTab(mockUser)
+    renderUserDetailPage()
+    verifyAntiScrollStatsVisible()
+  })
+
+  /* helpers */
+
+  const renderUserDetailPage = () => {
+    render(<UserDetailPage />)
+  }
+
+  const setupHookWithSelectedUser = (user: any) => {
     mockedUseUsers.mockReturnValue({
-      selectedUser: mockUser,
-      activeTab: 'usage',
+      selectedUser: user,
+    } as any)
+  }
+
+  const setupHookWithSelectedUserAndTab = (user: any, tab: string) => {
+    mockedUseUsers.mockReturnValue({
+      selectedUser: user,
+      activeTab: tab,
       setActiveTab: vi.fn(),
       activitiesLoading: false,
       activities: null,
     } as any)
+  }
 
-    render(<UserDetailPage />)
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
-    expect(screen.getByText('john@example.com')).toBeInTheDocument()
-    expect(screen.getByText('Activo')).toBeInTheDocument()
-  })
-
-  it('muestra la pestaña de Uso y Actividades con estadísticas', () => {
+  const setupHookWithUsageTab = (user: any) => {
     mockedUseUsers.mockReturnValue({
-      selectedUser: mockUser,
+      selectedUser: user,
       activeTab: 'usage',
       setActiveTab: vi.fn(),
       activitiesLoading: false,
@@ -78,23 +113,11 @@ describe('UserDetailPage', () => {
         ],
       },
     } as any)
+  }
 
-    render(<UserDetailPage />)
-
-    expect(screen.getByText('Sesiones de hoy')).toBeInTheDocument()
-    expect(screen.getByText('5')).toBeInTheDocument()
-    expect(screen.getByText('Módulo favorito')).toBeInTheDocument()
-    expect(screen.getAllByText('Burbujas relajantes').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('12')).toBeInTheDocument()
-    expect(screen.getByText('sesiones/semana')).toBeInTheDocument()
-    expect(screen.getByText('Distribución de Uso de Funcionalidades')).toBeInTheDocument()
-    expect(screen.getByText('8 sesiones')).toBeInTheDocument()
-    expect(screen.getByText('Historial de uso reciente')).toBeInTheDocument()
-  })
-
-  it('muestra la pestaña de IA y Decisiones con diagnósticos', () => {
+  const setupHookWithAITab = (user: any) => {
     mockedUseUsers.mockReturnValue({
-      selectedUser: mockUser,
+      selectedUser: user,
       activeTab: 'ai',
       setActiveTab: vi.fn(),
       aiLoading: false,
@@ -114,21 +137,11 @@ describe('UserDetailPage', () => {
         },
       },
     } as any)
+  }
 
-    render(<UserDetailPage />)
-
-    expect(screen.getByText('Usuario centrado y reflexivo')).toBeInTheDocument()
-    expect(screen.getByText('Foco: Estrés laboral o académico')).toBeInTheDocument()
-    expect(screen.getByText('Preferencia: Meditación y Respiración')).toBeInTheDocument()
-    expect(screen.getByText('80%')).toBeInTheDocument()
-    expect(screen.getByText('Alta receptividad')).toBeInTheDocument()
-    expect(screen.getByText('Respiración Guiada')).toBeInTheDocument()
-    expect(screen.getByText('Retos Diarios')).toBeInTheDocument()
-  })
-
-  it('muestra la pestaña de Métricas Financieras con ingresos', () => {
+  const setupHookWithFinanceTab = (user: any) => {
     mockedUseUsers.mockReturnValue({
-      selectedUser: mockUser,
+      selectedUser: user,
       activeTab: 'finance',
       setActiveTab: vi.fn(),
       financialsLoading: false,
@@ -147,19 +160,11 @@ describe('UserDetailPage', () => {
         ],
       },
     } as any)
+  }
 
-    render(<UserDetailPage />)
-
-    expect(screen.getByText('Total ganancias generadas')).toBeInTheDocument()
-    expect(screen.getAllByText('$49,99').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText('Historial de Transacciones')).toBeInTheDocument()
-    expect(screen.getByText('Premium Plan')).toBeInTheDocument()
-    expect(screen.getByText('APROBADO')).toBeInTheDocument()
-  })
-
-  it('muestra la pestaña de Antiscroll con estadísticas de navegación', () => {
+  const setupHookWithAntiScrollTab = (user: any) => {
     mockedUseUsers.mockReturnValue({
-      selectedUser: mockUser,
+      selectedUser: user,
       activeTab: 'antiscroll',
       setActiveTab: vi.fn(),
       antiscrollLoading: false,
@@ -202,13 +207,52 @@ describe('UserDetailPage', () => {
       filteredTotalTime: 5000,
       hasUsageData: true,
     } as any)
+  }
 
-    render(<UserDetailPage />)
+  const verifyLoadingSpinnerVisible = () => {
+    verifyTextPresent('Cargando información del usuario...')
+  }
 
-    expect(screen.getByText('Tiempo scrolleando por día')).toBeInTheDocument()
-    expect(screen.getByText('Tiempo en cada dominio')).toBeInTheDocument()
-    expect(screen.getByText('instagram.com')).toBeInTheDocument()
-    expect(screen.getByText('1 h')).toBeInTheDocument()
-  })
+  const verifyUserProfileInfoInSidebar = (name: string, email: string, status: string) => {
+    verifyTextPresent(name)
+    verifyTextPresent(email)
+    verifyTextPresent(status)
+  }
+
+  const verifyUsageAndActivitiesStats = () => {
+    verifyTextPresent('Sesiones de hoy')
+    verifyTextPresent('5')
+    verifyTextPresent('Módulo favorito')
+    expect(screen.getAllByText('Burbujas relajantes').length).toBeGreaterThanOrEqual(1)
+    verifyTextPresent('12')
+    verifyTextPresent('sesiones/semana')
+    verifyTextPresent('Distribución de Uso de Funcionalidades')
+    verifyTextPresent('8 sesiones')
+    verifyTextPresent('Historial de uso reciente')
+  }
+
+  const verifyAIDiagnosticsVisible = () => {
+    verifyTextPresent('Usuario centrado y reflexivo')
+    verifyTextPresent('Foco: Estrés laboral o académico')
+    verifyTextPresent('Preferencia: Meditación y Respiración')
+    verifyTextPresent('80%')
+    verifyTextPresent('Alta receptividad')
+    verifyTextPresent('Respiración Guiada')
+    verifyTextPresent('Retos Diarios')
+  }
+
+  const verifyFinancialMetricsVisible = () => {
+    verifyTextPresent('Total ganancias generadas')
+    expect(screen.getAllByText('$49,99').length).toBeGreaterThanOrEqual(2)
+    verifyTextPresent('Historial de Transacciones')
+    verifyTextPresent('Premium Plan')
+    verifyTextPresent('APROBADO')
+  }
+
+  const verifyAntiScrollStatsVisible = () => {
+    verifyTextPresent('Tiempo scrolleando por día')
+    verifyTextPresent('Tiempo en cada dominio')
+    verifyTextPresent('instagram.com')
+    verifyTextPresent('1 h')
+  }
 })
-

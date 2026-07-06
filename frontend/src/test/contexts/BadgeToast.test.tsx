@@ -1,18 +1,14 @@
-import { beforeEach, describe, it, expect } from 'vitest'
+import { beforeEach, describe, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BadgeToastProvider, useBadgeToast } from '../../context/BadgeToast'
 import { BadgeResponse } from '../../api/badges'
+import { verifyTextPresent, verifyTextNotPresent } from '../testHelpers'
 
-const makeBadge = (): BadgeResponse => ({
-  id: 1, code: 'PRIMER_PASO', name: 'Primer paso',
-  description: null, imageUrl: null, createdAt: ''
-})
 
-function TriggerButton() {
-  const { showBadgeToast } = useBadgeToast()
-  return <button onClick={() => showBadgeToast(makeBadge())}>Mostrar</button>
-}
+
+
+
 
 describe('BadgeToast', () => {
   beforeEach(() => {
@@ -20,33 +16,91 @@ describe('BadgeToast', () => {
   })
 
   it('renderiza los hijos correctamente', () => {
-    render(<BadgeToastProvider><p>Hijo</p></BadgeToastProvider>)
-    expect(screen.getByText('Hijo')).toBeInTheDocument()
+    renderBadgeToastWithChildren()
+    verifyHijoTextIsPresent()
   })
 
-  it('showBadgeToast muestra el toast con el nombre del Badge', async () => {
-    render(<BadgeToastProvider><TriggerButton /></BadgeToastProvider>)
-    const button = screen.getByRole('button', { name: 'Mostrar' })
-    await userEvent.click(button)
-    expect(screen.getByText('Primer paso')).toBeInTheDocument()
+  it('showBadgeToast muestra el toast con el nombre del Badge', () => {
+    renderBadgeToastWithTrigger()
+    return clickMostrarButton().then(() => {
+      verifyPrimerPasoTextIsPresent()
+    })
   })
 
-  it('el toast se oculta al hacer click en Cerrar', async () => {
-    render(<BadgeToastProvider><TriggerButton /></BadgeToastProvider>)
+  it('el toast se oculta al hacer click en Cerrar', () => {
+    renderBadgeToastWithTrigger()
+    return clickMostrarButton()
+      .then(() => clickCerrarButton())
+      .then(() => {
+        verifyPrimerPasoTextIsNotPresent()
+      })
+  })
+
+  it('no muestra el toast mientras el tutorial principal esta activo', () => {
+    setTutorialActive(true)
+    renderBadgeToastWithTrigger()
+    return clickMostrarButton().then(() => {
+      verifyPrimerPasoTextIsNotPresent()
+    })
+  })
+
+  /* helpers */
+
+  const renderBadgeToastWithChildren = () => {
+    render(
+      <BadgeToastProvider>
+        <p>Hijo</p>
+      </BadgeToastProvider>
+    )
+  }
+
+  const renderBadgeToastWithTrigger = () => {
+    render(
+      <BadgeToastProvider>
+        <TriggerButton />
+      </BadgeToastProvider>
+    )
+  }
+
+  const verifyHijoTextIsPresent = () => {
+    verifyTextPresent('Hijo')
+  }
+
+  const clickMostrarButton = () => {
     const button = screen.getByRole('button', { name: 'Mostrar' })
-    await userEvent.click(button)
+    return userEvent.click(button)
+  }
+
+  const clickCerrarButton = () => {
     const closeButton = screen.getByRole('button', { name: 'Cerrar' })
-    await userEvent.click(closeButton)
-    expect(screen.queryByText('Primer paso')).not.toBeInTheDocument()
-  })
+    return userEvent.click(closeButton)
+  }
 
-  it('no muestra el toast mientras el tutorial principal esta activo', async () => {
-    document.body.setAttribute('data-home-onboarding-active', 'true')
+  const verifyPrimerPasoTextIsPresent = () => {
+    verifyTextPresent('Primer paso')
+  }
 
-    render(<BadgeToastProvider><TriggerButton /></BadgeToastProvider>)
+  const verifyPrimerPasoTextIsNotPresent = () => {
+    verifyTextNotPresent('Primer paso')
+  }
 
-    await userEvent.click(screen.getByRole('button', { name: 'Mostrar' }))
+  const setTutorialActive = (active: boolean) => {
+    if (active) {
+      document.body.setAttribute('data-home-onboarding-active', 'true')
+    } else {
+      document.body.removeAttribute('data-home-onboarding-active')
+    }
+  }
+})
 
-    expect(screen.queryByText('Primer paso')).not.toBeInTheDocument()
-  })
-  })
+function makeBadge(): BadgeResponse {
+  return ({
+  id: 1, code: 'PRIMER_PASO', name: 'Primer paso',
+  description: null, imageUrl: null, createdAt: ''
+})
+}
+
+function TriggerButton() {
+  const { showBadgeToast } = useBadgeToast()
+  return <button onClick={() => showBadgeToast(makeBadge())}>Mostrar</button>
+}

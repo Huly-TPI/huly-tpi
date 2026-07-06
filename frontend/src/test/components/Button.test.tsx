@@ -2,8 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Button from '../../components/Buttons/Button/Button'
+import { clickButton, verifyButtonDisabled } from '../testHelpers'
 
 describe('Button', () => {
+  let user: ReturnType<typeof userEvent.setup>
+
   it.each([
     { variant: 'primary' as const, expectedClass: 'bg-violeta' },
     { variant: 'secondary' as const, expectedClass: 'text-violeta' },
@@ -12,33 +15,51 @@ describe('Button', () => {
     { variant: 'tertiary' as const, expectedClass: 'text-bosque' },
     { variant: 'alert' as const, expectedClass: 'bg-anaranjado' },
   ])('aplica variante visual $variant', ({ variant, expectedClass }) => {
-    render(<Button variant={variant}>Accion</Button>)
-
-    const button = screen.getByRole('button', { name: 'Accion' })
-    expect(button).toHaveClass(expectedClass)
+    renderButton({ variant })
+    verifyButtonHasClass('Accion', expectedClass)
   })
 
-  it('aplica tamano configurable', () => {
-    render(<Button size="lg">Accion</Button>)
-
-    const button = screen.getByRole('button', { name: 'Accion' })
-    expect(button).toHaveClass('min-w-[13.5rem]')
+  it('aplica tamaño configurable', () => {
+    renderButton({ size: 'lg' })
+    verifyButtonHasClass('Accion', 'min-w-[13.5rem]')
   })
 
   it('muestra loadingLabel y queda deshabilitado cuando isLoading es true', () => {
-    render(
-      <Button isLoading loadingLabel="Guardando...">
-        Guardar
-      </Button>,
-    )
-
-    const button = screen.getByRole('button', { name: 'Guardando...' })
-    expect(button).toBeDisabled()
-    expect(button).toHaveAttribute('aria-busy', 'true')
+    renderButton({ isLoading: true, loadingLabel: 'Guardando...' }, 'Guardar')
+    verifyButtonIsDisabled('Guardando...')
+    verifyButtonHasAttribute('Guardando...', 'aria-busy', 'true')
   })
 
-  it('bloquea doble click mientras se resuelve un onClick asincrono', async () => {
-    const user = userEvent.setup()
+  it('bloquea doble click mientras se resuelve un onClick asíncrono', () => {
+    return testDoubleSubmitPrevention()
+  })
+
+  it('delega errores asíncronos a través de onAsyncError cuando se proporciona', () => {
+    return testAsyncErrorDelegation()
+  })
+
+  /* helpers */
+
+  const renderButton = (props: React.ComponentProps<typeof Button>, children: React.ReactNode = 'Accion') => {
+    user = userEvent.setup()
+    render(<Button {...props}>{children}</Button>)
+  }
+
+  const verifyButtonHasClass = (name: string, expectedClass: string) => {
+    const button = screen.getByRole('button', { name })
+    expect(button).toHaveClass(expectedClass)
+  }
+
+  const verifyButtonIsDisabled = (name: string) => {
+    verifyButtonDisabled(name)
+  }
+
+  const verifyButtonHasAttribute = (name: string, attribute: string, expectedValue: string) => {
+    const button = screen.getByRole('button', { name })
+    expect(button).toHaveAttribute(attribute, expectedValue)
+  }
+
+  const testDoubleSubmitPrevention = () => {
     let resolveClick: (() => void) | undefined
     const onClick = vi.fn(
       () =>
@@ -47,33 +68,28 @@ describe('Button', () => {
         }),
     )
 
-    render(<Button onClick={onClick}>Enviar</Button>)
+    renderButton({ onClick }, 'Enviar')
 
     const button = screen.getByRole('button', { name: 'Enviar' })
-    await user.click(button)
-    await user.click(button)
+    return user.click(button)
+      .then(() => user.click(button))
+      .then(() => {
+        expect(onClick).toHaveBeenCalledTimes(1)
+        expect(button).toBeDisabled()
+        resolveClick?.()
+        return waitFor(() => expect(button).not.toBeDisabled())
+      })
+  }
 
-    expect(onClick).toHaveBeenCalledTimes(1)
-    expect(button).toBeDisabled()
-
-    resolveClick?.()
-    await waitFor(() => expect(button).not.toBeDisabled())
-  })
-
-  it('delegates async errors through onAsyncError when provided', async () => {
-    const user = userEvent.setup()
+  const testAsyncErrorDelegation = () => {
     const asyncError = new Error('fallo')
     const onAsyncError = vi.fn()
     const onClick = vi.fn(() => Promise.reject(asyncError))
 
-    render(
-      <Button onClick={onClick} onAsyncError={onAsyncError}>
-        Enviar
-      </Button>,
-    )
+    renderButton({ onClick, onAsyncError }, 'Enviar')
 
-    await user.click(screen.getByRole('button', { name: 'Enviar' }))
-
-    expect(onAsyncError).toHaveBeenCalledWith(asyncError)
-  })
+    return clickButton(user, 'Enviar').then(() => {
+      expect(onAsyncError).toHaveBeenCalledWith(asyncError)
+    })
+  }
 })

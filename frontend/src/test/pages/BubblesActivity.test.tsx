@@ -13,7 +13,14 @@ vi.mock('../../components/Bubbles', () => ({
 
 describe('BubblesActivity', () => {
     it('renderiza el componente de burbujas', () => {
+        renderBubblesActivity()
+        verifyBubblesComponentRendered()
+    })
+    const renderBubblesActivity = () => {
         render(<MemoryRouter><BubblesActivity /></MemoryRouter>)
+    }
+
+    const verifyBubblesComponentRendered = () => {
         expect(screen.getByTestId('bubbles-activity')).toBeInTheDocument()
-    })
-    })
+    }
+})

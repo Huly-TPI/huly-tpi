@@ -5,7 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Register from '../../pages/Register/Register'
 import { ApiError } from '../../api/apiError'
 import { ThemeProvider } from '../../context/theme'
+import { register } from '../../api/auth'
+import { clickButton, clickCheckbox, typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled, verifyTextPresentAsync, clearAllMocks, verifyValidationAlertsShown } from '../testHelpers'
 
+// --- SIMULACIONES GLOBALES (MOCKS) ---
 vi.mock('../../api/auth', () => ({
     register: vi.fn(),
 }))
@@ -15,19 +18,235 @@ vi.mock('../../context/auth', () => ({
     useAuth: () => ({ loginWithToken: mockLoginWithToken }),
 }))
 
-import { register } from '../../api/auth'
-
 const mockedRegister = vi.mocked(register)
 
 describe('Register', () => {
+    let user: ReturnType<typeof userEvent.setup>
+
     beforeEach(() => {
-        vi.clearAllMocks()
+        clearAllMocks()
     })
 
-    const getSubmitButton = () => screen.getByRole('button', { name: 'Crear cuenta' })
+    // --- CASOS DE PRUEBA (TEST SUITE) ---
 
-    const renderWithRouter = () => {
-        const user = userEvent.setup()
+    it('renderiza el formulario de registro', () => {
+        renderRegisterForm()
+        verifyRegisterFormIsVisible()
+    })
+
+    it('muestra errores de validación al enviar vacío', () => {
+        renderRegisterForm()
+        return clickTermsCheckbox()
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyValidationAlertsShown()
+            })
+    })
+
+    it('registra exitosamente y redirige al home', () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
+        renderRegisterForm()
+        return fillValidRegisterForm('mili', 'mili@mail.com')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyTextPresentAsync('Home')
+            })
+    })
+
+    it('pasa el token de register a loginWithToken', () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
+        renderRegisterForm()
+        return fillValidRegisterForm('mili', 'mili@mail.com')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyLoginWithTokenCalledWith('token-123')
+            })
+    })
+
+    it('muestra error del backend cuando falla el registro', () => {
+        mockedRegister.mockRejectedValueOnce(new Error('El email ya está registrado'))
+        renderRegisterForm()
+        return fillValidRegisterForm('mili', 'mili@mail.com')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyTextPresentAsync('El email ya está registrado')
+            })
+    })
+
+    it('no llama a loginWithToken cuando falla el registro', () => {
+        mockedRegister.mockRejectedValueOnce(new Error('Error'))
+        renderRegisterForm()
+        return fillValidRegisterForm('mili', 'mili@mail.com')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyTextPresentAsync('Error')
+            })
+            .then(() => {
+                verifyLoginWithTokenWasNotCalled()
+            })
+    })
+
+    it('navega a login al hacer click en Iniciá sesión', () => {
+        renderRegisterForm()
+        return clickNavigationButton('Iniciá sesión').then(() => {
+            verifyTextPresent('Login')
+        })
+    })
+
+    it('deshabilita el botón si no acepta términos', () => {
+        renderRegisterForm()
+        verifyButtonDisabled('Crear cuenta')
+    })
+
+    it('habilita el botón al aceptar términos', () => {
+        renderRegisterForm()
+        return clickTermsCheckbox().then(() => {
+            verifyButtonEnabled('Crear cuenta')
+        })
+    })
+
+    it('muestra error de edad mínima con fecha reciente', () => {
+        renderRegisterForm()
+        return fillValidRegisterForm('mili', 'mili@mail.com')
+            .then(() => fillBirthDate('2020-01-01'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyTextPresent('Debés tener al menos 13 años')
+                verifyRegisterWasNotCalled()
+            })
+    })
+
+    it('muestra errores por campo del backend', () => {
+        mockedRegister.mockRejectedValueOnce(
+            new ApiError('Error de validación', { birthDate: 'Edad mínima inválida' }),
+        )
+        renderRegisterForm()
+        return fillValidRegisterForm('mili', 'mili@mail.com')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyTextPresentAsync('Edad mínima inválida')
+            })
+    })
+
+    it('bloquea nombre con contenido XSS', () => {
+        renderRegisterForm()
+        return fillNameInput('<script>alert(1)</script>')
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyTextPresent('El texto contiene caracteres no permitidos')
+                verifyRegisterWasNotCalled()
+            })
+    })
+
+    it('bloquea nombre con SQL injection', () => {
+        renderRegisterForm()
+        return fillNameInput("' OR 1=1 --")
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyTextPresent('El texto contiene caracteres no permitidos')
+                verifyRegisterWasNotCalled()
+            })
+    })
+
+    it('bloquea nombre que supera el máximo de caracteres', () => {
+        renderRegisterForm()
+        return fillNameInput('a'.repeat(51))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyTextPresent('Máximo 50 caracteres')
+                verifyRegisterWasNotCalled()
+            })
+    })
+
+    it('envía los valores con trim al backend', () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
+        renderRegisterForm()
+        return fillValidRegisterForm('  Mili  ', '  mili@mail.com  ')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyRegisterCalledWithTrimmed('Mili', 'mili@mail.com')
+            })
+    })
+
+    it('bloquea nombre compuesto solo por un punto', () => {
+        renderRegisterForm()
+        return fillNameInput('.')
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyInvalidNameErrorIsShown()
+                verifyRegisterWasNotCalled()
+            })
+    })
+
+    it('bloquea nombre con números', () => {
+        renderRegisterForm()
+        return fillNameInput('Mili123')
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyInvalidNameErrorIsShown()
+                verifyRegisterWasNotCalled()
+            })
+    })
+
+    it('bloquea nombre con menos de 3 letras', () => {
+        renderRegisterForm()
+        return fillNameInput('Lu')
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                verifyInvalidNameErrorIsShown()
+                verifyRegisterWasNotCalled()
+            })
+    })
+
+    it('permite nombre con varias palabras si solo contiene letras', () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Ana Maria', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
+        renderRegisterForm()
+        return fillValidRegisterForm('Ana Maria', 'mili@mail.com')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyRegisterCalledWithName('Ana Maria')
+            })
+    })
+
+    it('redirige al /onboarding cuando onBoardingCompleted es false', () => {
+        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER', onBoardingCompleted: false })
+        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: false })
+        renderRegisterForm()
+        return fillValidRegisterForm('mili', 'mili@mail.com')
+            .then(() => fillBirthDate('2000-01-15'))
+            .then(() => clickTermsCheckbox())
+            .then(() => submitRegisterForm())
+            .then(() => {
+                return verifyTextPresentAsync('Onboarding')
+            })
+    })
+    const renderRegisterForm = () => {
+        user = userEvent.setup()
         render(
             <ThemeProvider>
                 <MemoryRouter initialEntries={['/register']}>
@@ -40,288 +259,81 @@ describe('Register', () => {
                 </MemoryRouter>
             </ThemeProvider>,
         )
-        return { user }
     }
 
-    const fillForm = async (user: ReturnType<typeof userEvent.setup>) => {
-        await user.type(screen.getByPlaceholderText('Nombre'), 'mili')
-        await user.type(screen.getByPlaceholderText('Email'), 'mili@mail.com')
-
+    const fillValidRegisterForm = async (name: string, email: string) => {
+        await typePlaceholder(user, 'Nombre', name)
+        await typePlaceholder(user, 'Email', email)
         const passwordFields = screen.getAllByPlaceholderText(/contraseña/i)
         await user.type(passwordFields[0], '123456')
         await user.type(passwordFields[1], '123456')
     }
 
-    const fillDate = async (
-        user: ReturnType<typeof userEvent.setup>,
-        date: string,
-    ) => {
+    const fillBirthDate = async (date: string) => {
         const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
         await user.click(dateInput)
         await user.type(dateInput, date)
     }
 
-    it('renderiza el formulario de registro', () => {
-        renderWithRouter()
+    const fillNameInput = async (name: string) => {
+        await typePlaceholder(user, 'Nombre', name)
+    }
 
-        expect(screen.getByText('¡Creá tu cuenta!')).toBeInTheDocument()
-        expect(screen.getByPlaceholderText('Nombre')).toBeInTheDocument()
-        expect(screen.getByPlaceholderText('Email')).toBeInTheDocument()
-    })
+    const clickTermsCheckbox = async () => {
+        await clickCheckbox(user)
+    }
 
-    it('muestra errores de validación al enviar vacío', async () => {
-        const { user } = renderWithRouter()
+    const submitRegisterForm = async () => {
+        await clickButton(user, 'Crear cuenta')
+    }
 
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
+    const clickNavigationButton = async (name: string) => {
+        await clickButton(user, name)
+    }
 
-        expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
-    })
+    const verifyRegisterFormIsVisible = () => {
+        verifyTextPresent('¡Creá tu cuenta!')
+        verifyPlaceholderPresent('Nombre')
+        verifyPlaceholderPresent('Email')
+    }
 
-    it('registra exitosamente y redirige al home', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
-        const { user } = renderWithRouter()
+    
 
-        await fillForm(user)
-        await fillDate(user, '2000-01-15')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('Home')).toBeInTheDocument()
-        })
-    })
-
-    it('pasa el token de register a loginWithToken', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await fillDate(user, '2000-01-15')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(mockLoginWithToken).toHaveBeenCalledWith('token-123')
-        })
-    })
-
-    it('muestra error del backend cuando falla el registro', async () => {
-        mockedRegister.mockRejectedValueOnce(new Error('El email ya está registrado'))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await fillDate(user, '2000-01-15')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('El email ya está registrado')).toBeInTheDocument()
-        })
-    })
-
-    it('no llama a loginWithToken cuando falla el registro', async () => {
-        mockedRegister.mockRejectedValueOnce(new Error('Error'))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await fillDate(user, '2000-01-15')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('Error')).toBeInTheDocument()
-        })
+    const verifyLoginWithTokenWasNotCalled = () => {
         expect(mockLoginWithToken).not.toHaveBeenCalled()
-    })
+    }
 
-    it('navega a login al hacer click en Iniciá sesión', async () => {
-        const { user } = renderWithRouter()
-
-        await user.click(screen.getByRole('button', { name: 'Iniciá sesión' }))
-
-        expect(screen.getByText('Login')).toBeInTheDocument()
-    })
-
-    it('deshabilita el botón si no acepta términos', () => {
-        renderWithRouter()
-
-        expect(getSubmitButton()).toBeDisabled()
-    })
-
-    it('habilita el botón al aceptar términos', async () => {
-        const { user } = renderWithRouter()
-
-        await user.click(screen.getByRole('checkbox'))
-
-        expect(getSubmitButton()).toBeEnabled()
-    })
-
-    it('muestra error de edad mínima con fecha reciente', async () => {
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await fillDate(user, '2020-01-01')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        expect(screen.getByText('Debés tener al menos 13 años')).toBeInTheDocument()
+    
+    
+    const verifyRegisterWasNotCalled = () => {
         expect(mockedRegister).not.toHaveBeenCalled()
-    })
+    }
 
-    it('muestra errores por campo del backend', async () => {
-        mockedRegister.mockRejectedValueOnce(
-            new ApiError('Error de validación', { birthDate: 'Edad mínima inválida' }),
-        )
-        const { user } = renderWithRouter()
+    const verifyInvalidNameErrorIsShown = () => {
+        verifyTextPresent('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')
+    }
 
-        await fillForm(user)
-        await fillDate(user, '2000-01-15')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
+    
+    
+    const verifyLoginWithTokenCalledWith = async (token: string) => {
         await waitFor(() => {
-            expect(screen.getByText('Edad mínima inválida')).toBeInTheDocument()
+            expect(mockLoginWithToken).toHaveBeenCalledWith(token)
         })
-    })
+    }
 
-    it('bloquea nombre con contenido XSS', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), '<script>alert(1)</script>')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        expect(screen.getByText('El texto contiene caracteres no permitidos')).toBeInTheDocument()
-        expect(mockedRegister).not.toHaveBeenCalled()
-    })
-
-    it('bloquea nombre con SQL injection', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), "' OR 1=1 --")
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        expect(screen.getByText('El texto contiene caracteres no permitidos')).toBeInTheDocument()
-        expect(mockedRegister).not.toHaveBeenCalled()
-    })
-
-    it('bloquea nombre que supera el máximo de caracteres', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), 'a'.repeat(51))
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        expect(screen.getByText('Máximo 50 caracteres')).toBeInTheDocument()
-        expect(mockedRegister).not.toHaveBeenCalled()
-    })
-
-    it('envía los valores con trim al backend', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), '  Mili  ')
-        await user.type(screen.getByPlaceholderText('Email'), '  mili@mail.com  ')
-
-        const passwordFields = screen.getAllByPlaceholderText(/contraseña/i)
-        await user.type(passwordFields[0], '123456')
-        await user.type(passwordFields[1], '123456')
-
-        await fillDate(user, '2000-01-15')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
+    const verifyRegisterCalledWithTrimmed = async (name: string, email: string) => {
         await waitFor(() => {
             expect(mockedRegister).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    name: 'Mili',
-                    email: 'mili@mail.com',
-                }),
+                expect.objectContaining({ name, email })
             )
         })
-    })
+    }
 
-    it('bloquea nombre compuesto solo por un punto', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), '.')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
-        expect(mockedRegister).not.toHaveBeenCalled()
-    })
-
-    it('bloquea nombre con números', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), 'Mili123')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
-        expect(mockedRegister).not.toHaveBeenCalled()
-    })
-
-    it('bloquea nombre con menos de 3 letras', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), 'Lu')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
-        expect(screen.getByText('El nombre debe tener al menos 3 letras. Solo puede contener letras y espacios')).toBeInTheDocument()
-        expect(mockedRegister).not.toHaveBeenCalled()
-    })
-
-    it('permite nombre con varias palabras si solo contiene letras', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-        mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Ana Maria', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: true })
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Nombre'), 'Ana Maria')
-        await user.type(screen.getByPlaceholderText('Email'), 'mili@mail.com')
-
-        const passwordFields = screen.getAllByPlaceholderText(/contraseña/i)
-        await user.type(passwordFields[0], '123456')
-        await user.type(passwordFields[1], '123456')
-
-        await fillDate(user, '2000-01-15')
-        await user.click(screen.getByRole('checkbox'))
-        await user.click(getSubmitButton())
-
+    const verifyRegisterCalledWithName = async (name: string) => {
         await waitFor(() => {
             expect(mockedRegister).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    name: 'Ana Maria',
-                }),
+                expect.objectContaining({ name })
             )
         })
-    })
-
-    it('redirige al /onboarding cuando onBoardingCompleted es false', async () => {
-        mockedRegister.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER', onBoardingCompleted: false })
-         mockLoginWithToken.mockResolvedValueOnce({ id: 1, name: 'Mili', email: 'mili@mail.com', role: 'USER', onBoardingCompleted: false })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        const dateInput = screen.getByPlaceholderText('Fecha de nacimiento')
-        await user.click(dateInput)
-        await user.type(dateInput, '2000-01-15')
-
-        const checkbox = screen.getByRole('checkbox')
-        await user.click(checkbox)
-
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('Onboarding')).toBeInTheDocument()
-        })
-    })
-
+    }
 })

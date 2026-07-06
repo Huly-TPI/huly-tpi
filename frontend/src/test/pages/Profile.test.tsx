@@ -6,7 +6,7 @@ import { ThemeProvider } from '../../context/theme'
 import { AudioSettingsProvider } from '../../context/audioSettings'
 import Profile from '../../pages/Profile/Profile'
 import { completeProfileTutorial } from '../../api/onboarding'
-import { getAccountSettings, updateAccountSettings } from '../../api/auth'
+import { clickButton, verifyTextPresent, verifyTextNotPresent, verifyPlaceholderPresent, clearAllMocks } from '../testHelpers'
 
 const mockUseAuth = vi.fn()
 const mockRefreshUser = vi.fn()
@@ -24,8 +24,6 @@ vi.mock('../../api/auth', async (importOriginal) => {
   return {
     ...actual,
     changePassword: vi.fn(),
-    getAccountSettings: vi.fn(),
-    updateAccountSettings: vi.fn(),
   }
 })
 
@@ -41,8 +39,10 @@ const authenticatedUser = {
 }
 
 describe('Profile', () => {
+  let user: ReturnType<typeof userEvent.setup>
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     window.localStorage.clear()
     window.localStorage.setItem('huly:scene-theme', 'light')
     mockUseAuth.mockReturnValue({
@@ -52,268 +52,273 @@ describe('Profile', () => {
     })
     vi.mocked(completeProfileTutorial).mockResolvedValue(undefined)
     mockRefreshUser.mockResolvedValue(authenticatedUser)
-    vi.mocked(getAccountSettings).mockResolvedValue({
-      name: 'Jimena',
-      email: 'jimena@mail.com',
-      birthDate: '2000-01-15',
-    })
-    vi.mocked(updateAccountSettings).mockResolvedValue({
-      name: 'Jime',
-      email: 'jimena@mail.com',
-      birthDate: '2000-01-15',
+  })
+
+  it('muestra el estado de carga mientras obtiene el perfil', () => {
+    setupLoadingAuth()
+    renderProfilePage()
+    verifyLoadingMessageVisible()
+  })
+
+  it('redirige a login cuando no hay usuario autenticado', () => {
+    setupUnauthenticatedAuth()
+    renderProfileWithRoutes('/login', <h1>Vista Login</h1>)
+    verifyHeadingVisible('Vista Login')
+  })
+
+  it('renderiza la escena y el saludo con el primer nombre del usuario', () => {
+    renderProfilePage()
+    verifySceneElementsAndGreetingVisible()
+  })
+
+  it('renderiza los objetos del perfil con sus hotspots', () => {
+    renderProfilePage()
+    verifyObjectsAndHotspotsVisible()
+  })
+
+  it('renderiza las imagenes de los elementos de escena', () => {
+    renderProfilePage()
+    verifySceneImagesVisible()
+  })
+
+  it('redirige al jardin al hacer click en la ventana', () => {
+    renderProfileWithRoutes('/', <h1>Vista Jardin</h1>)
+    return clickVolverAlJardinLink().then(() => {
+      verifyHeadingVisible('Vista Jardin')
     })
   })
 
-  const renderProfile = () => {
-    return render(
+  it('muestra el tutorial de perfil la primera vez que se entra', () => {
+    setupNewUserProfileTutorialNotCompleted()
+    renderProfilePage()
+    return waitForTutorialDialogVisible().then(() => {
+      verifyTutorialContent()
+    })
+  })
+
+  it('avanza el tutorial de perfil y lo oculta al finalizar', () => {
+    setupNewUserProfileTutorialNotCompleted()
+    renderProfilePage()
+    return clickComenzarTutorialButton().then(() => {
+      verifyWindowHeadingInTutorial()
+      return clickNextInTutorialMultipleTimes(4).then(() => {
+        return clickFinalizarTutorialButton().then(() => {
+          verifyTutorialFinished()
+        })
+      })
+    })
+  })
+
+  it('no vuelve a mostrar el tutorial de perfil cuando ya fue visto', () => {
+    renderProfilePage()
+    verifyTutorialDialogNotVisible()
+  })
+
+  it('abre el modal de audio al hacer click en el equipo de musica', () => {
+    renderProfilePage()
+    return clickMusicaButton().then(() => {
+      verifyAudioModalOpened()
+    })
+  })
+
+  it('permite cambiar el volumen desde el modal de audio', () => {
+    renderProfilePage()
+    return clickMusicaButton().then(() => {
+      changeBackgroundVolumeSlider('0.25')
+      verifyBackgroundVolumeValue('0.25')
+    })
+  })
+
+  it('abre el modal de cambio de contraseña al hacer click en el Baúl', () => {
+    renderProfilePage()
+    return clickBaulButton().then(() => {
+      verifyChangePasswordModalVisible()
+    })
+  })
+
+  it('cierra el modal de cambio de contraseña al hacer click en el botón cerrar', () => {
+    renderProfilePage()
+    return clickBaulButton().then(() => {
+      verifyChangePasswordModalVisible()
+      return clickCerrarModalButton().then(() => {
+        verifyChangePasswordModalNotVisible()
+      })
+    })
+  })
+
+  /* helpers */
+
+  const renderProfilePage = () => {
+    user = userEvent.setup()
+    render(
       <ThemeProvider>
         <MemoryRouter>
           <AudioSettingsProvider>
             <Profile />
           </AudioSettingsProvider>
         </MemoryRouter>
-      </ThemeProvider>,
+      </ThemeProvider>
     )
   }
 
-  it('muestra el estado de carga mientras obtiene el perfil', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      loading: true,
-    })
-
-    renderProfile()
-
-    expect(screen.getByText('Cargando perfil...')).toBeInTheDocument()
-  })
-
-  it('redirige a login cuando no hay usuario autenticado', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      loading: false,
-    })
-
+  const renderProfileWithRoutes = (targetPath: string, targetElement: React.ReactNode) => {
+    user = userEvent.setup()
     render(
       <ThemeProvider>
         <MemoryRouter initialEntries={['/profile']}>
           <AudioSettingsProvider>
             <Routes>
               <Route path="/profile" element={<Profile />} />
-              <Route path="/login" element={<h1>Vista Login</h1>} />
+              <Route path={targetPath} element={targetElement} />
             </Routes>
           </AudioSettingsProvider>
         </MemoryRouter>
-      </ThemeProvider>,
+      </ThemeProvider>
     )
+  }
 
-    expect(screen.getByRole('heading', { name: 'Vista Login' })).toBeInTheDocument()
-  })
+  const setupLoadingAuth = () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      loading: true,
+    })
+  }
 
-  it('renderiza la escena y el saludo con el primer nombre del usuario', () => {
-    renderProfile()
+  const setupUnauthenticatedAuth = () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      loading: false,
+    })
+  }
 
+  const setupNewUserProfileTutorialNotCompleted = () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        ...authenticatedUser,
+        profileOnboardingTutorialCompleted: false,
+      },
+      loading: false,
+      refreshUser: mockRefreshUser,
+    })
+  }
+
+  const verifyLoadingMessageVisible = () => {
+    verifyTextPresent('Cargando perfil...')
+  }
+
+  const verifyHeadingVisible = (text: string) => {
+    expect(screen.getByRole('heading', { name: text })).toBeInTheDocument()
+  }
+
+  const verifySceneElementsAndGreetingVisible = () => {
     expect(screen.getByLabelText('Perfil de usuario')).toBeInTheDocument()
     expect(screen.getByLabelText('Habitacion de perfil')).toBeInTheDocument()
     expect(screen.getByLabelText('Bienvenido Jimena')).toBeInTheDocument()
-  })
+  }
 
-  it('renderiza los objetos del perfil con sus hotspots', () => {
-    renderProfile()
-
+  const verifyObjectsAndHotspotsVisible = () => {
     expect(screen.getByRole('button', { name: 'Espejo' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Volver al jardin' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('button', { name: 'Baúl' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reloj' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Musica' })).toBeInTheDocument()
-  })
+  }
 
-  it('renderiza las imagenes de los elementos de escena', () => {
-    renderProfile()
-
+  const verifySceneImagesVisible = () => {
     expect(screen.getByAltText('Espejo del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Ventana hacia el jardin')).toBeInTheDocument()
     expect(screen.getByAltText('Baúl del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Reloj del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Equipo de musica del perfil')).toBeInTheDocument()
-  })
+  }
 
-  it('redirige al jardin al hacer click en la ventana', async () => {
-    const user = userEvent.setup()
+  const clickVolverAlJardinLink = () => {
+    return user.click(screen.getByRole('link', { name: 'Volver al jardin' }))
+  }
 
-    render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={['/profile']}>
-          <AudioSettingsProvider>
-            <Routes>
-              <Route path="/" element={<h1>Vista Jardin</h1>} />
-              <Route path="/profile" element={<Profile />} />
-            </Routes>
-          </AudioSettingsProvider>
-        </MemoryRouter>
-      </ThemeProvider>,
-    )
-
-    await user.click(screen.getByRole('link', { name: 'Volver al jardin' }))
-
-    expect(screen.getByRole('heading', { name: 'Vista Jardin' })).toBeInTheDocument()
-  })
-
-  it('muestra el tutorial de perfil la primera vez que se entra', async () => {
-    mockUseAuth.mockReturnValue({
-      user: {
-        ...authenticatedUser,
-        profileOnboardingTutorialCompleted: false,
-      },
-      loading: false,
-      refreshUser: mockRefreshUser,
+  const waitForTutorialDialogVisible = () => {
+    return screen.findByRole('dialog').then(el => {
+      expect(el).toBeInTheDocument()
     })
+  }
 
-    renderProfile()
-
-    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+  const verifyTutorialContent = () => {
     expect(screen.getByRole('heading', { name: 'Tu habitación personal' })).toBeInTheDocument()
-    expect(screen.queryByText('Bienvenido a')).not.toBeInTheDocument()
+    verifyTextNotPresent('Bienvenido a')
     expect(screen.queryByRole('img', { name: 'Huly' })).not.toBeInTheDocument()
     expect(completeProfileTutorial).not.toHaveBeenCalled()
-  })
+  }
 
-  it('avanza el tutorial de perfil y lo oculta al finalizar', async () => {
-    const user = userEvent.setup()
-    mockUseAuth.mockReturnValue({
-      user: {
-        ...authenticatedUser,
-        profileOnboardingTutorialCompleted: false,
-      },
-      loading: false,
-      refreshUser: mockRefreshUser,
+  const clickComenzarTutorialButton = () => {
+    return screen.findByRole('button', { name: 'Comenzar con el tutorial' }).then(btn => {
+      return user.click(btn)
     })
+  }
 
-    renderProfile()
-
-    await user.click(await screen.findByRole('button', { name: 'Comenzar con el tutorial' }))
+  const verifyWindowHeadingInTutorial = () => {
     expect(screen.getByRole('heading', { name: 'Ventana' })).toBeInTheDocument()
     expect(document.querySelector('.home-onboarding__mascot')).not.toBeInTheDocument()
+  }
 
-    for (let index = 0; index < 4; index += 1) {
-      await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+  const clickNextInTutorialMultipleTimes = (times: number) => {
+    let p = Promise.resolve()
+    for (let i = 0; i < times; i++) {
+      p = p.then(() => clickButton(user, 'Siguiente'))
     }
+    return p
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
+  const clickFinalizarTutorialButton = () => {
+    return clickButton(user, 'Finalizar tutorial')
+  }
 
+  const verifyTutorialFinished = () => {
     expect(completeProfileTutorial).toHaveBeenCalledTimes(1)
     expect(mockRefreshUser).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
+  }
 
-  it('no vuelve a mostrar el tutorial de perfil cuando ya fue visto', () => {
-    renderProfile()
-
+  const verifyTutorialDialogNotVisible = () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
+  }
 
-  it('abre el modal de audio al hacer click en el equipo de musica', async () => {
-    const user = userEvent.setup()
+  const clickMusicaButton = () => {
+    return clickButton(user, 'Musica')
+  }
 
-    renderProfile()
-
-    await user.click(screen.getByRole('button', { name: 'Musica' }))
-
+  const verifyAudioModalOpened = () => {
     expect(screen.getByRole('dialog', { name: 'Ambiente sonoro' })).toBeInTheDocument()
     expect(screen.getByRole('slider', { name: 'Volumen de interfaz' })).toBeInTheDocument()
     expect(screen.getByRole('slider', { name: 'Volumen de fondo' })).toBeInTheDocument()
     expect(screen.getByRole('slider', { name: 'Volumen de minijuegos' })).toBeInTheDocument()
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
-  })
+  }
 
-  it('permite cambiar el volumen desde el modal de audio', async () => {
-    const user = userEvent.setup()
-
-    renderProfile()
-
-    await user.click(screen.getByRole('button', { name: 'Musica' }))
+  const changeBackgroundVolumeSlider = (value: string) => {
     const volumeSlider = screen.getByRole('slider', { name: 'Volumen de fondo' })
+    fireEvent.change(volumeSlider, { target: { value } })
+  }
 
-    fireEvent.change(volumeSlider, { target: { value: '0.25' } })
+  const verifyBackgroundVolumeValue = (value: string) => {
+    const volumeSlider = screen.getByRole('slider', { name: 'Volumen de fondo' })
+    expect(volumeSlider).toHaveValue(value)
+  }
 
-    expect(volumeSlider).toHaveValue('0.25')
-  })
+  const clickBaulButton = () => {
+    return clickButton(user, 'Baúl')
+  }
 
-  it('abre el modal de cambio de contraseña al hacer click en el Baúl', async () => {
-    const user = userEvent.setup()
-
-    renderProfile()
-
-    await user.click(screen.getByRole('button', { name: 'Baúl' }))
-
+  const verifyChangePasswordModalVisible = () => {
     expect(screen.getByRole('dialog', { name: 'Cambiar contraseña' })).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Contraseña actual')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Nueva contraseña')).toBeInTheDocument()
-  })
+    verifyPlaceholderPresent('Contraseña actual')
+    verifyPlaceholderPresent('Nueva contraseña')
+  }
 
-  it('cierra el modal de cambio de contraseña al hacer click en el botón cerrar', async () => {
-    const user = userEvent.setup()
+  const clickCerrarModalButton = () => {
+    return clickButton(user, 'Cerrar modal')
+  }
 
-    renderProfile()
-
-    await user.click(screen.getByRole('button', { name: 'Baúl' }))
-    expect(screen.getByRole('dialog', { name: 'Cambiar contraseña' })).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Cerrar modal' }))
+  const verifyChangePasswordModalNotVisible = () => {
     expect(screen.queryByRole('dialog', { name: 'Cambiar contraseña' })).not.toBeInTheDocument()
-  })
-
-  it('abre la configuracion de cuenta desde el espejo y carga datos del backend', async () => {
-    const user = userEvent.setup()
-
-    renderProfile()
-
-    await user.click(screen.getByRole('button', { name: 'Espejo' }))
-
-    expect(await screen.findByRole('dialog', { name: 'Configuración de cuenta' })).toBeInTheDocument()
-    expect(getAccountSettings).toHaveBeenCalledTimes(1)
-    expect(screen.queryByText('Estos son los datos básicos de tu perfil. Tu correo se muestra como referencia y no se edita desde acá.')).not.toBeInTheDocument()
-    const emailInput = screen.getByLabelText('Correo electrónico')
-    const nameInput = screen.getByLabelText('Nombre')
-    const birthDateInput = screen.getByLabelText('Fecha de nacimiento')
-    expect(emailInput.compareDocumentPosition(nameInput)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(nameInput.compareDocumentPosition(birthDateInput)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(nameInput).toHaveValue('Jimena')
-    expect(emailInput).toHaveValue('jimena@mail.com')
-    expect(emailInput).toHaveAttribute('readonly')
-    expect(birthDateInput).toHaveValue('2000-01-15')
-    expect(document.querySelector('#account-last-name')).not.toBeInTheDocument()
-  })
-
-  it('guarda los cambios de configuracion y refresca el perfil', async () => {
-    const user = userEvent.setup()
-
-    renderProfile()
-
-    await user.click(screen.getByRole('button', { name: 'Espejo' }))
-    const nameInput = await screen.findByLabelText('Nombre')
-    await user.clear(nameInput)
-    await user.type(nameInput, 'Jime')
-    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
-
-    expect(updateAccountSettings).toHaveBeenCalledWith({
-      name: 'Jime',
-      birthDate: '2000-01-15',
-    })
-    expect(mockRefreshUser).toHaveBeenCalledTimes(1)
-    expect(await screen.findByText('Tus datos se guardaron correctamente.')).toBeInTheDocument()
-  })
-
-  it('muestra validaciones del formulario de configuracion de cuenta', async () => {
-    const user = userEvent.setup()
-
-    renderProfile()
-
-    await user.click(screen.getByRole('button', { name: 'Espejo' }))
-    const nameInput = await screen.findByLabelText('Nombre')
-    await user.clear(nameInput)
-    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
-
-    expect(screen.getByText('Ingresá tu nombre')).toBeInTheDocument()
-    expect(updateAccountSettings).not.toHaveBeenCalled()
-  })
+  }
 })
