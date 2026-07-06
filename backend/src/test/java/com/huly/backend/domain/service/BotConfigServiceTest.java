@@ -1,9 +1,10 @@
 package com.huly.backend.domain.service;
 
-import com.huly.backend.domain.model.chat.UpdateBotConfigCommand;
 import com.huly.backend.domain.model.chat.ChatConfig;
+import com.huly.backend.domain.model.chat.UpdateBotConfigCommand;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.service.chat.BotConfigService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,24 +28,159 @@ class BotConfigServiceTest {
     @InjectMocks
     private BotConfigService botConfigService;
 
-    // ── getConfig ────────────────────────────────────────────────────────────
-
     @Test
-    void getConfig_shouldReturnConfigFromRepository_whenExists() {
-        ChatConfig config = ChatConfig.builder().id(1L).riskDetectionEnabled(true).systemPrompt("prompt").build();
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(config));
+    @DisplayName("Devuelve la configuración almacenada cuando existe")
+    void getConfigShouldReturnStoredConfigWhenExists() {
+        ChatConfig stored = storedConfig(1L, true, "prompt");
+        givenStoredConfig(stored);
 
-        ChatConfig result = botConfigService.getConfig();
+        ChatConfig result = getConfig();
 
-        assertThat(result).isEqualTo(config);
+        thenResultIs(result, stored);
     }
 
     @Test
-    void getConfig_shouldReturnDefaultConfig_whenNotExists() {
+    @DisplayName("Devuelve la configuración por defecto cuando no existe")
+    void getConfigShouldReturnDefaultConfigWhenNotExists() {
+        givenNoStoredConfig();
+
+        ChatConfig result = getConfig();
+
+        thenDefaultConfig(result);
+    }
+
+    @Test
+    @DisplayName("Actualiza riesgo y prompt cuando el comando trae ambos valores")
+    void updateConfigShouldUpdateBothFieldsWhenCommandHasAllValues() {
+        givenStoredConfig(storedConfig(1L, false, "viejo"));
+        givenSaveReturnsArgument();
+
+        ChatConfig result = updateConfig(command(true, "nuevo prompt"));
+
+        thenIdIs(result, 1L);
+        thenRiskAndPrompt(result, true, "nuevo prompt");
+    }
+
+    @Test
+    @DisplayName("Conserva la detección de riesgo existente cuando el comando la trae en null")
+    void updateConfigShouldKeepExistingRiskDetectionWhenCommandHasNull() {
+        givenStoredConfig(storedConfig(1L, true, "prompt"));
+        givenSaveReturnsArgument();
+
+        ChatConfig result = updateConfig(command(null, "nuevo prompt"));
+
+        thenRiskAndPrompt(result, true, "nuevo prompt");
+    }
+
+    @Test
+    @DisplayName("Conserva el prompt existente cuando el comando lo trae en null")
+    void updateConfigShouldKeepExistingSystemPromptWhenCommandHasNull() {
+        givenStoredConfig(storedConfig(1L, false, "prompt original"));
+        givenSaveReturnsArgument();
+
+        ChatConfig result = updateConfig(command(true, null));
+
+        thenRiskAndPrompt(result, true, "prompt original");
+    }
+
+    @Test
+    @DisplayName("Persiste la configuración actualizada y devuelve la guardada")
+    void updateConfigShouldPersistUpdatedConfig() {
+        givenStoredConfig(storedConfig(2L, false, "old"));
+        ChatConfig saved = storedConfig(2L, true, "new");
+        givenSaveReturns(saved);
+
+        ChatConfig result = updateConfig(command(true, "new"));
+
+        thenPersistedConfigId(2L);
+        thenResultIs(result, saved);
+    }
+
+    @Test
+    @DisplayName("Actualiza los flags de personalización cuando el comando los trae")
+    void updateConfigShouldUpdatePersonalizationFlagsWhenCommandHasThem() {
+        givenStoredConfig(fullConfig(1L, true, "prompt", true, true));
+        givenSaveReturnsArgument();
+
+        ChatConfig result = updateConfig(command(true, "prompt", false, false));
+
+        thenPersonalizationFlags(result, false, false);
+    }
+
+    @Test
+    @DisplayName("Conserva los flags de personalización existentes cuando el comando los omite")
+    void updateConfigShouldKeepExistingPersonalizationFlagsWhenCommandOmitsThem() {
+        givenStoredConfig(fullConfig(1L, true, "prompt", true, true));
+        givenSaveReturnsArgument();
+
+        ChatConfig result = updateConfig(command(true, "prompt"));
+
+        thenPersonalizationFlags(result, true, true);
+    }
+
+    // --- arrange ---
+    private void givenStoredConfig(ChatConfig config) {
+        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(config));
+    }
+
+    private void givenNoStoredConfig() {
         when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
+    }
 
-        ChatConfig result = botConfigService.getConfig();
+    private void givenSaveReturnsArgument() {
+        when(chatConfigRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+    }
 
+    private void givenSaveReturns(ChatConfig saved) {
+        when(chatConfigRepository.save(any())).thenReturn(saved);
+    }
+
+    private ChatConfig storedConfig(Long id, boolean riskDetectionEnabled, String systemPrompt) {
+        return ChatConfig.builder()
+                .id(id)
+                .riskDetectionEnabled(riskDetectionEnabled)
+                .systemPrompt(systemPrompt)
+                .build();
+    }
+
+    private ChatConfig fullConfig(
+            Long id,
+            boolean riskDetectionEnabled,
+            String systemPrompt,
+            boolean preferredNameQuestionEnabled,
+            boolean communicationStyleQuestionEnabled) {
+        return new ChatConfig(
+                id, riskDetectionEnabled, systemPrompt, preferredNameQuestionEnabled, communicationStyleQuestionEnabled);
+    }
+
+    private UpdateBotConfigCommand command(Boolean riskDetectionEnabled, String systemPrompt) {
+        return new UpdateBotConfigCommand(riskDetectionEnabled, systemPrompt);
+    }
+
+    private UpdateBotConfigCommand command(
+            Boolean riskDetectionEnabled,
+            String systemPrompt,
+            Boolean preferredNameQuestionEnabled,
+            Boolean communicationStyleQuestionEnabled) {
+        return new UpdateBotConfigCommand(
+                riskDetectionEnabled, systemPrompt, preferredNameQuestionEnabled, communicationStyleQuestionEnabled);
+    }
+
+    // --- act ---
+    private ChatConfig getConfig() {
+        return botConfigService.getConfig();
+    }
+
+    private ChatConfig updateConfig(UpdateBotConfigCommand command) {
+        return botConfigService.updateConfig(command);
+    }
+
+    // --- assert ---
+    private void thenResultIs(ChatConfig result, ChatConfig expected) {
+        assertThat(result).isEqualTo(expected);
+    }
+
+    private void thenDefaultConfig(ChatConfig result) {
         assertThat(result.getId()).isNull();
         assertThat(result.getRiskDetectionEnabled()).isFalse();
         assertThat(result.getSystemPrompt()).isEmpty();
@@ -52,73 +188,24 @@ class BotConfigServiceTest {
         assertThat(result.getCommunicationStyleQuestionEnabled()).isTrue();
     }
 
-    // ── updateConfig ─────────────────────────────────────────────────────────
-
-    @Test
-    void updateConfig_shouldUpdateBothFields_whenCommandHasAllValues() {
-        ChatConfig existing = ChatConfig.builder().id(1L).riskDetectionEnabled(false).systemPrompt("viejo").build();
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(existing));
-        when(chatConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        UpdateBotConfigCommand command = new UpdateBotConfigCommand(true, "nuevo prompt");
-        ChatConfig result = botConfigService.updateConfig(command);
-
-        assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getRiskDetectionEnabled()).isTrue();
-        assertThat(result.getSystemPrompt()).isEqualTo("nuevo prompt");
+    private void thenIdIs(ChatConfig result, Long id) {
+        assertThat(result.getId()).isEqualTo(id);
     }
 
-    @Test
-    void updateConfig_shouldKeepExistingRiskDetection_whenCommandHasNullRiskDetection() {
-        ChatConfig existing = ChatConfig.builder().id(1L).riskDetectionEnabled(true).systemPrompt("prompt").build();
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(existing));
-        when(chatConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        UpdateBotConfigCommand command = new UpdateBotConfigCommand(null, "nuevo prompt");
-        ChatConfig result = botConfigService.updateConfig(command);
-
-        assertThat(result.getRiskDetectionEnabled()).isTrue();
-        assertThat(result.getSystemPrompt()).isEqualTo("nuevo prompt");
+    private void thenRiskAndPrompt(ChatConfig result, boolean riskDetectionEnabled, String systemPrompt) {
+        assertThat(result.getRiskDetectionEnabled()).isEqualTo(riskDetectionEnabled);
+        assertThat(result.getSystemPrompt()).isEqualTo(systemPrompt);
     }
 
-    @Test
-    void updateConfig_shouldKeepExistingSystemPrompt_whenCommandHasNullSystemPrompt() {
-        ChatConfig existing = ChatConfig.builder().id(1L).riskDetectionEnabled(false).systemPrompt("prompt original").build();
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(existing));
-        when(chatConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        UpdateBotConfigCommand command = new UpdateBotConfigCommand(true, null);
-        ChatConfig result = botConfigService.updateConfig(command);
-
-        assertThat(result.getRiskDetectionEnabled()).isTrue();
-        assertThat(result.getSystemPrompt()).isEqualTo("prompt original");
+    private void thenPersonalizationFlags(
+            ChatConfig result, boolean preferredNameQuestionEnabled, boolean communicationStyleQuestionEnabled) {
+        assertThat(result.getPreferredNameQuestionEnabled()).isEqualTo(preferredNameQuestionEnabled);
+        assertThat(result.getCommunicationStyleQuestionEnabled()).isEqualTo(communicationStyleQuestionEnabled);
     }
 
-    @Test
-    void updateConfig_shouldPersistUpdatedConfig() {
-        ChatConfig existing = ChatConfig.builder().id(2L).riskDetectionEnabled(false).systemPrompt("old").build();
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(existing));
-        ChatConfig saved = ChatConfig.builder().id(2L).riskDetectionEnabled(true).systemPrompt("new").build();
-        when(chatConfigRepository.save(any())).thenReturn(saved);
-
-        ChatConfig result = botConfigService.updateConfig(new UpdateBotConfigCommand(true, "new"));
-
+    private void thenPersistedConfigId(Long id) {
         ArgumentCaptor<ChatConfig> captor = ArgumentCaptor.forClass(ChatConfig.class);
         verify(chatConfigRepository).save(captor.capture());
-        assertThat(captor.getValue().getId()).isEqualTo(2L);
-        assertThat(result).isEqualTo(saved);
-    }
-
-    @Test
-    void updateConfig_shouldUpdatePersonalizationQuestionFlags() {
-        ChatConfig existing = new ChatConfig(1L, true, "prompt", true, true);
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(existing));
-        when(chatConfigRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        ChatConfig result = botConfigService.updateConfig(
-                new UpdateBotConfigCommand(true, "prompt", false, false));
-
-        assertThat(result.getPreferredNameQuestionEnabled()).isFalse();
-        assertThat(result.getCommunicationStyleQuestionEnabled()).isFalse();
+        assertThat(captor.getValue().getId()).isEqualTo(id);
     }
 }

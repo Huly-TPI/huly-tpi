@@ -2,6 +2,7 @@ package com.huly.backend.domain.service.store;
 
 import com.huly.backend.domain.port.FileStoragePort;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -21,6 +22,12 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class StoreItemImageServiceTest {
 
+    private static final byte[] LIGHT = {1};
+    private static final byte[] DARK = {2};
+    private static final String LIGHT_URL = "http://x/light";
+    private static final String LIGHT_PREFIX = "light-theme/";
+    private static final String DARK_PREFIX = "dark-theme/";
+
     @Mock
     private FileStoragePort fileStoragePort;
 
@@ -29,54 +36,89 @@ class StoreItemImageServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(fileStoragePort.upload(any(), anyString(), any())).thenReturn("http://x/light");
+        when(fileStoragePort.upload(any(), anyString(), any())).thenReturn(LIGHT_URL);
     }
 
-    private List<String> uploadedKeys(String contentType) {
-        imageService.uploadThemePair(new byte[] { 1 }, new byte[] { 2 }, contentType);
+    @Test
+    @DisplayName("Sube ambos temas con el mismo nombre y devuelve la URL del tema claro")
+    void uploadThemePairShouldUploadBothThemesWithSameFilenameAndReturnLightUrl() {
+        String result = uploadThemePair("image/webp");
+
+        thenBothThemesShareFilenameWithExtension(".webp");
+        thenReturnedUrlIs(result, LIGHT_URL);
+    }
+
+    @Test
+    @DisplayName("Mapea el content type png a su extensión")
+    void uploadThemePairShouldMapPngContentTypeToExtension() {
+        uploadThemePair("image/png");
+
+        thenLightKeyEndsWith(".png");
+    }
+
+    @Test
+    @DisplayName("Mapea el content type jpeg a su extensión")
+    void uploadThemePairShouldMapJpegContentTypeToExtension() {
+        uploadThemePair("image/jpeg");
+
+        thenLightKeyEndsWith(".jpg");
+    }
+
+    @Test
+    @DisplayName("Mapea el content type webp a su extensión")
+    void uploadThemePairShouldMapWebpContentTypeToExtension() {
+        uploadThemePair("image/webp");
+
+        thenLightKeyEndsWith(".webp");
+    }
+
+    @Test
+    @DisplayName("No usa extensión cuando el content type es desconocido")
+    void uploadThemePairShouldUseNoExtensionWhenContentTypeUnknown() {
+        uploadThemePair("image/gif");
+
+        thenLightKeyHasNoExtension();
+    }
+
+    @Test
+    @DisplayName("No usa extensión cuando el content type es nulo")
+    void uploadThemePairShouldUseNoExtensionWhenContentTypeNull() {
+        uploadThemePair(null);
+
+        thenLightKeyHasNoExtension();
+    }
+
+    // --- act ---
+    private String uploadThemePair(String contentType) {
+        return imageService.uploadThemePair(LIGHT, DARK, contentType);
+    }
+
+    // --- assert ---
+    private List<String> capturedKeys() {
         ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
         verify(fileStoragePort, times(2)).upload(any(), keys.capture(), any());
         return keys.getAllValues();
     }
 
-    @Test
-    void uploadThemePair_shouldUploadBothThemesWithSameFilenameAndReturnLightUrl() {
-        String result = imageService.uploadThemePair(new byte[] { 1 }, new byte[] { 2 }, "image/webp");
-
-        ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
-        verify(fileStoragePort, times(2)).upload(any(), keys.capture(), any());
-        String light = keys.getAllValues().get(0);
-        String dark = keys.getAllValues().get(1);
-        assertThat(light).startsWith("light-theme/").endsWith(".webp");
-        assertThat(dark).startsWith("dark-theme/").endsWith(".webp");
-        assertThat(light.substring("light-theme/".length()))
-                .isEqualTo(dark.substring("dark-theme/".length()));
-        assertThat(result).isEqualTo("http://x/light");
+    private void thenBothThemesShareFilenameWithExtension(String suffix) {
+        List<String> keys = capturedKeys();
+        String light = keys.get(0);
+        String dark = keys.get(1);
+        assertThat(light).startsWith(LIGHT_PREFIX).endsWith(suffix);
+        assertThat(dark).startsWith(DARK_PREFIX).endsWith(suffix);
+        assertThat(light.substring(LIGHT_PREFIX.length()))
+                .isEqualTo(dark.substring(DARK_PREFIX.length()));
     }
 
-    @Test
-    void uploadThemePair_shouldMapPngContentTypeToExtension() {
-        assertThat(uploadedKeys("image/png").get(0)).endsWith(".png");
+    private void thenReturnedUrlIs(String result, String expected) {
+        assertThat(result).isEqualTo(expected);
     }
 
-    @Test
-    void uploadThemePair_shouldMapJpegContentTypeToExtension() {
-        assertThat(uploadedKeys("image/jpeg").get(0)).endsWith(".jpg");
+    private void thenLightKeyEndsWith(String suffix) {
+        assertThat(capturedKeys().get(0)).endsWith(suffix);
     }
 
-    @Test
-    void uploadThemePair_shouldMapWebpContentTypeToExtension() {
-        assertThat(uploadedKeys("image/webp").get(0)).endsWith(".webp");
+    private void thenLightKeyHasNoExtension() {
+        assertThat(capturedKeys().get(0)).doesNotContain(".");
     }
-
-    @Test
-    void uploadThemePair_shouldUseNoExtension_whenContentTypeUnknown() {
-        assertThat(uploadedKeys("image/gif").get(0)).doesNotContain(".");
-    }
-
-    @Test
-    void uploadThemePair_shouldUseNoExtension_whenContentTypeNull() {
-        assertThat(uploadedKeys(null).get(0)).doesNotContain(".");
-    }
-
 }
