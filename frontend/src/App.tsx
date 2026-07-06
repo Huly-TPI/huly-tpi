@@ -26,6 +26,7 @@ import SandZenGarden from './pages/SandZenGarden/SandZenGarden.tsx'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
+import Pending from './pages/Pending/Pending'
 import Privacy from './pages/Privacy/Privacy'
 import LanternActivity from './pages/Lanterns/Lanterns'
 
@@ -59,6 +60,7 @@ const App = () => {
           <Route path="/diary" element={<Diary />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/challenges" element={<Challenges />} />
+          <Route path="/pending" element={<Pending />} />
           <Route path="/orchard" element={<Orchard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/register" element={<Register />} />
