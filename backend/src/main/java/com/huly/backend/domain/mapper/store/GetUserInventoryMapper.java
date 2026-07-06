@@ -24,7 +24,8 @@ public class GetUserInventoryMapper {
                 owned.getStoreItem().getName(),
                 owned.getStoreItem().getCategory(),
                 owned.getStoreItem().getAssetKey(),
-                owned.isEquipped()
+                owned.isEquipped(), 
+                owned.getStoreItem().getImageUrl()
         );
     }
 }

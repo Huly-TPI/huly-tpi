@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.activity.ActivitySession;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.Timeframe;
+import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
@@ -30,13 +31,30 @@ class GetUserActivitiesUseCaseTest {
 
     private UserRepository userRepository;
     private ActivitySessionRepository activitySessionRepository;
+    private ActivityRepository activityRepository;
     private GetUserActivitiesUseCase useCase;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
         activitySessionRepository = mock(ActivitySessionRepository.class);
-        useCase = new GetUserActivitiesUseCase(userRepository, activitySessionRepository);
+        activityRepository = mock(com.huly.backend.domain.repository.activity.ActivityRepository.class);
+        
+        com.huly.backend.domain.model.activity.Activity breathing = com.huly.backend.domain.model.activity.Activity.builder()
+                .type(ActivityType.BREATHING)
+                .title("Respiración guiada")
+                .build();
+        com.huly.backend.domain.model.activity.Activity diary = com.huly.backend.domain.model.activity.Activity.builder()
+                .type(ActivityType.DIARY)
+                .title("Diario emocional")
+                .build();
+        com.huly.backend.domain.model.activity.Activity bubble = com.huly.backend.domain.model.activity.Activity.builder()
+                .type(ActivityType.BUBBLE)
+                .title("Burbujas relajantes")
+                .build();
+        when(activityRepository.findAll()).thenReturn(List.of(breathing, diary, bubble));
+
+        useCase = new GetUserActivitiesUseCase(userRepository, activitySessionRepository, activityRepository);
     }
 
     @Test
@@ -54,7 +72,7 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession session = ActivitySession.builder()
                 .id(10L)
                 .userId(USER_ID)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(now)
                 .build();
 
@@ -65,12 +83,14 @@ class GetUserActivitiesUseCaseTest {
         GetUserActivitiesResponse response = useCase.execute(new GetUserActivitiesRequest(USER_ID, Timeframe.TODAY));
 
         assertThat(response.todayActivitiesCount()).isEqualTo(1);
-        assertThat(response.favoriteActivity()).isEqualTo("RESPIRACION");
+        assertThat(response.favoriteActivity()).isEqualTo("BREATHING");
         assertThat(response.averageSessionsText()).isEqualTo("1 sesión hoy");
-        assertThat(response.activityDistribution()).containsEntry("RESPIRACION", 1);
+        assertThat(response.activityDistribution()).containsEntry("BREATHING", 1);
+        assertThat(response.activityNames()).containsEntry("BREATHING", "Respiración guiada");
         assertThat(response.activitySessions()).singleElement().satisfies(item -> {
             assertThat(item.id()).isEqualTo(10L);
-            assertThat(item.activityType()).isEqualTo("RESPIRACION");
+            assertThat(item.activityType()).isEqualTo("BREATHING");
+            assertThat(item.activityName()).isEqualTo("Respiración guiada");
             assertThat(item.createdAt()).isEqualTo(now);
         });
     }
@@ -82,13 +102,13 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession oldSession = ActivitySession.builder()
                 .id(1L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(tenDaysAgo)
                 .build();
         ActivitySession recentSession = ActivitySession.builder()
                 .id(2L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(now)
                 .build();
 
@@ -109,13 +129,13 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession session1 = ActivitySession.builder()
                 .id(1L)
                 .userId(USER_ID)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
         ActivitySession session2 = ActivitySession.builder()
                 .id(2L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(Instant.now())
                 .build();
 
@@ -139,13 +159,13 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession oldSession = ActivitySession.builder()
                 .id(1L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(thirtyDaysAgo)
                 .build();
         ActivitySession recentSession = ActivitySession.builder()
                 .id(2L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(now)
                 .build();
 
@@ -164,7 +184,7 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession session = ActivitySession.builder()
                 .id(1L)
                 .userId(USER_ID)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -181,13 +201,13 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession session1 = ActivitySession.builder()
                 .id(1L)
                 .userId(USER_ID)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
         ActivitySession session2 = ActivitySession.builder()
                 .id(2L)
                 .userId(USER_ID)
-                .activityType(ActivityType.RESPIRACION)
+                .activityType(ActivityType.BREATHING)
                 .createdAt(Instant.now())
                 .build();
 
@@ -206,13 +226,13 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession oldSession = ActivitySession.builder()
                 .id(1L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(sevenDaysAgo)
                 .build();
         ActivitySession recentSession = ActivitySession.builder()
                 .id(2L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(now)
                 .build();
 
@@ -265,7 +285,7 @@ class GetUserActivitiesUseCaseTest {
         ActivitySession oldSession = ActivitySession.builder()
                 .id(1L)
                 .userId(USER_ID)
-                .activityType(ActivityType.DIARIO)
+                .activityType(ActivityType.DIARY)
                 .createdAt(sevenDaysAgo)
                 .build();
 

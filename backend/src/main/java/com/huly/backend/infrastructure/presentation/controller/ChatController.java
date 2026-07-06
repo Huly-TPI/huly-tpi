@@ -1,8 +1,10 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.model.chat.ChatMessage;
-import com.huly.backend.domain.model.chat.ChatReply;
-import com.huly.backend.domain.model.chat.SuggestedChatAction;
+import com.huly.backend.domain.dto.chat.ChatHistoryRequest;
+import com.huly.backend.domain.dto.chat.ChatHistoryResponse;
+import com.huly.backend.domain.dto.chat.ChatMessageRequest;
+import com.huly.backend.domain.dto.chat.ChatReplyResponse;
+import com.huly.backend.domain.dto.chat.SuggestedActionResponse;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.useCase.chat.AudioChatUseCase;
 import com.huly.backend.domain.useCase.chat.ChatUseCase;
@@ -16,9 +18,6 @@ import com.huly.backend.infrastructure.presentation.dto.chat.ChatResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,7 +49,8 @@ public class ChatController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody @Valid ChatRequest request) {
         Long userId = getUserId(principal);
-        ChatReply reply = chatUseCase.execute(request.message(), request.conversationId(), userId);
+        ChatReplyResponse reply = chatUseCase.execute(
+                new ChatMessageRequest(userId, request.conversationId(), request.message()));
         ChatQuotaService.RemainingQuota quota = chatQuotaService.getRemainingQuota(userId);
         return ResponseEntity.ok(toResponse(reply, quota, null, null));
     }
@@ -62,7 +62,7 @@ public class ChatController {
             @RequestParam("conversationId") String conversationId) {
         Long userId = getUserId(principal);
         chatQuotaService.assertWithinAudioLimit(userId);
-        ChatReply reply = audioChatUseCase.execute(audio, conversationId, userId);
+        ChatReplyResponse reply = audioChatUseCase.execute(audio, conversationId, userId);
         ChatQuotaService.RemainingQuota quota = chatQuotaService.getRemainingQuota(userId);
         ChatQuotaService.RemainingAudioQuota audioQuota = chatQuotaService.getRemainingAudioQuota(userId);
         return ResponseEntity.ok(toResponse(reply, quota, audioQuota.remaining(), audioQuota.limitMessage()));
@@ -90,8 +90,8 @@ public class ChatController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Long userId = getUserId(principal);
-        Page<ChatMessage> result = listChatHistoryUseCase.execute(
-                conversationId, userId, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        ChatHistoryResponse result = listChatHistoryUseCase.execute(
+                new ChatHistoryRequest(userId, conversationId, page, size));
         return ResponseEntity.ok(toPageResponse(result));
     }
 
@@ -102,7 +102,7 @@ public class ChatController {
         return Long.parseLong(principal.getUsername());
     }
 
-    private ChatResponse toResponse(ChatReply reply, ChatQuotaService.RemainingQuota quota,
+    private ChatResponse toResponse(ChatReplyResponse reply, ChatQuotaService.RemainingQuota quota,
                                     Integer remainingAudio, String audioLimitMessage) {
         String emotion = reply.detectedEmotion() != null ? reply.detectedEmotion().name() : null;
         ChatResponse.Metadata metadata = reply.riskDetected() != null
@@ -115,7 +115,7 @@ public class ChatController {
                 challenge, metadata, quota.remaining(), quota.limitMessage(), remainingAudio, audioLimitMessage);
     }
 
-    private ChatResponse.SuggestedAction toSuggestedAction(SuggestedChatAction action) {
+    private ChatResponse.SuggestedAction toSuggestedAction(SuggestedActionResponse action) {
         if (action == null) {
             return null;
         }
@@ -129,22 +129,22 @@ public class ChatController {
         );
     }
 
-    private ChatHistoryPageResponse toPageResponse(Page<ChatMessage> page) {
-        List<ChatMessageResponse> content = page.getContent().stream()
+    private ChatHistoryPageResponse toPageResponse(ChatHistoryResponse page) {
+        List<ChatMessageResponse> content = page.content().stream()
                 .map(this::toMessageResponse)
                 .toList();
         return new ChatHistoryPageResponse(
                 content,
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.isFirst(),
-                page.isLast()
+                page.pageNumber(),
+                page.pageSize(),
+                page.totalElements(),
+                page.totalPages(),
+                page.first(),
+                page.last()
         );
     }
 
-    private ChatMessageResponse toMessageResponse(ChatMessage msg) {
+    private ChatMessageResponse toMessageResponse(ChatHistoryResponse.Message msg) {
         return new ChatMessageResponse(
                 msg.id(),
                 msg.role() != null ? msg.role().name() : null,
@@ -164,7 +164,7 @@ public class ChatController {
     private String toFrontendDecision(String decision) {
         if (decision == null || decision.isBlank())
             return null;
-        
+
         return "ACCEPTED".equalsIgnoreCase(decision) ? "accepted" : "rejected";
     }
 }

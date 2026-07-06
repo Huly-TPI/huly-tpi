@@ -611,4 +611,57 @@ class GetUserAntiScrollStatsUseCaseTest {
 
         assertThat(result).isFalse();
     }
+
+    @Test
+    void execute_shouldMatchDomainsWithCountrySuffix() {
+        Long userId = 1L;
+        AppUser user = AppUser.builder().id(userId).build();
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
+                .enabled(true)
+                .dataSharingConsent(true)
+                .monitoredDomains(List.of("mercadolibre.com", "google.com.ar"))
+                .build();
+
+        ExtensionMetric metric1 = ExtensionMetric.builder()
+                .domain("www.mercadolibre.com.ar")
+                .activeSeconds(100)
+                .createdAt(Instant.now())
+                .build();
+
+        ExtensionMetric metric2 = ExtensionMetric.builder()
+                .domain("google.com")
+                .activeSeconds(200)
+                .createdAt(Instant.now())
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+        when(metricsRepository.findByUserId(userId)).thenReturn(List.of(metric1, metric2));
+
+        GetUserAntiScrollStatsResponse response = useCase.execute(new GetUserAntiScrollStatsRequest(userId, "current", "all"));
+
+        assertThat(response.totalScrollTimeSeconds()).isEqualTo(300);
+        assertThat(response.topApps()).hasSize(2);
+    }
+
+    @Test
+    void matchesMonitoredDomains_shouldMatchDomainsWithCountrySuffix() throws Exception {
+        Method method = GetUserAntiScrollStatsUseCase.class.getDeclaredMethod(
+                "matchesMonitoredDomains",
+                String.class,
+                List.class
+        );
+        method.setAccessible(true);
+
+        List<String> monitored = List.of("mercadolibre.com", "google.com.ar");
+
+        boolean result1 = (boolean) method.invoke(useCase, "www.mercadolibre.com.ar", monitored);
+        assertThat(result1).isTrue();
+
+        boolean result2 = (boolean) method.invoke(useCase, "google.com", monitored);
+        assertThat(result2).isTrue();
+
+        boolean result3 = (boolean) method.invoke(useCase, "wikipedia.org", monitored);
+        assertThat(result3).isFalse();
+    }
 }

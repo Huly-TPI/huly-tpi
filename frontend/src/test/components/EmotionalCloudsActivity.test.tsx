@@ -1,15 +1,15 @@
+import { verifyTextPresent, verifyTextNotPresent } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import EmotionalCloudsActivity from '../../components/EmotionalClouds/EmotionalCloudsActivity'
+import type { EmotionalCloudsProps } from '../../components/EmotionalClouds/types'
 
 vi.mock('../../context/authGate', () => ({
   useAuthGate: () => ({
     requireAuth: (action: () => void) => action(),
   }),
 }))
-
-import EmotionalCloudsActivity from '../../components/EmotionalClouds/EmotionalCloudsActivity'
-import type { EmotionalCloudsProps } from '../../components/EmotionalClouds/types'
 
 vi.mock('./EmotionalClouds.css', () => ({}))
 
@@ -26,74 +26,63 @@ vi.mock('../../components/EmotionalClouds/EmotionalCloud', () => ({
   ),
 }))
 
-beforeEach(() => {
-  vi.useFakeTimers()
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
-const renderActivity = (props: EmotionalCloudsProps = {}) =>
-  render(
-    <MemoryRouter>
-      <EmotionalCloudsActivity {...props} />
-    </MemoryRouter>,
-  )
-
-const typeAndSubmit = (text: string) => {
-  fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: text } })
-  fireEvent.click(screen.getByTestId('submit-button'))
-}
-
 describe('EmotionalCloudsActivity', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  // --- CASOS DE PRUEBA (TEST SUITE) ---
 
   describe('renderizado inicial', () => {
     it('muestra el título y subtítulo', () => {
       renderActivity()
-      expect(screen.getByText('Nubes que pasan')).toBeInTheDocument()
-      expect(screen.getByText(/deja ir tus pensamientos/i)).toBeInTheDocument()
+      verifyTextPresent('Nubes que pasan')
+      verifyTextPresent('Deja ir tus pensamientos como nubes')
     })
 
     it('muestra el input y el botón', () => {
       renderActivity()
-      expect(screen.getByTestId('emotional-input')).toBeInTheDocument()
-      expect(screen.getByTestId('submit-button')).toBeInTheDocument()
+      verifyInputIsPresent()
+      verifySubmitButtonIsPresent()
     })
 
     it('el botón empieza deshabilitado', () => {
       renderActivity()
-      expect(screen.getByTestId('submit-button')).toBeDisabled()
+      verifySubmitButtonDisabled()
     })
 
     it('no hay nubes al montar', () => {
       renderActivity()
-      expect(screen.queryByTestId(/^cloud-cloud-/)).not.toBeInTheDocument()
+      verifyNoCloudsRendered()
     })
   })
 
   describe('input', () => {
     it('habilita el botón al escribir texto', () => {
       renderActivity()
-      fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: 'Trabajo' } })
-      expect(screen.getByTestId('submit-button')).toBeEnabled()
+      typeText('Trabajo')
+      verifySubmitButtonEnabled()
     })
 
     it('no habilita el botón con solo espacios', () => {
       renderActivity()
-      fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: '   ' } })
-      expect(screen.getByTestId('submit-button')).toBeDisabled()
+      typeText('   ')
+      verifySubmitButtonDisabled()
     })
 
     it('respeta el maxLength de 100 caracteres', () => {
       renderActivity()
-      expect(screen.getByTestId('emotional-input')).toHaveAttribute('maxLength', '100')
+      verifyInputMaxLength(100)
     })
 
     it('muestra el contador de caracteres', () => {
       renderActivity()
-      fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: 'Hola' } })
-      expect(screen.getByTestId('char-counter')).toHaveTextContent('4/100')
+      typeText('Hola')
+      verifyCounterText('4/100')
     })
   })
 
@@ -101,51 +90,49 @@ describe('EmotionalCloudsActivity', () => {
     it('agrega una nube al hacer click en Soltar', () => {
       renderActivity()
       typeAndSubmit('Mis miedos')
-      expect(screen.getByText('Mis miedos')).toBeInTheDocument()
+      verifyTextPresent('Mis miedos')
     })
 
     it('limpia el input después de agregar la nube', () => {
       renderActivity()
       typeAndSubmit('Estrés')
-      expect(screen.getByTestId('emotional-input')).toHaveValue('')
+      verifyInputValue('')
     })
 
     it('el botón vuelve a deshabilitarse después de enviar', () => {
       renderActivity()
       typeAndSubmit('Trabajo')
-      expect(screen.getByTestId('submit-button')).toBeDisabled()
+      verifySubmitButtonDisabled()
     })
 
     it('agrega la nube al presionar Enter', () => {
       renderActivity()
-      const input = screen.getByTestId('emotional-input')
-      fireEvent.change(input, { target: { value: 'Pendientes' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      expect(screen.getByText('Pendientes')).toBeInTheDocument()
+      typeText('Pendientes')
+      pressEnterKey()
+      verifyTextPresent('Pendientes')
     })
 
     it('no agrega nube al presionar Shift+Enter', () => {
       renderActivity()
-      const input = screen.getByTestId('emotional-input')
-      fireEvent.change(input, { target: { value: 'Algo' } })
-      fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })
-      expect(screen.getByTestId('emotional-input')).toHaveValue('Algo')
-      expect(screen.queryByText('Algo')).not.toBeInTheDocument()
+      typeText('Algo')
+      pressShiftEnterKey()
+      verifyInputValue('Algo')
+      verifyTextNotPresent('Algo')
     })
 
     it('llama a onFinish con el texto de la nube al seleccionarla', () => {
       const onFinish = vi.fn()
       renderActivity({ onFinish })
       typeAndSubmit('Trabajo')
-      fireEvent.click(screen.getByRole('button', { name: 'select' }))
-      expect(onFinish).toHaveBeenCalledWith(['Trabajo'])
+      clickChooseButton()
+      verifyOnFinishCalledWith(onFinish, ['Trabajo'])
     })
 
     it('llama a onThoughtAdded con el texto al agregar una nube', () => {
       const onThoughtAdded = vi.fn()
       renderActivity({ onThoughtAdded })
       typeAndSubmit('Estrés laboral')
-      expect(onThoughtAdded).toHaveBeenCalledWith('Estrés laboral')
+      verifyOnThoughtAddedCalledWith(onThoughtAdded, 'Estrés laboral')
     })
 
     it('llama a onThoughtAdded por cada nube agregada', () => {
@@ -153,15 +140,15 @@ describe('EmotionalCloudsActivity', () => {
       renderActivity({ onThoughtAdded })
       typeAndSubmit('Primer pensamiento')
       typeAndSubmit('Segundo pensamiento')
-      expect(onThoughtAdded).toHaveBeenCalledTimes(2)
-      expect(onThoughtAdded).toHaveBeenNthCalledWith(1, 'Primer pensamiento')
-      expect(onThoughtAdded).toHaveBeenNthCalledWith(2, 'Segundo pensamiento')
+      verifyOnThoughtAddedCalledTimes(onThoughtAdded, 2)
+      verifyOnThoughtAddedNthCalledWith(onThoughtAdded, 1, 'Primer pensamiento')
+      verifyOnThoughtAddedNthCalledWith(onThoughtAdded, 2, 'Segundo pensamiento')
     })
 
     it('trimea el texto antes de crear la nube', () => {
       renderActivity()
       typeAndSubmit('  Estrés  ')
-      expect(screen.getByText('Estrés')).toBeInTheDocument()
+      verifyTextPresent('Estrés')
     })
 
     it('agrega múltiples nubes correctamente', () => {
@@ -169,15 +156,15 @@ describe('EmotionalCloudsActivity', () => {
       typeAndSubmit('Miedo')
       typeAndSubmit('Trabajo')
       typeAndSubmit('Estrés')
-      expect(screen.getByText('Miedo')).toBeInTheDocument()
-      expect(screen.getByText('Trabajo')).toBeInTheDocument()
-      expect(screen.getByText('Estrés')).toBeInTheDocument()
+      verifyTextPresent('Miedo')
+      verifyTextPresent('Trabajo')
+      verifyTextPresent('Estrés')
     })
 
     it('no agrega nube si el input está vacío', () => {
       renderActivity()
-      fireEvent.click(screen.getByTestId('submit-button'))
-      expect(screen.queryByTestId(/^cloud-cloud-/)).not.toBeInTheDocument()
+      clickSubmitButton()
+      verifyNoCloudsRendered()
     })
   })
 
@@ -187,9 +174,9 @@ describe('EmotionalCloudsActivity', () => {
       typeAndSubmit('Nube1')
       typeAndSubmit('Nube2')
       typeAndSubmit('Nube3')
-      expect(screen.queryByText('Nube1')).not.toBeInTheDocument()
-      expect(screen.getByText('Nube2')).toBeInTheDocument()
-      expect(screen.getByText('Nube3')).toBeInTheDocument()
+      verifyTextNotPresent('Nube1')
+      verifyTextPresent('Nube2')
+      verifyTextPresent('Nube3')
     })
   })
 
@@ -197,17 +184,108 @@ describe('EmotionalCloudsActivity', () => {
     it('elimina una nube al llamar onRemove', () => {
       renderActivity()
       typeAndSubmit('Trabajo')
-      fireEvent.click(screen.getByText('Trabajo'))
-      expect(screen.queryByText('Trabajo')).not.toBeInTheDocument()
+      clickOnText('Trabajo')
+      verifyTextNotPresent('Trabajo')
     })
 
     it('elimina solo la nube correcta cuando hay varias', () => {
       renderActivity()
       typeAndSubmit('Miedo')
       typeAndSubmit('Trabajo')
-      fireEvent.click(screen.getByText('Miedo'))
-      expect(screen.queryByText('Miedo')).not.toBeInTheDocument()
-      expect(screen.getByText('Trabajo')).toBeInTheDocument()
+      clickOnText('Miedo')
+      verifyTextNotPresent('Miedo')
+      verifyTextPresent('Trabajo')
     })
   })
+
+  /* helpers */
+
+  const renderActivity = (props: EmotionalCloudsProps = {}) => {
+    render(
+      <MemoryRouter>
+        <EmotionalCloudsActivity {...props} />
+      </MemoryRouter>
+    )
+  }
+
+  const typeText = (text: string) => {
+    fireEvent.change(screen.getByTestId('emotional-input'), { target: { value: text } })
+  }
+
+  const clickSubmitButton = () => {
+    fireEvent.click(screen.getByTestId('submit-button'))
+  }
+
+  const typeAndSubmit = (text: string) => {
+    typeText(text)
+    clickSubmitButton()
+  }
+
+  const pressEnterKey = () => {
+    fireEvent.keyDown(screen.getByTestId('emotional-input'), { key: 'Enter' })
+  }
+
+  const pressShiftEnterKey = () => {
+    fireEvent.keyDown(screen.getByTestId('emotional-input'), { key: 'Enter', shiftKey: true })
+  }
+
+  const clickChooseButton = () => {
+    fireEvent.click(screen.getByRole('button', { name: 'select' }))
+  }
+
+  const clickOnText = (text: string) => {
+    fireEvent.click(screen.getByText(text))
+  }
+
+  
+
+  
+
+  const verifyInputIsPresent = () => {
+    expect(screen.getByTestId('emotional-input')).toBeInTheDocument()
+  }
+
+  const verifySubmitButtonIsPresent = () => {
+    expect(screen.getByTestId('submit-button')).toBeInTheDocument()
+  }
+
+  const verifySubmitButtonDisabled = () => {
+    expect(screen.getByTestId('submit-button')).toBeDisabled()
+  }
+
+  const verifySubmitButtonEnabled = () => {
+    expect(screen.getByTestId('submit-button')).toBeEnabled()
+  }
+
+  const verifyNoCloudsRendered = () => {
+    expect(screen.queryByTestId(/^cloud-cloud-/)).not.toBeInTheDocument()
+  }
+
+  const verifyInputMaxLength = (max: number) => {
+    expect(screen.getByTestId('emotional-input')).toHaveAttribute('maxLength', String(max))
+  }
+
+  const verifyCounterText = (text: string) => {
+    expect(screen.getByTestId('char-counter')).toHaveTextContent(text)
+  }
+
+  const verifyInputValue = (val: string) => {
+    expect(screen.getByTestId('emotional-input')).toHaveValue(val)
+  }
+
+  const verifyOnFinishCalledWith = (fn: any, args: any) => {
+    expect(fn).toHaveBeenCalledWith(args)
+  }
+
+  const verifyOnThoughtAddedCalledWith = (fn: any, arg: any) => {
+    expect(fn).toHaveBeenCalledWith(arg)
+  }
+
+  const verifyOnThoughtAddedCalledTimes = (fn: any, times: number) => {
+    expect(fn).toHaveBeenCalledTimes(times)
+  }
+
+  const verifyOnThoughtAddedNthCalledWith = (fn: any, n: number, arg: any) => {
+    expect(fn).toHaveBeenNthCalledWith(n, arg)
+  }
 })

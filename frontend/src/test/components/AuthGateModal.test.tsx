@@ -1,83 +1,130 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AuthGateModal from '../../components/AuthGateModal/AuthGateModal'
-
-const defaultProps = {
-  open: true,
-  onClose: vi.fn(),
-  onLogin: vi.fn(),
-  onRegister: vi.fn(),
-}
+import { clickButton } from '../testHelpers'
 
 describe('AuthGateModal', () => {
+  let onCloseMock: any
+  let onLoginMock: any
+  let onRegisterMock: any
+
+  beforeEach(() => {
+    onCloseMock = vi.fn()
+    onLoginMock = vi.fn()
+    onRegisterMock = vi.fn()
+  })
+
   it('no renderiza nada cuando open es false', () => {
-    render(<AuthGateModal {...defaultProps} open={false} />)
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    renderModal(false)
+    verifyDialogNotPresent()
   })
 
   it('renderiza el modal cuando open es true', () => {
-    render(<AuthGateModal {...defaultProps} />)
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    renderModal(true)
+    verifyDialogPresent()
   })
 
- it('muestra el título y el mensaje', () => {
-  render(<AuthGateModal {...defaultProps} />)
-
-  expect(
-    screen.getByText('¡Necesitás una cuenta!')
-  ).toBeInTheDocument()
-
-  expect(
-    screen.getByText(
-      /iniciá sesión o registrate para disfrutar de todas las funcionalidades de huly/i
-    )
-  ).toBeInTheDocument()
-})
-
-  it('llama a onLogin al hacer click en iniciar sesión', async () => {
-    const onLogin = vi.fn()
-    const user = userEvent.setup()
-    render(<AuthGateModal {...defaultProps} onLogin={onLogin} />)
-
-    await user.click(screen.getByRole('button', { name: /iniciar sesión/i }))
-
-    expect(onLogin).toHaveBeenCalledOnce()
+  it('muestra el título y el mensaje', () => {
+    renderModal(true)
+    verifyTitleAndMessagePresent()
   })
 
-  it('llama a onRegister al hacer click en registrarse', async () => {
-    const onRegister = vi.fn()
-    const user = userEvent.setup()
-    render(<AuthGateModal {...defaultProps} onRegister={onRegister} />)
-
-    await user.click(screen.getByRole('button', { name: /registrarse/i }))
-
-    expect(onRegister).toHaveBeenCalledOnce()
+  it('llama a onLogin al hacer click en iniciar sesión', () => {
+    renderModal(true)
+    return clickLoginButton().then(() => {
+      verifyLoginCalled()
+    })
   })
 
-  it('llama a onClose al hacer click en "ahora no"', async () => {
-    const onClose = vi.fn()
-    const user = userEvent.setup()
-    render(<AuthGateModal {...defaultProps} onClose={onClose} />)
-
-    await user.click(screen.getByRole('button', { name: /ahora no/i }))
-
-    expect(onClose).toHaveBeenCalledOnce()
+  it('llama a onRegister al hacer click en registrarse', () => {
+    renderModal(true)
+    return clickRegisterButton().then(() => {
+      verifyRegisterCalled()
+    })
   })
 
-  it('llama a onClose al presionar Escape', async () => {
-    const onClose = vi.fn()
-    const user = userEvent.setup()
-    render(<AuthGateModal {...defaultProps} onClose={onClose} />)
+  it('llama a onClose al hacer click en "ahora no"', () => {
+    renderModal(true)
+    return clickCancelButton().then(() => {
+      verifyCloseCalled()
+    })
+  })
 
-    await user.keyboard('{Escape}')
-
-    expect(onClose).toHaveBeenCalledOnce()
+  it('llama a onClose al presionar Escape', () => {
+    renderModal(true)
+    return pressEscapeKey().then(() => {
+      verifyCloseCalled()
+    })
   })
 
   it('tiene atributos de accesibilidad de diálogo', () => {
-    render(<AuthGateModal {...defaultProps} />)
+    renderModal(true)
+    verifyDialogAccessibilityAttributes()
+  })
+
+  /* helpers */
+
+  const renderModal = (isOpen: boolean = true) => {
+    render(
+      <AuthGateModal
+        open={isOpen}
+        onClose={onCloseMock}
+        onLogin={onLoginMock}
+        onRegister={onRegisterMock}
+      />
+    )
+  }
+
+  const verifyDialogNotPresent = () => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  }
+
+  const verifyDialogPresent = () => {
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  }
+
+  const verifyTitleAndMessagePresent = () => {
+    expect(screen.getByText('¡Necesitás una cuenta!')).toBeInTheDocument()
+    expect(
+      screen.getByText(/iniciá sesión o registrate para disfrutar de todas las funcionalidades de huly/i)
+    ).toBeInTheDocument()
+  }
+
+  const clickLoginButton = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Iniciar sesión')
+  }
+
+  const verifyLoginCalled = () => {
+    expect(onLoginMock).toHaveBeenCalledOnce()
+  }
+
+  const clickRegisterButton = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Registrarse')
+  }
+
+  const verifyRegisterCalled = () => {
+    expect(onRegisterMock).toHaveBeenCalledOnce()
+  }
+
+  const clickCancelButton = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Ahora no')
+  }
+
+  const verifyCloseCalled = () => {
+    expect(onCloseMock).toHaveBeenCalledOnce()
+  }
+
+  const pressEscapeKey = () => {
+    const user = userEvent.setup()
+    return user.keyboard('{Escape}')
+  }
+
+  const verifyDialogAccessibilityAttributes = () => {
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveAttribute('aria-modal', 'true')
-  })
+  }
 })

@@ -1,69 +1,82 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ChatbotChallengeCard from '../../components/Chatbot/ChatbotChallengeCard'
+import { clickButton, verifyTextPresent } from '../testHelpers'
 
 describe('ChatbotChallengeCard', () => {
-  it('renders challenge and actions when no decision', () => {
+  let onAcceptMock: any
+  let onRejectMock: any
+
+  beforeEach(() => {
+    onAcceptMock = vi.fn()
+    onRejectMock = vi.fn()
+  })
+
+  it('renderiza el reto y las acciones cuando no hay decisión', () => {
+    renderCard()
+    verifyChallengeAndActionsShown()
+  })
+
+  it('llama a los manejadores al hacer click en los botones', () => {
+    renderCard()
+    return clickAccept()
+      .then(() => clickReject())
+      .then(() => {
+        verifyAcceptCalled()
+        verifyRejectCalled()
+      })
+  })
+
+  it('muestra el texto del estado resuelto como aceptado', () => {
+    renderCard('accepted')
+    verifyStatusText('Reto aceptado.')
+  })
+
+  it('muestra el texto del estado resuelto como rechazado', () => {
+    renderCard('rejected')
+    verifyStatusText('Reto rechazado.')
+  })
+
+  /* helpers */
+
+  const renderCard = (decision?: 'accepted' | 'rejected') => {
     render(
       <ChatbotChallengeCard
         title="Reto"
         description="Descripcion"
-        onAccept={vi.fn()}
-        onReject={vi.fn()}
-      />,
+        decision={decision}
+        onAccept={onAcceptMock}
+        onReject={onRejectMock}
+      />
     )
+  }
 
-    expect(screen.getByText('Reto propuesto')).toBeInTheDocument()
+  const verifyChallengeAndActionsShown = () => {
+    verifyTextPresent('Reto propuesto')
     expect(screen.getByRole('button', { name: 'Aceptar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Rechazar' })).toBeInTheDocument()
-  })
+  }
 
-  it('calls handlers on button click', async () => {
+  const clickAccept = () => {
     const user = userEvent.setup()
-    const onAccept = vi.fn()
-    const onReject = vi.fn()
+    return clickButton(user, 'Aceptar')
+  }
 
-    render(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        onAccept={onAccept}
-        onReject={onReject}
-      />,
-    )
+  const clickReject = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Rechazar')
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Aceptar' }))
-    await user.click(screen.getByRole('button', { name: 'Rechazar' }))
+  const verifyAcceptCalled = () => {
+    expect(onAcceptMock).toHaveBeenCalledTimes(1)
+  }
 
-    expect(onAccept).toHaveBeenCalledTimes(1)
-    expect(onReject).toHaveBeenCalledTimes(1)
-  })
+  const verifyRejectCalled = () => {
+    expect(onRejectMock).toHaveBeenCalledTimes(1)
+  }
 
-  it('shows resolved state text', () => {
-    const { rerender } = render(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        decision="accepted"
-        onAccept={vi.fn()}
-        onReject={vi.fn()}
-      />,
-    )
-
-    expect(screen.getByText('Reto aceptado.')).toBeInTheDocument()
-
-    rerender(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        decision="rejected"
-        onAccept={vi.fn()}
-        onReject={vi.fn()}
-      />,
-    )
-
-    expect(screen.getByText('Reto rechazado.')).toBeInTheDocument()
-  })
+  const verifyStatusText = (text: string) => {
+    verifyTextPresent(text)
+  }
 })
-

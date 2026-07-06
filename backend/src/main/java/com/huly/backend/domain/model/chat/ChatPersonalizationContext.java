@@ -14,4 +14,17 @@ public record ChatPersonalizationContext(
         String preferredName,
         CommunicationStyle communicationStyle
 ) {
+
+    /**
+     * Arma el contexto de personalización a partir del nombre registrado y una preferencia
+     * de conversación que puede ser nula.
+     */
+    public static ChatPersonalizationContext from(
+            String registeredName,
+            ChatConversationPreference preference) {
+        return new ChatPersonalizationContext(
+                registeredName,
+                preference != null ? preference.getPreferredName() : null,
+                preference != null ? preference.getCommunicationStyle() : null);
+    }
 }

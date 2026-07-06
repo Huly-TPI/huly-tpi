@@ -19,4 +19,5 @@ public interface IActivitySessionJpaRepository extends JpaRepository<ActivitySes
     List<ActivitySessionEntity> findTop5ByUserIdAndCreatedAtAfterOrderByCreatedAtDesc(Long userId, Instant start);
     long countByUserIdAndCreatedAtAfter(Long userId, Instant start);
     Optional<ActivitySessionEntity> findFirstByUserIdOrderByCreatedAtAsc(Long userId);
+    List<ActivitySessionEntity> findByCreatedAtAfter(Instant start);
 }

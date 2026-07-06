@@ -277,7 +277,7 @@ class UserVectorMemoryPortTest {
                 "conv-1",
                 50L,
                 new com.huly.backend.domain.model.chat.SuggestedChatAction(
-                        ActivityType.DIARIO,
+                        ActivityType.DIARY,
                         2L,
                         "Diario emocional",
                         "Ordenar pensamientos",

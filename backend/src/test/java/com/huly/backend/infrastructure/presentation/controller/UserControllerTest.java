@@ -7,6 +7,7 @@ import com.huly.backend.domain.dto.user.GetUserCoinsRequest;
 import com.huly.backend.domain.dto.user.GetUserCoinsResponse;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.user.AudioSettings;
+import com.huly.backend.domain.model.user.UserAccountSettings;
 import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.model.enums.UserRole;
@@ -16,7 +17,9 @@ import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.useCase.user.ChangePasswordUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
+import com.huly.backend.domain.useCase.user.GetUserAccountSettingsUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
+import com.huly.backend.domain.useCase.user.UpdateUserAccountSettingsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.user.ChangePasswordRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateAudioSettingsRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.UpdateThemePreferenceRequest;
@@ -35,6 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collections;
 
 import static org.mockito.Mockito.*;
@@ -53,6 +57,8 @@ class UserControllerTest {
     private GetUserCoinsUseCase getUserCoinsUseCase;
     private GetCurrentMembershipUseCase getCurrentMembershipUseCase;
     private ChangePasswordUseCase changePasswordUseCase;
+    private GetUserAccountSettingsUseCase getUserAccountSettingsUseCase;
+    private UpdateUserAccountSettingsUseCase updateUserAccountSettingsUseCase;
 
     private static final Long USER_ID = 1L;
 
@@ -63,6 +69,8 @@ class UserControllerTest {
         getUserCoinsUseCase = mock(GetUserCoinsUseCase.class);
         getCurrentMembershipUseCase = mock(GetCurrentMembershipUseCase.class);
         changePasswordUseCase = mock(ChangePasswordUseCase.class);
+        getUserAccountSettingsUseCase = mock(GetUserAccountSettingsUseCase.class);
+        updateUserAccountSettingsUseCase = mock(UpdateUserAccountSettingsUseCase.class);
 
         UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
@@ -74,7 +82,9 @@ class UserControllerTest {
                 getUserCoinsUseCase,
                 getCurrentMembershipUseCase,
                 new UserPresentationMapper(),
-                changePasswordUseCase
+                changePasswordUseCase,
+                getUserAccountSettingsUseCase,
+                updateUserAccountSettingsUseCase
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
@@ -99,12 +109,15 @@ class UserControllerTest {
         when(userDetailDomainRepository.findThemePreference(USER_ID)).thenReturn(ThemePreference.DARK);
         when(userDetailDomainRepository.findAudioSettings(USER_ID))
                 .thenReturn(new AudioSettings(0.25, 0.45, 0.85));
+        when(getUserAccountSettingsUseCase.execute(USER_ID))
+                .thenReturn(new UserAccountSettings("Mili", "user@huly.com", LocalDate.of(2000, 1, 15)));
 
         mockMvc.perform(get("/api/users/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(USER_ID))
                 .andExpect(jsonPath("$.name").value("Mili"))
                 .andExpect(jsonPath("$.email").value("user@huly.com"))
+                .andExpect(jsonPath("$.birthDate").value("2000-01-15"))
                 .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.onBoardingCompleted").value(true))
                 .andExpect(jsonPath("$.onboardingTutorialCompleted").value(false))
@@ -113,6 +126,67 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.audioSettings.interfaceVolume").value(0.25))
                 .andExpect(jsonPath("$.audioSettings.ambientVolume").value(0.45))
                 .andExpect(jsonPath("$.audioSettings.minigameVolume").value(0.85));
+    }
+
+    @Test
+    void getAccountSettings_shouldReturnSettingsForAuthenticatedUser() throws Exception {
+        when(getUserAccountSettingsUseCase.execute(USER_ID))
+                .thenReturn(new UserAccountSettings("Mili", "user@huly.com", LocalDate.of(2000, 1, 15)));
+
+        mockMvc.perform(get("/api/users/me/settings"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Mili"))
+                .andExpect(jsonPath("$.email").value("user@huly.com"))
+                .andExpect(jsonPath("$.birthDate").value("2000-01-15"));
+
+        verify(getUserAccountSettingsUseCase).execute(USER_ID);
+    }
+
+    @Test
+    void updateAccountSettings_shouldPersistAllowedFieldsForAuthenticatedUser() throws Exception {
+        when(updateUserAccountSettingsUseCase.execute(
+                USER_ID,
+                new UserAccountSettings("Mili", null, LocalDate.of(2000, 1, 15))
+        )).thenReturn(new UserAccountSettings("Mili", "user@huly.com", LocalDate.of(2000, 1, 15)));
+
+        mockMvc.perform(put("/api/users/me/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Mili",
+                                  "birthDate": "2000-01-15"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Mili"))
+                .andExpect(jsonPath("$.email").value("user@huly.com"))
+                .andExpect(jsonPath("$.birthDate").value("2000-01-15"));
+    }
+
+    @Test
+    void updateAccountSettings_shouldRejectBlankName() throws Exception {
+        mockMvc.perform(put("/api/users/me/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "",
+                                  "birthDate": "2000-01-15"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateAccountSettings_shouldRejectFutureBirthDate() throws Exception {
+        mockMvc.perform(put("/api/users/me/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Mili",
+                                  "birthDate": "2999-01-15"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

@@ -21,6 +21,7 @@ export interface UserProfile {
   id: number
   name: string
   email: string
+  birthDate?: string | null
   role: string
   onBoardingCompleted?: boolean
   onboardingTutorialCompleted?: boolean
@@ -33,6 +34,17 @@ export interface AudioSettings {
   interfaceVolume: number
   ambientVolume: number
   minigameVolume: number
+}
+
+export interface AccountSettings {
+  name: string
+  email: string
+  birthDate: string | null
+}
+
+export interface UpdateAccountSettingsRequest {
+  name: string
+  birthDate?: string | null
 }
 
 export const getMe = () => {
@@ -61,6 +73,14 @@ export const updateThemePreference = (themePreference: UserProfile['themePrefere
 
 export const updateAudioSettings = (audioSettings: AudioSettings) => {
   return api.put<AudioSettings>('/users/me/audio-settings', audioSettings)
+}
+
+export const getAccountSettings = () => {
+  return api.get<AccountSettings>('/users/me/settings')
+}
+
+export const updateAccountSettings = (data: UpdateAccountSettingsRequest) => {
+  return api.put<AccountSettings>('/users/me/settings', data)
 }
 
 export const getUserCoins = () =>

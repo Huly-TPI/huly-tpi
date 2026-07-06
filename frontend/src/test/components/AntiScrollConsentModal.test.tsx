@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
 import * as extensionApi from '../../api/extension'
+import { clickButton, verifyTextPresent, verifyTextNotPresent, clearAllMocks } from '../testHelpers'
 
 vi.mock('../../api/extension', () => ({
   getExtensionSettings: vi.fn(),
@@ -22,17 +23,15 @@ describe('AntiScrollConsentModal', () => {
     dataSharingConsent: false,
   }
 
+  let openSpy: any
+  let onCloseMock: any
+
   beforeEach(() => {
-    vi.clearAllMocks()
-    document.documentElement.removeAttribute('data-huly-antiscroll-installed')
-    document.documentElement.removeAttribute('data-huly-antiscroll-enabled')
-    document.documentElement.removeAttribute('data-huly-antiscroll-consent')
-    document.documentElement.removeAttribute('data-huly-antiscroll-id')
-    vi.stubGlobal('chrome', {
-      runtime: {
-        sendMessage: vi.fn(),
-      },
-    })
+    clearAllMocks()
+    resetDOMAttributes()
+    setupChromeStub()
+    setupWindowOpenMock()
+    setupCloseMock()
   })
 
   afterEach(() => {
@@ -40,131 +39,200 @@ describe('AntiScrollConsentModal', () => {
   })
 
   it('muestra el estado cargando inicialmente', () => {
+    setupGetSettingsPromise()
+    renderModal()
+    verifyLoadingStateIsShown()
+  })
+
+  it('renderiza correctamente cuando no está instalada la extensión', () => {
+    setupGetSettingsResolved(defaultSettings)
+    renderModal()
+    return waitForLoadingStateToDisappear().then(() => {
+      verifyExtensionNotInstalledRendered()
+    })
+  })
+
+  it('al hacer click en instalar, abre la Chrome Web Store', () => {
+    setupGetSettingsResolved(defaultSettings)
+    renderModal()
+    return waitForLoadingStateToDisappear()
+      .then(() => clickInstallButton())
+      .then(() => verifyChromeWebStoreOpened())
+  })
+
+  it('renderiza con toggles cuando la extensión está instalada', () => {
+    setupDOMAttributesForInstalled()
+    setupGetSettingsResolved(defaultSettings)
+    renderModal()
+    return waitForLoadingStateToDisappear().then(() => {
+      verifyExtensionInstalledRendered()
+    })
+  })
+
+  it('llama a onClose al hacer click en Entendido', () => {
+    setupGetSettingsResolved(defaultSettings)
+    renderModalWithOnClose()
+    return waitForLoadingStateToDisappear()
+      .then(() => clickEntendidoButton())
+      .then(() => verifyOnCloseCalled())
+  })
+
+  it('cambia el estado de los switches al hacer click y guarda/sincroniza', () => {
+    setupDOMAttributesForInstalledWithoutConsent()
+    setupGetSettingsResolved(defaultSettings)
+    renderModal()
+    return waitForLoadingStateToDisappear()
+      .then(() => clickFirstCheckbox())
+      .then(() => verifyFirstCheckboxCheckedAndSaved())
+  })
+
+  it('sincroniza el estado visual cuando la extensión actualiza atributos del DOM', () => {
+    setupDOMAttributesForInstalledDisabled()
+    setupGetSettingsResolved(defaultSettings)
+    renderModal()
+    return waitForLoadingStateToDisappear()
+      .then(() => verifyCheckboxesAreNotChecked())
+      .then(() => updateDOMAttributesForEnabled())
+      .then(() => waitForCheckboxesToBeChecked())
+  })
+
+  /* helpers */
+
+  const setupGetSettingsPromise = () => {
     mockedGetSettings.mockReturnValue(new Promise(() => {}))
+  }
+
+  const setupGetSettingsResolved = (settings: any) => {
+    mockedGetSettings.mockResolvedValueOnce(settings)
+  }
+
+  const renderModal = () => {
     render(<AntiScrollConsentModal onClose={vi.fn()} />)
-    expect(screen.getByText('Cargando estado...')).toBeInTheDocument()
-  })
+  }
 
-  it('renderiza correctamente cuando no esta instalada la extension', async () => {
-    mockedGetSettings.mockResolvedValueOnce(defaultSettings)
+  const renderModalWithOnClose = () => {
+    render(<AntiScrollConsentModal onClose={onCloseMock} />)
+  }
 
-    render(<AntiScrollConsentModal onClose={vi.fn()} />)
+  const verifyLoadingStateIsShown = () => {
+    verifyTextPresent('Cargando estado...')
+  }
 
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
+  const waitForLoadingStateToDisappear = () => {
+    return waitFor(() => {
+      verifyTextNotPresent('Cargando estado...')
     })
+  }
 
-    expect(screen.getByText(/pausa digital: anti-scroll/i)).toBeInTheDocument()
-    expect(screen.getByText('Extension no instalada')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /instalar/i })).toBeInTheDocument()
-  })
+  const verifyExtensionNotInstalledRendered = () => {
+    verifyTextPresent('Pausa digital: Anti-Scroll')
+    verifyTextPresent('Extension no instalada')
+    expect(screen.getByRole('button', { name: 'Instalar' })).toBeInTheDocument()
+  }
 
-  it('al hacer click en instalar, abre la Chrome Web Store', async () => {
+  const clickInstallButton = () => {
     const user = userEvent.setup()
-    mockedGetSettings.mockResolvedValueOnce(defaultSettings)
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    return clickButton(user, 'Instalar')
+  }
 
-    render(<AntiScrollConsentModal onClose={vi.fn()} />)
+  const clickEntendidoButton = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Entendido')
+  }
 
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
-    })
-
-    await user.click(screen.getByRole('button', { name: /instalar/i }))
-
+  const verifyChromeWebStoreOpened = () => {
     expect(openSpy).toHaveBeenCalledWith(
       'https://chromewebstore.google.com/detail/opafcmdcpkhcfnbfmfipdninpkkpamgh?utm_source=item-share-cb',
       '_blank',
       'noopener,noreferrer',
     )
-  })
+  }
 
-  it('renderiza con toggles cuando la extension esta instalada', async () => {
+  const setupDOMAttributesForInstalled = () => {
     document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true')
     document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'true')
     document.documentElement.setAttribute('data-huly-antiscroll-consent', 'true')
     document.documentElement.setAttribute('data-huly-antiscroll-id', 'ext-id-123')
+  }
 
-    mockedGetSettings.mockResolvedValueOnce(defaultSettings)
-
-    render(<AntiScrollConsentModal onClose={vi.fn()} />)
-
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
-    })
-
-    expect(screen.getByText('Extension anti-scroll')).toBeInTheDocument()
-    expect(screen.getByText('Activo y limitando el scroll infinito')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /instalar/i })).not.toBeInTheDocument()
-  })
-
-  it('llama a onClose al hacer click en Entendido', async () => {
-    const user = userEvent.setup()
-    const onClose = vi.fn()
-    mockedGetSettings.mockResolvedValueOnce(defaultSettings)
-
-    render(<AntiScrollConsentModal onClose={onClose} />)
-
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
-    })
-
-    await user.click(screen.getByRole('button', { name: /entendido/i }))
-
-    expect(onClose).toHaveBeenCalledOnce()
-  })
-
-  it('cambia el estado de los switches al hacer click y guarda/sincroniza', async () => {
+  const setupDOMAttributesForInstalledWithoutConsent = () => {
     document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true')
     document.documentElement.setAttribute('data-huly-antiscroll-id', 'ext-id-123')
+  }
 
+  const setupDOMAttributesForInstalledDisabled = () => {
+    document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true')
+    document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'false')
+    document.documentElement.setAttribute('data-huly-antiscroll-consent', 'false')
+  }
+
+  const updateDOMAttributesForEnabled = () => {
+    document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'true')
+    document.documentElement.setAttribute('data-huly-antiscroll-consent', 'true')
+  }
+
+  const verifyExtensionInstalledRendered = () => {
+    verifyTextPresent('Extension anti-scroll')
+    verifyTextPresent('Activo y limitando el scroll infinito')
+    expect(screen.queryByRole('button', { name: 'Instalar' })).not.toBeInTheDocument()
+  }
+
+  const verifyOnCloseCalled = () => {
+    expect(onCloseMock).toHaveBeenCalledOnce()
+  }
+
+  const clickFirstCheckbox = () => {
     const user = userEvent.setup()
-    mockedGetSettings.mockResolvedValueOnce(defaultSettings)
-
-    render(<AntiScrollConsentModal onClose={vi.fn()} />)
-
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
-    })
-
     const checkboxes = screen.getAllByRole('checkbox')
     expect(checkboxes).toHaveLength(2)
-
     expect(checkboxes[0]).not.toBeChecked()
+    return user.click(checkboxes[0])
+  }
 
-    await user.click(checkboxes[0])
-
+  const verifyFirstCheckboxCheckedAndSaved = () => {
+    const checkboxes = screen.getAllByRole('checkbox')
     expect(checkboxes[0]).toBeChecked()
     expect(mockedSaveSettings).toHaveBeenCalled()
     expect((window as any).chrome.runtime.sendMessage).toHaveBeenCalledWith(
       'ext-id-123',
       expect.objectContaining({ type: 'SET_ENABLED', enabled: true }),
     )
-  })
+  }
 
-  it('sincroniza el estado visual cuando la extension actualiza atributos del DOM', async () => {
-    document.documentElement.setAttribute('data-huly-antiscroll-installed', 'true')
-    document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'false')
-    document.documentElement.setAttribute('data-huly-antiscroll-consent', 'false')
-
-    mockedGetSettings.mockResolvedValueOnce(defaultSettings)
-
-    render(<AntiScrollConsentModal onClose={vi.fn()} />)
-
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando estado...')).not.toBeInTheDocument()
-    })
-
+  const verifyCheckboxesAreNotChecked = () => {
     const checkboxes = screen.getAllByRole('checkbox')
     expect(checkboxes[0]).not.toBeChecked()
     expect(checkboxes[1]).not.toBeChecked()
+  }
 
-    document.documentElement.setAttribute('data-huly-antiscroll-enabled', 'true')
-    document.documentElement.setAttribute('data-huly-antiscroll-consent', 'true')
-
-    await waitFor(() => {
+  const waitForCheckboxesToBeChecked = () => {
+    const checkboxes = screen.getAllByRole('checkbox')
+    return waitFor(() => {
       expect(checkboxes[0]).toBeChecked()
       expect(checkboxes[1]).toBeChecked()
     })
-  })
+  }
+
+  const resetDOMAttributes = () => {
+    document.documentElement.removeAttribute('data-huly-antiscroll-installed')
+    document.documentElement.removeAttribute('data-huly-antiscroll-enabled')
+    document.documentElement.removeAttribute('data-huly-antiscroll-consent')
+    document.documentElement.removeAttribute('data-huly-antiscroll-id')
+  }
+
+  const setupChromeStub = () => {
+    vi.stubGlobal('chrome', {
+      runtime: {
+        sendMessage: vi.fn(),
+      },
+    })
+  }
+
+  const setupWindowOpenMock = () => {
+    openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+  }
+
+  const setupCloseMock = () => {
+    onCloseMock = vi.fn()
+  }
 })

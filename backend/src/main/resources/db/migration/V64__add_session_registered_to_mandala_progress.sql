@@ -1,0 +1,2 @@
+ALTER TABLE mandala_progress
+    ADD COLUMN IF NOT EXISTS session_registered BOOLEAN NOT NULL DEFAULT FALSE;

@@ -4,6 +4,7 @@ import com.huly.backend.domain.mapper.activities.ListActivitiesMapper;
 import com.huly.backend.domain.mapper.activities.RegisterActivitySessionMapper;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
+import com.huly.backend.domain.repository.mandala.MandalaProgressRepository;
 import com.huly.backend.domain.useCase.activities.ListActivitiesUseCase;
 import com.huly.backend.domain.useCase.activities.RegisterActivitySessionUseCase;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,11 @@ public class ActivitiesUseCaseConfig {
 
     @Bean
     public RegisterActivitySessionUseCase registerActivitySessionUseCase(ActivitySessionRepository activitySessionRepository,
+                                                                         MandalaProgressRepository mandalaProgressRepository,
                                                                          RegisterActivitySessionMapper registerActivitySessionMapper) {
-        return new RegisterActivitySessionUseCase(activitySessionRepository, registerActivitySessionMapper);
+        return new RegisterActivitySessionUseCase(
+                activitySessionRepository,
+                mandalaProgressRepository,
+                registerActivitySessionMapper);
     }
 }

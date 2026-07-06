@@ -17,6 +17,7 @@ import com.huly.backend.domain.mapper.activities.RegisterActivitySessionMapper;
 import com.huly.backend.domain.model.activity.ActivitySession;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
+import com.huly.backend.domain.repository.mandala.MandalaProgressRepository;
 
 import java.time.Instant;
 
@@ -25,19 +26,23 @@ class RegisterActivitySessionUseCaseTest {
 
     @Mock
     private ActivitySessionRepository activitySessionRepository;
+    @Mock
+    private MandalaProgressRepository mandalaProgressRepository;
 
     private RegisterActivitySessionUseCase registerActivitySessionUseCase;
 
     @BeforeEach
     void setUp() {
         registerActivitySessionUseCase = new RegisterActivitySessionUseCase(
-                activitySessionRepository, new RegisterActivitySessionMapper());
+                activitySessionRepository,
+                mandalaProgressRepository,
+                new RegisterActivitySessionMapper());
     }
 
     @Test
     void execute_shouldSaveActivitySession() {
         Long userId = 1L;
-        ActivityType type = ActivityType.RESPIRACION;
+        ActivityType type = ActivityType.BREATHING;
 
         ActivitySession expectedSession = ActivitySession.builder()
                 .id(100L)
@@ -49,12 +54,30 @@ class RegisterActivitySessionUseCaseTest {
         when(activitySessionRepository.save(any(ActivitySession.class))).thenReturn(expectedSession);
 
         RegisterActivitySessionResponse result = registerActivitySessionUseCase.execute(
-                new RegisterActivitySessionRequest(userId, type));
+                new RegisterActivitySessionRequest(userId, type, null));
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(100L);
         assertThat(result.userId()).isEqualTo(userId);
         assertThat(result.activityType()).isEqualTo(type);
         verify(activitySessionRepository).save(any(ActivitySession.class));
+    }
+
+    @Test
+    void execute_shouldMarkMandalaSessionWhenContextIsPresent() {
+        Long userId = 1L;
+        ActivitySession expectedSession = ActivitySession.builder()
+                .id(200L)
+                .userId(userId)
+                .activityType(ActivityType.MANDALA)
+                .createdAt(Instant.now())
+                .build();
+
+        when(activitySessionRepository.save(any(ActivitySession.class))).thenReturn(expectedSession);
+
+        registerActivitySessionUseCase.execute(
+                new RegisterActivitySessionRequest(userId, ActivityType.MANDALA, "mandala-01"));
+
+        verify(mandalaProgressRepository).markSessionRegistered(userId, "mandala-01");
     }
 }
