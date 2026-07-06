@@ -1,32 +1,53 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import TaskTabs from '../../components/Pending/TaskTabs'
+import { clickButton } from '../testHelpers'
+
+const hasValue = { date: false, duration: false, category: false, subtasks: false }
 
 describe('TaskTabs', () => {
-  const hasValue = { date: false, duration: false, category: false, subtasks: false }
-
   it('llama a onTabChange con la tab clickeada', () => {
     const onTabChange = vi.fn()
-    render(<TaskTabs activeTab={null} onTabChange={onTabChange} hasValue={hasValue} />)
+    renderTabs(null, onTabChange)
 
-    fireEvent.click(screen.getByLabelText('Fecha límite'))
-
-    expect(onTabChange).toHaveBeenCalledWith('date')
+    return clickTab('Fecha límite').then(() => {
+      verifyTabChangeCalledWith(onTabChange, 'date')
+    })
   })
 
   it('colapsa la tab activa si se clickea de nuevo', () => {
     const onTabChange = vi.fn()
-    render(<TaskTabs activeTab="date" onTabChange={onTabChange} hasValue={hasValue} />)
+    renderTabs('date', onTabChange)
 
-    fireEvent.click(screen.getByLabelText('Fecha límite'))
-
-    expect(onTabChange).toHaveBeenCalledWith(null)
+    return clickTab('Fecha límite').then(() => {
+      verifyTabChangeCalledWith(onTabChange, null)
+    })
   })
 
   it('marca aria-pressed solo en la tab activa', () => {
-    render(<TaskTabs activeTab="duration" onTabChange={vi.fn()} hasValue={hasValue} />)
+    renderTabs('duration')
 
-    expect(screen.getByLabelText('Duración estimada')).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByLabelText('Fecha límite')).toHaveAttribute('aria-pressed', 'false')
+    verifyTabPressed('Duración estimada', 'true')
+    verifyTabPressed('Fecha límite', 'false')
   })
+
+  /* helpers */
+
+  const renderTabs = (activeTab: 'date' | 'duration' | 'category' | 'subtasks' | null, onTabChange = vi.fn()) => {
+    render(<TaskTabs activeTab={activeTab} onTabChange={onTabChange} hasValue={hasValue} />)
+  }
+
+  const clickTab = (label: string) => {
+    const user = userEvent.setup()
+    return clickButton(user, label)
+  }
+
+  const verifyTabChangeCalledWith = (onTabChange: ReturnType<typeof vi.fn>, expected: string | null) => {
+    expect(onTabChange).toHaveBeenCalledWith(expected)
+  }
+
+  const verifyTabPressed = (label: string, expected: string) => {
+    expect(screen.getByLabelText(label)).toHaveAttribute('aria-pressed', expected)
+  }
 })

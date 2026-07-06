@@ -23,33 +23,65 @@ const baseTask: PendingTaskResponse = {
 
 describe('Postit', () => {
   it('aplica la rotación indicada por el prop de forma estable entre renders', () => {
-    const { container, rerender } = render(
-      <Postit task={baseTask} isRecommended={false} onPickUp={vi.fn()} onOpen={vi.fn()} />,
-    )
-    const firstStyle = (container.querySelector('.postit') as HTMLElement).style.transform
+    const { container, rerender } = renderPostit(baseTask)
+    const firstStyle = getPostitTransform(container)
 
-    rerender(<Postit task={baseTask} isRecommended={false} onPickUp={vi.fn()} onOpen={vi.fn()} />)
-    const secondStyle = (container.querySelector('.postit') as HTMLElement).style.transform
+    rerenderPostit(rerender, baseTask)
+    const secondStyle = getPostitTransform(container)
 
     expect(firstStyle).toContain('rotate(3.5deg)')
     expect(firstStyle).toBe(secondStyle)
   })
 
   it('muestra el pin cuando la tarea ya está fijada', () => {
-    render(<Postit task={baseTask} isRecommended={false} onPickUp={vi.fn()} onOpen={vi.fn()} />)
-    expect(screen.getByTestId('postit-pin')).toBeInTheDocument()
+    renderPostit(baseTask)
+    verifyPinPresent()
   })
 
   it('no muestra el pin cuando la tarea no está fijada', () => {
-    render(<Postit task={{ ...baseTask, pinnedAt: null }} isRecommended={false} onPickUp={vi.fn()} onOpen={vi.fn()} />)
-    expect(screen.queryByTestId('postit-pin')).not.toBeInTheDocument()
+    renderPostit({ ...baseTask, pinnedAt: null })
+    verifyPinNotPresent()
   })
 
   it('muestra el badge de recomendado solo cuando isRecommended es true', () => {
-    const { rerender } = render(<Postit task={baseTask} isRecommended={false} onPickUp={vi.fn()} onOpen={vi.fn()} />)
-    expect(screen.queryByLabelText(/recomendado hoy/)).not.toBeInTheDocument()
+    const { rerender } = renderPostit(baseTask, false)
+    verifyRecommendedBadgeNotPresent()
 
-    rerender(<Postit task={baseTask} isRecommended onPickUp={vi.fn()} onOpen={vi.fn()} />)
-    expect(screen.getByLabelText(/recomendado hoy/)).toBeInTheDocument()
+    rerenderPostit(rerender, baseTask, true)
+    verifyRecommendedBadgePresent()
   })
+
+  /* helpers */
+
+  const renderPostit = (task: PendingTaskResponse, isRecommended = false) => {
+    return render(<Postit task={task} isRecommended={isRecommended} onPickUp={vi.fn()} onOpen={vi.fn()} />)
+  }
+
+  const rerenderPostit = (
+    rerender: (ui: React.ReactElement) => void,
+    task: PendingTaskResponse,
+    isRecommended = false,
+  ) => {
+    rerender(<Postit task={task} isRecommended={isRecommended} onPickUp={vi.fn()} onOpen={vi.fn()} />)
+  }
+
+  const getPostitTransform = (container: HTMLElement) => {
+    return (container.querySelector('.postit') as HTMLElement).style.transform
+  }
+
+  const verifyPinPresent = () => {
+    expect(screen.getByTestId('postit-pin')).toBeInTheDocument()
+  }
+
+  const verifyPinNotPresent = () => {
+    expect(screen.queryByTestId('postit-pin')).not.toBeInTheDocument()
+  }
+
+  const verifyRecommendedBadgePresent = () => {
+    expect(screen.getByLabelText(/recomendado hoy/)).toBeInTheDocument()
+  }
+
+  const verifyRecommendedBadgeNotPresent = () => {
+    expect(screen.queryByLabelText(/recomendado hoy/)).not.toBeInTheDocument()
+  }
 })

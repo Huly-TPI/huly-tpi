@@ -13,91 +13,139 @@ function makeRect(overrides: Partial<DOMRect> = {}): DOMRect {
 
 describe('pixelToPercent', () => {
   it('convierte coordenadas de pixeles a porcentaje relativo al tablero', () => {
-    const rect = makeRect()
-    const result = pixelToPercent(100, 50, rect)
-    expect(result.x).toBeCloseTo(50)
-    expect(result.y).toBeCloseTo(50)
+    const result = callPixelToPercent(100, 50, makeRect())
+
+    verifyX(result, 50)
+    verifyY(result, 50)
   })
 
   it('clampea a un mínimo de 4%', () => {
-    const rect = makeRect()
-    const result = pixelToPercent(-1000, -1000, rect)
+    const result = callPixelToPercent(-1000, -1000, makeRect())
+
     expect(result.x).toBe(4)
     expect(result.y).toBe(4)
   })
 
   it('clampea a un máximo de 96%', () => {
-    const rect = makeRect()
-    const result = pixelToPercent(10000, 10000, rect)
+    const result = callPixelToPercent(10000, 10000, makeRect())
+
     expect(result.x).toBe(96)
     expect(result.y).toBe(96)
   })
 
   it('tiene en cuenta el offset del tablero', () => {
-    const rect = makeRect({ left: 50, top: 20, right: 250, bottom: 120 })
-    const result = pixelToPercent(150, 70, rect)
-    expect(result.x).toBeCloseTo(50)
-    expect(result.y).toBeCloseTo(50)
+    const result = callPixelToPercent(150, 70, makeRect({ left: 50, top: 20, right: 250, bottom: 120 }))
+
+    verifyX(result, 50)
+    verifyY(result, 50)
   })
+
+  /* helpers */
+
+  const callPixelToPercent = (clientX: number, clientY: number, rect: DOMRect) => {
+    return pixelToPercent(clientX, clientY, rect)
+  }
+
+  const verifyX = (result: { x: number; y: number }, expected: number) => {
+    expect(result.x).toBeCloseTo(expected)
+  }
+
+  const verifyY = (result: { x: number; y: number }, expected: number) => {
+    expect(result.y).toBeCloseTo(expected)
+  }
 })
 
 describe('usePostitDrag', () => {
+  let rendered: ReturnType<typeof renderHook<ReturnType<typeof usePostitDrag>, undefined>>
+  let onPlace: ReturnType<typeof vi.fn>
+
   it('pickUp entra en modo following', () => {
-    const boardRef = createRef<HTMLDivElement>()
-    const onPlace = vi.fn()
-    const { result } = renderHook(() => usePostitDrag(boardRef, onPlace))
+    setupHook(createRef<HTMLDivElement>())
 
-    act(() => result.current.pickUp(1))
+    callPickUp(1)
 
-    expect(result.current.dragState.mode).toBe('following')
+    verifyDragMode('following')
   })
 
   it('cancel vuelve a modo idle sin llamar onPlace', () => {
-    const boardRef = createRef<HTMLDivElement>()
-    const onPlace = vi.fn()
-    const { result } = renderHook(() => usePostitDrag(boardRef, onPlace))
+    setupHook(createRef<HTMLDivElement>())
 
-    act(() => result.current.pickUp(1))
-    act(() => result.current.cancel())
+    callPickUp(1)
+    callCancel()
 
-    expect(result.current.dragState.mode).toBe('idle')
-    expect(onPlace).not.toHaveBeenCalled()
+    verifyDragMode('idle')
+    verifyOnPlaceNotCalled()
   })
 
   it('un pointerdown en el tablero mientras sigue al puntero llama a onPlace y vuelve a idle', () => {
-    const boardEl = document.createElement('div')
-    document.body.appendChild(boardEl)
-    vi.spyOn(boardEl, 'getBoundingClientRect').mockReturnValue(makeRect())
+    const boardEl = attachBoardElement()
     const boardRef = createRef<HTMLDivElement>()
     // @ts-expect-error asignación manual para test
     boardRef.current = boardEl
+    setupHook(boardRef)
 
-    const onPlace = vi.fn()
-    const { result } = renderHook(() => usePostitDrag(boardRef, onPlace))
+    callPickUp(7)
+    dispatchBoardPointerDown(boardEl, 100, 50)
 
-    act(() => result.current.pickUp(7))
-
-    act(() => {
-      boardEl.dispatchEvent(new MouseEvent('pointerdown', { clientX: 100, clientY: 50, bubbles: true }))
-    })
-
-    expect(onPlace).toHaveBeenCalledWith(7, 50, 50)
-    expect(result.current.dragState.mode).toBe('idle')
+    verifyOnPlaceCalledWith(7, 50, 50)
+    verifyDragMode('idle')
 
     document.body.removeChild(boardEl)
   })
 
   it('Escape cancela el modo following', () => {
-    const boardRef = createRef<HTMLDivElement>()
-    const onPlace = vi.fn()
-    const { result } = renderHook(() => usePostitDrag(boardRef, onPlace))
+    setupHook(createRef<HTMLDivElement>())
 
-    act(() => result.current.pickUp(1))
+    callPickUp(1)
+    dispatchEscapeKey()
+
+    verifyDragMode('idle')
+    verifyOnPlaceNotCalled()
+  })
+
+  /* helpers */
+
+  const setupHook = (boardRef: React.RefObject<HTMLDivElement>) => {
+    onPlace = vi.fn()
+    rendered = renderHook(() => usePostitDrag(boardRef, onPlace))
+  }
+
+  const attachBoardElement = () => {
+    const boardEl = document.createElement('div')
+    document.body.appendChild(boardEl)
+    vi.spyOn(boardEl, 'getBoundingClientRect').mockReturnValue(makeRect())
+    return boardEl
+  }
+
+  const callPickUp = (taskId: number) => {
+    act(() => rendered.result.current.pickUp(taskId))
+  }
+
+  const callCancel = () => {
+    act(() => rendered.result.current.cancel())
+  }
+
+  const dispatchBoardPointerDown = (boardEl: HTMLDivElement, clientX: number, clientY: number) => {
+    act(() => {
+      boardEl.dispatchEvent(new MouseEvent('pointerdown', { clientX, clientY, bubbles: true }))
+    })
+  }
+
+  const dispatchEscapeKey = () => {
     act(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     })
+  }
 
-    expect(result.current.dragState.mode).toBe('idle')
+  const verifyDragMode = (expected: string) => {
+    expect(rendered.result.current.dragState.mode).toBe(expected)
+  }
+
+  const verifyOnPlaceNotCalled = () => {
     expect(onPlace).not.toHaveBeenCalled()
-  })
+  }
+
+  const verifyOnPlaceCalledWith = (taskId: number, x: number, y: number) => {
+    expect(onPlace).toHaveBeenCalledWith(taskId, x, y)
+  }
 })

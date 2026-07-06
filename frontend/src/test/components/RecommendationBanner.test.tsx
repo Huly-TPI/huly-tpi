@@ -1,43 +1,81 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import RecommendationBanner from '../../components/Pending/RecommendationBanner'
+import { clickButton, verifyTextPresent } from '../testHelpers'
 
 describe('RecommendationBanner', () => {
   it('muestra las tareas recomendadas', () => {
-    render(<RecommendationBanner taskTitles={['Lavar los platos', 'Escribir el informe']} onAccept={vi.fn()} onReject={vi.fn()} />)
+    renderBanner(['Lavar los platos', 'Escribir el informe'])
 
-    expect(screen.getByText('Lavar los platos')).toBeInTheDocument()
-    expect(screen.getByText('Escribir el informe')).toBeInTheDocument()
+    verifyTextPresent('Lavar los platos')
+    verifyTextPresent('Escribir el informe')
   })
 
-  it('el botón de tilde llama a onAccept', async () => {
+  it('el botón de tilde llama a onAccept', () => {
     const onAccept = vi.fn().mockResolvedValue(undefined)
-    render(<RecommendationBanner taskTitles={['Tarea']} onAccept={onAccept} onReject={vi.fn()} />)
+    renderBanner(['Tarea'], onAccept)
 
-    fireEvent.click(screen.getByLabelText('Aceptar recomendación'))
-
-    await waitFor(() => expect(onAccept).toHaveBeenCalled())
+    return clickAccept().then(() => {
+      verifyAcceptCalled(onAccept)
+    })
   })
 
-  it('el botón de cruz llama a onReject', async () => {
+  it('el botón de cruz llama a onReject', () => {
     const onReject = vi.fn().mockResolvedValue(undefined)
-    render(<RecommendationBanner taskTitles={['Tarea']} onAccept={vi.fn()} onReject={onReject} />)
+    renderBanner(['Tarea'], vi.fn(), onReject)
 
-    fireEvent.click(screen.getByLabelText('Rechazar recomendación'))
-
-    await waitFor(() => expect(onReject).toHaveBeenCalled())
+    return clickReject().then(() => {
+      verifyRejectCalled(onReject)
+    })
   })
 
   it('no tiene un botón de cierre neutral: solo aceptar o rechazar', () => {
-    render(<RecommendationBanner taskTitles={['Tarea']} onAccept={vi.fn()} onReject={vi.fn()} />)
+    renderBanner(['Tarea'])
 
-    expect(screen.queryByLabelText(/^cerrar$/i)).not.toBeInTheDocument()
-    expect(screen.getAllByRole('button')).toHaveLength(2)
+    verifyNoNeutralCloseButton()
+    verifyOnlyTwoButtonsPresent()
   })
 
   it('se muestra como un modal por encima del contenido (con backdrop)', () => {
-    render(<RecommendationBanner taskTitles={['Tarea']} onAccept={vi.fn()} onReject={vi.fn()} />)
+    renderBanner(['Tarea'])
 
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    verifyDialogPresent()
   })
+
+  /* helpers */
+
+  const renderBanner = (taskTitles: string[], onAccept = vi.fn(), onReject = vi.fn()) => {
+    render(<RecommendationBanner taskTitles={taskTitles} onAccept={onAccept} onReject={onReject} />)
+  }
+
+  const clickAccept = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Aceptar recomendación')
+  }
+
+  const clickReject = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Rechazar recomendación')
+  }
+
+  const verifyAcceptCalled = (onAccept: ReturnType<typeof vi.fn>) => {
+    expect(onAccept).toHaveBeenCalled()
+  }
+
+  const verifyRejectCalled = (onReject: ReturnType<typeof vi.fn>) => {
+    expect(onReject).toHaveBeenCalled()
+  }
+
+  const verifyNoNeutralCloseButton = () => {
+    expect(screen.queryByLabelText(/^cerrar$/i)).not.toBeInTheDocument()
+  }
+
+  const verifyOnlyTwoButtonsPresent = () => {
+    expect(screen.getAllByRole('button')).toHaveLength(2)
+  }
+
+  const verifyDialogPresent = () => {
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  }
 })

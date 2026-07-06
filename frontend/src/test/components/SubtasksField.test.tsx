@@ -1,72 +1,116 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import SubtasksField from '../../components/Pending/SubtasksField'
+import { clickButton, clickCheckbox, typePlaceholder } from '../testHelpers'
 
 describe('SubtasksField', () => {
   it('agrega un ítem al presionar Enter', () => {
     const onAdd = vi.fn()
-    render(<SubtasksField items={[]} onAdd={onAdd} onDelete={vi.fn()} />)
+    renderField([], onAdd)
 
-    const input = screen.getByPlaceholderText('Agregar subtarea')
-    fireEvent.change(input, { target: { value: 'Comprar detergente' } })
-    fireEvent.keyDown(input, { key: 'Enter' })
-
-    expect(onAdd).toHaveBeenCalledWith('Comprar detergente')
+    return typeAndPressEnter('Comprar detergente').then(() => {
+      verifyAddCalledWith(onAdd, 'Comprar detergente')
+    })
   })
 
   it('agrega un ítem al clickear el botón +', () => {
     const onAdd = vi.fn()
-    render(<SubtasksField items={[]} onAdd={onAdd} onDelete={vi.fn()} />)
+    renderField([], onAdd)
 
-    fireEvent.change(screen.getByPlaceholderText('Agregar subtarea'), { target: { value: 'Tender la cama' } })
-    fireEvent.click(screen.getByLabelText('Agregar subtarea'))
-
-    expect(onAdd).toHaveBeenCalledWith('Tender la cama')
+    return typeDraft('Tender la cama')
+      .then(() => clickAddButton())
+      .then(() => {
+        verifyAddCalledWith(onAdd, 'Tender la cama')
+      })
   })
 
   it('no agrega texto vacío', () => {
     const onAdd = vi.fn()
-    render(<SubtasksField items={[]} onAdd={onAdd} onDelete={vi.fn()} />)
+    renderField([], onAdd)
 
-    fireEvent.click(screen.getByLabelText('Agregar subtarea'))
-
-    expect(onAdd).not.toHaveBeenCalled()
+    return clickAddButton().then(() => {
+      verifyAddNotCalled(onAdd)
+    })
   })
 
   it('llama a onToggle al tildar un ítem', () => {
     const onToggle = vi.fn()
-    render(
-      <SubtasksField
-        items={[{ id: 1, text: 'Lavar platos', done: false }]}
-        onAdd={vi.fn()}
-        onToggle={onToggle}
-        onDelete={vi.fn()}
-      />,
-    )
+    renderField([{ id: 1, text: 'Lavar platos', done: false }], vi.fn(), onToggle)
 
-    fireEvent.click(screen.getByLabelText('Marcar Lavar platos'))
-
-    expect(onToggle).toHaveBeenCalledWith(1)
+    return clickToggleCheckbox().then(() => {
+      verifyToggleCalledWith(onToggle, 1)
+    })
   })
 
   it('deshabilita el checkbox cuando no hay onToggle (modo borrador)', () => {
-    render(<SubtasksField items={[{ id: 0, text: 'Borrador', done: false }]} onAdd={vi.fn()} onDelete={vi.fn()} />)
+    renderField([{ id: 0, text: 'Borrador', done: false }])
 
-    expect(screen.getByLabelText('Marcar Borrador')).toBeDisabled()
+    verifyCheckboxDisabled('Marcar Borrador')
   })
 
   it('llama a onDelete al eliminar un ítem', () => {
     const onDelete = vi.fn()
-    render(
-      <SubtasksField
-        items={[{ id: 1, text: 'Lavar platos', done: false }]}
-        onAdd={vi.fn()}
-        onDelete={onDelete}
-      />,
-    )
+    renderField([{ id: 1, text: 'Lavar platos', done: false }], vi.fn(), undefined, onDelete)
 
-    fireEvent.click(screen.getByLabelText('Eliminar Lavar platos'))
-
-    expect(onDelete).toHaveBeenCalledWith(1)
+    return clickDeleteButton('Lavar platos').then(() => {
+      verifyDeleteCalledWith(onDelete, 1)
+    })
   })
+
+  /* helpers */
+
+  const renderField = (
+    items: { id: string | number; text: string; done: boolean }[],
+    onAdd = vi.fn(),
+    onToggle?: (id: string | number) => void,
+    onDelete = vi.fn(),
+  ) => {
+    render(<SubtasksField items={items} onAdd={onAdd} onToggle={onToggle} onDelete={onDelete} />)
+  }
+
+  const typeDraft = (text: string) => {
+    const user = userEvent.setup()
+    return typePlaceholder(user, 'Agregar subtarea', text)
+  }
+
+  const typeAndPressEnter = (text: string) => {
+    const user = userEvent.setup()
+    return typePlaceholder(user, 'Agregar subtarea', `${text}{Enter}`)
+  }
+
+  const clickAddButton = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Agregar subtarea')
+  }
+
+  const clickToggleCheckbox = () => {
+    const user = userEvent.setup()
+    return clickCheckbox(user)
+  }
+
+  const clickDeleteButton = (text: string) => {
+    const user = userEvent.setup()
+    return clickButton(user, `Eliminar ${text}`)
+  }
+
+  const verifyAddCalledWith = (onAdd: ReturnType<typeof vi.fn>, text: string) => {
+    expect(onAdd).toHaveBeenCalledWith(text)
+  }
+
+  const verifyAddNotCalled = (onAdd: ReturnType<typeof vi.fn>) => {
+    expect(onAdd).not.toHaveBeenCalled()
+  }
+
+  const verifyToggleCalledWith = (onToggle: ReturnType<typeof vi.fn>, id: number) => {
+    expect(onToggle).toHaveBeenCalledWith(id)
+  }
+
+  const verifyDeleteCalledWith = (onDelete: ReturnType<typeof vi.fn>, id: number) => {
+    expect(onDelete).toHaveBeenCalledWith(id)
+  }
+
+  const verifyCheckboxDisabled = (label: string) => {
+    expect(screen.getByLabelText(label)).toBeDisabled()
+  }
 })
