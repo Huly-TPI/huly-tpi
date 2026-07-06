@@ -1,17 +1,31 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import ChatbotChallengeCard from '../../components/Chatbot/ChatbotChallengeCard'
+
+const mockedNavigate = vi.fn()
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => mockedNavigate,
+  }
+})
 
 describe('ChatbotChallengeCard', () => {
   it('renders challenge and actions when no decision', () => {
     render(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        onAccept={vi.fn()}
-        onReject={vi.fn()}
-      />,
+      <MemoryRouter>
+        <ChatbotChallengeCard
+          title="Reto"
+          description="Descripcion"
+          onClose={vi.fn()}
+          onAccept={vi.fn()}
+          onReject={vi.fn()}
+        />
+      </MemoryRouter>,
     )
 
     expect(screen.getByText('Reto propuesto')).toBeInTheDocument()
@@ -25,12 +39,15 @@ describe('ChatbotChallengeCard', () => {
     const onReject = vi.fn()
 
     render(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        onAccept={onAccept}
-        onReject={onReject}
-      />,
+      <MemoryRouter>
+        <ChatbotChallengeCard
+          title="Reto"
+          description="Descripcion"
+          onClose={vi.fn()}
+          onAccept={onAccept}
+          onReject={onReject}
+        />
+      </MemoryRouter>,
     )
 
     await user.click(screen.getByRole('button', { name: 'Aceptar' }))
@@ -40,30 +57,45 @@ describe('ChatbotChallengeCard', () => {
     expect(onReject).toHaveBeenCalledTimes(1)
   })
 
-  it('shows resolved state text', () => {
-    const { rerender } = render(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        decision="accepted"
-        onAccept={vi.fn()}
-        onReject={vi.fn()}
-      />,
+  it('shows accepted state with go-to-challenges button and navigates', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+
+    render(
+      <MemoryRouter>
+        <ChatbotChallengeCard
+          title="Reto"
+          description="Descripcion"
+          decision="accepted"
+          onClose={onClose}
+          onAccept={vi.fn()}
+          onReject={vi.fn()}
+        />
+      </MemoryRouter>,
     )
 
     expect(screen.getByText('Reto aceptado.')).toBeInTheDocument()
 
-    rerender(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        decision="rejected"
-        onAccept={vi.fn()}
-        onReject={vi.fn()}
-      />,
+    await user.click(screen.getByRole('button', { name: 'Ir a mis retos' }))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(mockedNavigate).toHaveBeenCalledWith('/challenges')
+  })
+
+  it('shows rejected state text', () => {
+    render(
+      <MemoryRouter>
+        <ChatbotChallengeCard
+          title="Reto"
+          description="Descripcion"
+          decision="rejected"
+          onClose={vi.fn()}
+          onAccept={vi.fn()}
+          onReject={vi.fn()}
+        />
+      </MemoryRouter>,
     )
 
     expect(screen.getByText('Reto rechazado.')).toBeInTheDocument()
   })
 })
-

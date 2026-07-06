@@ -105,6 +105,9 @@ export default function Challenges() {
       const coinsEarned = image
         ? (result.goal.coinsRewardWithImage ?? 25)
         : (result.goal.coinsReward ?? 10)
+      if (!image) {
+        showToast('📸 Tip: subí una foto como evidiencia la próxima vez y ganás más semillas', 'info')
+      }
       setCoinToast(coinsEarned)
       if (result.harvestTriggered) {
         setHarvestPlant(result.harvestedPlantNumber)

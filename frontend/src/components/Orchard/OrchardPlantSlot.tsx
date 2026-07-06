@@ -34,7 +34,7 @@ export default function OrchardPlantSlot({ plant, onClick, hideBadge, onHoverSta
       style={{ position: 'relative' }}
       aria-label={
         isGrowing
-          ? 'Planta en curso — ir a retos'
+          ? 'Planta creciendo — ir a retos'
           : `Planta #${plant.plantNumber} — ver retos completados`
       }
     >
@@ -44,7 +44,7 @@ export default function OrchardPlantSlot({ plant, onClick, hideBadge, onHoverSta
           style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', zIndex: 10 }}
         >
           <span className="text-m font-bold px-3 py-1 rounded-full shadow-sm leading-none" style={{ background: '#f5e6c8', color: '#7a5c2e', border: '1px solid #d4b483' }}>
-            En curso
+            Creciendo
           </span>
           <div style={{ width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #f5e6c8' }} />
         </div>
@@ -55,7 +55,7 @@ export default function OrchardPlantSlot({ plant, onClick, hideBadge, onHoverSta
           {isGrowing ? (
             <div className={`flex flex-col items-center transition-opacity duration-150 ${hideBadge ? 'opacity-0' : 'opacity-100'}`}>
               <span className="text-m font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-sm leading-none" style={{ background: '#f5e6c8', color: '#7a5c2e', border: '1px solid #d4b483' }}>
-                En curso
+                Creciendo
               </span>
               <div style={{ width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #f5e6c8' }} />
             </div>
