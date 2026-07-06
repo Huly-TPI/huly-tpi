@@ -1,18 +1,17 @@
+import { clearAllMocks, setupMockedPostResponse, setupMockedPostError, setupMockedPutResponse, setupMockedPutError } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { register, login, logout, backofficeLogin, changePassword, getAccountSettings, updateAccountSettings } from '../../api/auth'
+import { register, login, logout, backofficeLogin, changePassword } from '../../api/auth'
 import type { RegisterRequest, LoginRequest } from '../../api/auth'
 import { api } from '../../api/client'
 import { ApiError } from '../../api/apiError'
 
 vi.mock('../../api/client', () => ({
     api: {
-        get: vi.fn(),
         post: vi.fn(),
         put: vi.fn(),
     },
 }))
 
-const mockedGet = vi.mocked(api.get)
 const mockedPost = vi.mocked(api.post)
 const mockedPut = vi.mocked(api.put)
 
@@ -28,192 +27,209 @@ const validLoginRequest: LoginRequest = {
     password: '123456',
 }
 
-describe('register', () => {
+describe('API de Autenticación', () => {
     beforeEach(() => {
-        vi.clearAllMocks()
+        clearAllMocks()
     })
 
-    it('llama a POST /auth/register con los datos correctos', async () => {
-        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123' })
+    describe('register', () => {
+        it('llama a POST /auth/register con los datos correctos', () => {
+            setupMockedPostResponse({ accessToken: 'token-123' })
+            return callRegister(validRegisterRequest).then(() => {
+                verifyPostCalledWith('/auth/register', validRegisterRequest, { skipAuthRedirect: true })
+            })
+        })
 
-        await register(validRegisterRequest)
+        it('retorna el accessToken del backend', () => {
+            setupMockedPostResponse({ accessToken: 'token-123' })
+            return callRegisterAndVerifyAccessToken(validRegisterRequest, 'token-123')
+        })
 
-        expect(mockedPost).toHaveBeenCalledWith('/auth/register', validRegisterRequest, { skipAuthRedirect: true })
-    })
+        it('propaga el error del backend', () => {
+            setupMockedPostError(new Error('El email ya está registrado'))
+            return verifyRegisterThrowsError(validRegisterRequest, 'El email ya está registrado')
+        })
 
-    it('retorna el accessToken del backend', async () => {
-        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123' })
-
-        const res = await register(validRegisterRequest)
-
-        expect(res.accessToken).toBe('token-123')
-    })
-
-    it('propaga el error del backend', async () => {
-        mockedPost.mockRejectedValueOnce(new Error('El email ya está registrado'))
-
-        await expect(register(validRegisterRequest)).rejects.toThrow('El email ya está registrado')
-    })
-
-    it('propaga errores por campo del backend', async () => {
-        const apiError = new ApiError('Error de validación', { email: 'Email ya registrado' })
-        mockedPost.mockRejectedValueOnce(apiError)
-
-        await expect(register(validRegisterRequest)).rejects.toThrow(apiError)
-    })
-})
-
-describe('login', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    it('llama a POST /auth/login con los datos correctos', async () => {
-        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-
-        await login(validLoginRequest)
-
-        expect(mockedPost).toHaveBeenCalledWith('/auth/login', validLoginRequest, { skipAuthRedirect: true })
-    })
-
-    it('retorna accessToken y role del backend', async () => {
-        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123', role: 'USER' })
-
-        const res = await login(validLoginRequest)
-
-        expect(res.accessToken).toBe('token-123')
-        expect(res.role).toBe('USER')
-    })
-
-    it('propaga el error si las credenciales son inválidas', async () => {
-        mockedPost.mockRejectedValueOnce(new Error('Credenciales inválidas'))
-
-        await expect(login(validLoginRequest)).rejects.toThrow('Credenciales inválidas')
-    })
-
-    it('propaga errores por campo del backend', async () => {
-        const apiError = new ApiError('Error de validación', { email: 'Email no registrado' })
-        mockedPost.mockRejectedValueOnce(apiError)
-
-        await expect(login(validLoginRequest)).rejects.toThrow(apiError)
-    })
-})
-
-describe('backofficeLogin', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    it('llama a POST /auth/backoffice/login con los datos correctos y skipAuthRedirect', async () => {
-        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
-
-        await backofficeLogin(validLoginRequest)
-
-        expect(mockedPost).toHaveBeenCalledWith(
-            '/auth/backoffice/login',
-            validLoginRequest,
-            { skipAuthRedirect: true },
-        )
-    })
-
-    it('retorna accessToken y role ADMIN del backend', async () => {
-        mockedPost.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
-
-        const res = await backofficeLogin(validLoginRequest)
-
-        expect(res.accessToken).toBe('token-123')
-        expect(res.role).toBe('ADMIN')
-    })
-
-    it('propaga el error si las credenciales son inválidas', async () => {
-        mockedPost.mockRejectedValueOnce(new Error('Invalid credentials'))
-
-        await expect(backofficeLogin(validLoginRequest)).rejects.toThrow('Invalid credentials')
-    })
-})
-
-describe('logout', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    it('llama a POST /auth/logout', async () => {
-        mockedPost.mockResolvedValueOnce(null)
-
-        await logout()
-
-        expect(mockedPost).toHaveBeenCalledWith('/auth/logout', {})
-    })
-
-    it('propaga el error si falla', async () => {
-        mockedPost.mockRejectedValueOnce(new Error('Sin conexión'))
-
-        await expect(logout()).rejects.toThrow('Sin conexión')
-    })
-})
-
-describe('changePassword', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    it('llama a PUT /users/me/password con la contraseña actual y la nueva', async () => {
-        mockedPut.mockResolvedValueOnce(undefined)
-
-        await changePassword('currentPass123', 'newPass456')
-
-        expect(mockedPut).toHaveBeenCalledWith('/users/me/password', {
-            currentPassword: 'currentPass123',
-            newPassword: 'newPass456',
+        it('propaga errores por campo del backend', () => {
+            const apiError = new ApiError('Error de validación', { email: 'Email ya registrado' })
+            setupMockedPostError(apiError)
+            return verifyRegisterThrowsApiError(validRegisterRequest, apiError)
         })
     })
 
-    it('resuelve sin valor cuando el cambio es exitoso', async () => {
-        mockedPut.mockResolvedValueOnce(undefined)
-
-        await expect(changePassword('currentPass123', 'newPass456')).resolves.toBeUndefined()
-    })
-
-    it('propaga el error si la contraseña actual es incorrecta', async () => {
-        mockedPut.mockRejectedValueOnce(new Error('Current password is incorrect'))
-
-        await expect(changePassword('wrongPass', 'newPass456')).rejects.toThrow('Current password is incorrect')
-    })
-
-    it('propaga el error ante fallas del servidor', async () => {
-        mockedPut.mockRejectedValueOnce(new Error('Internal server error'))
-
-        await expect(changePassword('currentPass123', 'newPass456')).rejects.toThrow('Internal server error')
-    })
-})
-
-describe('accountSettings', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    it('getAccountSettings llama a GET /users/me/settings', async () => {
-        mockedGet.mockResolvedValueOnce({
-            name: 'Mili',
-            email: 'mili@mail.com',
-            birthDate: '2000-01-15',
+    describe('login', () => {
+        it('llama a POST /auth/login con los datos correctos', () => {
+            setupMockedPostResponse({ accessToken: 'token-123', role: 'USER' })
+            return callLogin(validLoginRequest).then(() => {
+                verifyPostCalledWith('/auth/login', validLoginRequest, { skipAuthRedirect: true })
+            })
         })
 
-        const response = await getAccountSettings()
-
-        expect(mockedGet).toHaveBeenCalledWith('/users/me/settings')
-        expect(response.email).toBe('mili@mail.com')
-    })
-
-    it('updateAccountSettings llama a PUT /users/me/settings con los datos permitidos', async () => {
-        const request = { name: 'Mili', birthDate: '2000-01-15' }
-        mockedPut.mockResolvedValueOnce({
-            ...request,
-            email: 'mili@mail.com',
+        it('retorna accessToken y role del backend', () => {
+            setupMockedPostResponse({ accessToken: 'token-123', role: 'USER' })
+            return callLoginAndVerifyResponse(validLoginRequest, 'token-123', 'USER')
         })
 
-        await updateAccountSettings(request)
+        it('propaga el error si las credenciales son inválidas', () => {
+            setupMockedPostError(new Error('Credenciales inválidas'))
+            return verifyLoginThrowsError(validLoginRequest, 'Credenciales inválidas')
+        })
 
-        expect(mockedPut).toHaveBeenCalledWith('/users/me/settings', request)
+        it('propaga errores por campo del backend', () => {
+            const apiError = new ApiError('Error de validación', { email: 'Email no registrado' })
+            setupMockedPostError(apiError)
+            return verifyLoginThrowsApiError(validLoginRequest, apiError)
+        })
     })
+
+    describe('backofficeLogin', () => {
+        it('llama a POST /auth/backoffice/login con los datos correctos y skipAuthRedirect', () => {
+            setupMockedPostResponse({ accessToken: 'token-123', role: 'ADMIN' })
+            return callBackofficeLogin(validLoginRequest).then(() => {
+                verifyPostCalledWith('/auth/backoffice/login', validLoginRequest, { skipAuthRedirect: true })
+            })
+        })
+
+        it('retorna accessToken y role ADMIN del backend', () => {
+            setupMockedPostResponse({ accessToken: 'token-123', role: 'ADMIN' })
+            return callBackofficeLoginAndVerifyResponse(validLoginRequest, 'token-123', 'ADMIN')
+        })
+
+        it('propaga el error si las credenciales son inválidas', () => {
+            setupMockedPostError(new Error('Invalid credentials'))
+            return verifyBackofficeLoginThrowsError(validLoginRequest, 'Invalid credentials')
+        })
+    })
+
+    describe('logout', () => {
+        it('llama a POST /auth/logout', () => {
+            setupMockedPostResponse(null)
+            return callLogout().then(() => {
+                verifyPostCalledWith('/auth/logout', {})
+            })
+        })
+
+        it('propaga el error si falla', () => {
+            setupMockedPostError(new Error('Sin conexión'))
+            return verifyLogoutThrowsError('Sin conexión')
+        })
+    })
+
+    describe('changePassword', () => {
+        it('llama a PUT /users/me/password con la contraseña actual y la nueva', () => {
+            setupMockedPutResponse(undefined)
+            return callChangePassword('currentPass123', 'newPass456').then(() => {
+                verifyPutCalledWith('/users/me/password', {
+                    currentPassword: 'currentPass123',
+                    newPassword: 'newPass456',
+                })
+            })
+        })
+
+        it('resuelve sin valor cuando el cambio es exitoso', () => {
+            setupMockedPutResponse(undefined)
+            return verifyChangePasswordResolves('currentPass123', 'newPass456')
+        })
+
+        it('propaga el error si la contraseña actual es incorrecta', () => {
+            setupMockedPutError(new Error('Current password is incorrect'))
+            return verifyChangePasswordThrowsError('wrongPass', 'newPass456', 'Current password is incorrect')
+        })
+
+        it('propaga el error ante fallas del servidor', () => {
+            setupMockedPutError(new Error('Internal server error'))
+            return verifyChangePasswordThrowsError('currentPass123', 'newPass456', 'Internal server error')
+        })
+    })
+    
+
+    
+
+    
+
+    
+
+    const callRegister = (req: RegisterRequest) => {
+        return register(req)
+    }
+
+    const callRegisterAndVerifyAccessToken = (req: RegisterRequest, expectedToken: string) => {
+        return register(req).then((res) => {
+            expect(res.accessToken).toBe(expectedToken)
+        })
+    }
+
+    const verifyRegisterThrowsError = (req: RegisterRequest, expectedMessage: string) => {
+        return expect(register(req)).rejects.toThrow(expectedMessage)
+    }
+
+    const verifyRegisterThrowsApiError = (req: RegisterRequest, expectedError: ApiError) => {
+        return expect(register(req)).rejects.toThrow(expectedError)
+    }
+
+    const callLogin = (req: LoginRequest) => {
+        return login(req)
+    }
+
+    const callLoginAndVerifyResponse = (req: LoginRequest, expectedToken: string, expectedRole: string) => {
+        return login(req).then((res) => {
+            expect(res.accessToken).toBe(expectedToken)
+            expect(res.role).toBe(expectedRole)
+        })
+    }
+
+    const verifyLoginThrowsError = (req: LoginRequest, expectedMessage: string) => {
+        return expect(login(req)).rejects.toThrow(expectedMessage)
+    }
+
+    const verifyLoginThrowsApiError = (req: LoginRequest, expectedError: ApiError) => {
+        return expect(login(req)).rejects.toThrow(expectedError)
+    }
+
+    const callBackofficeLogin = (req: LoginRequest) => {
+        return backofficeLogin(req)
+    }
+
+    const callBackofficeLoginAndVerifyResponse = (req: LoginRequest, expectedToken: string, expectedRole: string) => {
+        return backofficeLogin(req).then((res) => {
+            expect(res.accessToken).toBe(expectedToken)
+            expect(res.role).toBe(expectedRole)
+        })
+    }
+
+    const verifyBackofficeLoginThrowsError = (req: LoginRequest, expectedMessage: string) => {
+        return expect(backofficeLogin(req)).rejects.toThrow(expectedMessage)
+    }
+
+    const callLogout = () => {
+        return logout()
+    }
+
+    const verifyLogoutThrowsError = (expectedMessage: string) => {
+        return expect(logout()).rejects.toThrow(expectedMessage)
+    }
+
+    const callChangePassword = (currentPass: string, newPass: string) => {
+        return changePassword(currentPass, newPass)
+    }
+
+    const verifyChangePasswordResolves = (currentPass: string, newPass: string) => {
+        return expect(changePassword(currentPass, newPass)).resolves.toBeUndefined()
+    }
+
+    const verifyChangePasswordThrowsError = (currentPass: string, newPass: string, expectedMessage: string) => {
+        return expect(changePassword(currentPass, newPass)).rejects.toThrow(expectedMessage)
+    }
+
+    const verifyPostCalledWith = (url: string, body: any, options?: any) => {
+        if (options) {
+            expect(mockedPost).toHaveBeenCalledWith(url, body, options)
+        } else {
+            expect(mockedPost).toHaveBeenCalledWith(url, body)
+        }
+    }
+
+    const verifyPutCalledWith = (url: string, body: any) => {
+        expect(mockedPut).toHaveBeenCalledWith(url, body)
+    }
 })

@@ -17,98 +17,125 @@ const RULES = {
 
 describe('useForm', () => {
     it('inicializa con los valores dados', () => {
-        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
-
-        expect(result.current.values).toEqual(INITIAL_VALUES)
-        expect(result.current.errors).toEqual({})
+        setupHook()
+        verifyValues(INITIAL_VALUES)
+        verifyErrors({})
     })
 
     it('actualiza un campo con handleChange', () => {
-        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
-
-        act(() => {
-            result.current.handleChange('email', 'user@mail.com')
-        })
-
-        expect(result.current.values.email).toBe('user@mail.com')
+        setupHook()
+        callHandleChange('email', 'user@mail.com')
+        verifyValue('email', 'user@mail.com')
     })
 
     it('limpia el error del campo al escribir', () => {
-        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
-
-        act(() => {
-            result.current.validateAll()
-        })
-
-        expect(result.current.errors.email).toBeDefined()
-
-        act(() => {
-            result.current.handleChange('email', 'user@mail.com')
-        })
-
-        expect(result.current.errors.email).toBeUndefined()
+        setupHook()
+        callValidateAll()
+        verifyErrorDefined('email')
+        callHandleChange('email', 'user@mail.com')
+        verifyErrorUndefined('email')
     })
 
     it('validateAll retorna false con campos inválidos', () => {
-        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
-
-        let isValid = false
-        act(() => {
-            isValid = result.current.validateAll()
-        })
-
-        expect(isValid).toBe(false)
-        expect(result.current.errors.email).toBe('Campo requerido')
-        expect(result.current.errors.password).toBe('Campo requerido')
+        setupHook()
+        verifyValidateAllResult(false)
+        verifyErrorMessage('email', 'Campo requerido')
+        verifyErrorMessage('password', 'Campo requerido')
     })
 
     it('validateAll retorna true con campos válidos', () => {
-        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
-
-        act(() => {
-            result.current.handleChange('email', 'user@mail.com')
-            result.current.handleChange('password', '123456')
-            result.current.handleChange('confirmPassword', '123456')
-        })
-
-        let isValid = false
-        act(() => {
-            isValid = result.current.validateAll()
-        })
-
-        expect(isValid).toBe(true)
-        expect(result.current.errors).toEqual({})
+        setupHook()
+        fillValidForm()
+        verifyValidateAllResult(true)
+        verifyErrors({})
     })
 
     it('detecta contraseñas que no coinciden', () => {
-        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
-
-        act(() => {
-            result.current.handleChange('email', 'user@mail.com')
-            result.current.handleChange('password', '123456')
-            result.current.handleChange('confirmPassword', '654321')
-        })
-
-        act(() => {
-            result.current.validateAll()
-        })
-
-        expect(result.current.errors.confirmPassword).toBe('Las contraseñas no coinciden')
+        setupHook()
+        fillMismatchedPasswords()
+        callValidateAll()
+        verifyErrorMessage('confirmPassword', 'Las contraseñas no coinciden')
     })
 
     it('reset vuelve a los valores iniciales', () => {
-        const { result } = renderHook(() => useForm(INITIAL_VALUES, RULES))
-
-        act(() => {
-            result.current.handleChange('email', 'user@mail.com')
-            result.current.validateAll()
-        })
-
-        act(() => {
-            result.current.reset()
-        })
-
-        expect(result.current.values).toEqual(INITIAL_VALUES)
-        expect(result.current.errors).toEqual({})
+        setupHook()
+        callHandleChange('email', 'user@mail.com')
+        callValidateAll()
+        callReset()
+        verifyValues(INITIAL_VALUES)
+        verifyErrors({})
     })
+    let rendered: ReturnType<typeof renderHook<ReturnType<typeof useForm>, undefined>>
+
+    const setupHook = () => {
+        rendered = renderHook(() => useForm(INITIAL_VALUES, RULES))
+    }
+
+    const callHandleChange = (field: keyof typeof INITIAL_VALUES, value: string) => {
+        act(() => {
+            rendered.result.current.handleChange(field, value)
+        })
+    }
+
+    const callValidateAll = () => {
+        let res = false
+        act(() => {
+            res = rendered.result.current.validateAll()
+        })
+        return res
+    }
+
+    const callReset = () => {
+        act(() => {
+            rendered.result.current.reset()
+        })
+    }
+
+    const fillValidForm = () => {
+        act(() => {
+            rendered.result.current.handleChange('email', 'user@mail.com')
+            rendered.result.current.handleChange('password', '123456')
+            rendered.result.current.handleChange('confirmPassword', '123456')
+        })
+    }
+
+    const fillMismatchedPasswords = () => {
+        act(() => {
+            rendered.result.current.handleChange('email', 'user@mail.com')
+            rendered.result.current.handleChange('password', '123456')
+            rendered.result.current.handleChange('confirmPassword', '654321')
+        })
+    }
+
+    const verifyValues = (expected: typeof INITIAL_VALUES) => {
+        expect(rendered.result.current.values).toEqual(expected)
+    }
+
+    const verifyValue = (field: keyof typeof INITIAL_VALUES, expected: string) => {
+        expect(rendered.result.current.values[field]).toBe(expected)
+    }
+
+    const verifyErrors = (expected: any) => {
+        expect(rendered.result.current.errors).toEqual(expected)
+    }
+
+    const verifyErrorDefined = (field: keyof typeof INITIAL_VALUES) => {
+        expect(rendered.result.current.errors[field]).toBeDefined()
+    }
+
+    const verifyErrorUndefined = (field: keyof typeof INITIAL_VALUES) => {
+        expect(rendered.result.current.errors[field]).toBeUndefined()
+    }
+
+    const verifyErrorMessage = (field: keyof typeof INITIAL_VALUES, expectedMsg: string) => {
+        expect(rendered.result.current.errors[field]).toBe(expectedMsg)
+    }
+
+    const verifyValidateAllResult = (expected: boolean) => {
+        let res = false
+        act(() => {
+            res = rendered.result.current.validateAll()
+        })
+        expect(res).toBe(expected)
+    }
 })

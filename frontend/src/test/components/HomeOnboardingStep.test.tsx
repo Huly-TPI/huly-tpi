@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import HomeOnboardingStep from '../../components/Onboarding/HomeOnboarding/HomeOnboardingStep'
 import type { HomeOnboardingStep as HomeOnboardingStepDefinition } from '../../components/Onboarding/HomeOnboarding/types'
 import type { SceneElementDefinition } from '../../components/Scene/types'
+import { clickButton, verifyTextPresent, verifyHeadingPresent } from '../testHelpers'
+
 
 const baseElement: SceneElementDefinition = {
   id: 'notebook',
@@ -22,9 +24,34 @@ const baseElement: SceneElementDefinition = {
 }
 
 describe('HomeOnboardingStep', () => {
-  it('renderiza mascota anclada, usa imagen dark y avanza al clickear', async () => {
-    const user = userEvent.setup()
-    const onAdvance = vi.fn()
+  let onAdvanceSpy: any
+
+  it('renderiza la mascota anclada, usa imagen oscura y avanza al hacer click', () => {
+    renderWithAnchoredMascotAndDarkTheme()
+    verifyHeadingPresent('Diario emocional')
+    verifyDescriptionPresent('Escribí, reflexioná y registrá cómo te sentiste en tu día')
+    verifyMascotAltText('Mascota escribiendo')
+    verifyImageMirrorClassPresent()
+    verifyHighlightedImageSrc('/dark-notebook.webp')
+    return clickNextButton().then(() => {
+      verifyOnAdvanceCalledTimes(1)
+    })
+  })
+
+  it('renderiza la mascota global cuando no tiene identificador de anclaje', () => {
+    renderWithGlobalMascotAndLightTheme()
+    verifyMascotAltText('Mascota respirando')
+    verifyMascotCount(1)
+    verifyFinishButtonPresent()
+  })
+  let user: any
+  let renderResult: any
+
+  /* helpers */
+
+  const renderWithAnchoredMascotAndDarkTheme = () => {
+    user = userEvent.setup()
+    onAdvanceSpy = vi.fn()
     const step: HomeOnboardingStepDefinition = {
       id: 'notebook',
       title: 'Diario emocional',
@@ -40,32 +67,19 @@ describe('HomeOnboardingStep', () => {
         imageClassName: 'w-full',
       },
     }
-
-    const { container } = render(
+    renderResult = render(
       <HomeOnboardingStep
         currentStepIndex={0}
-        onAdvance={onAdvance}
+        onAdvance={onAdvanceSpy}
         sceneElements={[baseElement]}
         step={step}
         theme="dark"
         totalSteps={2}
       />,
     )
+  }
 
-    expect(screen.getByRole('heading', { name: 'Diario emocional' })).toBeInTheDocument()
-    expect(screen.getByText('Escribí, reflexioná y registrá cómo te sentiste en tu día')).toBeInTheDocument()
-    expect(screen.getByAltText('Mascota escribiendo')).toBeInTheDocument()
-    expect(container.querySelector('.scene-element__image--mirror-mobile')).toBeInTheDocument()
-
-    const highlightedImage = container.querySelector('.home-onboarding__highlight-image') as HTMLImageElement | null
-    expect(highlightedImage?.getAttribute('src')).toBe('/dark-notebook.webp')
-
-    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
-
-    expect(onAdvance).toHaveBeenCalledTimes(1)
-  })
-
-  it('renderiza mascota global cuando no tiene anchorElementId', () => {
+  const renderWithGlobalMascotAndLightTheme = () => {
     const step: HomeOnboardingStepDefinition = {
       id: 'clouds',
       title: 'Respiraciones guiadas',
@@ -80,8 +94,7 @@ describe('HomeOnboardingStep', () => {
         imageClassName: 'w-full',
       },
     }
-
-    const { container } = render(
+    renderResult = render(
       <HomeOnboardingStep
         currentStepIndex={0}
         onAdvance={vi.fn()}
@@ -97,9 +110,40 @@ describe('HomeOnboardingStep', () => {
         totalSteps={1}
       />,
     )
+  }
 
-    expect(screen.getByAltText('Mascota respirando')).toBeInTheDocument()
-    expect(container.querySelectorAll('.home-onboarding__mascot')).toHaveLength(1)
+  
+
+  const verifyDescriptionPresent = (text: string) => {
+    verifyTextPresent(text)
+  }
+
+  const verifyMascotAltText = (alt: string) => {
+    expect(screen.getByAltText(alt)).toBeInTheDocument()
+  }
+
+  const verifyImageMirrorClassPresent = () => {
+    expect(renderResult.container.querySelector('.scene-element__image--mirror-mobile')).toBeInTheDocument()
+  }
+
+  const verifyHighlightedImageSrc = (src: string) => {
+    const highlightedImage = renderResult.container.querySelector('.home-onboarding__highlight-image') as HTMLImageElement | null
+    expect(highlightedImage?.getAttribute('src')).toBe(src)
+  }
+
+  const clickNextButton = () => {
+    return clickButton(user, 'Siguiente')
+  }
+
+  const verifyOnAdvanceCalledTimes = (times: number) => {
+    expect(onAdvanceSpy).toHaveBeenCalledTimes(times)
+  }
+
+  const verifyMascotCount = (count: number) => {
+    expect(renderResult.container.querySelectorAll('.home-onboarding__mascot')).toHaveLength(count)
+  }
+
+  const verifyFinishButtonPresent = () => {
     expect(screen.getByRole('button', { name: 'Finalizar tutorial' })).toBeInTheDocument()
-  })
+  }
 })

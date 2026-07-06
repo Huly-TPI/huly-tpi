@@ -1,3 +1,4 @@
+import { clearAllMocks, setupMockedPostResponse, setupMockedPostError, setupMockedGetResponse, setupMockedGetError } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { journalApi } from '../../api/journal'
 import { api } from '../../api/client'
@@ -19,79 +20,119 @@ const validEntry = {
   createdAt: '2025-01-15T10:00:00Z',
 }
 
-describe('journalApi.create', () => {
+describe('journalApi', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
   })
 
-  it('llama a api.post con la ruta y los datos correctos', async () => {
-    mockedPost.mockResolvedValueOnce(validEntry)
-    const data = { content: 'Hoy me sentí bien', mood: 'HAPPY' as const }
+  describe('create', () => {
+    it('llama a api.post con la ruta y los datos correctos', () => {
+      setupMockedPostResponse(validEntry)
+      return callCreate({ content: 'Hoy me sentí bien', mood: 'HAPPY' }).then(() => {
+        verifyPostCalledWith('/journal', { content: 'Hoy me sentí bien', mood: 'HAPPY' })
+      })
+    })
 
-    await journalApi.create(data)
+    it('retorna la entrada creada por el backend', () => {
+      setupMockedPostResponse(validEntry)
+      return callCreateAndVerifyResult({ content: 'Algo', mood: null }, validEntry)
+    })
 
-    expect(mockedPost).toHaveBeenCalledWith('/journal', data)
+    it('permite crear una entrada sin mood', () => {
+      const entryWithoutMood = { ...validEntry, mood: null }
+      setupMockedPostResponse(entryWithoutMood)
+      return callCreateAndVerifyMoodIsNull({ content: 'Solo escribir', mood: null }).then(() => {
+        verifyPostCalledWith('/journal', { content: 'Solo escribir', mood: null })
+      })
+    })
+
+    it('propaga errores del backend', () => {
+      setupMockedPostError(new Error('No autorizado'))
+      return verifyCreateThrowsError({ content: 'Algo' }, 'No autorizado')
+    })
   })
 
-  it('retorna la entrada creada por el backend', async () => {
-    mockedPost.mockResolvedValueOnce(validEntry)
+  describe('list', () => {
+    it('llama a api.get con la ruta correcta', () => {
+      setupMockedGetResponse([])
+      return callList().then(() => {
+        verifyGetCalledWith('/journal')
+      })
+    })
 
-    const result = await journalApi.create({ content: 'Algo', mood: null })
+    it('retorna la lista de entradas del backend', () => {
+      const entries = [validEntry, { ...validEntry, id: 2 }]
+      setupMockedGetResponse(entries)
+      return callListAndVerifyResultAndLength(entries, 2)
+    })
 
-    expect(result).toEqual(validEntry)
+    it('retorna lista vacía cuando no hay entradas', () => {
+      setupMockedGetResponse([])
+      return callListAndVerifyResult([])
+    })
+
+    it('propaga errores del backend', () => {
+      setupMockedGetError(new Error('Error del servidor'))
+      return verifyListThrowsError('Error del servidor')
+    })
   })
 
-  it('permite crear una entrada sin mood', async () => {
-    const entryWithoutMood = { ...validEntry, mood: null }
-    mockedPost.mockResolvedValueOnce(entryWithoutMood)
+  /* helpers */
 
-    const result = await journalApi.create({ content: 'Solo escribir', mood: null })
+  
 
-    expect(mockedPost).toHaveBeenCalledWith('/journal', { content: 'Solo escribir', mood: null })
-    expect(result.mood).toBeNull()
-  })
+  
 
-  it('propaga errores del backend', async () => {
-    mockedPost.mockRejectedValueOnce(new Error('No autorizado'))
+  
 
-    await expect(journalApi.create({ content: 'Algo' })).rejects.toThrow('No autorizado')
-  })
-})
+  
 
-describe('journalApi.list', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+  const callCreate = (data: any) => {
+    return journalApi.create(data)
+  }
 
-  it('llama a api.get con la ruta correcta', async () => {
-    mockedGet.mockResolvedValueOnce([])
+  const callCreateAndVerifyResult = (data: any, expected: any) => {
+    return journalApi.create(data).then((res) => {
+      expect(res).toEqual(expected)
+    })
+  }
 
-    await journalApi.list()
+  const callCreateAndVerifyMoodIsNull = (data: any) => {
+    return journalApi.create(data).then((res) => {
+      expect(res.mood).toBeNull()
+    })
+  }
 
-    expect(mockedGet).toHaveBeenCalledWith('/journal')
-  })
+  const verifyCreateThrowsError = (data: any, expectedErrorMsg: string) => {
+    return expect(journalApi.create(data)).rejects.toThrow(expectedErrorMsg)
+  }
 
-  it('retorna la lista de entradas del backend', async () => {
-    const entries = [validEntry, { ...validEntry, id: 2 }]
-    mockedGet.mockResolvedValueOnce(entries)
+  const callList = () => {
+    return journalApi.list()
+  }
 
-    const result = await journalApi.list()
+  const callListAndVerifyResult = (expected: any[]) => {
+    return journalApi.list().then((res) => {
+      expect(res).toEqual(expected)
+    })
+  }
 
-    expect(result).toEqual(entries)
-    expect(result).toHaveLength(2)
-  })
+  const callListAndVerifyResultAndLength = (expected: any[], expectedLength: number) => {
+    return journalApi.list().then((res) => {
+      expect(res).toEqual(expected)
+      expect(res).toHaveLength(expectedLength)
+    })
+  }
 
-  it('retorna lista vacía cuando no hay entradas', async () => {
-    mockedGet.mockResolvedValueOnce([])
+  const verifyListThrowsError = (expectedErrorMsg: string) => {
+    return expect(journalApi.list()).rejects.toThrow(expectedErrorMsg)
+  }
 
-    const result = await journalApi.list()
+  const verifyPostCalledWith = (url: string, body: any) => {
+    expect(mockedPost).toHaveBeenCalledWith(url, body)
+  }
 
-    expect(result).toEqual([])
-  })
-
-  it('propaga errores del backend', async () => {
-    mockedGet.mockRejectedValueOnce(new Error('Error del servidor'))
-
-    await expect(journalApi.list()).rejects.toThrow('Error del servidor')
-  })
+  const verifyGetCalledWith = (url: string) => {
+    expect(mockedGet).toHaveBeenCalledWith(url)
+  }
 })

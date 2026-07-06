@@ -35,10 +35,14 @@ vi.mock('../../api/activities', () => ({
 import LanternsActivity from '../../pages/Lanterns/Lanterns'
 import { lanternsApi } from '../../api/lanterns'
 import { registerActivitySession } from '../../api/activities'
+import { clickButton, clearAllMocks } from '../testHelpers'
 
 describe('LanternsActivity', () => {
+  let user: ReturnType<typeof userEvent.setup>
+  let activeUnmount: () => void
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     mockRequireAuth.mockImplementation((fn: () => void) => fn())
     vi.mocked(lanternsApi.list).mockResolvedValue([
       { id: 1, text: 'Pensamiento 1', workedOn: false, createdAt: '2026-01-01T00:00:00Z' },
@@ -53,99 +57,134 @@ describe('LanternsActivity', () => {
     vi.mocked(lanternsApi.markWorkedOn).mockResolvedValue(undefined)
   })
 
-  const renderLanterns = () => {
-    const user = userEvent.setup()
-    const view = render(
+  it('renderiza la vista de faroles y lista los pensamientos', () => {
+    renderLanternsPage()
+    return waitForPensamientoVisible('Pensamiento 1')
+  })
+
+  it('no registra sesion si entra y sale sin liberar, soltar o completar', () => {
+    renderLanternsPage()
+    return waitForPensamientoVisible('Pensamiento 1').then(() => {
+      unmountLanterns()
+      verifyRegisterActivitySessionNotCalled()
+    })
+  })
+
+  it('registra sesion al salir si liberó un farol', () => {
+    renderLanternsPage()
+    return waitForPensamientoVisible('Pensamiento 1').then(() => {
+      return clickLiberarButton().then(() => {
+        unmountLanterns()
+        verifyRegisterActivitySessionCalledWithKeepalive()
+      })
+    })
+  })
+
+  it('registra sesion al salir si soltó un farol nuevo', () => {
+    setupCreateMockResponse('Pensamiento nuevo')
+    renderLanternsPage()
+    return waitForPensamientoVisible('Pensamiento 1').then(() => {
+      return typeNewPensamiento('Pensamiento nuevo').then(() => {
+        return clickSoltarButton().then(() => {
+          return waitForCreateCall('Pensamiento nuevo').then(() => {
+            unmountLanterns()
+            verifyRegisterActivitySessionCalledWithKeepalive()
+          })
+        })
+      })
+    })
+  })
+
+  it('registra sesion inmediatamente al completar un farol', () => {
+    setupListMockResponse([{ id: 1, text: 'Pensamiento 1', workedOn: true, createdAt: '2026-01-01T00:00:00Z' }])
+    renderLanternsPage()
+    return waitForPensamientoVisible('Pensamiento 1').then(() => {
+      return clickCompletarButton().then(() => {
+        return waitForCompletarVerification(1)
+      })
+    })
+  })
+
+  /* helpers */
+
+  const renderLanternsPage = () => {
+    user = userEvent.setup()
+    const { unmount } = render(
       <ThemeProvider>
         <MemoryRouter>
           <LanternsActivity />
         </MemoryRouter>
       </ThemeProvider>
     )
-    return { user, ...view }
+    activeUnmount = unmount
   }
 
-  it('renderiza la vista de faroles y lista los pensamientos', async () => {
-    renderLanterns()
-    await waitFor(() => {
-      expect(screen.getAllByText('Pensamiento 1').length).toBeGreaterThan(0)
-    })
-  })
+  const unmountLanterns = () => {
+    activeUnmount()
+  }
 
-  it('no registra sesion si entra y sale sin liberar, soltar o completar', async () => {
-    const { unmount } = renderLanterns()
-    await waitFor(() => {
-      expect(screen.getAllByText('Pensamiento 1').length).toBeGreaterThan(0)
-    })
-    unmount()
-    expect(registerActivitySession).not.toHaveBeenCalled()
-  })
+  const setupListMockResponse = (response: any) => {
+    vi.mocked(lanternsApi.list).mockResolvedValue(response)
+  }
 
-  it('registra sesion al salir si liberó un farol', async () => {
-    const { user, unmount } = renderLanterns()
-    await waitFor(() => {
-      expect(screen.getAllByText('Pensamiento 1').length).toBeGreaterThan(0)
-    })
-
-    const liberarButton = screen.getAllByRole('button', { name: 'Liberar' })[0]
-    await user.click(liberarButton)
-
-    unmount()
-
-    expect(registerActivitySession).toHaveBeenCalledTimes(1)
-    expect(registerActivitySession).toHaveBeenCalledWith({
-      activityType: 'LANTERN',
-    }, { keepalive: true })
-  })
-
-  it('registra sesion al salir si soltó un farol nuevo', async () => {
+  const setupCreateMockResponse = (text: string) => {
     vi.mocked(lanternsApi.create).mockResolvedValue({
       id: 2,
-      text: 'Pensamiento nuevo',
+      text,
       workedOn: false,
       createdAt: '2026-01-01T00:00:00Z',
     })
+  }
 
-    const { user, unmount } = renderLanterns()
-    await waitFor(() => {
-      expect(screen.getAllByText('Pensamiento 1').length).toBeGreaterThan(0)
+  const waitForPensamientoVisible = (text: string) => {
+    return waitFor(() => {
+      expect(screen.getAllByText(text).length).toBeGreaterThan(0)
     })
+  }
 
+  const clickLiberarButton = () => {
+    const liberarButton = screen.getAllByRole('button', { name: 'Liberar' })[0]
+    return user.click(liberarButton)
+  }
+
+  const typeNewPensamiento = (text: string) => {
     const input = screen.getByPlaceholderText('¿Qué te da vueltas?')
-    await user.type(input, 'Pensamiento nuevo')
-    await user.click(screen.getByRole('button', { name: 'Soltar' }))
+    return user.type(input, text)
+  }
 
-    await waitFor(() => {
-      expect(lanternsApi.create).toHaveBeenCalledWith('Pensamiento nuevo')
+  const clickSoltarButton = () => {
+    return clickButton(user, 'Soltar')
+  }
+
+  const waitForCreateCall = (text: string) => {
+    return waitFor(() => {
+      expect(lanternsApi.create).toHaveBeenCalledWith(text)
     })
+  }
 
-    unmount()
-
-    expect(registerActivitySession).toHaveBeenCalledTimes(1)
-    expect(registerActivitySession).toHaveBeenCalledWith({
-      activityType: 'LANTERN',
-    }, { keepalive: true })
-  })
-
-  it('registra sesion inmediatamente al completar un farol', async () => {
-    vi.mocked(lanternsApi.list).mockResolvedValue([
-      { id: 1, text: 'Pensamiento 1', workedOn: true, createdAt: '2026-01-01T00:00:00Z' },
-    ])
-
-    const { user } = renderLanterns()
-    await waitFor(() => {
-      expect(screen.getAllByText('Pensamiento 1').length).toBeGreaterThan(0)
-    })
-
+  const clickCompletarButton = () => {
     const completarButton = screen.getAllByRole('button', { name: 'Completar' })[0]
-    await user.click(completarButton)
+    return user.click(completarButton)
+  }
 
-    await waitFor(() => {
-      expect(lanternsApi.updateStatus).toHaveBeenCalledWith(1, 'COMPLETED')
+  const waitForCompletarVerification = (id: number) => {
+    return waitFor(() => {
+      expect(lanternsApi.updateStatus).toHaveBeenCalledWith(id, 'COMPLETED')
       expect(registerActivitySession).toHaveBeenCalledTimes(1)
       expect(registerActivitySession).toHaveBeenCalledWith({
         activityType: 'LANTERN',
       }, undefined)
     })
-  })
+  }
+
+  const verifyRegisterActivitySessionNotCalled = () => {
+    expect(registerActivitySession).not.toHaveBeenCalled()
+  }
+
+  const verifyRegisterActivitySessionCalledWithKeepalive = () => {
+    expect(registerActivitySession).toHaveBeenCalledTimes(1)
+    expect(registerActivitySession).toHaveBeenCalledWith({
+      activityType: 'LANTERN',
+    }, { keepalive: true })
+  }
 })

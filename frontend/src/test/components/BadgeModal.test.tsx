@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BadgeModal from '../../components/Badges/BadgeModal'
 import { BadgeWithStatus } from '../../hooks/useBadges'
+import { verifyTextPresent, verifyTextNotPresent, clearAllMocks } from '../testHelpers'
 
 const mockUseBadges = vi.fn()
 vi.mock('../../hooks/useBadges', () => ({ useBadges: () => mockUseBadges() }))
@@ -14,50 +15,87 @@ vi.mock('../../components/Badges/BadgeCard', () => ({
 }))
 
 
-const makeBadgeWithStatus = (code: string, unlocked: boolean): BadgeWithStatus => ({
+
+describe('BadgeModal', () => {
+    let onCloseMock: any
+
+    beforeEach(() => {
+        clearAllMocks()
+        onCloseMock = vi.fn()
+    })
+
+    it('no renderiza nada cuando isOpen es false', () => {
+        setupUseBadges([], false)
+        renderModal(false)
+        verifyTitleNotPresent()
+    })
+
+    it('muestra el titulo cuando está abierto', () => {
+        setupUseBadges([], false)
+        renderModal(true)
+        verifyTitlePresent()
+    })
+
+    it('renderiza una BadgeCard por cada insignia', () => {
+        setupUseBadges([
+            makeBadgeWithStatus('PRIMER_PASO', true),
+            makeBadgeWithStatus('VALENTIA', false),
+        ], false)
+        renderModal(true)
+        verifyBadgeCardsCount(2)
+    })
+
+    it('muestra loading mientras se cargan las insignias', () => {
+        setupUseBadges([], true)
+        renderModal(true)
+        verifyLoadingStatePresent()
+    })
+
+    it('llama onClose al hacer click en cerrar', () => {
+        setupUseBadges([], false)
+        renderModal(true)
+        return clickCloseButton().then(() => {
+            verifyOnCloseCalled()
+        })
+    })
+    const setupUseBadges = (badges: BadgeWithStatus[], loading: boolean, error: string | null = null) => {
+        mockUseBadges.mockReturnValue({ badges, loading, error })
+    }
+
+    const renderModal = (isOpen: boolean) => {
+        render(<BadgeModal isOpen={isOpen} onClose={onCloseMock} />)
+    }
+
+    const verifyTitlePresent = () => {
+        verifyTextPresent('Mis estampitas')
+    }
+
+    const verifyTitleNotPresent = () => {
+        verifyTextNotPresent('Mis estampitas')
+    }
+
+    const verifyBadgeCardsCount = (count: number) => {
+        expect(screen.getAllByTestId('badge-card')).toHaveLength(count)
+    }
+
+    const verifyLoadingStatePresent = () => {
+        verifyTextPresent('Cargando estampitas...')
+    }
+
+    const clickCloseButton = () => {
+        const user = userEvent.setup()
+        return user.click(screen.getByRole('button', { name: 'Cerrar' }))
+    }
+
+    const verifyOnCloseCalled = () => {
+        expect(onCloseMock).toHaveBeenCalledOnce()
+    }
+})
+
+function makeBadgeWithStatus(code: string, unlocked: boolean): BadgeWithStatus {
+  return ({
     badge: { id:1, code, name: code, description: null, imageUrl: null, createdAt: '' }, 
     unlocked, 
     obtainedAt: unlocked ? '2026-01-01T00:00:00.000Z' : null
 })
-
-describe('BadgeModal', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    it('no renderiza nada cuando isOpen es false', () => {
-        mockUseBadges.mockReturnValue({ badges: [], loading: false, error: null })
-        render(<BadgeModal isOpen={false} onClose={() => {}} />)
-        expect(screen.queryByText('Mis estampitas')).not.toBeInTheDocument()
-    })
-
-    it('muestra el titulo cuando está abierto', () => {
-        mockUseBadges.mockReturnValue({ badges: [], loading: false, error: null })
-        render(<BadgeModal isOpen onClose={() => {}} />)
-        expect(screen.getByText('Mis estampitas')).toBeInTheDocument()
-    })
-
-    it('renderiza una BadgeCard por cada insignia', () => {
-        mockUseBadges.mockReturnValue({ badges: [
-            makeBadgeWithStatus('PRIMER_PASO', true),
-            makeBadgeWithStatus('VALENTIA', false),
-        ], loading: false, error: null })
-        render(<BadgeModal isOpen={true} onClose={() => {}} />)
-        expect(screen.getAllByTestId('badge-card')).toHaveLength(2)
-    })
-
-    it('muestra loading mientras se cargan las insignias', () => {
-        mockUseBadges.mockReturnValue({ badges: [], loading: true, error: null })
-        render(<BadgeModal isOpen={true} onClose={() => {}} />)
-        expect(screen.getByText('Cargando estampitas...')).toBeInTheDocument()
-    })
-
-    it('llama onClose al hacer click en cerrar', async () => {
-        mockUseBadges.mockReturnValue({ badges: [], loading: false, error: null })
-        const onClose = vi.fn()
-        render(<BadgeModal isOpen={true} onClose={onClose} />)
-        await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
-        expect(onClose).toHaveBeenCalledOnce()
-    })
-
-})
+}

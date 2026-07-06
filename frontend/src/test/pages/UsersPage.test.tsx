@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import UsersPage from '../../pages/Backoffice/UsersPage'
 import UserDetailPage from '../../pages/Backoffice/UserDetailPage'
 import * as adminApi from '../../api/admin'
+import { verifyTextPresent, verifyTextNotPresent, clearAllMocks } from '../testHelpers'
 
 vi.mock('../../api/admin', () => ({
   getUsers: vi.fn(),
@@ -57,8 +58,10 @@ const mockUsersList = [
 ]
 
 describe('UsersPage', () => {
+  let user: ReturnType<typeof userEvent.setup>
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     mockedGetUsers.mockImplementation(async (search?: string) => {
       if (!search) return mockUsersList
       return mockUsersList.filter(
@@ -115,17 +118,49 @@ describe('UsersPage', () => {
   })
 
   it('muestra el estado cargando inicialmente', () => {
-    mockedGetUsers.mockReturnValue(new Promise(() => {}))
-    render(
-      <MemoryRouter>
-        <UsersPage />
-      </MemoryRouter>
-    )
-    expect(screen.getByText('Cargando usuarios...')).toBeInTheDocument()
+    setupGetUsersPending()
+    renderUsersPage()
+    verifyLoadingUsersMessageVisible()
   })
 
-  it('renderiza la lista de usuarios correctamente', async () => {
-    mockedGetUsers.mockResolvedValue([
+  it('renderiza la lista de usuarios correctamente', () => {
+    setupGetUsersResolved(mockUsersList)
+    renderUsersPage()
+    return waitForLoadingUsersToDisappear().then(() => {
+      verifyUsersListVisible()
+    })
+  })
+
+  it('filtra usuarios por busqueda', () => {
+    renderUsersPage()
+    return waitForLoadingUsersToDisappear().then(() => {
+      return typeSearchTermAndSubmit('Smith').then(() => {
+        verifyOnlySmithUserVisible()
+      })
+    })
+  })
+
+  it('navega a detalle al hacer click en el ojo y regresa', () => {
+    setupSingleUserDetailMockResponse()
+    renderUsersWithRoutes()
+    return waitForLoadingUsersToDisappear().then(() => {
+      return clickDetailButtonFor('John Doe').then(() => {
+        return waitForUserDetailHeaderVisible().then(() => {
+          verifyEmailVisibleInDetail('john@example.com')
+          return clickAntiscrollTab().then(() => {
+            return waitForDomainVisible('instagram.com').then(() => {
+              return clickBackLink().then(() => {
+                verifyBackToUsersList('John Doe')
+              })
+            })
+          })
+        })
+      })
+    })
+  })
+
+  it('no muestra las estadísticas si el usuario no tiene habilitado antiscroll', () => {
+    setupGetUsersResolved([
       {
         id: 2,
         name: 'John Doe',
@@ -133,67 +168,62 @@ describe('UsersPage', () => {
         role: 'USER',
         status: 'ACTIVE',
         birthDate: '2000-01-01',
-        antiScrollEnabled: true,
+        antiScrollEnabled: false,
         dataSharingConsent: true,
         mostUsedApp: 'instagram.com',
         mostUsedAppActiveSeconds: 3600,
         totalScrollTimeSeconds: 5000,
       },
-      {
-        id: 3,
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        role: 'USER',
-        status: 'ACTIVE',
-        birthDate: null,
-        antiScrollEnabled: false,
-        dataSharingConsent: false,
-        mostUsedApp: null,
-        mostUsedAppActiveSeconds: 0,
-        totalScrollTimeSeconds: 0,
-      },
     ])
+    renderUserDetailPageOnly(2)
+    return waitForUserDetailHeaderVisible().then(() => {
+      verifyAntiScrollStatsNotVisible()
+    })
+  })
 
+  /* helpers */
+
+  const renderUsersPage = () => {
+    user = userEvent.setup()
     render(
       <MemoryRouter>
         <UsersPage />
       </MemoryRouter>
     )
+  }
 
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument()
-    })
-
-    expect(screen.getAllByText('John Doe')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('john@example.com')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('Jane Doe')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('jane@example.com')[0]).toBeInTheDocument()
-  })
-
-  it('filtra usuarios por busqueda', async () => {
-    const user = userEvent.setup()
-
+  const renderUsersWithRoutes = () => {
+    user = userEvent.setup()
     render(
-      <MemoryRouter>
-        <UsersPage />
+      <MemoryRouter initialEntries={['/backoffice/usuarios']}>
+        <Routes>
+          <Route path="/backoffice/usuarios" element={<UsersPage />} />
+          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
+        </Routes>
       </MemoryRouter>
     )
+  }
 
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument()
-    })
+  const renderUserDetailPageOnly = (userId: number) => {
+    user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={[`/backoffice/usuarios/${userId}`]}>
+        <Routes>
+          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+  }
 
-    const searchInput = screen.getByPlaceholderText('Buscar por nombre o email...')
-    await user.type(searchInput, 'Smith{enter}')
+  const setupGetUsersPending = () => {
+    mockedGetUsers.mockReturnValue(new Promise(() => {}))
+  }
 
-    await waitFor(() => {
-      expect(screen.queryAllByText('John Doe')).toHaveLength(0)
-    })
-    expect(screen.getAllByText('Jane Smith')[0]).toBeInTheDocument()
-  })
+  const setupGetUsersResolved = (list: any[]) => {
+    mockedGetUsers.mockResolvedValue(list)
+  }
 
-  it('navega a detalle al hacer click en el ojo y regresa', async () => {
-    const user = userEvent.setup()
+  const setupSingleUserDetailMockResponse = () => {
     mockedGetUsers.mockResolvedValue([
       {
         id: 2,
@@ -225,65 +255,73 @@ describe('UsersPage', () => {
         },
       },
     ])
+  }
 
-    render(
-      <MemoryRouter initialEntries={['/backoffice/usuarios']}>
-        <Routes>
-          <Route path="/backoffice/usuarios" element={<UsersPage />} />
-          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+  const verifyLoadingUsersMessageVisible = () => {
+    verifyTextPresent('Cargando usuarios...')
+  }
 
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument()
+  const waitForLoadingUsersToDisappear = () => {
+    return waitFor(() => {
+      verifyTextNotPresent('Cargando usuarios...')
     })
+  }
 
-    const detailBtn = screen.getAllByLabelText('Ver detalles de John Doe')[0]
-    await user.click(detailBtn)
-
-    expect(await screen.findByText('Detalle de usuario')).toBeInTheDocument()
-    expect(screen.getAllByText('john@example.com')[0]).toBeInTheDocument()
-
-    const antiscrollTab = screen.getByRole('button', { name: /Antiscroll/i })
-    await user.click(antiscrollTab)
-
-    expect(await screen.findByText('instagram.com')).toBeInTheDocument()
-
-    const backBtn = screen.getByLabelText('volver')
-    await user.click(backBtn)
-
-    expect(screen.queryByText('Detalle de usuario')).not.toBeInTheDocument()
+  const verifyUsersListVisible = () => {
     expect(screen.getAllByText('John Doe')[0]).toBeInTheDocument()
-  })
+    expect(screen.getAllByText('john@example.com')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Jane Smith')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('jane@example.com')[0]).toBeInTheDocument()
+  }
 
-  it('no muestra las estadísticas si el usuario no tiene habilitado antiscroll', async () => {
-    mockedGetUsers.mockResolvedValue([
-      {
-        id: 2,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'USER',
-        status: 'ACTIVE',
-        birthDate: '2000-01-01',
-        antiScrollEnabled: false,
-        dataSharingConsent: true,
-        mostUsedApp: 'instagram.com',
-        mostUsedAppActiveSeconds: 3600,
-        totalScrollTimeSeconds: 5000,
-      },
-    ])
+  const typeSearchTermAndSubmit = (term: string) => {
+    const searchInput = screen.getByPlaceholderText('Buscar por nombre o email...')
+    return user.type(searchInput, `${term}{enter}`)
+  }
 
-    render(
-      <MemoryRouter initialEntries={['/backoffice/usuarios/2']}>
-        <Routes>
-          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+  const verifyOnlySmithUserVisible = () => {
+    expect(screen.queryAllByText('John Doe')).toHaveLength(0)
+    expect(screen.getAllByText('Jane Smith')[0]).toBeInTheDocument()
+  }
 
-    expect(await screen.findByText('Detalle de usuario')).toBeInTheDocument()
-    expect(screen.queryByText('Tiempo scrolleando por día')).not.toBeInTheDocument()
-    expect(screen.queryByText('Tiempo en cada dominio')).not.toBeInTheDocument()
-  })
+  const clickDetailButtonFor = (name: string) => {
+    const detailBtn = screen.getAllByLabelText(`Ver detalles de ${name}`)[0]
+    return user.click(detailBtn)
+  }
+
+  const waitForUserDetailHeaderVisible = () => {
+    return screen.findByText('Detalle de usuario').then(el => {
+      expect(el).toBeInTheDocument()
+    })
+  }
+
+  const verifyEmailVisibleInDetail = (email: string) => {
+    expect(screen.getAllByText(email)[0]).toBeInTheDocument()
+  }
+
+  const clickAntiscrollTab = () => {
+    const antiscrollTab = screen.getByRole('button', { name: 'Antiscroll' })
+    return user.click(antiscrollTab)
+  }
+
+  const waitForDomainVisible = (domain: string) => {
+    return screen.findByText(domain).then(el => {
+      expect(el).toBeInTheDocument()
+    })
+  }
+
+  const clickBackLink = () => {
+    const backBtn = screen.getByLabelText('volver')
+    return user.click(backBtn)
+  }
+
+  const verifyBackToUsersList = (name: string) => {
+    verifyTextNotPresent('Detalle de usuario')
+    expect(screen.getAllByText(name)[0]).toBeInTheDocument()
+  }
+
+  const verifyAntiScrollStatsNotVisible = () => {
+    verifyTextNotPresent('Tiempo scrolleando por día')
+    verifyTextNotPresent('Tiempo en cada dominio')
+  }
 })

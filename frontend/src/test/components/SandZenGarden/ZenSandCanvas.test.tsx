@@ -15,11 +15,60 @@ class MockResizeObserver {
   disconnect = vi.fn()
 }
 
-const createGradient = () => ({
-  addColorStop: vi.fn(),
+
+
+
+
+describe('ZenSandCanvas', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', MockResizeObserver)
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      createContext() as unknown as CanvasRenderingContext2D,
+    )
+  })
+
+  it('renderiza el marco del arenero y limita la superficie interactiva al canvas interno', () => {
+    renderDefaultCanvas()
+    verifyInteractiveSurfaceHasClass('zen-sand__canvas')
+    verifyExportButtonHasClass('zen-sand__export-button')
+    verifyClearButtonHasClass('zen-sand__clear-button')
+    verifyFrameImagePresent()
+  })
+  let renderResult: any
+
+  /* helpers */
+
+  const renderDefaultCanvas = () => {
+    renderResult = render(<ZenSandCanvas onDraw={vi.fn()} />)
+  }
+
+  const verifyInteractiveSurfaceHasClass = (className: string) => {
+    expect(
+      screen.getByLabelText('Superficie de arena interactiva para dibujar'),
+    ).toHaveClass(className)
+  }
+
+  const verifyExportButtonHasClass = (className: string) => {
+    expect(screen.getByRole('button', { name: 'Descargar dibujo de arena' })).toHaveClass(className)
+  }
+
+  const verifyClearButtonHasClass = (className: string) => {
+    expect(screen.getByRole('button', { name: 'Limpiar arena y borrar todos los trazos' })).toHaveClass(className)
+  }
+
+  const verifyFrameImagePresent = () => {
+    expect(renderResult.container.querySelector('.zen-sand__frame-image')).toBeInTheDocument()
+  }
 })
 
-const createContext = () => ({
+function createGradient() {
+  return ({
+  addColorStop: vi.fn(),
+})
+}
+
+function createContext() {
+  return ({
   setTransform: vi.fn(),
   clearRect: vi.fn(),
   createLinearGradient: vi.fn(createGradient),
@@ -38,23 +87,4 @@ const createContext = () => ({
   lineWidth: 0,
   strokeStyle: '',
 })
-
-describe('ZenSandCanvas', () => {
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', MockResizeObserver)
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-      createContext() as unknown as CanvasRenderingContext2D,
-    )
-  })
-
-  it('renderiza el marco del arenero y limita la superficie interactiva al canvas interno', () => {
-    const { container } = render(<ZenSandCanvas onDraw={vi.fn()} />)
-
-    expect(
-      screen.getByLabelText('Superficie de arena interactiva para dibujar'),
-    ).toHaveClass('zen-sand__canvas')
-    expect(screen.getByRole('button', { name: /descargar dibujo de arena/i })).toHaveClass('zen-sand__export-button')
-    expect(screen.getByRole('button', { name: /limpiar arena/i })).toHaveClass('zen-sand__clear-button')
-    expect(container.querySelector('.zen-sand__frame-image')).toBeInTheDocument()
-  })
-})
+}

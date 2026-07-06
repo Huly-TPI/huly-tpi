@@ -1,3 +1,4 @@
+import { clearAllMocks, setupMockedGetResponse, setupMockedPostResponse, setupMockedPutResponse } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { userGoalsApi } from '../../api/userGoals'
 import { api } from '../../api/client'
@@ -20,60 +21,133 @@ const mockedDelete = vi.mocked(api.delete)
 
 describe('userGoalsApi', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
   })
 
-  it('getForCurrentUser llama a GET /user-goals/me con paginación por defecto', async () => {
-    mockedGet.mockResolvedValueOnce({ completados: { content: [] }, pendientes: { content: [] } } as never)
-    await userGoalsApi.getForCurrentUser()
-    expect(mockedGet).toHaveBeenCalledWith('/user-goals/me?page=0&size=50')
-  })
-
-  it('getForCurrentUser reenvía paginación personalizada', async () => {
-    mockedGet.mockResolvedValueOnce({ completados: { content: [] }, pendientes: { content: [] } } as never)
-    await userGoalsApi.getForCurrentUser(2, 10)
-    expect(mockedGet).toHaveBeenCalledWith('/user-goals/me?page=2&size=10')
-  })
-
-  it('create llama a POST /user-goals con los datos', async () => {
-    mockedPost.mockResolvedValueOnce({ id: 1 } as never)
-    await userGoalsApi.create({ title: 'Reto 1' })
-    expect(mockedPost).toHaveBeenCalledWith('/user-goals', { title: 'Reto 1' })
-  })
-
-  it('create incluye descripción opcional si se provee', async () => {
-    mockedPost.mockResolvedValueOnce({ id: 2 } as never)
-    await userGoalsApi.create({ title: 'Reto', description: 'Descripción', activityId: 5 })
-    expect(mockedPost).toHaveBeenCalledWith('/user-goals', {
-      title: 'Reto',
-      description: 'Descripción',
-      activityId: 5,
+  it('getForCurrentUser llama a GET /user-goals/me con paginación por defecto', () => {
+    setupMockedGetResponse({ completados: { content: [] }, pendientes: { content: [] } })
+    return callGetForCurrentUser().then(() => {
+      verifyGetCalledWith('/user-goals/me?page=0&size=50')
     })
   })
 
-  it('update llama a PUT /user-goals/{id} con los datos', async () => {
-    mockedPut.mockResolvedValueOnce({ id: 5 } as never)
-    await userGoalsApi.update(5, { title: 'Actualizado' })
-    expect(mockedPut).toHaveBeenCalledWith('/user-goals/5', { title: 'Actualizado' })
+  it('getForCurrentUser reenvía paginación personalizada', () => {
+    setupMockedGetResponse({ completados: { content: [] }, pendientes: { content: [] } })
+    return callGetForCurrentUser(2, 10).then(() => {
+      verifyGetCalledWith('/user-goals/me?page=2&size=10')
+    })
   })
 
-  it('delete llama a DELETE /user-goals/{id}', async () => {
-    mockedDelete.mockResolvedValueOnce(undefined as never)
-    await userGoalsApi.delete(3)
-    expect(mockedDelete).toHaveBeenCalledWith('/user-goals/3')
+  it('create llama a POST /user-goals con los datos', () => {
+    setupMockedPostResponse({ id: 1 })
+    return callCreate({ title: 'Reto 1' }).then(() => {
+      verifyPostCalledWith('/user-goals', { title: 'Reto 1' })
+    })
   })
 
-  it('complete llama a PATCH /user-goals/{id}/complete con FormData', async () => {
-    mockedPatch.mockResolvedValueOnce({ id: 7, status: 'COMPLETED' } as never)
-    await userGoalsApi.complete(7)
-    expect(mockedPatch).toHaveBeenCalledWith('/user-goals/7/complete', expect.any(FormData))
+  it('create incluye descripción opcional si se provee', () => {
+    setupMockedPostResponse({ id: 2 })
+    return callCreate({ title: 'Reto', description: 'Descripción', activityId: 5 }).then(() => {
+      verifyPostCalledWith('/user-goals', {
+        title: 'Reto',
+        description: 'Descripción',
+        activityId: 5,
+      })
+    })
   })
 
-  it('complete incluye la imagen en el FormData cuando se provee', async () => {
-    mockedPatch.mockResolvedValueOnce({ id: 7, status: 'COMPLETED' } as never)
+  it('update llama a PUT /user-goals/{id} con los datos', () => {
+    setupMockedPutResponse({ id: 5 })
+    return callUpdate(5, { title: 'Actualizado' }).then(() => {
+      verifyPutCalledWith('/user-goals/5', { title: 'Actualizado' })
+    })
+  })
+
+  it('delete llama a DELETE /user-goals/{id}', () => {
+    setupMockedDeleteResponse(undefined)
+    return callDelete(3).then(() => {
+      verifyDeleteCalledWith('/user-goals/3')
+    })
+  })
+
+  it('complete llama a PATCH /user-goals/{id}/complete con FormData', () => {
+    setupMockedPatchResponse({ id: 7, status: 'COMPLETED' })
+    return callComplete(7).then(() => {
+      verifyPatchCalledWith('/user-goals/7/complete', expect.any(FormData))
+    })
+  })
+
+  it('complete incluye la imagen en el FormData cuando se provee', () => {
+    setupMockedPatchResponse({ id: 7, status: 'COMPLETED' })
+    return callCompleteWithDummyFile(7).then(() => {
+      verifyPatchCalledWithDummyFile()
+    })
+  })
+
+  /* helpers */
+
+  
+
+  
+
+  
+
+  const setupMockedDeleteResponse = (response: any) => {
+    mockedDelete.mockResolvedValueOnce(response as never)
+  }
+
+  const setupMockedPatchResponse = (response: any) => {
+    mockedPatch.mockResolvedValueOnce(response as never)
+  }
+
+  const callGetForCurrentUser = (page?: number, size?: number) => {
+    return userGoalsApi.getForCurrentUser(page, size)
+  }
+
+  const callCreate = (dto: any) => {
+    return userGoalsApi.create(dto)
+  }
+
+  const callUpdate = (id: number, dto: any) => {
+    return userGoalsApi.update(id, dto)
+  }
+
+  const callDelete = (id: number) => {
+    return userGoalsApi.delete(id)
+  }
+
+  const callComplete = (id: number) => {
+    return userGoalsApi.complete(id)
+  }
+
+  const callCompleteWithDummyFile = (id: number) => {
     const file = new File(['img'], 'foto.jpg', { type: 'image/jpeg' })
-    await userGoalsApi.complete(7, file)
+    return userGoalsApi.complete(id, file)
+  }
+
+  const verifyGetCalledWith = (url: string) => {
+    expect(mockedGet).toHaveBeenCalledWith(url)
+  }
+
+  const verifyPostCalledWith = (url: string, body: any) => {
+    expect(mockedPost).toHaveBeenCalledWith(url, body)
+  }
+
+  const verifyPutCalledWith = (url: string, body: any) => {
+    expect(mockedPut).toHaveBeenCalledWith(url, body)
+  }
+
+  const verifyDeleteCalledWith = (url: string) => {
+    expect(mockedDelete).toHaveBeenCalledWith(url)
+  }
+
+  const verifyPatchCalledWith = (url: string, body: any) => {
+    expect(mockedPatch).toHaveBeenCalledWith(url, body)
+  }
+
+  const verifyPatchCalledWithDummyFile = () => {
     const [, formData] = mockedPatch.mock.calls[0] as [string, FormData]
-    expect(formData.get('image')).toBe(file)
-  })
+    expect(formData.get('image')).toBeInstanceOf(File)
+    expect((formData.get('image') as File).name).toBe('foto.jpg')
+  }
 })

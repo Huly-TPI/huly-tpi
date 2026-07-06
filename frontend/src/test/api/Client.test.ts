@@ -8,16 +8,11 @@ import {
   SessionExpiredError,
 } from '../../api/client'
 
-function mockResponse(status: number, body: unknown = {}) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: () => Promise.resolve(body),
-    text: () => Promise.resolve(body ? JSON.stringify(body) : ''),
-  } as Response
-}
+
 
 describe('client', () => {
+  let authExpiredSpy: any
+
   beforeEach(() => {
     clearToken()
     vi.restoreAllMocks()
@@ -30,150 +25,219 @@ describe('client', () => {
 
   describe('manejo del token', () => {
     it('setToken y getToken funcionan', () => {
-      setToken('abc')
-      expect(getToken()).toBe('abc')
+      return callSetTokenAndVerifyGetToken('abc')
     })
 
     it('clearToken borra el token', () => {
-      setToken('abc')
-      clearToken()
-      expect(getToken()).toBeNull()
+      return callSetTokenClearAndVerifyNull('abc')
     })
 
     it('getToken devuelve null si nunca se seteó', () => {
-      expect(getToken()).toBeNull()
+      return verifyGetTokenIsNull()
     })
   })
 
   describe('request', () => {
-    it('incluye el header Authorization si hay token', async () => {
-      setToken('my-token')
-      const fetchMock = vi
-        .spyOn(global, 'fetch')
-        .mockResolvedValue(mockResponse(200, { ok: true }))
-
-      await api.get('/test')
-
-      const [, options] = fetchMock.mock.calls[0]
-      expect((options?.headers as Record<string, string>).Authorization).toBe(
-        'Bearer my-token',
-      )
+    it('incluye el header Authorization si hay token', () => {
+      setupToken('my-token')
+      setupSpyFetchResponse(200, { ok: true })
+      return callApiGet('/test').then(() => {
+        verifyFetchHeadersAuthorization('Bearer my-token')
+      })
     })
 
-    it('no incluye Authorization si no hay token', async () => {
-      const fetchMock = vi
-        .spyOn(global, 'fetch')
-        .mockResolvedValue(mockResponse(200, {}))
-
-      await api.get('/test')
-
-      const [, options] = fetchMock.mock.calls[0]
-      expect(
-        (options?.headers as Record<string, string>).Authorization,
-      ).toBeUndefined()
+    it('no incluye Authorization si no hay token', () => {
+      setupSpyFetchResponse(200, {})
+      return callApiGet('/test').then(() => {
+        verifyFetchHeadersAuthorizationUndefined()
+      })
     })
 
-    it('devuelve el body parseado en éxito', async () => {
-      vi.spyOn(global, 'fetch').mockResolvedValue(
-        mockResponse(200, { id: 1, name: 'Mili' }),
-      )
-
-      const result = await api.get<{ id: number; name: string }>('/test')
-
-      expect(result).toEqual({ id: 1, name: 'Mili' })
+    it('devuelve el body parseado en éxito', () => {
+      setupSpyFetchResponse(200, { id: 1, name: 'Mili' })
+      return callApiGetAndVerifyResponse('/test', { id: 1, name: 'Mili' })
     })
 
-    it('lanza ApiError en respuesta no-ok sin retry', async () => {
-      vi.spyOn(global, 'fetch').mockResolvedValue(
-        mockResponse(400, { message: 'Bad request' }),
-      )
-
-      await expect(api.get('/test')).rejects.toThrow('Bad request')
+    it('lanza ApiError en respuesta no-ok sin retry', () => {
+      setupSpyFetchResponse(400, { message: 'Bad request' })
+      return verifyApiGetThrowsError('/test', 'Bad request')
     })
   })
 
   describe('retry de refresh en 401', () => {
-    it('reintenta el request tras refrescar el token con éxito', async () => {
-      setToken('expired-token')
-      const fetchMock = vi
-        .spyOn(global, 'fetch')
-        .mockResolvedValueOnce(mockResponse(401, {}))
-        .mockResolvedValueOnce(mockResponse(200, { accessToken: 'fresh-token' }))
-        .mockResolvedValueOnce(mockResponse(200, { data: 'ok' }))
-
-      const result = await api.get<{ data: string }>('/protected')
-
-      expect(result).toEqual({ data: 'ok' })
-      expect(getToken()).toBe('fresh-token')
-      expect(fetchMock).toHaveBeenCalledTimes(3)
+    it('reintenta el request tras refrescar el token con éxito', () => {
+      setupToken('expired-token')
+      setupSpyFetchResponses([
+        mockResponse(401, {}),
+        mockResponse(200, { accessToken: 'fresh-token' }),
+        mockResponse(200, { data: 'ok' }),
+      ])
+      return callApiGetAndVerifyResponse('/protected', { data: 'ok' }).then(() => {
+        verifyGetTokenEquals('fresh-token')
+        verifyFetchCalledTimes(3)
+      })
     })
 
-    it('limpia el token, emite auth:expired y lanza SessionExpiredError si el refresh falla', async () => {
-      setToken('expired-token')
-      const expiredHandler = vi.fn()
-      window.addEventListener('auth:expired', expiredHandler)
-
-      vi.spyOn(global, 'fetch')
-        .mockResolvedValueOnce(mockResponse(401, {}))
-        .mockResolvedValueOnce(mockResponse(401, {}))
-
-      await expect(api.get('/protected')).rejects.toBeInstanceOf(SessionExpiredError)
-      expect(getToken()).toBeNull()
-      expect(expiredHandler).toHaveBeenCalled()
-
-      window.removeEventListener('auth:expired', expiredHandler)
+    it('limpia el token, emite auth:expired y lanza SessionExpiredError si el refresh falla', () => {
+      setupToken('expired-token')
+      setupAuthExpiredListener()
+      setupSpyFetchResponses([
+        mockResponse(401, {}),
+        mockResponse(401, {}),
+      ])
+      return verifyApiGetThrowsSessionExpiredError('/protected').then(() => {
+        verifyGetTokenIsNull()
+        verifyAuthExpiredListenerCalled()
+        cleanupAuthExpiredListener()
+      })
     })
 
-    it('no reintenta infinitamente (un solo refresh)', async () => {
-      setToken('expired-token')
-      const fetchMock = vi
-        .spyOn(global, 'fetch')
-        .mockResolvedValueOnce(mockResponse(401, {}))
-        .mockResolvedValueOnce(mockResponse(200, { accessToken: 'fresh' }))
-        .mockResolvedValueOnce(mockResponse(401, {}))
-
-      await expect(api.get('/protected')).rejects.toThrow()
-      expect(fetchMock).toHaveBeenCalledTimes(3)
+    it('no reintenta infinitamente (un solo refresh)', () => {
+      setupToken('expired-token')
+      setupSpyFetchResponses([
+        mockResponse(401, {}),
+        mockResponse(200, { accessToken: 'fresh' }),
+        mockResponse(401, {}),
+      ])
+      return verifyApiGetThrowsAnyError('/protected').then(() => {
+        verifyFetchCalledTimes(3)
+      })
     })
   })
 
   describe('tryRehydrateSession', () => {
-    it('devuelve el accessToken y lo guarda en memoria si el refresh es exitoso', async () => {
-      vi.spyOn(global, 'fetch').mockResolvedValue(
-        mockResponse(200, { accessToken: 'rehydrated-token' }),
-      )
-
-      const result = await tryRehydrateSession()
-
-      expect(result).toBe('rehydrated-token')
-      expect(getToken()).toBe('rehydrated-token')
+    it('devuelve el accessToken y lo guarda en memoria si el refresh es exitoso', () => {
+      setupSpyFetchResponse(200, { accessToken: 'rehydrated-token' })
+      return callTryRehydrateSessionAndVerify('rehydrated-token').then(() => {
+        verifyGetTokenEquals('rehydrated-token')
+      })
     })
 
-    it('devuelve null y no setea token si el refresh responde no-ok', async () => {
-      vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse(401, {}))
-
-      const result = await tryRehydrateSession()
-
-      expect(result).toBeNull()
-      expect(getToken()).toBeNull()
+    it('devuelve null y no setea token si el refresh responde no-ok', () => {
+      setupSpyFetchResponse(401, {})
+      return callTryRehydrateSessionAndVerify(null).then(() => {
+        verifyGetTokenIsNull()
+      })
     })
 
-    it('devuelve null si el body no trae accessToken', async () => {
-      vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse(200, {}))
-
-      const result = await tryRehydrateSession()
-
-      expect(result).toBeNull()
-      expect(getToken()).toBeNull()
+    it('devuelve null si el body no trae accessToken', () => {
+      setupSpyFetchResponse(200, {})
+      return callTryRehydrateSessionAndVerify(null).then(() => {
+        verifyGetTokenIsNull()
+      })
     })
 
-    it('devuelve null si el fetch lanza una excepción', async () => {
-      vi.spyOn(global, 'fetch').mockRejectedValue(new Error('Network down'))
-
-      const result = await tryRehydrateSession()
-
-      expect(result).toBeNull()
-      expect(getToken()).toBeNull()
+    it('devuelve null si el fetch lanza una excepción', () => {
+      setupSpyFetchRejectedError(new Error('Network down'))
+      return callTryRehydrateSessionAndVerify(null).then(() => {
+        verifyGetTokenIsNull()
+      })
     })
   })
+
+  /* helpers */
+
+  const setupToken = (token: string) => {
+    setToken(token)
+  }
+
+  const callSetTokenAndVerifyGetToken = (token: string) => {
+    setToken(token)
+    expect(getToken()).toBe(token)
+  }
+
+  const callSetTokenClearAndVerifyNull = (token: string) => {
+    setToken(token)
+    clearToken()
+    expect(getToken()).toBeNull()
+  }
+
+  const verifyGetTokenIsNull = () => {
+    expect(getToken()).toBeNull()
+  }
+
+  const verifyGetTokenEquals = (expected: string) => {
+    expect(getToken()).toBe(expected)
+  }
+
+  const setupSpyFetchResponse = (status: number, body: any) => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse(status, body))
+  }
+
+  const setupSpyFetchResponses = (responses: Response[]) => {
+    const fetchSpy = vi.spyOn(global, 'fetch')
+    responses.forEach((res) => {
+      fetchSpy.mockResolvedValueOnce(res)
+    })
+  }
+
+  const setupSpyFetchRejectedError = (error: Error) => {
+    vi.spyOn(global, 'fetch').mockRejectedValue(error)
+  }
+
+  const callApiGet = (url: string) => {
+    return api.get(url)
+  }
+
+  const callApiGetAndVerifyResponse = (url: string, expectedBody: any) => {
+    return api.get(url).then((res) => {
+      expect(res).toEqual(expectedBody)
+    })
+  }
+
+  const verifyApiGetThrowsError = (url: string, expectedMsg: string) => {
+    return expect(api.get(url)).rejects.toThrow(expectedMsg)
+  }
+
+  const verifyApiGetThrowsSessionExpiredError = (url: string) => {
+    return expect(api.get(url)).rejects.toBeInstanceOf(SessionExpiredError)
+  }
+
+  const verifyApiGetThrowsAnyError = (url: string) => {
+    return expect(api.get(url)).rejects.toThrow()
+  }
+
+  const callTryRehydrateSessionAndVerify = (expectedResult: string | null) => {
+    return tryRehydrateSession().then((res) => {
+      expect(res).toBe(expectedResult)
+    })
+  }
+
+  const verifyFetchHeadersAuthorization = (expectedAuth: string) => {
+    const fetchMock = vi.mocked(global.fetch)
+    const [, options] = fetchMock.mock.calls[0]
+    expect((options?.headers as Record<string, string>).Authorization).toBe(expectedAuth)
+  }
+
+  const verifyFetchHeadersAuthorizationUndefined = () => {
+    const fetchMock = vi.mocked(global.fetch)
+    const [, options] = fetchMock.mock.calls[0]
+    expect((options?.headers as Record<string, string>).Authorization).toBeUndefined()
+  }
+
+  const verifyFetchCalledTimes = (times: number) => {
+    expect(global.fetch).toHaveBeenCalledTimes(times)
+  }
+
+  const setupAuthExpiredListener = () => {
+    authExpiredSpy = vi.fn()
+    window.addEventListener('auth:expired', authExpiredSpy)
+  }
+
+  const verifyAuthExpiredListenerCalled = () => {
+    expect(authExpiredSpy).toHaveBeenCalled()
+  }
+
+  const cleanupAuthExpiredListener = () => {
+    window.removeEventListener('auth:expired', authExpiredSpy)
+  }
 })
+
+function mockResponse(status: number, body: unknown = {}) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(body ? JSON.stringify(body) : ''),
+  } as Response
+}

@@ -1,3 +1,4 @@
+import { clearAllMocks, setupMockedGetResponse, setupMockedGetError, setupMockedPostResponse, setupMockedPostError } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getExtensionSettings, saveExtensionSettings } from '../../api/extension'
 import type { ExtensionSettings } from '../../api/extension'
@@ -24,39 +25,70 @@ const sampleSettings: ExtensionSettings = {
 
 describe('extensionApi', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
   })
 
   describe('getExtensionSettings', () => {
-    it('llama a GET /extension/settings y retorna el resultado', async () => {
-      mockedGet.mockResolvedValueOnce(sampleSettings)
-
-      const res = await getExtensionSettings()
-
-      expect(mockedGet).toHaveBeenCalledWith('/extension/settings')
-      expect(res).toEqual(sampleSettings)
+    it('llama a GET /extension/settings y retorna el resultado', () => {
+      setupMockedGetResponse(sampleSettings)
+      return callGetExtensionSettingsAndVerify(sampleSettings).then(() => {
+        verifyGetCalledWith('/extension/settings')
+      })
     })
 
-    it('propaga errores del api client', async () => {
-      mockedGet.mockRejectedValueOnce(new Error('Network Error'))
-
-      await expect(getExtensionSettings()).rejects.toThrow('Network Error')
+    it('propaga errores del api client', () => {
+      setupMockedGetError(new Error('Network Error'))
+      return verifyGetExtensionSettingsThrows('Network Error')
     })
   })
 
   describe('saveExtensionSettings', () => {
-    it('llama a POST /extension/settings con los datos del body', async () => {
-      mockedPost.mockResolvedValueOnce(undefined)
-
-      await saveExtensionSettings(sampleSettings)
-
-      expect(mockedPost).toHaveBeenCalledWith('/extension/settings', sampleSettings)
+    it('llama a POST /extension/settings con los datos del body', () => {
+      setupMockedPostResponse(undefined)
+      return callSaveExtensionSettings(sampleSettings).then(() => {
+        verifyPostCalledWith('/extension/settings', sampleSettings)
+      })
     })
 
-    it('propaga errores del api client', async () => {
-      mockedPost.mockRejectedValueOnce(new Error('Validation Failed'))
-
-      await expect(saveExtensionSettings(sampleSettings)).rejects.toThrow('Validation Failed')
+    it('propaga errores del api client', () => {
+      setupMockedPostError(new Error('Validation Failed'))
+      return verifySaveExtensionSettingsThrows(sampleSettings, 'Validation Failed')
     })
   })
+
+  /* helpers */
+
+  
+
+  
+
+  
+
+  
+
+  const callGetExtensionSettingsAndVerify = (expected: ExtensionSettings) => {
+    return getExtensionSettings().then((res) => {
+      expect(res).toEqual(expected)
+    })
+  }
+
+  const verifyGetExtensionSettingsThrows = (expectedErrorMsg: string) => {
+    return expect(getExtensionSettings()).rejects.toThrow(expectedErrorMsg)
+  }
+
+  const callSaveExtensionSettings = (settings: ExtensionSettings) => {
+    return saveExtensionSettings(settings)
+  }
+
+  const verifySaveExtensionSettingsThrows = (settings: ExtensionSettings, expectedErrorMsg: string) => {
+    return expect(saveExtensionSettings(settings)).rejects.toThrow(expectedErrorMsg)
+  }
+
+  const verifyGetCalledWith = (url: string) => {
+    expect(mockedGet).toHaveBeenCalledWith(url)
+  }
+
+  const verifyPostCalledWith = (url: string, body: any) => {
+    expect(mockedPost).toHaveBeenCalledWith(url, body)
+  }
 })

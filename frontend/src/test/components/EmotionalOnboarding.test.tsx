@@ -3,8 +3,9 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EmotionalOnboarding from '../../components/Onboarding/EmotionalOnboarding/EmotionalOnboarding'
 import type { Step1Option } from '../../hooks/useEmotionalOnboarding'
+import { clickButton, verifyTextPresent } from '../testHelpers'
 
-const MockIcon = () => <svg />
+
 
 const mockStep1Options: Step1Option[] = [
     { Icon: MockIcon, title: 'Un momento para mí',    subtitle: 'Para pausar y respirar' },
@@ -16,6 +17,10 @@ const mockStep1Options: Step1Option[] = [
 const mockPillOptions = ['Opción A', 'Opción B', 'Opción C', 'Opción D']
 
 describe('EmotionalOnboarding', () => {
+    let onAdvanceSpy: any
+    let onSkipSpy: any
+    let onSelectOptionSpy: any
+
     const baseProps = {
         step1Options: mockStep1Options,
         pillOptions: [],
@@ -26,76 +31,126 @@ describe('EmotionalOnboarding', () => {
 
     describe('Step 0 - intro', () => {
         it('muestra el mensaje de bienvenida', () => {
-            render(<EmotionalOnboarding {...baseProps} step={0}/>)
-            expect(screen.getByText(/Me alegra que estés acá/i)).toBeInTheDocument()
+            renderStep(0)
+            expect(screen.getByText('Me alegra que estés acá', { exact: false })).toBeInTheDocument()
         })
         
-        it('el botón Empezar llama a onAdvance', async () => {
-            const user = userEvent.setup()
-            const onAdvance = vi.fn()
-            render(<EmotionalOnboarding {...baseProps} step={0} onAdvance={onAdvance}/>)
-            await user.click(screen.getByRole('button', { name: /empezar/i }))
-
-            expect(onAdvance).toHaveBeenCalledTimes(1)
+        it('el botón Empezar llama a onAdvance', () => {
+            renderStepWithAdvanceSpy(0)
+            return clickButtonWithText('Empezar').then(() => {
+                verifyOnAdvanceCalledTimes(1)
+            })
         })
 
-        it('el botón Saltar por ahora llama a onSkip', async () => {
-            const user = userEvent.setup()
-            const onSkip = vi.fn()
-            render(<EmotionalOnboarding {...baseProps} step={0} onSkip={onSkip}/>)
-            await user.click(screen.getByRole('button', { name: /saltar por ahora/i }))
-            expect(onSkip).toHaveBeenCalledTimes(1)
+        it('el botón Saltar por ahora llama a onSkip', () => {
+            renderStepWithSkipSpy(0)
+            return clickButtonWithText('Saltar por ahora').then(() => {
+                verifyOnSkipCalledTimes(1)
+            })
         })
-})
+    })
 
     describe('Step 1 - tarjetas', () => {
         it('renderiza las 4 tarjetas con título y subtítulo', () => {
-            render(<EmotionalOnboarding {...baseProps} step={1} />)
-            expect(screen.getByText('Un momento para mí')).toBeInTheDocument()
-            expect(screen.getByText('Para pausar y respirar')).toBeInTheDocument()
-            expect(screen.getByText('Descansar un rato')).toBeInTheDocument()
+            renderStep(1)
+            verifyTextPresent('Un momento para mí')
+            verifyTextPresent('Para pausar y respirar')
+            verifyTextPresent('Descansar un rato')
         })
 
-        it('click en una tarjeta llama a onSelectOption con el título', async () => {
-            const user = userEvent.setup()
-            const onSelectOption = vi.fn()
-            render(<EmotionalOnboarding {...baseProps} step={1} onSelectOption={onSelectOption}/>)
-            await user.click(screen.getByRole('button', { name: /Un momento para mí/i }))
-            expect(onSelectOption).toHaveBeenCalledTimes(1)
-            expect(onSelectOption).toHaveBeenCalledWith('Un momento para mí')
+        it('click en una tarjeta llama a onSelectOption con el título', () => {
+            renderStepWithSelectOptionSpy(1)
+            return clickButtonWithText('Un momento para mí Para pausar y respirar').then(() => {
+                verifyOnSelectOptionCalledTimes(1)
+                verifyOnSelectOptionCalledWith('Un momento para mí')
+            })
         })
 
-        it('muestra el botón Saltar que llama a onSkip', async () => {
-            const user = userEvent.setup()
-            const onSkip = vi.fn()
-            render(<EmotionalOnboarding {...baseProps} step={1} onSkip={onSkip}/>)
-            await user.click(screen.getByRole('button', { name: /saltar/i }))
-            expect(onSkip).toHaveBeenCalledTimes(1)
+        it('muestra el botón Saltar que llama a onSkip', () => {
+            renderStepWithSkipSpy(1)
+            return clickButtonWithText('Saltar').then(() => {
+                verifyOnSkipCalledTimes(1)
+            })
         })
     })
 
     describe('Steps 2 y 3 - pills', () => {
         it('muestra las opciones de las pilas', () => {
-            render(<EmotionalOnboarding {...baseProps} step={2} pillOptions={mockPillOptions}/>)
-            expect(screen.getByText('Opción A')).toBeInTheDocument()
-            expect(screen.getByText('Opción D')).toBeInTheDocument()
+            renderStepWithPillOptions(2, mockPillOptions)
+            verifyTextPresent('Opción A')
+            verifyTextPresent('Opción D')
         })
 
-        it('click en una pill lama a onSelectOption con el título', async () => {
-            const user = userEvent.setup()
-            const onSelectOption = vi.fn()
-            render(<EmotionalOnboarding {...baseProps} step={2} pillOptions={mockPillOptions} onSelectOption={onSelectOption}/>)
-            await user.click(screen.getByRole('button', { name: /Opción A/i }))
-            expect(onSelectOption).toHaveBeenCalledTimes(1)
-            expect(onSelectOption).toHaveBeenCalledWith('Opción A')
+        it('click en una pill lama a onSelectOption con el título', () => {
+            renderStepWithPillOptionsAndSelectOptionSpy(2, mockPillOptions)
+            return clickButtonWithText('Opción A').then(() => {
+                verifyOnSelectOptionCalledTimes(1)
+                verifyOnSelectOptionCalledWith('Opción A')
+            })
         })
 
-        it('muestra el botón Saltar en Step3 llama a onSkip', async () => {
-            const user = userEvent.setup()
-            const onSkip = vi.fn()
-            render(<EmotionalOnboarding {...baseProps} step={2} onSkip={onSkip}/>)
-            await user.click(screen.getByRole('button', { name: /saltar/i }))
-            expect(onSkip).toHaveBeenCalledTimes(1)
+        it('muestra el botón Saltar en Step3 llama a onSkip', () => {
+            renderStepWithSkipSpy(2)
+            return clickButtonWithText('Saltar').then(() => {
+                verifyOnSkipCalledTimes(1)
+            })
         })
     })
+    let user: any
+
+    const renderStep = (step: 0 | 1 | 2 | 3) => {
+        render(<EmotionalOnboarding {...baseProps} step={step} />)
+    }
+
+    const renderStepWithAdvanceSpy = (step: 0 | 1 | 2 | 3) => {
+        user = userEvent.setup()
+        onAdvanceSpy = vi.fn()
+        render(<EmotionalOnboarding {...baseProps} step={step} onAdvance={onAdvanceSpy} />)
+    }
+
+    const renderStepWithSkipSpy = (step: 0 | 1 | 2 | 3) => {
+        user = userEvent.setup()
+        onSkipSpy = vi.fn()
+        render(<EmotionalOnboarding {...baseProps} step={step} onSkip={onSkipSpy} />)
+    }
+
+    const renderStepWithSelectOptionSpy = (step: 0 | 1 | 2 | 3) => {
+        user = userEvent.setup()
+        onSelectOptionSpy = vi.fn()
+        render(<EmotionalOnboarding {...baseProps} step={step} onSelectOption={onSelectOptionSpy} />)
+    }
+
+    const renderStepWithPillOptions = (step: 0 | 1 | 2 | 3, pillOptions: string[]) => {
+        render(<EmotionalOnboarding {...baseProps} step={step} pillOptions={pillOptions} />)
+    }
+
+    const renderStepWithPillOptionsAndSelectOptionSpy = (step: 0 | 1 | 2 | 3, pillOptions: string[]) => {
+        user = userEvent.setup()
+        onSelectOptionSpy = vi.fn()
+        render(<EmotionalOnboarding {...baseProps} step={step} pillOptions={pillOptions} onSelectOption={onSelectOptionSpy} />)
+    }
+
+    const clickButtonWithText = (text: string) => {
+        return clickButton(user, text)
+    }
+
+    const verifyOnAdvanceCalledTimes = (times: number) => {
+        expect(onAdvanceSpy).toHaveBeenCalledTimes(times)
+    }
+
+    const verifyOnSkipCalledTimes = (times: number) => {
+        expect(onSkipSpy).toHaveBeenCalledTimes(times)
+    }
+
+    const verifyOnSelectOptionCalledTimes = (times: number) => {
+        expect(onSelectOptionSpy).toHaveBeenCalledTimes(times)
+    }
+
+    const verifyOnSelectOptionCalledWith = (value: string) => {
+        expect(onSelectOptionSpy).toHaveBeenCalledWith(value)
+    }
 })
+
+function MockIcon() {
+  return <svg />
+}

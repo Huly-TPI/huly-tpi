@@ -20,7 +20,7 @@ import easelImage from '../../assets/minigames/light-theme/paddle.webp'
 import sandImage from '../../assets/minigames/light-theme/sand.webp'
 
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
-import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
+import { resolveEquippedImages } from '../../components/Scene/CosmeticAssets'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import { useTheme } from '../../context/theme'

@@ -1,90 +1,98 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ChatbotComposer from '../../components/Chatbot/ChatbotComposer'
+import { clickButton, typePlaceholder, verifyPlaceholderPresent } from '../testHelpers'
 
 describe('ChatbotComposer', () => {
-  it('renders input and send button', () => {
-    render(
-      <ChatbotComposer
-        input=""
-        isSending={false}
-        onInputChange={vi.fn()}
-        onSend={vi.fn()}
-        onSendAudio={vi.fn()}
-      />,
-    )
+  let onInputChangeMock: any
+  let onSendMock: any
+  let onSendAudioMock: any
 
-    expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Enviar' })).toBeInTheDocument()
+  beforeEach(() => {
+    onInputChangeMock = vi.fn()
+    onSendMock = vi.fn()
+    onSendAudioMock = vi.fn()
   })
 
-  it('calls onInputChange when typing', async () => {
-    const user = userEvent.setup()
-    const onInputChange = vi.fn()
-
-    render(
-      <ChatbotComposer
-        input=""
-        isSending={false}
-        onInputChange={onInputChange}
-        onSend={vi.fn()}
-        onSendAudio={vi.fn()}
-      />,
-    )
-
-    await user.type(screen.getByPlaceholderText('Escribí tu mensaje...'), 'hola')
-    expect(onInputChange).toHaveBeenCalled()
+  it('renderiza el input y el botón de enviar', () => {
+    renderComposer()
+    verifyInputAndSendButtonShown()
   })
 
-  it('calls onSend on button click and enter key', async () => {
-    const user = userEvent.setup()
-    const onSend = vi.fn()
-
-    render(
-      <ChatbotComposer
-        input="hola"
-        isSending={false}
-        onInputChange={vi.fn()}
-        onSend={onSend}
-        onSendAudio={vi.fn()}
-      />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Enviar' }))
-    expect(onSend).toHaveBeenCalledTimes(1)
-
-    await user.type(screen.getByPlaceholderText('Escribí tu mensaje...'), '{enter}')
-    expect(onSend).toHaveBeenCalledTimes(2)
-  })
-
-  it('autofocuses the textarea on mount', async () => {
-    render(
-      <ChatbotComposer
-        input=""
-        isSending={false}
-        onInputChange={vi.fn()}
-        onSend={vi.fn()}
-        onSendAudio={vi.fn()}
-      />,
-    )
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toHaveFocus()
+  it('llama a onInputChange al escribir', () => {
+    renderComposer()
+    return typeIntoComposer('hola').then(() => {
+      verifyOnInputChangeCalled()
     })
   })
 
-  it('does not render reset button in the composer', () => {
+  it('llama a onSend al hacer click en el botón y presionar enter', () => {
+    renderComposer('hola')
+    return clickSendButton()
+      .then(() => {
+        verifyOnSendCalledTimes(1)
+        return typeIntoComposer('{enter}')
+      })
+      .then(() => {
+        verifyOnSendCalledTimes(2)
+      })
+  })
+
+  it('hace autofoco en el textarea al montar', () => {
+    renderComposer()
+    return verifyTextareaHasFocus()
+  })
+
+  it('no renderiza el botón de limpiar chat en el composer', () => {
+    renderComposer()
+    verifyResetButtonNotPresent()
+  })
+
+  /* helpers */
+
+  const renderComposer = (input: string = '', isSending: boolean = false) => {
     render(
       <ChatbotComposer
-        input=""
-        isSending={false}
-        onInputChange={vi.fn()}
-        onSend={vi.fn()}
-        onSendAudio={vi.fn()}
-      />,
+        input={input}
+        isSending={isSending}
+        onInputChange={onInputChangeMock}
+        onSend={onSendMock}
+        onSendAudio={onSendAudioMock}
+      />
     )
+  }
 
+  const verifyInputAndSendButtonShown = () => {
+    verifyPlaceholderPresent('Escribí tu mensaje...')
+    expect(screen.getByRole('button', { name: 'Enviar' })).toBeInTheDocument()
+  }
+
+  const typeIntoComposer = (text: string) => {
+    const user = userEvent.setup()
+    return typePlaceholder(user, 'Escribí tu mensaje...', text)
+  }
+
+  const verifyOnInputChangeCalled = () => {
+    expect(onInputChangeMock).toHaveBeenCalled()
+  }
+
+  const clickSendButton = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Enviar')
+  }
+
+  const verifyOnSendCalledTimes = (times: number) => {
+    expect(onSendMock).toHaveBeenCalledTimes(times)
+  }
+
+  const verifyTextareaHasFocus = () => {
+    return waitFor(() => {
+      expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toHaveFocus()
+    })
+  }
+
+  const verifyResetButtonNotPresent = () => {
     expect(screen.queryByRole('button', { name: 'Limpiar chat' })).not.toBeInTheDocument()
-  })
+  }
 })

@@ -1,3 +1,4 @@
+import { clearAllMocks } from '../../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { useStoreItems } from '../../../hooks/store/useStoreItems'
@@ -18,7 +19,59 @@ vi.mock('../../../context/auth', () => ({
 
 const mockedGetItems = vi.mocked(storeApi.getItems)
 
-const makeItem = (id: number) => ({
+
+
+describe('useStoreItems', () => {
+    beforeEach(() => {
+        clearAllMocks()
+    })
+
+    it('carga el catalogo de items', () => {
+        setupGetItemsResolved([makeItem(10), makeItem(20)])
+        setupHook()
+        return waitForLoadingFinished().then(() => {
+            verifyItemsLength(2)
+        })
+    })
+
+    it('setea error si falla la carga' , () => {
+        setupGetItemsRejected('red')
+        setupHook()
+        return waitForError('No se pudieron cargar los items de la tienda.')
+    })
+    let rendered: ReturnType<typeof renderHook<ReturnType<typeof useStoreItems>, undefined>>
+
+    const setupHook = () => {
+        rendered = renderHook(() => useStoreItems())
+    }
+
+    const setupGetItemsResolved = (items: any[]) => {
+        mockedGetItems.mockResolvedValueOnce(items as never)
+    }
+
+    const setupGetItemsRejected = (msg: string) => {
+        mockedGetItems.mockRejectedValueOnce(new Error(msg) as never)
+    }
+
+    const waitForLoadingFinished = () => {
+        return waitFor(() => {
+            expect(rendered.result.current.loading).toBe(false)
+        })
+    }
+
+    const waitForError = (expectedError: string) => {
+        return waitFor(() => {
+            expect(rendered.result.current.error).toBe(expectedError)
+        })
+    }
+
+    const verifyItemsLength = (length: number) => {
+        expect(rendered.result.current.items).toHaveLength(length)
+    }
+})
+
+function makeItem(id: number) {
+  return ({
     id, 
     name: 'Casa rosa', 
     description: 'desc',
@@ -26,23 +79,4 @@ const makeItem = (id: number) => ({
     assetKey: 'casa-rosa',
     priceCoins: 50
 })
-
-describe('useStoreItems', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    it('carga el catalogo de items', async () => {
-        mockedGetItems.mockResolvedValueOnce([makeItem(10), makeItem(20)] as never)
-        const { result } = renderHook(() => useStoreItems())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        expect(result.current.items).toHaveLength(2)
-    })
-
-    it('setea error si falla la carga' , async () => {
-        mockedGetItems.mockRejectedValueOnce(new Error('red') as never)
-        const { result } = renderHook(() => useStoreItems())
-        await waitFor(() => expect(result.current.error).toBe("No se pudieron cargar los items de la tienda."))    
-    
-    })
-})
+}

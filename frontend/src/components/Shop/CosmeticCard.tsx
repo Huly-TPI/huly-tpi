@@ -1,5 +1,5 @@
 import type { StoreItemResponse } from '../../api/store'
-import { cosmeticAssets } from '../Scene/cosmeticAssets'
+import { cosmeticAssets } from '../Scene/CosmeticAssets'
 import { mandalaAssetByKey } from '../Mandalas/mandalaAssets'
 import seedIcon from '../../assets/shop-seed/1seed.webp'
 import { getBackendOrigin } from '../../api/client'

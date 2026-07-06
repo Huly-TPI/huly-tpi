@@ -1,5 +1,6 @@
+import { clearAllMocks } from '../testHelpers'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import treeBlueLight from '../../assets/garden/light-theme/tree-blue.webp'
@@ -13,58 +14,93 @@ vi.mock('../../hooks/store/useInventory', () => ({
 }))
 
 describe('Minigames', () => {
+  let user: ReturnType<typeof userEvent.setup>
+  let activeContainer: HTMLElement
+
   beforeEach(() => {
-    vi.clearAllMocks()
-    mockUseInventory.mockReturnValue({
-      inventory: [],
-      loading: false,
-      error: null,
-      refetch: vi.fn(),
+    clearAllMocks()
+    setupDefaultInventory()
+  })
+
+  it('renderiza los fondos de escena desktop y mobile', () => {
+    renderMinigamesPage()
+    verifyDesktopAndMobileBackgroundsVisible()
+  })
+
+  it('renderiza las nubes como elementos decorativos sin links', () => {
+    renderMinigamesPage()
+    verifyDecorativeCloudsExistWithoutLinks()
+  })
+
+  it('renderiza los faroles navegables hacia la actividad de farolitos', () => {
+    renderMinigamesPage()
+    verifyLanternLinksNavigateTo('/lanterns')
+  })
+
+  it('renderiza los hotspots de cada minijuego con su ruta', () => {
+    renderMinigamesPage()
+    verifyHotspotLinkTarget('Burbujas', '/bubbles')
+    verifyHotspotLinkTarget('Colorear mandalas', '/mandalas')
+    verifyHotspotLinkTarget('Arena zen', '/zen-sand-garden')
+  })
+
+  it('usa el arbol cosmetico equipado para volver al jardin', () => {
+    setupEquippedTreeInventory()
+    renderMinigamesPage()
+    verifyEquippedTreeImageSrcContains(treeBlueLight)
+  })
+
+  it('el boton volver navega a /', () => {
+    renderMinigamesWithRoutes('/', <h1>Vista Garden</h1>)
+    return clickVolverLink().then(() => {
+      return verifyHeadingVisible('Vista Garden')
     })
   })
 
-  const renderWithRouter = () => {
-    return render(
+  it('redirige a burbujas al hacer click en el hotspot del pez', () => {
+    renderMinigamesWithRoutes('/bubbles', <h1>Vista Burbujas</h1>)
+    return clickHotspot('Burbujas').then(() => {
+      return verifyHeadingVisible('Vista Burbujas')
+    })
+  })
+
+  it('redirige a farolitos al hacer click en un farol', () => {
+    renderMinigamesWithRoutes('/lanterns', <h1>Vista Farolitos</h1>)
+    return clickFirstLanternLink().then(() => {
+      return verifyHeadingVisible('Vista Farolitos')
+    })
+  })
+
+  /* helpers */
+
+  const renderMinigamesPage = () => {
+    user = userEvent.setup()
+    const { container } = render(
       <ThemeProvider>
         <MemoryRouter>
           <Minigames />
         </MemoryRouter>
-      </ThemeProvider>,
+      </ThemeProvider>
     )
+    activeContainer = container
   }
 
-  it('renderiza los fondos de escena desktop y mobile', () => {
-    renderWithRouter()
-    expect(screen.getByAltText('Fondo de minijuegos')).toBeInTheDocument()
-    expect(screen.getByAltText('Fondo de minijuegos para celular')).toBeInTheDocument()
-  })
+  const renderMinigamesWithRoutes = (targetPath: string, targetElement: React.ReactNode) => {
+    user = userEvent.setup()
+    const { container } = render(
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/minigames']}>
+          <Routes>
+            <Route path="/minigames" element={<Minigames />} />
+            <Route path={targetPath} element={targetElement} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
+    )
+    activeContainer = container
+  }
 
-  it('renderiza las nubes como elementos decorativos sin links', () => {
-    const { container } = renderWithRouter()
-    const clouds = container.querySelectorAll('img[src*="cloud.webp"]')
-    expect(clouds).toHaveLength(3)
-    clouds.forEach(cloud => {
-      expect(cloud.closest('a')).toBeNull()
-    })
-  })
-
-  it('renderiza los faroles navegables hacia la actividad de farolitos', () => {
-    renderWithRouter()
-    const lanternLinks = screen.getAllByLabelText('Farolitos que vuelan')
-    expect(lanternLinks).toHaveLength(4)
-    lanternLinks.forEach(lantern => {
-      expect(lantern.closest('a')).toHaveAttribute('href', '/lanterns')
-    })
-  })
-
-  it('renderiza los hotspots de cada minijuego con su ruta', () => {
-    renderWithRouter()
-    expect(screen.getByLabelText('Burbujas').closest('a')).toHaveAttribute('href', '/bubbles')
-    expect(screen.getByLabelText('Colorear mandalas').closest('a')).toHaveAttribute('href', '/mandalas')
-    expect(screen.getByLabelText('Arena zen').closest('a')).toHaveAttribute('href', '/zen-sand-garden')
-  })
-
-  it('usa el arbol cosmetico equipado para volver al jardin', () => {
+  const setupEquippedTreeInventory = () => {
     mockUseInventory.mockReturnValue({
       inventory: [
         {
@@ -79,64 +115,61 @@ describe('Minigames', () => {
       error: null,
       refetch: vi.fn(),
     })
+  }
 
-    renderWithRouter()
+  const verifyDesktopAndMobileBackgroundsVisible = () => {
+    expect(screen.getByAltText('Fondo de minijuegos')).toBeInTheDocument()
+    expect(screen.getByAltText('Fondo de minijuegos para celular')).toBeInTheDocument()
+  }
 
+  const verifyDecorativeCloudsExistWithoutLinks = () => {
+    const clouds = activeContainer.querySelectorAll('img[src*="cloud.webp"]')
+    expect(clouds).toHaveLength(3)
+    clouds.forEach(cloud => {
+      expect(cloud.closest('a')).toBeNull()
+    })
+  }
+
+  const verifyLanternLinksNavigateTo = (path: string) => {
+    const lanternLinks = screen.getAllByLabelText('Farolitos que vuelan')
+    expect(lanternLinks).toHaveLength(4)
+    lanternLinks.forEach(lantern => {
+      expect(lantern.closest('a')).toHaveAttribute('href', path)
+    })
+  }
+
+  const verifyHotspotLinkTarget = (labelText: string, path: string) => {
+    expect(screen.getByLabelText(labelText).closest('a')).toHaveAttribute('href', path)
+  }
+
+  const verifyEquippedTreeImageSrcContains = (srcPart: string) => {
     const treeImage = screen.getByAltText('Fragmento del arbol del jardin') as HTMLImageElement
-    expect(treeImage.src).toContain(treeBlueLight)
-  })
+    expect(treeImage.src).toContain(srcPart)
+  }
 
-  it('el boton volver navega a /', async () => {
-    const user = userEvent.setup()
+  const clickVolverLink = () => {
+    return user.click(screen.getByRole('link', { name: 'Volver al jardin' }))
+  }
 
-    render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={['/minigames']}>
-          <Routes>
-            <Route path="/" element={<h1>Vista Garden</h1>} />
-            <Route path="/minigames" element={<Minigames />} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>,
-    )
+  const clickHotspot = (labelText: string) => {
+    return user.click(screen.getByLabelText(labelText))
+  }
 
-    await user.click(screen.getByRole('link', { name: /volver/i }))
-    expect(await screen.findByRole('heading', { name: 'Vista Garden' })).toBeInTheDocument()
-  })
+  const clickFirstLanternLink = () => {
+    return user.click(screen.getAllByLabelText('Farolitos que vuelan')[0])
+  }
 
-  it('redirige a burbujas al hacer click en el hotspot del pez', async () => {
-    const user = userEvent.setup()
-
-    render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={['/minigames']}>
-          <Routes>
-            <Route path="/minigames" element={<Minigames />} />
-            <Route path="/bubbles" element={<h1>Vista Burbujas</h1>} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>,
-    )
-
-    await user.click(screen.getByLabelText('Burbujas'))
-    expect(screen.getByRole('heading', { name: 'Vista Burbujas' })).toBeInTheDocument()
-  })
-
-  it('redirige a farolitos al hacer click en un farol', async () => {
-    const user = userEvent.setup()
-
-    render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={['/minigames']}>
-          <Routes>
-            <Route path="/minigames" element={<Minigames />} />
-            <Route path="/lanterns" element={<h1>Vista Farolitos</h1>} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>,
-    )
-
-    await user.click(screen.getAllByLabelText('Farolitos que vuelan')[0])
-    expect(screen.getByRole('heading', { name: 'Vista Farolitos' })).toBeInTheDocument()
-  })
+  const verifyHeadingVisible = async (text: string) => {
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: text })).toBeInTheDocument()
+    })
+  }
+  const setupDefaultInventory = () => {
+    mockUseInventory.mockReturnValue({
+      inventory: [],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    })
+  }
 })

@@ -1,3 +1,4 @@
+import { clearAllMocks } from '../testHelpers'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActivityType, registerActivitySession } from '../../api/activities'
 import * as clientModule from '../../api/client'
@@ -17,59 +18,78 @@ const mockedTryRehydrateSession = vi.mocked(clientModule.tryRehydrateSession)
 
 describe('registerActivitySession', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     vi.stubGlobal('fetch', vi.fn())
     mockedGetToken.mockReturnValue('token-de-prueba')
     mockedTryRehydrateSession.mockResolvedValue(null)
   })
 
-  it('llama a fetch con la ruta y los datos correctos', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(null, { status: 200 }),
+  it('llama a fetch con la ruta y los datos correctos', () => {
+    setupMockedFetchResponse(200)
+    return callRegisterActivitySession({ activityType: ActivityType.BREATHING }).then(() => {
+      verifyFetchCalledWithCorrectData(ActivityType.BREATHING)
+    })
+  })
+
+  it('pasa keepalive cuando se indica', () => {
+    setupMockedFetchResponse(200)
+    return callRegisterActivitySession(
+      { activityType: ActivityType.BREATHING },
+      { keepalive: true },
+    ).then(() => {
+      verifyFetchCalledWithKeepalive()
+    })
+  })
+
+  it('propaga errores del backend', () => {
+    setupMockedFetchResponse(401, { message: 'No autorizado' })
+    return verifyRegisterActivitySessionThrowsError(
+      { activityType: ActivityType.BUBBLE },
+      'Session expired',
     )
+  })
 
-    await registerActivitySession({ activityType: ActivityType.BREATHING })
+  /* helpers */
 
+  const setupMockedFetchResponse = (status: number, bodyObj?: any) => {
+    const responseBody = bodyObj ? JSON.stringify(bodyObj) : null
+    const headers = bodyObj ? { 'Content-Type': 'application/json' } : undefined
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(responseBody, { status, headers }),
+    )
+  }
+
+  const callRegisterActivitySession = (
+    data: { activityType: ActivityType },
+    options?: { keepalive?: boolean },
+  ) => {
+    return registerActivitySession(data, options)
+  }
+
+  const verifyFetchCalledWithCorrectData = (activityType: ActivityType) => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringMatching(/\/api\/activities\/sessions$/),
       expect.objectContaining({
         method: 'POST',
         credentials: 'include',
-        body: JSON.stringify({ activityType: ActivityType.BREATHING }),
+        body: JSON.stringify({ activityType }),
       }),
     )
-  })
+  }
 
-  it('pasa keepalive cuando se indica', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(null, { status: 200 }),
-    )
-
-    await registerActivitySession(
-      { activityType: ActivityType.BREATHING },
-      { keepalive: true },
-    )
-
+  const verifyFetchCalledWithKeepalive = () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         keepalive: true,
       }),
     )
-  })
+  }
 
-  it('propaga errores del backend', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ message: 'No autorizado' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    )
-
-    await expect(
-      registerActivitySession({
-        activityType: ActivityType.BUBBLE,
-      }),
-    ).rejects.toThrow('Session expired')
-  })
+  const verifyRegisterActivitySessionThrowsError = (
+    data: { activityType: ActivityType },
+    expectedErrorMsg: string,
+  ) => {
+    return expect(registerActivitySession(data)).rejects.toThrow(expectedErrorMsg)
+  }
 })
