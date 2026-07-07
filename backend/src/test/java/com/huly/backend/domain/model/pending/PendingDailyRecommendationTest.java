@@ -1,6 +1,7 @@
 package com.huly.backend.domain.model.pending;
 
 import com.huly.backend.domain.model.enums.RecommendationResponseDecision;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -11,35 +12,66 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class PendingDailyRecommendationTest {
 
     @Test
-    void accept_shouldSetDecisionAndDecidedAt() {
+    @DisplayName("Establece la decisión en ACCEPTED y la marca de tiempo de la decisión al aceptar")
+    void acceptShouldSetDecisionAndDecidedAt() {
         PendingDailyRecommendation recommendation = pendingRecommendation();
         Instant now = Instant.now();
 
-        recommendation.accept(now);
+        performAccept(recommendation, now);
 
-        assertThat(recommendation.getDecision()).isEqualTo(RecommendationResponseDecision.ACCEPTED);
-        assertThat(recommendation.getDecidedAt()).isEqualTo(now);
+        thenDecisionIs(recommendation, RecommendationResponseDecision.ACCEPTED);
+        thenDecidedAtIs(recommendation, now);
     }
 
     @Test
-    void reject_shouldSetDecisionAndDecidedAt() {
+    @DisplayName("Establece la decisión en REJECTED y la marca de tiempo de la decisión al rechazar")
+    void rejectShouldSetDecisionAndDecidedAt() {
         PendingDailyRecommendation recommendation = pendingRecommendation();
         Instant now = Instant.now();
 
-        recommendation.reject(now);
+        performReject(recommendation, now);
 
-        assertThat(recommendation.getDecision()).isEqualTo(RecommendationResponseDecision.REJECTED);
-        assertThat(recommendation.getDecidedAt()).isEqualTo(now);
+        thenDecisionIs(recommendation, RecommendationResponseDecision.REJECTED);
+        thenDecidedAtIs(recommendation, now);
     }
 
     @Test
-    void accept_shouldThrow_whenAlreadyDecided() {
+    @DisplayName("Lanza excepción si se intenta decidir sobre una recomendación que ya fue decidida previamente")
+    void acceptShouldThrowWhenAlreadyDecided() {
         PendingDailyRecommendation recommendation = pendingRecommendation();
-        recommendation.accept(Instant.now());
+        givenAlreadyAccepted(recommendation);
 
-        assertThatThrownBy(() -> recommendation.reject(Instant.now()))
+        assertThatThrownBy(() -> performReject(recommendation, Instant.now()))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    // --- arrange ---
+
+    private void givenAlreadyAccepted(PendingDailyRecommendation recommendation) {
+        recommendation.accept(Instant.now());
+    }
+
+    // --- act ---
+
+    private void performAccept(PendingDailyRecommendation recommendation, Instant now) {
+        recommendation.accept(now);
+    }
+
+    private void performReject(PendingDailyRecommendation recommendation, Instant now) {
+        recommendation.reject(now);
+    }
+
+    // --- assert ---
+
+    private void thenDecisionIs(PendingDailyRecommendation recommendation, RecommendationResponseDecision expected) {
+        assertThat(recommendation.getDecision()).isEqualTo(expected);
+    }
+
+    private void thenDecidedAtIs(PendingDailyRecommendation recommendation, Instant expected) {
+        assertThat(recommendation.getDecidedAt()).isEqualTo(expected);
+    }
+
+    // --- helpers ---
 
     private PendingDailyRecommendation pendingRecommendation() {
         return PendingDailyRecommendation.builder()
