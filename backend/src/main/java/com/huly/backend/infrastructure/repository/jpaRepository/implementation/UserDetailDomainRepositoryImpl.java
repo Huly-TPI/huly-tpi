@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import com.huly.backend.domain.model.dailyReward.DailyClaimState;
 import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.model.user.AudioSettings;
+import com.huly.backend.domain.model.user.UserAccountSettings;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.infrastructure.presentation.exception.NotFoundException;
 import com.huly.backend.infrastructure.repository.entity.UserDetailEntity;
@@ -50,6 +51,13 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
         return toAudioSettings(userDetail);
+    }
+
+    @Override
+    public UserAccountSettings findAccountSettings(Long userId) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        return toAccountSettings(userDetail);
     }
 
     @Override
@@ -103,6 +111,16 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
     }
 
     @Override
+    @Transactional
+    public UserAccountSettings updateAccountSettings(Long userId, UserAccountSettings accountSettings) {
+        UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
+        userDetail.setName(accountSettings.name());
+        userDetail.setBirth(accountSettings.birthDate());
+        return toAccountSettings(userDetailRepository.save(userDetail));
+    }
+
+    @Override
     public DailyClaimState findDailyClaimState(Long userId) {
         UserDetailEntity userDetail = userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new NotFoundException("No se encontraron datos del usuario: " + userId));
@@ -142,6 +160,14 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
                 userDetail.getInterfaceVolume() != null ? userDetail.getInterfaceVolume() : defaults.interfaceVolume(),
                 userDetail.getAmbientVolume() != null ? userDetail.getAmbientVolume() : defaults.ambientVolume(),
                 userDetail.getMinigameVolume() != null ? userDetail.getMinigameVolume() : defaults.minigameVolume()
+        );
+    }
+
+    private UserAccountSettings toAccountSettings(UserDetailEntity userDetail) {
+        return new UserAccountSettings(
+                userDetail.getName(),
+                userDetail.getAppUser().getEmail(),
+                userDetail.getBirth()
         );
     }
 

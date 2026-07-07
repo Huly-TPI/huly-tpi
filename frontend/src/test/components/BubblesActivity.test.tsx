@@ -25,47 +25,75 @@ vi.mock('../../hooks/useActivitySessionTracker', () => ({
 
 import BubblesActivity from '../../components/Bubbles/BubblesActivity.tsx'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
+import { clickButton, clearAllMocks } from '../testHelpers'
 
 const mockedUseTracker = vi.mocked(useActivitySessionTracker)
 
-const renderActivity = () =>
-  render(
-    <MemoryRouter>
-      <BubblesActivity />
-    </MemoryRouter>,
-  )
-
 describe('BubblesActivity component', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     mockSaveSession.mockResolvedValue(undefined)
   })
 
   it('renderiza el menú de inicio', () => {
-    renderActivity()
-    expect(screen.getByRole('button', { name: /comenzar/i })).toBeInTheDocument()
+    renderActivityComponent()
+    verifyComenzarButtonPresent()
   })
 
-  it('renderiza el componente de burbujas al hacer click en comenzar', async () => {
-    const user = userEvent.setup()
-    renderActivity()
-    await user.click(screen.getByRole('button', { name: /comenzar/i }))
-    expect(screen.getByTestId('bubbles-container')).toBeInTheDocument()
+  it('renderiza el componente de burbujas al hacer click en comenzar', () => {
+    renderActivityComponent()
+    return clickComenzar().then(() => {
+      verifyBubblesContainerPresent()
+    })
   })
 
-  it('muestra el botón de volver una vez iniciado el juego', async () => {
-    const user = userEvent.setup()
-    renderActivity()
-
-    expect(screen.queryByRole('button', { name: /volver/i })).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: /comenzar/i }))
-    expect(screen.getByRole('button', { name: /volver/i })).toBeInTheDocument()
+  it('muestra el botón de volver una vez iniciado el juego', () => {
+    renderActivityComponent()
+    verifyVolverButtonNotPresent()
+    return clickComenzar().then(() => {
+      verifyVolverButtonPresent()
+    })
   })
 
-  it('navega a minijuegos al hacer click en volver', async () => {
-    const user = userEvent.setup()
+  it('navega a minijuegos al hacer click en volver', () => {
+    renderActivityWithRoutes()
+    return clickComenzar()
+      .then(() => clickVolver())
+      .then(() => verifyMinigamesViewPresent())
+  })
 
+  it('llama a startSession al hacer click en "Comenzar"', () => {
+    renderActivityComponent()
+    verifyStartSessionNotCalled()
+    return clickComenzar().then(() => {
+      verifyStartSessionCalledOnce()
+    })
+  })
+
+  it('llama a markConditionMet al interactuar con una burbuja', () => {
+    renderActivityComponent()
+    return clickComenzar()
+      .then(() => verifyMarkConditionMetNotCalled())
+      .then(() => clickFirstBubble())
+      .then(() => verifyMarkConditionMetCalled())
+  })
+
+  it('usa los valores retornados por el hook mockeado', () => {
+    renderActivityComponent()
+    verifyTrackerHookCalled()
+  })
+
+  /* helpers */
+
+  const renderActivityComponent = () => {
+    render(
+      <MemoryRouter>
+        <BubblesActivity />
+      </MemoryRouter>,
+    )
+  }
+
+  const renderActivityWithRoutes = () => {
     render(
       <MemoryRouter initialEntries={['/bubbles']}>
         <Routes>
@@ -74,45 +102,66 @@ describe('BubblesActivity component', () => {
         </Routes>
       </MemoryRouter>,
     )
+  }
 
-    await user.click(screen.getByRole('button', { name: /comenzar/i }))
-    await user.click(screen.getByRole('button', { name: /volver/i }))
-    expect(await screen.findByRole('heading', { name: 'Vista Minijuegos' })).toBeInTheDocument()
-  })
-
-  it('llama a startSession al hacer click en "Comenzar"', async () => {
+  const clickComenzar = () => {
     const user = userEvent.setup()
-    renderActivity()
+    return clickButton(user, 'Comenzar')
+  }
 
+  const clickVolver = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Volver')
+  }
+
+  const verifyComenzarButtonPresent = () => {
+    expect(screen.getByRole('button', { name: 'Comenzar' })).toBeInTheDocument()
+  }
+
+  const verifyBubblesContainerPresent = () => {
+    expect(screen.getByTestId('bubbles-container')).toBeInTheDocument()
+  }
+
+  const verifyVolverButtonNotPresent = () => {
+    expect(screen.queryByRole('button', { name: 'Volver' })).not.toBeInTheDocument()
+  }
+
+  const verifyVolverButtonPresent = () => {
+    expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument()
+  }
+
+  const verifyMinigamesViewPresent = () => {
+    return screen.findByRole('heading', { name: 'Vista Minijuegos' }).then((el) => {
+      expect(el).toBeInTheDocument()
+    })
+  }
+
+  const verifyStartSessionNotCalled = () => {
     expect(mockStartSession).not.toHaveBeenCalled()
+  }
 
-    await user.click(screen.getByRole('button', { name: /comenzar/i }))
-
+  const verifyStartSessionCalledOnce = () => {
     expect(mockStartSession).toHaveBeenCalledOnce()
-  })
+  }
 
-  it('llama a markConditionMet al interactuar con una burbuja', async () => {
+  const clickFirstBubble = () => {
     const user = userEvent.setup()
-    renderActivity()
-
-    await user.click(screen.getByRole('button', { name: /comenzar/i }))
-
-    expect(mockMarkConditionMet).not.toHaveBeenCalled()
-
-    // Click on the first bubble
     const bubble = screen.getByTestId('bubble-b-0')
-    await user.click(bubble)
+    return user.click(bubble)
+  }
 
+  const verifyMarkConditionMetNotCalled = () => {
+    expect(mockMarkConditionMet).not.toHaveBeenCalled()
+  }
+
+  const verifyMarkConditionMetCalled = () => {
     expect(mockMarkConditionMet).toHaveBeenCalled()
-  })
+  }
 
-  it('usa los valores retornados por el hook mockeado', () => {
-    renderActivity()
-
-    // Verify the hook was called with the correct arguments
+  const verifyTrackerHookCalled = () => {
     expect(mockedUseTracker).toHaveBeenCalledWith(
-      'BURBUJA',
+      'BUBBLE',
       expect.objectContaining({ autoStart: false }),
     )
-  })
+  }
 })

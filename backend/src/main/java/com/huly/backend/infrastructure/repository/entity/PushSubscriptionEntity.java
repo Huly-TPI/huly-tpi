@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(name = "push_subscriptions")
 public class PushSubscriptionEntity {
 
-    @Id 
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -27,14 +27,18 @@ public class PushSubscriptionEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String p256dh;
 
-    @Column(nullable = false,  length = 100)
+    @Column(nullable = false, length = 100)
     private String auth;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    @Builder.Default
+    @Column(name = "notification_hour", nullable = false)
+    private int notificationHour = 9;
 }

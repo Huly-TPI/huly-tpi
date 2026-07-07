@@ -20,6 +20,19 @@ import com.huly.backend.infrastructure.presentation.dto.admin.UserAiDiagnosticsR
 import com.huly.backend.infrastructure.presentation.dto.admin.UserAntiScrollResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.UserFinancialsResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.VectorMemoryDto;
+import com.huly.backend.domain.model.activity.Activity;
+import com.huly.backend.domain.model.activity.ActivityMetric;
+import com.huly.backend.domain.model.activity.ActivitiesKpiStats;
+import com.huly.backend.domain.model.activity.ActivityPopularityStats;
+import com.huly.backend.domain.model.activity.ActivityCorrelationStats;
+import com.huly.backend.domain.model.activity.ActivityImpactStats;
+import com.huly.backend.domain.dto.admin.activities.UpdateActivityConfigRequest;
+import com.huly.backend.infrastructure.presentation.dto.admin.activities.AdminActivityResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.activities.AdminUpdateActivityConfigRequest;
+import com.huly.backend.infrastructure.presentation.dto.admin.activities.AdminActivitiesKpiResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.activities.AdminActivityPopularityResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.activities.AdminActivityCorrelationResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.activities.AdminActivityImpactResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -32,6 +45,7 @@ public class AdminPresentationMapper {
                 .map(s -> ActivitySessionDto.builder()
                         .id(s.id())
                         .activityType(s.activityType())
+                        .activityName(s.activityName())
                         .createdAt(s.createdAt())
                         .build())
                 .toList();
@@ -42,6 +56,7 @@ public class AdminPresentationMapper {
                 .favoriteActivity(result.favoriteActivity())
                 .averageSessionsText(result.averageSessionsText())
                 .activityDistribution(result.activityDistribution())
+                .activityNames(result.activityNames())
                 .build();
     }
 
@@ -163,5 +178,80 @@ public class AdminPresentationMapper {
 
     private TopAppResponse toTopAppResponse(TopAppStats app) {
         return new TopAppResponse(app.getDomain(), app.getTotalActiveSeconds());
+    }
+
+    public AdminActivityResponse toResponse(Activity activity) {
+        return new AdminActivityResponse(
+                activity.getId(),
+                activity.getType(),
+                activity.getValenceMin(),
+                activity.getValenceMax(),
+                activity.getArousalMin(),
+                activity.getArousalMax(),
+                activity.getDominanceMin(),
+                activity.getDominanceMax(),
+                activity.getEffectValence(),
+                activity.getEffectArousal(),
+                activity.getEffectDominance(),
+                activity.getTitle(),
+                activity.getDescription(),
+                activity.getGoalKeywords(),
+                activity.getRoutePath()
+        );
+    }
+
+    public UpdateActivityConfigRequest toDomainRequest(AdminUpdateActivityConfigRequest request) {
+        return new UpdateActivityConfigRequest(
+                request.getValenceMin(),
+                request.getValenceMax(),
+                request.getArousalMin(),
+                request.getArousalMax(),
+                request.getDominanceMin(),
+                request.getDominanceMax(),
+                request.getEffectValence(),
+                request.getEffectArousal(),
+                request.getEffectDominance(),
+                request.getTitle(),
+                request.getDescription(),
+                request.getGoalKeywords(),
+                request.getRoutePath()
+        );
+    }
+
+    public AdminActivitiesKpiResponse toKpiResponse(ActivitiesKpiStats stats) {
+        return new AdminActivitiesKpiResponse(
+                stats.getTotalSessions(),
+                new AdminActivitiesKpiResponse.TopActivity(
+                        stats.getTopActivityType(),
+                        stats.getTopActivitySessions()
+                ),
+                stats.getAverageMoodImprovement()
+        );
+    }
+
+    public AdminActivityPopularityResponse toPopularityResponse(ActivityPopularityStats stats) {
+        return new AdminActivityPopularityResponse(
+                stats.getActivityType(),
+                stats.getActivityName(),
+                stats.getTotalSessions()
+        );
+    }
+
+    public AdminActivityCorrelationResponse toCorrelationResponse(ActivityCorrelationStats stats) {
+        return new AdminActivityCorrelationResponse(
+                stats.getActivityType(),
+                stats.getEmotion(),
+                stats.getSuggestionsCount(),
+                stats.getAcceptanceRate()
+        );
+    }
+
+    public AdminActivityImpactResponse toImpactResponse(ActivityImpactStats stats) {
+        return new AdminActivityImpactResponse(
+                stats.getActivityType(),
+                stats.getAverageValenceChange(),
+                stats.getAverageArousalChange(),
+                stats.isBasedOnMetrics()
+        );
     }
 }

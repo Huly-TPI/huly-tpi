@@ -132,26 +132,26 @@ public class GetCloudRecommendationUseCase {
     }
 
     private String toPublicActivityType(ActivityType type) {
-        if (type == ActivityType.RESPIRACION) {
+        if (type == ActivityType.BREATHING) {
             return "breathing";
         }
-        if (type == ActivityType.NUBE) {
+        if (type == ActivityType.LANTERN) {
             return "lanterns";
         }
-        if (type == ActivityType.BURBUJA) {
+        if (type == ActivityType.BUBBLE) {
             return "bubbles";
         }
         return "diary";
     }
 
     private String redirectUrl(ActivityType type) {
-        if (type == ActivityType.RESPIRACION) {
+        if (type == ActivityType.BREATHING) {
             return "/guided-breathing";
         }
-        if (type == ActivityType.NUBE) {
+        if (type == ActivityType.LANTERN) {
             return "/lanterns";
         }
-        if (type == ActivityType.BURBUJA) {
+        if (type == ActivityType.BUBBLE) {
             return "/bubbles";
         }
         return "/diary";

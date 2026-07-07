@@ -1,3 +1,4 @@
+import { clearAllMocks } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useAntiScrollDashboard } from '../../hooks/backoffice/useAntiScrollDashboard'
@@ -15,83 +16,130 @@ const mockedSaveAntiScrollConfig = vi.mocked(adminApi.saveAntiScrollConfig)
 
 describe('useAntiScrollDashboard', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     vi.restoreAllMocks()
   })
 
-  it('cargará los datos del dashboard y configuración al montar', async () => {
-    const mockDashboard = {
-      totalUsersCount: 10,
-      activeExtensionUsersCount: 5,
-      dataSharingConsentUsersCount: 3,
-      totalModalsShown: 100,
-      totalRedirects: 40,
-      topUsedApps: [
-        { domain: 'instagram.com', totalActiveSeconds: 1200 },
-        { domain: 'tiktok.com', totalActiveSeconds: 800 },
-      ],
-    }
-
-    const mockConfig = {
-      defaultPauseIntervalMinutes: 30,
-      termsAndConditions: 'Términos y condiciones aceptados',
-    }
-
-    mockedGetAntiScrollDashboard.mockResolvedValueOnce(mockDashboard)
-    mockedGetAntiScrollConfig.mockResolvedValueOnce(mockConfig)
-
-    const { result } = renderHook(() => useAntiScrollDashboard())
-
-    expect(result.current.loading).toBe(true)
-    expect(result.current.configLoading).toBe(true)
-
-    await waitFor(() => expect(result.current.loading).toBe(false))
-
-    expect(result.current.configLoading).toBe(false)
-    expect(result.current.dashboard).toEqual(mockDashboard)
-    expect(result.current.defaultTime).toBe(30)
-    expect(result.current.terms).toBe('Términos y condiciones aceptados')
-
-    expect(result.current.totalModals).toBe(100)
-    expect(result.current.totalRedirects).toBe(40)
-    expect(result.current.totalIgnore).toBe(60)
-    expect(result.current.redirectRate).toBe(40)
-    expect(result.current.ignoreRate).toBe(60)
-    expect(result.current.maxAppTime).toBe(1200)
+  it('cargará los datos del dashboard y configuración al montar', () => {
+    setupDashboardResolved(getMockDashboard())
+    setupConfigResolved(getMockConfig())
+    setupHook()
+    verifyLoadingStates(true, true)
+    return waitForLoadingFinished().then(() => {
+      verifyLoadingStates(false, false)
+      verifyDashboardData(getMockDashboard())
+      verifyConfigFields(30, 'Términos y condiciones aceptados')
+      verifyCalculatedMetrics(100, 40, 60, 40, 60, 1200)
+    })
   })
 
-  it('manejará errores si la carga falla', async () => {
-    mockedGetAntiScrollDashboard.mockRejectedValueOnce(new Error('Dashboard error'))
-    mockedGetAntiScrollConfig.mockRejectedValueOnce(new Error('Config error'))
-
-    const { result } = renderHook(() => useAntiScrollDashboard())
-
-    await waitFor(() => expect(result.current.loading).toBe(false))
-
-    expect(result.current.error).toBe('No se pudieron cargar los datos de antiscroll')
-    expect(result.current.dashboard).toBeNull()
+  it('manejará errores si la carga falla', () => {
+    setupDashboardRejected('Dashboard error')
+    setupConfigRejected('Config error')
+    setupHook()
+    return waitForLoadingFinished().then(() => {
+      verifyErrorMessage('No se pudieron cargar los datos de antiscroll')
+      verifyDashboardIsNull()
+    })
   })
 
-  it('permitirá guardar la configuración correctamente', async () => {
-    const mockDashboard = {
-      totalUsersCount: 10,
-      activeExtensionUsersCount: 5,
-      dataSharingConsentUsersCount: 3,
-      totalModalsShown: 0,
-      totalRedirects: 0,
-      topUsedApps: [],
-    }
+  it('permitirá guardar la configuración correctamente', () => {
+    setupDashboardResolved(getMockEmptyDashboard())
+    setupConfigResolved({ defaultPauseIntervalMinutes: 20, termsAndConditions: 'Términos' })
+    setupSaveConfigResolved()
+    setupTimeoutMock()
+    setupHook()
+    return waitForLoadingFinished().then(() => {
+      updateConfigInputs(25, 'Nuevos Términos')
+      callSaveConfig()
+      verifyConfigSaving(true)
+      return resolveSubmitPromise().then(() => {
+        verifyConfigSaving(false)
+        verifySaveSuccess(true)
+        verifySaveConfigCalledWith({ defaultPauseIntervalMinutes: 25, termsAndConditions: 'Nuevos Términos' })
+        verifyTimerCallbackDefined()
+        triggerTimerCallback()
+        verifySaveSuccess(false)
+      })
+    })
+  })
 
-    const mockConfig = {
-      defaultPauseIntervalMinutes: 20,
-      termsAndConditions: 'Términos',
-    }
+  it('manejará errores al intentar guardar la configuración', () => {
+    setupDashboardResolved(getMockEmptyDashboard())
+    setupConfigResolved({ defaultPauseIntervalMinutes: 20, termsAndConditions: 'Términos' })
+    setupSaveConfigRejected('Save error')
+    setupHook()
+    return waitForLoadingFinished().then(() => {
+      callSaveConfig()
+      return resolveSubmitPromise().then(() => {
+        verifyConfigSaving(false)
+        verifySaveSuccess(false)
+        verifyConfigError('No se pudo guardar la configuración')
+      })
+    })
+  })
+  let rendered: ReturnType<typeof renderHook<ReturnType<typeof useAntiScrollDashboard>, undefined>>
+  let submitPromise: Promise<void>
+  let timerCallback: (() => void) | undefined
 
-    mockedGetAntiScrollDashboard.mockResolvedValueOnce(mockDashboard)
-    mockedGetAntiScrollConfig.mockResolvedValueOnce(mockConfig)
+  /* helpers */
+
+  const getMockDashboard = () => ({
+    totalUsersCount: 10,
+    activeExtensionUsersCount: 5,
+    dataSharingConsentUsersCount: 3,
+    totalModalsShown: 100,
+    totalRedirects: 40,
+    topUsedApps: [
+      { domain: 'instagram.com', totalActiveSeconds: 1200 },
+      { domain: 'tiktok.com', totalActiveSeconds: 800 },
+    ],
+  })
+
+  const getMockConfig = () => ({
+    defaultPauseIntervalMinutes: 30,
+    termsAndConditions: 'Términos y condiciones aceptados',
+  })
+
+  const getMockEmptyDashboard = () => ({
+    totalUsersCount: 10,
+    activeExtensionUsersCount: 5,
+    dataSharingConsentUsersCount: 3,
+    totalModalsShown: 0,
+    totalRedirects: 0,
+    topUsedApps: [],
+  })
+
+  const setupHook = () => {
+    rendered = renderHook(() => useAntiScrollDashboard())
+  }
+
+  const setupDashboardResolved = (val: any) => {
+    mockedGetAntiScrollDashboard.mockResolvedValueOnce(val)
+  }
+
+  const setupConfigResolved = (val: any) => {
+    mockedGetAntiScrollConfig.mockResolvedValueOnce(val)
+  }
+
+  const setupDashboardRejected = (msg: string) => {
+    mockedGetAntiScrollDashboard.mockRejectedValueOnce(new Error(msg))
+  }
+
+  const setupConfigRejected = (msg: string) => {
+    mockedGetAntiScrollConfig.mockRejectedValueOnce(new Error(msg))
+  }
+
+  const setupSaveConfigResolved = () => {
     mockedSaveAntiScrollConfig.mockResolvedValueOnce(undefined)
+  }
 
-    let timerCallback: (() => void) | undefined
+  const setupSaveConfigRejected = (msg: string) => {
+    mockedSaveAntiScrollConfig.mockRejectedValueOnce(new Error(msg))
+  }
+
+  const setupTimeoutMock = () => {
+    timerCallback = undefined
     const originalSetTimeout = global.setTimeout
     vi.spyOn(global, 'setTimeout').mockImplementation((cb, ms, ...args) => {
       if (ms === 3000) {
@@ -100,79 +148,96 @@ describe('useAntiScrollDashboard', () => {
       }
       return originalSetTimeout(cb, ms, ...args)
     })
+  }
 
-    const { result } = renderHook(() => useAntiScrollDashboard())
-
-    await waitFor(() => expect(result.current.loading).toBe(false))
-
-    act(() => {
-      result.current.setDefaultTime(25)
-      result.current.setTerms('Nuevos Términos')
+  const waitForLoadingFinished = () => {
+    return waitFor(() => {
+      expect(rendered.result.current.loading).toBe(false)
     })
+  }
 
-    let submitPromise: Promise<void>
+  const updateConfigInputs = (defaultTime: number, terms: string) => {
     act(() => {
-      submitPromise = result.current.handleSaveConfig({
+      rendered.result.current.setDefaultTime(defaultTime)
+      rendered.result.current.setTerms(terms)
+    })
+  }
+
+  const callSaveConfig = () => {
+    act(() => {
+      submitPromise = rendered.result.current.handleSaveConfig({
         preventDefault: vi.fn(),
       } as unknown as React.FormEvent)
     })
+  }
 
-    expect(result.current.configSaving).toBe(true)
-
+  const resolveSubmitPromise = async () => {
     await act(async () => {
       await submitPromise
     })
+  }
 
-    expect(result.current.configSaving).toBe(false)
-    expect(result.current.saveSuccess).toBe(true)
-    expect(mockedSaveAntiScrollConfig).toHaveBeenCalledWith({
-      defaultPauseIntervalMinutes: 25,
-      termsAndConditions: 'Nuevos Términos',
-    })
-
-    expect(timerCallback).toBeDefined()
+  const triggerTimerCallback = () => {
     act(() => {
       timerCallback?.()
     })
-    expect(result.current.saveSuccess).toBe(false)
-  })
+  }
 
-  it('manejará errores al intentar guardar la configuración', async () => {
-    const mockDashboard = {
-      totalUsersCount: 10,
-      activeExtensionUsersCount: 5,
-      dataSharingConsentUsersCount: 3,
-      totalModalsShown: 0,
-      totalRedirects: 0,
-      topUsedApps: [],
-    }
+  const verifyLoadingStates = (loading: boolean, configLoading: boolean) => {
+    expect(rendered.result.current.loading).toBe(loading)
+    expect(rendered.result.current.configLoading).toBe(configLoading)
+  }
 
-    const mockConfig = {
-      defaultPauseIntervalMinutes: 20,
-      termsAndConditions: 'Términos',
-    }
+  const verifyDashboardData = (expected: any) => {
+    expect(rendered.result.current.dashboard).toEqual(expected)
+  }
 
-    mockedGetAntiScrollDashboard.mockResolvedValueOnce(mockDashboard)
-    mockedGetAntiScrollConfig.mockResolvedValueOnce(mockConfig)
-    mockedSaveAntiScrollConfig.mockRejectedValueOnce(new Error('Save error'))
+  const verifyConfigFields = (defaultTime: number, terms: string) => {
+    expect(rendered.result.current.defaultTime).toBe(defaultTime)
+    expect(rendered.result.current.terms).toBe(terms)
+  }
 
-    const { result } = renderHook(() => useAntiScrollDashboard())
+  const verifyCalculatedMetrics = (
+    totalModals: number,
+    totalRedirects: number,
+    totalIgnore: number,
+    redirectRate: number,
+    ignoreRate: number,
+    maxAppTime: number
+  ) => {
+    expect(rendered.result.current.totalModals).toBe(totalModals)
+    expect(rendered.result.current.totalRedirects).toBe(totalRedirects)
+    expect(rendered.result.current.totalIgnore).toBe(totalIgnore)
+    expect(rendered.result.current.redirectRate).toBe(redirectRate)
+    expect(rendered.result.current.ignoreRate).toBe(ignoreRate)
+    expect(rendered.result.current.maxAppTime).toBe(maxAppTime)
+  }
 
-    await waitFor(() => expect(result.current.loading).toBe(false))
+  const verifyErrorMessage = (expected: string) => {
+    expect(rendered.result.current.error).toBe(expected)
+  }
 
-    let submitPromise: Promise<void>
-    act(() => {
-      submitPromise = result.current.handleSaveConfig({
-        preventDefault: vi.fn(),
-      } as unknown as React.FormEvent)
-    })
+  const verifyDashboardIsNull = () => {
+    expect(rendered.result.current.dashboard).toBeNull()
+  }
 
-    await act(async () => {
-      await submitPromise
-    })
+  const verifyConfigSaving = (expected: boolean) => {
+    expect(rendered.result.current.configSaving).toBe(expected)
+  }
 
-    expect(result.current.configSaving).toBe(false)
-    expect(result.current.saveSuccess).toBe(false)
-    expect(result.current.configError).toBe('No se pudo guardar la configuración')
-  })
+  const verifySaveSuccess = (expected: boolean) => {
+    expect(rendered.result.current.saveSuccess).toBe(expected)
+  }
+
+  const verifyConfigError = (expected: string) => {
+    expect(rendered.result.current.configError).toBe(expected)
+  }
+
+  const verifySaveConfigCalledWith = (expected: any) => {
+    expect(mockedSaveAntiScrollConfig).toHaveBeenCalledWith(expected)
+  }
+
+  const verifyTimerCallbackDefined = () => {
+    expect(timerCallback).toBeDefined()
+  }
 })

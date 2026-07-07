@@ -1,6 +1,7 @@
 package com.huly.backend.domain.useCase.lead;
 
 import com.huly.backend.domain.dto.lead.RegisterLeadRequest;
+import com.huly.backend.domain.dto.lead.RegisterLeadResponse;
 import com.huly.backend.domain.mapper.lead.RegisterLeadMapper;
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.SourceAction;
@@ -10,6 +11,7 @@ import com.huly.backend.domain.exception.DuplicateResourceException;
 import com.huly.backend.domain.port.EmailPort;
 import com.huly.backend.domain.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,8 +28,15 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RegisterLeadUseCaseTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private EmailPort emailPort;
+    private static final String EMAIL = "lead@huly.com";
+    private static final String NICKNAME = "hulyuser";
+    private static final Long USER_ID = 42L;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private EmailPort emailPort;
 
     private RegisterLeadUseCase registerLeadUseCase;
 
@@ -37,58 +46,135 @@ class RegisterLeadUseCaseTest {
     }
 
     @Test
-    void execute_shouldSaveUserWithLeadRoleAndActiveStatus() {
-        when(userRepository.existsByEmail("lead@huly.com")).thenReturn(false);
-        when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().id(1L).build());
+    @DisplayName("Guarda el usuario con rol LEAD y estado ACTIVE")
+    void executeShouldSaveUserWithLeadRoleAndActiveStatus() {
+        // --- arrange ---
+        givenNewLead();
+        givenPersistedUser();
 
+        // --- act ---
+        register(SourceAction.LANDING);
+
+        // --- assert ---
+        thenSavedUserIsActiveLead();
+    }
+
+    @Test
+    @DisplayName("Guarda el detalle del lead con el nickname y la accion de origen")
+    void executeShouldSaveLeadDetailWithNicknameAndSourceAction() {
+        // --- arrange ---
+        givenNewLead();
+        givenPersistedUser();
+
+        // --- act ---
+        register(SourceAction.JOURNAL);
+
+        // --- assert ---
+        thenLeadDetailSavedWith(SourceAction.JOURNAL);
+    }
+
+    @Test
+    @DisplayName("Envia el email de bienvenida al lead")
+    void executeShouldSendWelcomeEmail() {
+        // --- arrange ---
+        givenNewLead();
+        givenPersistedUser();
+
+        // --- act ---
+        register(SourceAction.LANDING);
+
+        // --- assert ---
+        thenWelcomeEmailSent();
+    }
+
+    @Test
+    @DisplayName("Devuelve la respuesta con el id, email y nickname del lead registrado")
+    void executeShouldReturnResponseWithLeadData() {
+        // --- arrange ---
+        givenNewLead();
+        givenPersistedUser();
+
+        // --- act ---
+        RegisterLeadResponse result = register(SourceAction.LANDING);
+
+        // --- assert ---
+        thenResponseHasLeadData(result);
+    }
+
+    @Test
+    @DisplayName("Lanza excepcion de conflicto cuando el email ya existe")
+    void executeShouldThrowConflictWhenEmailAlreadyExists() {
+        // --- arrange ---
+        givenExistingLead();
+
+        // --- assert ---
+        thenRegisterThrowsDuplicate();
+    }
+
+    @Test
+    @DisplayName("No guarda ni envia email cuando el email ya existe")
+    void executeShouldNotSaveNorSendEmailWhenEmailAlreadyExists() {
+        // --- arrange ---
+        givenExistingLead();
+
+        // --- assert ---
+        thenRegisterThrowsDuplicate();
+        thenNothingWasPersisted();
+    }
+
+    // --- arrange ---
+
+    private void givenNewLead() {
+        when(userRepository.existsByEmail(EMAIL)).thenReturn(false);
+    }
+
+    private void givenPersistedUser() {
+        when(userRepository.save(any(AppUser.class)))
+                .thenReturn(AppUser.builder().id(USER_ID).email(EMAIL).build());
+    }
+
+    private void givenExistingLead() {
+        when(userRepository.existsByEmail(EMAIL)).thenReturn(true);
+    }
+
+    // --- act ---
+
+    private RegisterLeadResponse register(SourceAction sourceAction) {
+        return registerLeadUseCase.execute(new RegisterLeadRequest(EMAIL, NICKNAME, sourceAction));
+    }
+
+    // --- assert ---
+
+    private void thenSavedUserIsActiveLead() {
         ArgumentCaptor<AppUser> captor = ArgumentCaptor.forClass(AppUser.class);
-        registerLeadUseCase.execute(new RegisterLeadRequest("lead@huly.com", "hulyuser", SourceAction.LANDING));
-
         verify(userRepository).save(captor.capture());
         AppUser saved = captor.getValue();
-        assertThat(saved.getEmail()).isEqualTo("lead@huly.com");
+        assertThat(saved.getEmail()).isEqualTo(EMAIL);
         assertThat(saved.getRole()).isEqualTo(UserRole.LEAD);
         assertThat(saved.getStatus()).isEqualTo(UserStatus.ACTIVE);
     }
 
-    @Test
-    void execute_shouldSaveLeadDetailWithNicknameAndSourceAction() {
-        when(userRepository.existsByEmail("lead@huly.com")).thenReturn(false);
-        when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().id(42L).build());
-
-        registerLeadUseCase.execute(new RegisterLeadRequest("lead@huly.com", "hulyuser", SourceAction.JOURNAL));
-
-        verify(userRepository).saveLeadDetail(42L, "hulyuser", SourceAction.JOURNAL);
+    private void thenLeadDetailSavedWith(SourceAction sourceAction) {
+        verify(userRepository).saveLeadDetail(USER_ID, NICKNAME, sourceAction);
     }
 
-    @Test
-    void execute_shouldSendWelcomeEmail() {
-        when(userRepository.existsByEmail("lead@huly.com")).thenReturn(false);
-        when(userRepository.save(any(AppUser.class))).thenReturn(AppUser.builder().id(1L).build());
-
-        registerLeadUseCase.execute(new RegisterLeadRequest("lead@huly.com", "hulyuser", SourceAction.LANDING));
-
-        verify(emailPort).sendWelcomeLead("lead@huly.com", "hulyuser");
+    private void thenWelcomeEmailSent() {
+        verify(emailPort).sendWelcomeLead(EMAIL, NICKNAME);
     }
 
-    @Test
-    void execute_shouldThrowConflictException_whenEmailAlreadyExists() {
-        when(userRepository.existsByEmail("existing@huly.com")).thenReturn(true);
+    private void thenResponseHasLeadData(RegisterLeadResponse result) {
+        assertThat(result.id()).isEqualTo(USER_ID);
+        assertThat(result.email()).isEqualTo(EMAIL);
+        assertThat(result.nickname()).isEqualTo(NICKNAME);
+    }
 
-        assertThatThrownBy(() -> registerLeadUseCase.execute(
-                new RegisterLeadRequest("existing@huly.com", "hulyuser", SourceAction.LANDING)))
+    private void thenRegisterThrowsDuplicate() {
+        assertThatThrownBy(() -> register(SourceAction.LANDING))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("Ya existe un lead con email");
     }
 
-    @Test
-    void execute_shouldNotSaveNorSendEmail_whenEmailAlreadyExists() {
-        when(userRepository.existsByEmail("existing@huly.com")).thenReturn(true);
-
-        assertThatThrownBy(() -> registerLeadUseCase.execute(
-                new RegisterLeadRequest("existing@huly.com", "hulyuser", SourceAction.LANDING)))
-                .isInstanceOf(DuplicateResourceException.class);
-
+    private void thenNothingWasPersisted() {
         verify(userRepository, never()).save(any());
         verify(userRepository, never()).saveLeadDetail(any(), any(), any());
         verify(emailPort, never()).sendWelcomeLead(any(), any());

@@ -30,4 +30,26 @@ public record EmotionalAnalysisResult(
     public Vad vad() {
         return new Vad(valence, arousal, dominance);
     }
+
+    /**
+     * Indica si el análisis tiene una emoción aprovechable para enriquecer la respuesta.
+     */
+    public boolean hasUsableEmotion() {
+        return detectedEmotion != null && confidence > 0.0;
+    }
+
+    /**
+     * Normaliza la intensidad continua (0..1) a la escala 0..10 usada en el chat.
+     */
+    public Integer chatIntensity() {
+        return (int) Math.round(Math.max(0.0, Math.min(1.0, intensity)) * 10.0);
+    }
+
+    /**
+     * Nombre de la emoción detectada, con {@link EmotionType#NEUTRAL} por defecto.
+     */
+    public String emotionName() {
+        EmotionType emotion = detectedEmotion == null ? EmotionType.NEUTRAL : detectedEmotion;
+        return emotion.name();
+    }
 }

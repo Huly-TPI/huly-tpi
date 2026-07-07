@@ -1,4 +1,5 @@
 package com.huly.backend.infrastructure.repository.entity;
+
 import com.huly.backend.domain.model.enums.ItemCategory;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,7 +19,7 @@ public class StoreItemEntity {
     private Long id;
 
     @Column(nullable = false)
-    
+
     private String name;
     @Column(nullable = false)
     private String description;
@@ -26,16 +27,19 @@ public class StoreItemEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ItemCategory category;
-    
-    @Column(name = "asset_key", nullable = false, unique = true, length = 100)
+
+    @Column(name = "asset_key", unique = true, length = 100)
     private String assetKey;
-    
+
     @Column(name = "price_coins", nullable = false)
     private int priceCoins;
-    
+
     @Column(name = "price")
     private BigDecimal price;
 
     @Column(name = "premium_only", nullable = false)
     private boolean premiumOnly;
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 }

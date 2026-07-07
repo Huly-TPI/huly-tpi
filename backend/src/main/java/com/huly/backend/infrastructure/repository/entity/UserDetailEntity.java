@@ -29,9 +29,6 @@ public class UserDetailEntity {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "lastname")
-    private String lastname;
-
     @Column(name = "avatar_url")
     private String avatarUrl;
 

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { act } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import ChatbotLauncher from '../../components/Chatbot/ChatbotLauncher'
+import { verifyTextPresent, clearAllMocks } from '../testHelpers'
 
 const mockUseAuth = vi.fn()
 vi.mock('../../context/auth', () => ({
@@ -18,91 +19,90 @@ vi.mock('../../components/Chatbot/ChatbotModal', () => ({
 
 describe('ChatbotLauncher', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     document.body.removeAttribute('data-home-onboarding-active')
   })
 
-  it('does not render launcher when not authenticated', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: false })
-
-    render(
-      <MemoryRouter>
-        <ChatbotLauncher />
-      </MemoryRouter>,
-    )
-
-    expect(
-      screen.queryByRole('button', { name: 'Abrir chat de Huly' }),
-    ).not.toBeInTheDocument()
+  it('no renderiza el launcher cuando no está autenticado', () => {
+    setupAuth(false)
+    renderLauncher()
+    verifyLauncherButtonNotPresent()
   })
 
-  it('renders launcher when authenticated and opens modal', async () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true })
-    const user = userEvent.setup()
+  it('renderiza el launcher cuando está autenticado y abre el modal', () => {
+    setupAuth(true)
+    renderLauncher()
+    return verifyLauncherButtonPresent()
+      .then(() => clickLauncherButton())
+      .then(() => verifyModalOpen())
+  })
 
-    render(
-      <MemoryRouter>
-        <ChatbotLauncher />
-      </MemoryRouter>,
-    )
+  it('no renderiza el launcher en la ruta de onboarding emocional', () => {
+    setupAuth(true)
+    renderLauncher('/onboarding')
+    verifyLauncherButtonNotPresent()
+  })
 
-    const openButton = await screen.findByRole('button', {
-      name: 'Abrir chat de Huly',
+  it('no renderiza el launcher mientras el onboarding de inicio está activo', () => {
+    setupAuth(true)
+    setupHomeOnboardingActive()
+    renderLauncher()
+    verifyLauncherButtonNotPresent()
+  })
+
+  it('oculta el launcher cuando el onboarding de inicio se activa después de renderizar', () => {
+    setupAuth(true)
+    renderLauncher()
+    return verifyLauncherButtonPresent().then(() => {
+      triggerHomeOnboardingVisibilityChange()
+      verifyLauncherButtonNotPresent()
     })
-    expect(openButton).toBeInTheDocument()
-
-    await user.click(openButton)
-    expect(screen.getByText('modal-open')).toBeInTheDocument()
   })
 
-  it('does not render launcher on emotional onboarding route', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true })
+  /* helpers */
 
+  const setupAuth = (isAuthenticated: boolean) => {
+    mockUseAuth.mockReturnValue({ isAuthenticated })
+  }
+
+  const renderLauncher = (initialRoute: string = '/') => {
     render(
-      <MemoryRouter initialEntries={['/onboarding']}>
+      <MemoryRouter initialEntries={[initialRoute]}>
         <ChatbotLauncher />
-      </MemoryRouter>,
+      </MemoryRouter>
     )
+  }
 
-    expect(
-      screen.queryByRole('button', { name: 'Abrir chat de Huly' }),
-    ).not.toBeInTheDocument()
-  })
+  const verifyLauncherButtonNotPresent = () => {
+    expect(screen.queryByRole('button', { name: 'Abrir chat de Huly' })).not.toBeInTheDocument()
+  }
 
-  it('does not render launcher while home onboarding is active', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true })
+  const verifyLauncherButtonPresent = () => {
+    return screen.findByRole('button', { name: 'Abrir chat de Huly' }).then(button => {
+      expect(button).toBeInTheDocument()
+    })
+  }
+
+  const clickLauncherButton = () => {
+    const user = userEvent.setup()
+    return screen.findByRole('button', { name: 'Abrir chat de Huly' }).then(button => {
+      return user.click(button)
+    })
+  }
+
+  const verifyModalOpen = () => {
+    verifyTextPresent('modal-open')
+  }
+
+  const setupHomeOnboardingActive = () => {
     document.body.setAttribute('data-home-onboarding-active', 'true')
     window.dispatchEvent(new CustomEvent('home-onboarding-visibility-change'))
+  }
 
-    render(
-      <MemoryRouter>
-        <ChatbotLauncher />
-      </MemoryRouter>,
-    )
-
-    expect(
-      screen.queryByRole('button', { name: 'Abrir chat de Huly' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('hides launcher when home onboarding becomes active after render', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true })
-
-    render(
-      <MemoryRouter>
-        <ChatbotLauncher />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByRole('button', { name: 'Abrir chat de Huly' })).toBeInTheDocument()
-
+  const triggerHomeOnboardingVisibilityChange = () => {
     act(() => {
       document.body.setAttribute('data-home-onboarding-active', 'true')
       window.dispatchEvent(new CustomEvent('home-onboarding-visibility-change'))
     })
-
-    expect(
-      screen.queryByRole('button', { name: 'Abrir chat de Huly' }),
-    ).not.toBeInTheDocument()
-  })
+  }
 })

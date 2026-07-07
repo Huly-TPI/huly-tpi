@@ -1,5 +1,6 @@
-import { ActivityType, ACTIVITY_METADATA } from '../../../types/ai'
-import { Activity, Calendar } from 'lucide-react'
+import { ActivityType } from '../../../api/activities'
+import { ACTIVITY_ICONS, ACTIVITY_THEMES } from '../../../components/backoffice/activities/activityUiMetadata'
+import { Activity, Calendar, CirclePlay } from 'lucide-react'
 import { UserActivitiesResponse } from '../../../api/admin'
 import { Timeframe } from '../../../types/timeframe'
 
@@ -22,7 +23,7 @@ export function UsageTab({
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-violeta border-t-transparent"></div>
-        <p className="text-xs text-gray-550 dark:text-gray-400 font-bold">Cargando actividades...</p>
+        <p className="text-xs text-gray-555 dark:text-gray-400 font-bold">Cargando actividades...</p>
       </div>
     )
   }
@@ -44,12 +45,13 @@ export function UsageTab({
   const distribution = activities.activityDistribution
 
   const counts: Record<ActivityType, number> = {
-    [ActivityType.RESPIRACION]: distribution['RESPIRACION'] || 0,
-    [ActivityType.DIARIO]: distribution['DIARIO'] || 0,
-    [ActivityType.NUBE]: distribution['NUBE'] || 0,
-    [ActivityType.BURBUJA]: distribution['BURBUJA'] || 0,
-    [ActivityType.RETO]: distribution['RETO'] || 0,
-    [ActivityType.ARENA_ZEN]: distribution['ARENA_ZEN'] || 0,
+    [ActivityType.BREATHING]: distribution['BREATHING'] || 0,
+    [ActivityType.DIARY]: distribution['DIARY'] || 0,
+    [ActivityType.LANTERN]: distribution['LANTERN'] || 0,
+    [ActivityType.BUBBLE]: distribution['BUBBLE'] || 0,
+    [ActivityType.CHALLENGE]: distribution['CHALLENGE'] || 0,
+    [ActivityType.ZEN_GARDEN]: distribution['ZEN_GARDEN'] || 0,
+    [ActivityType.MANDALA]: distribution['MANDALA'] || 0,
   }
   const maxCount = Math.max(...Object.values(counts), 1)
 
@@ -63,7 +65,7 @@ export function UsageTab({
         <div className={`bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 dark:from-emerald-950/20 dark:to-transparent border border-emerald-500/20 rounded-xl p-4 flex flex-col justify-between transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
           <span className="text-xs font-bold text-gray-400 dark:text-gray-555">Módulo favorito</span>
           <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-2 truncate">
-            {favoriteActivity && ACTIVITY_METADATA[favoriteActivity] ? ACTIVITY_METADATA[favoriteActivity].title : 'Ninguno'}
+            {favoriteActivity ? ((activities.activityNames && activities.activityNames[favoriteActivity]) || favoriteActivity) : 'Ninguno'}
           </span>
         </div>
         <div className={`bg-gradient-to-br from-blue-500/10 to-blue-500/5 dark:from-blue-955/20 dark:to-transparent border border-blue-500/20 rounded-xl p-4 flex flex-col justify-between transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
@@ -77,7 +79,7 @@ export function UsageTab({
                 return (
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-black text-blue-600 dark:text-blue-400">{numberPart}</span>
-                    <span className="text-xs font-bold text-gray-400 dark:text-gray-550">{labelPart}</span>
+                    <span className="text-xs font-bold text-gray-400 dark:text-gray-555">{labelPart}</span>
                   </div>
                 )
               }
@@ -116,25 +118,38 @@ export function UsageTab({
             </select>
           </div>
         </div>
-        <div className={`space-y-4 transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
-          {(Object.entries(counts) as [ActivityType, number][]).map(([key, count]) => {
-            const pct = (count / maxCount) * 100
-            const metadata = ACTIVITY_METADATA[key]
-            return (
-              <div key={key} className="space-y-1">
-                <div className="flex justify-between text-xs font-bold text-gray-600 dark:text-gray-400">
-                  <span>{metadata.title}</span>
-                  <span className="text-gray-800 dark:text-gray-200">{count} veces</span>
+        <div className={`grid gap-5 md:grid-cols-2 transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
+          {(Object.entries(counts) as [ActivityType, number][])
+            .sort((a, b) => b[1] - a[1])
+            .map(([key, count]) => {
+              const Icon = ACTIVITY_ICONS[key] || CirclePlay
+              const theme = ACTIVITY_THEMES[key] || { bg: 'bg-gray-100', text: 'text-gray-600', bar: 'bg-gray-400' }
+              const barWidthPercentage = maxCount > 0 ? Math.round((count * 100) / maxCount) : 0
+
+              return (
+                <div key={key} className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${theme.bg}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span className="text-gray-705 dark:text-gray-300">
+                        {(activities.activityNames && activities.activityNames[key]) || key}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono text-gray-400 text-[11px]">
+                      <span className="text-gray-700 dark:text-gray-200">{count} {count === 1 ? 'sesión' : 'sesiones'}</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800/40 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${theme.bar}`}
+                      style={{ width: `${barWidthPercentage}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full bg-gradient-to-r ${metadata.color} rounded-full transition-all duration-500`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
         </div>
       </div>
 
@@ -149,19 +164,26 @@ export function UsageTab({
           <div className="py-8 text-center text-xs text-gray-400">No hay sesiones de actividad registradas.</div>
         ) : (
           <div className={`space-y-3 pr-1 transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
-            {sessions.map((s) => (
-              <div key={s.id} className="flex justify-between items-center bg-white dark:bg-[#172033] px-4 py-2.5 rounded-xl border border-gray-100 dark:border-gray-800/60 shadow-sm text-xs animate-fadeIn">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-violeta animate-pulse" />
-                  <span className="font-extrabold text-gray-700 dark:text-gray-300">
-                    {ACTIVITY_METADATA[s.activityType as ActivityType]?.title || s.activityType}
+            {sessions.map((s) => {
+              const key = s.activityType as ActivityType
+              const Icon = ACTIVITY_ICONS[key] || CirclePlay
+              const theme = ACTIVITY_THEMES[key] || { bg: 'bg-gray-100 text-gray-500' }
+              return (
+                <div key={s.id} className="flex justify-between items-center bg-white dark:bg-[#172033] px-4 py-2.5 rounded-xl border border-gray-100 dark:border-gray-800/60 shadow-sm text-xs animate-fadeIn">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex h-6 w-6 items-center justify-center rounded-md ${theme.bg}`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="font-extrabold text-gray-700 dark:text-gray-300">
+                      {s.activityName || (activities.activityNames && activities.activityNames[key]) || s.activityType}
+                    </span>
+                  </div>
+                  <span className="text-gray-400 dark:text-gray-555 font-medium">
+                    {new Date(s.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
                   </span>
                 </div>
-                <span className="text-gray-400 dark:text-gray-550 font-medium">
-                  {new Date(s.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

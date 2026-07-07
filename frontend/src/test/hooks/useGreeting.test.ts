@@ -3,21 +3,27 @@ import { getGreeting } from '../../hooks/useGreeting'
 
 describe('getGreeting', () => {
   it('devuelve "Buenos días" entre las 6 y las 11', () => {
-    expect(getGreeting(6)).toBe('Buenos días')
-    expect(getGreeting(9)).toBe('Buenos días')
-    expect(getGreeting(11)).toBe('Buenos días')
+    verifyGreeting(6, 'Buenos días')
+    verifyGreeting(9, 'Buenos días')
+    verifyGreeting(11, 'Buenos días')
   })
 
   it('devuelve "Buenas tardes" entre las 12 y las 18', () => {
-    expect(getGreeting(12)).toBe('Buenas tardes')
-    expect(getGreeting(15)).toBe('Buenas tardes')
-    expect(getGreeting(18)).toBe('Buenas tardes')
+    verifyGreeting(12, 'Buenas tardes')
+    verifyGreeting(15, 'Buenas tardes')
+    verifyGreeting(18, 'Buenas tardes')
   })
 
   it('devuelve "Buenas noches" en la madrugada o de noche', () => {
-    expect(getGreeting(0)).toBe('Buenas noches')
-    expect(getGreeting(3)).toBe('Buenas noches')
-    expect(getGreeting(20)).toBe('Buenas noches')
-    expect(getGreeting(23)).toBe('Buenas noches')
+    verifyGreeting(0, 'Buenas noches')
+    verifyGreeting(3, 'Buenas noches')
+    verifyGreeting(20, 'Buenas noches')
+    verifyGreeting(23, 'Buenas noches')
   })
+
+  /* helpers */
+
+  const verifyGreeting = (hour: number, expected: string) => {
+    expect(getGreeting(hour)).toBe(expected)
+  }
 })

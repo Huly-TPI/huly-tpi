@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
+import { verifyTextPresent } from '../testHelpers'
+
 
 describe('SceneElement', () => {
   const baseProps = {
@@ -19,69 +21,72 @@ describe('SceneElement', () => {
     tooltipClassName: 'bottom-full mb-2',
   }
 
-  it('renderiza imagen y tooltip con el titulo', () => {
-    render(
-      <MemoryRouter>
-        <SceneElement {...baseProps} to="/profile" />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByAltText('Casa de perfil')).toBeInTheDocument()
-    expect(screen.getByText('Perfil')).toBeInTheDocument()
+  it('renderiza la imagen y el tooltip con el título', () => {
+    renderWithRouterAndProps({ to: '/profile' })
+    verifyAltTextPresent('Casa de perfil')
+    verifyTextPresent('Perfil')
   })
 
-  it('renderiza un link cuando recibe destino', () => {
-    render(
-      <MemoryRouter>
-        <SceneElement {...baseProps} to="/profile" />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByLabelText('Perfil').closest('a')).toHaveAttribute('href', '/profile')
+  it('renderiza un enlace cuando recibe un destino', () => {
+    renderWithRouterAndProps({ to: '/profile' })
+    verifyLinkDestination('Perfil', '/profile')
   })
 
-  it('renderiza un button cuando no recibe destino', () => {
-    render(
-      <MemoryRouter>
-        <SceneElement {...baseProps} />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByRole('button', { name: 'Perfil' })).toBeInTheDocument()
+  it('renderiza un botón cuando no recibe un destino', () => {
+    renderWithRouterAndProps({})
+    verifyButtonWithNamePresent('Perfil')
   })
 
-  it('usa la imagen dark cuando el theme es dark', () => {
-    render(
-      <MemoryRouter>
-        <SceneElement {...baseProps} theme="dark" />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByAltText('Casa de perfil')).toHaveAttribute('src', '/dark-house.webp')
+  it('usa la imagen oscura cuando el tema es oscuro', () => {
+    renderWithRouterAndProps({ theme: 'dark' })
+    verifyImageSrc('Casa de perfil', '/dark-house.webp')
   })
 
-  it('aplica la variante visual adicional cuando se la pasa', () => {
-    render(
-      <MemoryRouter>
-        <SceneElement
-          {...baseProps}
-          imageAlt="Banco espejado"
-          imageVariantClassName="scene-element__image--mirror-mobile"
-        />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByAltText('Banco espejado')).toHaveClass('scene-element__image--mirror-mobile')
+  it('aplica la variante visual adicional cuando se especifica', () => {
+    renderWithRouterAndProps({
+      imageAlt: 'Banco espejado',
+      imageVariantClassName: 'scene-element__image--mirror-mobile',
+    })
+    verifyImageHasClass('Banco espejado', 'scene-element__image--mirror-mobile')
   })
 
-  it('desactiva navegacion cuando interactive es false', () => {
+  it('desactiva la navegación cuando la propiedad interactiva es falsa', () => {
+    renderWithRouterAndProps({ to: '/profile', interactive: false })
+    verifyButtonWithNamePresent('Perfil')
+    verifyLinkWithNameNotPresent('Perfil')
+  })
+
+  /* helpers */
+
+  const renderWithRouterAndProps = (props: Record<string, any>) => {
     render(
       <MemoryRouter>
-        <SceneElement {...baseProps} to="/profile" interactive={false} />
+        <SceneElement {...baseProps} {...props} />
       </MemoryRouter>
     )
+  }
 
-    expect(screen.getByRole('button', { name: 'Perfil' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Perfil' })).not.toBeInTheDocument()
-  })
+  const verifyAltTextPresent = (alt: string) => {
+    expect(screen.getByAltText(alt)).toBeInTheDocument()
+  }
+
+  const verifyLinkDestination = (label: string, href: string) => {
+    expect(screen.getByLabelText(label).closest('a')).toHaveAttribute('href', href)
+  }
+
+  const verifyButtonWithNamePresent = (name: string) => {
+    expect(screen.getByRole('button', { name })).toBeInTheDocument()
+  }
+
+  const verifyImageSrc = (alt: string, src: string) => {
+    expect(screen.getByAltText(alt)).toHaveAttribute('src', src)
+  }
+
+  const verifyImageHasClass = (alt: string, className: string) => {
+    expect(screen.getByAltText(alt)).toHaveClass(className)
+  }
+
+  const verifyLinkWithNameNotPresent = (name: string) => {
+    expect(screen.queryByRole('link', { name })).not.toBeInTheDocument()
+  }
 })

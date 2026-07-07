@@ -25,6 +25,7 @@ import com.huly.backend.infrastructure.presentation.mapper.cloud.CloudPresentati
 import com.huly.backend.infrastructure.presentation.mapper.cloudRecommendation.CloudRecommendationPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
@@ -34,6 +35,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
@@ -43,13 +45,18 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class CloudControllerTest {
+
+    private static final Long USER_ID = 1L;
 
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -60,8 +67,6 @@ class CloudControllerTest {
     private UpdateCloudStatusUseCase updateCloudStatusUseCase;
     private MarkCloudWorkedOnUseCase markCloudWorkedOnUseCase;
 
-    private static final Long USER_ID = 1L;
-
     @BeforeEach
     void setUp() {
         getCloudRecommendationUseCase = mock(GetCloudRecommendationUseCase.class);
@@ -70,10 +75,6 @@ class CloudControllerTest {
         listCloudThoughtsUseCase = mock(ListCloudThoughtsUseCase.class);
         updateCloudStatusUseCase = mock(UpdateCloudStatusUseCase.class);
         markCloudWorkedOnUseCase = mock(MarkCloudWorkedOnUseCase.class);
-
-        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
-        SecurityContextHolder.getContext().setAuthentication(
-                new TestingAuthenticationToken(userDetails, null));
 
         CloudController controller = new CloudController(
                 getCloudRecommendationUseCase,
@@ -89,6 +90,8 @@ class CloudControllerTest {
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+
+        authenticateAs(String.valueOf(USER_ID));
     }
 
     @AfterEach
@@ -99,190 +102,350 @@ class CloudControllerTest {
     // ── GET /api/clouds ──────────────────────────────────────────────────────
 
     @Test
-    void list_shouldReturn200WithEmptyList_whenNoThoughts() throws Exception {
-        when(listCloudThoughtsUseCase.execute(any(ListCloudThoughtsRequest.class)))
-                .thenReturn(new ListCloudThoughtsResponse(List.of()));
-
-        mockMvc.perform(get("/api/clouds"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+    @DisplayName("Devuelve 200 con una lista vacía cuando el usuario no tiene pensamientos")
+    void listShouldReturn200WithEmptyListWhenNoThoughts() throws Exception {
+        // --- arrange ---
+        givenNoThoughts();
+        // --- act ---
+        ResultActions result = performList();
+        // --- assert ---
+        thenOkWithEmptyArray(result);
     }
 
     @Test
-    void list_shouldReturn200WithThoughts_whenThoughtsExist() throws Exception {
-        CloudThoughtItem item = new CloudThoughtItem(1L, "me siento ansioso", false, Instant.now());
-        when(listCloudThoughtsUseCase.execute(any(ListCloudThoughtsRequest.class)))
-                .thenReturn(new ListCloudThoughtsResponse(List.of(item)));
+    @DisplayName("Devuelve 200 con los pensamientos cuando existen")
+    void listShouldReturn200WithThoughtsWhenThoughtsExist() throws Exception {
+        // --- arrange ---
+        givenThoughts(List.of(new CloudThoughtItem(1L, "me siento ansioso", false, Instant.now())));
+        // --- act ---
+        ResultActions result = performList();
+        // --- assert ---
+        thenOkWithThought(result, 1, "me siento ansioso", false);
+    }
 
-        mockMvc.perform(get("/api/clouds"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].text").value("me siento ansioso"))
-                .andExpect(jsonPath("$[0].workedOn").value(false));
+    @Test
+    @DisplayName("Devuelve 401 al listar cuando no está autenticado")
+    void listShouldReturn401WhenNotAuthenticated() throws Exception {
+        // --- arrange ---
+        givenNoAuthentication();
+        // --- act ---
+        ResultActions result = performList();
+        // --- assert ---
+        thenUnauthorized(result);
     }
 
     // ── POST /api/clouds/thought ─────────────────────────────────────────────
 
     @Test
-    void saveThought_shouldReturn201WithBody_whenThoughtIsValid() throws Exception {
-        CreateCloudThoughtResponse response =
-                new CreateCloudThoughtResponse(1L, "me siento ansioso", false, Instant.now());
-        when(createCloudThoughtUseCase.execute(any(CreateCloudThoughtRequest.class))).thenReturn(response);
-
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thought", "me siento ansioso"))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.text").value("me siento ansioso"));
+    @DisplayName("Devuelve 201 con el cuerpo cuando el pensamiento es válido")
+    void saveThoughtShouldReturn201WithBodyWhenThoughtIsValid() throws Exception {
+        // --- arrange ---
+        givenCreatedThought(new CreateCloudThoughtResponse(1L, "me siento ansioso", false, Instant.now()));
+        // --- act ---
+        ResultActions result = performSaveThought("me siento ansioso");
+        // --- assert ---
+        thenCreatedWithThought(result, 1, "me siento ansioso");
     }
 
     @Test
-    void saveThought_shouldSaveToVectorMemory_withCorrectUserId() throws Exception {
-        CreateCloudThoughtResponse response =
-                new CreateCloudThoughtResponse(1L, "me siento ansioso", false, Instant.now());
-        when(createCloudThoughtUseCase.execute(any(CreateCloudThoughtRequest.class))).thenReturn(response);
-
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thought", "me siento ansioso"))))
-                .andExpect(status().isCreated());
-
-        ArgumentCaptor<SaveVectorMemoryCommand> captor =
-                ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
-        verify(userVectorMemoryService).saveMemory(captor.capture());
-        assertThat(captor.getValue().userId()).isEqualTo(USER_ID);
-        assertThat(captor.getValue().content()).isEqualTo("me siento ansioso");
+    @DisplayName("Guarda el pensamiento en la memoria vectorial con el usuario correcto")
+    void saveThoughtShouldSaveToVectorMemoryWithCorrectUserId() throws Exception {
+        // --- arrange ---
+        givenCreatedThought(new CreateCloudThoughtResponse(1L, "me siento ansioso", false, Instant.now()));
+        // --- act ---
+        ResultActions result = performSaveThought("me siento ansioso");
+        // --- assert ---
+        thenCreated(result);
+        thenMemorySavedWith(USER_ID, "me siento ansioso");
     }
 
     @Test
-    void saveThought_shouldReturn400_whenThoughtIsBlank() throws Exception {
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thought", ""))))
-                .andExpect(status().isBadRequest());
+    @DisplayName("Devuelve 400 cuando el pensamiento está en blanco")
+    void saveThoughtShouldReturn400WhenThoughtIsBlank() throws Exception {
+        // --- act ---
+        ResultActions result = performSaveThought("");
+        // --- assert ---
+        thenBadRequest(result);
     }
 
     @Test
-    void saveThought_shouldReturn400_whenThoughtFieldIsMissing() throws Exception {
-        mockMvc.perform(post("/api/clouds/thought")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest());
+    @DisplayName("Devuelve 400 cuando falta el campo pensamiento")
+    void saveThoughtShouldReturn400WhenThoughtFieldIsMissing() throws Exception {
+        // --- act ---
+        ResultActions result = performSaveThoughtWithRawBody("{}");
+        // --- assert ---
+        thenBadRequest(result);
     }
 
     // ── PATCH /api/clouds/{id}/status ────────────────────────────────────────
 
     @Test
-    void updateStatus_shouldReturn204_whenStatusIsCompleted() throws Exception {
-        UpdateCloudStatusResponse response =
-                new UpdateCloudStatusResponse(1L, "pensamiento", CloudStatus.COMPLETED, false, Instant.now());
-        when(updateCloudStatusUseCase.execute(any(UpdateCloudStatusRequest.class))).thenReturn(response);
-
-        mockMvc.perform(patch("/api/clouds/1/status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("status", "COMPLETED"))))
-                .andExpect(status().isNoContent());
+    @DisplayName("Devuelve 204 cuando el estado es COMPLETED")
+    void updateStatusShouldReturn204WhenStatusIsCompleted() throws Exception {
+        // --- arrange ---
+        givenUpdateStatusReturns(
+                new UpdateCloudStatusResponse(1L, "pensamiento", CloudStatus.COMPLETED, false, Instant.now()));
+        // --- act ---
+        ResultActions result = performUpdateStatus(1, "COMPLETED");
+        // --- assert ---
+        thenNoContent(result);
     }
 
     @Test
-    void updateStatus_shouldReturn204_whenStatusIsCancelled() throws Exception {
-        UpdateCloudStatusResponse response =
-                new UpdateCloudStatusResponse(1L, "pensamiento", CloudStatus.CANCELLED, false, Instant.now());
-        when(updateCloudStatusUseCase.execute(any(UpdateCloudStatusRequest.class))).thenReturn(response);
-
-        mockMvc.perform(patch("/api/clouds/1/status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("status", "CANCELLED"))))
-                .andExpect(status().isNoContent());
+    @DisplayName("Devuelve 204 cuando el estado es CANCELLED")
+    void updateStatusShouldReturn204WhenStatusIsCancelled() throws Exception {
+        // --- arrange ---
+        givenUpdateStatusReturns(
+                new UpdateCloudStatusResponse(1L, "pensamiento", CloudStatus.CANCELLED, false, Instant.now()));
+        // --- act ---
+        ResultActions result = performUpdateStatus(1, "CANCELLED");
+        // --- assert ---
+        thenNoContent(result);
     }
 
     @Test
-    void updateStatus_shouldReturn400_whenStatusIsInvalid() throws Exception {
-        mockMvc.perform(patch("/api/clouds/1/status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("status", "INVALID"))))
-                .andExpect(status().isBadRequest());
+    @DisplayName("Devuelve 400 cuando el estado no es un valor válido del enum")
+    void updateStatusShouldReturn400WhenStatusIsInvalid() throws Exception {
+        // --- act ---
+        ResultActions result = performUpdateStatus(1, "INVALID");
+        // --- assert ---
+        thenBadRequest(result);
     }
 
     @Test
-    void updateStatus_shouldReturn400_whenStatusFieldIsMissing() throws Exception {
-        mockMvc.perform(patch("/api/clouds/1/status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest());
+    @DisplayName("Devuelve 400 cuando falta el campo estado")
+    void updateStatusShouldReturn400WhenStatusFieldIsMissing() throws Exception {
+        // --- act ---
+        ResultActions result = performUpdateStatusWithRawBody(1, "{}");
+        // --- assert ---
+        thenBadRequest(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 400 cuando el caso de uso rechaza la transición de estado")
+    void updateStatusShouldReturn400WhenUseCaseRejectsTransition() throws Exception {
+        // --- arrange ---
+        givenUpdateStatusRejectsWith(new IllegalStateException("Transición no permitida"));
+        // --- act ---
+        ResultActions result = performUpdateStatus(1, "COMPLETED");
+        // --- assert ---
+        thenBadRequest(result);
     }
 
     // ── PATCH /api/clouds/{id}/worked-on ─────────────────────────────────────
 
     @Test
-    void markWorkedOn_shouldReturn204_whenThoughtExists() throws Exception {
-        when(markCloudWorkedOnUseCase.execute(any(MarkCloudWorkedOnRequest.class)))
-                .thenReturn(new MarkCloudWorkedOnResponse(1L));
-
-        mockMvc.perform(patch("/api/clouds/1/worked-on"))
-                .andExpect(status().isNoContent());
-
-        ArgumentCaptor<MarkCloudWorkedOnRequest> captor =
-                ArgumentCaptor.forClass(MarkCloudWorkedOnRequest.class);
-        verify(markCloudWorkedOnUseCase).execute(captor.capture());
-        assertThat(captor.getValue().id()).isEqualTo(1L);
-        assertThat(captor.getValue().userId()).isEqualTo(USER_ID);
+    @DisplayName("Devuelve 204 y delega en el caso de uso al marcar como trabajado")
+    void markWorkedOnShouldReturn204WhenThoughtExists() throws Exception {
+        // --- arrange ---
+        givenMarkWorkedOnReturns(new MarkCloudWorkedOnResponse(1L));
+        // --- act ---
+        ResultActions result = performMarkWorkedOn(1);
+        // --- assert ---
+        thenNoContent(result);
+        thenMarkWorkedOnDelegated(1L, USER_ID);
     }
 
     // ── POST /api/clouds/recommendation ──────────────────────────────────────
 
     @Test
-    void getRecommendation_shouldReturn200WithDiaryRecommendation_whenRequestIsValid() throws Exception {
-        GetCloudRecommendationResponse recommendation = new GetCloudRecommendationResponse(
+    @DisplayName("Devuelve 200 con la recomendación de diario cuando el pedido es válido")
+    void getRecommendationShouldReturn200WithDiaryRecommendationWhenRequestIsValid() throws Exception {
+        // --- arrange ---
+        givenRecommendation(new GetCloudRecommendationResponse(
                 "diary", "diary", "Escribí en tu diario",
-                "Plasmar tus emociones puede ayudarte.", "/diary"
-        );
-        when(getCloudRecommendationUseCase.execute(any(GetCloudRecommendationRequest.class)))
-                .thenReturn(recommendation);
-
-        mockMvc.perform(post("/api/clouds/recommendation")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of("me siento muy triste")))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.activity_type").value("diary"))
-                .andExpect(jsonPath("$.action_id").value("diary"))
-                .andExpect(jsonPath("$.title").value("Escribí en tu diario"))
-                .andExpect(jsonPath("$.description").value("Plasmar tus emociones puede ayudarte."))
-                .andExpect(jsonPath("$.redirect_url").value("/diary"));
+                "Plasmar tus emociones puede ayudarte.", "/diary"));
+        // --- act ---
+        ResultActions result = performGetRecommendation(List.of("me siento muy triste"));
+        // --- assert ---
+        thenOkWithRecommendation(result, "diary", "diary", "Escribí en tu diario",
+                "Plasmar tus emociones puede ayudarte.", "/diary");
     }
 
     @Test
-    void getRecommendation_shouldReturn400_whenThoughtsIsEmpty() throws Exception {
-        mockMvc.perform(post("/api/clouds/recommendation")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of()))))
-                .andExpect(status().isBadRequest());
+    @DisplayName("Devuelve 400 cuando la lista de pensamientos está vacía")
+    void getRecommendationShouldReturn400WhenThoughtsIsEmpty() throws Exception {
+        // --- act ---
+        ResultActions result = performGetRecommendation(List.of());
+        // --- assert ---
+        thenBadRequest(result);
     }
 
     @Test
-    void getRecommendation_shouldReturn400_whenThoughtsFieldIsMissing() throws Exception {
-        mockMvc.perform(post("/api/clouds/recommendation")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest());
+    @DisplayName("Devuelve 400 cuando falta el campo pensamientos")
+    void getRecommendationShouldReturn400WhenThoughtsFieldIsMissing() throws Exception {
+        // --- act ---
+        ResultActions result = performGetRecommendationWithRawBody("{}");
+        // --- assert ---
+        thenBadRequest(result);
     }
 
     @Test
-    void getRecommendation_shouldDelegateThoughtsToUseCase() throws Exception {
-        when(getCloudRecommendationUseCase.execute(any(GetCloudRecommendationRequest.class)))
-                .thenReturn(new GetCloudRecommendationResponse("diary", "diary", "Título", "Desc.", "/diary"));
+    @DisplayName("Delega los pensamientos y el usuario al caso de uso de recomendación")
+    void getRecommendationShouldDelegateThoughtsToUseCase() throws Exception {
+        // --- arrange ---
+        givenRecommendation(new GetCloudRecommendationResponse("diary", "diary", "Título", "Desc.", "/diary"));
+        // --- act ---
+        ResultActions result = performGetRecommendation(List.of("no puedo dejar de pensar"));
+        // --- assert ---
+        thenOk(result);
+        thenRecommendationDelegated(List.of("no puedo dejar de pensar"), USER_ID);
+    }
 
-        mockMvc.perform(post("/api/clouds/recommendation")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("thoughts", List.of("no puedo dejar de pensar")))))
-                .andExpect(status().isOk());
+    // --- arrange ---
+    private void authenticateAs(String username) {
+        UserDetails userDetails = new User(username, "", Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(userDetails, null));
+    }
 
+    private void givenNoAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void givenNoThoughts() {
+        when(listCloudThoughtsUseCase.execute(any(ListCloudThoughtsRequest.class)))
+                .thenReturn(new ListCloudThoughtsResponse(List.of()));
+    }
+
+    private void givenThoughts(List<CloudThoughtItem> thoughts) {
+        when(listCloudThoughtsUseCase.execute(any(ListCloudThoughtsRequest.class)))
+                .thenReturn(new ListCloudThoughtsResponse(thoughts));
+    }
+
+    private void givenCreatedThought(CreateCloudThoughtResponse response) {
+        when(createCloudThoughtUseCase.execute(any(CreateCloudThoughtRequest.class))).thenReturn(response);
+    }
+
+    private void givenUpdateStatusReturns(UpdateCloudStatusResponse response) {
+        when(updateCloudStatusUseCase.execute(any(UpdateCloudStatusRequest.class))).thenReturn(response);
+    }
+
+    private void givenUpdateStatusRejectsWith(RuntimeException exception) {
+        when(updateCloudStatusUseCase.execute(any(UpdateCloudStatusRequest.class))).thenThrow(exception);
+    }
+
+    private void givenMarkWorkedOnReturns(MarkCloudWorkedOnResponse response) {
+        when(markCloudWorkedOnUseCase.execute(any(MarkCloudWorkedOnRequest.class))).thenReturn(response);
+    }
+
+    private void givenRecommendation(GetCloudRecommendationResponse response) {
+        when(getCloudRecommendationUseCase.execute(any(GetCloudRecommendationRequest.class))).thenReturn(response);
+    }
+
+    // --- act ---
+    private ResultActions performList() throws Exception {
+        return mockMvc.perform(get("/api/clouds"));
+    }
+
+    private ResultActions performSaveThought(String thought) throws Exception {
+        return mockMvc.perform(post("/api/clouds/thought")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("thought", thought))));
+    }
+
+    private ResultActions performSaveThoughtWithRawBody(String json) throws Exception {
+        return mockMvc.perform(post("/api/clouds/thought")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json));
+    }
+
+    private ResultActions performUpdateStatus(long id, String statusValue) throws Exception {
+        return mockMvc.perform(patch("/api/clouds/" + id + "/status")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("status", statusValue))));
+    }
+
+    private ResultActions performUpdateStatusWithRawBody(long id, String json) throws Exception {
+        return mockMvc.perform(patch("/api/clouds/" + id + "/status")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json));
+    }
+
+    private ResultActions performMarkWorkedOn(long id) throws Exception {
+        return mockMvc.perform(patch("/api/clouds/" + id + "/worked-on"));
+    }
+
+    private ResultActions performGetRecommendation(List<String> thoughts) throws Exception {
+        return mockMvc.perform(post("/api/clouds/recommendation")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("thoughts", thoughts))));
+    }
+
+    private ResultActions performGetRecommendationWithRawBody(String json) throws Exception {
+        return mockMvc.perform(post("/api/clouds/recommendation")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json));
+    }
+
+    // --- assert ---
+    private void thenOkWithEmptyArray(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    private void thenOkWithThought(ResultActions result, int id, String text, boolean workedOn) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(id))
+                .andExpect(jsonPath("$[0].text").value(text))
+                .andExpect(jsonPath("$[0].workedOn").value(workedOn));
+    }
+
+    private void thenCreatedWithThought(ResultActions result, int id, String text) throws Exception {
+        result.andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.text").value(text));
+    }
+
+    private void thenCreated(ResultActions result) throws Exception {
+        result.andExpect(status().isCreated());
+    }
+
+    private void thenMemorySavedWith(Long userId, String content) {
+        ArgumentCaptor<SaveVectorMemoryCommand> captor = ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(userId);
+        assertThat(captor.getValue().content()).isEqualTo(content);
+    }
+
+    private void thenNoContent(ResultActions result) throws Exception {
+        result.andExpect(status().isNoContent());
+    }
+
+    private void thenMarkWorkedOnDelegated(Long id, Long userId) {
+        ArgumentCaptor<MarkCloudWorkedOnRequest> captor = ArgumentCaptor.forClass(MarkCloudWorkedOnRequest.class);
+        verify(markCloudWorkedOnUseCase).execute(captor.capture());
+        assertThat(captor.getValue().id()).isEqualTo(id);
+        assertThat(captor.getValue().userId()).isEqualTo(userId);
+    }
+
+    private void thenOkWithRecommendation(ResultActions result, String activityType, String actionId,
+                                          String title, String description, String redirectUrl) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.activity_type").value(activityType))
+                .andExpect(jsonPath("$.action_id").value(actionId))
+                .andExpect(jsonPath("$.title").value(title))
+                .andExpect(jsonPath("$.description").value(description))
+                .andExpect(jsonPath("$.redirect_url").value(redirectUrl));
+    }
+
+    private void thenOk(ResultActions result) throws Exception {
+        result.andExpect(status().isOk());
+    }
+
+    private void thenRecommendationDelegated(List<String> thoughts, Long userId) {
         ArgumentCaptor<GetCloudRecommendationRequest> captor =
                 ArgumentCaptor.forClass(GetCloudRecommendationRequest.class);
         verify(getCloudRecommendationUseCase).execute(captor.capture());
-        assertThat(captor.getValue().thoughts()).isEqualTo(List.of("no puedo dejar de pensar"));
-        assertThat(captor.getValue().userId()).isEqualTo(USER_ID);
+        assertThat(captor.getValue().thoughts()).isEqualTo(thoughts);
+        assertThat(captor.getValue().userId()).isEqualTo(userId);
+    }
+
+    private void thenBadRequest(ResultActions result) throws Exception {
+        result.andExpect(status().isBadRequest());
+    }
+
+    private void thenUnauthorized(ResultActions result) throws Exception {
+        result.andExpect(status().isUnauthorized());
     }
 }

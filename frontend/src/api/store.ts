@@ -9,14 +9,18 @@ export interface StoreItemResponse {
     priceCoins: number
     price: number | null
     premiumOnly: boolean
+    imageUrlLight: string | null
+    imageUrlDark: string | null
 }
 
 export interface InventoryItemResponse {
     storeItemId: number
     name: string
     category: string
-    assetKey: string
+    assetKey: string | null
     equipped: boolean
+    imageUrlLight: string | null
+    imageUrlDark: string | null
 }
 
 export const storeApi = {

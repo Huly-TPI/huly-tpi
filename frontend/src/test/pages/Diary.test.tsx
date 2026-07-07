@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { ThemeProvider } from '../../context/theme'
 
+// --- SIMULACIONES GLOBALES (MOCKS) ---
 vi.mock('../../assets/garden/light-theme/cloud.webp', () => ({ default: 'cloud.webp' }))
 vi.mock('../../assets/brand/color-logo.webp', () => ({ default: 'color-logo.webp' }))
 
@@ -58,341 +59,275 @@ vi.mock('../../hooks/useActivitySessionTracker', () => ({
 import Diary from '../../pages/Diary/Diary.tsx'
 import { journalApi } from '../../api/journal'
 import type { JournalEntryResponse } from '../../api/journal'
+import { clickButton, typePlaceholder, verifyTextPresent, verifyTextNotPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled, clearAllMocks, verifyDisplayValuePresent } from '../testHelpers'
 
 const mockedList = vi.mocked(journalApi.list)
 const mockedCreate = vi.mocked(journalApi.create)
 
-const makeEntry = (overrides: Partial<JournalEntryResponse> = {}): JournalEntryResponse => ({
-  id: 1,
-  content: JSON.stringify({ adentro: 'Mi día', pensamiento: 'Un pensamiento', bien: 'Algo bueno', manana: 'Un deseo' }),
-  mood: 'HAPPY',
-  createdAt: '2025-01-15T10:00:00Z',
-  ...overrides,
-})
+
 
 describe('Diary', () => {
+  let user: ReturnType<typeof userEvent.setup>
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     localStorage.clear()
     mockedList.mockResolvedValue([])
     mockAuthState.user = { id: 1, name: 'Test', email: 'test@huly.com', role: 'USER' }
     mockRequireAuth.mockImplementation((fn: () => void) => fn())
   })
 
-  const renderDiary = (consent: 'true' | 'false' | null = 'true') => {
-    if (consent !== null) localStorage.setItem(CONSENT_KEY, consent)
-    const user = userEvent.setup()
-    render(
-      <ThemeProvider>
-        <MemoryRouter>
-          <Diary />
-        </MemoryRouter>
-      </ThemeProvider>
-    )
-    return { user }
-  }
-
+  // --- CASOS DE PRUEBA (TEST SUITE) ---
 
   describe('modal de consentimiento', () => {
     it('muestra el modal la primera vez que se abre el diario', () => {
       renderDiary(null)
-      expect(screen.getByText('Una pregunta antes de empezar')).toBeInTheDocument()
+      verifyTextPresent('Una pregunta antes de empezar')
     })
 
     it('no muestra el modal si el usuario ya aceptó', () => {
       localStorage.setItem('diaryTextConsent', 'true')
       renderDiary()
-      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+      verifyTextNotPresent('Una pregunta antes de empezar')
     })
 
     it('no muestra el modal si el usuario ya rechazó', () => {
       localStorage.setItem('diaryTextConsent', 'false')
       renderDiary()
-      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+      verifyTextNotPresent('Una pregunta antes de empezar')
     })
 
-    it('guarda true en localStorage al aceptar', async () => {
-      const { user } = renderDiary(null)
-      await user.click(screen.getByRole('button', { name: 'Sí, pueden usarlo' }))
-      expect(localStorage.getItem(CONSENT_KEY)).toBe('true')
+    it('guarda true en localStorage al aceptar', () => {
+      renderDiary(null)
+      return clickDiaryButton('Sí, pueden usarlo').then(() => {
+        verifyLocalStorageConsent('true')
+      })
     })
 
-    it('guarda false en localStorage al rechazar', async () => {
-      const { user } = renderDiary(null)
-      await user.click(screen.getByRole('button', { name: 'Prefiero mantenerlo privado' }))
-      expect(localStorage.getItem(CONSENT_KEY)).toBe('false')
+    it('guarda false en localStorage al rechazar', () => {
+      renderDiary(null)
+      return clickDiaryButton('Prefiero mantenerlo privado').then(() => {
+        verifyLocalStorageConsent('false')
+      })
     })
 
-    it('oculta el modal después de aceptar', async () => {
-      const { user } = renderDiary(null)
-      await user.click(screen.getByRole('button', { name: 'Sí, pueden usarlo' }))
-      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+    it('oculta el modal después de aceptar', () => {
+      renderDiary(null)
+      return clickDiaryButton('Sí, pueden usarlo').then(() => {
+        verifyTextNotPresent('Una pregunta antes de empezar')
+      })
     })
 
-    it('oculta el modal después de rechazar', async () => {
-      const { user } = renderDiary(null)
-      await user.click(screen.getByRole('button', { name: 'Prefiero mantenerlo privado' }))
-      expect(screen.queryByText('Una pregunta antes de empezar')).not.toBeInTheDocument()
+    it('oculta el modal después de rechazar', () => {
+      renderDiary(null)
+      return clickDiaryButton('Prefiero mantenerlo privado').then(() => {
+        verifyTextNotPresent('Una pregunta antes de empezar')
+      })
     })
   })
 
   it('renderiza el formulario de nueva entrada con los 4 campos', () => {
     renderDiary()
-    expect(screen.getByPlaceholderText('Hoy me pasó...')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Lo que ya no quiero cargar...')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Hoy logré...')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Mañana quiero...')).toBeInTheDocument()
+    verifyPlaceholderPresent('Hoy me pasó...')
+    verifyPlaceholderPresent('Lo que ya no quiero cargar...')
+    verifyPlaceholderPresent('Hoy logré...')
+    verifyPlaceholderPresent('Mañana quiero...')
   })
 
   it('renderiza los 8 estados de ánimo disponibles', () => {
     renderDiary()
-    expect(screen.getByText('Feliz')).toBeInTheDocument()
-    expect(screen.getByText('Tranquilo')).toBeInTheDocument()
-    expect(screen.getByText('Motivado')).toBeInTheDocument()
-    expect(screen.getByText('Neutro')).toBeInTheDocument()
-    expect(screen.getByText('Cansado')).toBeInTheDocument()
-    expect(screen.getByText('Ansioso')).toBeInTheDocument()
-    expect(screen.getByText('Frustrado')).toBeInTheDocument()
-    expect(screen.getByText('Triste')).toBeInTheDocument()
+    verifyTextPresent('Feliz')
+    verifyTextPresent('Tranquilo')
+    verifyTextPresent('Motivado')
+    verifyTextPresent('Neutro')
+    verifyTextPresent('Cansado')
+    verifyTextPresent('Ansioso')
+    verifyTextPresent('Frustrado')
+    verifyTextPresent('Triste')
   })
 
-  it('carga las entradas del servidor al montar', async () => {
+  it('carga las entradas del servidor al montar', () => {
     mockedList.mockResolvedValueOnce([makeEntry({ id: 1 }), makeEntry({ id: 2 })])
     renderDiary()
-
-    await waitFor(() => {
-      expect(mockedList).toHaveBeenCalledTimes(1)
-    })
+    return verifyListWasCalled()
   })
-
 
   it('el botón Guardar está deshabilitado sin contenido', () => {
     renderDiary()
-    expect(screen.getByRole('button', { name: /Guardar/ })).toBeDisabled()
+    verifyButtonDisabled(/Guardar/)
   })
 
   it('no registra sesión si el usuario no hizo ninguna edición', () => {
-    const { unmount } = render(
-      <ThemeProvider>
-        <MemoryRouter>
-          <Diary />
-        </MemoryRouter>
-      </ThemeProvider>,
-    )
-
-    unmount()
-
-    expect(mockStartSession).not.toHaveBeenCalled()
+    unmountDiaryComponent()
+    verifySessionNotStarted()
   })
 
-  it('el botón Guardar se habilita al escribir en cualquier campo', async () => {
-    const { user } = renderDiary()
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo que sentí')
-    expect(screen.getByRole('button', { name: /Guardar/ })).toBeEnabled()
-  })
-
-
-  it('permite seleccionar un mood', async () => {
-    const { user } = renderDiary()
-    const felizButton = screen.getByText('Feliz').closest('button')!
-    await user.click(felizButton)
-    expect(felizButton.querySelector('div')).toHaveClass('ring-2')
-  })
-
-  it('deselecciona el mood al hacer click por segunda vez', async () => {
-    const { user } = renderDiary()
-    const felizButton = screen.getByText('Feliz').closest('button')!
-    await user.click(felizButton)
-    await user.click(felizButton)
-    expect(felizButton.querySelector('div')).not.toHaveClass('ring-2')
-  })
-
-
-  it('guarda el contenido como JSON con los 4 campos', async () => {
-    mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary()
-
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Lo de adentro')
-    await user.type(screen.getByPlaceholderText('Lo que ya no quiero cargar...'), 'Mi pensamiento')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      const [data] = mockedCreate.mock.calls[0]
-      const parsed = JSON.parse(data.content)
-      expect(parsed.adentro).toBe('Lo de adentro')
-      expect(parsed.pensamiento).toBe('Mi pensamiento')
-      expect(parsed.bien).toBe('')
-      expect(parsed.manana).toBe('')
+  it('el botón Guardar se habilita al escribir en cualquier campo', () => {
+    renderDiary()
+    return writeInPlaceholder('Hoy me pasó...', 'Algo que sentí').then(() => {
+      verifyButtonEnabled(/Guardar/)
     })
   })
 
-  it('incluye el mood seleccionado al guardar', async () => {
+  it('permite seleccionar un mood', () => {
+    renderDiary()
+    return selectMood('Feliz').then(() => {
+      verifyMoodSelected('Feliz', true)
+    })
+  })
+
+  it('deselecciona el mood al hacer click por segunda vez', () => {
+    renderDiary()
+    return selectMood('Feliz')
+      .then(() => selectMood('Feliz'))
+      .then(() => {
+        verifyMoodSelected('Feliz', false)
+      })
+  })
+
+  it('guarda el contenido como JSON con los 4 campos', () => {
+    mockedCreate.mockResolvedValueOnce(makeEntry())
+    renderDiary()
+    return writeInPlaceholder('Hoy me pasó...', 'Lo de adentro')
+      .then(() => writeInPlaceholder('Lo que ya no quiero cargar...', 'Mi pensamiento'))
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyCreatePayloadContains({
+          adentro: 'Lo de adentro',
+          pensamiento: 'Mi pensamiento',
+          bien: '',
+          manana: ''
+        })
+      })
+  })
+
+  it('incluye el mood seleccionado al guardar', () => {
     mockedCreate.mockResolvedValueOnce(makeEntry({ mood: 'CALM' }))
-    const { user } = renderDiary()
-
-    await user.click(screen.getByText('Tranquilo').closest('button')!)
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      const [data] = mockedCreate.mock.calls[0]
-      expect(data.mood).toBe('CALM')
-    })
+    renderDiary()
+    return selectMood('Tranquilo')
+      .then(() => writeInPlaceholder('Hoy me pasó...', 'Algo'))
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyCreatePayloadContains({}, 'CALM')
+      })
   })
 
-  it('limpia el formulario tras guardar exitosamente', async () => {
+  it('limpia el formulario tras guardar exitosamente', () => {
     mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary()
-
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Hoy me pasó...')).toHaveValue('')
-    })
+    renderDiary()
+    return writeInPlaceholder('Hoy me pasó...', 'Algo')
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyPlaceholderValue('Hoy me pasó...', '')
+      })
   })
 
-  it('registra la sesión de actividad al guardar una entrada', async () => {
+  it('registra la sesión de actividad al guardar una entrada', () => {
     mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary()
-
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Contenido')
-    
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      expect(mockSaveSession).toHaveBeenCalled()
-    })
+    renderDiary()
+    return writeInPlaceholder('Hoy me pasó...', 'Contenido')
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifySessionSaved()
+      })
   })
 
-  it.skip('muestra toast de exito cuando guarda una entrada', async () => {
+  it.skip('muestra toast de exito cuando guarda una entrada', () => {
     mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary()
-
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      expect(mockShowToast).toHaveBeenCalledWith('Entrada al diario guardada correctamente.', 'success')
-    })
+    renderDiary()
+    return writeInPlaceholder('Hoy me pasó...', 'Algo')
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyToastShown('Entrada al diario guardada correctamente.', 'success')
+      })
   })
 
-  it('muestra error cuando falla el guardado', async () => {
+  it('muestra error cuando falla el guardado', () => {
     mockedCreate.mockRejectedValueOnce(new Error('Error del servidor'))
-    const { user } = renderDiary()
-
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      expect(mockShowToast).toHaveBeenCalledWith('No se pudo guardar la entrada. Intentá de nuevo.', 'error')
-    })
+    renderDiary()
+    return writeInPlaceholder('Hoy me pasó...', 'Algo')
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyToastShown('No se pudo guardar la entrada. Intentá de nuevo.', 'error')
+      })
   })
 
-
-  it.skip('muestra toast success al guardar una entrada', async () => {
+  it('muestra toast de exito al guardar usando el formulario nuevo', () => {
     mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary()
+    renderDiary()
+    return typeInFirstTextbox('Algo')
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyToastShown('Entrada al diario guardada correctamente.', 'success')
+      })
+  })
 
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      expect(mockShowToast).toHaveBeenCalledWith('Entrada al diario guardada correctamente.', 'success')
+  it('navega a home al hacer click en Volver', () => {
+    renderDiary()
+    return clickDiaryButton(/Volver/).then(() => {
+      verifyNavigateTo('/')
     })
   })
 
-  it('muestra toast de exito al guardar usando el formulario nuevo', async () => {
-    mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary()
-    const [firstTextbox] = screen.getAllByRole('textbox')
-
-    await user.type(firstTextbox, 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      expect(mockShowToast).toHaveBeenCalledWith('Entrada al diario guardada correctamente.', 'success')
-    })
-  })
-
-  it('navega a home al hacer click en Volver', async () => {
-    const { user } = renderDiary()
-    await user.click(screen.getByText(/Volver/))
-    expect(mockNavigate).toHaveBeenCalledWith('/')
-  })
-
-  it('muestra la paginación correcta al cargar entradas', async () => {
+  it('muestra la paginación correcta al cargar entradas', () => {
     mockedList.mockResolvedValueOnce([makeEntry({ id: 1 }), makeEntry({ id: 2 })])
     renderDiary()
-
-    await waitFor(() => {
-      expect(screen.getByText('1 / 3')).toBeInTheDocument()
-    })
+    return verifyPaginationTextShown('1 / 3')
   })
 
-  it('navega a una entrada pasada y la muestra en modo lectura', async () => {
+  it('navega a una entrada pasada y la muestra en modo lectura', () => {
     mockedList.mockResolvedValueOnce([makeEntry({ id: 1 })])
-    const { user } = renderDiary()
-
-    await waitFor(() => screen.getByText('1 / 2'))
-    await user.click(screen.getByText('›'))
-
-    expect(screen.getByText('2 / 2')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Hoy me pasó...')).toHaveAttribute('readonly')
+    renderDiary()
+    return waitAndClickPaginationButton('›', '1 / 2')
+      .then(() => {
+        verifyTextPresent('2 / 2')
+        verifyPlaceholderReadonly('Hoy me pasó...', true)
+      })
   })
 
-
-  it('parsea el contenido JSON de una entrada existente', async () => {
+  it('parsea el contenido JSON de una entrada existente', () => {
     mockedList.mockResolvedValueOnce([
       makeEntry({
         content: JSON.stringify({ adentro: 'Texto adentro', pensamiento: 'Texto pensamiento', bien: '', manana: '' }),
       }),
     ])
-    const { user } = renderDiary()
-
-    await waitFor(() => screen.getByText('1 / 2'))
-    await user.click(screen.getByText('›'))
-
-    expect(screen.getByDisplayValue('Texto adentro')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Texto pensamiento')).toBeInTheDocument()
+    renderDiary()
+    return waitAndClickPaginationButton('›', '1 / 2')
+      .then(() => {
+        verifyDisplayValuePresent('Texto adentro')
+        verifyDisplayValuePresent('Texto pensamiento')
+      })
   })
 
-  it('manda useTextForAI true al guardar cuando el usuario aceptó el consentimiento', async () => {
+  it('manda useTextForAI true al guardar cuando el usuario aceptó el consentimiento', () => {
     mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary('true')
-
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      const [data] = mockedCreate.mock.calls[0]
-      expect(data.useTextForAI).toBe(true)
-    })
+    renderDiary('true')
+    return writeInPlaceholder('Hoy me pasó...', 'Algo')
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyCreatePayloadContains({}, undefined, true)
+      })
   })
 
-  it('manda useTextForAI false al guardar cuando el usuario rechazó el consentimiento', async () => {
+  it('manda useTextForAI false al guardar cuando el usuario rechazó el consentimiento', () => {
     mockedCreate.mockResolvedValueOnce(makeEntry())
-    const { user } = renderDiary('false')
-
-    await user.type(screen.getByPlaceholderText('Hoy me pasó...'), 'Algo')
-    await user.click(screen.getByRole('button', { name: /Guardar/ }))
-
-    await waitFor(() => {
-      const [data] = mockedCreate.mock.calls[0]
-      expect(data.useTextForAI).toBe(false)
-    })
+    renderDiary('false')
+    return writeInPlaceholder('Hoy me pasó...', 'Algo')
+      .then(() => clickDiaryButton(/Guardar/))
+      .then(() => {
+        return verifyCreatePayloadContains({}, undefined, false)
+      })
   })
 
-  it('usa texto plano como fallback para entradas sin formato JSON', async () => {
+  it('usa texto plano como fallback para entradas sin formato JSON', () => {
     mockedList.mockResolvedValueOnce([
       makeEntry({ content: 'Texto plano sin JSON' }),
     ])
-    const { user } = renderDiary()
-
-    await waitFor(() => screen.getByText('1 / 2'))
-    await user.click(screen.getByText('›'))
-
-    expect(screen.getByDisplayValue('Texto plano sin JSON')).toBeInTheDocument()
+    renderDiary()
+    return waitAndClickPaginationButton('›', '1 / 2')
+      .then(() => {
+        verifyDisplayValuePresent('Texto plano sin JSON')
+      })
   })
 
   describe('acceso sin login', () => {
@@ -403,47 +338,211 @@ describe('Diary', () => {
 
     it('los 4 campos de texto son de solo lectura cuando no hay sesión', () => {
       renderDiary()
-      expect(screen.getByPlaceholderText('Hoy me pasó...')).toHaveAttribute('readonly')
-      expect(screen.getByPlaceholderText('Lo que ya no quiero cargar...')).toHaveAttribute('readonly')
-      expect(screen.getByPlaceholderText('Hoy logré...')).toHaveAttribute('readonly')
-      expect(screen.getByPlaceholderText('Mañana quiero...')).toHaveAttribute('readonly')
+      verifyPlaceholderReadonly('Hoy me pasó...', true)
+      verifyPlaceholderReadonly('Lo que ya no quiero cargar...', true)
+      verifyPlaceholderReadonly('Hoy logré...', true)
+      verifyPlaceholderReadonly('Mañana quiero...', true)
     })
 
-    it('llama a requireAuth al hacer foco en el campo "Lo que pasa adentro"', async () => {
-      const { user } = renderDiary()
-      await user.click(screen.getByPlaceholderText('Hoy me pasó...'))
-      expect(mockRequireAuth).toHaveBeenCalled()
+    it('llama a requireAuth al hacer foco en el campo "Lo que pasa adentro"', () => {
+      renderDiary()
+      return focusOnField('Hoy me pasó...').then(() => {
+        verifyRequireAuthCalled()
+      })
     })
 
-    it('llama a requireAuth al hacer foco en el campo de pensamiento', async () => {
-      const { user } = renderDiary()
-      await user.click(screen.getByPlaceholderText('Lo que ya no quiero cargar...'))
-      expect(mockRequireAuth).toHaveBeenCalled()
+    it('llama a requireAuth al hacer foco en el campo de pensamiento', () => {
+      renderDiary()
+      return focusOnField('Lo que ya no quiero cargar...').then(() => {
+        verifyRequireAuthCalled()
+      })
     })
 
-    it('llama a requireAuth al hacer foco en el campo de logros', async () => {
-      const { user } = renderDiary()
-      await user.click(screen.getByPlaceholderText('Hoy logré...'))
-      expect(mockRequireAuth).toHaveBeenCalled()
+    it('llama a requireAuth al hacer foco en el campo de logros', () => {
+      renderDiary()
+      return focusOnField('Hoy logré...').then(() => {
+        verifyRequireAuthCalled()
+      })
     })
 
-    it('llama a requireAuth al hacer foco en el campo de mañana', async () => {
-      const { user } = renderDiary()
-      await user.click(screen.getByPlaceholderText('Mañana quiero...'))
-      expect(mockRequireAuth).toHaveBeenCalled()
+    it('llama a requireAuth al hacer foco en el campo de mañana', () => {
+      renderDiary()
+      return focusOnField('Mañana quiero...').then(() => {
+        verifyRequireAuthCalled()
+      })
     })
 
-    it('llama a requireAuth al hacer click en un emoji de estado de ánimo', async () => {
-      const { user } = renderDiary()
-      await user.click(screen.getByText('Feliz').closest('button')!)
-      expect(mockRequireAuth).toHaveBeenCalled()
+    it('llama a requireAuth al hacer click en un emoji de estado de ánimo', () => {
+      renderDiary()
+      return selectMood('Feliz').then(() => {
+        verifyRequireAuthCalled()
+      })
     })
 
-    it('no selecciona el mood cuando no hay sesión', async () => {
-      const { user } = renderDiary()
-      const felizButton = screen.getByText('Feliz').closest('button')!
-      await user.click(felizButton)
-      expect(felizButton.querySelector('div')).not.toHaveClass('bg-green-400')
+    it('no selecciona el mood cuando no hay sesión', () => {
+      renderDiary()
+      return selectMood('Feliz').then(() => {
+        verifyMoodSelectedBackground('Feliz', false)
+      })
     })
   })
+
+  /* helpers */
+
+  const renderDiary = (consent: 'true' | 'false' | null = 'true') => {
+    if (consent !== null) localStorage.setItem(CONSENT_KEY, consent)
+    user = userEvent.setup()
+    render(
+      <ThemeProvider>
+        <MemoryRouter>
+          <Diary />
+        </MemoryRouter>
+      </ThemeProvider>
+    )
+  }
+
+  const writeInPlaceholder = async (placeholder: string, text: string) => {
+    await typePlaceholder(user, placeholder, text)
+  }
+
+  const clickDiaryButton = async (name: string | RegExp) => {
+    await clickButton(user, name)
+  }
+
+  const selectMood = async (name: string) => {
+    const button = screen.getByText(name).closest('button')!
+    await user.click(button)
+  }
+
+  const focusOnField = async (placeholder: string) => {
+    await user.click(screen.getByPlaceholderText(placeholder))
+  }
+
+  const typeInFirstTextbox = async (text: string) => {
+    const [firstTextbox] = screen.getAllByRole('textbox')
+    await user.type(firstTextbox, text)
+  }
+
+  const waitAndClickPaginationButton = async (btnText: string, waitText: string) => {
+    await screen.findByText(waitText)
+    await user.click(screen.getByText(btnText))
+  }
+
+  const unmountDiaryComponent = () => {
+    const { unmount } = render(
+      <ThemeProvider>
+        <MemoryRouter>
+          <Diary />
+        </MemoryRouter>
+      </ThemeProvider>,
+    )
+    unmount()
+  }
+
+  const verifyLocalStorageConsent = (value: string | null) => {
+    expect(localStorage.getItem(CONSENT_KEY)).toBe(value)
+  }
+
+  const verifyMoodSelected = (name: string, isSelected: boolean) => {
+    const button = screen.getByText(name).closest('button')!
+    if (isSelected) {
+      expect(button.querySelector('div')).toHaveClass('ring-2')
+    } else {
+      expect(button.querySelector('div')).not.toHaveClass('ring-2')
+    }
+  }
+
+  const verifyMoodSelectedBackground = (name: string, isSelected: boolean) => {
+    const button = screen.getByText(name).closest('button')!
+    if (isSelected) {
+      expect(button.querySelector('div')).toHaveClass('bg-green-400')
+    } else {
+      expect(button.querySelector('div')).not.toHaveClass('bg-green-400')
+    }
+  }
+
+  const verifyPlaceholderReadonly = (placeholder: string, isReadonly: boolean) => {
+    const input = screen.getByPlaceholderText(placeholder)
+    if (isReadonly) {
+      expect(input).toHaveAttribute('readonly')
+    } else {
+      expect(input).not.toHaveAttribute('readonly')
+    }
+  }
+
+  
+
+  const verifyCreatePayloadContains = async (
+    expectedContentPartial: Record<string, string>,
+    expectedMood?: string,
+    expectedUseTextForAI?: boolean
+  ) => {
+    await waitFor(() => {
+      const [data] = mockedCreate.mock.calls[0]
+      if (expectedMood !== undefined) {
+        expect(data.mood).toBe(expectedMood)
+      }
+      if (expectedUseTextForAI !== undefined) {
+        expect(data.useTextForAI).toBe(expectedUseTextForAI)
+      }
+      if (expectedContentPartial && Object.keys(expectedContentPartial).length > 0) {
+        const parsed = JSON.parse(data.content)
+        Object.keys(expectedContentPartial).forEach(key => {
+          expect(parsed[key]).toBe(expectedContentPartial[key])
+        })
+      }
+    })
+  }
+
+  const verifyListWasCalled = async () => {
+    await waitFor(() => {
+      expect(mockedList).toHaveBeenCalledTimes(1)
+    })
+  }
+
+  const verifySessionSaved = async () => {
+    await waitFor(() => {
+      expect(mockSaveSession).toHaveBeenCalled()
+    })
+  }
+
+  const verifySessionNotStarted = () => {
+    expect(mockStartSession).not.toHaveBeenCalled()
+  }
+
+  const verifyToastShown = async (message: string, type: 'success' | 'error') => {
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith(message, type)
+    })
+  }
+
+  const verifyNavigateTo = (path: string) => {
+    expect(mockNavigate).toHaveBeenCalledWith(path)
+  }
+
+  const verifyRequireAuthCalled = () => {
+    expect(mockRequireAuth).toHaveBeenCalled()
+  }
+
+  const verifyPlaceholderValue = async (placeholder: string, expectedValue: string) => {
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(placeholder)).toHaveValue(expectedValue)
+    })
+  }
+
+  const verifyPaginationTextShown = async (text: string) => {
+    await waitFor(() => {
+      verifyTextPresent(text)
+    })
+  }
 })
+
+function makeEntry(overrides: Partial<JournalEntryResponse> = {}): JournalEntryResponse {
+  return ({
+  id: 1,
+  content: JSON.stringify({ adentro: 'Mi día', pensamiento: 'Un pensamiento', bien: 'Algo bueno', manana: 'Un deseo' }),
+  mood: 'HAPPY',
+  createdAt: '2025-01-15T10:00:00Z',
+  ...overrides,
+})
+}

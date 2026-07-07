@@ -1,11 +1,12 @@
 package com.huly.backend.domain.useCase.auth;
 
-import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.exception.InvalidCredentialsException;
 import com.huly.backend.domain.model.auth.AuthTokens;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.exception.InvalidCredentialsException;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.repository.user.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,13 +23,74 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AdminLoginUseCaseTest {
 
+    private static final String EMAIL = "admin@huly.com";
+    private static final String PASSWORD = "password123";
+
     @Mock private UserRepository userRepository;
     @Mock private LoginUseCase loginUseCase;
 
     @InjectMocks private AdminLoginUseCase adminLoginUseCase;
 
-    private static final String EMAIL = "admin@huly.com";
-    private static final String PASSWORD = "password123";
+    @Test
+    @DisplayName("Devuelve los tokens del login cuando el usuario es ADMIN")
+    void executeShouldReturnTokensWhenUserIsAdmin() {
+        AuthTokens expected = adminTokens();
+        givenUserFound(UserRole.ADMIN);
+        givenLoginReturns(expected);
+
+        AuthTokens result = adminLogin();
+
+        thenResultIsSameAs(result, expected);
+    }
+
+    @Test
+    @DisplayName("Delega en LoginUseCase cuando el usuario es ADMIN")
+    void executeShouldDelegateToLoginUseCaseWhenUserIsAdmin() {
+        givenUserFound(UserRole.ADMIN);
+        givenLoginReturns(adminTokens());
+
+        adminLogin();
+
+        thenDelegatedToLogin();
+    }
+
+    @Test
+    @DisplayName("Lanza InvalidCredentials cuando el usuario no existe")
+    void executeShouldThrowInvalidCredentialsWhenUserNotFound() {
+        givenUserNotFound();
+
+        thenAdminLoginThrowsInvalidCredentials();
+    }
+
+    @Test
+    @DisplayName("Lanza InvalidCredentials cuando el usuario tiene rol USER")
+    void executeShouldThrowInvalidCredentialsWhenUserIsNotAdmin() {
+        givenUserFound(UserRole.USER);
+
+        thenAdminLoginThrowsInvalidCredentials();
+    }
+
+    @Test
+    @DisplayName("Lanza InvalidCredentials cuando el usuario tiene rol LEAD")
+    void executeShouldThrowInvalidCredentialsWhenUserIsLead() {
+        givenUserFound(UserRole.LEAD);
+
+        thenAdminLoginThrowsInvalidCredentials();
+    }
+
+    // --- arrange ---
+
+    private void givenUserFound(UserRole role) {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userWithRole(role)));
+    }
+
+    private void givenUserNotFound() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+    }
+
+    private void givenLoginReturns(AuthTokens tokens) {
+        when(loginUseCase.execute(EMAIL, PASSWORD)).thenReturn(tokens);
+    }
 
     private AppUser userWithRole(UserRole role) {
         return AppUser.builder()
@@ -37,52 +99,30 @@ class AdminLoginUseCaseTest {
                 .build();
     }
 
-    @Test
-    void execute_shouldReturnTokens_whenUserIsAdmin() {
-        AuthTokens expected = AuthTokens.builder()
-                .accessToken("token").refreshToken("refresh").role(UserRole.ADMIN).build();
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userWithRole(UserRole.ADMIN)));
-        when(loginUseCase.execute(EMAIL, PASSWORD)).thenReturn(expected);
+    private AuthTokens adminTokens() {
+        return AuthTokens.builder()
+                .accessToken("token").refreshToken("refresh").role(UserRole.ADMIN)
+                .build();
+    }
 
-        AuthTokens result = adminLoginUseCase.execute(EMAIL, PASSWORD);
+    // --- act ---
 
+    private AuthTokens adminLogin() {
+        return adminLoginUseCase.execute(EMAIL, PASSWORD);
+    }
+
+    // --- assert ---
+
+    private void thenResultIsSameAs(AuthTokens result, AuthTokens expected) {
         assertThat(result).isSameAs(expected);
     }
 
-    @Test
-    void execute_shouldDelegateToLoginUseCase_whenUserIsAdmin() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userWithRole(UserRole.ADMIN)));
-        when(loginUseCase.execute(EMAIL, PASSWORD)).thenReturn(
-                AuthTokens.builder().accessToken("t").refreshToken("r").role(UserRole.ADMIN).build());
-
-        adminLoginUseCase.execute(EMAIL, PASSWORD);
-
+    private void thenDelegatedToLogin() {
         verify(loginUseCase).execute(EMAIL, PASSWORD);
     }
 
-    @Test
-    void execute_shouldThrowUnauthorized_whenUserNotFound() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> adminLoginUseCase.execute(EMAIL, PASSWORD))
-                .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessage("Invalid credentials");
-    }
-
-    @Test
-    void execute_shouldThrowUnauthorized_whenUserIsNotAdmin() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userWithRole(UserRole.USER)));
-
-        assertThatThrownBy(() -> adminLoginUseCase.execute(EMAIL, PASSWORD))
-                .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessage("Invalid credentials");
-    }
-
-    @Test
-    void execute_shouldThrowUnauthorized_whenUserIsLead() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userWithRole(UserRole.LEAD)));
-
-        assertThatThrownBy(() -> adminLoginUseCase.execute(EMAIL, PASSWORD))
+    private void thenAdminLoginThrowsInvalidCredentials() {
+        assertThatThrownBy(this::adminLogin)
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid credentials");
     }

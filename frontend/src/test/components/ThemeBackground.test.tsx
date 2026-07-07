@@ -10,31 +10,37 @@ vi.mock('../../context/theme', () => ({
 
 describe('ThemeBackground', () => {
   beforeEach(() => {
-    mockUseTheme.mockReturnValue({ theme: 'light' })
+    setupThemeMock('light')
   })
 
   it('activa el fondo claro y oculta el nocturno en modo día', () => {
-    render(
-      <ThemeBackground
-        lightSrc="day.webp"
-        darkSrc="night.webp"
-        lightAlt="Fondo de día"
-        darkAlt="Fondo nocturno"
-      />,
-    )
-
-    const activeBackground = screen.getByAltText('Fondo de día')
-    const hiddenBackground = screen.getByRole('presentation', { hidden: true })
-
-    expect(activeBackground).toHaveAttribute('src', 'day.webp')
-    expect(activeBackground).toHaveClass('theme-background--active')
-    expect(hiddenBackground).toHaveAttribute('src', 'night.webp')
-    expect(hiddenBackground).toHaveAttribute('aria-hidden', 'true')
+    renderDefaultBackground()
+    verifyActiveBackground('Fondo de día', 'day.webp')
+    verifyHiddenBackground('night.webp')
   })
 
   it('activa el fondo nocturno y oculta el claro en modo noche', () => {
-    mockUseTheme.mockReturnValue({ theme: 'dark' })
+    setupThemeMock('dark')
+    renderDefaultBackground()
+    verifyActiveBackground('Fondo nocturno', 'night.webp')
+    verifyHiddenBackground('day.webp')
+  })
 
+  it('renderiza variantes mobile y desktop cuando recibe fondos mobile', () => {
+    renderMobileBackground()
+    verifyBackgroundClass('Fondo de día', 'theme-background--desktop')
+    verifyBackgroundClass('Fondo de día para celular', 'theme-background--mobile')
+    verifyHiddenBackgroundsCount(2)
+    verifyHiddenBackgroundsSrc(['night-desktop.webp', 'night-mobile.webp'])
+  })
+
+  /* helpers */
+
+  const setupThemeMock = (theme: string) => {
+    mockUseTheme.mockReturnValue({ theme })
+  }
+
+  const renderDefaultBackground = () => {
     render(
       <ThemeBackground
         lightSrc="day.webp"
@@ -43,17 +49,9 @@ describe('ThemeBackground', () => {
         darkAlt="Fondo nocturno"
       />,
     )
+  }
 
-    const activeBackground = screen.getByAltText('Fondo nocturno')
-    const hiddenBackground = screen.getByRole('presentation', { hidden: true })
-
-    expect(activeBackground).toHaveAttribute('src', 'night.webp')
-    expect(activeBackground).toHaveClass('theme-background--active')
-    expect(hiddenBackground).toHaveAttribute('src', 'day.webp')
-    expect(hiddenBackground).toHaveAttribute('aria-hidden', 'true')
-  })
-
-  it('renderiza variantes mobile y desktop cuando recibe fondos mobile', () => {
+  const renderMobileBackground = () => {
     render(
       <ThemeBackground
         lightSrc="day-desktop.webp"
@@ -64,13 +62,32 @@ describe('ThemeBackground', () => {
         darkMobileSrc="night-mobile.webp"
       />,
     )
+  }
 
-    expect(screen.getByAltText('Fondo de día')).toHaveClass('theme-background--desktop')
-    expect(screen.getByAltText('Fondo de día para celular')).toHaveClass('theme-background--mobile')
+  const verifyActiveBackground = (altText: string, src: string) => {
+    const activeBackground = screen.getByAltText(altText)
+    expect(activeBackground).toHaveAttribute('src', src)
+    expect(activeBackground).toHaveClass('theme-background--active')
+  }
 
+  const verifyHiddenBackground = (src: string) => {
+    const hiddenBackground = screen.getByRole('presentation', { hidden: true })
+    expect(hiddenBackground).toHaveAttribute('src', src)
+    expect(hiddenBackground).toHaveAttribute('aria-hidden', 'true')
+  }
+
+  const verifyBackgroundClass = (altText: string, className: string) => {
+    expect(screen.getByAltText(altText)).toHaveClass(className)
+  }
+
+  const verifyHiddenBackgroundsCount = (count: number) => {
+    expect(screen.getAllByRole('presentation', { hidden: true })).toHaveLength(count)
+  }
+
+  const verifyHiddenBackgroundsSrc = (srcs: string[]) => {
     const hiddenBackgrounds = screen.getAllByRole('presentation', { hidden: true })
-    expect(hiddenBackgrounds).toHaveLength(2)
-    expect(hiddenBackgrounds[0]).toHaveAttribute('src', 'night-desktop.webp')
-    expect(hiddenBackgrounds[1]).toHaveAttribute('src', 'night-mobile.webp')
-  })
+    srcs.forEach((src, idx) => {
+      expect(hiddenBackgrounds[idx]).toHaveAttribute('src', src)
+    })
+  }
 })

@@ -6,6 +6,7 @@ import com.huly.backend.domain.mapper.pushNotification.SavePushSubscriptionMappe
 import com.huly.backend.domain.model.PushSubscription;
 import com.huly.backend.domain.repository.PushSubscriptionRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,6 +20,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SavePushSubscriptionUseCaseTest {
 
+    private static final Long USER_ID = 10L;
+    private static final Long SAVED_ID = 1L;
+    private static final String ENDPOINT = "https://fcm.example.com/abc";
+    private static final String P256DH = "key123";
+    private static final String AUTH = "auth123";
+
     @Mock
     private PushSubscriptionRepository repository;
 
@@ -30,31 +37,63 @@ class SavePushSubscriptionUseCaseTest {
     }
 
     @Test
-    void execute_shouldSaveSubscription_whenEndpointDoesNotExist() {
-        when(repository.existsByEndpoint("https://fcm.example.com/abc")).thenReturn(false);
-        PushSubscription saved = PushSubscription.builder().id(1L).userId(10L).endpoint("https://fcm.example.com/abc")
-        .p256dh("key123").auth("auth123").build();
-        when(repository.save(any())).thenReturn(saved);
-
-        ArgumentCaptor<PushSubscription> captor = ArgumentCaptor.forClass(PushSubscription.class);
-        SavePushSubscriptionResponse result = useCase.execute(
-                new SavePushSubscriptionRequest(10L, "https://fcm.example.com/abc", "key123", "auth123"));
-
-        verify(repository).save(captor.capture());
-        assertThat(captor.getValue().getUserId()).isEqualTo(10L);
-        assertThat(captor.getValue().getEndpoint()).isEqualTo("https://fcm.example.com/abc");
-        assertThat(captor.getValue().getCreatedAt()).isNotNull();
-        assertThat(result.saved()).isTrue();
-        assertThat(result.id()).isEqualTo(1L);
+    @DisplayName("Guarda la suscripción cuando el endpoint no existe")
+    void executeShouldSaveSubscriptionWhenEndpointDoesNotExist() {
+        // --- arrange ---
+        givenEndpointDoesNotExist();
+        givenSaveReturnsSubscription();
+        // --- act ---
+        SavePushSubscriptionResponse result = save();
+        // --- assert ---
+        thenSubscriptionSaved(result);
     }
 
     @Test
-    void execute_shouldNotSave_whenEndpointAlreadyExists() {
-        when(repository.existsByEndpoint("https://fcm.example.com/abc")).thenReturn(true);
-        SavePushSubscriptionResponse result = useCase.execute(
-                new SavePushSubscriptionRequest(10L, "https://fcm.example.com/abc", "key123", "auth123"));
+    @DisplayName("No guarda la suscripción cuando el endpoint ya existe")
+    void executeShouldNotSaveWhenEndpointAlreadyExists() {
+        // --- arrange ---
+        givenEndpointAlreadyExists();
+        // --- act ---
+        SavePushSubscriptionResponse result = save();
+        // --- assert ---
+        thenSubscriptionNotSaved(result);
+    }
+
+    // --- arrange ---
+
+    private void givenEndpointDoesNotExist() {
+        when(repository.existsByEndpoint(ENDPOINT)).thenReturn(false);
+    }
+
+    private void givenEndpointAlreadyExists() {
+        when(repository.existsByEndpoint(ENDPOINT)).thenReturn(true);
+    }
+
+    private void givenSaveReturnsSubscription() {
+        when(repository.save(any())).thenReturn(PushSubscription.builder()
+                .id(SAVED_ID).userId(USER_ID).endpoint(ENDPOINT).p256dh(P256DH).auth(AUTH).build());
+    }
+
+    // --- act ---
+
+    private SavePushSubscriptionResponse save() {
+        return useCase.execute(new SavePushSubscriptionRequest(USER_ID, ENDPOINT, P256DH, AUTH));
+    }
+
+    // --- assert ---
+
+    private void thenSubscriptionSaved(SavePushSubscriptionResponse result) {
+        ArgumentCaptor<PushSubscription> captor = ArgumentCaptor.forClass(PushSubscription.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().getUserId()).isEqualTo(USER_ID);
+        assertThat(captor.getValue().getEndpoint()).isEqualTo(ENDPOINT);
+        assertThat(captor.getValue().getCreatedAt()).isNotNull();
+        assertThat(result.saved()).isTrue();
+        assertThat(result.id()).isEqualTo(SAVED_ID);
+    }
+
+    private void thenSubscriptionNotSaved(SavePushSubscriptionResponse result) {
         assertThat(result.saved()).isFalse();
         verify(repository, never()).save(any());
     }
-
 }
