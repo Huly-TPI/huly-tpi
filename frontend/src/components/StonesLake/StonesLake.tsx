@@ -23,7 +23,10 @@ import {
   type Stone,
 } from './lakeCanvas'
 import lakeBackground from '../../assets/stones-lake/light-theme/lake-background.webp'
+import lakeBackgroundMobile from '../../assets/stones-lake/light-theme/lake-background-mobile.webp'
 import './StonesLake.css'
+
+const MOBILE_MEDIA_QUERY = '(max-width: 640px)'
 
 const MAX_RIPPLES = 80
 const MAX_STONES = 30
@@ -215,16 +218,19 @@ export default function StonesLake({ onStoneThrown }: StonesLakeProps) {
   }
 
   return (
-    <>
-      <img
-        ref={backgroundRef}
-        src={lakeBackground}
-        alt=""
-        aria-hidden="true"
-        className="stones-lake__background"
-        draggable={false}
-        onLoad={handleBackgroundLoad}
-      />
+    <div className="stones-lake">
+      <picture>
+        <source media={MOBILE_MEDIA_QUERY} srcSet={lakeBackgroundMobile} />
+        <img
+          ref={backgroundRef}
+          src={lakeBackground}
+          alt=""
+          aria-hidden="true"
+          className="stones-lake__background"
+          draggable={false}
+          onLoad={handleBackgroundLoad}
+        />
+      </picture>
       <canvas
         ref={canvasRef}
         className="stones-lake__canvas"
@@ -232,6 +238,6 @@ export default function StonesLake({ onStoneThrown }: StonesLakeProps) {
         role="img"
         onPointerDown={throwStone}
       />
-    </>
+    </div>
   )
 }

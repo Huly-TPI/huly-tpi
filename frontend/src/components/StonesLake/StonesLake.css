@@ -1,3 +1,8 @@
+.stones-lake {
+  position: absolute;
+  inset: 0;
+}
+
 .stones-lake__background {
   position: absolute;
   inset: 0;

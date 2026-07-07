@@ -233,7 +233,7 @@ export const drawStone = (
   palette: LakePalette,
 ) => {
   const t = Math.min(Math.max(progress, 0), 1)
-  const eased = 1 - (1 - t) * (1 - t) // desacelera al alejarse
+  const eased = 1 - (1 - t) * (1 - t)
 
   const posX = lerp(stone.originX, stone.x, eased)
   const posY = lerp(stone.originY, stone.y, eased) - stone.arcHeight * Math.sin(Math.PI * eased)
