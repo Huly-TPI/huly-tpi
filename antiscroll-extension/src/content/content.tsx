@@ -12,7 +12,7 @@ import { setupActivityTracker } from './activityTracker';
 import { getSettings, setSettings } from '../utils/storage';
 import { STORAGE_KEYS } from '../utils/constants';
 import { ExtensionSettings } from '../utils/types';
-import { normalizeDomain } from '../utils/domain';
+import { normalizeDomain, stripCountrySuffix } from '../utils/domain';
 
 declare global {
   interface Window {
@@ -70,7 +70,11 @@ const createSettingsHelpers = (modalController: ReturnType<typeof createModalCon
   },
   isMonitored: () => {
     if (!settings || !settings.enabled) return false;
-    return settings.monitoredDomains.some((domain) => DOMAIN === domain || DOMAIN.endsWith(`.${domain}`));
+    const cleanDomain = stripCountrySuffix(DOMAIN);
+    return settings.monitoredDomains.some((domain) => {
+      const normalized = normalizeDomain(domain);
+      return cleanDomain === stripCountrySuffix(normalized);
+    });
   },
   isPaused: () => modalController.isOpen(),
 });

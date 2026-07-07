@@ -8,6 +8,7 @@ public record GetUserActivitiesResponse(
         long todayActivitiesCount,
         String favoriteActivity,
         String averageSessionsText,
-        Map<String, Integer> activityDistribution
+        Map<String, Integer> activityDistribution,
+        Map<String, String> activityNames
 ) {
 }

@@ -2,40 +2,50 @@ package com.huly.backend.domain.model.enums;
 
 public enum EmotionType {
     // Emociones básicas
-    JOY,
-    SADNESS,
-    ANGER,
-    FEAR,
-    SURPRISE,
-    DISGUST,
+    JOY("Alegría"),
+    SADNESS("Tristeza"),
+    ANGER("Enojo / Rabia"),
+    FEAR("Miedo"),
+    SURPRISE("Sorpresa"),
+    DISGUST("Disgusto"),
 
     // Estados ansiosos y de estrés
-    ANXIETY,
-    STRESS,
-    OVERWHELM,
-    PANIC,
+    ANXIETY("Ansiedad"),
+    STRESS("Estrés"),
+    OVERWHELM("Abrumación"),
+    PANIC("Pánico"),
 
     // Estados depresivos
-    HOPELESSNESS,
-    EMPTINESS,
-    LONELINESS,
-    GRIEF,
+    HOPELESSNESS("Desesperanza"),
+    EMPTINESS("Vacío"),
+    LONELINESS("Soledad"),
+    GRIEF("Duelo"),
 
     // Emociones sociales
-    SHAME,
-    GUILT,
-    FRUSTRATION,
-    IRRITABILITY,
+    SHAME("Vergüenza"),
+    GUILT("Culpa"),
+    FRUSTRATION("Frustración"),
+    IRRITABILITY("Irritabilidad"),
 
     // Estados positivos / neutros
-    CALM,
-    LOVE,
-    GRATITUDE,
-    MOTIVATION,
+    CALM("Calma"),
+    LOVE("Amor"),
+    GRATITUDE("Gratitud"),
+    MOTIVATION("Motivación"),
 
     // Estados disociativos o planos
-    EXHAUSTION,
-    NUMBNESS,
-    CONFUSION,
-    NEUTRAL
+    EXHAUSTION("Agotamiento"),
+    NUMBNESS("Adormecimiento"),
+    CONFUSION("Confusión"),
+    NEUTRAL("Neutral");
+
+    private final String description;
+
+    EmotionType(String description) {
+        this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

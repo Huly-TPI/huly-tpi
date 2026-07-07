@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import Button from '../Buttons/Button/Button'
 
 interface ChatbotChallengeCardProps {
   title: string
   description: string
+  onClose: () => void
   decision?: 'accepted' | 'rejected'
   onAccept: () => void | Promise<void>
   onReject: () => void | Promise<void>
@@ -11,10 +13,13 @@ interface ChatbotChallengeCardProps {
 export default function ChatbotChallengeCard({
   title,
   description,
+  onClose,
   decision,
   onAccept,
   onReject,
 }: ChatbotChallengeCardProps) {
+  const navigate = useNavigate()
+
   return (
     <div className="w-full min-w-0 rounded-xl border border-bosque/45 bg-bosque/10 p-3 sm:p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-bosque">Reto propuesto</p>
@@ -36,10 +41,26 @@ export default function ChatbotChallengeCard({
         </div>
       )}
 
-      {decision && (
-        <p className="mt-2 text-xs font-semibold text-bosque dark:text-menta">
-          {decision === 'accepted' ? 'Reto aceptado.' : 'Reto rechazado.'}
-        </p>
+      {decision === 'accepted' && (
+        <div className="mt-2 flex flex-col gap-2">
+          <p className="text-xs font-semibold text-bosque dark:text-menta">Reto aceptado.</p>
+          <Button
+            type="button"
+            onClick={() => {
+              onClose()
+              navigate('/challenges')
+            }}
+            variant="success"
+            size="sm"
+            fullWidth
+          >
+            Ir a mis retos
+          </Button>
+        </div>
+      )}
+
+      {decision === 'rejected' && (
+        <p className="mt-2 text-xs font-semibold text-bosque dark:text-menta">Reto rechazado.</p>
       )}
     </div>
   )

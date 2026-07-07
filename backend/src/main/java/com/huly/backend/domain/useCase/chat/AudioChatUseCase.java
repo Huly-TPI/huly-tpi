@@ -1,6 +1,7 @@
 package com.huly.backend.domain.useCase.chat;
 
-import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.dto.chat.ChatMessageRequest;
+import com.huly.backend.domain.dto.chat.ChatReplyResponse;
 import com.huly.backend.domain.port.AudioTranscriptionPort;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ public class AudioChatUseCase {
     private final AudioTranscriptionPort audioTranscriptionPort;
     private final ChatUseCase chatUseCase;
 
-    public ChatReply execute(MultipartFile audio, String conversationId, Long userId) {
+    public ChatReplyResponse execute(MultipartFile audio, String conversationId, Long userId) {
         byte[] audioBytes;
         try {
             audioBytes = audio.getBytes();
@@ -34,7 +35,7 @@ public class AudioChatUseCase {
         String formattedMessage = buildMessage(result.transcription(), result.vad(), result.dominantEmotion());
         log.info("[AUDIO] mensaje enviado a Claude:\n{}", formattedMessage);
 
-        return chatUseCase.execute(formattedMessage, conversationId, userId);
+        return chatUseCase.execute(new ChatMessageRequest(userId, conversationId, formattedMessage));
     }
 
     private String buildMessage(String transcription, AudioTranscriptionPort.VadResult vad, String dominantEmotion) {

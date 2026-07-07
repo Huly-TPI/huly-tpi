@@ -36,6 +36,7 @@ export interface VectorMemoryResponse {
 export interface ActivitySessionResponse {
   id: number
   activityType: string
+  activityName: string
   createdAt: string
 }
 
@@ -78,6 +79,7 @@ export interface UserActivitiesResponse {
   favoriteActivity: string | null
   averageSessionsText: string
   activityDistribution: Record<string, number>
+  activityNames: Record<string, string>
 }
 
 export interface UserAiDiagnosticsResponse {

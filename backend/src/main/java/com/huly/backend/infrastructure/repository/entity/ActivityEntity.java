@@ -47,5 +47,17 @@ public class ActivityEntity {
     
     @Column(name = "effect_dominance") 
     private double effectDominance;
+
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "goal_keywords", columnDefinition = "TEXT")
+    private String goalKeywords;
+
+    @Column(name = "route_path")
+    private String routePath;
    
 }

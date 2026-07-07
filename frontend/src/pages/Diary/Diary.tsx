@@ -115,7 +115,7 @@ export default function Diary() {
   )
 
   const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(
-    ActivityType.DIARIO
+    ActivityType.DIARY
   )
 
   useEffect(() => {

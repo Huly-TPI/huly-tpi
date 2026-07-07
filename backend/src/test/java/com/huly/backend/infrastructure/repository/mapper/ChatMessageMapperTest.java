@@ -38,7 +38,7 @@ class ChatMessageMapperTest {
                 null,
                 false,
                 null,
-                new SuggestedChatAction(ActivityType.RESPIRACION, 4L, "Respirar", "Desc", "/guided-breathing", 12L),
+                new SuggestedChatAction(ActivityType.BREATHING, 4L, "Respirar", "Desc", "/guided-breathing", 12L),
                 new ChatReply.GeneratedChallenge("Reto", "Descripcion"),
                 "ACCEPTED",
                 "REJECTED"
@@ -48,7 +48,7 @@ class ChatMessageMapperTest {
 
         assertThat(entity.getChatSession()).isEqualTo(session);
         assertThat(entity.getSuggestedAction()).isNotNull();
-        assertThat(entity.getSuggestedAction().getType()).isEqualTo("RESPIRACION");
+        assertThat(entity.getSuggestedAction().getType()).isEqualTo("BREATHING");
         assertThat(entity.getSuggestedAction().getDecision()).isEqualTo("ACCEPTED");
         assertThat(entity.getGeneratedChallenge()).isNotNull();
         assertThat(entity.getGeneratedChallenge().getTitle()).isEqualTo("Reto");
@@ -110,7 +110,7 @@ class ChatMessageMapperTest {
                 .riskDetected(true)
                 .createdAt(now)
                 .suggestedAction(com.huly.backend.infrastructure.repository.entity.SuggestedActionEmbeddable.builder()
-                        .type("RESPIRACION")
+                        .type("BREATHING")
                         .activityId(4L)
                         .title("Respirar")
                         .description("Desc")
@@ -131,7 +131,7 @@ class ChatMessageMapperTest {
         assertThat(chatMessage.id()).isEqualTo(1L);
         assertThat(chatMessage.detectedEmotion()).isEqualTo(EmotionType.CALM);
         assertThat(chatMessage.suggestedAction()).isNotNull();
-        assertThat(chatMessage.suggestedAction().type()).isEqualTo(ActivityType.RESPIRACION);
+        assertThat(chatMessage.suggestedAction().type()).isEqualTo(ActivityType.BREATHING);
         assertThat(chatMessage.suggestedActionDecision()).isEqualTo("ACCEPTED");
         assertThat(chatMessage.generatedChallenge()).isNotNull();
         assertThat(chatMessage.generatedChallenge().title()).isEqualTo("Reto");

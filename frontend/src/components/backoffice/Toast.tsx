@@ -43,27 +43,27 @@ export function Toast({
     error: {
       title: 'Error',
       icon: AlertTriangle,
-      colorClass: 'text-red-700 dark:text-red-400',
-      bgClass: 'bg-red-50 dark:bg-red-955/20',
-      ringClass: 'ring-red-200 dark:ring-red-900/30',
+      colorClass: 'text-red-750 dark:text-red-300',
+      bgClass: 'bg-red-50 dark:bg-[#241212]',
+      ringClass: 'ring-red-200 dark:ring-red-900/40 border dark:border-red-900/50',
       iconBg: 'bg-red-500',
       iconColor: 'text-white',
     },
     success: {
       title: 'Éxito',
       icon: CheckCircle2,
-      colorClass: 'text-bosque dark:text-menta',
-      bgClass: 'bg-[#EBF7EE] dark:bg-[#12231b]',
-      ringClass: 'ring-bosque/30 dark:ring-menta/20',
+      colorClass: 'text-bosque dark:text-green-300',
+      bgClass: 'bg-[#EBF7EE] dark:bg-[#0f2117]',
+      ringClass: 'ring-bosque/30 dark:ring-green-900/40 border dark:border-green-900/50',
       iconBg: 'bg-bosque',
       iconColor: 'text-white',
     },
     warning: {
       title: 'Advertencia',
       icon: AlertTriangle,
-      colorClass: 'text-anaranjado dark:text-[#f3a462]',
-      bgClass: 'bg-[#FFF7ED] dark:bg-[#25180f]',
-      ringClass: 'ring-anaranjado/30 dark:ring-[#9c5312]/20',
+      colorClass: 'text-anaranjado dark:text-amber-300',
+      bgClass: 'bg-[#FFF7ED] dark:bg-[#24190e]',
+      ringClass: 'ring-anaranjado/30 dark:ring-amber-900/40 border dark:border-amber-900/50',
       iconBg: 'bg-anaranjado',
       iconColor: 'text-white',
     },
@@ -71,8 +71,8 @@ export function Toast({
       title: 'Información',
       icon: Info,
       colorClass: 'text-violeta dark:text-violeta-claro',
-      bgClass: 'bg-[#F4EFFB] dark:bg-[#1a1324]',
-      ringClass: 'ring-violeta/30 dark:ring-violeta-claro/20',
+      bgClass: 'bg-[#F4EFFB] dark:bg-[#171124]',
+      ringClass: 'ring-violeta/30 dark:ring-violeta/40 border dark:border-violeta/30',
       iconBg: 'bg-violeta',
       iconColor: 'text-white',
     },
@@ -94,7 +94,7 @@ export function Toast({
       </div>
       <div className="min-w-0 flex-1">
         <p className={`text-sm sm:text-base font-bold ${config.colorClass}`}>{config.title}</p>
-        <p className="mt-1 break-words text-xs sm:text-sm text-[#4A5568] dark:text-gray-300 leading-relaxed">{message}</p>
+        <p className="mt-1 break-words text-xs sm:text-sm text-[#4A5568] dark:text-gray-100 leading-relaxed">{message}</p>
       </div>
       <button
         onClick={handleClose}

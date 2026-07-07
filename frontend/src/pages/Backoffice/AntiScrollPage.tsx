@@ -5,6 +5,7 @@ import DomainFavicon from '../../components/backoffice/DomainFavicon'
 import { RefreshCw, Monitor, Database, Link2, Settings, Clock, FileText, CheckCircle } from 'lucide-react'
 import Button from '../../components/Buttons/Button/Button'
 import { ErrorMessage } from '../../components/backoffice/ErrorMessage'
+import PageHeader from '../../components/backoffice/PageHeader'
 
 
 export default function AntiScrollPage() {
@@ -31,7 +32,7 @@ export default function AntiScrollPage() {
   if (loading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <div className="text-center text-sm text-gray-400 dark:text-gray-500">Cargando datos de antiscroll...</div>
+        <div className="text-center text-sm text-gray-400 dark:text-gray-550">Cargando datos de antiscroll...</div>
       </div>
     )
   }
@@ -47,12 +48,10 @@ export default function AntiScrollPage() {
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Panel antiscroll</h1>
-        <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">
-          Monitoreo global de bienestar digital, retorno al jardín y estadísticas de navegación de la extensión.
-        </p>
-      </div>
+      <PageHeader 
+        title="Panel antiscroll" 
+        subtitle="Monitoreo global de bienestar digital, retorno al jardín y estadísticas de navegación de la extensión."
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr] w-full">
         <div className="flex flex-col gap-6">

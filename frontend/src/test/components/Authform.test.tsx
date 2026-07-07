@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AuthForm from '../../components/AuthForm/AuthForm'
 import type { AuthFormField } from '../../components/AuthForm/AuthForm'
+import { clickButton, typePlaceholder, verifyTextPresent, verifyTextNotPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled } from '../testHelpers'
 
 const FIELDS: AuthFormField[] = [
     { name: 'email', type: 'email', placeholder: 'Email' },
@@ -23,192 +24,295 @@ const defaultProps = {
 }
 
 describe('AuthForm', () => {
+    let onChangeMock: any
+    let onSubmitMock: any
+    let onSwitchModeMock: any
+    let onForgotPasswordMock: any
+    let onTermsChangeMock: any
+
+    beforeEach(() => {
+        onChangeMock = vi.fn()
+        onSubmitMock = vi.fn()
+        onSwitchModeMock = vi.fn()
+        onForgotPasswordMock = vi.fn()
+        onTermsChangeMock = vi.fn()
+    })
+
     it('renderiza el título', () => {
-        render(<AuthForm {...defaultProps} title="¡Crea tu cuenta!" />)
-        expect(screen.getByText('¡Crea tu cuenta!')).toBeInTheDocument()
+        renderAuthForm({ title: '¡Crea tu cuenta!' })
+        verifyTitleIsPresent('¡Crea tu cuenta!')
     })
 
     it('renderiza el subtítulo cuando se pasa', () => {
-        render(<AuthForm {...defaultProps} subtitle="Comenzá tu aventura" />)
-        expect(screen.getByText('Comenzá tu aventura')).toBeInTheDocument()
+        renderAuthForm({ subtitle: 'Comenzá tu aventura' })
+        verifySubtitleIsPresent('Comenzá tu aventura')
     })
 
     it('no renderiza subtítulo si no se pasa', () => {
-        render(<AuthForm {...defaultProps} />)
-        expect(screen.queryByText('Comenzá tu aventura')).not.toBeInTheDocument()
+        renderAuthForm()
+        verifySubtitleNotPresent('Comenzá tu aventura')
     })
 
     it('renderiza todos los campos', () => {
-        render(<AuthForm {...defaultProps} />)
-        expect(screen.getByPlaceholderText('Email')).toBeInTheDocument()
-        expect(screen.getByPlaceholderText('Contraseña')).toBeInTheDocument()
+        renderAuthForm()
+        verifyFieldsArePresent(['Email', 'Contraseña'])
     })
 
     it('renderiza labels accesibles para cada campo', () => {
-        render(<AuthForm {...defaultProps} />)
-        expect(screen.getByLabelText('Email')).toBeInTheDocument()
-        expect(screen.getByLabelText('Contraseña')).toBeInTheDocument()
+        renderAuthForm()
+        verifyAccessibleLabels(['Email', 'Contraseña'])
     })
 
     it('muestra el botón con el label correcto', () => {
-        render(<AuthForm {...defaultProps} submitLabel="Registrarse" />)
-        expect(screen.getByRole('button', { name: 'Registrarse' })).toBeInTheDocument()
+        renderAuthForm({ submitLabel: 'Registrarse' })
+        verifyButtonWithLabel('Registrarse')
     })
 
     it('muestra el label de carga cuando loading es true', () => {
-        render(<AuthForm {...defaultProps} loading={true} loadingLabel="Cargando..." />)
-        expect(screen.getByRole('button', { name: 'Cargando...' })).toBeDisabled()
+        renderAuthForm({ loading: true, loadingLabel: 'Cargando...' })
+        verifyButtonDisabledWithLabel('Cargando...')
     })
 
     it('muestra errores por campo', () => {
-        const errors = { email: 'Email inválido' }
-        render(<AuthForm {...defaultProps} errors={errors} />)
-        expect(screen.getByText('Email inválido')).toBeInTheDocument()
-        expect(screen.getByText('Email inválido')).toHaveAttribute('role', 'alert')
+        renderAuthForm({ errors: { email: 'Email inválido' } })
+        verifyFieldError('Email inválido')
     })
 
     it('muestra error de API', () => {
-        render(<AuthForm {...defaultProps} apiError="Error del servidor" />)
-        expect(screen.getByText('Error del servidor')).toBeInTheDocument()
-        expect(screen.getByText('Error del servidor')).toHaveAttribute('role', 'alert')
+        renderAuthForm({ apiError: 'Error del servidor' })
+        verifyApiError('Error del servidor')
     })
 
     it('marca el input con aria-invalid cuando tiene error', () => {
-        const errors = { email: 'Requerido' }
-        render(<AuthForm {...defaultProps} errors={errors} />)
-        expect(screen.getByPlaceholderText('Email')).toHaveAttribute('aria-invalid', 'true')
+        renderAuthForm({ errors: { email: 'Requerido' } })
+        verifyFieldHasAriaInvalid('Email')
     })
 
-    it('llama a onChange al escribir en un campo', async () => {
-        const onChange = vi.fn()
-        const user = userEvent.setup()
-        render(<AuthForm {...defaultProps} onChange={onChange} />)
-
-        await user.type(screen.getByPlaceholderText('Email'), 'a')
-
-        expect(onChange).toHaveBeenCalledWith('email', 'a')
+    it('llama a onChange al escribir en un campo', () => {
+        renderAuthForm()
+        return typeIntoField('Email', 'a').then(() => {
+            verifyOnChangeCalledWith('email', 'a')
+        })
     })
 
-    it('llama a onSubmit al enviar el formulario', async () => {
-        const onSubmit = vi.fn()
-        const user = userEvent.setup()
-        render(<AuthForm {...defaultProps} onSubmit={onSubmit} />)
-
-        await user.click(screen.getByRole('button', { name: 'Enviar' }))
-
-        expect(onSubmit).toHaveBeenCalledOnce()
+    it('llama a onSubmit al enviar el formulario', () => {
+        renderAuthForm()
+        return submitForm().then(() => {
+            verifyOnSubmitCalled()
+        })
     })
 
     it('renderiza checkbox de términos cuando se pasa onTermsChange', () => {
-        render(
-            <AuthForm
-                {...defaultProps}
-                termsAccepted={false}
-                onTermsChange={vi.fn()}
-            />,
-        )
-        expect(screen.getByText(/términos y condiciones/)).toBeInTheDocument()
+        renderWithTerms(false)
+        verifyTermsMessagePresent()
     })
 
     it('deshabilita el botón si los términos no están aceptados', () => {
-        render(
-            <AuthForm
-                {...defaultProps}
-                termsAccepted={false}
-                onTermsChange={vi.fn()}
-            />,
-        )
-        expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled()
+        renderWithTerms(false)
+        verifyButtonDisabledWithLabel('Enviar')
     })
 
     it('habilita el botón cuando los términos se aceptan', () => {
-        render(
-            <AuthForm
-                {...defaultProps}
-                termsAccepted={true}
-                onTermsChange={vi.fn()}
-            />,
-        )
-        expect(screen.getByRole('button', { name: 'Enviar' })).toBeEnabled()
+        renderWithTerms(true)
+        verifyButtonEnabledWithLabel('Enviar')
     })
 
     it('renderiza el link de switch mode', () => {
-        render(
-            <AuthForm
-                {...defaultProps}
-                switchText="¿Ya tenés cuenta?"
-                switchLabel="Iniciá sesión"
-                onSwitchMode={vi.fn()}
-            />,
-        )
-        expect(screen.getByText('¿Ya tenés cuenta?')).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'Iniciá sesión' })).toBeInTheDocument()
+        renderWithSwitch()
+        verifySwitchLinkRendered()
     })
 
-    it('llama a onSwitchMode al hacer click', async () => {
-        const onSwitchMode = vi.fn()
-        const user = userEvent.setup()
-        render(
-            <AuthForm
-                {...defaultProps}
-                switchText="¿Ya tenés cuenta?"
-                switchLabel="Iniciá sesión"
-                onSwitchMode={onSwitchMode}
-            />,
-        )
-
-        await user.click(screen.getByRole('button', { name: 'Iniciá sesión' }))
-
-        expect(onSwitchMode).toHaveBeenCalledOnce()
+    it('llama a onSwitchMode al hacer click', () => {
+        renderWithSwitch()
+        return clickSwitchButton().then(() => {
+            verifyOnSwitchModeCalled()
+        })
     })
 
     it('renderiza campo de fecha con ícono de calendario', () => {
-        const fields: AuthFormField[] = [
-            { name: 'birthDate', type: 'date', placeholder: 'Fecha de nacimiento' },
-        ]
-        render(
-            <AuthForm
-                {...defaultProps}
-                fields={fields}
-                values={{ birthDate: '' }}
-            />,
-        )
-        expect(screen.getByPlaceholderText('Fecha de nacimiento')).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'Abrir calendario' })).toBeInTheDocument()
+        renderDateField()
+        verifyCalendarButtonPresent()
     })
 
     it('renderiza toggle de contraseña', () => {
-        render(<AuthForm {...defaultProps} />)
-        expect(screen.getByRole('button', { name: 'Mostrar contraseña' })).toBeInTheDocument()
+        renderAuthForm()
+        verifyShowPasswordButtonPresent()
     })
 
     it('renderiza el link de olvidaste tu contraseña cuando se pasa onForgotPassword', () => {
-        render(<AuthForm {...defaultProps} onForgotPassword={vi.fn()} />)
-        expect(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' })).toBeInTheDocument()
+        renderWithForgotPassword()
+        verifyForgotPasswordButtonPresent()
     })
 
     it('no renderiza el link de olvidaste tu contraseña si no se pasa onForgotPassword', () => {
-        render(<AuthForm {...defaultProps} />)
-        expect(screen.queryByRole('button', { name: '¿Olvidaste tu contraseña?' })).not.toBeInTheDocument()
+        renderAuthForm()
+        verifyForgotPasswordButtonNotPresent()
     })
 
-    it('llama a onForgotPassword al hacer click en el link', async () => {
-        const onForgotPassword = vi.fn()
-        const user = userEvent.setup()
-        render(<AuthForm {...defaultProps} onForgotPassword={onForgotPassword} />)
-
-        await user.click(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }))
-
-        expect(onForgotPassword).toHaveBeenCalledOnce()
+    it('llama a onForgotPassword al hacer click en el link', () => {
+        renderWithForgotPassword()
+        return clickForgotPasswordButton().then(() => {
+            verifyOnForgotPasswordCalled()
+        })
     })
 
     it('muestra el mensaje de éxito cuando se pasa successMessage', () => {
-        render(<AuthForm {...defaultProps} successMessage="¡Contraseña actualizada!" />)
-        expect(screen.getByText('¡Contraseña actualizada!')).toBeInTheDocument()
+        renderAuthForm({ successMessage: '¡Contraseña actualizada!' })
+        verifySuccessMessage('¡Contraseña actualizada!')
     })
 
     it('no muestra mensaje de éxito si successMessage es null', () => {
-        render(<AuthForm {...defaultProps} successMessage={null} />)
-        expect(screen.queryByText('¡Contraseña actualizada!')).not.toBeInTheDocument()
+        renderAuthForm({ successMessage: null })
+        verifySuccessMessageNotPresent('¡Contraseña actualizada!')
     })
+    const renderAuthForm = (props?: any) => {
+        render(<AuthForm {...defaultProps} onChange={onChangeMock} onSubmit={onSubmitMock} {...props} />)
+    }
+
+    const verifyTitleIsPresent = (title: string) => {
+        verifyTextPresent(title)
+    }
+
+    const verifySubtitleIsPresent = (subtitle: string) => {
+        verifyTextPresent(subtitle)
+    }
+
+    const verifySubtitleNotPresent = (subtitle: string) => {
+        verifyTextNotPresent(subtitle)
+    }
+
+    const verifyFieldsArePresent = (placeholders: string[]) => {
+        placeholders.forEach(ph => verifyPlaceholderPresent(ph))
+    }
+
+    const verifyAccessibleLabels = (labels: string[]) => {
+        labels.forEach(label => {
+            expect(screen.getByLabelText(label)).toBeInTheDocument()
+        })
+    }
+
+    const verifyButtonWithLabel = (label: string) => {
+        expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
+    }
+
+    const verifyButtonDisabledWithLabel = (label: string) => {
+        verifyButtonDisabled(label)
+    }
+
+    const verifyButtonEnabledWithLabel = (label: string) => {
+        verifyButtonEnabled(label)
+    }
+
+    const verifyFieldError = (errorText: string) => {
+        verifyTextPresent(errorText)
+        expect(screen.getByText(errorText)).toHaveAttribute('role', 'alert')
+    }
+
+    const verifyApiError = (errorText: string) => {
+        verifyTextPresent(errorText)
+        expect(screen.getByText(errorText)).toHaveAttribute('role', 'alert')
+    }
+
+    const verifyFieldHasAriaInvalid = (placeholder: string) => {
+        expect(screen.getByPlaceholderText(placeholder)).toHaveAttribute('aria-invalid', 'true')
+    }
+
+    const typeIntoField = (placeholder: string, text: string) => {
+        const user = userEvent.setup()
+        return typePlaceholder(user, placeholder, text)
+    }
+
+    const verifyOnChangeCalledWith = (name: string, value: string) => {
+        expect(onChangeMock).toHaveBeenCalledWith(name, value)
+    }
+
+    const submitForm = () => {
+        const user = userEvent.setup()
+        return clickButton(user, 'Enviar')
+    }
+
+    const verifyOnSubmitCalled = () => {
+        expect(onSubmitMock).toHaveBeenCalledOnce()
+    }
+
+    const renderWithTerms = (accepted: boolean) => {
+        renderAuthForm({
+            termsAccepted: accepted,
+            onTermsChange: onTermsChangeMock,
+        })
+    }
+
+    const verifyTermsMessagePresent = () => {
+        verifyTextPresent('términos y condiciones')
+    }
+
+    const renderWithSwitch = () => {
+        renderAuthForm({
+            switchText: '¿Ya tenés cuenta?',
+            switchLabel: 'Iniciá sesión',
+            onSwitchMode: onSwitchModeMock,
+        })
+    }
+
+    const verifySwitchLinkRendered = () => {
+        verifyTextPresent('¿Ya tenés cuenta?')
+        expect(screen.getByRole('button', { name: 'Iniciá sesión' })).toBeInTheDocument()
+    }
+
+    const clickSwitchButton = () => {
+        const user = userEvent.setup()
+        return clickButton(user, 'Iniciá sesión')
+    }
+
+    const verifyOnSwitchModeCalled = () => {
+        expect(onSwitchModeMock).toHaveBeenCalledOnce()
+    }
+
+    const renderDateField = () => {
+        const fields: AuthFormField[] = [
+            { name: 'birthDate', type: 'date', placeholder: 'Fecha de nacimiento' },
+        ]
+        renderAuthForm({
+            fields,
+            values: { birthDate: '' }
+        })
+    }
+
+    const verifyCalendarButtonPresent = () => {
+        verifyPlaceholderPresent('Fecha de nacimiento')
+        expect(screen.getByRole('button', { name: 'Abrir calendario' })).toBeInTheDocument()
+    }
+
+    const verifyShowPasswordButtonPresent = () => {
+        expect(screen.getByRole('button', { name: 'Mostrar contraseña' })).toBeInTheDocument()
+    }
+
+    const renderWithForgotPassword = () => {
+        renderAuthForm({ onForgotPassword: onForgotPasswordMock })
+    }
+
+    const verifyForgotPasswordButtonPresent = () => {
+        expect(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' })).toBeInTheDocument()
+    }
+
+    const verifyForgotPasswordButtonNotPresent = () => {
+        expect(screen.queryByRole('button', { name: '¿Olvidaste tu contraseña?' })).not.toBeInTheDocument()
+    }
+
+    const clickForgotPasswordButton = () => {
+        const user = userEvent.setup()
+        return clickButton(user, '¿Olvidaste tu contraseña?')
+    }
+
+    const verifyOnForgotPasswordCalled = () => {
+        expect(onForgotPasswordMock).toHaveBeenCalledOnce()
+    }
+
+    const verifySuccessMessage = (message: string) => {
+        verifyTextPresent(message)
+    }
+
+    const verifySuccessMessageNotPresent = (message: string) => {
+        verifyTextNotPresent(message)
+    }
 })

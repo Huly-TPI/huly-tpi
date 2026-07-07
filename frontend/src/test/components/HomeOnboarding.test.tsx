@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import type { HomeOnboardingStep } from '../../components/Onboarding/HomeOnboarding/types'
 import type { SceneElementDefinition } from '../../components/Scene/types'
+import { clickButton, verifyHeadingPresent } from '../testHelpers'
 
 vi.mock('../../hooks/useDialogFocusTrap', () => ({
   useDialogFocusTrap: () => ({
@@ -38,10 +39,32 @@ const steps: HomeOnboardingStep[] = [
 ]
 
 describe('HomeOnboarding', () => {
-  it('renderiza el modo intro como dialog y dispara onStart', async () => {
-    const user = userEvent.setup()
-    const onStart = vi.fn()
+  let onStartSpy: any
+  let onAdvanceSpy: any
 
+  it('renderiza el modo de introducción como diálogo y llama a onStart al comenzar', () => {
+    renderIntroMode()
+    verifyDialogIsModal()
+    return clickTutorialStartButton().then(() => {
+      verifyOnStartCalledTimes(1)
+    })
+  })
+
+  it('renderiza el modo de pasos con aria-labelledby y llama a onAdvance al avanzar', () => {
+    renderStepsMode()
+    verifyDialogLabelledBy('home-onboarding-step-title-house')
+    verifyHeadingPresent('Casa')
+    return clickTutorialFinishButton().then(() => {
+      verifyOnAdvanceCalledTimes(1)
+    })
+  })
+  let user: any
+
+  /* helpers */
+
+  const renderIntroMode = () => {
+    user = userEvent.setup()
+    onStartSpy = vi.fn()
     render(
       <HomeOnboarding
         mode="intro"
@@ -49,22 +72,15 @@ describe('HomeOnboarding', () => {
         sceneElements={sceneElements}
         steps={steps}
         currentStepIndex={0}
-        onStart={onStart}
+        onStart={onStartSpy}
         onAdvance={vi.fn()}
       />,
     )
+  }
 
-    expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
-
-    await user.click(screen.getByRole('button', { name: 'Comenzar con el tutorial' }))
-
-    expect(onStart).toHaveBeenCalledTimes(1)
-  })
-
-  it('renderiza el modo step con aria-labelledby y CTA de avance', async () => {
-    const user = userEvent.setup()
-    const onAdvance = vi.fn()
-
+  const renderStepsMode = () => {
+    user = userEvent.setup()
+    onAdvanceSpy = vi.fn()
     render(
       <HomeOnboarding
         mode="steps"
@@ -73,16 +89,34 @@ describe('HomeOnboarding', () => {
         steps={steps}
         currentStepIndex={0}
         onStart={vi.fn()}
-        onAdvance={onAdvance}
+        onAdvance={onAdvanceSpy}
       />,
     )
+  }
 
-    const dialog = screen.getByRole('dialog')
-    expect(dialog).toHaveAttribute('aria-labelledby', 'home-onboarding-step-title-house')
-    expect(screen.getByRole('heading', { name: 'Casa' })).toBeInTheDocument()
+  const verifyDialogIsModal = () => {
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Finalizar tutorial' }))
+  const clickTutorialStartButton = () => {
+    return clickButton(user, 'Comenzar con el tutorial')
+  }
 
-    expect(onAdvance).toHaveBeenCalledTimes(1)
-  })
+  const verifyOnStartCalledTimes = (times: number) => {
+    expect(onStartSpy).toHaveBeenCalledTimes(times)
+  }
+
+  const verifyDialogLabelledBy = (id: string) => {
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-labelledby', id)
+  }
+
+  
+
+  const clickTutorialFinishButton = () => {
+    return clickButton(user, 'Finalizar tutorial')
+  }
+
+  const verifyOnAdvanceCalledTimes = (times: number) => {
+    expect(onAdvanceSpy).toHaveBeenCalledTimes(times)
+  }
 })

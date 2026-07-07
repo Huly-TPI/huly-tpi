@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.enums.PaymentStatus;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.infrastructure.repository.entity.PaymentEventEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IPaymentEventJpaRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -13,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,34 +27,207 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PaymentEventRepositoryImplTest {
 
+    private static final Long EVENT_ID = 1L;
+    private static final Long USER_ID = 10L;
+    private static final Long MP_PAYMENT_ID = 99L;
+    private static final Instant CREATED_AT = Instant.parse("2026-01-01T00:00:00Z");
+
     @Mock private IPaymentEventJpaRepository jpaRepository;
     @InjectMocks private PaymentEventRepositoryImpl repository;
 
-    private PaymentEventEntity entity() {
-        return PaymentEventEntity.builder()
-                .id(1L).userId(10L).productId(2L)
-                .externalReference("ext-ref").mpPreferenceId("pref-123").mpPaymentId(99L)
-                .status(PaymentStatus.PENDING).coinsAmount(500)
-                .productType(ProductType.COIN_PACK).errorDetail(null)
-                .createdAt(Instant.now()).updatedAt(Instant.now())
-                .build();
+    @Test
+    @DisplayName("Mapea el dominio a entidad y de vuelta al guardar")
+    void saveShouldMapDomainToEntityAndBack() {
+        givenSaved(entity());
+
+        PaymentEvent result = save(domainEvent());
+
+        thenPersistedEntityMatches();
+        thenResultMatchesEntity(result);
     }
 
     @Test
-    void save_shouldMapDomainToEntityAndBack() {
-        Instant created = Instant.now();
-        PaymentEvent domain = PaymentEvent.builder()
-                .id(1L).userId(10L).productId(2L)
+    @DisplayName("Devuelve el evento mapeado al buscar por mpPaymentId cuando existe")
+    void findByMpPaymentIdShouldReturnMappedEventWhenFound() {
+        givenEventByMpPaymentId(entity());
+
+        Optional<PaymentEvent> result = findByMpPaymentId();
+
+        thenEventFoundByMpPaymentId(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío al buscar por mpPaymentId cuando no existe")
+    void findByMpPaymentIdShouldReturnEmptyWhenNotFound() {
+        givenEventByMpPaymentId(null);
+
+        Optional<PaymentEvent> result = findByMpPaymentId();
+
+        thenEmpty(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve el evento mapeado al buscar por referencia externa cuando existe")
+    void findByExternalReferenceShouldReturnMappedEventWhenFound() {
+        givenEventByExternalReference("ext-ref", entity());
+
+        Optional<PaymentEvent> result = findByExternalReference("ext-ref");
+
+        thenEventFoundByExternalReference(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío al buscar por referencia externa cuando no existe")
+    void findByExternalReferenceShouldReturnEmptyWhenNotFound() {
+        givenEventByExternalReference("missing", null);
+
+        Optional<PaymentEvent> result = findByExternalReference("missing");
+
+        thenEmpty(result);
+    }
+
+    @Test
+    @DisplayName("Actualiza y guarda el estado cuando el evento existe")
+    void updateStatusShouldUpdateAndSaveWhenEventExists() {
+        givenEventById(entity());
+
+        updateStatus(PaymentStatus.FAILED, MP_PAYMENT_ID, "cc_rejected");
+
+        thenStatusUpdatedAndSaved();
+    }
+
+    @Test
+    @DisplayName("No hace nada al actualizar el estado cuando el evento no existe")
+    void updateStatusShouldDoNothingWhenEventNotFound() {
+        givenEventById(null);
+
+        updateStatus(PaymentStatus.FAILED, MP_PAYMENT_ID, "err");
+
+        thenNothingSaved();
+    }
+
+    @Test
+    @DisplayName("Devuelve true al aprobar cuando se actualizó una fila")
+    void approveIfPendingShouldReturnTrueWhenRowUpdated() {
+        givenApproveResult(1);
+
+        boolean result = approveIfPending();
+
+        thenTrue(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve false al aprobar cuando no se actualizó ninguna fila")
+    void approveIfPendingShouldReturnFalseWhenNoRowUpdated() {
+        givenApproveResult(0);
+
+        boolean result = approveIfPending();
+
+        thenFalse(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve la lista mapeada al buscar por usuario")
+    void findByUserIdShouldReturnMappedList() {
+        givenEventsByUserId(entity());
+
+        List<PaymentEvent> result = findByUserId();
+
+        thenMappedListByUserId(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve la lista mapeada al buscar por usuario y estado")
+    void findByUserIdAndStatusShouldReturnMappedList() {
+        givenEventsByUserIdAndStatus(PaymentStatus.APPROVED, entity());
+
+        List<PaymentEvent> result = findByUserIdAndStatus(PaymentStatus.APPROVED);
+
+        thenMappedListByUserIdAndStatus(result, PaymentStatus.APPROVED);
+    }
+
+    // --- arrange ---
+    private void givenSaved(PaymentEventEntity entity) {
+        when(jpaRepository.save(any(PaymentEventEntity.class))).thenReturn(entity);
+    }
+
+    private void givenEventByMpPaymentId(PaymentEventEntity entity) {
+        when(jpaRepository.findByMpPaymentId(MP_PAYMENT_ID)).thenReturn(Optional.ofNullable(entity));
+    }
+
+    private void givenEventByExternalReference(String reference, PaymentEventEntity entity) {
+        when(jpaRepository.findByExternalReference(reference)).thenReturn(Optional.ofNullable(entity));
+    }
+
+    private void givenEventById(PaymentEventEntity entity) {
+        when(jpaRepository.findById(EVENT_ID)).thenReturn(Optional.ofNullable(entity));
+    }
+
+    private void givenApproveResult(int updated) {
+        when(jpaRepository.approveIfNotApproved(eq(EVENT_ID), eq(MP_PAYMENT_ID), any(Instant.class),
+                eq(PaymentStatus.APPROVED), eq(PaymentStatus.PENDING))).thenReturn(updated);
+    }
+
+    private void givenEventsByUserId(PaymentEventEntity... entities) {
+        when(jpaRepository.findByUserId(USER_ID)).thenReturn(List.of(entities));
+    }
+
+    private void givenEventsByUserIdAndStatus(PaymentStatus status, PaymentEventEntity... entities) {
+        when(jpaRepository.findByUserIdAndStatus(USER_ID, status)).thenReturn(List.of(entities));
+    }
+
+    private PaymentEvent domainEvent() {
+        return PaymentEvent.builder()
+                .id(EVENT_ID).userId(USER_ID).productId(2L)
                 .storeItemId(3L)
-                .externalReference("ext-ref").mpPreferenceId("pref-123").mpPaymentId(99L)
+                .externalReference("ext-ref").mpPreferenceId("pref-123").mpPaymentId(MP_PAYMENT_ID)
                 .status(PaymentStatus.PENDING).coinsAmount(500)
                 .productType(ProductType.PLAN).errorDetail("none")
-                .createdAt(created).updatedAt(created)
+                .createdAt(CREATED_AT).updatedAt(CREATED_AT)
                 .build();
-        when(jpaRepository.save(any(PaymentEventEntity.class))).thenReturn(entity());
+    }
 
-        PaymentEvent result = repository.save(domain);
+    private PaymentEventEntity entity() {
+        return PaymentEventEntity.builder()
+                .id(EVENT_ID).userId(USER_ID).productId(2L)
+                .externalReference("ext-ref").mpPreferenceId("pref-123").mpPaymentId(MP_PAYMENT_ID)
+                .status(PaymentStatus.PENDING).coinsAmount(500)
+                .productType(ProductType.COIN_PACK).errorDetail(null)
+                .createdAt(CREATED_AT).updatedAt(CREATED_AT)
+                .build();
+    }
 
+    // --- act ---
+    private PaymentEvent save(PaymentEvent domain) {
+        return repository.save(domain);
+    }
+
+    private Optional<PaymentEvent> findByMpPaymentId() {
+        return repository.findByMpPaymentId(MP_PAYMENT_ID);
+    }
+
+    private Optional<PaymentEvent> findByExternalReference(String reference) {
+        return repository.findByExternalReference(reference);
+    }
+
+    private void updateStatus(PaymentStatus status, Long mpPaymentId, String errorDetail) {
+        repository.updateStatus(EVENT_ID, status, mpPaymentId, errorDetail);
+    }
+
+    private boolean approveIfPending() {
+        return repository.approveIfPending(EVENT_ID, MP_PAYMENT_ID);
+    }
+
+    private List<PaymentEvent> findByUserId() {
+        return repository.findByUserId(USER_ID);
+    }
+
+    private List<PaymentEvent> findByUserIdAndStatus(PaymentStatus status) {
+        return repository.findByUserIdAndStatus(USER_ID, status);
+    }
+
+    // --- assert ---
+    private void thenPersistedEntityMatches() {
         ArgumentCaptor<PaymentEventEntity> captor = ArgumentCaptor.forClass(PaymentEventEntity.class);
         verify(jpaRepository).save(captor.capture());
         PaymentEventEntity persisted = captor.getValue();
@@ -65,54 +240,30 @@ class PaymentEventRepositoryImplTest {
         assertThat(persisted.getCoinsAmount()).isEqualTo(500);
         assertThat(persisted.getProductType()).isEqualTo(ProductType.PLAN);
         assertThat(persisted.getErrorDetail()).isEqualTo("none");
+    }
 
+    private void thenResultMatchesEntity(PaymentEvent result) {
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getStatus()).isEqualTo(PaymentStatus.PENDING);
         assertThat(result.getCoinsAmount()).isEqualTo(500);
     }
 
-    @Test
-    void findByMpPaymentId_shouldReturnMappedEvent_whenFound() {
-        when(jpaRepository.findByMpPaymentId(99L)).thenReturn(Optional.of(entity()));
-
-        Optional<PaymentEvent> result = repository.findByMpPaymentId(99L);
-
+    private void thenEventFoundByMpPaymentId(Optional<PaymentEvent> result) {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo(1L);
         assertThat(result.get().getMpPaymentId()).isEqualTo(99L);
     }
 
-    @Test
-    void findByMpPaymentId_shouldReturnEmpty_whenNotFound() {
-        when(jpaRepository.findByMpPaymentId(99L)).thenReturn(Optional.empty());
-
-        assertThat(repository.findByMpPaymentId(99L)).isEmpty();
-    }
-
-    @Test
-    void findByExternalReference_shouldReturnMappedEvent_whenFound() {
-        when(jpaRepository.findByExternalReference("ext-ref")).thenReturn(Optional.of(entity()));
-
-        Optional<PaymentEvent> result = repository.findByExternalReference("ext-ref");
-
+    private void thenEventFoundByExternalReference(Optional<PaymentEvent> result) {
         assertThat(result).isPresent();
         assertThat(result.get().getExternalReference()).isEqualTo("ext-ref");
     }
 
-    @Test
-    void findByExternalReference_shouldReturnEmpty_whenNotFound() {
-        when(jpaRepository.findByExternalReference("missing")).thenReturn(Optional.empty());
-
-        assertThat(repository.findByExternalReference("missing")).isEmpty();
+    private void thenEmpty(Optional<PaymentEvent> result) {
+        assertThat(result).isEmpty();
     }
 
-    @Test
-    void updateStatus_shouldUpdateAndSave_whenEventExists() {
-        PaymentEventEntity entity = entity();
-        when(jpaRepository.findById(1L)).thenReturn(Optional.of(entity));
-
-        repository.updateStatus(1L, PaymentStatus.FAILED, 99L, "cc_rejected");
-
+    private void thenStatusUpdatedAndSaved() {
         ArgumentCaptor<PaymentEventEntity> captor = ArgumentCaptor.forClass(PaymentEventEntity.class);
         verify(jpaRepository).save(captor.capture());
         PaymentEventEntity saved = captor.getValue();
@@ -122,51 +273,28 @@ class PaymentEventRepositoryImplTest {
         assertThat(saved.getUpdatedAt()).isNotNull();
     }
 
-    @Test
-    void updateStatus_shouldDoNothing_whenEventNotFound() {
-        when(jpaRepository.findById(1L)).thenReturn(Optional.empty());
-
-        repository.updateStatus(1L, PaymentStatus.FAILED, 99L, "err");
-
+    private void thenNothingSaved() {
         verify(jpaRepository, never()).save(any());
     }
 
-    @Test
-    void approveIfPending_shouldReturnTrue_whenRowUpdated() {
-        when(jpaRepository.approveIfNotApproved(eq(1L), eq(99L), any(Instant.class),
-                eq(PaymentStatus.APPROVED), eq(PaymentStatus.PENDING))).thenReturn(1);
-
-        assertThat(repository.approveIfPending(1L, 99L)).isTrue();
+    private void thenTrue(boolean result) {
+        assertThat(result).isTrue();
     }
 
-    @Test
-    void approveIfPending_shouldReturnFalse_whenNoRowUpdated() {
-        when(jpaRepository.approveIfNotApproved(eq(1L), eq(99L), any(Instant.class),
-                eq(PaymentStatus.APPROVED), eq(PaymentStatus.PENDING))).thenReturn(0);
-
-        assertThat(repository.approveIfPending(1L, 99L)).isFalse();
+    private void thenFalse(boolean result) {
+        assertThat(result).isFalse();
     }
 
-    @Test
-    void findByUserId_shouldReturnMappedList() {
-        when(jpaRepository.findByUserId(10L)).thenReturn(java.util.List.of(entity()));
-
-        java.util.List<PaymentEvent> result = repository.findByUserId(10L);
-
+    private void thenMappedListByUserId(List<PaymentEvent> result) {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(0).getUserId()).isEqualTo(10L);
         verify(jpaRepository).findByUserId(10L);
     }
 
-    @Test
-    void findByUserIdAndStatus_shouldReturnMappedList() {
-        when(jpaRepository.findByUserIdAndStatus(10L, PaymentStatus.APPROVED)).thenReturn(java.util.List.of(entity()));
-
-        java.util.List<PaymentEvent> result = repository.findByUserIdAndStatus(10L, PaymentStatus.APPROVED);
-
+    private void thenMappedListByUserIdAndStatus(List<PaymentEvent> result, PaymentStatus status) {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getUserId()).isEqualTo(10L);
-        verify(jpaRepository).findByUserIdAndStatus(10L, PaymentStatus.APPROVED);
+        verify(jpaRepository).findByUserIdAndStatus(10L, status);
     }
 }

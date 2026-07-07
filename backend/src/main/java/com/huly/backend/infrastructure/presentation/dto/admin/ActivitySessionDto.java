@@ -10,5 +10,6 @@ import java.time.Instant;
 public class ActivitySessionDto {
     private Long id;
     private String activityType;
+    private String activityName;
     private Instant createdAt;
 }

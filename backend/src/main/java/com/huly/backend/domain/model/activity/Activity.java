@@ -18,4 +18,8 @@ public class Activity {
     private double effectValence;
     private double effectArousal;
     private double effectDominance;
+    private String title;
+    private String description;
+    private String goalKeywords;
+    private String routePath;
 }
