@@ -13,6 +13,11 @@ public class DeletePendingTaskUseCase {
     public void execute(DeletePendingTaskRequest request) {
         pendingTaskRepository.findByIdAndUserId(request.id(), request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pending", "id", request.id()));
-        pendingTaskRepository.delete(request.id(), request.userId());
+
+        deleteTask(request.id(), request.userId());
+    }
+
+    private void deleteTask(Long id, Long userId) {
+        pendingTaskRepository.delete(id, userId);
     }
 }

@@ -5,6 +5,7 @@ import com.huly.backend.domain.dto.pending.PendingTaskResponse;
 import com.huly.backend.domain.model.pending.PendingSubtask;
 import com.huly.backend.domain.model.pending.PendingTask;
 
+import java.util.List;
 import java.util.Set;
 
 public class PendingTaskMapper {
@@ -33,16 +34,22 @@ public class PendingTaskMapper {
         return toResponse(task, recommendedTaskIds.contains(task.getId()));
     }
 
-    private java.util.List<PendingSubtaskResponse> toSubtaskResponses(PendingTask task) {
-        if (task.getSubtasks() == null) {
-            return java.util.List.of();
-        }
-        return task.getSubtasks().stream()
-                .map(this::toSubtaskResponse)
+    public List<PendingTaskResponse> toResponse(List<PendingTask> tasks, Set<Long> recommendedTaskIds) {
+        return tasks.stream()
+                .map(task -> toResponse(task, recommendedTaskIds))
                 .toList();
     }
 
-    private PendingSubtaskResponse toSubtaskResponse(PendingSubtask subtask) {
+    private List<PendingSubtaskResponse> toSubtaskResponses(PendingTask task) {
+        if (task.getSubtasks() == null) {
+            return List.of();
+        }
+        return task.getSubtasks().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public PendingSubtaskResponse toResponse(PendingSubtask subtask) {
         return new PendingSubtaskResponse(
                 subtask.getId(),
                 subtask.getTaskId(),

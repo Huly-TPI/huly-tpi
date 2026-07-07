@@ -84,15 +84,17 @@ public class PendingUseCaseConfig {
     public AddPendingSubtaskUseCase addPendingSubtaskUseCase(
             PendingTaskRepository pendingTaskRepository,
             PendingSubtaskRepository pendingSubtaskRepository,
-            PendingMentalLoadRefreshService pendingMentalLoadRefreshService) {
-        return new AddPendingSubtaskUseCase(pendingTaskRepository, pendingSubtaskRepository, pendingMentalLoadRefreshService);
+            PendingMentalLoadRefreshService pendingMentalLoadRefreshService,
+            PendingTaskMapper pendingTaskMapper) {
+        return new AddPendingSubtaskUseCase(pendingTaskRepository, pendingSubtaskRepository, pendingMentalLoadRefreshService, pendingTaskMapper);
     }
 
     @Bean
     public TogglePendingSubtaskUseCase togglePendingSubtaskUseCase(
             PendingTaskRepository pendingTaskRepository,
-            PendingSubtaskRepository pendingSubtaskRepository) {
-        return new TogglePendingSubtaskUseCase(pendingTaskRepository, pendingSubtaskRepository);
+            PendingSubtaskRepository pendingSubtaskRepository,
+            PendingTaskMapper pendingTaskMapper) {
+        return new TogglePendingSubtaskUseCase(pendingTaskRepository, pendingSubtaskRepository, pendingTaskMapper);
     }
 
     @Bean

@@ -21,9 +21,14 @@ public class GetPendingTaskUseCase {
     public PendingTaskResponse execute(GetPendingTaskRequest request) {
         PendingTask task = pendingTaskRepository.findByIdAndUserId(request.id(), request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pending", "id", request.id()));
-        boolean recommended = pendingRecommendationRepository
-                .findAcceptedTaskIds(request.userId(), LocalDate.now())
-                .contains(task.getId());
+
+        boolean recommended = isTaskRecommendedToday(request.userId(), task.getId());
         return mapper.toResponse(task, recommended);
+    }
+
+    private boolean isTaskRecommendedToday(Long userId, Long taskId) {
+        return pendingRecommendationRepository
+                .findAcceptedTaskIds(userId, LocalDate.now())
+                .contains(taskId);
     }
 }

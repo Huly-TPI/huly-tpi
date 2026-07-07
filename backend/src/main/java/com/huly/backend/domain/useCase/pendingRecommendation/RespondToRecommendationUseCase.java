@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 
+import static java.time.Instant.now;
+
 @RequiredArgsConstructor
 public class RespondToRecommendationUseCase {
 
@@ -18,19 +20,20 @@ public class RespondToRecommendationUseCase {
     private final PendingRecommendationMapper mapper;
 
     public PendingRecommendationResponse execute(RespondToRecommendationRequest request) {
-        PendingDailyRecommendation recommendation = pendingRecommendationRepository
-                .findByIdAndUserId(request.recommendationId(), request.userId())
+        PendingDailyRecommendation recommendation = pendingRecommendationRepository.findByIdAndUserId(request.recommendationId(), request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Recomendación", "id", request.recommendationId()));
 
-        Instant now = Instant.now();
-        if (request.decision() == RecommendationResponseDecision.ACCEPTED) {
-            recommendation.accept(now);
-        } else {
-            recommendation.reject(now);
-        }
-
-        PendingDailyRecommendation updated = pendingRecommendationRepository.updateDecision(
-                recommendation.getId(), recommendation.getDecision(), recommendation.getDecidedAt());
+        PendingDailyRecommendation updated = applyDecision(recommendation, request.decision());
         return mapper.toResponse(updated, false);
+    }
+
+    private PendingDailyRecommendation applyDecision(PendingDailyRecommendation recommendation, RecommendationResponseDecision decision) {
+        if (decision == RecommendationResponseDecision.ACCEPTED)
+            recommendation.accept(now());
+        else
+            recommendation.reject(now());
+
+        return pendingRecommendationRepository.updateDecision(
+                recommendation.getId(), recommendation.getDecision(), recommendation.getDecidedAt());
     }
 }

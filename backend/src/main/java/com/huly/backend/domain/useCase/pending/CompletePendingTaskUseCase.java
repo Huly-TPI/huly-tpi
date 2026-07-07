@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 
+import static java.time.Instant.now;
+
 @RequiredArgsConstructor
 public class CompletePendingTaskUseCase {
 
@@ -20,10 +22,13 @@ public class CompletePendingTaskUseCase {
         PendingTask task = pendingTaskRepository.findByIdAndUserId(request.id(), request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pending", "id", request.id()));
 
-        Instant now = Instant.now();
-        task.complete(now);
-
-        PendingTask updated = pendingTaskRepository.markCompleted(request.id(), now);
+        PendingTask updated = completeTask(task);
         return mapper.toResponse(updated, false);
+    }
+
+    private PendingTask completeTask(PendingTask task) {
+        Instant now = now();
+        task.complete(now());
+        return pendingTaskRepository.markCompleted(task.getId(), now);
     }
 }

@@ -18,12 +18,21 @@ public class DeletePendingSubtaskUseCase {
     public void execute(DeletePendingSubtaskRequest request) {
         PendingTask task = pendingTaskRepository.findByIdAndUserId(request.taskId(), request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pending", "id", request.taskId()));
+
         pendingSubtaskRepository.findByIdAndTaskId(request.subtaskId(), request.taskId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subtarea", "id", request.subtaskId()));
 
-        pendingSubtaskRepository.delete(request.subtaskId());
+        deleteSubtask(request.subtaskId());
+        refreshTaskMentalLoad(request.taskId(), request.userId(), task);
+    }
 
-        PendingTask refreshed = pendingTaskRepository.findByIdAndUserId(request.taskId(), request.userId()).orElse(task);
+    private void deleteSubtask(Long subtaskId) {
+        pendingSubtaskRepository.delete(subtaskId);
+    }
+
+    private void refreshTaskMentalLoad(Long taskId, Long userId, PendingTask fallbackTask) {
+        PendingTask refreshed = pendingTaskRepository.findByIdAndUserId(taskId, userId)
+                .orElse(fallbackTask);
         mentalLoadRefreshService.refresh(refreshed);
     }
 }

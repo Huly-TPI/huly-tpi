@@ -16,7 +16,13 @@ public class CreatePendingTaskUseCase {
     private final PendingTaskMapper mapper;
 
     public PendingTaskResponse execute(CreatePendingTaskRequest request) {
-        PendingTask created = pendingTaskRepository.create(
+        PendingTask created = createPendingTask(request);
+        PendingTask withMentalLoad = refreshMentalLoad(created);
+        return mapper.toResponse(withMentalLoad, false);
+    }
+
+    private PendingTask createPendingTask(CreatePendingTaskRequest request) {
+        return pendingTaskRepository.create(
                 request.userId(),
                 request.title(),
                 request.description(),
@@ -25,8 +31,9 @@ public class CreatePendingTaskUseCase {
                 request.category(),
                 request.initialSubtaskTexts()
         );
+    }
 
-        PendingTask withMentalLoad = mentalLoadRefreshService.refresh(created);
-        return mapper.toResponse(withMentalLoad, false);
+    private PendingTask refreshMentalLoad(PendingTask task) {
+        return mentalLoadRefreshService.refresh(task);
     }
 }

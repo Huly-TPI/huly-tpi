@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import java.time.Instant;
 import java.util.function.DoubleSupplier;
 
+import static java.time.Instant.now;
+
 @RequiredArgsConstructor
 public class UpdatePendingPositionUseCase {
 
@@ -23,13 +25,20 @@ public class UpdatePendingPositionUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Pending", "id", request.id()));
 
         boolean firstPin = !task.isPlaced();
-        Double assignedRotation = firstPin ? randomRotationSupplier.getAsDouble() : task.getRotationDeg();
-        Instant now = Instant.now();
+        Double assignedRotation = resolveRotation(task, firstPin);
 
-        task.applyPosition(request.positionX(), request.positionY(), assignedRotation, now);
-
-        PendingTask updated = pendingTaskRepository.updatePosition(
-                request.id(), request.positionX(), request.positionY(), firstPin ? assignedRotation : null, now);
+        PendingTask updated = updatePosition(task, request, assignedRotation, firstPin);
         return mapper.toResponse(updated, false);
+    }
+
+    private Double resolveRotation(PendingTask task, boolean firstPin) {
+        return firstPin ? randomRotationSupplier.getAsDouble() : task.getRotationDeg();
+    }
+
+    private PendingTask updatePosition(PendingTask task, UpdatePendingPositionRequest request, Double rotation, boolean firstPin) {
+        Instant now = now();
+        task.applyPosition(request.positionX(), request.positionY(), rotation, now);
+        return pendingTaskRepository.updatePosition(
+                request.id(), request.positionX(), request.positionY(), firstPin ? rotation : null, now);
     }
 }

@@ -20,11 +20,18 @@ public class UpdatePendingTaskUseCase {
         pendingTaskRepository.findByIdAndUserId(request.id(), request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pending", "id", request.id()));
 
-        PendingTask updated = pendingTaskRepository.updateFields(
+        PendingTask updated = updateFields(request);
+        PendingTask withMentalLoad = refreshMentalLoad(updated);
+        return mapper.toResponse(withMentalLoad, false);
+    }
+
+    private PendingTask updateFields(UpdatePendingTaskRequest request) {
+        return pendingTaskRepository.updateFields(
                 request.id(), request.title(), request.description(), request.dueDate(),
                 request.estimatedDuration(), request.category());
+    }
 
-        PendingTask withMentalLoad = mentalLoadRefreshService.refresh(updated);
-        return mapper.toResponse(withMentalLoad, false);
+    private PendingTask refreshMentalLoad(PendingTask task) {
+        return mentalLoadRefreshService.refresh(task);
     }
 }
