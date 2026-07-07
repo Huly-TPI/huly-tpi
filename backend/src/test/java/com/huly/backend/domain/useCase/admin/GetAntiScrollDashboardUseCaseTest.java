@@ -9,8 +9,12 @@ import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,40 +22,123 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class GetAntiScrollDashboardUseCaseTest {
 
+    private static final Long USER_1 = 2L;
+    private static final Long USER_2 = 3L;
+
+    @Mock
     private UserRepository userRepository;
+
+    @Mock
     private UserAntiScrollSettingsRepository settingsRepository;
+
+    @Mock
     private ExtensionMetricsRepository metricsRepository;
+
+    @InjectMocks
     private GetAntiScrollDashboardUseCase useCase;
 
-    @BeforeEach
-    void setUp() {
-        userRepository = mock(UserRepository.class);
-        settingsRepository = mock(UserAntiScrollSettingsRepository.class);
-        metricsRepository = mock(ExtensionMetricsRepository.class);
-        useCase = new GetAntiScrollDashboardUseCase(userRepository, settingsRepository, metricsRepository);
+    @Test
+    @DisplayName("Agrega usuarios, consentimiento y métricas cuando hay datos")
+    void executeShouldAggregateStatsWhenUsersAndMetricsExist() {
+        // --- arrange ---
+        givenNonAdmins(activeUser(USER_1), activeUser(USER_2));
+        givenSettings(USER_1, settings(true, true));
+        givenSettings(USER_2, settings(false, false));
+        givenConsentingMetrics(
+                metric("instagram.com", 1000, 5, 2),
+                metric("twitter.com", 2000, 10, 4));
+
+        // --- act ---
+        AntiScrollDashboardStats stats = dashboard();
+
+        // --- assert ---
+        thenTwoUserAggregate(stats);
     }
 
     @Test
-    void execute_shouldAggregateCorrectly() {
-        AppUser user1 = AppUser.builder().id(2L).role(UserRole.USER).status(UserStatus.ACTIVE).build();
-        AppUser user2 = AppUser.builder().id(3L).role(UserRole.USER).status(UserStatus.ACTIVE).build();
+    @DisplayName("Ignora en los contadores a los usuarios sin configuración de anti-scroll")
+    void executeShouldIgnoreUsersWithoutSettings() {
+        // --- arrange ---
+        givenNonAdmins(activeUser(USER_1));
+        givenNoSettings(USER_1);
+        givenNoConsentingMetrics();
 
-        UserAntiScrollSettings settings1 = UserAntiScrollSettings.builder().enabled(true).dataSharingConsent(true).build();
-        UserAntiScrollSettings settings2 = UserAntiScrollSettings.builder().enabled(false).dataSharingConsent(false).build();
+        // --- act ---
+        AntiScrollDashboardStats stats = dashboard();
 
-        when(userRepository.findAllNonAdmins()).thenReturn(List.of(user1, user2));
-        when(settingsRepository.findByUserId(2L)).thenReturn(Optional.of(settings1));
-        when(settingsRepository.findByUserId(3L)).thenReturn(Optional.of(settings2));
+        // --- assert ---
+        thenUserCountedButNotActiveNorConsenting(stats);
+    }
 
-        ExtensionMetric metric1 = ExtensionMetric.builder().domain("instagram.com").activeSeconds(1000).modalsShown(5).redirects(2).build();
-        ExtensionMetric metric2 = ExtensionMetric.builder().domain("twitter.com").activeSeconds(2000).modalsShown(10).redirects(4).build();
+    @Test
+    @DisplayName("Devuelve estadísticas en cero cuando no hay usuarios ni métricas")
+    void executeShouldReturnZeroStatsWhenNoUsersNorMetrics() {
+        // --- arrange ---
+        givenNoNonAdmins();
+        givenNoConsentingMetrics();
 
-        when(metricsRepository.findAllConsentingMetrics()).thenReturn(List.of(metric1, metric2));
+        // --- act ---
+        AntiScrollDashboardStats stats = dashboard();
 
-        AntiScrollDashboardStats stats = useCase.execute();
+        // --- assert ---
+        thenZeroStats(stats);
+    }
 
+    // --- arrange ---
+
+    private void givenNonAdmins(AppUser... users) {
+        when(userRepository.findAllNonAdmins()).thenReturn(List.of(users));
+    }
+
+    private void givenNoNonAdmins() {
+        when(userRepository.findAllNonAdmins()).thenReturn(List.of());
+    }
+
+    private void givenSettings(Long userId, UserAntiScrollSettings settings) {
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    }
+
+    private void givenNoSettings(Long userId) {
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.empty());
+    }
+
+    private void givenConsentingMetrics(ExtensionMetric... metrics) {
+        when(metricsRepository.findAllConsentingMetrics()).thenReturn(List.of(metrics));
+    }
+
+    private void givenNoConsentingMetrics() {
+        when(metricsRepository.findAllConsentingMetrics()).thenReturn(List.of());
+    }
+
+    private AppUser activeUser(Long id) {
+        return AppUser.builder().id(id).role(UserRole.USER).status(UserStatus.ACTIVE).build();
+    }
+
+    private UserAntiScrollSettings settings(boolean enabled, boolean consent) {
+        return UserAntiScrollSettings.builder().enabled(enabled).dataSharingConsent(consent).build();
+    }
+
+    private ExtensionMetric metric(String domain, int activeSeconds, int modalsShown, int redirects) {
+        return ExtensionMetric.builder()
+                .domain(domain)
+                .activeSeconds(activeSeconds)
+                .modalsShown(modalsShown)
+                .redirects(redirects)
+                .build();
+    }
+
+    // --- act ---
+
+    private AntiScrollDashboardStats dashboard() {
+        return useCase.execute();
+    }
+
+    // --- assert ---
+
+    private void thenTwoUserAggregate(AntiScrollDashboardStats stats) {
         assertThat(stats.getTotalUsersCount()).isEqualTo(2);
         assertThat(stats.getActiveExtensionUsersCount()).isEqualTo(1);
         assertThat(stats.getDataSharingConsentUsersCount()).isEqualTo(1);
@@ -62,5 +149,21 @@ class GetAntiScrollDashboardUseCaseTest {
         assertThat(stats.getTopUsedApps().get(0).getTotalActiveSeconds()).isEqualTo(2000);
         assertThat(stats.getTopUsedApps().get(1).getDomain()).isEqualTo("instagram.com");
         assertThat(stats.getTopUsedApps().get(1).getTotalActiveSeconds()).isEqualTo(1000);
+    }
+
+    private void thenUserCountedButNotActiveNorConsenting(AntiScrollDashboardStats stats) {
+        assertThat(stats.getTotalUsersCount()).isEqualTo(1);
+        assertThat(stats.getActiveExtensionUsersCount()).isEqualTo(0);
+        assertThat(stats.getDataSharingConsentUsersCount()).isEqualTo(0);
+        assertThat(stats.getTopUsedApps()).isEmpty();
+    }
+
+    private void thenZeroStats(AntiScrollDashboardStats stats) {
+        assertThat(stats.getTotalUsersCount()).isEqualTo(0);
+        assertThat(stats.getActiveExtensionUsersCount()).isEqualTo(0);
+        assertThat(stats.getDataSharingConsentUsersCount()).isEqualTo(0);
+        assertThat(stats.getTotalModalsShown()).isEqualTo(0);
+        assertThat(stats.getTotalRedirects()).isEqualTo(0);
+        assertThat(stats.getTopUsedApps()).isEmpty();
     }
 }

@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.extension.AntiScrollGlobalConfig;
 import com.huly.backend.infrastructure.repository.entity.AntiScrollConfigEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IAntiScrollConfigJpaRepository;
 import com.huly.backend.infrastructure.repository.mapper.AntiScrollGlobalConfigMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +21,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AntiScrollGlobalConfigRepositoryImplTest {
 
+    private static final Long CONFIG_ID = 1L;
+    private static final Integer PAUSE_INTERVAL = 15;
+
     @Mock private IAntiScrollConfigJpaRepository jpa;
     @Mock private AntiScrollGlobalConfigMapper mapper;
 
@@ -27,40 +31,93 @@ class AntiScrollGlobalConfigRepositoryImplTest {
     private AntiScrollGlobalConfigRepositoryImpl repository;
 
     @Test
-    void save_shouldMapSaveAndMapBack() {
-        AntiScrollGlobalConfig domain = AntiScrollGlobalConfig.builder().id(1L).defaultPauseIntervalMinutes(15).build();
-        AntiScrollConfigEntity entity = AntiScrollConfigEntity.builder().id(1L).defaultPauseIntervalMinutes(15).build();
-        AntiScrollConfigEntity saved = AntiScrollConfigEntity.builder().id(1L).defaultPauseIntervalMinutes(15).build();
-        AntiScrollGlobalConfig savedDomain = AntiScrollGlobalConfig.builder().id(1L).defaultPauseIntervalMinutes(15).build();
+    @DisplayName("Mapea a entidad, guarda y vuelve a mapear a dominio al guardar")
+    void saveShouldMapSaveAndMapBack() {
+        AntiScrollGlobalConfig domain = domain(CONFIG_ID, PAUSE_INTERVAL);
+        AntiScrollConfigEntity entity = entity(CONFIG_ID, PAUSE_INTERVAL);
+        AntiScrollConfigEntity saved = entity(CONFIG_ID, PAUSE_INTERVAL);
+        AntiScrollGlobalConfig savedDomain = domain(CONFIG_ID, PAUSE_INTERVAL);
+        givenMappedToEntity(domain, entity);
+        givenSaved(entity, saved);
+        givenMappedToDomain(saved, savedDomain);
 
+        AntiScrollGlobalConfig result = save(domain);
+
+        thenResultIs(result, savedDomain);
+        thenSaved(entity);
+    }
+
+    @Test
+    @DisplayName("Devuelve el primer dominio mapeado cuando existe alguna entidad")
+    void findFirstShouldReturnFirstMappedDomainWhenAnyExists() {
+        AntiScrollConfigEntity entity = entity(CONFIG_ID, null);
+        AntiScrollGlobalConfig domain = domain(CONFIG_ID, null);
+        givenAllEntities(entity);
+        givenMappedToDomain(entity, domain);
+
+        Optional<AntiScrollGlobalConfig> result = findFirst();
+
+        thenResultContains(result, domain);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío cuando no existen entidades al buscar el primero")
+    void findFirstShouldReturnEmptyWhenNoEntitiesExist() {
+        givenAllEntities();
+
+        Optional<AntiScrollGlobalConfig> result = findFirst();
+
+        thenResultEmpty(result);
+    }
+
+    // --- arrange ---
+    private void givenMappedToEntity(AntiScrollGlobalConfig domain, AntiScrollConfigEntity entity) {
         when(mapper.toEntity(domain)).thenReturn(entity);
+    }
+
+    private void givenSaved(AntiScrollConfigEntity entity, AntiScrollConfigEntity saved) {
         when(jpa.save(entity)).thenReturn(saved);
-        when(mapper.toDomain(saved)).thenReturn(savedDomain);
+    }
 
-        AntiScrollGlobalConfig result = repository.save(domain);
+    private void givenMappedToDomain(AntiScrollConfigEntity entity, AntiScrollGlobalConfig domain) {
+        when(mapper.toDomain(entity)).thenReturn(domain);
+    }
 
-        assertThat(result).isEqualTo(savedDomain);
+    private void givenAllEntities(AntiScrollConfigEntity... entities) {
+        when(jpa.findAll()).thenReturn(List.of(entities));
+    }
+
+    private AntiScrollGlobalConfig domain(Long id, Integer pauseInterval) {
+        return AntiScrollGlobalConfig.builder().id(id).defaultPauseIntervalMinutes(pauseInterval).build();
+    }
+
+    private AntiScrollConfigEntity entity(Long id, Integer pauseInterval) {
+        return AntiScrollConfigEntity.builder().id(id).defaultPauseIntervalMinutes(pauseInterval).build();
+    }
+
+    // --- act ---
+    private AntiScrollGlobalConfig save(AntiScrollGlobalConfig domain) {
+        return repository.save(domain);
+    }
+
+    private Optional<AntiScrollGlobalConfig> findFirst() {
+        return repository.findFirst();
+    }
+
+    // --- assert ---
+    private void thenResultIs(AntiScrollGlobalConfig result, AntiScrollGlobalConfig expected) {
+        assertThat(result).isEqualTo(expected);
+    }
+
+    private void thenSaved(AntiScrollConfigEntity entity) {
         verify(jpa).save(entity);
     }
 
-    @Test
-    void findFirst_shouldReturnFirstMappedDomain_whenAnyExists() {
-        AntiScrollConfigEntity entity = AntiScrollConfigEntity.builder().id(1L).build();
-        AntiScrollGlobalConfig domain = AntiScrollGlobalConfig.builder().id(1L).build();
-        when(jpa.findAll()).thenReturn(List.of(entity));
-        when(mapper.toDomain(entity)).thenReturn(domain);
-
-        Optional<AntiScrollGlobalConfig> result = repository.findFirst();
-
-        assertThat(result).contains(domain);
+    private void thenResultContains(Optional<AntiScrollGlobalConfig> result, AntiScrollGlobalConfig expected) {
+        assertThat(result).contains(expected);
     }
 
-    @Test
-    void findFirst_shouldReturnEmpty_whenNoEntitiesExist() {
-        when(jpa.findAll()).thenReturn(List.of());
-
-        Optional<AntiScrollGlobalConfig> result = repository.findFirst();
-
+    private void thenResultEmpty(Optional<AntiScrollGlobalConfig> result) {
         assertThat(result).isEmpty();
     }
 }

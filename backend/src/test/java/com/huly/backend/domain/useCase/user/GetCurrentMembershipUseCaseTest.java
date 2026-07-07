@@ -6,6 +6,7 @@ import com.huly.backend.domain.mapper.user.GetCurrentMembershipMapper;
 import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,7 +22,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class GetCurrentMembershipUseCaseTest {
 
-    @Mock private UserPlanRepository userPlanRepository;
+    private static final long USER_ID = 10L;
+
+    @Mock
+    private UserPlanRepository userPlanRepository;
+
     private GetCurrentMembershipUseCase useCase;
 
     @BeforeEach
@@ -30,40 +35,73 @@ class GetCurrentMembershipUseCaseTest {
     }
 
     @Test
-    void execute_shouldReturnMembership_whenActive() {
+    @DisplayName("Devuelve la membresía activa cuando está vigente")
+    void executeReturnsMembershipWhenActive() {
+        givenActiveMembership(USER_ID);
+
+        GetCurrentMembershipResponse result = getMembership(USER_ID);
+
+        thenActivePremium(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve inactiva cuando la membresía está vencida")
+    void executeReturnsInactiveWhenMembershipExpired() {
+        givenExpiredMembership(USER_ID);
+
+        GetCurrentMembershipResponse result = getMembership(USER_ID);
+
+        thenInactive(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve inactiva cuando el usuario no tiene membresía")
+    void executeReturnsInactiveWhenUserHasNoMembership() {
+        givenNoMembership(USER_ID);
+
+        GetCurrentMembershipResponse result = getMembership(USER_ID);
+
+        thenInactive(result);
+    }
+
+    // --- arrange ---
+
+    private void givenActiveMembership(long userId) {
         UserPlan plan = UserPlan.builder()
-                .id(1L).userId(10L).planCode("PREMIUM")
+                .id(1L).userId(userId).planCode("PREMIUM")
                 .grantedAt(Instant.now().minus(1, ChronoUnit.DAYS))
                 .expiresAt(Instant.now().plus(30, ChronoUnit.DAYS))
                 .build();
-        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(plan));
+        when(userPlanRepository.findByUser(userId)).thenReturn(Optional.of(plan));
+    }
 
-        GetCurrentMembershipResponse result = useCase.execute(new GetCurrentMembershipRequest(10L));
+    private void givenExpiredMembership(long userId) {
+        UserPlan expired = UserPlan.builder()
+                .id(1L).userId(userId).planCode("PREMIUM")
+                .grantedAt(Instant.now().minus(60, ChronoUnit.DAYS))
+                .expiresAt(Instant.now().minus(1, ChronoUnit.DAYS))
+                .build();
+        when(userPlanRepository.findByUser(userId)).thenReturn(Optional.of(expired));
+    }
 
+    private void givenNoMembership(long userId) {
+        when(userPlanRepository.findByUser(userId)).thenReturn(Optional.empty());
+    }
+
+    // --- act ---
+
+    private GetCurrentMembershipResponse getMembership(long userId) {
+        return useCase.execute(new GetCurrentMembershipRequest(userId));
+    }
+
+    // --- assert ---
+
+    private void thenActivePremium(GetCurrentMembershipResponse result) {
         assertThat(result.active()).isTrue();
         assertThat(result.planCode()).isEqualTo("PREMIUM");
     }
 
-    @Test
-    void execute_shouldReturnInactive_whenMembershipExpired() {
-        UserPlan expired = UserPlan.builder()
-                .id(1L).userId(10L).planCode("PREMIUM")
-                .grantedAt(Instant.now().minus(60, ChronoUnit.DAYS))
-                .expiresAt(Instant.now().minus(1, ChronoUnit.DAYS))
-                .build();
-        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.of(expired));
-
-        GetCurrentMembershipResponse result = useCase.execute(new GetCurrentMembershipRequest(10L));
-
-        assertThat(result.active()).isFalse();
-    }
-
-    @Test
-    void execute_shouldReturnInactive_whenUserHasNoMembership() {
-        when(userPlanRepository.findByUser(10L)).thenReturn(Optional.empty());
-
-        GetCurrentMembershipResponse result = useCase.execute(new GetCurrentMembershipRequest(10L));
-
+    private void thenInactive(GetCurrentMembershipResponse result) {
         assertThat(result.active()).isFalse();
     }
 }
