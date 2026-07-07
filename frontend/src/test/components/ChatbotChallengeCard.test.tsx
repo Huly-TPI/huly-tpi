@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import ChatbotChallengeCard from '../../components/Chatbot/ChatbotChallengeCard'
+import { clickButton, verifyTextPresent, clearAllMocks } from '../testHelpers'
 
 const mockedNavigate = vi.fn()
 
@@ -15,87 +16,90 @@ vi.mock('react-router-dom', async () => {
 })
 
 describe('ChatbotChallengeCard', () => {
-  it('renders challenge and actions when no decision', () => {
+  let onAcceptMock: any
+  let onRejectMock: any
+  let onCloseMock: any
+
+  beforeEach(() => {
+    clearAllMocks()
+    onAcceptMock = vi.fn()
+    onRejectMock = vi.fn()
+    onCloseMock = vi.fn()
+  })
+
+  it('renderiza el reto y las acciones cuando no hay decisión', () => {
+    renderCard()
+    verifyChallengeAndActionsShown()
+  })
+
+  it('llama a los manejadores al hacer click en los botones', async () => {
+    renderCard()
+    await clickAccept()
+    await clickReject()
+
+    verifyAcceptCalled()
+    verifyRejectCalled()
+  })
+
+  it('muestra el estado aceptado y navega a mis retos', async () => {
+    renderCard('accepted')
+    verifyStatusText('Reto aceptado.')
+
+    await clickButton(userEvent.setup(), 'Ir a mis retos')
+
+    verifyCloseCalled()
+    verifyNavigatedToChallenges()
+  })
+
+  it('muestra el texto del estado resuelto como rechazado', () => {
+    renderCard('rejected')
+    verifyStatusText('Reto rechazado.')
+  })
+
+  /* helpers */
+
+  const renderCard = (decision?: 'accepted' | 'rejected') => {
     render(
       <MemoryRouter>
         <ChatbotChallengeCard
           title="Reto"
           description="Descripcion"
-          onClose={vi.fn()}
-          onAccept={vi.fn()}
-          onReject={vi.fn()}
+          decision={decision}
+          onClose={onCloseMock}
+          onAccept={onAcceptMock}
+          onReject={onRejectMock}
         />
       </MemoryRouter>,
     )
+  }
 
-    expect(screen.getByText('Reto propuesto')).toBeInTheDocument()
+  const verifyChallengeAndActionsShown = () => {
+    verifyTextPresent('Reto propuesto')
     expect(screen.getByRole('button', { name: 'Aceptar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Rechazar' })).toBeInTheDocument()
-  })
+  }
 
-  it('calls handlers on button click', async () => {
-    const user = userEvent.setup()
-    const onAccept = vi.fn()
-    const onReject = vi.fn()
+  const clickAccept = () => clickButton(userEvent.setup(), 'Aceptar')
 
-    render(
-      <MemoryRouter>
-        <ChatbotChallengeCard
-          title="Reto"
-          description="Descripcion"
-          onClose={vi.fn()}
-          onAccept={onAccept}
-          onReject={onReject}
-        />
-      </MemoryRouter>,
-    )
+  const clickReject = () => clickButton(userEvent.setup(), 'Rechazar')
 
-    await user.click(screen.getByRole('button', { name: 'Aceptar' }))
-    await user.click(screen.getByRole('button', { name: 'Rechazar' }))
+  const verifyAcceptCalled = () => {
+    expect(onAcceptMock).toHaveBeenCalledTimes(1)
+  }
 
-    expect(onAccept).toHaveBeenCalledTimes(1)
-    expect(onReject).toHaveBeenCalledTimes(1)
-  })
+  const verifyRejectCalled = () => {
+    expect(onRejectMock).toHaveBeenCalledTimes(1)
+  }
 
-  it('shows accepted state with go-to-challenges button and navigates', async () => {
-    const user = userEvent.setup()
-    const onClose = vi.fn()
+  const verifyStatusText = (text: string) => {
+    verifyTextPresent(text)
+  }
 
-    render(
-      <MemoryRouter>
-        <ChatbotChallengeCard
-          title="Reto"
-          description="Descripcion"
-          decision="accepted"
-          onClose={onClose}
-          onAccept={vi.fn()}
-          onReject={vi.fn()}
-        />
-      </MemoryRouter>,
-    )
+  const verifyCloseCalled = () => {
+    expect(onCloseMock).toHaveBeenCalledTimes(1)
+  }
 
-    expect(screen.getByText('Reto aceptado.')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Ir a mis retos' }))
-
-    expect(onClose).toHaveBeenCalledTimes(1)
+  const verifyNavigatedToChallenges = () => {
     expect(mockedNavigate).toHaveBeenCalledWith('/challenges')
-  })
-
-  it('shows rejected state text', () => {
-    render(
-      <MemoryRouter>
-        <ChatbotChallengeCard
-          title="Reto"
-          description="Descripcion"
-          decision="rejected"
-          onClose={vi.fn()}
-          onAccept={vi.fn()}
-          onReject={vi.fn()}
-        />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByText('Reto rechazado.')).toBeInTheDocument()
-  })
+  }
 })
