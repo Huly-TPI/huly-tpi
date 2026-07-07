@@ -7,6 +7,7 @@ import com.huly.backend.domain.model.enums.PendingStatus;
 import com.huly.backend.domain.model.pending.PendingTask;
 import com.huly.backend.domain.repository.pending.PendingTaskRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,6 +18,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static java.time.Instant.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -37,30 +39,69 @@ class UpdatePendingPositionUseCaseTest {
     }
 
     @Test
-    void execute_shouldAssignServerRotation_onFirstPin() {
+    @DisplayName("Asigna una rotación desde el servidor cuando es el primer pin de la tarea")
+    void executeShouldAssignServerRotationOnFirstPin() {
         PendingTask unplaced = unplacedTask();
-        when(pendingTaskRepository.findByIdAndUserId(1L, 10L)).thenReturn(Optional.of(unplaced));
-        when(pendingTaskRepository.updatePosition(eq(1L), eq(20.0), eq(30.0), eq(4.2), any(Instant.class)))
-                .thenReturn(placedTask(20.0, 30.0, 4.2));
+        givenTaskExists(1L, 10L, unplaced);
+        givenPositionUpdated(1L, 20.0, 30.0, 4.2, placedTask(20.0, 30.0, 4.2));
 
-        PendingTaskResponse response = useCase.execute(new UpdatePendingPositionRequest(1L, 10L, 20.0, 30.0));
+        PendingTaskResponse response = executeUseCase(1L, 10L, 20.0, 30.0);
 
-        assertThat(response.rotationDeg()).isEqualTo(4.2);
-        verify(pendingTaskRepository).updatePosition(eq(1L), eq(20.0), eq(30.0), eq(4.2), any());
+        thenRotationIs(response, 4.2);
+        thenPositionUpdateVerified(1L, 20.0, 30.0, 4.2);
     }
 
     @Test
-    void execute_shouldKeepExistingRotation_onRepin() {
+    @DisplayName("Mantiene la rotación existente cuando la tarea ya había sido posicionada previamente")
+    void executeShouldKeepExistingRotationOnRepin() {
         PendingTask placed = placedTask(5.0, 5.0, 1.0);
-        when(pendingTaskRepository.findByIdAndUserId(1L, 10L)).thenReturn(Optional.of(placed));
+        givenTaskExists(1L, 10L, placed);
+
         ArgumentCaptor<Double> rotationCaptor = ArgumentCaptor.forClass(Double.class);
-        when(pendingTaskRepository.updatePosition(eq(1L), eq(70.0), eq(80.0), rotationCaptor.capture(), any(Instant.class)))
-                .thenReturn(placedTask(70.0, 80.0, 1.0));
+        givenPositionUpdatedWithCaptor(1L, 70.0, 80.0, rotationCaptor, placedTask(70.0, 80.0, 1.0));
 
-        useCase.execute(new UpdatePendingPositionRequest(1L, 10L, 70.0, 80.0));
+        executeUseCase(1L, 10L, 70.0, 80.0);
 
-        assertThat(rotationCaptor.getValue()).isNull();
+        thenRotationPassedIs(rotationCaptor, null);
     }
+
+    // --- arrange ---
+
+    private void givenTaskExists(Long id, Long userId, PendingTask task) {
+        when(pendingTaskRepository.findByIdAndUserId(id, userId)).thenReturn(Optional.of(task));
+    }
+
+    private void givenPositionUpdated(Long id, double x, double y, Double rotation, PendingTask result) {
+        when(pendingTaskRepository.updatePosition(eq(id), eq(x), eq(y), eq(rotation), any(Instant.class)))
+                .thenReturn(result);
+    }
+
+    private void givenPositionUpdatedWithCaptor(Long id, double x, double y, ArgumentCaptor<Double> captor, PendingTask result) {
+        when(pendingTaskRepository.updatePosition(eq(id), eq(x), eq(y), captor.capture(), any(Instant.class)))
+                .thenReturn(result);
+    }
+
+    // --- act ---
+
+    private PendingTaskResponse executeUseCase(Long id, Long userId, double x, double y) {
+        return useCase.execute(new UpdatePendingPositionRequest(id, userId, x, y));
+    }
+
+    // --- assert ---
+
+    private void thenRotationIs(PendingTaskResponse response, double expectedRotation) {
+        assertThat(response.rotationDeg()).isEqualTo(expectedRotation);
+    }
+
+    private void thenPositionUpdateVerified(Long id, double x, double y, Double rotation) {
+        verify(pendingTaskRepository).updatePosition(eq(id), eq(x), eq(y), eq(rotation), any());
+    }
+
+    private void thenRotationPassedIs(ArgumentCaptor<Double> captor, Double expectedRotation) {
+        assertThat(captor.getValue()).isEqualTo(expectedRotation);
+    }
+
+    // --- helpers ---
 
     private PendingTask unplacedTask() {
         return PendingTask.builder()
@@ -81,7 +122,7 @@ class UpdatePendingPositionUseCaseTest {
                 .positionX(x)
                 .positionY(y)
                 .rotationDeg(rotation)
-                .pinnedAt(Instant.now())
+                .pinnedAt(now())
                 .subtasks(List.of())
                 .build();
     }
