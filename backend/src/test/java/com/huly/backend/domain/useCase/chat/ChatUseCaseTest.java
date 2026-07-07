@@ -43,9 +43,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -83,338 +85,314 @@ class ChatUseCaseTest {
     @Test
     @DisplayName("Devuelve la respuesta de preferencia sin llamar al LLM cuando la preferencia fue atendida")
     void executeShouldReturnPreferenceReplyWithoutCallingLlmWhenPreferenceWasHandled() {
-        ChatReply expected = ChatReply.of("Listo, te voy a decir Checho.");
-        when(chatPreferenceHandlingService.handle(42L, "conv-1", "decime Checho"))
-                .thenReturn(ChatPreferenceHandlingResult.handled(expected));
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(42L, "conv-1", "decime Checho"));
-
-        assertThat(result.content()).isEqualTo("Listo, te voy a decir Checho.");
-        verify(chatPreferenceHandlingService).handle(42L, "conv-1", "decime Checho");
-        verifyNoInteractions(llmChatPort);
+        // --- arrange ---
+        givenPreferenceHandled(42L, "conv-1", "decime Checho", ChatReply.of("Listo, te voy a decir Checho."));
+        // --- act ---
+        ChatReplyResponse result = execute(42L, "conv-1", "decime Checho");
+        // --- assert ---
+        thenContentIs(result, "Listo, te voy a decir Checho.");
+        thenPreferenceServiceWasCalled(42L, "conv-1", "decime Checho");
+        thenLlmWasNotCalled();
     }
 
     @Test
     @DisplayName("Devuelve la respuesta del LLM")
     void processMessageShouldReturnReplyFromLlm() {
-        ChatReply expected = new ChatReply("respuesta", EmotionType.JOY, 8, false, null);
-        givenDefaultSetup("prompt base", List.of(), "prompt enriquecido", List.of(), expected);
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "hola"));
-
-        assertThat(result.content()).isEqualTo("respuesta");
-        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.JOY);
-        assertThat(result.intensity()).isEqualTo(8);
+        // --- arrange ---
+        givenDefaultSetup("prompt base", List.of(), "prompt enriquecido", List.of(),
+                new ChatReply("respuesta", EmotionType.JOY, 8, false, null));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "hola");
+        // --- assert ---
+        thenReplyMatchesEmotion(result, "respuesta", EmotionType.JOY, 8);
     }
 
     @Test
     @DisplayName("Usa el prompt base de la configuración")
     void processMessageShouldUseBasePromptFromConfig() {
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.of(new ChatConfig(1L, true, "mi prompt")));
-        when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
-        when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq("mi prompt"), any(), any(), any(), any(), any())).thenReturn("enriquecido");
-        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
-        when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
-
-        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
-
-        verify(promptBuilderService).buildEnrichedPrompt(eq("mi prompt"), any(), any(), any(), any(), any());
+        // --- arrange ---
+        givenDefaultSetup("mi prompt", List.of(), "enriquecido", List.of(), ChatReply.of("ok"));
+        // --- act ---
+        execute(1L, "conv-1", "msg");
+        // --- assert ---
+        thenPromptBuiltWithBasePrompt("mi prompt");
     }
 
     @Test
     @DisplayName("Usa un prompt vacío como fallback cuando no hay configuración")
     void processMessageShouldUseFallbackEmptyPromptWhenConfigNotFound() {
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
-        when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
-        when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(eq(""), any(), any(), any(), any(), any())).thenReturn("fallback");
-        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
-        when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
-
-        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
-
-        verify(promptBuilderService).buildEnrichedPrompt(eq(""), any(), any(), any(), any(), any());
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "fallback", List.of(), ChatReply.of("ok"));
+        // --- act ---
+        execute(1L, "conv-1", "msg");
+        // --- assert ---
+        thenPromptBuiltWithBasePrompt("");
     }
 
     @Test
     @DisplayName("Pasa el nombre registrado y las preferencias al armador de prompt")
     void processMessageShouldPassRegisteredNameAndPreferencesToPromptBuilder() {
-        AppUser user = AppUser.builder().id(1L).name("Sergio Ramírez").build();
-        ChatConversationPreference preference = ChatConversationPreference.builder()
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "personalizado", List.of(), ChatReply.of("ok"));
+        givenRegisteredUser(1L, "Sergio Ramírez");
+        givenConversationPreference(ChatConversationPreference.builder()
                 .id(5L)
                 .userId(1L)
                 .preferredName("Checho")
                 .communicationStyle(CommunicationStyle.DIRECT)
                 .onboardingStatus(ChatOnboardingStatus.COMPLETED)
-                .build();
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(chatConversationPreferenceRepository.findByUserId(1L)).thenReturn(Optional.of(preference));
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
-        when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
-        when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(chatMemoryPort.getHistory("conv-1", 1L)).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any(), any(), any()))
-                .thenReturn("personalizado");
-        when(llmChatPort.chat("personalizado", "msg", List.of())).thenReturn(ChatReply.of("ok"));
-
-        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
-
-        ArgumentCaptor<ChatPersonalizationContext> personalizationCaptor =
-                ArgumentCaptor.forClass(ChatPersonalizationContext.class);
-        verify(promptBuilderService).buildEnrichedPrompt(
-                any(), any(), any(), any(), any(), personalizationCaptor.capture());
-        assertThat(personalizationCaptor.getValue().registeredName()).isEqualTo("Sergio Ramírez");
-        assertThat(personalizationCaptor.getValue().preferredName()).isEqualTo("Checho");
-        assertThat(personalizationCaptor.getValue().communicationStyle()).isEqualTo(CommunicationStyle.DIRECT);
+                .build());
+        // --- act ---
+        execute(1L, "conv-1", "msg");
+        // --- assert ---
+        thenPersonalizationPassedToPromptBuilder("Sergio Ramírez", "Checho", CommunicationStyle.DIRECT);
     }
 
     @Test
     @DisplayName("Pasa las palabras de riesgo activas al armador de prompt")
     void processMessageShouldPassActiveRiskWordsToPromptBuilder() {
-        RiskWord rw = RiskWord.builder().id(1L).word("suicidio").severity(RiskSeverity.HIGH).active(true).build();
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
-        when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
-        when(riskWordRepository.findAllActive()).thenReturn(List.of(rw));
-        when(promptBuilderService.buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any(), any(), any())).thenReturn("enriquecido");
-        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
-        when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
-
-        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
-
-        verify(promptBuilderService).buildEnrichedPrompt(any(), eq(List.of(rw)), any(), any(), any(), any());
+        // --- arrange ---
+        givenActiveRiskWord("suicidio", RiskSeverity.HIGH);
+        // --- act ---
+        execute(1L, "conv-1", "msg");
+        // --- assert ---
+        thenPromptBuiltWithActiveRiskWord("suicidio", RiskSeverity.HIGH);
     }
 
     @Test
     @DisplayName("Trae el historial y se lo pasa al LLM")
     void processMessageShouldFetchHistoryAndPassItToLlm() {
-        List<ConversationMessage> history = List.of(ConversationMessage.of(MessageRole.USER, "anterior"));
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
-        when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of());
-        when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any(), any(), any())).thenReturn("prompt");
-        when(chatMemoryPort.getHistory("conv-abc", 1L)).thenReturn(history);
-        when(llmChatPort.chat(any(), any(), eq(history))).thenReturn(ChatReply.of("ok"));
-
-        chatUseCase.execute(new ChatMessageRequest(1L, "conv-abc", "msg"));
-
-        verify(chatMemoryPort).getHistory("conv-abc", 1L);
-        verify(llmChatPort).chat(any(), eq("msg"), eq(history));
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", conversationHistory(), ChatReply.of("ok"));
+        // --- act ---
+        execute(1L, "conv-abc", "msg");
+        // --- assert ---
+        thenHistoryFetchedAndPassedToLlm("conv-abc", 1L, "msg");
     }
 
     @Test
     @DisplayName("Guarda el mensaje del usuario con la emoción y el riesgo de la respuesta")
     void processMessageShouldSaveUserMessageWithEmotionAndRiskFromReply() {
-        ChatReply reply = new ChatReply("respuesta", EmotionType.SADNESS, 6, true, "suicidio");
-        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-
-        chatUseCase.execute(new ChatMessageRequest(5L, "conv-1", "me siento mal"));
-
-        ArgumentCaptor<ConversationMessage> captor = ArgumentCaptor.forClass(ConversationMessage.class);
-        verify(chatMemoryPort, times(2)).addMessage(eq("conv-1"), captor.capture(), eq(5L));
-
-        ConversationMessage userMsg = captor.getAllValues().get(0);
-        assertThat(userMsg.role()).isEqualTo(MessageRole.USER);
-        assertThat(userMsg.content()).isEqualTo("me siento mal");
-        assertThat(userMsg.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
-        assertThat(userMsg.riskDetected()).isTrue();
-        assertThat(userMsg.matchedWord()).isEqualTo("suicidio");
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("respuesta", EmotionType.SADNESS, 6, true, "suicidio"));
+        // --- act ---
+        execute(5L, "conv-1", "me siento mal");
+        // --- assert ---
+        thenUserMessageSavedWith("conv-1", 5L, "me siento mal", EmotionType.SADNESS, "suicidio");
     }
 
     @Test
     @DisplayName("Guarda el mensaje del asistente con el contenido de la respuesta")
     void processMessageShouldSaveAssistantMessageWithReplyContent() {
-        ChatReply reply = new ChatReply("todo va a estar bien", EmotionType.JOY, 7, false, null);
-        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-
-        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "hola"));
-
-        ArgumentCaptor<ConversationMessage> captor = ArgumentCaptor.forClass(ConversationMessage.class);
-        verify(chatMemoryPort, times(2)).addMessage(eq("conv-1"), captor.capture(), eq(1L));
-
-        ConversationMessage assistantMsg = captor.getAllValues().get(1);
-        assertThat(assistantMsg.role()).isEqualTo(MessageRole.ASSISTANT);
-        assertThat(assistantMsg.content()).isEqualTo("todo va a estar bien");
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("todo va a estar bien", EmotionType.JOY, 7, false, null));
+        // --- act ---
+        execute(1L, "conv-1", "hola");
+        // --- assert ---
+        thenAssistantMessageSavedWith("conv-1", 1L, "todo va a estar bien");
     }
 
     @Test
     @DisplayName("Usa el servicio reutilizable de memoria del usuario")
     void processMessageShouldUseReusableUserMemoryService() {
-        VectorMemory memory = new VectorMemory("mem-1", 1L, null, null, "recuerdo", null, 0.9);
-        when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
-        when(userVectorMemoryService.findRelevantUserMemories(1L, "msg")).thenReturn(List.of(memory));
-        when(riskWordRepository.findAllActive()).thenReturn(List.of());
-        when(promptBuilderService.buildEnrichedPrompt(any(), any(), eq(List.of(memory)), any(), any(), any())).thenReturn("prompt final");
-        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
-        when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
-
-        chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "msg"));
-
-        verify(userVectorMemoryService).findRelevantUserMemories(1L, "msg");
-
-        ArgumentCaptor<SaveVectorMemoryCommand> captor = ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
-        verify(userVectorMemoryService).saveMemory(captor.capture());
-        assertThat(captor.getValue().userId()).isEqualTo(1L);
-        assertThat(captor.getValue().content()).isEqualTo("msg");
-
-        verify(llmChatPort).chat(eq("prompt final"), any(), any());
+        // --- arrange ---
+        givenSetupWithRelevantMemory(1L, "msg");
+        // --- act ---
+        execute(1L, "conv-1", "msg");
+        // --- assert ---
+        thenReusableMemoryServiceUsed(1L, "msg");
     }
 
     @Test
     @DisplayName("Adjunta la acción sugerida de la recomendación emocional")
     void processMessageShouldAttachSuggestedActionFromEmotionalRecommendation() {
-        ChatReply reply = new ChatReply("te acompaño", EmotionType.SADNESS, 8, false, null);
-        SuggestedChatAction action = new SuggestedChatAction(
-                ActivityType.DIARY,
-                2L,
-                "Diario emocional",
-                "Un espacio para ordenar pensamientos",
-                "/api/activities",
-                30L
-        );
-        EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
-                true,
-                EmotionType.SADNESS,
-                0.9,
-                -0.8,
-                0.2,
-                -0.7,
-                0.85,
-                "procesar tristeza",
-                "malestar claro"
-        );
-        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-        when(chatEmotionalRecommendationService.recommend(any(), any(), any(), any(), any(), any(), eq(false)))
-                .thenReturn(new ChatRecommendationOutcome(analysis, action));
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "estoy decaido"));
-
-        assertThat(result.suggestedAction().type()).isEqualTo(ActivityType.DIARY);
-        assertThat(result.suggestedAction().activityId()).isEqualTo(2L);
-        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
-        assertThat(result.intensity()).isEqualTo(9);
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("te acompaño", EmotionType.SADNESS, 8, false, null));
+        givenEmotionalRecommendation(
+                diaryAction(),
+                new EmotionalAnalysisResult(true, EmotionType.SADNESS, 0.9, -0.8, 0.2, -0.7, 0.85,
+                        "procesar tristeza", "malestar claro"));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "estoy decaido");
+        // --- assert ---
+        thenSuggestedActionAttached(result);
     }
 
     @Test
     @DisplayName("Fuerza la recomendación de actividad cuando el usuario la pide explícitamente")
     void processMessageShouldForceActivityRecommendationWhenUserExplicitlyRequestsActivity() {
-        ChatReply reply = new ChatReply("te recomiendo escribir", EmotionType.CALM, 4, false, null);
-        SuggestedChatAction action = new SuggestedChatAction(
-                ActivityType.DIARY,
-                2L,
-                "Diario emocional",
-                "Un espacio para ordenar pensamientos",
-                "/api/activities",
-                30L
-        );
-        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-        when(chatEmotionalRecommendationService.recommend(any(), any(), any(), any(), any(), any(), eq(true)))
-                .thenReturn(new ChatRecommendationOutcome(EmotionalAnalysisResult.neutral(), action));
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "dame una recomendacion de actividad"));
-
-        assertThat(result.suggestedAction().type()).isEqualTo(ActivityType.DIARY);
-        assertThat(result.suggestedAction().activityId()).isEqualTo(2L);
-        verify(chatEmotionalRecommendationService).recommend(any(), any(), any(), any(), any(), any(), eq(true));
-        verify(promptBuilderService).buildEnrichedPrompt(
-                any(), any(), any(), eq(action), eq(ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST), any());
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("te recomiendo escribir", EmotionType.CALM, 4, false, null));
+        givenForcedActivityRecommendation(diaryAction());
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "dame una recomendacion de actividad");
+        // --- assert ---
+        thenActivityRecommendationForced(result);
     }
 
     @Test
     @DisplayName("Fuerza el reto cuando el usuario lo pide explícitamente")
     void processMessageShouldForceChallengePromptWhenUserExplicitlyRequestsChallenge() {
-        ChatReply reply = new ChatReply("claro", EmotionType.MOTIVATION, 5, false, null);
-        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "quiero un reto"));
-
-        assertThat(result.generatedChallenge()).isNotNull();
-        assertThat(result.generatedChallenge().title()).isEqualTo("Reto de accion pequena");
-        verify(promptBuilderService).buildEnrichedPrompt(
-                any(), any(), any(), eq(null), eq(ChatUserIntent.CHALLENGE_REQUEST), any());
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("claro", EmotionType.MOTIVATION, 5, false, null));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "quiero un reto");
+        // --- assert ---
+        thenChallengeForced(result);
     }
 
     @Test
     @DisplayName("Agrega la pregunta de estilo cuando la respuesta es segura")
     void processMessageShouldAppendStyleQuestionWhenReplyIsSafe() {
-        ChatConversationPreference preference = ChatConversationPreference.builder()
+        // --- arrange ---
+        givenConversationPreference(ChatConversationPreference.builder()
                 .id(5L)
                 .userId(1L)
                 .preferredName("Crack")
                 .onboardingStatus(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
-                .build();
-        when(chatConversationPreferenceRepository.findByUserId(1L))
-                .thenReturn(Optional.of(preference));
-        when(chatPreferenceHandlingService.handle(1L, "conv-1", "qué onda"))
-                .thenReturn(ChatPreferenceHandlingResult.continueChatAndOfferStyle());
-        givenDefaultSetup(
-                "",
-                List.of(),
-                "prompt",
-                List.of(),
+                .build());
+        givenOfferStyleWhenSafe(1L, "conv-1", "qué onda");
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
                 new ChatReply("Todo bien por acá.", EmotionType.JOY, 3, false, null));
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "qué onda"));
-
-        assertThat(result.content())
-                .contains("Todo bien por acá.")
-                .contains("Cómo te gustaría que te hable");
-        ArgumentCaptor<ChatConversationPreference> captor =
-                ArgumentCaptor.forClass(ChatConversationPreference.class);
-        verify(chatConversationPreferenceRepository).save(captor.capture());
-        assertThat(captor.getValue().getOnboardingStatus())
-                .isEqualTo(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE);
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "qué onda");
+        // --- assert ---
+        thenStyleQuestionAppendedAndMarkedAsked(result);
     }
 
     @Test
     @DisplayName("Pospone la pregunta de estilo cuando se detecta riesgo")
     void processMessageShouldPostponeStyleQuestionWhenRiskIsDetected() {
-        ChatConversationPreference preference = ChatConversationPreference.builder()
+        // --- arrange ---
+        givenConversationPreference(ChatConversationPreference.builder()
                 .id(5L)
                 .userId(1L)
                 .preferredName("Crack")
                 .onboardingStatus(ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE)
-                .build();
-        when(chatConversationPreferenceRepository.findByUserId(1L))
-                .thenReturn(Optional.of(preference));
-        when(chatPreferenceHandlingService.handle(1L, "conv-1", "estoy muy mal"))
-                .thenReturn(ChatPreferenceHandlingResult.continueChatAndOfferStyle());
-        givenDefaultSetup(
-                "",
-                List.of(),
-                "prompt",
-                List.of(),
+                .build());
+        givenOfferStyleWhenSafe(1L, "conv-1", "estoy muy mal");
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
                 new ChatReply("Estoy acá para acompañarte.", EmotionType.SADNESS, 9, true, "riesgo"));
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "estoy muy mal"));
-
-        assertThat(result.content()).doesNotContain("Cómo te gustaría");
-        verify(chatConversationPreferenceRepository, never()).save(any());
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "estoy muy mal");
+        // --- assert ---
+        thenStyleQuestionNotOfferedNorSaved(result);
     }
 
     @Test
     @DisplayName("Anula el reto cuando el usuario lo acepta")
     void processMessageShouldNullifyChallengeWhenUserAcceptsChallenge() {
-        ChatReply.GeneratedChallenge generated = new ChatReply.GeneratedChallenge("Reto", "Haz algo");
-        ChatReply reply = new ChatReply("¡Qué bueno!", EmotionType.JOY, 5, false, null, null, generated);
-        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "Acepto este reto"));
-
-        assertThat(result.generatedChallenge()).isNull();
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("¡Qué bueno!", EmotionType.JOY, 5, false, null, null,
+                        new ChatReply.GeneratedChallenge("Reto", "Haz algo")));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "Acepto este reto");
+        // --- assert ---
+        thenChallengeNullified(result);
     }
 
     @Test
     @DisplayName("Anula el reto cuando el usuario lo rechaza")
     void processMessageShouldNullifyChallengeWhenUserRejectsChallenge() {
-        ChatReply.GeneratedChallenge generated = new ChatReply.GeneratedChallenge("Reto", "Haz algo");
-        ChatReply reply = new ChatReply("No hay problema", EmotionType.JOY, 5, false, null, null, generated);
-        givenDefaultSetup("", List.of(), "prompt", List.of(), reply);
-
-        ChatReplyResponse result = chatUseCase.execute(new ChatMessageRequest(1L, "conv-1", "Rechazo este reto por ahora"));
-
-        assertThat(result.generatedChallenge()).isNull();
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("No hay problema", EmotionType.JOY, 5, false, null, null,
+                        new ChatReply.GeneratedChallenge("Reto", "Haz algo")));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "Rechazo este reto por ahora");
+        // --- assert ---
+        thenChallengeNullified(result);
     }
+
+    /*
+     * Ramas defensivas INALCANZABLES (no se cubren a propósito):
+     *
+     * 1) rememberRecommendedActivity -> "if (action == null) return;":
+     *    action proviene de outcome.suggestedAction() y el método solo se invoca en la rama else de
+     *    applyRecommendationOutcome, es decir cuando outcome != null y outcome.suggestedAction() != null.
+     *    Por lo tanto action == null nunca puede darse en ese camino.
+     *
+     * 2) ensureRequestedChallenge -> sub-condición "suggestedAction != null":
+     *    esa sub-condición solo se evalúa cuando el intent es CHALLENGE_REQUEST, y en ese caso
+     *    evaluateRecommendation devuelve ChatRecommendationOutcome.none(...) cuyo suggestedAction() es
+     *    null; por eso suggestedAction != null nunca llega a ser true en ese punto.
+     */
+
+    @Test
+    @DisplayName("Devuelve la respuesta del LLM sin acción sugerida cuando la recomendación es nula")
+    void processMessageShouldReturnLlmReplyWithoutActionWhenRecommendationIsNull() {
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(), ChatReply.of("respuesta simple"));
+        givenNullRecommendation();
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "hola");
+        // --- assert ---
+        thenReturnedLlmReplyWithoutActionAndSavedMemory(result, "respuesta simple");
+    }
+
+    @Test
+    @DisplayName("No ofrece la pregunta de estilo cuando la preferencia no está pendiente de estilo")
+    void processMessageShouldNotOfferStyleWhenPreferenceIsNotPending() {
+        // --- arrange ---
+        givenConversationPreference(ChatConversationPreference.builder()
+                .id(5L)
+                .userId(1L)
+                .onboardingStatus(ChatOnboardingStatus.COMPLETED)
+                .build());
+        givenOfferStyleWhenSafe(1L, "conv-1", "todo bien");
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("Todo bien por acá.", EmotionType.JOY, 3, false, null));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "todo bien");
+        // --- assert ---
+        thenStyleQuestionNotOfferedNorSaved(result);
+    }
+
+    @Test
+    @DisplayName("No persiste el reto generado cuando no es recordable")
+    void processMessageShouldNotPersistGeneratedChallengeWhenNotRememberable() {
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("respuesta", EmotionType.JOY, 3, false, null, null,
+                        new ChatReply.GeneratedChallenge("", "descripcion")));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "hola");
+        // --- assert ---
+        thenChallengeNotPersisted(result);
+    }
+
+    @Test
+    @DisplayName("Conserva el reto del LLM cuando el usuario pide un reto y la respuesta ya incluye uno")
+    void processMessageShouldKeepLlmChallengeWhenUserRequestsChallengeAndReplyAlreadyHasOne() {
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(),
+                new ChatReply("Aquí tenés tu reto.", EmotionType.MOTIVATION, 5, false, null, null,
+                        new ChatReply.GeneratedChallenge("Reto del LLM", "Hacé esto")));
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "quiero un reto");
+        // --- assert ---
+        thenChallengeKeptFromLlm(result, "Reto del LLM", "Aquí tenés tu reto.");
+    }
+
+    @Test
+    @DisplayName("No propaga errores de persistencia del historial y guarda la memoria del usuario igual")
+    void processMessageShouldNotPropagatePersistenceErrorsAndStillSaveMemory() {
+        // --- arrange ---
+        givenDefaultSetup("", List.of(), "prompt", List.of(), ChatReply.of("respuesta ok"));
+        givenChatMemoryPersistenceFails();
+        // --- act ---
+        ChatReplyResponse result = execute(1L, "conv-1", "hola");
+        // --- assert ---
+        thenReplyReturnedAndMemorySavedDespitePersistenceError(result, "respuesta ok");
+    }
+
+    // --- arrange ---
 
     private void givenDefaultSetup(String basePrompt, List<RiskWord> riskWords,
                                    String enrichedPrompt, List<ConversationMessage> history,
@@ -427,5 +405,227 @@ class ChatUseCaseTest {
         when(promptBuilderService.buildEnrichedPrompt(any(), any(), any(), any(), any(), any())).thenReturn(enrichedPrompt);
         when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(history);
         when(llmChatPort.chat(any(), any(), any())).thenReturn(reply);
+    }
+
+    private void givenPreferenceHandled(long userId, String conversationId, String message, ChatReply reply) {
+        when(chatPreferenceHandlingService.handle(userId, conversationId, message))
+                .thenReturn(ChatPreferenceHandlingResult.handled(reply));
+    }
+
+    private void givenRegisteredUser(long userId, String name) {
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(AppUser.builder().id(userId).name(name).build()));
+    }
+
+    private void givenConversationPreference(ChatConversationPreference preference) {
+        when(chatConversationPreferenceRepository.findByUserId(preference.getUserId()))
+                .thenReturn(Optional.of(preference));
+    }
+
+    private void givenActiveRiskWord(String word, RiskSeverity severity) {
+        RiskWord riskWord = RiskWord.builder().id(1L).word(word).severity(severity).active(true).build();
+        givenDefaultSetup("", List.of(riskWord), "enriquecido", List.of(), ChatReply.of("ok"));
+    }
+
+    private void givenSetupWithRelevantMemory(long userId, String message) {
+        when(chatConfigRepository.findFirst()).thenReturn(Optional.empty());
+        when(userVectorMemoryService.findRelevantUserMemories(userId, message))
+                .thenReturn(List.of(rememberedMemory()));
+        when(riskWordRepository.findAllActive()).thenReturn(List.of());
+        when(promptBuilderService.buildEnrichedPrompt(any(), any(), eq(List.of(rememberedMemory())), any(), any(), any()))
+                .thenReturn("prompt final");
+        when(chatMemoryPort.getHistory(anyString(), anyLong())).thenReturn(List.of());
+        when(llmChatPort.chat(any(), any(), any())).thenReturn(ChatReply.of("ok"));
+    }
+
+    private void givenEmotionalRecommendation(SuggestedChatAction action, EmotionalAnalysisResult analysis) {
+        when(chatEmotionalRecommendationService.recommend(any(), any(), any(), any(), any(), any(), eq(false)))
+                .thenReturn(new ChatRecommendationOutcome(analysis, action));
+    }
+
+    private void givenForcedActivityRecommendation(SuggestedChatAction action) {
+        when(chatEmotionalRecommendationService.recommend(any(), any(), any(), any(), any(), any(), eq(true)))
+                .thenReturn(new ChatRecommendationOutcome(EmotionalAnalysisResult.neutral(), action));
+    }
+
+    private void givenOfferStyleWhenSafe(long userId, String conversationId, String message) {
+        when(chatPreferenceHandlingService.handle(userId, conversationId, message))
+                .thenReturn(ChatPreferenceHandlingResult.continueChatAndOfferStyle());
+    }
+
+    private void givenNullRecommendation() {
+        when(chatEmotionalRecommendationService.recommend(any(), any(), any(), any(), any(), any(), anyBoolean()))
+                .thenReturn(null);
+    }
+
+    private void givenChatMemoryPersistenceFails() {
+        doThrow(new RuntimeException("fallo al persistir"))
+                .when(chatMemoryPort).addMessage(any(), any(), any());
+    }
+
+    private SuggestedChatAction diaryAction() {
+        return new SuggestedChatAction(
+                ActivityType.DIARY,
+                2L,
+                "Diario emocional",
+                "Un espacio para ordenar pensamientos",
+                "/api/activities",
+                30L);
+    }
+
+    private List<ConversationMessage> conversationHistory() {
+        return List.of(ConversationMessage.of(MessageRole.USER, "anterior"));
+    }
+
+    private VectorMemory rememberedMemory() {
+        return new VectorMemory("mem-1", 1L, null, null, "recuerdo", null, 0.9);
+    }
+
+    // --- act ---
+
+    private ChatReplyResponse execute(long userId, String conversationId, String message) {
+        return chatUseCase.execute(new ChatMessageRequest(userId, conversationId, message));
+    }
+
+    // --- assert ---
+
+    private void thenContentIs(ChatReplyResponse result, String expected) {
+        assertThat(result.content()).isEqualTo(expected);
+    }
+
+    private void thenPreferenceServiceWasCalled(long userId, String conversationId, String message) {
+        verify(chatPreferenceHandlingService).handle(userId, conversationId, message);
+    }
+
+    private void thenLlmWasNotCalled() {
+        verifyNoInteractions(llmChatPort);
+    }
+
+    private void thenReplyMatchesEmotion(ChatReplyResponse result, String content, EmotionType emotion, int intensity) {
+        assertThat(result.content()).isEqualTo(content);
+        assertThat(result.detectedEmotion()).isEqualTo(emotion);
+        assertThat(result.intensity()).isEqualTo(intensity);
+    }
+
+    private void thenPromptBuiltWithBasePrompt(String basePrompt) {
+        verify(promptBuilderService).buildEnrichedPrompt(eq(basePrompt), any(), any(), any(), any(), any());
+    }
+
+    private void thenPersonalizationPassedToPromptBuilder(String registeredName, String preferredName, CommunicationStyle style) {
+        ArgumentCaptor<ChatPersonalizationContext> personalizationCaptor =
+                ArgumentCaptor.forClass(ChatPersonalizationContext.class);
+        verify(promptBuilderService).buildEnrichedPrompt(
+                any(), any(), any(), any(), any(), personalizationCaptor.capture());
+        assertThat(personalizationCaptor.getValue().registeredName()).isEqualTo(registeredName);
+        assertThat(personalizationCaptor.getValue().preferredName()).isEqualTo(preferredName);
+        assertThat(personalizationCaptor.getValue().communicationStyle()).isEqualTo(style);
+    }
+
+    private void thenPromptBuiltWithActiveRiskWord(String word, RiskSeverity severity) {
+        verify(promptBuilderService).buildEnrichedPrompt(
+                any(),
+                argThat((List<RiskWord> words) -> words.size() == 1
+                        && word.equals(words.get(0).getWord())
+                        && words.get(0).getSeverity() == severity
+                        && words.get(0).isActive()),
+                any(), any(), any(), any());
+    }
+
+    private void thenUserMessageSavedWith(String conversationId, long userId, String content,
+                                          EmotionType emotion, String matchedWord) {
+        ArgumentCaptor<ConversationMessage> captor = ArgumentCaptor.forClass(ConversationMessage.class);
+        verify(chatMemoryPort, times(2)).addMessage(eq(conversationId), captor.capture(), eq(userId));
+        ConversationMessage userMsg = captor.getAllValues().get(0);
+        assertThat(userMsg.role()).isEqualTo(MessageRole.USER);
+        assertThat(userMsg.content()).isEqualTo(content);
+        assertThat(userMsg.detectedEmotion()).isEqualTo(emotion);
+        assertThat(userMsg.riskDetected()).isTrue();
+        assertThat(userMsg.matchedWord()).isEqualTo(matchedWord);
+    }
+
+    private void thenAssistantMessageSavedWith(String conversationId, long userId, String content) {
+        ArgumentCaptor<ConversationMessage> captor = ArgumentCaptor.forClass(ConversationMessage.class);
+        verify(chatMemoryPort, times(2)).addMessage(eq(conversationId), captor.capture(), eq(userId));
+        ConversationMessage assistantMsg = captor.getAllValues().get(1);
+        assertThat(assistantMsg.role()).isEqualTo(MessageRole.ASSISTANT);
+        assertThat(assistantMsg.content()).isEqualTo(content);
+    }
+
+    private void thenHistoryFetchedAndPassedToLlm(String conversationId, long userId, String message) {
+        verify(chatMemoryPort).getHistory(conversationId, userId);
+        verify(llmChatPort).chat(any(), eq(message), eq(conversationHistory()));
+    }
+
+    private void thenReusableMemoryServiceUsed(long userId, String message) {
+        verify(userVectorMemoryService).findRelevantUserMemories(userId, message);
+        ArgumentCaptor<SaveVectorMemoryCommand> captor = ArgumentCaptor.forClass(SaveVectorMemoryCommand.class);
+        verify(userVectorMemoryService).saveMemory(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(userId);
+        assertThat(captor.getValue().content()).isEqualTo(message);
+        verify(llmChatPort).chat(eq("prompt final"), any(), any());
+    }
+
+    private void thenSuggestedActionAttached(ChatReplyResponse result) {
+        assertThat(result.suggestedAction().type()).isEqualTo(ActivityType.DIARY);
+        assertThat(result.suggestedAction().activityId()).isEqualTo(2L);
+        assertThat(result.detectedEmotion()).isEqualTo(EmotionType.SADNESS);
+        assertThat(result.intensity()).isEqualTo(9);
+    }
+
+    private void thenActivityRecommendationForced(ChatReplyResponse result) {
+        assertThat(result.suggestedAction().type()).isEqualTo(ActivityType.DIARY);
+        assertThat(result.suggestedAction().activityId()).isEqualTo(2L);
+        verify(chatEmotionalRecommendationService).recommend(any(), any(), any(), any(), any(), any(), eq(true));
+        verify(promptBuilderService).buildEnrichedPrompt(
+                any(), any(), any(), eq(diaryAction()), eq(ChatUserIntent.ACTIVITY_RECOMMENDATION_REQUEST), any());
+    }
+
+    private void thenChallengeForced(ChatReplyResponse result) {
+        assertThat(result.generatedChallenge()).isNotNull();
+        assertThat(result.generatedChallenge().title()).isEqualTo("Reto de accion pequena");
+        verify(promptBuilderService).buildEnrichedPrompt(
+                any(), any(), any(), eq(null), eq(ChatUserIntent.CHALLENGE_REQUEST), any());
+    }
+
+    private void thenStyleQuestionAppendedAndMarkedAsked(ChatReplyResponse result) {
+        assertThat(result.content())
+                .contains("Todo bien por acá.")
+                .contains("Cómo te gustaría que te hable");
+        ArgumentCaptor<ChatConversationPreference> captor =
+                ArgumentCaptor.forClass(ChatConversationPreference.class);
+        verify(chatConversationPreferenceRepository).save(captor.capture());
+        assertThat(captor.getValue().getOnboardingStatus())
+                .isEqualTo(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE);
+    }
+
+    private void thenStyleQuestionNotOfferedNorSaved(ChatReplyResponse result) {
+        assertThat(result.content()).doesNotContain("Cómo te gustaría");
+        verify(chatConversationPreferenceRepository, never()).save(any());
+    }
+
+    private void thenChallengeNullified(ChatReplyResponse result) {
+        assertThat(result.generatedChallenge()).isNull();
+    }
+
+    private void thenReturnedLlmReplyWithoutActionAndSavedMemory(ChatReplyResponse result, String content) {
+        assertThat(result.content()).isEqualTo(content);
+        assertThat(result.suggestedAction()).isNull();
+        verify(userVectorMemoryService).saveMemory(any());
+    }
+
+    private void thenChallengeNotPersisted(ChatReplyResponse result) {
+        assertThat(result.generatedChallenge()).isNotNull();
+        verify(userVectorMemoryService, times(1)).saveMemory(any());
+    }
+
+    private void thenChallengeKeptFromLlm(ChatReplyResponse result, String title, String content) {
+        assertThat(result.generatedChallenge()).isNotNull();
+        assertThat(result.generatedChallenge().title()).isEqualTo(title);
+        assertThat(result.content()).isEqualTo(content);
+    }
+
+    private void thenReplyReturnedAndMemorySavedDespitePersistenceError(ChatReplyResponse result, String content) {
+        assertThat(result.content()).isEqualTo(content);
+        verify(userVectorMemoryService).saveMemory(any());
     }
 }

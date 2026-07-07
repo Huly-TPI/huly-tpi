@@ -21,7 +21,7 @@ export default function OrchardPlantCard({ plant, onClick }: OrchardPlantCardPro
     <button
       onClick={onClick}
       className="Orchard-plant-card flex flex-col items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer border-2 border-transparent hover:border-bosque/30 w-full"
-      aria-label={isGrowing ? `Planta ${plant.plantNumber} en curso, ir a retos` : `Planta ${plant.plantNumber} cosechada, ver retos completados`}
+      aria-label={isGrowing ? `Planta ${plant.plantNumber} creciendo, ir a retos` : `Planta ${plant.plantNumber} cosechada, ver retos completados`}
     >
       <div className="scale-[0.55] origin-top -mb-10">
         <Plant stage={stage} isWatering={false} plantType={plant.plantNumber} />
@@ -35,7 +35,7 @@ export default function OrchardPlantCard({ plant, onClick }: OrchardPlantCardPro
         {isGrowing ? (
           <>
             <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-              En curso
+              Creciendo
             </span>
             <span className="text-[0.7rem] text-gray-500 mt-0.5">
               {plant.completedGoalsCount} / {plant.requiredGoals} retos

@@ -1,12 +1,13 @@
 package com.huly.backend.domain.useCase.user;
 
 import com.huly.backend.domain.exception.InvalidCredentialsException;
-import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
+import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.port.PasswordHasherPort;
 import com.huly.backend.domain.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,25 +18,32 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ChangePasswordUseCaseTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private PasswordHasherPort passwordHasherPort;
+    private static final long USER_ID = 1L;
 
-    private ChangePasswordUseCase changePasswordUseCase;
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PasswordHasherPort passwordHasherPort;
+
+    private ChangePasswordUseCase useCase;
 
     private AppUser user;
 
     @BeforeEach
     void setUp() {
-        changePasswordUseCase = new ChangePasswordUseCase(userRepository, passwordHasherPort);
-
+        useCase = new ChangePasswordUseCase(userRepository, passwordHasherPort);
         user = AppUser.builder()
-                .id(1L)
+                .id(USER_ID)
                 .email("user@huly.com")
                 .password("encodedCurrentPass")
                 .role(UserRole.USER)
@@ -44,56 +52,108 @@ class ChangePasswordUseCaseTest {
     }
 
     @Test
-    void execute_shouldUpdatePassword_whenCurrentPasswordIsCorrect() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(passwordHasherPort.matches("currentPass", "encodedCurrentPass")).thenReturn(true);
-        when(passwordHasherPort.encode("newPass123")).thenReturn("encodedNewPass");
+    @DisplayName("Actualiza la contraseña cuando la actual es correcta")
+    void executeUpdatesPasswordWhenCurrentPasswordIsCorrect() {
+        givenExistingUser();
+        givenCurrentPasswordMatches();
+        givenEncodedNewPassword();
 
-        changePasswordUseCase.execute(1L, "currentPass", "newPass123");
+        changePassword(USER_ID, "currentPass", "newPass123");
 
-        verify(userRepository).updatePassword(1L, "encodedNewPass");
+        thenPasswordUpdatedTo("encodedNewPass");
     }
 
     @Test
-    void execute_shouldEncodeNewPasswordBeforeSaving() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(passwordHasherPort.matches("currentPass", "encodedCurrentPass")).thenReturn(true);
-        when(passwordHasherPort.encode("newPass123")).thenReturn("encodedNewPass");
+    @DisplayName("Codifica la nueva contraseña antes de guardarla")
+    void executeEncodesNewPasswordBeforeSaving() {
+        givenExistingUser();
+        givenCurrentPasswordMatches();
+        givenEncodedNewPassword();
 
+        changePassword(USER_ID, "currentPass", "newPass123");
+
+        thenSavedPasswordIs("encodedNewPass");
+    }
+
+    @Test
+    @DisplayName("Lanza credenciales inválidas cuando el usuario no existe")
+    void executeThrowsInvalidCredentialsWhenUserNotFound() {
+        givenUserNotFound(99L);
+
+        thenChangePasswordThrowsInvalidCredentials(99L, "currentPass", "newPass123");
+    }
+
+    @Test
+    @DisplayName("Lanza credenciales inválidas cuando la contraseña actual es incorrecta")
+    void executeThrowsInvalidCredentialsWhenCurrentPasswordIsWrong() {
+        givenExistingUser();
+        givenCurrentPasswordDoesNotMatch();
+
+        thenChangePasswordThrowsIncorrectCurrentPassword(USER_ID, "wrongPass", "newPass123");
+    }
+
+    @Test
+    @DisplayName("No actualiza la contraseña cuando la actual es incorrecta")
+    void executeNeverUpdatesPasswordWhenCurrentPasswordIsWrong() {
+        givenExistingUser();
+        givenCurrentPasswordDoesNotMatch();
+
+        thenChangePasswordThrowsInvalidCredentials(USER_ID, "wrongPass", "newPass123");
+        thenPasswordWasNeverUpdated();
+    }
+
+    // --- arrange ---
+
+    private void givenExistingUser() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+    }
+
+    private void givenUserNotFound(long userId) {
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    }
+
+    private void givenCurrentPasswordMatches() {
+        when(passwordHasherPort.matches("currentPass", "encodedCurrentPass")).thenReturn(true);
+    }
+
+    private void givenCurrentPasswordDoesNotMatch() {
+        when(passwordHasherPort.matches("wrongPass", "encodedCurrentPass")).thenReturn(false);
+    }
+
+    private void givenEncodedNewPassword() {
+        when(passwordHasherPort.encode("newPass123")).thenReturn("encodedNewPass");
+    }
+
+    // --- act ---
+
+    private void changePassword(long userId, String currentPassword, String newPassword) {
+        useCase.execute(userId, currentPassword, newPassword);
+    }
+
+    // --- assert ---
+
+    private void thenPasswordUpdatedTo(String expectedEncoded) {
+        verify(userRepository).updatePassword(USER_ID, expectedEncoded);
+    }
+
+    private void thenSavedPasswordIs(String expectedEncoded) {
         ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
-        changePasswordUseCase.execute(1L, "currentPass", "newPass123");
-
-        verify(userRepository).updatePassword(org.mockito.ArgumentMatchers.eq(1L), passwordCaptor.capture());
-        assertThat(passwordCaptor.getValue()).isEqualTo("encodedNewPass");
+        verify(userRepository).updatePassword(eq(USER_ID), passwordCaptor.capture());
+        assertThat(passwordCaptor.getValue()).isEqualTo(expectedEncoded);
     }
 
-    @Test
-    void execute_shouldThrowInvalidCredentials_whenUserNotFound() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> changePasswordUseCase.execute(99L, "currentPass", "newPass123"))
+    private void thenChangePasswordThrowsInvalidCredentials(long userId, String currentPassword, String newPassword) {
+        assertThatThrownBy(() -> useCase.execute(userId, currentPassword, newPassword))
                 .isInstanceOf(InvalidCredentialsException.class);
     }
 
-    @Test
-    void execute_shouldThrowInvalidCredentials_whenCurrentPasswordIsWrong() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(passwordHasherPort.matches("wrongPass", "encodedCurrentPass")).thenReturn(false);
-
-        assertThatThrownBy(() -> changePasswordUseCase.execute(1L, "wrongPass", "newPass123"))
+    private void thenChangePasswordThrowsIncorrectCurrentPassword(long userId, String currentPassword, String newPassword) {
+        assertThatThrownBy(() -> useCase.execute(userId, currentPassword, newPassword))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessageContaining("incorrect");
     }
 
-    @Test
-    void execute_shouldNeverCallUpdatePassword_whenCurrentPasswordIsWrong() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(passwordHasherPort.matches("wrongPass", "encodedCurrentPass")).thenReturn(false);
-
-        assertThatThrownBy(() -> changePasswordUseCase.execute(1L, "wrongPass", "newPass123"))
-                .isInstanceOf(InvalidCredentialsException.class);
-
-        org.mockito.Mockito.verify(userRepository, org.mockito.Mockito.never())
-                .updatePassword(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    private void thenPasswordWasNeverUpdated() {
+        verify(userRepository, never()).updatePassword(any(), any());
     }
 }

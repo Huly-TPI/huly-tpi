@@ -36,6 +36,9 @@ import static org.mockito.Mockito.when;
 
 class ChatEmotionalRecommendationServiceTest {
 
+    private static final String BASE_PROMPT = "base";
+    private static final String ANALYSIS_PROMPT = "analysis prompt";
+
     private EmotionalAnalysisPort emotionalAnalysisPort;
     private PromptBuilderService promptBuilderService;
     private GetEmotionalRecommendationsUseCase recommendationsUseCase;
@@ -62,222 +65,230 @@ class ChatEmotionalRecommendationServiceTest {
     @DisplayName("No recomienda ni crea evento cuando el análisis indica que no")
     void recommendShouldNotRecommendOrCreateEventWhenAnalysisSaysNo() {
         List<VectorMemory> memories = List.of(memory("me ayuda escribir"));
-        List<ConversationMessage> history = List.of(ConversationMessage.of(MessageRole.USER, "hola"));
-        when(promptBuilderService.buildEmotionalAnalysisPrompt("base", memories)).thenReturn("analysis prompt");
-        when(emotionalAnalysisPort.analyze("analysis prompt", "hola", history))
-                .thenReturn(new EmotionalAnalysisResult(false, EmotionType.NEUTRAL, 0.8, 0.0, 0.0, 0.0, 0.1, null, null));
+        List<ConversationMessage> history = List.of(userMessage("hola"));
+        givenPromptBuiltFor(memories);
+        givenAnalyzed(history, analysisWithoutRecommendation());
 
-        ChatRecommendationOutcome outcome = service.recommend("hola", 1L, "base", memories, history, null, false);
+        ChatRecommendationOutcome outcome = recommend("hola", 1L, memories, history, null, false);
 
-        assertThat(outcome.suggestedAction()).isNull();
-        assertThat(outcome.analysis().shouldRecommend()).isFalse();
-        verify(recommendationsUseCase, never()).execute(any());
-        verify(createEmotionalEventUseCase, never()).execute(any());
+        thenNoSuggestedAction(outcome);
+        thenAnalysisDoesNotRecommend(outcome);
+        thenUseCasesNeverInvoked();
     }
 
     @Test
     @DisplayName("Recomienda la actividad principal y crea el evento emocional del chatbot")
     void recommendShouldRecommendTopActivityAndCreateChatbotEmotionalEvent() {
-        EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
-                true,
-                EmotionType.GRIEF,
+        givenPromptBuilt();
+        givenAnalysis(griefRecommendationAnalysis());
+        givenRecommendations(diaryItem(7L));
+        givenCreatedEvent(eventResponse(50L, 3L, 7L));
+
+        ChatRecommendationOutcome outcome = recommend(
+                "estoy decaido, se murio mi perro", 3L, List.of(), List.of(), null, false);
+
+        thenSuggestedActivityIs(outcome, 7L);
+        thenSuggestedEventIs(outcome, 50L);
+        thenRecommendationQueryHas(3L, -0.85, 0.35, -0.75);
+        thenChatbotEventCommandHas(
+                "estoy decaido, se murio mi perro",
+                "GRIEF",
                 0.92,
-                -0.85,
-                0.35,
-                -0.75,
                 0.88,
                 "sentirse acompanado y aliviar tristeza",
-                "perdida significativa"
-        );
-        EmotionalRecommendationItem item = new EmotionalRecommendationItem(
                 7L,
-                ActivityType.DIARY,
-                "Diario emocional",
-                "Un espacio para ordenar pensamientos",
-                0.95,
-                "Recomendada para procesar la emocion",
-                "/diary"
-        );
-        EmotionalEventResponse saved = eventResponse(50L, 3L, 7L);
-        when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
-        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
-                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
-        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
-
-        ChatRecommendationOutcome outcome = service.recommend(
-                "estoy decaido, se murio mi perro",
-                3L,
-                "base",
-                List.of(),
-                List.of(),
-                null,
-                false
-        );
-
-        assertThat(outcome.suggestedAction()).isNotNull();
-        assertThat(outcome.suggestedAction().activityId()).isEqualTo(7L);
-        assertThat(outcome.suggestedAction().emotionalEventId()).isEqualTo(50L);
-
-        ArgumentCaptor<GetEmotionalRecommendationsRequest> queryCaptor =
-                ArgumentCaptor.forClass(GetEmotionalRecommendationsRequest.class);
-        verify(recommendationsUseCase).execute(queryCaptor.capture());
-        assertThat(queryCaptor.getValue().userId()).isEqualTo(3L);
-        assertThat(queryCaptor.getValue().valence()).isEqualTo(-0.85);
-        assertThat(queryCaptor.getValue().arousal()).isEqualTo(0.35);
-        assertThat(queryCaptor.getValue().dominance()).isEqualTo(-0.75);
-
-        ArgumentCaptor<CreateEmotionalEventRequest> commandCaptor =
-                ArgumentCaptor.forClass(CreateEmotionalEventRequest.class);
-        verify(createEmotionalEventUseCase).execute(commandCaptor.capture());
-        CreateEmotionalEventRequest command = commandCaptor.getValue();
-        assertThat(command.source()).isEqualTo(EmotionalEventSource.CHATBOT);
-        assertThat(command.inputText()).isEqualTo("estoy decaido, se murio mi perro");
-        assertThat(command.detectedEmotion()).isEqualTo("GRIEF");
-        assertThat(command.confidence()).isEqualTo(0.92);
-        assertThat(command.intensity()).isEqualTo(0.88);
-        assertThat(command.userGoal()).isEqualTo("sentirse acompanado y aliviar tristeza");
-        assertThat(command.recommendedActivityId()).isEqualTo(7L);
-        assertThat(command.chosenActivityId()).isNull();
-        assertThat(command.generatedRecommendation()).contains("Diario emocional");
+                "Diario emocional");
     }
 
     @Test
     @DisplayName("Sobrescribe el análisis negativo cuando la conversación detecta duelo de alta intensidad")
     void recommendShouldOverrideFalseAnalysisWhenConversationDetectsHighIntensityGrief() {
-        EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
-                false,
-                EmotionType.NEUTRAL,
-                0.7,
-                0.0,
-                0.0,
-                0.0,
-                0.2,
-                null,
-                "El modelo estructurado no recomendo"
-        );
-        EmotionalRecommendationItem item = new EmotionalRecommendationItem(
-                2L,
-                ActivityType.DIARY,
-                "Diario emocional",
-                "Un espacio para ordenar pensamientos",
-                0.91,
-                "Recomendada para procesar la emocion",
-                "/diary"
-        );
-        EmotionalEventResponse saved = eventResponse(60L, 1L, 2L);
-        ChatReply conversationalReply = new ChatReply(
-                "Siento mucho lo de Rocky",
-                EmotionType.GRIEF,
-                8,
-                false,
-                null
-        );
-        when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
-        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
-                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
-        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
+        givenPromptBuilt();
+        givenAnalysis(neutralWithoutRecommendationAnalysis());
+        givenRecommendations(diaryItem(2L));
+        givenCreatedEvent(eventResponse(60L, 1L, 2L));
 
-        ChatRecommendationOutcome outcome = service.recommend(
+        ChatRecommendationOutcome outcome = recommend(
                 "Estoy decaido, se murio Rocky y no se como procesarlo. Me siento sin fuerzas.",
                 1L,
-                "base",
                 List.of(),
                 List.of(),
-                conversationalReply,
-                false
-        );
+                griefConversationalReply(),
+                false);
 
-        assertThat(outcome.suggestedAction()).isNotNull();
-        assertThat(outcome.suggestedAction().activityId()).isEqualTo(2L);
-        assertThat(outcome.analysis().shouldRecommend()).isTrue();
-        assertThat(outcome.analysis().detectedEmotion()).isEqualTo(EmotionType.GRIEF);
-        assertThat(outcome.analysis().valence()).isEqualTo(-0.85);
-
-        ArgumentCaptor<CreateEmotionalEventRequest> commandCaptor =
-                ArgumentCaptor.forClass(CreateEmotionalEventRequest.class);
-        verify(createEmotionalEventUseCase).execute(commandCaptor.capture());
-        assertThat(commandCaptor.getValue().detectedEmotion()).isEqualTo("GRIEF");
-        assertThat(commandCaptor.getValue().userGoal()).contains("duelo");
-        assertThat(commandCaptor.getValue().recommendedActivityId()).isEqualTo(2L);
+        thenSuggestedActivityIs(outcome, 2L);
+        thenAnalysisRecommends(outcome);
+        thenAnalysisEmotionIs(outcome, EmotionType.GRIEF);
+        thenAnalysisValenceIs(outcome, -0.85);
+        thenEventCommandEmotionAndGoalContain("GRIEF", "duelo", 2L);
     }
 
     @Test
     @DisplayName("No crea evento cuando la lista de recomendaciones está vacía")
     void recommendShouldNotCreateEventWhenRecommendationListIsEmpty() {
-        when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
-        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(new EmotionalAnalysisResult(
-                true,
-                EmotionType.STRESS,
-                0.9,
-                -0.5,
-                0.7,
-                -0.4,
-                0.8,
-                "calmarme",
-                "estres claro"
-        ));
-        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
-                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(), false));
+        givenPromptBuilt();
+        givenAnalysis(stressRecommendationAnalysis());
+        givenRecommendations();
 
-        ChatRecommendationOutcome outcome = service.recommend(
-                "estoy muy estresado",
-                1L,
-                "base",
-                List.of(),
-                List.of(),
-                null,
-                false);
+        ChatRecommendationOutcome outcome = recommend(
+                "estoy muy estresado", 1L, List.of(), List.of(), null, false);
 
-        assertThat(outcome.suggestedAction()).isNull();
-        verify(createEmotionalEventUseCase, never()).execute(any());
+        thenNoSuggestedAction(outcome);
+        thenCreateEventNeverInvoked();
     }
 
     @Test
     @DisplayName("Recomienda cuando el usuario pide explícitamente una actividad aunque el análisis diga que no")
     void recommendShouldRecommendWhenUserExplicitlyRequestsActivityEvenIfAnalysisSaysNo() {
-        EmotionalAnalysisResult analysis = new EmotionalAnalysisResult(
-                false,
-                EmotionType.NEUTRAL,
-                0.4,
-                0.0,
-                0.0,
-                0.0,
-                0.1,
-                null,
-                "pedido neutro"
-        );
-        EmotionalRecommendationItem item = new EmotionalRecommendationItem(
-                4L,
+        givenPromptBuilt();
+        givenAnalysis(explicitNeutralAnalysis());
+        givenRecommendations(breathingItem(4L));
+        givenCreatedEvent(eventResponse(70L, 1L, 4L));
+
+        ChatRecommendationOutcome outcome = recommend(
+                "dame una recomendacion de actividad", 1L, List.of(), List.of(), null, true);
+
+        thenSuggestedActivityIs(outcome, 4L);
+        thenAnalysisRecommends(outcome);
+        thenAnalysisUserGoalIs(outcome, "recibir una actividad de bienestar");
+    }
+
+    @Test
+    @DisplayName("Usa un análisis neutral y no recomienda cuando el análisis emocional falla")
+    void recommendShouldFallBackToNeutralAnalysisWhenAnalysisPortFails() {
+        givenPromptBuilt();
+        givenAnalysisPortFails();
+
+        ChatRecommendationOutcome outcome = recommend(
+                "hola", 1L, List.of(), List.of(), null, false);
+
+        thenNoSuggestedAction(outcome);
+        thenAnalysisDoesNotRecommend(outcome);
+        thenAnalysisEmotionIs(outcome, EmotionType.NEUTRAL);
+        thenUseCasesNeverInvoked();
+    }
+
+    @Test
+    @DisplayName("Usa un análisis neutral cuando el puerto de análisis devuelve null")
+    void recommendShouldFallBackToNeutralAnalysisWhenAnalysisPortReturnsNull() {
+        givenPromptBuilt();
+        givenAnalysisReturnsNull();
+
+        ChatRecommendationOutcome outcome = recommend(
+                "hola", 1L, List.of(), List.of(), null, false);
+
+        thenNoSuggestedAction(outcome);
+        thenAnalysisDoesNotRecommend(outcome);
+        thenAnalysisEmotionIs(outcome, EmotionType.NEUTRAL);
+        thenUseCasesNeverInvoked();
+    }
+
+    @Test
+    @DisplayName("Devuelve el análisis sin acción cuando la generación de recomendaciones falla")
+    void recommendShouldReturnNoneWhenRecommendationGenerationFails() {
+        givenPromptBuilt();
+        givenAnalysis(griefRecommendationAnalysis());
+        givenRecommendationsUseCaseFails();
+
+        ChatRecommendationOutcome outcome = recommend(
+                "estoy decaido, se murio mi perro", 3L, List.of(), List.of(), null, false);
+
+        thenNoSuggestedAction(outcome);
+        thenAnalysisRecommends(outcome);
+        thenCreateEventNeverInvoked();
+    }
+
+    // Nota: la rama `analysis == null` de logAnalysisResult es inalcanzable desde recommend(),
+    // porque analyze() nunca devuelve null (siempre retorna EmotionalAnalysisResult.neutral()).
+
+    // --- arrange ---
+    private void givenPromptBuiltFor(List<VectorMemory> memories) {
+        when(promptBuilderService.buildEmotionalAnalysisPrompt(BASE_PROMPT, memories)).thenReturn(ANALYSIS_PROMPT);
+    }
+
+    private void givenPromptBuilt() {
+        when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn(ANALYSIS_PROMPT);
+    }
+
+    private void givenAnalyzed(List<ConversationMessage> history, EmotionalAnalysisResult result) {
+        when(emotionalAnalysisPort.analyze(ANALYSIS_PROMPT, "hola", history)).thenReturn(result);
+    }
+
+    private void givenAnalysis(EmotionalAnalysisResult result) {
+        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(result);
+    }
+
+    private void givenAnalysisReturnsNull() {
+        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(null);
+    }
+
+    private void givenAnalysisPortFails() {
+        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenThrow(new RuntimeException("boom"));
+    }
+
+    private void givenRecommendations(EmotionalRecommendationItem... items) {
+        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
+                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(items), false));
+    }
+
+    private void givenRecommendationsUseCaseFails() {
+        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
+                .thenThrow(new RuntimeException("boom"));
+    }
+
+    private void givenCreatedEvent(EmotionalEventResponse event) {
+        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(event);
+    }
+
+    private EmotionalAnalysisResult analysisWithoutRecommendation() {
+        return new EmotionalAnalysisResult(false, EmotionType.NEUTRAL, 0.8, 0.0, 0.0, 0.0, 0.1, null, null);
+    }
+
+    private EmotionalAnalysisResult griefRecommendationAnalysis() {
+        return new EmotionalAnalysisResult(
+                true, EmotionType.GRIEF, 0.92, -0.85, 0.35, -0.75, 0.88,
+                "sentirse acompanado y aliviar tristeza", "perdida significativa");
+    }
+
+    private EmotionalAnalysisResult neutralWithoutRecommendationAnalysis() {
+        return new EmotionalAnalysisResult(
+                false, EmotionType.NEUTRAL, 0.7, 0.0, 0.0, 0.0, 0.2, null, "El modelo estructurado no recomendo");
+    }
+
+    private EmotionalAnalysisResult stressRecommendationAnalysis() {
+        return new EmotionalAnalysisResult(
+                true, EmotionType.STRESS, 0.9, -0.5, 0.7, -0.4, 0.8, "calmarme", "estres claro");
+    }
+
+    private EmotionalAnalysisResult explicitNeutralAnalysis() {
+        return new EmotionalAnalysisResult(
+                false, EmotionType.NEUTRAL, 0.4, 0.0, 0.0, 0.0, 0.1, null, "pedido neutro");
+    }
+
+    private EmotionalRecommendationItem diaryItem(Long activityId) {
+        return new EmotionalRecommendationItem(
+                activityId,
+                ActivityType.DIARY,
+                "Diario emocional",
+                "Un espacio para ordenar pensamientos",
+                0.95,
+                "Recomendada para procesar la emocion",
+                "/diary");
+    }
+
+    private EmotionalRecommendationItem breathingItem(Long activityId) {
+        return new EmotionalRecommendationItem(
+                activityId,
                 ActivityType.BREATHING,
                 "Respiracion guiada",
                 "Una practica breve para regularte",
                 0.88,
                 "Puede ayudar a empezar",
-                "/guided-breathing"
-        );
-        EmotionalEventResponse saved = eventResponse(70L, 1L, 4L);
-        when(promptBuilderService.buildEmotionalAnalysisPrompt(any(), any())).thenReturn("analysis prompt");
-        when(emotionalAnalysisPort.analyze(any(), any(), any())).thenReturn(analysis);
-        when(recommendationsUseCase.execute(any(GetEmotionalRecommendationsRequest.class)))
-                .thenReturn(new GetEmotionalRecommendationsResponse(List.of(item), false));
-        when(createEmotionalEventUseCase.execute(any(CreateEmotionalEventRequest.class))).thenReturn(saved);
+                "/guided-breathing");
+    }
 
-        ChatRecommendationOutcome outcome = service.recommend(
-                "dame una recomendacion de actividad",
-                1L,
-                "base",
-                List.of(),
-                List.of(),
-                null,
-                true
-        );
-
-        assertThat(outcome.suggestedAction()).isNotNull();
-        assertThat(outcome.suggestedAction().activityId()).isEqualTo(4L);
-        assertThat(outcome.analysis().shouldRecommend()).isTrue();
-        assertThat(outcome.analysis().userGoal()).isEqualTo("recibir una actividad de bienestar");
+    private ChatReply griefConversationalReply() {
+        return new ChatReply("Siento mucho lo de Rocky", EmotionType.GRIEF, 8, false, null);
     }
 
     private EmotionalEventResponse eventResponse(Long id, Long userId, Long recommendedActivityId) {
@@ -307,5 +318,107 @@ class ChatEmotionalRecommendationServiceTest {
 
     private VectorMemory memory(String content) {
         return new VectorMemory("id", 1L, null, null, content, null, 0.8);
+    }
+
+    private ConversationMessage userMessage(String content) {
+        return ConversationMessage.of(MessageRole.USER, content);
+    }
+
+    // --- act ---
+    private ChatRecommendationOutcome recommend(
+            String message,
+            Long userId,
+            List<VectorMemory> memories,
+            List<ConversationMessage> history,
+            ChatReply conversationalReply,
+            boolean explicitActivityRequest) {
+        return service.recommend(
+                message, userId, BASE_PROMPT, memories, history, conversationalReply, explicitActivityRequest);
+    }
+
+    // --- assert ---
+    private void thenNoSuggestedAction(ChatRecommendationOutcome outcome) {
+        assertThat(outcome.suggestedAction()).isNull();
+    }
+
+    private void thenSuggestedActivityIs(ChatRecommendationOutcome outcome, Long activityId) {
+        assertThat(outcome.suggestedAction()).isNotNull();
+        assertThat(outcome.suggestedAction().activityId()).isEqualTo(activityId);
+    }
+
+    private void thenSuggestedEventIs(ChatRecommendationOutcome outcome, Long eventId) {
+        assertThat(outcome.suggestedAction().emotionalEventId()).isEqualTo(eventId);
+    }
+
+    private void thenAnalysisDoesNotRecommend(ChatRecommendationOutcome outcome) {
+        assertThat(outcome.analysis().shouldRecommend()).isFalse();
+    }
+
+    private void thenAnalysisRecommends(ChatRecommendationOutcome outcome) {
+        assertThat(outcome.analysis().shouldRecommend()).isTrue();
+    }
+
+    private void thenAnalysisEmotionIs(ChatRecommendationOutcome outcome, EmotionType emotion) {
+        assertThat(outcome.analysis().detectedEmotion()).isEqualTo(emotion);
+    }
+
+    private void thenAnalysisValenceIs(ChatRecommendationOutcome outcome, double valence) {
+        assertThat(outcome.analysis().valence()).isEqualTo(valence);
+    }
+
+    private void thenAnalysisUserGoalIs(ChatRecommendationOutcome outcome, String userGoal) {
+        assertThat(outcome.analysis().userGoal()).isEqualTo(userGoal);
+    }
+
+    private void thenRecommendationQueryHas(Long userId, double valence, double arousal, double dominance) {
+        ArgumentCaptor<GetEmotionalRecommendationsRequest> captor =
+                ArgumentCaptor.forClass(GetEmotionalRecommendationsRequest.class);
+        verify(recommendationsUseCase).execute(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(userId);
+        assertThat(captor.getValue().valence()).isEqualTo(valence);
+        assertThat(captor.getValue().arousal()).isEqualTo(arousal);
+        assertThat(captor.getValue().dominance()).isEqualTo(dominance);
+    }
+
+    private void thenChatbotEventCommandHas(
+            String inputText,
+            String detectedEmotion,
+            double confidence,
+            double intensity,
+            String userGoal,
+            Long recommendedActivityId,
+            String recommendationFragment) {
+        ArgumentCaptor<CreateEmotionalEventRequest> captor =
+                ArgumentCaptor.forClass(CreateEmotionalEventRequest.class);
+        verify(createEmotionalEventUseCase).execute(captor.capture());
+        CreateEmotionalEventRequest command = captor.getValue();
+        assertThat(command.source()).isEqualTo(EmotionalEventSource.CHATBOT);
+        assertThat(command.inputText()).isEqualTo(inputText);
+        assertThat(command.detectedEmotion()).isEqualTo(detectedEmotion);
+        assertThat(command.confidence()).isEqualTo(confidence);
+        assertThat(command.intensity()).isEqualTo(intensity);
+        assertThat(command.userGoal()).isEqualTo(userGoal);
+        assertThat(command.recommendedActivityId()).isEqualTo(recommendedActivityId);
+        assertThat(command.chosenActivityId()).isNull();
+        assertThat(command.generatedRecommendation()).contains(recommendationFragment);
+    }
+
+    private void thenEventCommandEmotionAndGoalContain(
+            String detectedEmotion, String userGoalFragment, Long recommendedActivityId) {
+        ArgumentCaptor<CreateEmotionalEventRequest> captor =
+                ArgumentCaptor.forClass(CreateEmotionalEventRequest.class);
+        verify(createEmotionalEventUseCase).execute(captor.capture());
+        assertThat(captor.getValue().detectedEmotion()).isEqualTo(detectedEmotion);
+        assertThat(captor.getValue().userGoal()).contains(userGoalFragment);
+        assertThat(captor.getValue().recommendedActivityId()).isEqualTo(recommendedActivityId);
+    }
+
+    private void thenUseCasesNeverInvoked() {
+        verify(recommendationsUseCase, never()).execute(any());
+        verify(createEmotionalEventUseCase, never()).execute(any());
+    }
+
+    private void thenCreateEventNeverInvoked() {
+        verify(createEmotionalEventUseCase, never()).execute(any());
     }
 }

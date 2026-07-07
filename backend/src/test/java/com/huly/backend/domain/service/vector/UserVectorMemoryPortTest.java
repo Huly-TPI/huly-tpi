@@ -1,8 +1,9 @@
 package com.huly.backend.domain.service.vector;
 
-import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.chat.ChatReply;
+import com.huly.backend.domain.model.chat.SuggestedChatAction;
 import com.huly.backend.domain.model.enums.ActivityType;
+import com.huly.backend.domain.model.user.UserPersonalitySummary;
 import com.huly.backend.domain.model.vector.SaveVectorMemoryCommand;
 import com.huly.backend.domain.model.vector.SearchVectorMemoriesQuery;
 import com.huly.backend.domain.model.vector.SearchVectorMemoryQuery;
@@ -12,8 +13,12 @@ import com.huly.backend.domain.model.vector.VectorMemorySource;
 import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.repository.UserPersonalitySummaryRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +36,14 @@ import static org.mockito.Mockito.when;
 
 class UserVectorMemoryPortTest {
 
+    private static final Resource PROMPT = new ByteArrayResource("mock prompt".getBytes());
+
     private VectorMemoryProperties properties;
     private RecordingVectorMemoryPort vectorMemoryPort;
     private RecordingUserPersonalitySummaryRepository personalitySummaryRepository;
+    private UserProfileFactExtractor userProfileFactExtractor;
+    private ObjectProvider<ChatClient> chatClientProvider;
     private UserVectorMemoryService service;
-    private ObjectProvider<org.springframework.ai.chat.client.ChatClient> chatClientProvider;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -43,436 +51,799 @@ class UserVectorMemoryPortTest {
         properties = new VectorMemoryProperties();
         vectorMemoryPort = new RecordingVectorMemoryPort();
         personalitySummaryRepository = new RecordingUserPersonalitySummaryRepository();
+        userProfileFactExtractor = new UserProfileFactExtractor();
         chatClientProvider = mock(ObjectProvider.class);
         service = new UserVectorMemoryService(
                 vectorMemoryPort,
                 properties,
-                new UserProfileFactExtractor(),
+                userProfileFactExtractor,
                 chatClientProvider,
                 personalitySummaryRepository,
-                new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
+                PROMPT
         );
     }
 
     @Test
-    void findRelevantUserMemories_shouldSearchAcrossAllUserMemorySources() {
-        service.findRelevantUserMemories(1L, "me gusta caminar");
+    @DisplayName("Busca en todas las fuentes de memoria del usuario")
+    void findRelevantUserMemoriesShouldSearchAcrossAllUserMemorySources() {
+        findAcrossAllSources(1L, "me gusta caminar");
 
+        thenMultiSourceQueryTargetsAllSources();
+        thenMultiSourceUserIdIs(1L);
+        thenMultiSourceLimitIs(properties.getDefaultLimit());
+        thenMultiSourceThresholdIs(properties.getRecallSimilarityThreshold());
+    }
+
+    @Test
+    @DisplayName("Busca en una fuente específica de memoria")
+    void findRelevantUserMemoriesShouldSearchSpecificSource() {
+        findInSource(1L, VectorMemorySource.GUIDED_LANTERNS, "ansiedad");
+
+        thenSingleSourceIs(VectorMemorySource.GUIDED_LANTERNS);
+    }
+
+    @Test
+    @DisplayName("Recupera una memoria de otra conversación del mismo usuario")
+    void findRelevantUserMemoriesShouldReturnMemoryFromAnotherConversationForSameUser() {
+        givenStoredMemory(memory("mem-1", 1L, VectorMemorySource.CHATBOT, "1234",
+                "Hola mi nombre es sergio, tengo 25 anos y soy un estudiante", 0.42));
+
+        List<VectorMemory> result = findAcrossAllSources(
+                1L, "A veces soy medio medio y me cuestan las cosas sencillas, me recordas mi edad");
+
+        thenContentsAre(result, "Hola mi nombre es sergio, tengo 25 anos y soy un estudiante");
+        thenMultiSourceUserIdIs(1L);
+        thenMultiSourceIncludesChatbot();
+    }
+
+    @Test
+    @DisplayName("Usa el recall de perfil para preguntas sobre la edad")
+    void findRelevantUserMemoriesShouldUseProfileRecallForAgeQuestions() {
+        givenStoredMemory(memory("mem-1", 1L, VectorMemorySource.CHATBOT, "1",
+                "El usuario tiene 25 anos.", 0.30));
+
+        List<VectorMemory> result = findAcrossAllSources(
+                1L, "A veces hay cosas que olvido, me recordas que edad tengo por favor");
+
+        thenContentsAre(result, "El usuario tiene 25 anos.");
+        thenMultiSourceLimitIs(10);
+        thenMultiSourceThresholdIsZero();
+        thenMultiSourceQueryContains("datos personales del usuario");
+    }
+
+    @Test
+    @DisplayName("No recupera memorias de otro usuario")
+    void findRelevantUserMemoriesShouldNotReturnMemoryFromAnotherUser() {
+        givenStoredMemory(memory("mem-1", 1L, VectorMemorySource.CHATBOT, "1234",
+                "Hola mi nombre es sergio, tengo 25 anos y soy un estudiante", 0.42));
+
+        List<VectorMemory> result = findAcrossAllSources(2L, "me recordas mi edad");
+
+        thenEmptyMemories(result);
+        thenMultiSourceUserIdIs(2L);
+    }
+
+    @Test
+    @DisplayName("Filtra por usuario al buscar en varias fuentes")
+    void findRelevantUserMemoriesBySourcesShouldFilterByUserAcrossSources() {
+        givenStoredMemory(memory("mem-1", 1L, VectorMemorySource.CHATBOT, "1", "tengo 25 anos", 0.75));
+        givenStoredMemory(memory("mem-2", 2L, VectorMemorySource.EMOTIONAL_JOURNAL, "99", "tengo 40 anos", 0.95));
+
+        List<VectorMemory> result = findAcrossSources(
+                1L, sources(VectorMemorySource.CHATBOT, VectorMemorySource.EMOTIONAL_JOURNAL), "edad");
+
+        thenUserIdsAre(result, 1L);
+        thenContentsAre(result, "tengo 25 anos");
+    }
+
+    @Test
+    @DisplayName("No propaga la excepción cuando falla el almacén vectorial al guardar")
+    void saveMemoryShouldNotThrowWhenVectorStoreFails() {
+        givenVectorStoreFailsOnSave();
+
+        thenSavingDoesNotThrow(command(1L, VectorMemorySource.CHATBOT, "contentType"));
+    }
+
+    @Test
+    @DisplayName("Traga la excepción al guardar aunque el comando sea nulo")
+    void saveMemoryShouldSwallowExceptionWhenCommandIsNull() {
+        givenVectorStoreFailsOnSave();
+
+        thenSavingDoesNotThrow(null);
+    }
+
+    @Test
+    @DisplayName("No genera resumen asíncrono cuando el comando es nulo")
+    void saveMemoryShouldSkipAsyncGenerationWhenCommandIsNull() {
+        saveMemory(null);
+
+        thenSavedCommandsHasSize(1);
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("No genera resumen asíncrono cuando el userId es nulo")
+    void saveMemoryShouldSkipAsyncGenerationWhenUserIdIsNull() {
+        saveMemory(command(null, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSavedCommandsHasSize(1);
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("No genera resumen asíncrono para contenido de tipo PERSONALITY_SUMMARY")
+    void saveMemoryShouldSkipAsyncGenerationForPersonalitySummaryContentType() {
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "PERSONALITY_SUMMARY"));
+
+        thenSavedCommandsHasSize(1);
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("Elimina el resumen de personalidad del repositorio dedicado")
+    void deletePersonalitySummaryShouldDeleteSummaryFromDedicatedRepository() {
+        deletePersonalitySummary(1L);
+
+        thenDeletedUserIdIs(1L);
+    }
+
+    @Test
+    @DisplayName("No propaga la excepción cuando el repositorio falla al eliminar el resumen")
+    void deletePersonalitySummaryShouldLogWarningWhenRepositoryFails() {
+        givenDeletingRepositoryFails();
+
+        thenDeletingDoesNotThrow(1L);
+    }
+
+    @Test
+    @DisplayName("Devuelve los contenidos de memoria filtrando el resumen de personalidad")
+    void getAllMemoryContentsShouldReturnContentsAndFilterPersonalitySummary() {
+        givenStoredMemoryContents("Me siento feliz");
+
+        List<String> contents = getAllMemoryContents(1L);
+
+        thenContentsExactly(contents, "Me siento feliz");
+    }
+
+    @Test
+    @DisplayName("Devuelve una lista vacía cuando el puerto lanza una excepción al leer contenidos")
+    void getAllMemoryContentsShouldReturnEmptyListWhenPortThrowsException() {
+        givenFindContentsFails();
+
+        List<String> contents = getAllMemoryContents(1L);
+
+        thenEmptyContents(contents);
+    }
+
+    @Test
+    @DisplayName("Recuerda el mensaje de chat con sourceId basado en el userId")
+    void rememberChatMessageShouldPersistMemoryWithUserSourceId() {
+        rememberChatMessage(1L, "conv-1", "hoy trabaje mucho y estoy cansado");
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedSourceIdIs("1");
+        thenLastSavedContentTypeIs("CHAT_MESSAGE");
+        thenLastSavedSourceTypeIs(VectorMemorySource.CHATBOT);
+    }
+
+    @Test
+    @DisplayName("Recuerda el mensaje de chat con sourceId nulo cuando el userId es nulo")
+    void rememberChatMessageShouldPersistMemoryWithNullSourceIdWhenUserIdIsNull() {
+        rememberChatMessage(null, "conv-1", "hoy trabaje mucho y estoy cansado");
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedSourceIdIsNull();
+    }
+
+    @Test
+    @DisplayName("No recuerda el reto generado cuando el reto es nulo")
+    void rememberGeneratedChallengeShouldDoNothingWhenChallengeIsNull() {
+        rememberGeneratedChallenge(1L, "conv-1", null);
+
+        thenSavedCommandsEmpty();
+    }
+
+    @Test
+    @DisplayName("No recuerda el reto generado cuando el título es nulo")
+    void rememberGeneratedChallengeShouldDoNothingWhenTitleIsNull() {
+        rememberGeneratedChallenge(1L, "conv-1", challenge(null, "desc"));
+
+        thenSavedCommandsEmpty();
+    }
+
+    @Test
+    @DisplayName("No recuerda el reto generado cuando el título está en blanco")
+    void rememberGeneratedChallengeShouldDoNothingWhenTitleIsBlank() {
+        rememberGeneratedChallenge(1L, "conv-1", challenge("", "desc"));
+
+        thenSavedCommandsEmpty();
+    }
+
+    @Test
+    @DisplayName("Recuerda el reto generado con descripción y conversación válida")
+    void rememberGeneratedChallengeShouldPersistMemoryWithDescriptionAndConversationId() {
+        rememberGeneratedChallenge(1L, "conv-1", challenge("Reto matinal", "Descripcion del reto"));
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedContentTypeIs("GENERATED_CHALLENGE");
+        thenLastSavedSourceIdContains("conv-1");
+    }
+
+    @Test
+    @DisplayName("Recuerda el reto generado usando conversación desconocida cuando el id es nulo")
+    void rememberGeneratedChallengeShouldUseUnknownConversationWhenConversationIdIsNull() {
+        rememberGeneratedChallenge(1L, null, challenge("Reto nocturno", null));
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedContentTypeIs("GENERATED_CHALLENGE");
+        thenLastSavedSourceIdContains("unknown");
+    }
+
+    @Test
+    @DisplayName("Recuerda el reto generado usando conversación desconocida cuando el id está en blanco")
+    void rememberGeneratedChallengeShouldUseUnknownConversationWhenConversationIdIsBlank() {
+        rememberGeneratedChallenge(1L, "   ", challenge("Reto vespertino", "desc"));
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedSourceIdContains("unknown");
+    }
+
+    @Test
+    @DisplayName("Recuerda la actividad recomendada persistiendo la memoria")
+    void rememberRecommendedActivityShouldPersistMemory() {
+        rememberRecommendedActivity(1L, "conv-1", 50L, fullAction());
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedContentTypeIs("RECOMMENDED_ACTIVITY");
+        thenLastSavedSourceTypeIs(VectorMemorySource.CHATBOT);
+        thenLastSavedSourceIdIs("50");
+    }
+
+    @Test
+    @DisplayName("No recuerda la actividad recomendada cuando la acción es nula")
+    void rememberRecommendedActivityShouldDoNothingWhenActionIsNull() {
+        rememberRecommendedActivity(1L, "conv-1", 50L, null);
+
+        thenSavedCommandsEmpty();
+    }
+
+    @Test
+    @DisplayName("Recuerda la actividad usando valores por defecto y el userId como sourceId")
+    void rememberRecommendedActivityShouldUseDefaultsAndUserIdAsSourceId() {
+        rememberRecommendedActivity(1L, "conv-1", null, emptyAction());
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedSourceIdIs("1");
+    }
+
+    @Test
+    @DisplayName("Recuerda la actividad con sourceId nulo cuando no hay evento ni usuario")
+    void rememberRecommendedActivityShouldUseNullSourceIdWhenUserAndEventAreNull() {
+        rememberRecommendedActivity(null, "conv-1", null, emptyAction());
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedSourceIdIsNull();
+    }
+
+    @Test
+    @DisplayName("Recuerda el rechazo de un reto persistiendo la memoria")
+    void rememberChallengeDecisionShouldPersistMemory() {
+        rememberChallengeDecision(1L, "conv-1", "Reto de respiración", "Respira hondo", "REJECTED");
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedContentTypeIs("CHALLENGE_DECISION");
+    }
+
+    @Test
+    @DisplayName("Recuerda la aceptación de un reto con descripción nula y conversación desconocida")
+    void rememberChallengeDecisionShouldPersistMemoryWithDefaults() {
+        rememberChallengeDecision(1L, null, "Reto de respiración", null, "accepted");
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedSourceIdContains("unknown");
+    }
+
+    @Test
+    @DisplayName("Recuerda la decisión del reto usando conversación desconocida cuando el id está en blanco")
+    void rememberChallengeDecisionShouldUseUnknownConversationWhenConversationIdIsBlank() {
+        rememberChallengeDecision(1L, "   ", "Reto de gratitud", "Escribe 3 cosas", "ACCEPTED");
+
+        thenSavedCommandsHasSize(1);
+        thenLastSavedSourceIdContains("unknown");
+    }
+
+    @Test
+    @DisplayName("No recuerda la decisión del reto cuando los parámetros son inválidos")
+    void rememberChallengeDecisionShouldDoNothingWhenParametersAreInvalid() {
+        rememberChallengeDecision(null, "conv-1", "title", "desc", "ACCEPTED");
+        rememberChallengeDecision(1L, "conv-1", null, "desc", "ACCEPTED");
+        rememberChallengeDecision(1L, "conv-1", "", "desc", "ACCEPTED");
+        rememberChallengeDecision(1L, "conv-1", "title", "desc", null);
+        rememberChallengeDecision(1L, "conv-1", "title", "desc", "");
+
+        thenSavedCommandsEmpty();
+    }
+
+    @Test
+    @DisplayName("Usa el límite por defecto cuando el máximo configurado es nulo")
+    void recallLimitShouldHandleNullMaxLimit() {
+        givenNullMaxLimit();
+
+        findAcrossAllSources(1L, "edad");
+
+        thenMultiSourceLimitIs(properties.getDefaultLimit());
+    }
+
+    @Test
+    @DisplayName("Construye una sola consulta cuando el recall de perfil coincide con la consulta")
+    void buildRecallQueriesShouldHandleWhenProfileRecallQueryEqualsQuery() {
+        givenProfileRecallQueryEquals("equalQuery");
+
+        findAcrossAllSources(1L, "equalQuery");
+
+        thenMultiSourceQueryIs("equalQuery");
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío cuando la búsqueda multi-fuente lanza una excepción")
+    void findRelevantUserMemoriesBySourcesShouldReturnEmptyOnSearchException() {
+        givenSearchAcrossSourcesThrows();
+
+        List<VectorMemory> result = findAcrossSources(1L, sources(VectorMemorySource.CHATBOT), "query");
+
+        thenEmptyMemories(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío cuando la búsqueda por fuente lanza una excepción")
+    void findRelevantUserMemoriesShouldReturnEmptyOnSearchException() {
+        givenSearchInSourceThrows();
+
+        List<VectorMemory> result = findInSource(1L, VectorMemorySource.CHATBOT, "query");
+
+        thenEmptyMemories(result);
+    }
+
+    @Test
+    @DisplayName("Ignora las memorias nulas al deduplicar y ordenar")
+    void uniqueRankedAndLimitedShouldIgnoreNullMemories() {
+        givenSearchAcrossSourcesReturns(listWithNull());
+
+        List<VectorMemory> result = findAcrossAllSources(1L, "query");
+
+        thenEmptyMemories(result);
+    }
+
+    @Test
+    @DisplayName("Deduplica por clave conservando la memoria con mayor puntaje")
+    void uniqueRankedAndLimitedShouldDedupeByKeyKeepingHigherScore() {
+        givenSearchAcrossSourcesReturns(dedupeMemories());
+
+        List<VectorMemory> result = findAcrossAllSources(1L, "recuerdos varios");
+
+        thenContentsAre(result, "A", "B", "C", "D");
+        thenTopScoreIs(result, 0.9);
+    }
+
+    @Test
+    @DisplayName("Genera y guarda el resumen de personalidad de forma asíncrona")
+    void saveMemoryShouldTriggerAsyncPersonalitySummaryGeneration() {
+        givenChatClientReturns(dto("Test profile summary", "activity", "none"));
+        givenStoredMemoryContents("Memory content 1", "Memory content 2");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSavedCommandsHasSize(1);
+        thenSavedSummaryEventuallyMatches("Test profile summary", "activity", "none");
+    }
+
+    @Test
+    @DisplayName("Trunca las memorias largas antes de generar el resumen")
+    void generatePersonalitySummaryShouldTruncateLongMemories() {
+        givenChatClientReturns(dto("Truncated summary", "activity", "none"));
+        givenStoredMemoryContents("a".repeat(4005));
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSavedSummaryEventuallyContains("Truncated summary");
+    }
+
+    @Test
+    @DisplayName("No genera el resumen cuando no hay memorias suficientes")
+    void generatePersonalitySummaryShouldReturnEarlyWhenNoMemories() {
+        givenChatClientReturns(dto("summary", "a", "b"));
+        givenStoredMemoryContents();
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("No genera el resumen cuando el modelo de chat no está disponible")
+    void generatePersonalitySummaryShouldReturnEarlyWhenChatModelIsNull() {
+        givenChatModelUnavailable();
+        givenStoredMemoryContents("Memory 1");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSavedCommandsHasSize(1);
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("Maneja la excepción del modelo de chat al generar el resumen")
+    void generatePersonalitySummaryShouldHandleException() {
+        givenChatClientThrows();
+        givenStoredMemoryContents("Memory 1");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSavedCommandsHasSize(1);
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("No guarda el resumen cuando el DTO devuelto es nulo")
+    void generatePersonalitySummaryShouldNotSaveWhenDtoIsNull() {
+        givenChatClientReturns(null);
+        givenStoredMemoryContents("Memory 1");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("No guarda el resumen cuando el resumen del DTO es nulo")
+    void generatePersonalitySummaryShouldNotSaveWhenSummaryIsNull() {
+        givenChatClientReturns(dto(null, "a", "b"));
+        givenStoredMemoryContents("Memory 1");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("No guarda el resumen cuando el resumen del DTO está en blanco")
+    void generatePersonalitySummaryShouldNotSaveWhenSummaryIsBlank() {
+        givenChatClientReturns(dto("   ", "a", "b"));
+        givenStoredMemoryContents("Memory 1");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSummaryNotSaved();
+    }
+
+    @Test
+    @DisplayName("Anula los valores opcionales nulos o marcados como N/A del resumen")
+    void generatePersonalitySummaryShouldNullifyNullAndNaOptionalValues() {
+        givenChatClientReturns(dto("Profile", null, "N/A"));
+        givenStoredMemoryContents("Memory 1");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSavedSummaryEventuallyMatches("Profile", null, null);
+    }
+
+    @Test
+    @DisplayName("Anula los valores opcionales en blanco y conserva los válidos del resumen")
+    void generatePersonalitySummaryShouldNullifyBlankOptionalValuesAndKeepValid() {
+        givenChatClientReturns(dto("Profile", "   ", "keep"));
+        givenStoredMemoryContents("Memory 1");
+
+        saveMemory(command(1L, VectorMemorySource.ONBOARDING, "ONBOARDING_GOALS"));
+
+        thenSavedSummaryEventuallyMatches("Profile", null, "keep");
+    }
+
+    // --- arrange ---
+    private void givenStoredMemory(VectorMemory memory) {
+        vectorMemoryPort.memories.add(memory);
+    }
+
+    private void givenStoredMemoryContents(String... contents) {
+        vectorMemoryPort.memoryContents = List.of(contents);
+    }
+
+    private void givenVectorStoreFailsOnSave() {
+        vectorMemoryPort.failOnSave = true;
+    }
+
+    private void givenFindContentsFails() {
+        vectorMemoryPort.failOnFindContents = true;
+    }
+
+    private void givenNullMaxLimit() {
+        properties.setMaxLimit(null);
+    }
+
+    private void givenDeletingRepositoryFails() {
+        UserPersonalitySummaryRepository failing = mock(UserPersonalitySummaryRepository.class);
+        doThrow(new RuntimeException("Delete failed")).when(failing).deleteByUserId(any());
+        service = new UserVectorMemoryService(
+                vectorMemoryPort, properties, userProfileFactExtractor, chatClientProvider, failing, PROMPT);
+    }
+
+    private void givenProfileRecallQueryEquals(String value) {
+        UserProfileFactExtractor mockExtractor = mock(UserProfileFactExtractor.class);
+        when(mockExtractor.asksForProfileFact(anyString())).thenReturn(true);
+        when(mockExtractor.buildProfileRecallQuery(anyString())).thenReturn(value);
+        service = new UserVectorMemoryService(
+                vectorMemoryPort, properties, mockExtractor, chatClientProvider, personalitySummaryRepository, PROMPT);
+    }
+
+    private void givenSearchAcrossSourcesThrows() {
+        VectorMemoryPort mockPort = mock(VectorMemoryPort.class);
+        when(mockPort.findRelevantMemories(any(SearchVectorMemoriesQuery.class)))
+                .thenThrow(new RuntimeException("Search failed"));
+        service = new UserVectorMemoryService(
+                mockPort, properties, userProfileFactExtractor, chatClientProvider, personalitySummaryRepository, PROMPT);
+    }
+
+    private void givenSearchInSourceThrows() {
+        VectorMemoryPort mockPort = mock(VectorMemoryPort.class);
+        when(mockPort.findRelevantMemories(any(SearchVectorMemoryQuery.class)))
+                .thenThrow(new RuntimeException("Search failed"));
+        service = new UserVectorMemoryService(
+                mockPort, properties, userProfileFactExtractor, chatClientProvider, personalitySummaryRepository, PROMPT);
+    }
+
+    private void givenSearchAcrossSourcesReturns(List<VectorMemory> memories) {
+        VectorMemoryPort mockPort = mock(VectorMemoryPort.class);
+        when(mockPort.findRelevantMemories(any(SearchVectorMemoriesQuery.class))).thenReturn(memories);
+        service = new UserVectorMemoryService(
+                mockPort, properties, userProfileFactExtractor, chatClientProvider, personalitySummaryRepository, PROMPT);
+    }
+
+    private void givenChatClientReturns(UserVectorMemoryService.PersonalitySummaryDto dto) {
+        ChatClient chatClient = mock(ChatClient.class, RETURNS_DEEP_STUBS);
+        when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
+        when(chatClient.prompt().system(any(Resource.class)).user(anyString()).call().entity(any(Class.class)))
+                .thenReturn(dto);
+    }
+
+    private void givenChatClientThrows() {
+        ChatClient chatClient = mock(ChatClient.class, RETURNS_DEEP_STUBS);
+        when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
+        when(chatClient.prompt().system(any(Resource.class)).user(anyString()).call().entity(any(Class.class)))
+                .thenThrow(new RuntimeException("ChatClient error"));
+    }
+
+    private void givenChatModelUnavailable() {
+        when(chatClientProvider.getIfAvailable()).thenReturn(null);
+    }
+
+    private VectorMemory memory(String id, Long userId, VectorMemorySource sourceType, String sourceId,
+                                String content, Double score) {
+        return new VectorMemory(id, userId, sourceType, sourceId, content, null, score);
+    }
+
+    private List<VectorMemory> listWithNull() {
+        List<VectorMemory> memories = new ArrayList<>();
+        memories.add(null);
+        return memories;
+    }
+
+    private List<VectorMemory> dedupeMemories() {
+        return List.of(
+                memory("dup", 1L, VectorMemorySource.CHATBOT, "s", "A", 0.5),
+                memory("dup", 1L, VectorMemorySource.CHATBOT, "s", "A", 0.9),
+                memory("low", 1L, VectorMemorySource.CHATBOT, "s", "B", 0.8),
+                memory("low", 1L, VectorMemorySource.CHATBOT, "s", "B", 0.2),
+                memory(null, 1L, VectorMemorySource.CHATBOT, "s", "C", 0.3),
+                memory("nul", 1L, VectorMemorySource.CHATBOT, "s", "D", null));
+    }
+
+    private List<VectorMemorySource> sources(VectorMemorySource... sourceTypes) {
+        return List.of(sourceTypes);
+    }
+
+    private SaveVectorMemoryCommand command(Long userId, VectorMemorySource sourceType, String contentType) {
+        return new SaveVectorMemoryCommand(
+                userId, sourceType, "1", "source", contentType, "content", null, null, Map.of());
+    }
+
+    private ChatReply.GeneratedChallenge challenge(String title, String description) {
+        return new ChatReply.GeneratedChallenge(title, description);
+    }
+
+    private SuggestedChatAction fullAction() {
+        return new SuggestedChatAction(
+                ActivityType.DIARY, 2L, "Diario emocional", "Ordenar pensamientos", "/api/activities", 50L);
+    }
+
+    private SuggestedChatAction emptyAction() {
+        return new SuggestedChatAction(null, null, null, null, null, null);
+    }
+
+    private UserVectorMemoryService.PersonalitySummaryDto dto(String summary, String accepted, String rejected) {
+        return new UserVectorMemoryService.PersonalitySummaryDto(summary, accepted, rejected);
+    }
+
+    // --- act ---
+    private List<VectorMemory> findAcrossAllSources(Long userId, String query) {
+        return service.findRelevantUserMemories(userId, query);
+    }
+
+    private List<VectorMemory> findInSource(Long userId, VectorMemorySource sourceType, String query) {
+        return service.findRelevantUserMemories(userId, sourceType, query);
+    }
+
+    private List<VectorMemory> findAcrossSources(Long userId, List<VectorMemorySource> sourceTypes, String query) {
+        return service.findRelevantUserMemoriesBySources(userId, sourceTypes, query);
+    }
+
+    private void saveMemory(SaveVectorMemoryCommand command) {
+        service.saveMemory(command);
+    }
+
+    private void deletePersonalitySummary(Long userId) {
+        service.deletePersonalitySummary(userId);
+    }
+
+    private List<String> getAllMemoryContents(Long userId) {
+        return service.getAllMemoryContents(userId);
+    }
+
+    private void rememberChatMessage(Long userId, String conversationId, String message) {
+        service.rememberChatMessage(userId, conversationId, message);
+    }
+
+    private void rememberGeneratedChallenge(Long userId, String conversationId, ChatReply.GeneratedChallenge challenge) {
+        service.rememberGeneratedChallenge(userId, conversationId, challenge);
+    }
+
+    private void rememberRecommendedActivity(Long userId, String conversationId, Long emotionalEventId,
+                                             SuggestedChatAction action) {
+        service.rememberRecommendedActivity(userId, conversationId, emotionalEventId, action);
+    }
+
+    private void rememberChallengeDecision(Long userId, String conversationId, String title, String description,
+                                           String decision) {
+        service.rememberChallengeDecision(userId, conversationId, title, description, decision);
+    }
+
+    // --- assert ---
+    private void thenMultiSourceQueryTargetsAllSources() {
         assertThat(vectorMemoryPort.lastMultiSourceQuery).isNotNull();
-        assertThat(vectorMemoryPort.lastMultiSourceQuery.userId()).isEqualTo(1L);
         assertThat(vectorMemoryPort.lastMultiSourceQuery.sourceTypes()).containsExactly(
                 VectorMemorySource.CHATBOT,
                 VectorMemorySource.GUIDED_LANTERNS,
                 VectorMemorySource.EMOTIONAL_JOURNAL,
-                VectorMemorySource.ONBOARDING
-        );
-        assertThat(vectorMemoryPort.lastMultiSourceQuery.limit()).isEqualTo(properties.getDefaultLimit());
-        assertThat(vectorMemoryPort.lastMultiSourceQuery.similarityThreshold())
-                .isEqualTo(properties.getRecallSimilarityThreshold());
+                VectorMemorySource.ONBOARDING);
     }
 
-    @Test
-    void findRelevantUserMemories_shouldSearchSpecificSource() {
-        service.findRelevantUserMemories(1L, VectorMemorySource.GUIDED_LANTERNS, "ansiedad");
-
-        assertThat(vectorMemoryPort.lastSingleSourceQuery).isNotNull();
-        assertThat(vectorMemoryPort.lastSingleSourceQuery.sourceType()).isEqualTo(VectorMemorySource.GUIDED_LANTERNS);
-    }
-
-    @Test
-    void findRelevantUserMemories_shouldReturnMemoryFromAnotherConversationForSameUser() {
-        vectorMemoryPort.memories.add(new VectorMemory(
-                "mem-1",
-                1L,
-                VectorMemorySource.CHATBOT,
-                "1234",
-                "Hola mi nombre es sergio, tengo 25 anos y soy un estudiante",
-                null,
-                0.42
-        ));
-
-        List<VectorMemory> result = service.findRelevantUserMemories(
-                1L,
-                "A veces soy medio medio y me cuestan las cosas sencillas, me recordas mi edad"
-        );
-
-        assertThat(result).extracting(VectorMemory::content)
-                .containsExactly("Hola mi nombre es sergio, tengo 25 anos y soy un estudiante");
-        assertThat(vectorMemoryPort.lastMultiSourceQuery.userId()).isEqualTo(1L);
+    private void thenMultiSourceIncludesChatbot() {
         assertThat(vectorMemoryPort.lastMultiSourceQuery.sourceTypes()).contains(VectorMemorySource.CHATBOT);
     }
 
-    @Test
-    void findRelevantUserMemories_shouldUseProfileRecallForAgeQuestions() {
-        vectorMemoryPort.memories.add(new VectorMemory(
-                "mem-1",
-                1L,
-                VectorMemorySource.CHATBOT,
-                "1",
-                "El usuario tiene 25 anos.",
-                null,
-                0.30
-        ));
+    private void thenMultiSourceUserIdIs(Long userId) {
+        assertThat(vectorMemoryPort.lastMultiSourceQuery.userId()).isEqualTo(userId);
+    }
 
-        List<VectorMemory> result = service.findRelevantUserMemories(
-                1L,
-                "A veces hay cosas que olvido, me recordas que edad tengo por favor"
-        );
+    private void thenMultiSourceLimitIs(Integer limit) {
+        assertThat(vectorMemoryPort.lastMultiSourceQuery.limit()).isEqualTo(limit);
+    }
 
-        assertThat(result).extracting(VectorMemory::content).containsExactly("El usuario tiene 25 anos.");
-        assertThat(vectorMemoryPort.lastMultiSourceQuery.limit()).isEqualTo(10);
+    private void thenMultiSourceThresholdIs(Double threshold) {
+        assertThat(vectorMemoryPort.lastMultiSourceQuery.similarityThreshold()).isEqualTo(threshold);
+    }
+
+    private void thenMultiSourceThresholdIsZero() {
         assertThat(vectorMemoryPort.lastMultiSourceQuery.similarityThreshold()).isZero();
-        assertThat(vectorMemoryPort.lastMultiSourceQuery.query()).contains("datos personales del usuario");
     }
 
-    @Test
-    void findRelevantUserMemories_shouldNotReturnMemoryFromAnotherUser() {
-        vectorMemoryPort.memories.add(new VectorMemory(
-                "mem-1",
-                1L,
-                VectorMemorySource.CHATBOT,
-                "1234",
-                "Hola mi nombre es sergio, tengo 25 anos y soy un estudiante",
-                null,
-                0.42
-        ));
+    private void thenMultiSourceQueryContains(String fragment) {
+        assertThat(vectorMemoryPort.lastMultiSourceQuery.query()).contains(fragment);
+    }
 
-        List<VectorMemory> result = service.findRelevantUserMemories(2L, "me recordas mi edad");
+    private void thenMultiSourceQueryIs(String expected) {
+        assertThat(vectorMemoryPort.lastMultiSourceQuery.query()).isEqualTo(expected);
+    }
 
+    private void thenSingleSourceIs(VectorMemorySource sourceType) {
+        assertThat(vectorMemoryPort.lastSingleSourceQuery).isNotNull();
+        assertThat(vectorMemoryPort.lastSingleSourceQuery.sourceType()).isEqualTo(sourceType);
+    }
+
+    private void thenContentsAre(List<VectorMemory> result, String... contents) {
+        assertThat(result).extracting(VectorMemory::content).containsExactly(contents);
+    }
+
+    private void thenUserIdsAre(List<VectorMemory> result, Long... userIds) {
+        assertThat(result).extracting(VectorMemory::userId).containsOnly(userIds);
+    }
+
+    private void thenTopScoreIs(List<VectorMemory> result, double score) {
+        assertThat(result.get(0).score()).isEqualTo(score);
+    }
+
+    private void thenEmptyMemories(List<VectorMemory> result) {
         assertThat(result).isEmpty();
-        assertThat(vectorMemoryPort.lastMultiSourceQuery.userId()).isEqualTo(2L);
     }
 
-    @Test
-    void findRelevantUserMemoriesBySources_shouldFilterByUserAcrossSources() {
-        vectorMemoryPort.memories.add(new VectorMemory(
-                "mem-1",
-                1L,
-                VectorMemorySource.CHATBOT,
-                "1",
-                "tengo 25 anos",
-                null,
-                0.75
-        ));
-        vectorMemoryPort.memories.add(new VectorMemory(
-                "mem-2",
-                2L,
-                VectorMemorySource.EMOTIONAL_JOURNAL,
-                "99",
-                "tengo 40 anos",
-                null,
-                0.95
-        ));
-
-        List<VectorMemory> result = service.findRelevantUserMemoriesBySources(
-                1L,
-                List.of(VectorMemorySource.CHATBOT, VectorMemorySource.EMOTIONAL_JOURNAL),
-                "edad"
-        );
-
-        assertThat(result).extracting(VectorMemory::userId).containsOnly(1L);
-        assertThat(result).extracting(VectorMemory::content).containsExactly("tengo 25 anos");
+    private void thenContentsExactly(List<String> contents, String... expected) {
+        assertThat(contents).containsExactly(expected);
     }
 
-    @Test
-    void saveMemory_shouldNotThrowWhenVectorStoreFails() {
-        vectorMemoryPort.failOnSave = true;
-
-        assertThatCode(() -> service.saveMemory(new SaveVectorMemoryCommand(
-                1L, VectorMemorySource.CHATBOT, "1", "source", "contentType", "content", null, null, Map.of())))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    void deletePersonalitySummary_shouldDeleteSummaryFromDedicatedRepository() {
-        service.deletePersonalitySummary(1L);
-
-        assertThat(personalitySummaryRepository.deletedUserId).isEqualTo(1L);
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void getAllMemoryContents_shouldReturnContentsAndFilterPersonalitySummary() throws Exception {
-        vectorMemoryPort.memoryContents = List.of("Me siento feliz");
-
-        List<String> contents = service.getAllMemoryContents(1L);
-        assertThat(contents).containsExactly("Me siento feliz");
-    }
-
-    @Test
-    void saveMemory_shouldTriggerAsyncPersonalitySummaryGeneration() {
-        org.springframework.ai.chat.client.ChatClient chatClient =
-                mock(org.springframework.ai.chat.client.ChatClient.class, RETURNS_DEEP_STUBS);
-        when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
-
-        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
-                .thenReturn(new UserVectorMemoryService.PersonalitySummaryDto("Test profile summary", "activity", "none"));
-
-        vectorMemoryPort.memoryContents = List.of("Memory content 1", "Memory content 2");
-
-        service.saveMemory(new SaveVectorMemoryCommand(
-                1L,
-                VectorMemorySource.ONBOARDING,
-                "1",
-                "ONBOARDING_GOALS",
-                "ONBOARDING_GOALS",
-                "content",
-                null,
-                null,
-                Map.of("createdFrom", "USER_MESSAGE", "feature", "ONBOARDING")
-        ));
-
-        assertThat(vectorMemoryPort.savedCommands).hasSize(1);
-
-        long start = System.currentTimeMillis();
-        while (personalitySummaryRepository.savedSummary == null && (System.currentTimeMillis() - start) < 3000) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException ignored) {
-            }
-        }
-
-        assertThat(personalitySummaryRepository.savedSummary).isNotNull();
-        assertThat(personalitySummaryRepository.savedSummary.getSummary()).isEqualTo("Test profile summary");
-        assertThat(personalitySummaryRepository.savedSummary.getAccepted()).isEqualTo("activity");
-        assertThat(personalitySummaryRepository.savedSummary.getRejected()).isEqualTo("none");
-    }
-
-    @Test
-    void deletePersonalitySummary_shouldLogWarning_whenRepositoryFails() {
-        UserPersonalitySummaryRepository failingRepository = mock(UserPersonalitySummaryRepository.class);
-        doThrow(new RuntimeException("Delete failed")).when(failingRepository).deleteByUserId(any());
-
-        UserVectorMemoryService testService = new UserVectorMemoryService(
-                vectorMemoryPort,
-                properties,
-                new UserProfileFactExtractor(),
-                chatClientProvider,
-                failingRepository,
-                new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
-        );
-
-        assertThatCode(() -> testService.deletePersonalitySummary(1L)).doesNotThrowAnyException();
-    }
-
-    @Test
-    void rememberGeneratedChallenge_shouldDoNothing_whenChallengeIsNullOrTitleIsBlank() {
-        service.rememberGeneratedChallenge(1L, "conv-1", null);
-        service.rememberGeneratedChallenge(1L, "conv-1", new ChatReply.GeneratedChallenge("", "desc"));
-        assertThat(vectorMemoryPort.savedCommands).isEmpty();
-    }
-
-    @Test
-    void rememberChallengeDecision_shouldDoNothing_whenParametersAreInvalid() {
-        service.rememberChallengeDecision(null, "conv-1", "title", "desc", "ACCEPTED");
-        service.rememberChallengeDecision(1L, "conv-1", "", "desc", "ACCEPTED");
-        service.rememberChallengeDecision(1L, "conv-1", "title", "desc", "");
-        assertThat(vectorMemoryPort.savedCommands).isEmpty();
-    }
-
-    @Test
-    void rememberRecommendedActivity_shouldPersistMemory() {
-        service.rememberRecommendedActivity(
-                1L,
-                "conv-1",
-                50L,
-                new com.huly.backend.domain.model.chat.SuggestedChatAction(
-                        ActivityType.DIARY,
-                        2L,
-                        "Diario emocional",
-                        "Ordenar pensamientos",
-                        "/api/activities",
-                        50L
-                )
-        );
-
-        assertThat(vectorMemoryPort.savedCommands).singleElement().satisfies(command -> {
-            assertThat(command.contentType()).isEqualTo("RECOMMENDED_ACTIVITY");
-            assertThat(command.sourceType()).isEqualTo(VectorMemorySource.CHATBOT);
-        });
-    }
-
-    @Test
-    void getAllMemoryContents_shouldReturnEmptyList_whenPortThrowsException() {
-        vectorMemoryPort.failOnFindContents = true;
-
-        List<String> contents = service.getAllMemoryContents(1L);
+    private void thenEmptyContents(List<String> contents) {
         assertThat(contents).isEmpty();
     }
 
-    @Test
-    void findRelevantUserMemories_shouldReturnEmpty_onSearchException() {
-        VectorMemoryPort mockService = mock(VectorMemoryPort.class);
-        when(mockService.findRelevantMemories(any(SearchVectorMemoryQuery.class)))
-                .thenThrow(new RuntimeException("Search failed"));
-        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                mockService,
-                properties,
-                new UserProfileFactExtractor(),
-                chatClientProvider,
-                personalitySummaryRepository,
-                new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
-        );
-
-        List<VectorMemory> result = serviceWithMock.findRelevantUserMemories(1L, VectorMemorySource.CHATBOT, "query");
-        assertThat(result).isEmpty();
+    private void thenSavedCommandsEmpty() {
+        assertThat(vectorMemoryPort.savedCommands).isEmpty();
     }
 
-    @Test
-    void findRelevantUserMemoriesBySources_shouldReturnEmpty_onSearchException() {
-        VectorMemoryPort mockService = mock(VectorMemoryPort.class);
-        when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class)))
-                .thenThrow(new RuntimeException("Search failed"));
-        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                mockService,
-                properties,
-                new UserProfileFactExtractor(),
-                chatClientProvider,
-                personalitySummaryRepository,
-                new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
-        );
-
-        List<VectorMemory> result = serviceWithMock.findRelevantUserMemoriesBySources(
-                1L,
-                List.of(VectorMemorySource.CHATBOT),
-                "query"
-        );
-        assertThat(result).isEmpty();
+    private void thenSavedCommandsHasSize(int size) {
+        assertThat(vectorMemoryPort.savedCommands).hasSize(size);
     }
 
-    @Test
-    void buildRecallQueries_shouldHandleWhenProfileRecallQueryEqualsQuery() {
-        UserProfileFactExtractor mockExtractor = mock(UserProfileFactExtractor.class);
-        when(mockExtractor.asksForProfileFact(anyString())).thenReturn(true);
-        when(mockExtractor.buildProfileRecallQuery(anyString())).thenReturn("equalQuery");
-
-        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                vectorMemoryPort,
-                properties,
-                mockExtractor,
-                chatClientProvider,
-                personalitySummaryRepository,
-                new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
-        );
-
-        serviceWithMock.findRelevantUserMemories(1L, "equalQuery");
+    private void thenLastSavedSourceIdIs(String sourceId) {
+        assertThat(vectorMemoryPort.savedCommands.get(0).sourceId()).isEqualTo(sourceId);
     }
 
-    @Test
-    void recallLimit_shouldHandleNullMaxLimit() {
-        properties.setMaxLimit(null);
-        service.findRelevantUserMemories(1L, "edad");
+    private void thenLastSavedSourceIdIsNull() {
+        assertThat(vectorMemoryPort.savedCommands.get(0).sourceId()).isNull();
     }
 
-    @Test
-    void uniqueRankedAndLimited_shouldIgnoreNullMemories() {
-        VectorMemoryPort mockService = mock(VectorMemoryPort.class);
-        List<VectorMemory> listWithNull = new ArrayList<>();
-        listWithNull.add(null);
-        when(mockService.findRelevantMemories(any(SearchVectorMemoriesQuery.class))).thenReturn(listWithNull);
-
-        UserVectorMemoryService serviceWithMock = new UserVectorMemoryService(
-                mockService,
-                properties,
-                new UserProfileFactExtractor(),
-                chatClientProvider,
-                personalitySummaryRepository,
-                new org.springframework.core.io.ByteArrayResource("mock prompt".getBytes())
-        );
-        List<VectorMemory> result = serviceWithMock.findRelevantUserMemories(1L, "query");
-        assertThat(result).isEmpty();
+    private void thenLastSavedSourceIdContains(String fragment) {
+        assertThat(vectorMemoryPort.savedCommands.get(0).sourceId()).contains(fragment);
     }
 
-    @Test
-    void generatePersonalitySummary_shouldReturnEarly_whenChatModelIsNull() {
-        when(chatClientProvider.getIfAvailable()).thenReturn(null);
-        vectorMemoryPort.memoryContents = List.of("Memory 1");
+    private void thenLastSavedContentTypeIs(String contentType) {
+        assertThat(vectorMemoryPort.savedCommands.get(0).contentType()).isEqualTo(contentType);
+    }
 
-        service.saveMemory(new SaveVectorMemoryCommand(
-                1L,
-                VectorMemorySource.ONBOARDING,
-                "1",
-                "ONBOARDING_GOALS",
-                "ONBOARDING_GOALS",
-                "content",
-                null,
-                null,
-                Map.of("createdFrom", "USER_MESSAGE", "feature", "ONBOARDING")
-        ));
+    private void thenLastSavedSourceTypeIs(VectorMemorySource sourceType) {
+        assertThat(vectorMemoryPort.savedCommands.get(0).sourceType()).isEqualTo(sourceType);
+    }
 
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException ignored) {
-        }
+    private void thenSavingDoesNotThrow(SaveVectorMemoryCommand command) {
+        assertThatCode(() -> service.saveMemory(command)).doesNotThrowAnyException();
+    }
 
-        assertThat(vectorMemoryPort.savedCommands).hasSize(1);
+    private void thenDeletingDoesNotThrow(Long userId) {
+        assertThatCode(() -> service.deletePersonalitySummary(userId)).doesNotThrowAnyException();
+    }
+
+    private void thenDeletedUserIdIs(Long userId) {
+        assertThat(personalitySummaryRepository.deletedUserId).isEqualTo(userId);
+    }
+
+    private void thenSavedSummaryEventuallyMatches(String summary, String accepted, String rejected) {
+        awaitSavedSummary();
+        assertThat(personalitySummaryRepository.savedSummary).isNotNull();
+        assertThat(personalitySummaryRepository.savedSummary.getSummary()).isEqualTo(summary);
+        assertThat(personalitySummaryRepository.savedSummary.getAccepted()).isEqualTo(accepted);
+        assertThat(personalitySummaryRepository.savedSummary.getRejected()).isEqualTo(rejected);
+    }
+
+    private void thenSavedSummaryEventuallyContains(String fragment) {
+        awaitSavedSummary();
+        assertThat(personalitySummaryRepository.savedSummary).isNotNull();
+        assertThat(personalitySummaryRepository.savedSummary.getSummary()).contains(fragment);
+    }
+
+    private void thenSummaryNotSaved() {
+        sleepQuietly(200);
         assertThat(personalitySummaryRepository.savedSummary).isNull();
     }
 
-    @Test
-    void generatePersonalitySummary_shouldHandleException() {
-        org.springframework.ai.chat.client.ChatClient chatClient =
-                mock(org.springframework.ai.chat.client.ChatClient.class, RETURNS_DEEP_STUBS);
-        when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
-        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
-                .thenThrow(new RuntimeException("ChatClient error"));
-
-        vectorMemoryPort.memoryContents = List.of("Memory 1");
-
-        service.saveMemory(new SaveVectorMemoryCommand(
-                1L,
-                VectorMemorySource.ONBOARDING,
-                "1",
-                "ONBOARDING_GOALS",
-                "ONBOARDING_GOALS",
-                "content",
-                null,
-                null,
-                Map.of("createdFrom", "USER_MESSAGE", "feature", "ONBOARDING")
-        ));
-
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException ignored) {
-        }
-
-        assertThat(vectorMemoryPort.savedCommands).hasSize(1);
-        assertThat(personalitySummaryRepository.savedSummary).isNull();
-    }
-
-    @Test
-    void generatePersonalitySummary_shouldTruncateLongMemories() {
-        org.springframework.ai.chat.client.ChatClient chatClient =
-                mock(org.springframework.ai.chat.client.ChatClient.class, RETURNS_DEEP_STUBS);
-        when(chatClientProvider.getIfAvailable()).thenReturn(chatClient);
-
-        when(chatClient.prompt().system(any(org.springframework.core.io.Resource.class)).user(anyString()).call().entity(any(Class.class)))
-                .thenReturn(new UserVectorMemoryService.PersonalitySummaryDto("Truncated summary", "activity", "none"));
-
-        vectorMemoryPort.memoryContents = List.of("a".repeat(4005));
-
-        service.saveMemory(new SaveVectorMemoryCommand(
-                1L,
-                VectorMemorySource.ONBOARDING,
-                "1",
-                "ONBOARDING_GOALS",
-                "ONBOARDING_GOALS",
-                "content",
-                null,
-                null,
-                Map.of("createdFrom", "USER_MESSAGE", "feature", "ONBOARDING")
-        ));
-
+    private void awaitSavedSummary() {
         long start = System.currentTimeMillis();
         while (personalitySummaryRepository.savedSummary == null && (System.currentTimeMillis() - start) < 3000) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException ignored) {
-            }
+            sleepQuietly(50);
         }
+    }
 
-        assertThat(personalitySummaryRepository.savedSummary).isNotNull();
-        assertThat(personalitySummaryRepository.savedSummary.getSummary()).contains("Truncated summary");
+    private void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static final class RecordingVectorMemoryPort implements VectorMemoryPort {

@@ -5,6 +5,7 @@ import com.huly.backend.domain.dto.comebackReward.GetComebackRewardStatusRespons
 import com.huly.backend.domain.model.comebackReward.ComebackRewardPolicy;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -38,45 +39,107 @@ class GetComebackRewardStatusUseCaseTest {
     }
 
     @Test
-    void execute_shouldNotBeAvailable_whenNeverSeen() {
+    @DisplayName("No está disponible cuando el usuario nunca fue visto")
+    void executeShouldNotBeAvailableWhenNeverSeen() {
+        // --- arrange ---
+        givenNeverSeen();
+
+        // --- act ---
+        GetComebackRewardStatusResponse status = getStatus();
+
+        // --- assert ---
+        thenNotAvailableAfterInactivity(status, 0);
+        thenAdvertisesRewardAmount(status);
+        thenAdvertisesThreshold(status);
+    }
+
+    @Test
+    @DisplayName("No está disponible cuando el usuario fue visto hoy")
+    void executeShouldNotBeAvailableWhenSeenToday() {
+        // --- arrange ---
+        givenLastSeen(TODAY);
+
+        // --- act ---
+        GetComebackRewardStatusResponse status = getStatus();
+
+        // --- assert ---
+        thenNotAvailableAfterInactivity(status, 0);
+    }
+
+    @Test
+    @DisplayName("No está disponible cuando la inactividad no alcanza el umbral")
+    void executeShouldNotBeAvailableWhenBelowThreshold() {
+        // --- arrange ---
+        givenLastSeen(TODAY.minusDays(9));
+
+        // --- act ---
+        GetComebackRewardStatusResponse status = getStatus();
+
+        // --- assert ---
+        thenNotAvailableAfterInactivity(status, 9);
+    }
+
+    @Test
+    @DisplayName("Está disponible cuando la inactividad alcanza el umbral")
+    void executeShouldBeAvailableWhenThresholdReached() {
+        // --- arrange ---
+        givenLastSeen(TODAY.minusDays(10));
+
+        // --- act ---
+        GetComebackRewardStatusResponse status = getStatus();
+
+        // --- assert ---
+        thenAvailableAfterInactivity(status, 10);
+        thenAdvertisesRewardAmount(status);
+    }
+
+    @Test
+    @DisplayName("No está disponible y recorta los días inactivos a cero cuando la última actividad es futura")
+    void executeShouldClampInactiveDaysToZeroWhenLastSeenIsInTheFuture() {
+        // Última actividad posterior a hoy (p. ej. desfase de reloj): la brecha negativa se recorta a 0.
+        // --- arrange ---
+        givenLastSeen(TODAY.plusDays(5));
+
+        // --- act ---
+        GetComebackRewardStatusResponse status = getStatus();
+
+        // --- assert ---
+        thenNotAvailableAfterInactivity(status, 0);
+    }
+
+    // --- arrange ---
+
+    private void givenNeverSeen() {
         when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.empty());
-
-        GetComebackRewardStatusResponse status = useCase.execute(new GetComebackRewardStatusRequest(USER_ID));
-
-        assertThat(status.available()).isFalse();
-        assertThat(status.daysInactive()).isEqualTo(0);
-        assertThat(status.coins()).isEqualTo(ComebackRewardPolicy.COMEBACK_COINS);
-        assertThat(status.thresholdDays()).isEqualTo(ComebackRewardPolicy.INACTIVE_DAYS_THRESHOLD);
     }
 
-    @Test
-    void execute_shouldNotBeAvailable_whenSeenToday() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY));
-
-        GetComebackRewardStatusResponse status = useCase.execute(new GetComebackRewardStatusRequest(USER_ID));
-
-        assertThat(status.available()).isFalse();
-        assertThat(status.daysInactive()).isEqualTo(0);
+    private void givenLastSeen(LocalDate lastSeen) {
+        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(lastSeen));
     }
 
-    @Test
-    void execute_shouldNotBeAvailable_whenBelowThreshold() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY.minusDays(9)));
+    // --- act ---
 
-        GetComebackRewardStatusResponse status = useCase.execute(new GetComebackRewardStatusRequest(USER_ID));
-
-        assertThat(status.available()).isFalse();
-        assertThat(status.daysInactive()).isEqualTo(9);
+    private GetComebackRewardStatusResponse getStatus() {
+        return useCase.execute(new GetComebackRewardStatusRequest(USER_ID));
     }
 
-    @Test
-    void execute_shouldBeAvailable_whenThresholdReached() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY.minusDays(10)));
+    // --- assert ---
 
-        GetComebackRewardStatusResponse status = useCase.execute(new GetComebackRewardStatusRequest(USER_ID));
+    private void thenNotAvailableAfterInactivity(GetComebackRewardStatusResponse status, int daysInactive) {
+        assertThat(status.available()).isFalse();
+        assertThat(status.daysInactive()).isEqualTo(daysInactive);
+    }
 
+    private void thenAvailableAfterInactivity(GetComebackRewardStatusResponse status, int daysInactive) {
         assertThat(status.available()).isTrue();
-        assertThat(status.daysInactive()).isEqualTo(10);
+        assertThat(status.daysInactive()).isEqualTo(daysInactive);
+    }
+
+    private void thenAdvertisesRewardAmount(GetComebackRewardStatusResponse status) {
         assertThat(status.coins()).isEqualTo(ComebackRewardPolicy.COMEBACK_COINS);
+    }
+
+    private void thenAdvertisesThreshold(GetComebackRewardStatusResponse status) {
+        assertThat(status.thresholdDays()).isEqualTo(ComebackRewardPolicy.INACTIVE_DAYS_THRESHOLD);
     }
 }

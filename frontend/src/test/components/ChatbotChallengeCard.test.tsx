@@ -1,17 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import ChatbotChallengeCard from '../../components/Chatbot/ChatbotChallengeCard'
-import { clickButton, verifyTextPresent } from '../testHelpers'
+import { clickButton, verifyTextPresent, clearAllMocks } from '../testHelpers'
+
+const mockedNavigate = vi.fn()
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => mockedNavigate,
+  }
+})
 
 describe('ChatbotChallengeCard', () => {
   let onAcceptMock: any
   let onRejectMock: any
+  let onCloseMock: any
 
   beforeEach(() => {
+    clearAllMocks()
     onAcceptMock = vi.fn()
     onRejectMock = vi.fn()
+    onCloseMock = vi.fn()
   })
+
+  // --- CASOS DE PRUEBA (TEST SUITE) ---
 
   it('renderiza el reto y las acciones cuando no hay decisión', () => {
     renderCard()
@@ -28,9 +44,13 @@ describe('ChatbotChallengeCard', () => {
       })
   })
 
-  it('muestra el texto del estado resuelto como aceptado', () => {
+  it('muestra el estado aceptado y navega a mis retos', () => {
     renderCard('accepted')
     verifyStatusText('Reto aceptado.')
+    return clickButton(userEvent.setup(), 'Ir a mis retos').then(() => {
+      verifyCloseCalled()
+      verifyNavigatedToChallenges()
+    })
   })
 
   it('muestra el texto del estado resuelto como rechazado', () => {
@@ -42,13 +62,16 @@ describe('ChatbotChallengeCard', () => {
 
   const renderCard = (decision?: 'accepted' | 'rejected') => {
     render(
-      <ChatbotChallengeCard
-        title="Reto"
-        description="Descripcion"
-        decision={decision}
-        onAccept={onAcceptMock}
-        onReject={onRejectMock}
-      />
+      <MemoryRouter>
+        <ChatbotChallengeCard
+          title="Reto"
+          description="Descripcion"
+          decision={decision}
+          onClose={onCloseMock}
+          onAccept={onAcceptMock}
+          onReject={onRejectMock}
+        />
+      </MemoryRouter>
     )
   }
 
@@ -59,13 +82,11 @@ describe('ChatbotChallengeCard', () => {
   }
 
   const clickAccept = () => {
-    const user = userEvent.setup()
-    return clickButton(user, 'Aceptar')
+    return clickButton(userEvent.setup(), 'Aceptar')
   }
 
   const clickReject = () => {
-    const user = userEvent.setup()
-    return clickButton(user, 'Rechazar')
+    return clickButton(userEvent.setup(), 'Rechazar')
   }
 
   const verifyAcceptCalled = () => {
@@ -78,5 +99,13 @@ describe('ChatbotChallengeCard', () => {
 
   const verifyStatusText = (text: string) => {
     verifyTextPresent(text)
+  }
+
+  const verifyCloseCalled = () => {
+    expect(onCloseMock).toHaveBeenCalledTimes(1)
+  }
+
+  const verifyNavigatedToChallenges = () => {
+    expect(mockedNavigate).toHaveBeenCalledWith('/challenges')
   }
 })

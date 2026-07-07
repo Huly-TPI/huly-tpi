@@ -5,6 +5,7 @@ import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.RefreshTokenEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IRefreshTokenJpaRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,64 +23,124 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenRepositoryImplTest {
 
+    private static final Instant NOW = Instant.now();
+
     @Mock private IRefreshTokenJpaRepository jpaRepository;
     @Mock private AppUserRepository appUserRepository;
 
     @InjectMocks private RefreshTokenRepositoryImpl refreshTokenRepository;
 
     @Test
-    void save_shouldMapDomainToEntityAndReturnMappedResult() {
-        Instant now = Instant.now();
-        AppUserEntity userEntity = AppUserEntity.builder().id(1L).build();
-        RefreshTokenEntity savedEntity = RefreshTokenEntity.builder()
-                .id(10L).appUser(userEntity).token("tok")
-                .createdAt(now).expiredAt(now.plusSeconds(3600)).build();
+    @DisplayName("Mapea el dominio a entidad y devuelve el resultado mapeado al guardar")
+    void saveShouldMapDomainToEntityAndReturnMappedResult() {
+        givenReferencedUser(1L);
+        givenSaved(savedTokenEntity());
 
-        when(appUserRepository.getReferenceById(1L)).thenReturn(userEntity);
-        when(jpaRepository.save(any())).thenReturn(savedEntity);
+        RefreshToken result = save(domainToken());
 
-        RefreshToken domain = RefreshToken.builder()
-                .userId(1L).token("tok")
-                .createdAt(now).expiredAt(now.plusSeconds(3600)).build();
-
-        RefreshToken result = refreshTokenRepository.save(domain);
-
-        assertThat(result.getId()).isEqualTo(10L);
-        assertThat(result.getToken()).isEqualTo("tok");
-        assertThat(result.getUserId()).isEqualTo(1L);
-        assertThat(result.getCreatedAt()).isEqualTo(now);
+        thenSavedTokenMatches(result);
     }
 
     @Test
-    void findByToken_shouldReturnMappedDomain_whenFound() {
-        Instant now = Instant.now();
-        AppUserEntity userEntity = AppUserEntity.builder().id(2L).build();
-        RefreshTokenEntity entity = RefreshTokenEntity.builder()
-                .id(5L).appUser(userEntity).token("someToken")
-                .createdAt(now).expiredAt(now.plusSeconds(3600)).build();
-        when(jpaRepository.findByToken("someToken")).thenReturn(Optional.of(entity));
+    @DisplayName("Devuelve el token por valor cuando existe")
+    void findByTokenShouldReturnMappedDomainWhenFound() {
+        givenTokenFound("someToken", foundTokenEntity());
 
-        Optional<RefreshToken> result = refreshTokenRepository.findByToken("someToken");
+        Optional<RefreshToken> result = findByToken("someToken");
 
+        thenTokenPresent(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío al buscar el token cuando no existe")
+    void findByTokenShouldReturnEmptyWhenNotFound() {
+        givenTokenFound("missing", null);
+
+        Optional<RefreshToken> result = findByToken("missing");
+
+        thenEmpty(result);
+    }
+
+    @Test
+    @DisplayName("Elimina el token por id")
+    void deleteShouldCallDeleteByIdWithCorrectId() {
+        delete(tokenToDelete());
+
+        thenDeletedById(7L);
+    }
+
+    // --- arrange ---
+    private void givenReferencedUser(Long userId) {
+        when(appUserRepository.getReferenceById(userId)).thenReturn(userEntity(userId));
+    }
+
+    private void givenSaved(RefreshTokenEntity entity) {
+        when(jpaRepository.save(any())).thenReturn(entity);
+    }
+
+    private void givenTokenFound(String token, RefreshTokenEntity entity) {
+        when(jpaRepository.findByToken(token)).thenReturn(Optional.ofNullable(entity));
+    }
+
+    private RefreshToken domainToken() {
+        return RefreshToken.builder()
+                .userId(1L).token("tok")
+                .createdAt(NOW).expiredAt(NOW.plusSeconds(3600)).build();
+    }
+
+    private RefreshToken tokenToDelete() {
+        return RefreshToken.builder().id(7L).build();
+    }
+
+    private RefreshTokenEntity savedTokenEntity() {
+        return RefreshTokenEntity.builder()
+                .id(10L).appUser(userEntity(1L)).token("tok")
+                .createdAt(NOW).expiredAt(NOW.plusSeconds(3600)).build();
+    }
+
+    private RefreshTokenEntity foundTokenEntity() {
+        return RefreshTokenEntity.builder()
+                .id(5L).appUser(userEntity(2L)).token("someToken")
+                .createdAt(NOW).expiredAt(NOW.plusSeconds(3600)).build();
+    }
+
+    private AppUserEntity userEntity(Long id) {
+        return AppUserEntity.builder().id(id).build();
+    }
+
+    // --- act ---
+    private RefreshToken save(RefreshToken domain) {
+        return refreshTokenRepository.save(domain);
+    }
+
+    private Optional<RefreshToken> findByToken(String token) {
+        return refreshTokenRepository.findByToken(token);
+    }
+
+    private void delete(RefreshToken domain) {
+        refreshTokenRepository.delete(domain);
+    }
+
+    // --- assert ---
+    private void thenSavedTokenMatches(RefreshToken result) {
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getToken()).isEqualTo("tok");
+        assertThat(result.getUserId()).isEqualTo(1L);
+        assertThat(result.getCreatedAt()).isEqualTo(NOW);
+    }
+
+    private void thenTokenPresent(Optional<RefreshToken> result) {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo(5L);
         assertThat(result.get().getToken()).isEqualTo("someToken");
         assertThat(result.get().getUserId()).isEqualTo(2L);
     }
 
-    @Test
-    void findByToken_shouldReturnEmpty_whenNotFound() {
-        when(jpaRepository.findByToken("missing")).thenReturn(Optional.empty());
-
-        assertThat(refreshTokenRepository.findByToken("missing")).isEmpty();
+    private void thenEmpty(Optional<RefreshToken> result) {
+        assertThat(result).isEmpty();
     }
 
-    @Test
-    void delete_shouldCallDeleteByIdWithCorrectId() {
-        RefreshToken domain = RefreshToken.builder().id(7L).build();
-
-        refreshTokenRepository.delete(domain);
-
-        verify(jpaRepository).deleteById(7L);
+    private void thenDeletedById(Long id) {
+        verify(jpaRepository).deleteById(id);
     }
 }

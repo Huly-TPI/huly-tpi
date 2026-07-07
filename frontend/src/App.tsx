@@ -29,6 +29,7 @@ import Stones from './pages/Stones/Stones'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
+import Pending from './pages/Pending/Pending'
 import Privacy from './pages/Privacy/Privacy'
 import LanternActivity from './pages/Lanterns/Lanterns'
 
@@ -55,29 +56,29 @@ const App = () => {
               <Route path="*" element={<BackofficeNotFound />} />
             </Route>
 
-
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/minigames" element={<Minigames />} />
-              <Route path="/diary" element={<Diary />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/challenges" element={<Challenges />} />
-              <Route path="/orchard" element={<Orchard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/guided-breathing" element={<Breathing />} />
-              <Route path="/lanterns" element={<LanternActivity />} />
-              <Route path="/bubbles" element={<BubblesActivity />} />
-              <Route path="/mandalas" element={<Mandalas />} />
-              <Route path="/zen-sand-garden" element={<SandZenGarden />} />
-              <Route path="/stones" element={<Stones />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </ToastProvider>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/minigames" element={<Minigames />} />
+          <Route path="/diary" element={<Diary />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/challenges" element={<Challenges />} />
+          <Route path="/pending" element={<Pending />} />
+          <Route path="/orchard" element={<Orchard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/guided-breathing" element={<Breathing />} />
+          <Route path="/lanterns" element={<LanternActivity />} />
+          <Route path="/bubbles" element={<BubblesActivity />} />
+          <Route path="/mandalas" element={<Mandalas />} />
+          <Route path="/zen-sand-garden" element={<SandZenGarden />} />
+          <Route path="/stones" element={<Stones />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+        </Routes>
+      </ToastProvider>
       </SubscriptionModalProvider>
     </AuthProvider>
   )
