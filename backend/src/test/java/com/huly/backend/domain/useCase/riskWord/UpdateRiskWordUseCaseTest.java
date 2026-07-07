@@ -3,10 +3,11 @@ package com.huly.backend.domain.useCase.riskWord;
 import com.huly.backend.domain.dto.riskWord.UpdateRiskWordRequest;
 import com.huly.backend.domain.dto.riskWord.UpdateRiskWordResponse;
 import com.huly.backend.domain.mapper.riskWord.UpdateRiskWordMapper;
-import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.model.enums.RiskSeverity;
+import com.huly.backend.domain.model.riskWord.RiskWord;
 import com.huly.backend.domain.service.chat.RiskWordService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +23,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UpdateRiskWordUseCaseTest {
 
+    private static final Long RISK_WORD_ID = 1L;
+    private static final String WORD = "panico";
+    private static final String DESCRIPTION = "desc";
+    private static final RiskSeverity SEVERITY = RiskSeverity.MEDIUM;
+
     @Mock
     private RiskWordService riskWordService;
 
@@ -33,28 +39,67 @@ class UpdateRiskWordUseCaseTest {
     }
 
     @Test
-    void execute_shouldBuildRiskWordAndDelegateToService() {
-        RiskWord updated = RiskWord.builder().id(1L).word("panico").severity(RiskSeverity.MEDIUM).active(true).build();
-        when(riskWordService.update(eq(1L), any(RiskWord.class))).thenReturn(updated);
+    @DisplayName("Construye la palabra con los nuevos datos y la delega al servicio con su id")
+    void executeShouldBuildRiskWordAndDelegateToServiceWithId() {
+        givenServiceUpdatesRiskWord();
 
-        ArgumentCaptor<RiskWord> captor = ArgumentCaptor.forClass(RiskWord.class);
-        updateRiskWordUseCase.execute(new UpdateRiskWordRequest(1L, "panico", "desc", RiskSeverity.MEDIUM));
+        update();
 
-        verify(riskWordService).update(eq(1L), captor.capture());
-        RiskWord captured = captor.getValue();
-        assertThat(captured.getWord()).isEqualTo("panico");
-        assertThat(captured.getDescription()).isEqualTo("desc");
-        assertThat(captured.getSeverity()).isEqualTo(RiskSeverity.MEDIUM);
+        thenServiceReceivedUpdatedRiskWordForId();
     }
 
     @Test
-    void execute_shouldReturnValueFromService() {
-        RiskWord updated = RiskWord.builder().id(1L).word("panico").severity(RiskSeverity.MEDIUM).active(true).build();
-        when(riskWordService.update(eq(1L), any(RiskWord.class))).thenReturn(updated);
+    @DisplayName("Devuelve la respuesta mapeada desde la palabra actualizada por el servicio")
+    void executeShouldReturnResponseMappedFromUpdatedRiskWord() {
+        givenServiceUpdatesRiskWord();
 
-        UpdateRiskWordResponse result = updateRiskWordUseCase.execute(
-                new UpdateRiskWordRequest(1L, "panico", null, RiskSeverity.MEDIUM));
+        UpdateRiskWordResponse result = update();
 
-        assertThat(result.word()).isEqualTo("panico");
+        thenResponseMatchesUpdatedRiskWord(result);
+    }
+
+    // --- arrange ---
+
+    private void givenServiceUpdatesRiskWord() {
+        when(riskWordService.update(eq(RISK_WORD_ID), any(RiskWord.class))).thenReturn(updatedRiskWord());
+    }
+
+    private UpdateRiskWordRequest updateRequest() {
+        return new UpdateRiskWordRequest(RISK_WORD_ID, WORD, DESCRIPTION, SEVERITY);
+    }
+
+    private RiskWord updatedRiskWord() {
+        return RiskWord.builder()
+                .id(RISK_WORD_ID)
+                .word(WORD)
+                .description(DESCRIPTION)
+                .severity(SEVERITY)
+                .active(true)
+                .build();
+    }
+
+    // --- act ---
+
+    private UpdateRiskWordResponse update() {
+        return updateRiskWordUseCase.execute(updateRequest());
+    }
+
+    // --- assert ---
+
+    private void thenServiceReceivedUpdatedRiskWordForId() {
+        ArgumentCaptor<RiskWord> captor = ArgumentCaptor.forClass(RiskWord.class);
+        verify(riskWordService).update(eq(RISK_WORD_ID), captor.capture());
+        RiskWord captured = captor.getValue();
+        assertThat(captured.getWord()).isEqualTo(WORD);
+        assertThat(captured.getDescription()).isEqualTo(DESCRIPTION);
+        assertThat(captured.getSeverity()).isEqualTo(SEVERITY);
+    }
+
+    private void thenResponseMatchesUpdatedRiskWord(UpdateRiskWordResponse result) {
+        assertThat(result.id()).isEqualTo(RISK_WORD_ID);
+        assertThat(result.word()).isEqualTo(WORD);
+        assertThat(result.description()).isEqualTo(DESCRIPTION);
+        assertThat(result.severity()).isEqualTo(SEVERITY);
+        assertThat(result.active()).isTrue();
     }
 }

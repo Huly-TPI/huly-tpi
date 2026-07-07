@@ -7,6 +7,7 @@ import com.huly.backend.domain.model.user.UserPlan;
 import com.huly.backend.domain.port.EmailPort;
 import com.huly.backend.domain.repository.user.UserPlanRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,6 +28,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PlanExpiryReminderSchedulerTest {
 
+    private static final String USER_EMAIL = "user@huly";
+
     @Mock
     private UserPlanRepository userPlanRepository;
     @Mock
@@ -37,68 +40,113 @@ class PlanExpiryReminderSchedulerTest {
     @InjectMocks
     private PlanExpiryReminderScheduler scheduler;
 
-    private AppUser user(Long id, String email) {
+    private Long planId;
+    private Instant planExpiresAt;
+    private Instant thresholdLowerBound;
+    private Instant thresholdUpperBound;
+
+    @Test
+    @DisplayName("Envía el aviso y marca el recordatorio cuando el plan está por vencer")
+    void sendExpiryRemindersShouldSendAndMarkWhenPlanIsExpiringSoon() {
+        // --- arrange ---
+        givenPlanNeedingReminder(10L, 1L, 5);
+        givenUserExists(1L, USER_EMAIL);
+        // --- act ---
+        sendExpiryReminders();
+        // --- assert ---
+        thenReminderSentAndMarked(USER_EMAIL);
+    }
+
+    @Test
+    @DisplayName("No hace nada cuando ningún plan necesita recordatorio")
+    void sendExpiryRemindersShouldDoNothingWhenNoPlansNeedReminder() {
+        // --- arrange ---
+        givenNoPlansNeedingReminder();
+        // --- act ---
+        sendExpiryReminders();
+        // --- assert ---
+        thenNoReminderSentNorMarked();
+    }
+
+    @Test
+    @DisplayName("No envía ni marca cuando el usuario del plan no existe")
+    void sendExpiryRemindersShouldNotSendNorMarkWhenUserMissing() {
+        // --- arrange ---
+        givenPlanNeedingReminder(10L, 99L, 3);
+        givenUserMissing(99L);
+        // --- act ---
+        sendExpiryReminders();
+        // --- assert ---
+        thenNoReminderSentNorMarked();
+    }
+
+    @Test
+    @DisplayName("Consulta con una ventana de 7 días")
+    void sendExpiryRemindersShouldQueryWithSevenDayWindow() {
+        // --- arrange ---
+        givenNoPlansNeedingReminder();
+        // --- act ---
+        sendExpiryReminders();
+        // --- assert ---
+        thenQueriedWithSevenDayWindow();
+    }
+
+    // --- arrange ---
+
+    private AppUser user(long id, String email) {
         return AppUser.builder()
                 .id(id).email(email)
                 .role(UserRole.USER).status(UserStatus.ACTIVE)
                 .build();
     }
 
-    @Test
-    void sendExpiryReminders_shouldSendAndMark_whenPlanIsExpiringSoon() {
-        Instant expiresAt = Instant.now().plus(5, ChronoUnit.DAYS);
+    private void givenPlanNeedingReminder(long planId, long userId, int daysToExpiry) {
+        this.planId = planId;
+        this.planExpiresAt = Instant.now().plus(daysToExpiry, ChronoUnit.DAYS);
         UserPlan plan = UserPlan.builder()
-                .id(10L).userId(1L).planCode("PREMIUM").expiresAt(expiresAt)
+                .id(planId).userId(userId).planCode("PREMIUM").expiresAt(planExpiresAt)
                 .build();
         when(userPlanRepository.findPlansNeedingExpiryReminder(any(Instant.class), any(Instant.class)))
                 .thenReturn(List.of(plan));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, "user@huly")));
-
-        scheduler.sendExpiryReminders();
-
-        verify(emailPort).sendPlanExpiryReminder(eq("user@huly"), anyLong(), eq(expiresAt));
-        verify(userPlanRepository).markExpiryReminderSent(10L, expiresAt);
     }
 
-    @Test
-    void sendExpiryReminders_shouldDoNothing_whenNoPlansNeedReminder() {
+    private void givenNoPlansNeedingReminder() {
         when(userPlanRepository.findPlansNeedingExpiryReminder(any(Instant.class), any(Instant.class)))
                 .thenReturn(List.of());
+    }
 
+    private void givenUserExists(long userId, String email) {
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user(userId, email)));
+    }
+
+    private void givenUserMissing(long userId) {
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    }
+
+    // --- act ---
+
+    private void sendExpiryReminders() {
+        thresholdLowerBound = Instant.now().plus(7, ChronoUnit.DAYS);
         scheduler.sendExpiryReminders();
+        thresholdUpperBound = Instant.now().plus(7, ChronoUnit.DAYS);
+    }
 
+    // --- assert ---
+
+    private void thenReminderSentAndMarked(String email) {
+        verify(emailPort).sendPlanExpiryReminder(eq(email), anyLong(), eq(planExpiresAt));
+        verify(userPlanRepository).markExpiryReminderSent(planId, planExpiresAt);
+    }
+
+    private void thenNoReminderSentNorMarked() {
         verify(emailPort, never()).sendPlanExpiryReminder(any(), anyLong(), any());
         verify(userPlanRepository, never()).markExpiryReminderSent(anyLong(), any());
     }
 
-    @Test
-    void sendExpiryReminders_shouldNotSendNorMark_whenUserMissing() {
-        UserPlan plan = UserPlan.builder()
-                .id(10L).userId(99L).planCode("PREMIUM")
-                .expiresAt(Instant.now().plus(3, ChronoUnit.DAYS))
-                .build();
-        when(userPlanRepository.findPlansNeedingExpiryReminder(any(Instant.class), any(Instant.class)))
-                .thenReturn(List.of(plan));
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
-
-        scheduler.sendExpiryReminders();
-
-        verify(emailPort, never()).sendPlanExpiryReminder(any(), anyLong(), any());
-        verify(userPlanRepository, never()).markExpiryReminderSent(anyLong(), any());
-    }
-
-    @Test
-    void sendExpiryReminders_shouldQueryWith7DayWindow() {
-        when(userPlanRepository.findPlansNeedingExpiryReminder(any(Instant.class), any(Instant.class)))
-                .thenReturn(List.of());
-
-        Instant beforeThreshold = Instant.now().plus(7, ChronoUnit.DAYS);
-        scheduler.sendExpiryReminders();
-        Instant afterThreshold = Instant.now().plus(7, ChronoUnit.DAYS);
-
+    private void thenQueriedWithSevenDayWindow() {
         verify(userPlanRepository).findPlansNeedingExpiryReminder(
                 argThat(now -> !now.isAfter(Instant.now())),
-                argThat(threshold -> !threshold.isBefore(beforeThreshold)
-                        && !threshold.isAfter(afterThreshold)));
+                argThat(threshold -> !threshold.isBefore(thresholdLowerBound)
+                        && !threshold.isAfter(thresholdUpperBound)));
     }
 }

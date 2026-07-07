@@ -3,16 +3,17 @@ package com.huly.backend.domain.useCase.extension;
 import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsRequest;
 import com.huly.backend.domain.dto.extension.GetUserAntiScrollSettingsResponse;
 import com.huly.backend.domain.mapper.extension.GetUserAntiScrollSettingsMapper;
-import com.huly.backend.domain.model.user.AppUser;
-import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import com.huly.backend.domain.model.extension.AntiScrollGlobalConfig;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
+import com.huly.backend.domain.model.user.AppUser;
+import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.repository.extension.AntiScrollGlobalConfigRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,15 +38,11 @@ class GetUserAntiScrollSettingsUseCaseTest {
     @Mock
     private GetCurrentUserUseCase getCurrentUserUseCase;
 
-    private GetUserAntiScrollSettingsUseCase getUserAntiScrollSettingsUseCase;
+    private GetUserAntiScrollSettingsUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        org.mockito.Mockito.lenient().when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.empty());
-        AppUser user = AppUser.builder().id(1L).name("Jim").role(UserRole.USER).status(UserStatus.ACTIVE).build();
-        org.mockito.Mockito.lenient().when(getCurrentUserUseCase.execute(org.mockito.ArgumentMatchers.anyLong()))
-                .thenReturn(new UserProfile(user, true, true, true));
-        getUserAntiScrollSettingsUseCase = new GetUserAntiScrollSettingsUseCase(
+        useCase = new GetUserAntiScrollSettingsUseCase(
                 settingsRepository,
                 antiScrollConfigRepository,
                 getCurrentUserUseCase,
@@ -55,18 +53,108 @@ class GetUserAntiScrollSettingsUseCaseTest {
     }
 
     @Test
-    void execute_shouldReturnSettingsFromRepository_whenSettingsExist() {
-        UserAntiScrollSettings existingSettings = UserAntiScrollSettings.builder()
-                .enabled(false)
-                .pauseIntervalSeconds(30)
-                .monitoredDomains(List.of("twitter.com"))
-                .dataSharingConsent(true)
+    @DisplayName("Devuelve las opciones almacenadas cuando existen")
+    void executeReturnsSettingsFromRepositoryWhenSettingsExist() {
+        givenCurrentUserName("Jim");
+        givenNoGlobalConfig();
+        givenStoredSettings(1L, false, 30, List.of("twitter.com"), true);
+
+        GetUserAntiScrollSettingsResponse result = getSettings(1L);
+
+        thenReturnsStoredSettings(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve las opciones por defecto cuando no existen almacenadas")
+    void executeReturnsDefaultSettingsWhenSettingsDoNotExist() {
+        givenCurrentUserName("Jim");
+        givenNoGlobalConfig();
+        givenNoStoredSettings(2L);
+
+        GetUserAntiScrollSettingsResponse result = getSettings(2L);
+
+        thenReturnsStaticDefaults(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve defaults dinámicos cuando no hay almacenadas y existe configuración global")
+    void executeReturnsDynamicDefaultSettingsWhenSettingsDoNotExistAndConfigExists() {
+        givenCurrentUserName("Jim");
+        givenGlobalConfig(35, "dynamic terms");
+        givenNoStoredSettings(3L);
+
+        GetUserAntiScrollSettingsResponse result = getSettings(3L);
+
+        thenReturnsDynamicDefaults(result);
+    }
+
+    @Test
+    @DisplayName("Usa los dominios por defecto cuando las opciones almacenadas no tienen dominios")
+    void executeFallsBackToDefaultDomainsWhenStoredSettingsHaveEmptyDomains() {
+        givenCurrentUserName("Jim");
+        givenNoGlobalConfig();
+        givenStoredSettings(4L, true, 45, List.of(), true);
+
+        GetUserAntiScrollSettingsResponse result = getSettings(4L);
+
+        thenFallsBackToDefaultDomains(result, 45);
+    }
+
+    @Test
+    @DisplayName("Usa los dominios por defecto cuando las opciones almacenadas tienen dominios nulos")
+    void executeFallsBackToDefaultDomainsWhenStoredSettingsHaveNullDomains() {
+        givenCurrentUserName("Jim");
+        givenNoGlobalConfig();
+        givenStoredSettings(5L, true, 45, null, true);
+
+        GetUserAntiScrollSettingsResponse result = getSettings(5L);
+
+        thenFallsBackToDefaultDomains(result, 45);
+    }
+
+    // --- arrange ---
+
+    private void givenCurrentUserName(String name) {
+        AppUser user = AppUser.builder().id(1L).name(name).role(UserRole.USER).status(UserStatus.ACTIVE).build();
+        when(getCurrentUserUseCase.execute(anyLong())).thenReturn(new UserProfile(user, true, true, true));
+    }
+
+    private void givenNoGlobalConfig() {
+        when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.empty());
+    }
+
+    private void givenGlobalConfig(int defaultPauseIntervalMinutes, String termsAndConditions) {
+        AntiScrollGlobalConfig config = AntiScrollGlobalConfig.builder()
+                .defaultPauseIntervalMinutes(defaultPauseIntervalMinutes)
+                .termsAndConditions(termsAndConditions)
                 .build();
+        when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.of(config));
+    }
 
-        when(settingsRepository.findByUserId(1L)).thenReturn(Optional.of(existingSettings));
+    private void givenStoredSettings(long userId, boolean enabled, int pauseIntervalSeconds,
+                                     List<String> monitoredDomains, boolean dataSharingConsent) {
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
+                .enabled(enabled)
+                .pauseIntervalSeconds(pauseIntervalSeconds)
+                .monitoredDomains(monitoredDomains)
+                .dataSharingConsent(dataSharingConsent)
+                .build();
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    }
 
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(1L));
+    private void givenNoStoredSettings(long userId) {
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.empty());
+    }
 
+    // --- act ---
+
+    private GetUserAntiScrollSettingsResponse getSettings(long userId) {
+        return useCase.execute(new GetUserAntiScrollSettingsRequest(userId));
+    }
+
+    // --- assert ---
+
+    private void thenReturnsStoredSettings(GetUserAntiScrollSettingsResponse result) {
         assertThat(result).isNotNull();
         assertThat(result.enabled()).isFalse();
         assertThat(result.pauseIntervalSeconds()).isEqualTo(30);
@@ -77,12 +165,7 @@ class GetUserAntiScrollSettingsUseCaseTest {
         assertThat(result.userName()).isEqualTo("Jim");
     }
 
-    @Test
-    void execute_shouldReturnDefaultSettings_whenSettingsDoNotExist() {
-        when(settingsRepository.findByUserId(2L)).thenReturn(Optional.empty());
-
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(2L));
-
+    private void thenReturnsStaticDefaults(GetUserAntiScrollSettingsResponse result) {
         assertThat(result).isNotNull();
         assertThat(result.enabled()).isTrue();
         assertThat(result.pauseIntervalSeconds()).isEqualTo(1200);
@@ -92,37 +175,15 @@ class GetUserAntiScrollSettingsUseCaseTest {
         assertThat(result.monitoredDomains()).contains("twitter.com", "x.com", "instagram.com");
     }
 
-    @Test
-    void execute_shouldReturnDynamicDefaultSettings_whenSettingsDoNotExistAndConfigExists() {
-        AntiScrollGlobalConfig config = AntiScrollGlobalConfig.builder()
-                .defaultPauseIntervalMinutes(35)
-                .termsAndConditions("dynamic terms")
-                .build();
-        when(antiScrollConfigRepository.findFirst()).thenReturn(Optional.of(config));
-        when(settingsRepository.findByUserId(3L)).thenReturn(Optional.empty());
-
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(3L));
-
+    private void thenReturnsDynamicDefaults(GetUserAntiScrollSettingsResponse result) {
         assertThat(result).isNotNull();
         assertThat(result.pauseIntervalSeconds()).isEqualTo(2100);
         assertThat(result.termsAndConditions()).isEqualTo("dynamic terms");
     }
 
-    @Test
-    void execute_shouldFallbackToDefaultDomains_whenStoredSettingsHaveNoDomains() {
-        UserAntiScrollSettings existingSettings = UserAntiScrollSettings.builder()
-                .enabled(true)
-                .pauseIntervalSeconds(45)
-                .monitoredDomains(List.of())
-                .dataSharingConsent(true)
-                .build();
-
-        when(settingsRepository.findByUserId(4L)).thenReturn(Optional.of(existingSettings));
-
-        GetUserAntiScrollSettingsResponse result = getUserAntiScrollSettingsUseCase.execute(new GetUserAntiScrollSettingsRequest(4L));
-
+    private void thenFallsBackToDefaultDomains(GetUserAntiScrollSettingsResponse result, int expectedPauseIntervalSeconds) {
         assertThat(result).isNotNull();
-        assertThat(result.pauseIntervalSeconds()).isEqualTo(45);
+        assertThat(result.pauseIntervalSeconds()).isEqualTo(expectedPauseIntervalSeconds);
         assertThat(result.monitoredDomains())
                 .containsExactly("twitter.com", "x.com", "instagram.com", "tiktok.com", "youtube.com", "facebook.com");
     }
