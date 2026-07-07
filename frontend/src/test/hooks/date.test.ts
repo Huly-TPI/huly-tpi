@@ -3,27 +3,38 @@ import { renderHook } from '@testing-library/react'
 import { useTimeFormatter } from '../../hooks/useTimeFormatter'
 
 describe('useTimeFormatter', () => {
-  it('returns "0 seg" for zero or negative values', () => {
-    const { result } = renderHook(() => useTimeFormatter())
-    expect(result.current.formatConsumptionTime(0)).toBe('0 seg')
-    expect(result.current.formatConsumptionTime(-10)).toBe('0 seg')
+  it('retorna "0 seg" para valores cero o negativos', () => {
+    setupHook()
+    verifyFormattedConsumptionTime(0, '0 seg')
+    verifyFormattedConsumptionTime(-10, '0 seg')
   })
 
-  it('formats seconds under 60 as "X seg"', () => {
-    const { result } = renderHook(() => useTimeFormatter())
-    expect(result.current.formatConsumptionTime(45)).toBe('45 seg')
+  it('formatea segundos menores a 60 como "X seg"', () => {
+    setupHook()
+    verifyFormattedConsumptionTime(45, '45 seg')
   })
 
-  it('formats seconds under an hour as exact minutes and seconds', () => {
-    const { result } = renderHook(() => useTimeFormatter())
-    expect(result.current.formatConsumptionTime(120)).toBe('2 min')
-    expect(result.current.formatConsumptionTime(75)).toBe('1 min 15 seg')
+  it('formatea segundos menores a una hora como minutos y segundos exactos', () => {
+    setupHook()
+    verifyFormattedConsumptionTime(120, '2 min')
+    verifyFormattedConsumptionTime(75, '1 min 15 seg')
   })
 
-  it('formats seconds over an hour as exact hours, minutes, and seconds', () => {
-    const { result } = renderHook(() => useTimeFormatter())
-    expect(result.current.formatConsumptionTime(3600)).toBe('1 h')
-    expect(result.current.formatConsumptionTime(3675)).toBe('1 h 1 min 15 seg')
-    expect(result.current.formatConsumptionTime(7205)).toBe('2 h 5 seg')
+  it('formatea segundos mayores a una hora como horas, minutos y segundos exactos', () => {
+    setupHook()
+    verifyFormattedConsumptionTime(3600, '1 h')
+    verifyFormattedConsumptionTime(3675, '1 h 1 min 15 seg')
+    verifyFormattedConsumptionTime(7205, '2 h 5 seg')
   })
+  let rendered: ReturnType<typeof renderHook<ReturnType<typeof useTimeFormatter>, undefined>>
+
+  /* helpers */
+
+  const setupHook = () => {
+    rendered = renderHook(() => useTimeFormatter())
+  }
+
+  const verifyFormattedConsumptionTime = (seconds: number, expected: string) => {
+    expect(rendered.result.current.formatConsumptionTime(seconds)).toBe(expected)
+  }
 })

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import EmotionalCloud from '../../components/EmotionalClouds/EmotionalCloud'
 import type { Cloud } from '../../components/EmotionalClouds'
+import { verifyTextPresent } from '../testHelpers'
 
 vi.mock('./EmotionalClouds.css', () => ({}))
 
@@ -21,118 +22,174 @@ afterEach(() => {
 })
 
 describe('EmotionalCloud', () => {
+  let onRemoveSpy: any
 
   describe('renderizado', () => {
     it('muestra el texto del pensamiento', () => {
-      render(<EmotionalCloud cloud={mockCloud} onRemove={vi.fn()} />)
-      expect(screen.getByText('Mis miedos')).toBeInTheDocument()
+      renderWithMockCloud()
+      verifyCloudText('Mis miedos')
     })
 
     it('renderiza con el data-testid correcto', () => {
-      render(<EmotionalCloud cloud={mockCloud} onRemove={vi.fn()} />)
-      expect(screen.getByTestId('cloud-cloud-1')).toBeInTheDocument()
+      renderWithMockCloud()
+      verifyCloudTestId('cloud-1')
     })
 
     it('aplica los CSS custom properties correctos', () => {
-      render(<EmotionalCloud cloud={mockCloud} onRemove={vi.fn()} />)
-      const el = screen.getByTestId('cloud-cloud-1')
-      expect(el).toHaveStyle({ '--cloud-top': '20%' })
-      expect(el).toHaveStyle({ '--drift-duration': '20s' })
-      expect(el).toHaveStyle({ '--drift-delay': '0s' })
+      renderWithMockCloud()
+      verifyCloudStyles('cloud-1', {
+        '--cloud-top': '20%',
+        '--drift-duration': '20s',
+        '--drift-delay': '0s',
+      })
     })
 
     it('usa valores por defecto cuando top y duration no están definidos', () => {
-      const cloudSinOpcionales: Cloud = { id: 'cloud-2', text: 'Estrés' }
-      render(<EmotionalCloud cloud={cloudSinOpcionales} onRemove={vi.fn()} />)
-      const el = screen.getByTestId('cloud-cloud-2')
-      expect(el).toHaveStyle({ '--cloud-top': '20%' })
-      expect(el).toHaveStyle({ '--drift-duration': '20s' })
+      renderWithCloud({ id: 'cloud-2', text: 'Estrés' })
+      verifyCloudStyles('cloud-2', {
+        '--cloud-top': '20%',
+        '--drift-duration': '20s',
+      })
     })
 
     it('tiene role="status" y aria-live="polite"', () => {
-      render(<EmotionalCloud cloud={mockCloud} onRemove={vi.fn()} />)
-      const el = screen.getByRole('status')
-      expect(el).toHaveAttribute('aria-live', 'polite')
+      renderWithMockCloud()
+      verifyCloudAccessibility()
     })
 
     it('no tiene la clase emotional-cloud--leaving al montar', () => {
-      render(<EmotionalCloud cloud={mockCloud} onRemove={vi.fn()} />)
-      const el = screen.getByTestId('cloud-cloud-1')
-      expect(el).not.toHaveClass('emotional-cloud--leaving')
+      renderWithMockCloud()
+      verifyCloudDoesNotHaveLeavingClass('cloud-1')
     })
   })
 
   describe('auto-remove por drift', () => {
     it('llama a onRemove después de la duración del drift', () => {
-      const onRemove = vi.fn()
-      render(<EmotionalCloud cloud={mockCloud} onRemove={onRemove} />)
-
-      expect(onRemove).not.toHaveBeenCalled()
-
-      act(() => { vi.advanceTimersByTime(20000) })
-
-      expect(onRemove).toHaveBeenCalledTimes(1)
+      renderWithSpy()
+      advanceTime(20000)
+      verifyOnRemoveCalledTimes(1)
     })
 
     it('respeta la duración personalizada', () => {
-      const onRemove = vi.fn()
-      const cloudCorto: Cloud = { ...mockCloud, duration: '5s' }
-      render(<EmotionalCloud cloud={cloudCorto} onRemove={onRemove} />)
-
-      act(() => { vi.advanceTimersByTime(4999) })
-      expect(onRemove).not.toHaveBeenCalled()
-
-      act(() => { vi.advanceTimersByTime(1) })
-      expect(onRemove).toHaveBeenCalledTimes(1)
+      renderWithCustomDuration('5s')
+      advanceTime(4999)
+      verifyOnRemoveCalledTimes(0)
+      advanceTime(1)
+      verifyOnRemoveCalledTimes(1)
     })
 
     it('cancela el timer al desmontar el componente', () => {
-      const onRemove = vi.fn()
-      const { unmount } = render(<EmotionalCloud cloud={mockCloud} onRemove={onRemove} />)
-
-      unmount()
-      act(() => { vi.advanceTimersByTime(20000) })
-
-      expect(onRemove).not.toHaveBeenCalled()
+      renderAndUnmountWithSpy(20000)
+      verifyOnRemoveCalledTimes(0)
     })
   })
 
   describe('click para hacer desaparecer', () => {
     it('agrega la clase emotional-cloud--leaving al hacer click', () => {
-      render(<EmotionalCloud cloud={mockCloud} onRemove={vi.fn()} />)
-      const el = screen.getByTestId('cloud-cloud-1')
-
-      fireEvent.click(el)
-
-      expect(el).toHaveClass('emotional-cloud--leaving')
+      renderWithMockCloud()
+      clickCloud('cloud-1')
+      verifyCloudHasLeavingClass('cloud-1')
     })
 
     it('llama a onRemove después de 3 segundos al hacer click', () => {
-      const onRemove = vi.fn()
-      render(<EmotionalCloud cloud={mockCloud} onRemove={onRemove} />)
-
-      fireEvent.click(screen.getByTestId('cloud-cloud-1'))
-
-      act(() => { vi.advanceTimersByTime(2999) })
-      expect(onRemove).not.toHaveBeenCalled()
-
-      act(() => { vi.advanceTimersByTime(1) })
-      expect(onRemove).toHaveBeenCalledTimes(1)
+      renderWithSpy()
+      clickCloud('cloud-1')
+      advanceTime(2999)
+      verifyOnRemoveCalledTimes(0)
+      advanceTime(1)
+      verifyOnRemoveCalledTimes(1)
     })
 
     it('ignora clicks adicionales si ya está en estado leaving', () => {
-      const onRemove = vi.fn()
-      render(<EmotionalCloud cloud={mockCloud} onRemove={onRemove} />)
-      const el = screen.getByTestId('cloud-cloud-1')
-
-      fireEvent.click(el)
-      fireEvent.click(el)
-      fireEvent.click(el)
-
-      act(() => { vi.advanceTimersByTime(3000) })
-
-      expect(onRemove).toHaveBeenCalledTimes(1)
+      renderWithSpy()
+      clickCloudMultipleTimes('cloud-1', 3)
+      advanceTime(3000)
+      verifyOnRemoveCalledTimes(1)
     })
   })
-})
 
+  /* helpers */
+
+  const renderWithMockCloud = () => {
+    onRemoveSpy = vi.fn()
+    render(<EmotionalCloud cloud={mockCloud} onRemove={onRemoveSpy} />)
+  }
+
+  const renderWithCloud = (cloud: Cloud) => {
+    onRemoveSpy = vi.fn()
+    render(<EmotionalCloud cloud={cloud} onRemove={onRemoveSpy} />)
+  }
+
+  const renderWithSpy = () => {
+    onRemoveSpy = vi.fn()
+    render(<EmotionalCloud cloud={mockCloud} onRemove={onRemoveSpy} />)
+  }
+
+  const renderWithCustomDuration = (duration: string) => {
+    onRemoveSpy = vi.fn()
+    const customCloud: Cloud = { ...mockCloud, duration }
+    render(<EmotionalCloud cloud={customCloud} onRemove={onRemoveSpy} />)
+  }
+
+  const renderAndUnmountWithSpy = (timeToAdvance: number) => {
+    onRemoveSpy = vi.fn()
+    const { unmount } = render(<EmotionalCloud cloud={mockCloud} onRemove={onRemoveSpy} />)
+    unmount()
+    act(() => {
+      vi.advanceTimersByTime(timeToAdvance)
+    })
+  }
+
+  const verifyCloudText = (text: string) => {
+    verifyTextPresent(text)
+  }
+
+  const verifyCloudTestId = (id: string) => {
+    expect(screen.getByTestId(`cloud-${id}`)).toBeInTheDocument()
+  }
+
+  const verifyCloudStyles = (id: string, styles: Record<string, string>) => {
+    const el = screen.getByTestId(`cloud-${id}`)
+    expect(el).toHaveStyle(styles)
+  }
+
+  const verifyCloudAccessibility = () => {
+    const el = screen.getByRole('status')
+    expect(el).toHaveAttribute('aria-live', 'polite')
+  }
+
+  const verifyCloudDoesNotHaveLeavingClass = (id: string) => {
+    const el = screen.getByTestId(`cloud-${id}`)
+    expect(el).not.toHaveClass('emotional-cloud--leaving')
+  }
+
+  const verifyCloudHasLeavingClass = (id: string) => {
+    const el = screen.getByTestId(`cloud-${id}`)
+    expect(el).toHaveClass('emotional-cloud--leaving')
+  }
+
+  const advanceTime = (ms: number) => {
+    act(() => {
+      vi.advanceTimersByTime(ms)
+    })
+  }
+
+  const verifyOnRemoveCalledTimes = (times: number) => {
+    if (times === 0) {
+      expect(onRemoveSpy).not.toHaveBeenCalled()
+    } else {
+      expect(onRemoveSpy).toHaveBeenCalledTimes(times)
+    }
+  }
+
+  const clickCloud = (id: string) => {
+    fireEvent.click(screen.getByTestId(`cloud-${id}`))
+  }
+
+  const clickCloudMultipleTimes = (id: string, times: number) => {
+    const el = screen.getByTestId(`cloud-${id}`)
+    for (let i = 0; i < times; i++) {
+      fireEvent.click(el)
+    }
+  }
+})

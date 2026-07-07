@@ -6,7 +6,9 @@ import Login from '../../pages/Login/Login'
 import { ApiError } from '../../api/apiError'
 import { ThemeProvider } from '../../context/theme'
 import { forgotPassword, resetPassword } from '../../api/auth'
+import { clickButton, typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled, verifyButtonPresent, verifyTextPresentAsync, verifyHeadingPresentAsync, clearAllMocks, verifyValidationAlertsShown } from '../testHelpers'
 
+// --- SIMULACIONES GLOBALES (MOCKS) ---
 const mockLogin = vi.fn()
 vi.mock('../../context/auth', () => ({
     useAuth: () => ({ login: mockLogin }),
@@ -21,16 +23,219 @@ const mockForgotPassword = vi.mocked(forgotPassword)
 const mockResetPassword = vi.mocked(resetPassword)
 
 describe('Login', () => {
+    let user: ReturnType<typeof userEvent.setup>
+
     beforeEach(() => {
-        vi.clearAllMocks()
+        clearAllMocks()
         mockForgotPassword.mockResolvedValue(undefined)
         mockResetPassword.mockResolvedValue(undefined)
     })
 
-    const getSubmitButton = () => screen.getByRole('button', { name: 'Iniciar sesión' })
+    // --- CASOS DE PRUEBA (TEST SUITE) ---
 
-    const renderWithRouter = () => {
-        const user = userEvent.setup()
+    it('renderiza el formulario de login', () => {
+        renderLoginForm()
+        verifyLoginFormIsVisible()
+    })
+
+    it('muestra errores de validación al enviar vacío', () => {
+        renderLoginForm()
+        return submitLoginForm('', '').then(() => {
+            verifyValidationAlertsShown()
+            verifyLoginWasNotCalled()
+        })
+    })
+
+    it('muestra error con email inválido', () => {
+        renderLoginForm()
+        return submitLoginForm('noesmail', '').then(() => {
+            verifyTextPresent('Email inválido')
+            verifyLoginWasNotCalled()
+        })
+    })
+
+    it('llama a login del contexto con las credenciales', () => {
+        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: true })
+        renderLoginForm()
+        return submitLoginForm('mili@mail.com', '123456').then(() => {
+            return verifyLoginCalledWith('mili@mail.com', '123456')
+        })
+    })
+
+    it('inicia sesión exitosamente y redirige al home', () => {
+        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: true })
+        renderLoginForm()
+        return submitLoginForm('mili@mail.com', '123456').then(() => {
+            return verifyTextPresentAsync('Home')
+        })
+    })
+
+    it('redirige a onboarding cuando el perfil emocional no está completo', () => {
+        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: false })
+        renderLoginForm()
+        return submitLoginForm('mili@mail.com', '123456').then(() => {
+            return verifyTextPresentAsync('Onboarding')
+        })
+    })
+
+    it('muestra mensaje amigable para credenciales inválidas', () => {
+        mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'))
+        renderLoginForm()
+        return submitLoginForm('mili@mail.com', '123456').then(() => {
+            return verifyTextPresentAsync('Email o contraseña incorrectos')
+        })
+    })
+
+    it('muestra error genérico del backend', () => {
+        mockLogin.mockRejectedValueOnce(new Error('Error del servidor'))
+        renderLoginForm()
+        return submitLoginForm('mili@mail.com', '123456').then(() => {
+            return verifyTextPresentAsync('Error del servidor')
+        })
+    })
+
+    it('muestra errores por campo del backend', () => {
+        mockLogin.mockRejectedValueOnce(
+            new ApiError('Error de validación', { email: 'Email no registrado' }),
+        )
+        renderLoginForm()
+        return submitLoginForm('mili@mail.com', '123456').then(() => {
+            return verifyTextPresentAsync('Email no registrado')
+        })
+    })
+
+    it('navega a registro al hacer click en Registrate', () => {
+        renderLoginForm()
+        return clickNavigationButton('Registrate').then(() => {
+            verifyTextPresent('Register')
+        })
+    })
+
+    it('deshabilita el botón mientras carga', () => {
+        mockLogin.mockImplementation(() => new Promise(() => {}))
+        renderLoginForm()
+        return submitLoginForm('mili@mail.com', '123456').then(() => {
+            verifyButtonDisabled('Ingresando...')
+        })
+    })
+
+    it('muestra el link de olvidaste tu contraseña en el paso login', () => {
+        renderLoginForm()
+        verifyButtonPresent('¿Olvidaste tu contraseña?')
+    })
+
+    describe('paso forgot password', () => {
+        it('muestra el formulario de recupero al clickear olvidaste tu contraseña', () => {
+            renderLoginForm()
+            return clickNavigationButton('¿Olvidaste tu contraseña?').then(() => {
+                verifyTextPresent('Recuperar contraseña')
+                verifyButtonPresent('Enviar código')
+            })
+        })
+
+        it('muestra error de validación si el email está vacío', () => {
+            renderLoginForm()
+            return clickNavigationButton('¿Olvidaste tu contraseña?')
+                .then(() => submitForgotPasswordForm(''))
+                .then(() => {
+                    verifyValidationAlertsShown()
+                    verifyForgotPasswordWasNotCalled()
+                })
+        })
+
+        it('llama a forgotPassword y pasa al paso reset', () => {
+            renderLoginForm()
+            return clickNavigationButton('¿Olvidaste tu contraseña?')
+                .then(() => submitForgotPasswordForm('user@huly.com'))
+                .then(() => {
+                    return verifyHeadingPresentAsync('Nueva contraseña')
+                })
+        })
+
+        it('muestra error si el email no existe', () => {
+            mockForgotPassword.mockRejectedValueOnce(new Error('No existe una cuenta con ese email'))
+            renderLoginForm()
+            return clickNavigationButton('¿Olvidaste tu contraseña?')
+                .then(() => submitForgotPasswordForm('missing@huly.com'))
+                .then(() => {
+                    return verifyTextPresentAsync('No existe una cuenta con ese email')
+                })
+        })
+
+        it('vuelve al login al clickear Volver', () => {
+            renderLoginForm()
+            return clickNavigationButton('¿Olvidaste tu contraseña?')
+                .then(() => clickNavigationButton('Volver'))
+                .then(() => {
+                    verifyTextPresent('¡Bienvenido!')
+                })
+        })
+    })
+
+    describe('paso reset password', () => {
+        it('muestra el formulario de nueva contraseña', () => {
+            renderLoginForm()
+            return enterResetPasswordStep().then(() => {
+                verifyResetPasswordFormIsVisible()
+            })
+        })
+
+        it('llama a resetPassword con el token y la nueva contraseña', () => {
+            renderLoginForm()
+            return enterResetPasswordStep()
+                .then(() => submitNewPasswordForm('uuid-token-123', 'newPass123'))
+                .then(() => {
+                    return verifyResetPasswordWasCalled('uuid-token-123', 'newPass123')
+                })
+        })
+
+        it('vuelve al login con mensaje de éxito al restablecer la contraseña', () => {
+            renderLoginForm()
+            return enterResetPasswordStep()
+                .then(() => submitNewPasswordForm('uuid-token-123', 'newPass123'))
+                .then(() => {
+                    return verifyTextPresentAsync('¡Contraseña actualizada! Podés iniciar sesión.')
+                })
+        })
+
+        it('muestra error si el token es inválido o expiró', () => {
+            mockResetPassword.mockRejectedValueOnce(new Error('Token inválido o expirado'))
+            renderLoginForm()
+            return enterResetPasswordStep()
+                .then(() => submitNewPasswordForm('bad-token', 'newPass123'))
+                .then(() => {
+                    return verifyTextPresentAsync('El código es inválido o ya expiró')
+                })
+        })
+
+        it('navega al paso forgot al clickear Reenviar', () => {
+            renderLoginForm()
+            return enterResetPasswordStep()
+                .then(() => clickNavigationButton('Reenviar'))
+                .then(() => {
+                    verifyTextPresent('Recuperar contraseña')
+                })
+        })
+
+        it('el botón de restablecer está habilitado al entrar al paso reset', () => {
+            renderLoginForm()
+            return enterResetPasswordStep().then(() => {
+                verifyButtonEnabled('Restablecer contraseña')
+            })
+        })
+
+        it('muestra errores de validación al enviar el formulario vacío', () => {
+            renderLoginForm()
+            return enterResetPasswordStep()
+                .then(() => submitNewPasswordForm('', ''))
+                .then(() => {
+                    verifyValidationAlertsShown()
+                    verifyResetPasswordWasNotCalled()
+                })
+        })
+    })
+    const renderLoginForm = () => {
+        user = userEvent.setup()
         render(
             <ThemeProvider>
                 <MemoryRouter initialEntries={['/login']}>
@@ -43,268 +248,76 @@ describe('Login', () => {
                 </MemoryRouter>
             </ThemeProvider>,
         )
-        return { user }
     }
 
-    const fillForm = async (user: ReturnType<typeof userEvent.setup>) => {
-        await user.type(screen.getByPlaceholderText('Email'), 'mili@mail.com')
-        await user.type(screen.getByPlaceholderText('Contraseña'), '123456')
+    const submitLoginForm = async (email: string, pass: string) => {
+        if (email) await typePlaceholder(user, 'Email', email)
+        if (pass) await typePlaceholder(user, 'Contraseña', pass)
+        await clickButton(user, 'Iniciar sesión')
     }
 
-    it('renderiza el formulario de login', () => {
-        renderWithRouter()
+    const clickNavigationButton = async (name: string) => {
+        await clickButton(user, name)
+    }
 
-        expect(screen.getByText('¡Bienvenido!')).toBeInTheDocument()
-        expect(screen.getByPlaceholderText('Email')).toBeInTheDocument()
-        expect(screen.getByPlaceholderText('Contraseña')).toBeInTheDocument()
-    })
+    const submitForgotPasswordForm = async (email: string) => {
+        if (email) await typePlaceholder(user, 'Email', email)
+        await clickButton(user, 'Enviar código')
+    }
 
-    it('muestra errores de validación al enviar vacío', async () => {
-        const { user } = renderWithRouter()
+    const submitNewPasswordForm = async (code: string, pass: string) => {
+        if (code) await typePlaceholder(user, 'Código recibido por email', code)
+        if (pass) await typePlaceholder(user, 'Nueva contraseña', pass)
+        await clickButton(user, 'Restablecer contraseña')
+    }
 
-        await user.click(getSubmitButton())
+    const enterResetPasswordStep = async () => {
+        await clickButton(user, '¿Olvidaste tu contraseña?')
+        await typePlaceholder(user, 'Email', 'user@huly.com')
+        await clickButton(user, 'Enviar código')
+        await screen.findByRole('heading', { name: 'Nueva contraseña' })
+    }
 
-        expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
+    const verifyLoginFormIsVisible = () => {
+        verifyTextPresent('¡Bienvenido!')
+        verifyPlaceholderPresent('Email')
+        verifyPlaceholderPresent('Contraseña')
+    }
+
+    const verifyResetPasswordFormIsVisible = () => {
+        verifyPlaceholderPresent('Código recibido por email')
+        verifyPlaceholderPresent('Nueva contraseña')
+    }
+
+    
+
+    const verifyLoginWasNotCalled = () => {
         expect(mockLogin).not.toHaveBeenCalled()
-    })
+    }
 
-    it('muestra error con email inválido', async () => {
-        const { user } = renderWithRouter()
+    const verifyForgotPasswordWasNotCalled = () => {
+        expect(mockForgotPassword).not.toHaveBeenCalled()
+    }
 
-        await user.type(screen.getByPlaceholderText('Email'), 'noesmail')
-        await user.click(getSubmitButton())
+    const verifyResetPasswordWasNotCalled = () => {
+        expect(mockResetPassword).not.toHaveBeenCalled()
+    }
 
-        expect(screen.getByText('Email inválido')).toBeInTheDocument()
-        expect(mockLogin).not.toHaveBeenCalled()
-    })
-
-    it('llama a login del contexto con las credenciales', async () => {
-        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: true })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(getSubmitButton())
-
+    
+    
+    
+    
+    
+    
+    const verifyLoginCalledWith = async (email: string, pass: string) => {
         await waitFor(() => {
-            expect(mockLogin).toHaveBeenCalledWith({
-                email: 'mili@mail.com',
-                password: '123456',
-            })
+            expect(mockLogin).toHaveBeenCalledWith({ email, password: pass })
         })
-    })
+    }
 
-    it('inicia sesión exitosamente y redirige al home', async () => {
-        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: true })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(getSubmitButton())
-
+    const verifyResetPasswordWasCalled = async (code: string, pass: string) => {
         await waitFor(() => {
-            expect(screen.getByText('Home')).toBeInTheDocument()
+            expect(mockResetPassword).toHaveBeenCalledWith(code, pass)
         })
-    })
-
-    it('redirige a onboarding cuando el perfil emocional no está completo', async () => {
-        mockLogin.mockResolvedValueOnce({ onBoardingCompleted: false })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('Onboarding')).toBeInTheDocument()
-        })
-    })
-
-    it('muestra mensaje amigable para credenciales inválidas', async () => {
-        mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('Email o contraseña incorrectos')).toBeInTheDocument()
-        })
-    })
-
-    it('muestra error genérico del backend', async () => {
-        mockLogin.mockRejectedValueOnce(new Error('Error del servidor'))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('Error del servidor')).toBeInTheDocument()
-        })
-    })
-
-    it('muestra errores por campo del backend', async () => {
-        mockLogin.mockRejectedValueOnce(
-            new ApiError('Error de validación', { email: 'Email no registrado' }),
-        )
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(getSubmitButton())
-
-        await waitFor(() => {
-            expect(screen.getByText('Email no registrado')).toBeInTheDocument()
-        })
-    })
-
-    it('navega a registro al hacer click en Registrate', async () => {
-        const { user } = renderWithRouter()
-
-        await user.click(screen.getByRole('button', { name: 'Registrate' }))
-
-        expect(screen.getByText('Register')).toBeInTheDocument()
-    })
-
-    it('deshabilita el botón mientras carga', async () => {
-        mockLogin.mockImplementation(() => new Promise(() => {}))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(getSubmitButton())
-
-        expect(screen.getByRole('button', { name: 'Ingresando...' })).toBeDisabled()
-    })
-
-    it('muestra el link de olvidaste tu contraseña en el paso login', () => {
-        renderWithRouter()
-        expect(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' })).toBeInTheDocument()
-    })
-
-    describe('paso forgot password', () => {
-        const goToForgot = async (user: ReturnType<typeof userEvent.setup>) => {
-            await user.click(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }))
-        }
-
-        it('muestra el formulario de recupero al clickear olvidaste tu contraseña', async () => {
-            const { user } = renderWithRouter()
-            await goToForgot(user)
-            expect(screen.getByText('Recuperar contraseña')).toBeInTheDocument()
-            expect(screen.getByRole('button', { name: 'Enviar código' })).toBeInTheDocument()
-        })
-
-        it('muestra error de validación si el email está vacío', async () => {
-            const { user } = renderWithRouter()
-            await goToForgot(user)
-            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
-            expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
-            expect(mockForgotPassword).not.toHaveBeenCalled()
-        })
-
-        it('llama a forgotPassword con el email ingresado', async () => {
-            const { user } = renderWithRouter()
-            await goToForgot(user)
-            await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
-            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
-            await waitFor(() => {
-                expect(mockForgotPassword).toHaveBeenCalledWith('user@huly.com')
-            })
-        })
-
-        it('avanza al paso reset al enviar el email correctamente', async () => {
-            const { user } = renderWithRouter()
-            await goToForgot(user)
-            await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
-            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
-            await waitFor(() => {
-                expect(screen.getByRole('heading', { name: 'Nueva contraseña' })).toBeInTheDocument()
-            })
-        })
-
-        it('muestra error si el email no existe', async () => {
-            mockForgotPassword.mockRejectedValueOnce(new Error('No existe una cuenta con ese email'))
-            const { user } = renderWithRouter()
-            await goToForgot(user)
-            await user.type(screen.getByPlaceholderText('Email'), 'missing@huly.com')
-            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
-            await waitFor(() => {
-                expect(screen.getByText('No existe una cuenta con ese email')).toBeInTheDocument()
-            })
-        })
-
-        it('vuelve al login al clickear Volver', async () => {
-            const { user } = renderWithRouter()
-            await goToForgot(user)
-            await user.click(screen.getByRole('button', { name: 'Volver' }))
-            expect(screen.getByText('¡Bienvenido!')).toBeInTheDocument()
-        })
-    })
-
-    describe('paso reset password', () => {
-        const goToReset = async (user: ReturnType<typeof userEvent.setup>) => {
-            await user.click(screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }))
-            await user.type(screen.getByPlaceholderText('Email'), 'user@huly.com')
-            await user.click(screen.getByRole('button', { name: 'Enviar código' }))
-            await screen.findByRole('heading', { name: 'Nueva contraseña' })
-        }
-
-        it('muestra el formulario de nueva contraseña', async () => {
-            const { user } = renderWithRouter()
-            await goToReset(user)
-            expect(screen.getByPlaceholderText('Código recibido por email')).toBeInTheDocument()
-            expect(screen.getByPlaceholderText('Nueva contraseña')).toBeInTheDocument()
-        })
-
-        it('llama a resetPassword con el token y la nueva contraseña', async () => {
-            const { user } = renderWithRouter()
-            await goToReset(user)
-            await user.type(screen.getByPlaceholderText('Código recibido por email'), 'uuid-token-123')
-            await user.type(screen.getByPlaceholderText('Nueva contraseña'), 'newPass123')
-            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
-            await waitFor(() => {
-                expect(mockResetPassword).toHaveBeenCalledWith('uuid-token-123', 'newPass123')
-            })
-        })
-
-        it('vuelve al login con mensaje de éxito al restablecer la contraseña', async () => {
-            const { user } = renderWithRouter()
-            await goToReset(user)
-            await user.type(screen.getByPlaceholderText('Código recibido por email'), 'uuid-token-123')
-            await user.type(screen.getByPlaceholderText('Nueva contraseña'), 'newPass123')
-            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
-            await waitFor(() => {
-                expect(screen.getByText('¡Contraseña actualizada! Podés iniciar sesión.')).toBeInTheDocument()
-            })
-        })
-
-        it('muestra error si el token es inválido o expiró', async () => {
-            mockResetPassword.mockRejectedValueOnce(new Error('Token inválido o expirado'))
-            const { user } = renderWithRouter()
-            await goToReset(user)
-            await user.type(screen.getByPlaceholderText('Código recibido por email'), 'bad-token')
-            await user.type(screen.getByPlaceholderText('Nueva contraseña'), 'newPass123')
-            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
-            await waitFor(() => {
-                expect(screen.getByText('El código es inválido o ya expiró')).toBeInTheDocument()
-            })
-        })
-
-        it('navega al paso forgot al clickear Reenviar', async () => {
-            const { user } = renderWithRouter()
-            await goToReset(user)
-            await user.click(screen.getByRole('button', { name: 'Reenviar' }))
-            expect(screen.getByText('Recuperar contraseña')).toBeInTheDocument()
-        })
-
-        it('el botón de restablecer está habilitado al entrar al paso reset', async () => {
-            const { user } = renderWithRouter()
-            await goToReset(user)
-            expect(screen.getByRole('button', { name: 'Restablecer contraseña' })).toBeEnabled()
-        })
-
-        it('muestra errores de validación al enviar el formulario vacío', async () => {
-            const { user } = renderWithRouter()
-            await goToReset(user)
-            await user.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
-            expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
-            expect(mockResetPassword).not.toHaveBeenCalled()
-        })
-    })
+    }
 })

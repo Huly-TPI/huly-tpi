@@ -6,83 +6,128 @@ import {
   type MandalaAnalysis,
 } from '../../../components/Mandalas/mandalaCanvasUtils'
 
-const indexFor = (x: number, y: number, width: number) => y * width + x
+
 
 describe('mandalaCanvas helpers', () => {
   it('floodFillExterior marca el exterior y respeta bordes cerrados', () => {
-    const width = 7
-    const height = 7
-    const boundaryMap = new Uint8Array(width * height)
-
-    for (let x = 2; x <= 4; x += 1) {
-      boundaryMap[indexFor(x, 2, width)] = 1
-      boundaryMap[indexFor(x, 4, width)] = 1
-    }
-    for (let y = 2; y <= 4; y += 1) {
-      boundaryMap[indexFor(2, y, width)] = 1
-      boundaryMap[indexFor(4, y, width)] = 1
-    }
-
-    const exteriorMap = floodFillExterior(boundaryMap, width, height)
-
-    expect(exteriorMap[indexFor(0, 0, width)]).toBe(1)
-    expect(exteriorMap[indexFor(3, 3, width)]).toBe(0)
+    setupBoundaryBox(7, 7, 2, 4)
+    runFloodFillExterior()
+    verifyExteriorMapValue(0, 0, 1)
+    verifyExteriorMapValue(3, 3, 0)
   })
 
-  it('createRegionMask devuelve solo la region interna donde empieza el trazo', () => {
-    const width = 7
-    const height = 7
-    const boundaryMap = new Uint8Array(width * height)
-
-    for (let x = 2; x <= 4; x += 1) {
-      boundaryMap[indexFor(x, 2, width)] = 1
-      boundaryMap[indexFor(x, 4, width)] = 1
-    }
-    for (let y = 2; y <= 4; y += 1) {
-      boundaryMap[indexFor(2, y, width)] = 1
-      boundaryMap[indexFor(4, y, width)] = 1
-    }
-
-    const analysis: MandalaAnalysis = {
-      boundaryMap,
-      exteriorMap: floodFillExterior(boundaryMap, width, height),
-      height,
-      width,
-    }
-
-    const mask = createRegionMask({ x: 3, y: 3 }, analysis)
-
-    expect(mask).not.toBeNull()
-    expect(mask?.[indexFor(3, 3, width)]).toBe(1)
-    expect(mask?.[indexFor(1, 1, width)]).toBe(0)
-    expect(mask?.[indexFor(2, 3, width)]).toBe(0)
+  it('createRegionMask devuelve solo la región interna donde empieza el trazo', () => {
+    setupAnalysisWithBoundaryBox(7, 7, 2, 4)
+    runCreateRegionMask(3, 3)
+    verifyMaskIsNotNull()
+    verifyMaskValue(3, 3, 1)
+    verifyMaskValue(1, 1, 0)
+    verifyMaskValue(2, 3, 0)
   })
 
   it('createRegionMask rechaza puntos del exterior', () => {
-    const width = 5
-    const height = 5
-    const boundaryMap = new Uint8Array(width * height)
-    const analysis: MandalaAnalysis = {
-      boundaryMap,
-      exteriorMap: floodFillExterior(boundaryMap, width, height),
-      height,
-      width,
+    setupAnalysisWithoutBoundaries(5, 5)
+    runCreateRegionMask(0, 0)
+    verifyMaskIsNull()
+  })
+
+  it('dilateMap expande un borde para cerrar huecos pequeños', () => {
+    setupMapWithSinglePixel(5, 5, 2, 2)
+    runDilateMap(1)
+    verifyDilatedMapValue(1, 1, 1)
+    verifyDilatedMapValue(2, 2, 1)
+    verifyDilatedMapValue(3, 3, 1)
+    verifyDilatedMapValue(0, 0, 0)
+  })
+  let currentWidth: number
+  let currentHeight: number
+  let currentBoundaryMap: Uint8Array
+  let currentExteriorMap: Uint8Array
+  let currentAnalysis: MandalaAnalysis
+  let currentMask: Uint8Array | null
+  let currentMap: Uint8Array
+  let currentDilatedMap: Uint8Array
+
+  /* helpers */
+
+  const setupBoundaryBox = (w: number, h: number, min: number, max: number) => {
+    currentWidth = w
+    currentHeight = h
+    currentBoundaryMap = new Uint8Array(w * h)
+    for (let x = min; x <= max; x += 1) {
+      currentBoundaryMap[indexFor(x, min, w)] = 1
+      currentBoundaryMap[indexFor(x, max, w)] = 1
     }
+    for (let y = min; y <= max; y += 1) {
+      currentBoundaryMap[indexFor(min, y, w)] = 1
+      currentBoundaryMap[indexFor(max, y, w)] = 1
+    }
+  }
 
-    expect(createRegionMask({ x: 0, y: 0 }, analysis)).toBeNull()
-  })
+  const runFloodFillExterior = () => {
+    currentExteriorMap = floodFillExterior(currentBoundaryMap, currentWidth, currentHeight)
+  }
 
-  it('dilateMap expande un borde para cerrar huecos pequenos', () => {
-    const width = 5
-    const height = 5
-    const map = new Uint8Array(width * height)
-    map[indexFor(2, 2, width)] = 1
+  const verifyExteriorMapValue = (x: number, y: number, expected: number) => {
+    expect(currentExteriorMap[indexFor(x, y, currentWidth)]).toBe(expected)
+  }
 
-    const dilated = dilateMap(map, width, height, 1)
+  const setupAnalysisWithBoundaryBox = (w: number, h: number, min: number, max: number) => {
+    setupBoundaryBox(w, h, min, max)
+    runFloodFillExterior()
+    currentAnalysis = {
+      boundaryMap: currentBoundaryMap,
+      exteriorMap: currentExteriorMap,
+      height: h,
+      width: w,
+    }
+  }
 
-    expect(dilated[indexFor(1, 1, width)]).toBe(1)
-    expect(dilated[indexFor(2, 2, width)]).toBe(1)
-    expect(dilated[indexFor(3, 3, width)]).toBe(1)
-    expect(dilated[indexFor(0, 0, width)]).toBe(0)
-  })
+  const runCreateRegionMask = (x: number, y: number) => {
+    currentMask = createRegionMask({ x, y }, currentAnalysis)
+  }
+
+  const verifyMaskIsNotNull = () => {
+    expect(currentMask).not.toBeNull()
+  }
+
+  const verifyMaskIsNull = () => {
+    expect(currentMask).toBeNull()
+  }
+
+  const verifyMaskValue = (x: number, y: number, expected: number) => {
+    expect(currentMask?.[indexFor(x, y, currentWidth)]).toBe(expected)
+  }
+
+  const setupAnalysisWithoutBoundaries = (w: number, h: number) => {
+    currentWidth = w
+    currentHeight = h
+    currentBoundaryMap = new Uint8Array(w * h)
+    currentExteriorMap = floodFillExterior(currentBoundaryMap, w, h)
+    currentAnalysis = {
+      boundaryMap: currentBoundaryMap,
+      exteriorMap: currentExteriorMap,
+      height: h,
+      width: w,
+    }
+  }
+
+  const setupMapWithSinglePixel = (w: number, h: number, px: number, py: number) => {
+    currentWidth = w
+    currentHeight = h
+    currentMap = new Uint8Array(w * h)
+    currentMap[indexFor(px, py, w)] = 1
+  }
+
+  const runDilateMap = (radius: number) => {
+    currentDilatedMap = dilateMap(currentMap, currentWidth, currentHeight, radius)
+  }
+
+  const verifyDilatedMapValue = (x: number, y: number, expected: number) => {
+    expect(currentDilatedMap[indexFor(x, y, currentWidth)]).toBe(expected)
+  }
 })
+
+function indexFor(x: number, y: number, width: number) {
+  return y * width + x
+}

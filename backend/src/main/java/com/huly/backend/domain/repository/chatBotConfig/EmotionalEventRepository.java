@@ -15,4 +15,10 @@ public interface EmotionalEventRepository {
     List<EmotionalEvent> findByUserId(Long userId);
 
     List<EmotionalEvent> findRecommendationEventsByUserId(Long userId);
+
+    List<EmotionalEvent> findAllRecommendationEvents();
+
+    List<EmotionalEvent> findAllRecommendationEventsAfter(java.time.Instant start);
+
+    List<EmotionalEvent> findByUserIds(List<Long> userIds);
 }

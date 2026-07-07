@@ -33,6 +33,7 @@ public class UserStoreItemMapper {
     .category(entity.getCategory())
     .assetKey(entity.getAssetKey())
     .priceCoins(entity.getPriceCoins())
+    .imageUrl(entity.getImageUrl())
     .build();
     }
 

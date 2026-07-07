@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ChatbotAudioRecorder from '../../components/Chatbot/ChatbotAudioRecorder'
-
-// --- MediaRecorder mock ---
+import { clickButton, verifyButtonDisabled, clearAllMocks } from '../testHelpers'
 
 let capturedOnStop: (() => void) | null = null
 let capturedOnDataAvailable: ((e: { data: { size: number } }) => void) | null = null
@@ -35,7 +34,7 @@ const mockStream = {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  clearAllMocks()
   capturedOnStop = null
   capturedOnDataAvailable = null
 
@@ -52,123 +51,169 @@ beforeEach(() => {
 })
 
 describe('ChatbotAudioRecorder', () => {
-  it('renders microphone button in idle state', () => {
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={vi.fn()} />,
-    )
+  let onSendMock: any
+  let onActiveChangeMock: any
 
+  beforeEach(() => {
+    onSendMock = vi.fn()
+    onActiveChangeMock = vi.fn()
+  })
+
+  it('renderiza el botón del micrófono en estado inactivo', () => {
+    renderRecorder()
+    verifyMicButtonPresent()
+  })
+
+  it('el botón del micrófono está deshabilitado cuando la prop disabled es true', () => {
+    renderRecorder(true)
+    verifyMicButtonDisabled()
+  })
+
+  it('al hacer click en el botón del micrófono se llama a getUserMedia con audio: true', () => {
+    renderRecorder()
+    return clickMicButton().then(() => {
+      verifyGetUserMediaCalled()
+    })
+  })
+
+  it('pasa al estado de grabación después de que getUserMedia se resuelva con éxito', () => {
+    renderRecorder()
+    return clickMicButton().then(() => {
+      verifyRecordingStateShown()
+    })
+  })
+
+  it('llama a onActiveChange(true) cuando comienza la grabación', () => {
+    renderRecorder()
+    return clickMicButton().then(() => {
+      verifyOnActiveChangeCalledWith(true)
+    })
+  })
+
+  it('al hacer click en el botón de detener se llama a mediaRecorder.stop()', () => {
+    renderRecorder()
+    return clickMicButton()
+      .then(() => clickStopButton())
+      .then(() => {
+        verifyMediaRecorderStopCalled()
+      })
+  })
+
+  it('pasa al estado de grabado después de que se dispare onstop', () => {
+    renderRecorder()
+    return clickMicButton()
+      .then(() => triggerOnStopEvent())
+      .then(() => {
+        verifyRecordedStateButtonsShown()
+      })
+  })
+
+  it('al hacer click en descartar se reinicia a inactivo y llama a onActiveChange(false)', () => {
+    renderRecorder()
+    return clickMicButton()
+      .then(() => triggerOnStopEvent())
+      .then(() => clickDiscardButton())
+      .then(() => {
+        verifyMicButtonPresent()
+        verifyOnActiveChangeLastCalledWith(false)
+      })
+  })
+
+  it('al hacer click en enviar se llama a onSend con el blob y se reinicia a inactivo', () => {
+    renderRecorder()
+    return clickMicButton()
+      .then(() => triggerOnStopEvent())
+      .then(() => clickSendButton())
+      .then(() => {
+        verifyOnSendCalledWithBlob()
+        verifyMicButtonPresent()
+      })
+  })
+
+  it('si se deniega el permiso de getUserMedia se mantiene silenciosamente en estado inactivo', () => {
+    setupGetUserMediaRejected()
+    renderRecorder()
+    return clickMicButton().then(() => {
+      verifyMicButtonPresent()
+    })
+  })
+
+  /* helpers */
+
+  const renderRecorder = (disabled: boolean = false) => {
+    render(
+      <ChatbotAudioRecorder
+        onSend={onSendMock}
+        disabled={disabled}
+        onActiveChange={onActiveChangeMock}
+      />
+    )
+  }
+
+  const verifyMicButtonPresent = () => {
     expect(screen.getByRole('button', { name: 'Grabar audio' })).toBeInTheDocument()
-  })
+  }
 
-  it('microphone button is disabled when disabled prop is true', () => {
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={true} onActiveChange={vi.fn()} />,
-    )
+  const verifyMicButtonDisabled = () => {
+    verifyButtonDisabled('Grabar audio')
+  }
 
-    expect(screen.getByRole('button', { name: 'Grabar audio' })).toBeDisabled()
-  })
-
-  it('clicking mic button calls getUserMedia with audio: true', async () => {
+  const clickMicButton = () => {
     const user = userEvent.setup()
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={vi.fn()} />,
-    )
+    return clickButton(user, 'Grabar audio')
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-
+  const verifyGetUserMediaCalled = () => {
     expect(mockGetUserMedia).toHaveBeenCalledWith({ audio: true })
-  })
+  }
 
-  it('transitions to recording state after getUserMedia succeeds', async () => {
+  const verifyRecordingStateShown = () => {
+    expect(screen.getByText('Grabando...', { exact: false })).toBeInTheDocument()
+  }
+
+  const verifyOnActiveChangeCalledWith = (active: boolean) => {
+    expect(onActiveChangeMock).toHaveBeenCalledWith(active)
+  }
+
+  const verifyOnActiveChangeLastCalledWith = (active: boolean) => {
+    expect(onActiveChangeMock).toHaveBeenLastCalledWith(active)
+  }
+
+  const clickStopButton = () => {
     const user = userEvent.setup()
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={vi.fn()} />,
-    )
+    return clickButton(user, 'Detener grabación')
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-
-    expect(screen.getByText(/Grabando\.\.\./)).toBeInTheDocument()
-  })
-
-  it('calls onActiveChange(true) when recording starts', async () => {
-    const user = userEvent.setup()
-    const onActiveChange = vi.fn()
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={onActiveChange} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-
-    expect(onActiveChange).toHaveBeenCalledWith(true)
-  })
-
-  it('clicking stop button calls mediaRecorder.stop()', async () => {
-    const user = userEvent.setup()
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={vi.fn()} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-    await user.click(screen.getByRole('button', { name: 'Detener grabación' }))
-
+  const verifyMediaRecorderStopCalled = () => {
     expect(mockStop).toHaveBeenCalled()
-  })
+  }
 
-  it('transitions to recorded state after onstop fires', async () => {
-    const user = userEvent.setup()
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={vi.fn()} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-
-    await act(async () => {
+  const triggerOnStopEvent = () => {
+    return act(async () => {
       capturedOnStop?.()
     })
+  }
 
+  const verifyRecordedStateButtonsShown = () => {
     expect(screen.getByRole('button', { name: 'Eliminar grabación' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Enviar audio' })).toBeInTheDocument()
-  })
+  }
 
-  it('clicking discard resets to idle and calls onActiveChange(false)', async () => {
+  const clickDiscardButton = () => {
     const user = userEvent.setup()
-    const onActiveChange = vi.fn()
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={onActiveChange} />,
-    )
+    return clickButton(user, 'Eliminar grabación')
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-    await act(async () => { capturedOnStop?.() })
-    await user.click(screen.getByRole('button', { name: 'Eliminar grabación' }))
-
-    expect(screen.getByRole('button', { name: 'Grabar audio' })).toBeInTheDocument()
-    expect(onActiveChange).toHaveBeenLastCalledWith(false)
-  })
-
-  it('clicking send calls onSend with blob and resets to idle', async () => {
+  const clickSendButton = () => {
     const user = userEvent.setup()
-    const onSend = vi.fn()
-    render(
-      <ChatbotAudioRecorder onSend={onSend} disabled={false} onActiveChange={vi.fn()} />,
-    )
+    return clickButton(user, 'Enviar audio')
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-    await act(async () => { capturedOnStop?.() })
-    await user.click(screen.getByRole('button', { name: 'Enviar audio' }))
+  const verifyOnSendCalledWithBlob = () => {
+    expect(onSendMock).toHaveBeenCalledWith(expect.any(Blob))
+  }
 
-    expect(onSend).toHaveBeenCalledWith(expect.any(Blob))
-    expect(screen.getByRole('button', { name: 'Grabar audio' })).toBeInTheDocument()
-  })
-
-  it('getUserMedia permission denied silently stays in idle state', async () => {
+  const setupGetUserMediaRejected = () => {
     mockGetUserMedia.mockRejectedValueOnce(new Error('Permission denied'))
-    const user = userEvent.setup()
-    render(
-      <ChatbotAudioRecorder onSend={vi.fn()} disabled={false} onActiveChange={vi.fn()} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Grabar audio' }))
-
-    expect(screen.getByRole('button', { name: 'Grabar audio' })).toBeInTheDocument()
-  })
+  }
 })

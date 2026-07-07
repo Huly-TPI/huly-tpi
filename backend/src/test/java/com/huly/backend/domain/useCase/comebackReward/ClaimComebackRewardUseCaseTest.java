@@ -6,6 +6,7 @@ import com.huly.backend.domain.model.comebackReward.ComebackRewardPolicy;
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.service.payment.CoinService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -42,41 +43,89 @@ class ClaimComebackRewardUseCaseTest {
     }
 
     @Test
-    void execute_shouldGrantAndCredit_whenThresholdReached() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY.minusDays(10)));
+    @DisplayName("Otorga y acredita las monedas cuando se alcanza el umbral de inactividad")
+    void executeShouldGrantAndCreditWhenThresholdReached() {
+        // --- arrange ---
+        givenLastSeen(TODAY.minusDays(10));
 
-        ClaimComebackRewardResponse result = useCase.execute(new ClaimComebackRewardRequest(USER_ID));
+        // --- act ---
+        ClaimComebackRewardResponse result = claim();
 
+        // --- assert ---
+        thenGranted(result, 10);
+        thenCredited();
+        thenRegisteredActivity();
+    }
+
+    @Test
+    @DisplayName("No otorga pero registra la actividad cuando no se alcanza el umbral")
+    void executeShouldNotGrantWhenBelowThreshold() {
+        // --- arrange ---
+        givenLastSeen(TODAY.minusDays(3));
+
+        // --- act ---
+        ClaimComebackRewardResponse result = claim();
+
+        // --- assert ---
+        thenNotGranted(result, 3);
+        thenNotCredited();
+        thenRegisteredActivity();
+    }
+
+    @Test
+    @DisplayName("No otorga pero registra la actividad cuando el usuario nunca fue visto")
+    void executeShouldNotGrantButRegisterWhenNeverSeen() {
+        // --- arrange ---
+        givenNeverSeen();
+
+        // --- act ---
+        ClaimComebackRewardResponse result = claim();
+
+        // --- assert ---
+        thenNotGranted(result, 0);
+        thenNotCredited();
+        thenRegisteredActivity();
+    }
+
+    // --- arrange ---
+
+    private void givenNeverSeen() {
+        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.empty());
+    }
+
+    private void givenLastSeen(LocalDate lastSeen) {
+        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(lastSeen));
+    }
+
+    // --- act ---
+
+    private ClaimComebackRewardResponse claim() {
+        return useCase.execute(new ClaimComebackRewardRequest(USER_ID));
+    }
+
+    // --- assert ---
+
+    private void thenGranted(ClaimComebackRewardResponse result, int daysInactive) {
         assertThat(result.granted()).isTrue();
         assertThat(result.coins()).isEqualTo(ComebackRewardPolicy.COMEBACK_COINS);
-        assertThat(result.daysInactive()).isEqualTo(10);
+        assertThat(result.daysInactive()).isEqualTo(daysInactive);
+    }
+
+    private void thenNotGranted(ClaimComebackRewardResponse result, int daysInactive) {
+        assertThat(result.granted()).isFalse();
+        assertThat(result.coins()).isEqualTo(0);
+        assertThat(result.daysInactive()).isEqualTo(daysInactive);
+    }
+
+    private void thenCredited() {
         verify(coinService).credit(USER_ID, ComebackRewardPolicy.COMEBACK_COINS);
-        verify(userDetailDomainRepository).updateLastLoginDate(USER_ID, TODAY);
     }
 
-    @Test
-    void execute_shouldNotGrant_whenBelowThreshold() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY.minusDays(3)));
-
-        ClaimComebackRewardResponse result = useCase.execute(new ClaimComebackRewardRequest(USER_ID));
-
-        assertThat(result.granted()).isFalse();
-        assertThat(result.coins()).isEqualTo(0);
-        assertThat(result.daysInactive()).isEqualTo(3);
+    private void thenNotCredited() {
         verify(coinService, never()).credit(anyLong(), anyInt());
-        verify(userDetailDomainRepository).updateLastLoginDate(USER_ID, TODAY);
     }
 
-    @Test
-    void execute_shouldNotGrantButRegister_whenNeverSeen() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.empty());
-
-        ClaimComebackRewardResponse result = useCase.execute(new ClaimComebackRewardRequest(USER_ID));
-
-        assertThat(result.granted()).isFalse();
-        assertThat(result.coins()).isEqualTo(0);
-        assertThat(result.daysInactive()).isEqualTo(0);
-        verify(coinService, never()).credit(anyLong(), anyInt());
+    private void thenRegisteredActivity() {
         verify(userDetailDomainRepository).updateLastLoginDate(USER_ID, TODAY);
     }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Bubble from '../../components/Bubbles/Bubble'          
@@ -16,37 +16,83 @@ const bubble: BubbleType = {
 }
 
 describe('Bubble', () => {
-    it('rennderiza bien en el DOM', () => {
-        render(<Bubble bubble={bubble} onClick={vi.fn()}/>)
+    let onClickMock: any
+    let onPopEndMock: any
+
+    beforeEach(() => {
+        onClickMock = vi.fn()
+        onPopEndMock = vi.fn()
+    })
+
+    it('renderiza bien en el DOM', () => {
+        renderBubble()
+        verifyBubbleRendered()
+    })
+
+    it('llama onClick con la burbuja y la posición al hacer click', () => {
+        renderBubble()
+        return clickBubble().then(() => {
+            verifyOnClickCalled()
+        })
+    })
+
+    it('aplica el tamaño correcto via style', () => {
+        renderBubble()
+        verifyBubbleSize('80px')
+    })
+
+    it('aplica la clase bubble--popping cuando se hace click en una burbuja', () => {
+        renderBubble(true)
+        verifyPoppingClassApplied()
+    })
+
+    it('llama onPopEnd con el id al finalizar la animación', () => {
+        renderBubble(true)
+        triggerAnimationEnd('bubble-pop')
+        verifyOnPopEndCalledWithId('b-1')
+    })
+    const renderBubble = (popping: boolean = false) => {
+        render(
+            <Bubble
+                bubble={bubble}
+                onClick={onClickMock}
+                popping={popping}
+                onPopEnd={onPopEndMock}
+            />
+        )
+    }
+
+    const verifyBubbleRendered = () => {
         expect(screen.getByTestId('bubble-b-1')).toBeInTheDocument()
-             })
+    }
 
-             it('llama onClick con la burbuja y la posición al hacer click', async () => {
-                const onClick = vi.fn()
-                render(<Bubble bubble={bubble} onClick={onClick} />)
-                await userEvent.click(screen.getByTestId('bubble-b-1'))
-                expect(onClick).toHaveBeenCalledWith(
-                bubble,
-                expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) })
-                )
-            })
+    const clickBubble = () => {
+        const user = userEvent.setup()
+        return user.click(screen.getByTestId('bubble-b-1'))
+    }
 
-              it('aplica el tamaño correcto via style', () => {
-                    render(<Bubble bubble={bubble} onClick={vi.fn()} />)
-                    expect(screen.getByTestId('bubble-b-1')).toHaveStyle({ width: '80px', height: '80px' })
-                })
+    const verifyOnClickCalled = () => {
+        expect(onClickMock).toHaveBeenCalledWith(
+            bubble,
+            expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) })
+        )
+    }
 
-            it('aplica la clase bubble--popping cuando se hace click en una burbuja', async () => {
-                render(<Bubble bubble={bubble} onClick={vi.fn()} popping={true} />)
-                expect(screen.getByTestId('bubble-b-1')).toHaveClass('bubble--popping')
-                })
+    const verifyBubbleSize = (size: string) => {
+        expect(screen.getByTestId('bubble-b-1')).toHaveStyle({ width: size, height: size })
+    }
 
-             it('llama onPopEnd con el id al finalizar la animación', () => {
-                    const onPopEnd = vi.fn()
-                    render(<Bubble bubble={bubble} onClick={vi.fn()} popping={true} onPopEnd={onPopEnd} />)
-                    const event = new Event('animationend', { bubbles: true })
-                    Object.defineProperty(event, 'animationName', { value: 'bubble-pop' })
-                    fireEvent(screen.getByTestId('bubble-b-1'), event)
-                    expect(onPopEnd).toHaveBeenCalledWith('b-1')
-                    })
-             })
+    const verifyPoppingClassApplied = () => {
+        expect(screen.getByTestId('bubble-b-1')).toHaveClass('bubble--popping')
+    }
+
+    const triggerAnimationEnd = (animationName: string) => {
+        const event = new Event('animationend', { bubbles: true })
+        Object.defineProperty(event, 'animationName', { value: animationName })
+        fireEvent(screen.getByTestId('bubble-b-1'), event)
+    }
+
+    const verifyOnPopEndCalledWithId = (id: string) => {
+        expect(onPopEndMock).toHaveBeenCalledWith(id)
+    }
+})

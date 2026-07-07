@@ -3,67 +3,117 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import NotificationsPrompt from '../../components/Notifications/NotificationsPrompt/NotificationsPrompt'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { clickButton, verifyTextPresent, clearAllMocks } from '../testHelpers'
+
 
 vi.mock('../../hooks/usePushNotifications', () => ({
     usePushNotifications: vi.fn(),
 }))
 
 describe('NotificationsPrompt', () => {
-    const onClose = vi.fn()
-    const subscribe = vi.fn()
+    let onCloseSpy: any
+    let subscribeSpy: any
 
-    const mockPush = (overrides = {}) => {
+    beforeEach(() => {
+        clearAllMocks()
+        subscribeSpy = vi.fn()
+        setupPushNotificationMock({ subscribe: subscribeSpy })
+    })
+
+    it('no renderiza nada si el navegador no soporta push', () => {
+        setupPushNotificationMock({ isSupported: false })
+        renderPrompt()
+        verifyDOMIsEmpty()
+    })
+
+    it('no renderiza nada si el usuario ya está suscrito', () => {
+        setupPushNotificationMock({ isSubscribed: true })
+        renderPrompt()
+        verifyDOMIsEmpty()
+    })
+
+    it('muestra el cartel con el copy y los dos botones', () => {
+        renderPrompt()
+        verifyPromptCopyPresent()
+        verifySubscribeButtonPresent()
+        verifyDismissButtonPresent()
+    })
+
+    it('llama a subscribe y a onClose al hacer click en activar recordatorios', () => {
+        setupPushNotificationMock({ subscribe: subscribeSpy })
+        setupSubscribeSuccess()
+        renderPromptWithUser()
+        return clickSubscribeButton().then(() => {
+            verifySubscribeCalledTimes(1)
+            verifyOnCloseCalledTimes(1)
+        })
+    })
+
+    it('llama a onClose sin suscribir al hacer click en ahora no', () => {
+        renderPromptWithUser()
+        return clickDismissButton().then(() => {
+            verifyOnCloseCalledTimes(1)
+            verifySubscribeCalledTimes(0)
+        })
+    })
+    let user: any
+    let renderResult: any
+
+    const setupPushNotificationMock = (overrides = {}) => {
         vi.mocked(usePushNotifications).mockReturnValue({
             isSubscribed: false,
             isLoading: false,
             isSupported: true,
-            subscribe,
+            subscribe: subscribeSpy || vi.fn(),
             unsubscribe: vi.fn(),
             ...overrides,
         } as unknown as ReturnType<typeof usePushNotifications>)
     }
 
-    beforeEach(() => {
-        vi.clearAllMocks()
-        mockPush()
-    })
+    const renderPrompt = () => {
+        onCloseSpy = vi.fn()
+        renderResult = render(<NotificationsPrompt onClose={onCloseSpy} />)
+    }
 
-    it('no renderiza nada si el navegador no soporta push', () => {
-        mockPush({ isSupported: false })
-        const { container } = render(<NotificationsPrompt onClose={onClose} />)
-        expect(container).toBeEmptyDOMElement()
-    })
+    const renderPromptWithUser = () => {
+        user = userEvent.setup()
+        onCloseSpy = vi.fn()
+        renderResult = render(<NotificationsPrompt onClose={onCloseSpy} />)
+    }
 
-    it('no renderiza nada si el usuario ya tiene suscripción', () => {
-        mockPush({ isSubscribed: true })
-        const { container } = render(<NotificationsPrompt onClose={onClose} />)
-        expect(container).toBeEmptyDOMElement()
-    })
+    const verifyDOMIsEmpty = () => {
+        expect(renderResult.container).toBeEmptyDOMElement()
+    }
 
-    it('muestra el cartel con el copy y los dos botones', () => {
-        render(<NotificationsPrompt onClose={onClose} />)
-        expect(screen.getByText(/te recordemos pasar por tu jardín/i)).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: /activar recordatorios/i })).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: /ahora no/i })).toBeInTheDocument()
-    })
+    const verifyPromptCopyPresent = () => {
+        verifyTextPresent('¿Querés que te recordemos pasar por tu jardín?')
+    }
 
-    it('al tocar "Activar recordatorios" llama a subscribe y luego cierra el cartel', async () => {
-        const user = userEvent.setup()
-        subscribe.mockResolvedValue(undefined)
-        render(<NotificationsPrompt onClose={onClose} />)
+    const verifySubscribeButtonPresent = () => {
+        expect(screen.getByRole('button', { name: 'Activar recordatorios' })).toBeInTheDocument()
+    }
 
-        await user.click(screen.getByRole('button', { name: /activar recordatorios/i }))
+    const verifyDismissButtonPresent = () => {
+        expect(screen.getByRole('button', { name: 'Ahora no' })).toBeInTheDocument()
+    }
 
-        expect(subscribe).toHaveBeenCalledTimes(1)
-        expect(onClose).toHaveBeenCalledTimes(1)    
-    })
+    const setupSubscribeSuccess = () => {
+        subscribeSpy.mockResolvedValue(undefined)
+    }
 
-    it('al tocar "Ahora no" cierra sin suscribir', async () => {
-        const user = userEvent.setup()
-        render(<NotificationsPrompt onClose={onClose} />)
+    const clickSubscribeButton = () => {
+        return clickButton(user, 'Activar recordatorios')
+    }
 
-        await user.click(screen.getByRole('button', { name: /ahora no/i }))
-        expect(onClose).toHaveBeenCalledTimes(1)
-        expect(subscribe).not.toHaveBeenCalled()
-    })
+    const clickDismissButton = () => {
+        return clickButton(user, 'Ahora no')
+    }
+
+    const verifySubscribeCalledTimes = (times: number) => {
+        expect(subscribeSpy).toHaveBeenCalledTimes(times)
+    }
+
+    const verifyOnCloseCalledTimes = (times: number) => {
+        expect(onCloseSpy).toHaveBeenCalledTimes(times)
+    }
 })

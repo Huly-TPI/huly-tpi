@@ -1,8 +1,10 @@
+import { clearAllMocks, verifyTextPresent, verifyTextNotPresent } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import StoreModal from '../../components/Shop/StoreModal'
 
+// --- SIMULACIONES GLOBALES (MOCKS) ---
 const mockUseStoreItems = vi.fn()
 const mockUseInventory = vi.fn()
 const mockUseCosmeticActions = vi.fn()
@@ -16,13 +18,136 @@ vi.mock('../../hooks/shop/useUserCoins', () => ({ useUserCoins: () => mockUseUse
 vi.mock('../../hooks/shop/useMembership', () => ({ useMembership: () => mockUseMembership() }))
 
 vi.mock('../../components/Shop/CosmeticCard', () => ({
-
-    CosmeticCard: ({ item }: { item: { name: string } }) => (
-        <div data-testid="cosmetic-card">{item.name}</div>
-    ),
+  CosmeticCard: ({ item }: { item: { name: string } }) => (
+    <div data-testid="cosmetic-card">{item.name}</div>
+  ),
 }))
 
-const makeItem = (id: number, name: string, category = 'HOUSE', extra: object = {}) => ({
+describe('StoreModal', () => {
+  let user: ReturnType<typeof userEvent.setup>
+
+  beforeEach(() => {
+    clearAllMocks()
+    setupUser()
+    setupDefaultStoreItems()
+    setupDefaultInventory()
+    setupDefaultCosmeticActions()
+    setupDefaultUserCoins(100)
+    setupDefaultMembership()
+  })
+
+  // --- CASOS DE PRUEBA (TEST SUITE) ---
+
+  it('no renderiza nada cuando isOpen es false', () => {
+    renderClosedModal()
+    verifyModalNotVisible()
+  })
+
+  it('muestra el titulo y el saldo de semillas', () => {
+    renderOpenModal()
+    verifyTitleVisible()
+    verifyCoinsBalance(100)
+  })
+
+  it('renderiza una card por cada item', () => {
+    setupStoreItems([makeItem(1, 'Casa rosa'), makeItem(2, 'Casa celeste')])
+    renderOpenModal()
+    verifyCosmeticCardsCount(2)
+  })
+
+  it('muestra loading mientras carga el catalogo', () => {
+    setupStoreItemsLoading()
+    renderOpenModal()
+    verifyLoadingMessageVisible()
+  })
+
+  it('muestra el error de una acción', () => {
+    setupCosmeticActionsError('Saldo de monedas insuficiente')
+    renderOpenModal()
+    verifyErrorMessageVisible('Saldo de monedas insuficiente')
+  })
+
+  it('llama onClose al hacer click en la X', () => {
+    const onClose = vi.fn()
+    renderOpenModalWithOnClose(onClose)
+    return clickCloseButton().then(() => {
+      verifyOnCloseCalled(onClose)
+    })
+  })
+
+  it('sin filtros activos muestra todos los items', () => {
+    setupMixedStoreItems()
+    renderOpenModal()
+    verifyCosmeticCardsCount(3)
+  })
+
+  it('filtrar por "Con dinero" mostrando solo items con precios en pesos', () => {
+    setupMixedStoreItems()
+    renderOpenModal()
+    return clickFilter('Con dinero').then(() => {
+      verifyTextPresent('Casa dinero')
+      verifyTextNotPresent('Casa semillas')
+      verifyTextNotPresent('Casa premium')
+    })
+  })
+
+  it('permite combinar varios filtros a la vez (semillas + premium)', () => {
+    setupMixedStoreItems()
+    renderOpenModal()
+    return clickFilter('Con semillas')
+      .then(() => clickFilter('Solo premium'))
+      .then(() => {
+        verifyTextPresent('Casa premium')
+        verifyTextPresent('Casa semillas')
+        verifyTextNotPresent('Casa dinero')
+      })
+  })
+
+  it('muestra una pestaña por cada categoria con items', () => {
+    setupStoreItems([
+      makeItem(1, 'Casa rosa', 'HOUSE'),
+      makeItem(2, 'Diario rosa', 'NOTEBOOK'),
+      makeItem(3, 'Árbol sakura', 'TREE'),
+    ])
+    renderOpenModal()
+    verifyTabVisible('Casas')
+    verifyTabVisible('Diarios')
+    verifyTabVisible('Árboles')
+  })
+
+  it('no muestra pestaña de categorias sin items', () => {
+    setupStoreItems([makeItem(1, 'Casa rosa', 'HOUSE')])
+    renderOpenModal()
+    verifyTabVisible('Casas')
+    verifyTabNotVisible('Diarios')
+  })
+
+  it('la pestaña "Todos" muestra items de todas las categorias', () => {
+    setupStoreItems([
+      makeItem(1, 'Casa rosa', 'HOUSE'),
+      makeItem(2, 'Diario rosa', 'NOTEBOOK'),
+    ])
+    renderOpenModal()
+    verifyTabVisible('Todos')
+    verifyTextPresent('Casa rosa')
+    verifyTextPresent('Diario rosa')
+  })
+
+  it('cambia de categoria al clickear otra pestaña', () => {
+    setupStoreItems([
+      makeItem(1, 'Casa rosa', 'HOUSE'),
+      makeItem(2, 'Diario rosa', 'NOTEBOOK'),
+    ])
+    renderOpenModal()
+    return clickTab('Casas').then(() => {
+      verifyTextPresent('Casa rosa')
+      verifyTextNotPresent('Diario rosa')
+    })
+  })
+
+  /* helpers */
+
+  const makeItem = (id: number, name: string, category = 'HOUSE', extra: object = {}) => ({
     id,
     name,
     description: 'desc',
@@ -32,144 +157,112 @@ const makeItem = (id: number, name: string, category = 'HOUSE', extra: object = 
     price: null,
     premiumOnly: false,
     ...extra,
-})
+  })
 
-const setItems = (...items: object[]) => mockUseStoreItems.mockReturnValue({ items, loading: false, error: null })
+  const setupStoreItems = (items: any[]) => {
+    mockUseStoreItems.mockReturnValue({ items, loading: false, error: null })
+  }
 
-const renderModal = () => render(<StoreModal isOpen onClose={() => { }} />)
+  const setupStoreItemsLoading = () => {
+    mockUseStoreItems.mockReturnValue({ items: [], loading: true, error: null })
+  }
 
-const clickFilter = (name: string) => userEvent.click(screen.getByRole('button', { name }))
+  const setupCosmeticActionsError = (error: string) => {
+    mockUseCosmeticActions.mockReturnValue({ busyId: null, error, buy: vi.fn(), equip: vi.fn(), unequip: vi.fn() })
+  }
 
-const mixedItems = () => [
-    makeItem(1, 'Casa semillas', 'HOUSE'),
-    makeItem(2, 'Casa premium', 'HOUSE', { premiumOnly: true }),
-    makeItem(3, 'Casa dinero', 'HOUSE', { price: 1000 })
-]
+  const setupMixedStoreItems = () => {
+    setupStoreItems([
+      makeItem(1, 'Casa semillas', 'HOUSE'),
+      makeItem(2, 'Casa premium', 'HOUSE', { premiumOnly: true }),
+      makeItem(3, 'Casa dinero', 'HOUSE', { price: 1000 })
+    ])
+  }
 
-describe('StoreModal', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-        mockUseStoreItems.mockReturnValue({ items: [], loading: false, error: null })
-        mockUseInventory.mockReturnValue({ inventory: [], refetch: vi.fn() })
-        mockUseCosmeticActions.mockReturnValue({ busyId: null, error: null, buy: vi.fn(), equip: vi.fn(), unequip: vi.fn() })
-        mockUseUserCoins.mockReturnValue({ coins: 100, refresh: vi.fn() })
-        mockUseMembership.mockReturnValue({ membership: { active: false, planCode: null } })
-    })
+  const renderOpenModal = () => {
+    render(<StoreModal isOpen onClose={() => { }} />)
+  }
 
-    it('no renderiza nada cuando isOpen es false', () => {
-        render(<StoreModal isOpen={false} onClose={() => { }} />)
-        expect(screen.queryByText('Tienda')).not.toBeInTheDocument()
-    })
+  const renderOpenModalWithOnClose = (onClose: () => void) => {
+    render(<StoreModal isOpen onClose={onClose} />)
+  }
 
-    it('muestra el titulo y el saldo de semillas', () => {
-        render(<StoreModal isOpen onClose={() => { }} />)
-        expect(screen.getByText('Tienda')).toBeInTheDocument()
-        expect(screen.getByText('100 semillas')).toBeInTheDocument()
-    })
+  const renderClosedModal = () => {
+    render(<StoreModal isOpen={false} onClose={() => { }} />)
+  }
 
-    it('renderiza una card por cada item', () => {
-        mockUseStoreItems.mockReturnValue({ items: [makeItem(1, 'Casa rosa'), makeItem(2, 'Casa celeste')], loading: false, error: null })
-        render(<StoreModal isOpen onClose={() => { }} />)
+  const clickCloseButton = () => {
+    return user.click(screen.getByRole('button', { name: 'Cerrar' }))
+  }
 
-        expect(screen.getAllByTestId('cosmetic-card')).toHaveLength(2)
-    })
+  const clickFilter = (name: string) => {
+    return user.click(screen.getByRole('button', { name }))
+  }
 
-    it('muestra loading mientras carga el catalogo', () => {
-        mockUseStoreItems.mockReturnValue({ items: [], loading: true, error: null })
-        render(<StoreModal isOpen onClose={() => { }} />)
+  const clickTab = (name: string) => {
+    return user.click(screen.getByRole('tab', { name }))
+  }
 
-        expect(screen.getByText('Cargando tienda...')).toBeInTheDocument()
-    })
+  const verifyModalNotVisible = () => {
+    expect(screen.queryByText('Tienda')).not.toBeInTheDocument()
+  }
 
-    it('muestra el error de una acción', () => {
-        mockUseCosmeticActions.mockReturnValue({ busyId: null, error: 'Saldo de monedas insuficiente', buy: vi.fn(), equip: vi.fn() })
-        render(<StoreModal isOpen onClose={() => { }} />)
+  const verifyTitleVisible = () => {
+    expect(screen.getByText('Tienda')).toBeInTheDocument()
+  }
 
-        expect(screen.getByText('Saldo de monedas insuficiente')).toBeInTheDocument()
-    })
+  const verifyCoinsBalance = (coins: number) => {
+    expect(screen.getByText(`${coins} semillas`)).toBeInTheDocument()
+  }
 
-    it('llama onClose al hacer click en la X', async () => {
-        const onClose = vi.fn()
-        render(<StoreModal isOpen onClose={onClose} />)
+  const verifyCosmeticCardsCount = (count: number) => {
+    expect(screen.getAllByTestId('cosmetic-card')).toHaveLength(count)
+  }
 
-        await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+  const verifyLoadingMessageVisible = () => {
+    expect(screen.getByText('Cargando tienda...')).toBeInTheDocument()
+  }
 
-        expect(onClose).toHaveBeenCalledOnce()
-    })
+  const verifyErrorMessageVisible = (msg: string) => {
+    expect(screen.getByText(msg)).toBeInTheDocument()
+  }
 
-    it('sin filtros activos muestra todos los items', () => {
-        setItems(...mixedItems())
-        renderModal()
+  const verifyOnCloseCalled = (onClose: any) => {
+    expect(onClose).toHaveBeenCalledOnce()
+  }
 
-        expect(screen.getAllByTestId('cosmetic-card')).toHaveLength(3)
-    })
+  const verifyTabVisible = (name: string) => {
+    expect(screen.getByRole('tab', { name })).toBeInTheDocument()
+  }
 
-    it('filtrar por "Con dinero" mostrando solo items con preicos en pesos', async () => {
-        setItems(...mixedItems())
-        renderModal()
+  const verifyTabNotVisible = (name: string) => {
+    expect(screen.queryByRole('tab', { name })).not.toBeInTheDocument()
+  }
 
-        await clickFilter('Con dinero')
+  
 
-        expect(screen.getByText('Casa dinero')).toBeInTheDocument()
-        expect(screen.queryByText('Casa semillas')).not.toBeInTheDocument()
-        expect(screen.queryByText('Casa premium')).not.toBeInTheDocument()
-    })
+  
+  const setupUser = () => {
+    user = userEvent.setup()
+  }
 
-    it('permite combinar varios filtros a la vez (semillas + premium)', async () => {
-        setItems(...mixedItems())
-        renderModal()
+  const setupDefaultStoreItems = () => {
+    mockUseStoreItems.mockReturnValue({ items: [], loading: false, error: null })
+  }
 
-        await clickFilter('Con semillas')
-        await clickFilter('Solo premium')
+  const setupDefaultInventory = () => {
+    mockUseInventory.mockReturnValue({ inventory: [], refetch: vi.fn() })
+  }
 
-        expect(screen.getByText('Casa premium')).toBeInTheDocument()
-        expect(screen.queryByText('Casa semillas')).toBeInTheDocument()
-        expect(screen.queryByText('Casa dinero')).not.toBeInTheDocument()
-    })
+  const setupDefaultCosmeticActions = () => {
+    mockUseCosmeticActions.mockReturnValue({ busyId: null, error: null, buy: vi.fn(), equip: vi.fn(), unequip: vi.fn() })
+  }
 
-    it('muestra una pestaña por cada categoria con items', () => {
-        setItems(
-            makeItem(1, 'Casa rosa', 'HOUSE'),
-            makeItem(2, 'Diario rosa', 'NOTEBOOK'),
-            makeItem(3, 'Árbol sakura', 'TREE'),
-        )
-        renderModal()
+  const setupDefaultUserCoins = (coins: number) => {
+    mockUseUserCoins.mockReturnValue({ coins, refresh: vi.fn() })
+  }
 
-        expect(screen.getByRole('tab', { name: 'Casas' })).toBeInTheDocument()
-        expect(screen.getByRole('tab', { name: 'Diarios' })).toBeInTheDocument()
-        expect(screen.getByRole('tab', { name: 'Árboles' })).toBeInTheDocument()
-    })
-
-    it('no muestra pestaña de categorias sin items', () => {
-        setItems(makeItem(1, 'Casa rosa', 'HOUSE'))
-        renderModal()
-
-        expect(screen.getByRole('tab', { name: 'Casas' })).toBeInTheDocument()
-        expect(screen.queryByRole('tab', { name: 'Diarios' })).not.toBeInTheDocument()
-    })
-
-    it('la pestaña "Todos" muestra items de todas las categorias', () => {
-        setItems(
-            makeItem(1, 'Casa rosa', 'HOUSE'),
-            makeItem(2, 'Diario rosa', 'NOTEBOOK'),
-        )
-        renderModal()
-
-        expect(screen.getByRole('tab', { name: 'Todos' })).toBeInTheDocument()
-        expect(screen.getByText('Casa rosa')).toBeInTheDocument()
-        expect(screen.getByText('Diario rosa')).toBeInTheDocument()
-    })
-
-    it('cambia de categoria al clickear otra pestaña', async () => {
-        setItems(
-            makeItem(1, 'Casa rosa', 'HOUSE'),
-            makeItem(2, 'Diario rosa', 'NOTEBOOK'),
-        )
-        renderModal()
-
-        await userEvent.click(screen.getByRole('tab', { name: 'Casas' }))
-
-        expect(screen.getByText('Casa rosa')).toBeInTheDocument()
-        expect(screen.queryByText('Diario rosa')).not.toBeInTheDocument()
-    })
+  const setupDefaultMembership = () => {
+    mockUseMembership.mockReturnValue({ membership: { active: false, planCode: null } })
+  }
 })

@@ -32,7 +32,7 @@ import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
 import { useInventory } from '../../hooks/store/useInventory'
 import { useUserCoins } from '../../hooks/shop/useUserCoins'
 import { useDailyRewards } from '../../hooks/shop/useDailyRewards'
-import { resolveEquippedImages } from '../../components/Scene/cosmeticAssets'
+import { resolveEquippedImages } from '../../components/Scene/CosmeticAssets'
 import { createHomeOnboardingSteps } from './homeOnboardingSteps'
 import './Home.css'
 

@@ -1,4 +1,5 @@
 package com.huly.backend.domain.useCase.pushNotification;
+
 import com.huly.backend.domain.model.PushSubscription;
 import com.huly.backend.domain.repository.PushSubscriptionRepository;
 import com.huly.backend.infrastructure.adapter.pushNotification.PushNotificationAdapter;
@@ -7,28 +8,30 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PushNotificationScheduler {
-      
+
         private final PushSubscriptionRepository pushSubscriptionRepository;
         private final PushNotificationAdapter pushNotificationAdapter;
 
-      private static final String PAYLOAD = """
+        private static final String PAYLOAD = """
                         {"title":"¿Cómo estás hoy?","body":"Pasá al jardín un ratito 🌱"}
                         """;
 
-        
-
-        @Scheduled(cron = "0 0 9 * * *")
+        @Scheduled(cron = "0 0 * * * *")
         public void sendDailyNotifications() {
-                for(PushSubscription subscription : pushSubscriptionRepository.findAll()) {
+                sendNotificationsForHour(java.time.LocalTime.now().getHour());
+        }
+
+        void sendNotificationsForHour(int hour) {
+                for (PushSubscription subscription : pushSubscriptionRepository.findByNotificationHour(hour)) {
                         try {
                                 pushNotificationAdapter.send(subscription, PAYLOAD);
                         } catch (Exception e) {
-                                log.error("No se pudo enviar push a endpoint {}: {}", subscription.getEndpoint(), e.getMessage());
+                                log.error("No se pudo enviar push a endpoint {}: {}", subscription.getEndpoint(),
+                                                e.getMessage());
                         }
                 }
         }

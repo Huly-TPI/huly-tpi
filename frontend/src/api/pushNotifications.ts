@@ -10,5 +10,6 @@ interface SubscribeRequest {
 export const pushNotificationsApi = {
     subscribe: (data: SubscribeRequest) => api.post<void>('/pushNotification/subscribe', data),
     unsubscribe: (endpoint: string) => api.delete<void>('/pushNotification/unsubscribe', { body: { endpoint } }),
-    getStatus: () => api.get<{ subscribed: boolean }>('/pushNotification/status'),
+    getStatus: () => api.get<{ subscribed: boolean; notificationHour: number }>('/pushNotification/status'),
+    updateHour: (hour: number) => api.put<void>('/pushNotification/hour', { hour }),
 }

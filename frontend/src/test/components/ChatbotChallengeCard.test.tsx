@@ -27,28 +27,30 @@ describe('ChatbotChallengeCard', () => {
     onCloseMock = vi.fn()
   })
 
+  // --- CASOS DE PRUEBA (TEST SUITE) ---
+
   it('renderiza el reto y las acciones cuando no hay decisión', () => {
     renderCard()
     verifyChallengeAndActionsShown()
   })
 
-  it('llama a los manejadores al hacer click en los botones', async () => {
+  it('llama a los manejadores al hacer click en los botones', () => {
     renderCard()
-    await clickAccept()
-    await clickReject()
-
-    verifyAcceptCalled()
-    verifyRejectCalled()
+    return clickAccept()
+      .then(() => clickReject())
+      .then(() => {
+        verifyAcceptCalled()
+        verifyRejectCalled()
+      })
   })
 
-  it('muestra el estado aceptado y navega a mis retos', async () => {
+  it('muestra el estado aceptado y navega a mis retos', () => {
     renderCard('accepted')
     verifyStatusText('Reto aceptado.')
-
-    await clickButton(userEvent.setup(), 'Ir a mis retos')
-
-    verifyCloseCalled()
-    verifyNavigatedToChallenges()
+    return clickButton(userEvent.setup(), 'Ir a mis retos').then(() => {
+      verifyCloseCalled()
+      verifyNavigatedToChallenges()
+    })
   })
 
   it('muestra el texto del estado resuelto como rechazado', () => {
@@ -69,7 +71,7 @@ describe('ChatbotChallengeCard', () => {
           onAccept={onAcceptMock}
           onReject={onRejectMock}
         />
-      </MemoryRouter>,
+      </MemoryRouter>
     )
   }
 
@@ -79,9 +81,13 @@ describe('ChatbotChallengeCard', () => {
     expect(screen.getByRole('button', { name: 'Rechazar' })).toBeInTheDocument()
   }
 
-  const clickAccept = () => clickButton(userEvent.setup(), 'Aceptar')
+  const clickAccept = () => {
+    return clickButton(userEvent.setup(), 'Aceptar')
+  }
 
-  const clickReject = () => clickButton(userEvent.setup(), 'Rechazar')
+  const clickReject = () => {
+    return clickButton(userEvent.setup(), 'Rechazar')
+  }
 
   const verifyAcceptCalled = () => {
     expect(onAcceptMock).toHaveBeenCalledTimes(1)

@@ -3,8 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import MandalaGallery from '../../../components/Mandalas/MandalaGallery'
 import { mandalaAssetByKey } from '../../../components/Mandalas/mandalaAssets'
+import { clickButton, verifyTextPresent } from '../../testHelpers'
 
 describe('MandalaGallery', () => {
+  let onSelectMandalaSpy: any
+  let onPageChangeSpy: any
+  let user: any
+
   const availableMandalas = [
     {
       id: 'mandala-01',
@@ -39,13 +44,51 @@ describe('MandalaGallery', () => {
   ]
 
   it('mantiene disponibles los assets locales de las 21 mandalas', () => {
-    expect(Object.keys(mandalaAssetByKey).sort()).toEqual(
-      Array.from({ length: 21 }, (_, index) => `mandala-${String(index + 1).padStart(2, '0')}`),
-    )
-    expect(mandalaAssetByKey['mandala-21']).toBeTruthy()
+    verifyLocalMandalaAssetsCount(21)
+    verifyMandalaAssetPresent('mandala-21')
   })
 
   it('renderiza solamente las mandalas disponibles recibidas', () => {
+    renderDefaultGallery()
+    verifyNoHeadingPresent()
+    verifyTextPresent('Gratis')
+    verifyTextPresent('Comprado')
+    verifyTextPresent('Suscripción')
+    verifyChooseMandalaButtonsCount(3)
+    verifyUniqueSourcesCount(3)
+  })
+
+  it('permite seleccionar cualquiera de las mandalas del catálogo', () => {
+    renderGalleryWithSelectSpy()
+    verifyChooseMandalaButtonsEnabled()
+    return clickChooseMandalaButton(0).then(() => {
+      verifyOnSelectMandalaCalledWith(availableMandalas[0])
+    })
+  })
+
+  it('permite navegar entre páginas sin mostrar texto visible', () => {
+    renderGalleryWithPageChangeSpy()
+    return clickPreviousPageButton()
+      .then(() => clickNextPageButton())
+      .then(() => {
+        verifyOnPageChangeNthCalledWith(1, 0)
+        verifyOnPageChangeNthCalledWith(2, 2)
+      })
+  })
+
+  /* helpers */
+
+  const verifyLocalMandalaAssetsCount = (count: number) => {
+    expect(Object.keys(mandalaAssetByKey).sort()).toEqual(
+      Array.from({ length: count }, (_, index) => `mandala-${String(index + 1).padStart(2, '0')}`),
+    )
+  }
+
+  const verifyMandalaAssetPresent = (key: string) => {
+    expect(mandalaAssetByKey[key]).toBeTruthy()
+  }
+
+  const renderDefaultGallery = () => {
     render(
       <MandalaGallery
         first
@@ -57,59 +100,75 @@ describe('MandalaGallery', () => {
         totalPages={1}
       />,
     )
+  }
 
-    expect(screen.queryByRole('heading')).not.toBeInTheDocument()
-    expect(screen.getByText('Gratis')).toBeInTheDocument()
-    expect(screen.getByText('Comprado')).toBeInTheDocument()
-    expect(screen.getByText('Suscripción')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /elegir mandala/i })).toHaveLength(3)
-    expect(new Set(availableMandalas.map(mandala => mandala.src))).toHaveProperty('size', 3)
-  })
-
-  it('permite seleccionar cualquiera de las mandalas del catalogo', async () => {
-    const user = userEvent.setup()
-    const onSelectMandala = vi.fn()
-
+  const renderGalleryWithSelectSpy = () => {
+    user = userEvent.setup()
+    onSelectMandalaSpy = vi.fn()
     render(
       <MandalaGallery
         first
         last
         mandalas={availableMandalas}
         onPageChange={vi.fn()}
-        onSelectMandala={onSelectMandala}
+        onSelectMandala={onSelectMandalaSpy}
         page={0}
         totalPages={1}
       />,
     )
+  }
 
-    const mandalaButtons = screen.getAllByRole('button', { name: /elegir mandala/i })
-    expect(mandalaButtons).toHaveLength(3)
-    mandalaButtons.forEach(button => expect(button).toBeEnabled())
-
-    await user.click(mandalaButtons[0])
-    expect(onSelectMandala).toHaveBeenCalledWith(availableMandalas[0])
-  })
-
-  it('permite navegar entre paginas sin mostrar texto visible', async () => {
-    const user = userEvent.setup()
-    const onPageChange = vi.fn()
-
+  const renderGalleryWithPageChangeSpy = () => {
+    user = userEvent.setup()
+    onPageChangeSpy = vi.fn()
     render(
       <MandalaGallery
         first={false}
         last={false}
         mandalas={availableMandalas}
-        onPageChange={onPageChange}
+        onPageChange={onPageChangeSpy}
         onSelectMandala={vi.fn()}
         page={1}
         totalPages={3}
       />,
     )
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Página anterior' }))
-    await user.click(screen.getByRole('button', { name: 'Página siguiente' }))
+  const verifyNoHeadingPresent = () => {
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument()
+  }
 
-    expect(onPageChange).toHaveBeenNthCalledWith(1, 0)
-    expect(onPageChange).toHaveBeenNthCalledWith(2, 2)
-  })
+  const verifyChooseMandalaButtonsCount = (count: number) => {
+    expect(screen.getAllByRole('button', { name: (content) => content.includes('Elegir Mandala') })).toHaveLength(count)
+  }
+
+  const verifyUniqueSourcesCount = (count: number) => {
+    expect(new Set(availableMandalas.map(mandala => mandala.src))).toHaveProperty('size', count)
+  }
+
+  const verifyChooseMandalaButtonsEnabled = () => {
+    const mandalaButtons = screen.getAllByRole('button', { name: (content) => content.includes('Elegir Mandala') })
+    mandalaButtons.forEach(button => expect(button).toBeEnabled())
+  }
+
+  const clickChooseMandalaButton = (index: number) => {
+    const mandalaButtons = screen.getAllByRole('button', { name: (content) => content.includes('Elegir Mandala') })
+    return user.click(mandalaButtons[index])
+  }
+
+  const verifyOnSelectMandalaCalledWith = (mandala: any) => {
+    expect(onSelectMandalaSpy).toHaveBeenCalledWith(mandala)
+  }
+
+  const clickPreviousPageButton = () => {
+    return clickButton(user, 'Página anterior')
+  }
+
+  const clickNextPageButton = () => {
+    return clickButton(user, 'Página siguiente')
+  }
+
+  const verifyOnPageChangeNthCalledWith = (nth: number, page: number) => {
+    expect(onPageChangeSpy).toHaveBeenNthCalledWith(nth, page)
+  }
 })

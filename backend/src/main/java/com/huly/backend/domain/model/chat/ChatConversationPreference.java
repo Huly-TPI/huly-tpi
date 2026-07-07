@@ -79,6 +79,10 @@ public class ChatConversationPreference {
                 .build();
     }
 
+    public boolean isPendingCommunicationStyle() {
+        return onboardingStatus == ChatOnboardingStatus.PENDING_COMMUNICATION_STYLE;
+    }
+
     private ChatConversationPreferenceBuilder toBuilder() {
         return ChatConversationPreference.builder()
                 .id(id)

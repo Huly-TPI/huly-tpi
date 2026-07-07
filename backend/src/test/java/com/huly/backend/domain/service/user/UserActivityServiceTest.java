@@ -1,6 +1,7 @@
 package com.huly.backend.domain.service.user;
 
 import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,7 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserActivityServiceTest {
@@ -25,30 +30,56 @@ class UserActivityServiceTest {
     private UserActivityService service;
 
     @Test
-    void registerActivity_shouldAdvanceLastLogin_whenNoComebackPending() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY.minusDays(3)));
+    @DisplayName("Avanza la última fecha de acceso cuando no hay comeback pendiente")
+    void registerActivityShouldAdvanceLastLoginWhenNoComebackPending() {
+        givenLastLoginDaysAgo(3);
 
-        service.registerActivity(USER_ID, TODAY);
+        registerActivity();
 
-        verify(userDetailDomainRepository).updateLastLoginDate(USER_ID, TODAY);
+        thenLastLoginUpdated();
     }
 
     @Test
-    void registerActivity_shouldAdvanceLastLogin_whenNeverSeen() {
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.empty());
+    @DisplayName("Avanza la última fecha de acceso cuando nunca fue visto")
+    void registerActivityShouldAdvanceLastLoginWhenNeverSeen() {
+        givenNeverSeen();
 
-        service.registerActivity(USER_ID, TODAY);
+        registerActivity();
 
-        verify(userDetailDomainRepository).updateLastLoginDate(USER_ID, TODAY);
+        thenLastLoginUpdated();
     }
 
     @Test
-    void registerActivity_shouldNotAdvanceLastLogin_whenComebackPending() {
+    @DisplayName("No avanza la última fecha de acceso cuando hay un comeback pendiente")
+    void registerActivityShouldNotAdvanceLastLoginWhenComebackPending() {
         // Brecha >= umbral (10 días): hay un comeback pendiente, no hay que borrar la brecha.
-        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY.minusDays(15)));
+        givenLastLoginDaysAgo(15);
 
+        registerActivity();
+
+        thenLastLoginNotUpdated();
+    }
+
+    // --- arrange ---
+    private void givenLastLoginDaysAgo(int days) {
+        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.of(TODAY.minusDays(days)));
+    }
+
+    private void givenNeverSeen() {
+        when(userDetailDomainRepository.findLastLoginDate(USER_ID)).thenReturn(Optional.empty());
+    }
+
+    // --- act ---
+    private void registerActivity() {
         service.registerActivity(USER_ID, TODAY);
+    }
 
+    // --- assert ---
+    private void thenLastLoginUpdated() {
+        verify(userDetailDomainRepository).updateLastLoginDate(USER_ID, TODAY);
+    }
+
+    private void thenLastLoginNotUpdated() {
         verify(userDetailDomainRepository, never()).updateLastLoginDate(anyLong(), any());
     }
 }

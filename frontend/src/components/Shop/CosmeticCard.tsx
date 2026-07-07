@@ -1,7 +1,8 @@
 import type { StoreItemResponse } from '../../api/store'
-import { cosmeticAssets } from '../Scene/cosmeticAssets'
+import { cosmeticAssets } from '../Scene/CosmeticAssets'
 import { mandalaAssetByKey } from '../Mandalas/mandalaAssets'
 import seedIcon from '../../assets/shop-seed/1seed.webp'
+import { getBackendOrigin } from '../../api/client'
 
 interface CosmeticCardProps {
   item: StoreItemResponse
@@ -17,14 +18,20 @@ interface CosmeticCardProps {
 }
 
 export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onBuyWithMoney, onEquip, onUnequip, userIsPremium }: CosmeticCardProps) {
-  let preview = cosmeticAssets[item.assetKey]?.light
-  if (item.category === 'MANDALA') {
-    preview = mandalaAssetByKey[item.assetKey]
-  }
+  const resolveImageUrl = (url: string) => url.startsWith('http') ? url : `${getBackendOrigin()}${url}`
 
+  let preview: string | undefined
+  if (item.imageUrlLight) {
+    preview = resolveImageUrl(item.imageUrlLight)
+  } else if (item.category === 'MANDALA') {
+    preview = item.assetKey ? mandalaAssetByKey[item.assetKey] : undefined
+  } else {
+    preview = item.assetKey ? cosmeticAssets[item.assetKey]?.light : undefined
+  }
+  
   return (
-        <div className="flex flex-col gap-1.5 rounded-2xl border border-[#ACCCA4]/50 bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:gap-2 sm:p-3">
-        {preview && (
+    <div className="flex flex-col gap-1.5 rounded-2xl border border-[#ACCCA4]/50 bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:gap-2 sm:p-3">
+      {preview && (
         <div className="mx-auto flex h-20 w-full items-center justify-center rounded-xl bg-gradient-to-b from-[#E9F1EA]/70 to-transparent sm:h-24">
           <img src={preview} alt={item.name} className="h-14 w-14 object-contain sm:h-20 sm:w-20" />
         </div>

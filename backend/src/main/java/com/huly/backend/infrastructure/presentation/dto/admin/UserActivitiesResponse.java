@@ -13,4 +13,5 @@ public class UserActivitiesResponse {
     private String favoriteActivity;
     private String averageSessionsText;
     private Map<String, Integer> activityDistribution;
+    private Map<String, String> activityNames;
 }

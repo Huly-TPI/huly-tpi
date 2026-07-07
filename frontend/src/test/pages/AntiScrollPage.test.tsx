@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import AntiScrollPage from '../../pages/Backoffice/AntiScrollPage'
 import * as adminApi from '../../api/admin'
+import { verifyTextPresent, verifyTextNotPresent, clearAllMocks } from '../testHelpers'
 
 vi.mock('../../api/admin', () => ({
   getUsers: vi.fn(),
@@ -32,40 +33,67 @@ const defaultConfig = {
 
 describe('AntiScrollPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
   })
 
   it('muestra el estado cargando inicialmente', () => {
-    mockedGetAntiScrollDashboard.mockReturnValue(new Promise(() => {}))
-    mockedGetAntiScrollConfig.mockReturnValue(new Promise(() => {}))
-    render(
-      <MemoryRouter>
-        <AntiScrollPage />
-      </MemoryRouter>
-    )
-    expect(screen.getByText('Cargando datos de antiscroll...')).toBeInTheDocument()
+    setupDashboardPromisePending()
+    setupConfigPromisePending()
+    renderAntiScrollPage()
+    verifyLoadingStateVisible()
   })
 
-  it('renderiza el dashboard y sus componentes correctamente', async () => {
-    mockedGetAntiScrollDashboard.mockResolvedValueOnce(defaultDashboard)
-    mockedGetAntiScrollConfig.mockResolvedValueOnce(defaultConfig)
+  it('renderiza el dashboard y sus componentes correctamente', () => {
+    setupDashboardResponse(defaultDashboard)
+    setupConfigResponse(defaultConfig)
+    renderAntiScrollPage()
+    return waitForLoadingStateToDisappear().then(() => {
+      verifyDashboardComponentsRendered()
+    })
+  })
 
+  /* helpers */
+
+  const renderAntiScrollPage = () => {
     render(
       <MemoryRouter>
         <AntiScrollPage />
       </MemoryRouter>
     )
+  }
 
-    await waitFor(() => {
-      expect(screen.queryByText('Cargando datos de antiscroll...')).not.toBeInTheDocument()
+  const setupDashboardPromisePending = () => {
+    mockedGetAntiScrollDashboard.mockReturnValue(new Promise(() => {}))
+  }
+
+  const setupConfigPromisePending = () => {
+    mockedGetAntiScrollConfig.mockReturnValue(new Promise(() => {}))
+  }
+
+  const setupDashboardResponse = (dashboard: any) => {
+    mockedGetAntiScrollDashboard.mockResolvedValueOnce(dashboard)
+  }
+
+  const setupConfigResponse = (config: any) => {
+    mockedGetAntiScrollConfig.mockResolvedValueOnce(config)
+  }
+
+  const verifyLoadingStateVisible = () => {
+    verifyTextPresent('Cargando datos de antiscroll...')
+  }
+
+  const waitForLoadingStateToDisappear = () => {
+    return waitFor(() => {
+      verifyTextNotPresent('Cargando datos de antiscroll...')
     })
+  }
 
-    expect(screen.getByText('Panel antiscroll')).toBeInTheDocument()
-    expect(screen.getByText('40.0%')).toBeInTheDocument()
-    expect(screen.getByText('instagram.com')).toBeInTheDocument()
+  const verifyDashboardComponentsRendered = () => {
+    verifyTextPresent('Panel antiscroll')
+    verifyTextPresent('40.0%')
+    verifyTextPresent('instagram.com')
     expect(screen.getAllByText('1')[0]).toBeInTheDocument()
     expect(screen.getByLabelText('Tiempo de pausa por defecto (minutos)')).toBeInTheDocument()
     expect(screen.getByLabelText('Mensaje de consentimiento de datos')).toBeInTheDocument()
-  })
+  }
 })
-

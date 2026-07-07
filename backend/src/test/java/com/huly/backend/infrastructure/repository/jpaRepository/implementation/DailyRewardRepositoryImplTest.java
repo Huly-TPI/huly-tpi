@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
 import com.huly.backend.domain.model.dailyReward.DailyReward;
 import com.huly.backend.infrastructure.repository.entity.DailyRewardEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IDailyRewardJpaRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,14 +25,41 @@ class DailyRewardRepositoryImplTest {
     private DailyRewardRepositoryImpl repository;
 
     @Test
-    void findAllOrderByDay_shouldMapEntitiesToDomain() {
-        when(jpaRepository.findAllByOrderByDayNumberAsc()).thenReturn(List.of(
-                DailyRewardEntity.builder().id(1L).dayNumber(1).coins(10).build(),
-                DailyRewardEntity.builder().id(2L).dayNumber(2).coins(15).build()
-        ));
+    @DisplayName("Mapea las entidades a dominio ordenadas por día")
+    void findAllOrderByDayShouldMapEntitiesToDomain() {
+        givenRewards(rewardEntity(1L, 1, 10), rewardEntity(2L, 2, 15));
 
-        List<DailyReward> result = repository.findAllOrderByDay();
+        List<DailyReward> result = findAllOrderByDay();
 
+        thenRewardsMapped(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve lista vacía cuando no hay filas")
+    void findAllOrderByDayShouldReturnEmptyWhenNoRows() {
+        givenRewards();
+
+        List<DailyReward> result = findAllOrderByDay();
+
+        thenEmpty(result);
+    }
+
+    // --- arrange ---
+    private void givenRewards(DailyRewardEntity... entities) {
+        when(jpaRepository.findAllByOrderByDayNumberAsc()).thenReturn(List.of(entities));
+    }
+
+    private DailyRewardEntity rewardEntity(Long id, int dayNumber, int coins) {
+        return DailyRewardEntity.builder().id(id).dayNumber(dayNumber).coins(coins).build();
+    }
+
+    // --- act ---
+    private List<DailyReward> findAllOrderByDay() {
+        return repository.findAllOrderByDay();
+    }
+
+    // --- assert ---
+    private void thenRewardsMapped(List<DailyReward> result) {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(0).getDayNumber()).isEqualTo(1);
@@ -40,10 +68,7 @@ class DailyRewardRepositoryImplTest {
         assertThat(result.get(1).getCoins()).isEqualTo(15);
     }
 
-    @Test
-    void findAllOrderByDay_shouldReturnEmpty_whenNoRows() {
-        when(jpaRepository.findAllByOrderByDayNumberAsc()).thenReturn(List.of());
-
-        assertThat(repository.findAllOrderByDay()).isEmpty();
+    private void thenEmpty(List<DailyReward> result) {
+        assertThat(result).isEmpty();
     }
 }

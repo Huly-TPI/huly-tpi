@@ -2,13 +2,18 @@ package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.user.UserProfile;
 import com.huly.backend.domain.model.user.AudioSettings;
+import com.huly.backend.domain.model.user.UserAccountSettings;
 import com.huly.backend.domain.useCase.auth.GetCurrentUserUseCase;
 import com.huly.backend.domain.useCase.user.ChangePasswordUseCase;
+import com.huly.backend.domain.useCase.user.GetUserAccountSettingsUseCase;
 import com.huly.backend.domain.useCase.user.GetUserCoinsUseCase;
 import com.huly.backend.domain.useCase.user.GetCurrentMembershipUseCase;
+import com.huly.backend.domain.useCase.user.UpdateUserAccountSettingsUseCase;
 import com.huly.backend.infrastructure.presentation.dto.user.ChangePasswordRequest;
 import com.huly.backend.infrastructure.presentation.dto.user.CoinsResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.MembershipResponse;
+import com.huly.backend.infrastructure.presentation.dto.user.UpdateUserAccountSettingsRequest;
+import com.huly.backend.infrastructure.presentation.dto.user.UserAccountSettingsResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.UserProfileResponse;
 import com.huly.backend.infrastructure.presentation.dto.user.AudioSettingsResponse;
 import com.huly.backend.infrastructure.presentation.exception.UnauthorizedException;
@@ -39,6 +44,8 @@ public class UserController {
     private final GetCurrentMembershipUseCase getCurrentMembershipUseCase;
     private final UserPresentationMapper userPresentationMapper;
     private final ChangePasswordUseCase changePasswordUseCase;
+    private final GetUserAccountSettingsUseCase getUserAccountSettingsUseCase;
+    private final UpdateUserAccountSettingsUseCase updateUserAccountSettingsUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(
@@ -52,11 +59,13 @@ public class UserController {
         UserProfile profile = getCurrentUserUseCase.execute(userId);
         ThemePreference themePreference = userDetailDomainRepository.findThemePreference(userId);
         AudioSettings audioSettings = userDetailDomainRepository.findAudioSettings(userId);
+        UserAccountSettings accountSettings = getUserAccountSettingsUseCase.execute(userId);
 
         return ResponseEntity.ok(UserProfileResponse.builder()
                 .id(profile.user().getId())
-                .name(profile.user().getName())
+                .name(accountSettings.name())
                 .email(profile.user().getEmail())
+                .birthDate(accountSettings.birthDate())
                 .role(profile.user().getRole())
                 .onBoardingCompleted(profile.onBoardingCompleted())
                 .onboardingTutorialCompleted(profile.onboardingTutorialCompleted())
@@ -64,6 +73,27 @@ public class UserController {
                 .themePreference(themePreference)
                 .audioSettings(toAudioSettingsResponse(audioSettings))
                 .build());
+    }
+
+    @GetMapping("/me/settings")
+    public ResponseEntity<UserAccountSettingsResponse> getAccountSettings(
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        Long userId = currentUserId(principal);
+        return ResponseEntity.ok(toAccountSettingsResponse(getUserAccountSettingsUseCase.execute(userId)));
+    }
+
+    @PutMapping("/me/settings")
+    public ResponseEntity<UserAccountSettingsResponse> updateAccountSettings(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody UpdateUserAccountSettingsRequest request
+    ) {
+        Long userId = currentUserId(principal);
+        UserAccountSettings updatedSettings = updateUserAccountSettingsUseCase.execute(
+                userId,
+                new UserAccountSettings(request.name(), null, request.birthDate())
+        );
+        return ResponseEntity.ok(toAccountSettingsResponse(updatedSettings));
     }
 
     @GetMapping("/me/coins")
@@ -131,6 +161,14 @@ public class UserController {
                 audioSettings.interfaceVolume(),
                 audioSettings.ambientVolume(),
                 audioSettings.minigameVolume()
+        );
+    }
+
+    private UserAccountSettingsResponse toAccountSettingsResponse(UserAccountSettings accountSettings) {
+        return new UserAccountSettingsResponse(
+                accountSettings.name(),
+                accountSettings.email(),
+                accountSettings.birthDate()
         );
     }
 }

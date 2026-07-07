@@ -1,4 +1,5 @@
 package com.huly.backend.domain.model.shop;
+
 import com.huly.backend.domain.model.enums.ItemCategory;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,6 @@ public class StoreItem {
     private final String assetKey;
     private final int priceCoins;
     private final BigDecimal price;
-     private final boolean premiumOnly;
+    private final boolean premiumOnly;
+    private final String imageUrl;
 }
-
