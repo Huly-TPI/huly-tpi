@@ -8,6 +8,8 @@ import { useTheme } from '../../context/theme'
 import { useWaterAudio } from '../../hooks/useWaterAudio'
 import {
   buildWaterMask,
+  buildWaterMaskCanvas,
+  coverPlacement,
   createAmbientRipple,
   createRipple,
   createStone,
@@ -33,8 +35,10 @@ interface StonesLakeProps {
 
 export default function StonesLake({ onStoneThrown }: StonesLakeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const ripplesCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const backgroundRef = useRef<HTMLImageElement>(null)
   const waterMaskRef = useRef<((imageX: number, imageY: number) => boolean) | null>(null)
+  const waterMaskCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const ripplesRef = useRef<Ripple[]>([])
   const stonesRef = useRef<Stone[]>([])
   const lastAmbientRef = useRef(0)
@@ -52,6 +56,7 @@ export default function StonesLake({ onStoneThrown }: StonesLakeProps) {
     const image = backgroundRef.current
     if (image) {
       waterMaskRef.current = buildWaterMask(image)
+      waterMaskCanvasRef.current = buildWaterMaskCanvas(image)
     }
   }
 
@@ -81,18 +86,57 @@ export default function StonesLake({ onStoneThrown }: StonesLakeProps) {
   const resizeCanvas = useCallback((canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect()
     const dpr = window.devicePixelRatio || 1
-    canvas.width = Math.max(1, Math.floor(rect.width * dpr))
-    canvas.height = Math.max(1, Math.floor(rect.height * dpr))
-    const context = canvas.getContext('2d')
-    if (context) {
-      context.setTransform(dpr, 0, 0, dpr, 0, 0)
+    const width = Math.max(1, Math.floor(rect.width * dpr))
+    const height = Math.max(1, Math.floor(rect.height * dpr))
+
+    for (const target of [canvas, ripplesCanvasRef.current]) {
+      if (!target) continue
+      target.width = width
+      target.height = height
+      const context = target.getContext('2d')
+      if (context) {
+        context.setTransform(dpr, 0, 0, dpr, 0, 0)
+      }
     }
   }, [])
+
+  const drawRipplesClippedToWater = useCallback(
+    (
+      context: CanvasRenderingContext2D,
+      rect: { width: number; height: number },
+      palette: (typeof LAKE_PALETTES)['light'],
+      now: number,
+    ) => {
+      const maskCanvas = waterMaskCanvasRef.current
+      const ripplesCanvas = ripplesCanvasRef.current
+      const ripplesContext = ripplesCanvas?.getContext('2d')
+
+      if (!maskCanvas || !ripplesCanvas || !ripplesContext) {
+        return drawRipples(context, ripplesRef.current, palette, now)
+      }
+
+      ripplesContext.globalCompositeOperation = 'source-over'
+      ripplesContext.clearRect(0, 0, rect.width, rect.height)
+      const alive = drawRipples(ripplesContext, ripplesRef.current, palette, now)
+
+      const placement = coverPlacement(rect.width, rect.height, maskCanvas.width, maskCanvas.height)
+      ripplesContext.globalCompositeOperation = 'destination-in'
+      ripplesContext.drawImage(maskCanvas, placement.x, placement.y, placement.width, placement.height)
+      ripplesContext.globalCompositeOperation = 'source-over'
+
+      context.drawImage(ripplesCanvas, 0, 0, rect.width, rect.height)
+      return alive
+    },
+    [],
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    if (!ripplesCanvasRef.current) {
+      ripplesCanvasRef.current = document.createElement('canvas')
+    }
     resizeCanvas(canvas)
 
     const renderFrame = () => {
@@ -124,14 +168,18 @@ export default function StonesLake({ onStoneThrown }: StonesLakeProps) {
           continue
         }
         stillFalling.push(stone)
-        drawStone(context, stone, progress, palette)
       }
       stonesRef.current = stillFalling
 
       if (ripplesRef.current.length > MAX_RIPPLES) {
         ripplesRef.current.splice(0, ripplesRef.current.length - MAX_RIPPLES)
       }
-      ripplesRef.current = drawRipples(context, ripplesRef.current, palette, now)
+
+      ripplesRef.current = drawRipplesClippedToWater(context, rect, palette, now)
+
+      for (const stone of stonesRef.current) {
+        drawStone(context, stone, stoneProgress(stone, now), palette)
+      }
 
       frameRef.current = requestAnimationFrame(renderFrame)
     }
@@ -146,7 +194,7 @@ export default function StonesLake({ onStoneThrown }: StonesLakeProps) {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current)
       resizeObserver.disconnect()
     }
-  }, [resizeCanvas, isWaterAtView])
+  }, [resizeCanvas, isWaterAtView, drawRipplesClippedToWater])
 
   const throwStone = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     if (event.button > 0 || event.isPrimary === false) return

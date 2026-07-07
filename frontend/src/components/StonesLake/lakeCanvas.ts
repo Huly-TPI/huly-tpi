@@ -103,6 +103,57 @@ export const toImagePoint = (
   }
 }
 
+export const coverPlacement = (
+  viewWidth: number,
+  viewHeight: number,
+  naturalWidth: number,
+  naturalHeight: number,
+): { x: number; y: number; width: number; height: number } => {
+  const scale = Math.max(viewWidth / naturalWidth, viewHeight / naturalHeight)
+  const width = naturalWidth * scale
+  const height = naturalHeight * scale
+  return {
+    x: (viewWidth - width) / 2,
+    y: (viewHeight - height) / 2,
+    width,
+    height,
+  }
+}
+
+export const buildWaterMaskCanvas = (
+  image: HTMLImageElement,
+): HTMLCanvasElement | null => {
+  const width = image.naturalWidth
+  const height = image.naturalHeight
+  if (!width || !height) return null
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d', { willReadFrequently: true })
+  if (!context) return null
+
+  let imageData: ImageData
+  try {
+    context.drawImage(image, 0, 0)
+    imageData = context.getImageData(0, 0, width, height)
+  } catch {
+    return null
+  }
+
+  const data = imageData.data
+  for (let index = 0; index < data.length; index += 4) {
+    const isWater = isWaterColor(data[index], data[index + 1], data[index + 2])
+    data[index] = 255
+    data[index + 1] = 255
+    data[index + 2] = 255
+    data[index + 3] = isWater ? 255 : 0
+  }
+
+  context.putImageData(imageData, 0, 0)
+  return canvas
+}
+
 export const getLakePoint = (
   event: { clientX: number; clientY: number },
   canvas: HTMLCanvasElement,

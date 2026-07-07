@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  coverPlacement,
   createRipple,
   drawRipples,
   getLakePoint,
@@ -42,15 +43,18 @@ describe('lakeCanvas', () => {
   })
 
   it('reconoce el azul del agua y descarta el pasto y las rocas', () => {
-    verifyIsWaterColor(90, 175, 225, true) // agua
-    verifyIsWaterColor(150, 200, 40, false) // pasto amarillento
-    verifyIsWaterColor(60, 140, 70, false) // arbustos verdes
-    verifyIsWaterColor(200, 190, 170, false) // rocas
+    verifyIsWaterColor(90, 175, 225, true)
+    verifyIsWaterColor(150, 200, 40, false)
+    verifyIsWaterColor(60, 140, 70, false)
+    verifyIsWaterColor(200, 190, 170, false)
   })
 
   it('mapea el punto de la vista a píxeles de la imagen con cover cuadrado centrado', () => {
-    // Imagen 100x100 en una vista 200x100: cover escala x2 y recorta arriba/abajo.
     verifyImagePointMapping(100, 50, 200, 100, 100, 100, 50, 50)
+  })
+
+  it('ubica la imagen con cover escalada y centrada dentro de la vista', () => {
+    verifyCoverPlacement(200, 100, 100, 100, { x: 0, y: -50, width: 200, height: 200 })
   })
 
   let currentRect: { left: number; top: number }
@@ -58,8 +62,6 @@ describe('lakeCanvas', () => {
   let currentRipple: Ripple
   let currentContext: CanvasRenderingContext2D & { stroke: ReturnType<typeof vi.fn> }
   let currentAliveRipples: Ripple[]
-
-  /* helpers */
 
   const setupCanvasRect = (left: number, top: number) => {
     currentRect = { left, top }
@@ -133,6 +135,20 @@ describe('lakeCanvas', () => {
     const point = toImagePoint(viewX, viewY, viewWidth, viewHeight, naturalWidth, naturalHeight)
     expect(point.x).toBeCloseTo(expectedX)
     expect(point.y).toBeCloseTo(expectedY)
+  }
+
+  const verifyCoverPlacement = (
+    viewWidth: number,
+    viewHeight: number,
+    naturalWidth: number,
+    naturalHeight: number,
+    expected: { x: number; y: number; width: number; height: number },
+  ) => {
+    const placement = coverPlacement(viewWidth, viewHeight, naturalWidth, naturalHeight)
+    expect(placement.x).toBeCloseTo(expected.x)
+    expect(placement.y).toBeCloseTo(expected.y)
+    expect(placement.width).toBeCloseTo(expected.width)
+    expect(placement.height).toBeCloseTo(expected.height)
   }
 })
 

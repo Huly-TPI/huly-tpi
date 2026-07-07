@@ -41,7 +41,6 @@ describe('StonesLake', () => {
     throwStoneAt(40, 40)
     verifyStoneThrownCalledTimes(1)
     verifyPlayDropCalledTimes(0)
-    // Tras el vuelo (flightDuration = 520 ms) la piedra toca el agua.
     advanceFrame(600)
     verifyPlayDropCalledTimes(1)
   })
@@ -55,8 +54,6 @@ describe('StonesLake', () => {
 
   let frameCallback: FrameRequestCallback | null
   let nowValue: number
-
-  /* helpers */
 
   const setupAnimationFrameStub = () => {
     frameCallback = null
@@ -88,7 +85,6 @@ describe('StonesLake', () => {
     fireEvent.pointerDown(getLakeCanvas(), { isPrimary: true, button: 0, clientX, clientY })
 
   const rightClickAt = (clientX: number, clientY: number) => {
-    // jsdom no propaga `button` en el init, así que lo forzamos sobre el evento nativo.
     const canvas = getLakeCanvas()
     const event = createEvent.pointerDown(canvas, { clientX, clientY })
     Object.defineProperty(event, 'button', { value: 2 })
@@ -113,6 +109,7 @@ function createContext() {
   return {
     setTransform: vi.fn(),
     clearRect: vi.fn(),
+    drawImage: vi.fn(),
     save: vi.fn(),
     restore: vi.fn(),
     translate: vi.fn(),
