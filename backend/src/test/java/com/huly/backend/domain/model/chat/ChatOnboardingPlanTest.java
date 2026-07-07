@@ -11,47 +11,87 @@ class ChatOnboardingPlanTest {
     @Test
     @DisplayName("Pregunta el nombre cuando esa pregunta está habilitada")
     void createShouldAskPreferredNameWhenEnabled() {
-        ChatOnboardingPlan plan = ChatOnboardingPlan.create(true, true, "Sergio");
+        ChatOnboardingPlan plan = createPlan(true, true, "Sergio");
 
-        assertThat(plan.initialStatus()).isEqualTo(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
-        assertThat(plan.greeting())
-                .contains("Hola Sergio")
-                .contains("Cómo te gustaría que te llame");
+        thenAsksPreferredName(plan);
+        thenGreetingAsksName(plan);
     }
 
     @Test
     @DisplayName("Pregunta el estilo cuando el nombre está deshabilitado")
     void createShouldAskCommunicationStyleWhenNameDisabled() {
-        ChatOnboardingPlan plan = ChatOnboardingPlan.create(false, true, "Sergio");
+        ChatOnboardingPlan plan = createPlan(false, true, "Sergio");
 
-        assertThat(plan.initialStatus()).isEqualTo(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE);
-        assertThat(plan.greeting()).contains("Cómo te gustaría que te hable");
+        thenAsksCommunicationStyle(plan);
     }
 
     @Test
     @DisplayName("Completa el onboarding y saluda en general cuando ambas preguntas están deshabilitadas")
     void createShouldCompleteWhenBothQuestionsDisabled() {
-        ChatOnboardingPlan plan = ChatOnboardingPlan.create(false, false, "Sergio");
+        ChatOnboardingPlan plan = createPlan(false, false, "Sergio");
 
+        thenCompletesWithGeneralGreeting(plan);
+    }
+
+    @Test
+    @DisplayName("Trata los flags nulos como habilitados")
+    void createShouldTreatNullFlagsAsEnabled() {
+        ChatOnboardingPlan plan = createPlan(null, null, "Sergio");
+
+        thenAsksPreferredName(plan);
+    }
+
+    @Test
+    @DisplayName("Usa un saludo sin nombre cuando el nombre registrado está en blanco")
+    void createShouldUseGenericGreetingWhenNameIsBlank() {
+        ChatOnboardingPlan plan = createPlan(true, true, "  ");
+
+        thenGreetingHasNoName(plan);
+    }
+
+    @Test
+    @DisplayName("Usa un saludo sin nombre cuando el nombre registrado es nulo")
+    void createShouldUseGenericGreetingWhenNameIsNull() {
+        ChatOnboardingPlan plan = createPlan(true, true, null);
+
+        thenGreetingHasNoName(plan);
+    }
+
+    // --- act ---
+
+    private ChatOnboardingPlan createPlan(
+            Boolean preferredNameQuestionEnabled,
+            Boolean communicationStyleQuestionEnabled,
+            String registeredName) {
+        return ChatOnboardingPlan.create(
+                preferredNameQuestionEnabled, communicationStyleQuestionEnabled, registeredName);
+    }
+
+    // --- assert ---
+
+    private void thenAsksPreferredName(ChatOnboardingPlan plan) {
+        assertThat(plan.initialStatus()).isEqualTo(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
+    }
+
+    private void thenGreetingAsksName(ChatOnboardingPlan plan) {
+        assertThat(plan.greeting())
+                .contains("Hola Sergio")
+                .contains("Cómo te gustaría que te llame");
+    }
+
+    private void thenAsksCommunicationStyle(ChatOnboardingPlan plan) {
+        assertThat(plan.initialStatus()).isEqualTo(ChatOnboardingStatus.ASKED_COMMUNICATION_STYLE);
+        assertThat(plan.greeting()).contains("Cómo te gustaría que te hable");
+    }
+
+    private void thenCompletesWithGeneralGreeting(ChatOnboardingPlan plan) {
         assertThat(plan.initialStatus()).isEqualTo(ChatOnboardingStatus.COMPLETED);
         assertThat(plan.greeting())
                 .contains("En qué te puedo ayudar")
                 .doesNotContain("Cómo te gustaría");
     }
 
-    @Test
-    @DisplayName("Trata los flags nulos como habilitados")
-    void createShouldTreatNullFlagsAsEnabled() {
-        ChatOnboardingPlan plan = ChatOnboardingPlan.create(null, null, "Sergio");
-
-        assertThat(plan.initialStatus()).isEqualTo(ChatOnboardingStatus.ASKED_PREFERRED_NAME);
-    }
-
-    @Test
-    @DisplayName("Usa un saludo sin nombre cuando el nombre registrado es nulo o vacío")
-    void createShouldUseGenericGreetingWhenNameIsBlank() {
-        ChatOnboardingPlan plan = ChatOnboardingPlan.create(true, true, "  ");
-
+    private void thenGreetingHasNoName(ChatOnboardingPlan plan) {
         assertThat(plan.greeting()).startsWith("Hola, soy Huly");
     }
 }

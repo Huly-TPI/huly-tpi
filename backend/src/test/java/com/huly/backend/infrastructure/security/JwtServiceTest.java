@@ -3,6 +3,7 @@ package com.huly.backend.infrastructure.security;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -118,6 +119,16 @@ class JwtServiceTest {
         assertThat(first).isNotEqualTo(second);
     }
 
+    @Test
+    @DisplayName("generateAccessToken genera un token válido cuando el rol y el estado son nulos")
+    void generateAccessToken_shouldGenerateValidToken_whenRoleAndStatusAreNull() {
+        String token = generateAccessTokenWithNullRoleAndStatus();
+
+        thenTokenIsValidForDefaultUser(token);
+    }
+
+    // --- arrange ---
+
     private JwtService buildJwtService(String secret, long accessMs, long refreshMs, boolean secure) {
         JwtService instance = new JwtService();
         ReflectionTestUtils.setField(instance, "secret", secret);
@@ -125,5 +136,20 @@ class JwtServiceTest {
         ReflectionTestUtils.setField(instance, "refreshTokenExpirationMs", refreshMs);
         ReflectionTestUtils.setField(instance, "cookieSecure", secure);
         return instance;
+    }
+
+    // --- act ---
+
+    private String generateAccessTokenWithNullRoleAndStatus() {
+        return jwtService.generateAccessToken(1L, "user@test.com", null, null);
+    }
+
+    // --- assert ---
+
+    private void thenTokenIsValidForDefaultUser(String token) {
+        assertThat(token).isNotBlank();
+        assertThat(jwtService.isTokenValid(token)).isTrue();
+        assertThat(jwtService.extractEmail(token)).isEqualTo("user@test.com");
+        assertThat(jwtService.extractUserId(token)).isEqualTo(1L);
     }
 }

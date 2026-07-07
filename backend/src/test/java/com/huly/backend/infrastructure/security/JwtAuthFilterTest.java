@@ -2,6 +2,7 @@ package com.huly.backend.infrastructure.security;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -123,5 +124,49 @@ class JwtAuthFilterTest {
         verifyNoInteractions(userDetailsService);
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName())
                 .isEqualTo("existing@huly.com");
+    }
+
+    @Test
+    @DisplayName("No reemplaza la autenticación existente aunque el token válido traiga un userId")
+    void doFilter_shouldNotOverrideAuthentication_whenUserIdPresentButAuthenticationAlreadySet() throws Exception {
+        givenExistingAuthentication("existing@huly.com");
+        givenValidAccessTokenWithUserId("validToken", 1L);
+
+        filter();
+
+        thenAuthenticationNameIs("existing@huly.com");
+        thenUserDetailsServiceWasNotUsed();
+    }
+
+    // --- arrange ---
+
+    private void givenExistingAuthentication(String username) {
+        UsernamePasswordAuthenticationToken existingAuth =
+                new UsernamePasswordAuthenticationToken(username, null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(existingAuth);
+    }
+
+    private void givenValidAccessTokenWithUserId(String token, Long userId) {
+        request.addHeader("Authorization", "Bearer " + token);
+        when(jwtService.isTokenValid(token)).thenReturn(true);
+        when(jwtService.isAccessToken(token)).thenReturn(true);
+        when(jwtService.extractUserId(token)).thenReturn(userId);
+    }
+
+    // --- act ---
+
+    private void filter() throws Exception {
+        jwtAuthFilter.doFilter(request, response, filterChain);
+    }
+
+    // --- assert ---
+
+    private void thenAuthenticationNameIs(String expected) {
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName())
+                .isEqualTo(expected);
+    }
+
+    private void thenUserDetailsServiceWasNotUsed() {
+        verifyNoInteractions(userDetailsService);
     }
 }
