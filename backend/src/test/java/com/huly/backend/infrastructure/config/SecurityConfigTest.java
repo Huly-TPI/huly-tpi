@@ -9,6 +9,7 @@ import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -29,7 +30,7 @@ class SecurityConfigTest {
     private JwtAuthFilter jwtAuthFilter;
 
     @Mock
-    private SecurityFilterChain builtChain;
+    private DefaultSecurityFilterChain builtChain;
 
     private SecurityConfig config;
 
