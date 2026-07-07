@@ -139,7 +139,7 @@ export default function Orchard() {
       <BackButton to="/challenges" />
 
       <div className="relative z-20 flex justify-center gap-4 pt-16 md:pt-6 px-4 flex-shrink-0">
-        <StatCard label="En curso" count={loading ? 0 : (growingPlant ? 1 : 0)} isDark={isDark} />
+        <StatCard label="Creciendo" count={loading ? 0 : (growingPlant ? 1 : 0)} isDark={isDark} />
         <StatCard label="Completadas" count={loading ? 0 : completedPlants.length} isDark={isDark} />
       </div>
 
