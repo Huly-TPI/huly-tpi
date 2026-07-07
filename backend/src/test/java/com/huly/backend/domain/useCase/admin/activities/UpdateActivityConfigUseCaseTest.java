@@ -8,58 +8,116 @@ import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class UpdateActivityConfigUseCaseTest {
 
+    private static final Long ACTIVITY_ID = 1L;
+    private static final Long MISSING_ID = 99L;
+
+    @Mock
     private ActivityRepository activityRepository;
+
     private UpdateActivityConfigMapper mapper;
     private UpdateActivityConfigUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        activityRepository = mock(ActivityRepository.class);
         mapper = new UpdateActivityConfigMapper();
         useCase = new UpdateActivityConfigUseCase(activityRepository, mapper);
     }
 
     @Test
-    void execute_shouldThrowException_whenActivityNotFound() {
-        when(activityRepository.findById(99L)).thenReturn(Optional.empty());
-
-        UpdateActivityConfigRequest request = new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "Titulo", "Desc", "key", "/path"
-        );
-
-        assertThatThrownBy(() -> useCase.execute(99L, request))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("99");
+    @DisplayName("Actualiza y persiste la actividad cuando la solicitud es válida")
+    void executeShouldUpdateAndSaveWhenRequestIsValid() {
+        // --- arrange ---
+        givenExistingActivity();
+        givenRepositoryEchoesSavedActivity();
+        // --- act ---
+        Activity result = updateWithValidRequest();
+        // --- assert ---
+        thenUpdatedActivityMatchesRequest(result);
     }
 
     @Test
-    void execute_shouldUpdateAndSave_whenRequestIsValid() {
+    @DisplayName("Lanza ResourceNotFound cuando la actividad no existe")
+    void executeShouldThrowWhenActivityNotFound() {
+        // --- arrange ---
+        givenActivityNotFound();
+        // --- assert ---
+        thenUpdateThrowsResourceNotFound();
+    }
+
+    @Test
+    @DisplayName("Lanza error de negocio cuando algún rango está fuera de [-1.0, 1.0]")
+    void executeShouldThrowWhenRangeIsInvalid() {
+        // --- arrange ---
+        givenExistingActivity();
+        // --- assert ---
+        thenEachOutOfRangeFieldThrows();
+    }
+
+    @Test
+    @DisplayName("Lanza error de negocio cuando un mínimo es mayor que su máximo")
+    void executeShouldThrowWhenMinIsGreaterThanMax() {
+        // --- arrange ---
+        givenExistingActivity();
+        // --- assert ---
+        thenEachMinGreaterThanMaxThrows();
+    }
+
+    @Test
+    @DisplayName("Lanza error de negocio cuando un campo obligatorio está vacío")
+    void executeShouldThrowWhenRequiredFieldIsBlank() {
+        // --- arrange ---
+        givenExistingActivity();
+        // --- assert ---
+        thenEachBlankRequiredFieldThrows();
+    }
+
+    // --- arrange ---
+
+    private void givenExistingActivity() {
         Activity existing = Activity.builder()
-                .id(1L)
+                .id(ACTIVITY_ID)
                 .type(ActivityType.BREATHING)
                 .title("Original")
                 .build();
-        when(activityRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(activityRepository.findById(ACTIVITY_ID)).thenReturn(Optional.of(existing));
+    }
 
-        UpdateActivityConfigRequest request = new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, -0.2, 0.3, "Nuevo Titulo", "Nueva Desc", "keyword", "/new-path"
-        );
+    private void givenActivityNotFound() {
+        when(activityRepository.findById(MISSING_ID)).thenReturn(Optional.empty());
+    }
 
+    private void givenRepositoryEchoesSavedActivity() {
         when(activityRepository.save(any(Activity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    }
 
-        Activity result = useCase.execute(1L, request);
+    // --- act ---
 
+    private Activity updateWithValidRequest() {
+        UpdateActivityConfigRequest request = new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, -0.2, 0.3,
+                "Nuevo Titulo", "Nueva Desc", "keyword", "/new-path");
+        return useCase.execute(ACTIVITY_ID, request);
+    }
+
+    // --- assert ---
+
+    private void thenUpdatedActivityMatchesRequest(Activity result) {
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getType()).isEqualTo(ActivityType.BREATHING);
         assertThat(result.getValenceMin()).isEqualTo(-0.5);
@@ -77,116 +135,79 @@ class UpdateActivityConfigUseCaseTest {
         assertThat(result.getRoutePath()).isEqualTo("/new-path");
     }
 
-    @Test
-    void validate_shouldThrowException_whenRangeIsInvalid() {
-        Activity existing = Activity.builder().id(1L).build();
-        when(activityRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        // Invalid valenceMin (< -1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -1.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "valenceMin debe estar entre -1.0 y 1.0");
-
-        // Invalid valenceMax (> 1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 1.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "valenceMax debe estar entre -1.0 y 1.0");
-
-        // Invalid arousalMin (< -1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -2.0, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "arousalMin debe estar entre -1.0 y 1.0");
-
-        // Invalid arousalMax (> 1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 2.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "arousalMax debe estar entre -1.0 y 1.0");
-
-        // Invalid dominanceMin (< -1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -1.1, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "dominanceMin debe estar entre -1.0 y 1.0");
-
-        // Invalid dominanceMax (> 1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 1.01, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "dominanceMax debe estar entre -1.0 y 1.0");
-
-        // Invalid effectValence (< -1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -1.05, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "effectValence debe estar entre -1.0 y 1.0");
-
-        // Invalid effectArousal (> 1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 1.05, 0.1, "T", "D", "K", "/p"
-        ), "effectArousal debe estar entre -1.0 y 1.0");
-
-        // Invalid effectDominance (< -1.0)
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, -1.01, "T", "D", "K", "/p"
-        ), "effectDominance debe estar entre -1.0 y 1.0");
+    private void thenUpdateThrowsResourceNotFound() {
+        UpdateActivityConfigRequest request = new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "Titulo", "Desc", "key", "/path");
+        assertThatThrownBy(() -> useCase.execute(MISSING_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
     }
 
-    @Test
-    void validate_shouldThrowException_whenMinIsGreaterThanMax() {
-        Activity existing = Activity.builder().id(1L).build();
-        when(activityRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        // valenceMin > valenceMax
-        assertValidationError(new UpdateActivityConfigRequest(
-                0.6, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "valenceMin no puede ser mayor que valenceMax");
-
-        // arousalMin > arousalMax
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, 0.8, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "arousalMin no puede ser mayor que arousalMax");
-
-        // dominanceMin > dominanceMax
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, 0.9, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"
-        ), "dominanceMin no puede ser mayor que dominanceMax");
+    private void thenEachOutOfRangeFieldThrows() {
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -1.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "valenceMin debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 1.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "valenceMax debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -2.0, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "arousalMin debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 2.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "arousalMax debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -1.1, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "dominanceMin debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 1.01, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "dominanceMax debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -1.05, 0.1, 0.1, "T", "D", "K", "/p"),
+                "effectValence debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 1.05, 0.1, "T", "D", "K", "/p"),
+                "effectArousal debe estar entre -1.0 y 1.0");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, -1.01, "T", "D", "K", "/p"),
+                "effectDominance debe estar entre -1.0 y 1.0");
     }
 
-    @Test
-    void validate_shouldThrowException_whenRequiredFieldIsBlank() {
-        Activity existing = Activity.builder().id(1L).build();
-        when(activityRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        // null title
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, null, "D", "K", "/p"
-        ), "El título es obligatorio");
-
-        // empty title
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "  ", "D", "K", "/p"
-        ), "El título es obligatorio");
-
-        // null description
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", null, "K", "/p"
-        ), "La descripción es obligatoria");
-
-        // empty description
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "", "K", "/p"
-        ), "La descripción es obligatoria");
-
-        // null routePath
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", null
-        ), "La ruta de navegación es obligatoria");
-
-        // empty routePath
-        assertValidationError(new UpdateActivityConfigRequest(
-                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "  "
-        ), "La ruta de navegación es obligatoria");
+    private void thenEachMinGreaterThanMaxThrows() {
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                0.6, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "valenceMin no puede ser mayor que valenceMax");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, 0.8, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "arousalMin no puede ser mayor que arousalMax");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, 0.9, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "/p"),
+                "dominanceMin no puede ser mayor que dominanceMax");
     }
 
-    private void assertValidationError(UpdateActivityConfigRequest request, String expectedMessage) {
-        assertThatThrownBy(() -> useCase.execute(1L, request))
+    private void thenEachBlankRequiredFieldThrows() {
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, null, "D", "K", "/p"),
+                "El título es obligatorio");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "  ", "D", "K", "/p"),
+                "El título es obligatorio");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", null, "K", "/p"),
+                "La descripción es obligatoria");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "", "K", "/p"),
+                "La descripción es obligatoria");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", null),
+                "La ruta de navegación es obligatoria");
+        thenUpdateThrowsBusinessRule(new UpdateActivityConfigRequest(
+                -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.1, 0.1, 0.1, "T", "D", "K", "  "),
+                "La ruta de navegación es obligatoria");
+    }
+
+    private void thenUpdateThrowsBusinessRule(UpdateActivityConfigRequest request, String expectedMessage) {
+        assertThatThrownBy(() -> useCase.execute(ACTIVITY_ID, request))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage(expectedMessage);
     }

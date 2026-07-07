@@ -8,6 +8,7 @@ import com.huly.backend.domain.model.enums.EmotionType;
 import com.huly.backend.domain.model.enums.MessageRole;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.service.chat.ChatPreferenceInitializationService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +34,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ListChatHistoryUseCaseTest {
 
+    private static final Long USER_ID = 1L;
+    private static final String CONVERSATION_ID = "conv-1";
+
     @Mock
     private ChatMessageRepository chatMessageRepository;
     @Mock
@@ -43,60 +47,122 @@ class ListChatHistoryUseCaseTest {
     @InjectMocks
     private ListChatHistoryUseCase listChatHistoryUseCase;
 
+    private ChatHistoryRequest request;
+
     @Test
-    void execute_shouldDelegateToRepositoryAndReturnPage() {
-        String conversationId = "conv-1";
-        Long userId = 1L;
-        ChatMessage msg = new ChatMessage(1L, MessageRole.USER, "hola", false, EmotionType.NEUTRAL, Instant.now(), null, null, null, null);
-        Page<ChatMessage> expected = new PageImpl<>(List.of(msg), PageRequest.of(0, 10), 1);
+    @DisplayName("Delega en el repositorio y devuelve la página mapeada")
+    void executeShouldDelegateToRepositoryAndReturnPage() {
+        // --- arrange ---
+        givenRequest(USER_ID, CONVERSATION_ID, 0, 10);
+        givenRepositoryReturnsOneMessage("hola");
+        // --- act ---
+        ChatHistoryResponse result = execute();
+        // --- assert ---
+        thenResponseContainsSingleMessage(result, "hola", 1);
+        thenPreferenceServiceInitialized();
+        thenRepositoryQueried();
+    }
 
-        when(chatMessageRepository.findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class)))
-                .thenReturn(expected);
+    @Test
+    @DisplayName("Devuelve una página vacía cuando no hay mensajes")
+    void executeShouldReturnEmptyPageWhenNoMessages() {
+        // --- arrange ---
+        givenRequest(USER_ID, "conv-sin-mensajes", 0, 10);
+        givenRepositoryReturnsEmptyPage(10);
+        // --- act ---
+        ChatHistoryResponse result = execute();
+        // --- assert ---
+        thenResponseIsEmpty(result);
+        thenPreferenceServiceInitialized();
+        thenRepositoryQueried();
+    }
 
-        ChatHistoryResponse result = listChatHistoryUseCase.execute(new ChatHistoryRequest(userId, conversationId, 0, 10));
+    @Test
+    @DisplayName("Normaliza la paginación inválida (page<0 y size<1)")
+    void executeShouldNormalizeInvalidPagination() {
+        // --- arrange ---
+        givenRequest(USER_ID, CONVERSATION_ID, -1, 0);
+        givenRepositoryReturnsEmptyPage(1);
+        // --- act ---
+        ChatHistoryResponse result = execute();
+        // --- assert ---
+        thenResponseIsEmpty(result);
+        thenRepositoryQueriedWithNormalizedPageable();
+    }
 
+    @Test
+    @DisplayName("Propaga la excepción lanzada por el repositorio")
+    void executeShouldPropagateExceptionFromRepository() {
+        // --- arrange ---
+        givenRequest(USER_ID, "conv-err", 0, 10);
+        givenRepositoryThrows("error de repositorio");
+        // --- act + assert ---
+        thenExecuteThrowsRuntimeWithMessage("error de repositorio");
+    }
+
+    // --- arrange ---
+
+    private void givenRequest(Long userId, String conversationId, int page, int size) {
+        request = new ChatHistoryRequest(userId, conversationId, page, size);
+    }
+
+    private void givenRepositoryReturnsOneMessage(String content) {
+        ChatMessage message = new ChatMessage(
+                1L, MessageRole.USER, content, false, EmotionType.NEUTRAL, Instant.now(), null, null, null, null);
+        Page<ChatMessage> page = new PageImpl<>(List.of(message), PageRequest.of(0, 10), 1);
+        when(chatMessageRepository.findByConversationIdAndUserId(
+                eq(request.conversationId()), eq(request.userId()), any(Pageable.class)))
+                .thenReturn(page);
+    }
+
+    private void givenRepositoryReturnsEmptyPage(int size) {
+        when(chatMessageRepository.findByConversationIdAndUserId(
+                eq(request.conversationId()), eq(request.userId()), any(Pageable.class)))
+                .thenReturn(Page.empty(PageRequest.of(0, size)));
+    }
+
+    private void givenRepositoryThrows(String message) {
+        when(chatMessageRepository.findByConversationIdAndUserId(
+                eq(request.conversationId()), eq(request.userId()), any(Pageable.class)))
+                .thenThrow(new RuntimeException(message));
+    }
+
+    // --- act ---
+
+    private ChatHistoryResponse execute() {
+        return listChatHistoryUseCase.execute(request);
+    }
+
+    // --- assert ---
+
+    private void thenResponseContainsSingleMessage(ChatHistoryResponse result, String content, long totalElements) {
         assertThat(result.content()).hasSize(1);
-        assertThat(result.content().get(0).content()).isEqualTo("hola");
-        assertThat(result.totalElements()).isEqualTo(1);
-        verify(chatPreferenceInitializationService).initialize(userId, conversationId);
-        verify(chatMessageRepository).findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class));
+        assertThat(result.content().get(0).content()).isEqualTo(content);
+        assertThat(result.totalElements()).isEqualTo(totalElements);
     }
 
-    @Test
-    void execute_shouldReturnEmptyPageWhenNoMessages() {
-        String conversationId = "conv-sin-mensajes";
-        Long userId = 1L;
-        Page<ChatMessage> emptyPage = Page.empty(PageRequest.of(0, 10));
-
-        when(chatMessageRepository.findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class)))
-                .thenReturn(emptyPage);
-
-        ChatHistoryResponse result = listChatHistoryUseCase.execute(new ChatHistoryRequest(userId, conversationId, 0, 10));
-
+    private void thenResponseIsEmpty(ChatHistoryResponse result) {
         assertThat(result.content()).isEmpty();
-        verify(chatPreferenceInitializationService).initialize(userId, conversationId);
-        verify(chatMessageRepository).findByConversationIdAndUserId(eq(conversationId), eq(userId), any(Pageable.class));
     }
 
-    @Test
-    void execute_shouldNormalizeInvalidPagination() {
-        when(chatMessageRepository.findByConversationIdAndUserId(eq("conv-1"), eq(1L), any(Pageable.class)))
-                .thenReturn(Page.empty(PageRequest.of(0, 1)));
+    private void thenPreferenceServiceInitialized() {
+        verify(chatPreferenceInitializationService).initialize(request.userId(), request.conversationId());
+    }
 
-        ChatHistoryResponse result = listChatHistoryUseCase.execute(new ChatHistoryRequest(1L, "conv-1", -1, 0));
+    private void thenRepositoryQueried() {
+        verify(chatMessageRepository).findByConversationIdAndUserId(
+                eq(request.conversationId()), eq(request.userId()), any(Pageable.class));
+    }
 
-        assertThat(result.content()).isEmpty();
-        verify(chatMessageRepository).findByConversationIdAndUserId(eq("conv-1"), eq(1L),
+    private void thenRepositoryQueriedWithNormalizedPageable() {
+        verify(chatMessageRepository).findByConversationIdAndUserId(
+                eq(request.conversationId()), eq(request.userId()),
                 argThat(pageable -> pageable.getPageNumber() == 0 && pageable.getPageSize() == 1));
     }
 
-    @Test
-    void execute_shouldPropagateExceptionFromRepository() {
-        when(chatMessageRepository.findByConversationIdAndUserId(eq("conv-err"), eq(1L), any(Pageable.class)))
-                .thenThrow(new RuntimeException("error de repositorio"));
-
-        assertThatThrownBy(() -> listChatHistoryUseCase.execute(new ChatHistoryRequest(1L, "conv-err", 0, 10)))
+    private void thenExecuteThrowsRuntimeWithMessage(String message) {
+        assertThatThrownBy(this::execute)
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("error de repositorio");
+                .hasMessage(message);
     }
 }

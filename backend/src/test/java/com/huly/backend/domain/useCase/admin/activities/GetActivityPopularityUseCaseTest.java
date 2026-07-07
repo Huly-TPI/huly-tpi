@@ -7,67 +7,112 @@ import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.repository.activity.ActivityRepository;
 import com.huly.backend.domain.repository.activity.ActivitySessionRepository;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
 
+import static com.huly.backend.domain.model.enums.ActivityType.BREATHING;
+import static com.huly.backend.domain.model.enums.ActivityType.DIARY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class GetActivityPopularityUseCaseTest {
 
+    private static final Instant BASE = Instant.parse("2026-06-12T10:00:00Z");
+
+    @Mock
     private ActivityRepository activityRepository;
+
+    @Mock
     private ActivitySessionRepository activitySessionRepository;
+
+    @InjectMocks
     private GetActivityPopularityUseCase useCase;
 
-    @BeforeEach
-    void setUp() {
-        activityRepository = mock(ActivityRepository.class);
-        activitySessionRepository = mock(ActivitySessionRepository.class);
-        useCase = new GetActivityPopularityUseCase(activityRepository, activitySessionRepository);
+    @Test
+    @DisplayName("Devuelve el conteo de sesiones por actividad")
+    void executeShouldReturnCorrectPopularityStats() {
+        // --- arrange ---
+        givenTwoActivitiesWithMixedSessions();
+        // --- act ---
+        List<ActivityPopularityStats> result = calculatePopularity(Timeframe.MONTH);
+        // --- assert ---
+        thenPopularityHasSize(result, 2);
+        thenActivityPopularityIs(result, "BREATHING", "Breathing Guided", 2L);
+        thenActivityPopularityIs(result, "DIARY", "Diary Guided", 1L);
     }
 
     @Test
-    void execute_shouldReturnCorrectPopularityStats() {
-        Activity breathing = Activity.builder().id(1L).title("Breathing Guided").type(ActivityType.BREATHING).build();
-        Activity diary = Activity.builder().id(2L).title("Diary Guided").type(ActivityType.DIARY).build();
-        when(activityRepository.findAll()).thenReturn(List.of(breathing, diary));
-
-        ActivitySession session1 = ActivitySession.builder().activityType(ActivityType.BREATHING).createdAt(Instant.now()).build();
-        ActivitySession session2 = ActivitySession.builder().activityType(ActivityType.BREATHING).createdAt(Instant.now()).build();
-        ActivitySession session3 = ActivitySession.builder().activityType(ActivityType.DIARY).createdAt(Instant.now()).build();
-        when(activitySessionRepository.findAllAfter(any())).thenReturn(List.of(session1, session2, session3));
-
-        List<ActivityPopularityStats> result = useCase.execute(Timeframe.MONTH);
-
-        assertThat(result).hasSize(2);
-        
-        ActivityPopularityStats breathingStats = result.stream()
-                .filter(s -> s.getActivityType().equals("BREATHING"))
-                .findFirst().orElseThrow();
-        assertThat(breathingStats.getActivityName()).isEqualTo("Breathing Guided");
-        assertThat(breathingStats.getTotalSessions()).isEqualTo(2L);
-
-        ActivityPopularityStats diaryStats = result.stream()
-                .filter(s -> s.getActivityType().equals("DIARY"))
-                .findFirst().orElseThrow();
-        assertThat(diaryStats.getActivityName()).isEqualTo("Diary Guided");
-        assertThat(diaryStats.getTotalSessions()).isEqualTo(1L);
+    @DisplayName("Devuelve cero sesiones para las actividades sin sesiones registradas")
+    void executeShouldHandleEmptySessionsCorrectly() {
+        // --- arrange ---
+        givenSingleActivityWithNoSessions();
+        // --- act ---
+        List<ActivityPopularityStats> result = calculatePopularity(Timeframe.TODAY);
+        // --- assert ---
+        thenPopularityHasSize(result, 1);
+        thenActivityPopularityIs(result, "BREATHING", "Breathing Guided", 0L);
     }
 
-    @Test
-    void execute_shouldHandleEmptySessionsCorrectly() {
-        Activity breathing = Activity.builder().id(1L).title("Breathing Guided").type(ActivityType.BREATHING).build();
-        when(activityRepository.findAll()).thenReturn(List.of(breathing));
-        when(activitySessionRepository.findAllAfter(any())).thenReturn(List.of());
+    // --- arrange ---
 
-        List<ActivityPopularityStats> result = useCase.execute(Timeframe.TODAY);
+    private void givenTwoActivitiesWithMixedSessions() {
+        givenActivities(activity(1L, BREATHING, "Breathing Guided"), activity(2L, DIARY, "Diary Guided"));
+        givenSessions(session(BREATHING), session(BREATHING), session(DIARY));
+    }
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTotalSessions()).isEqualTo(0L);
+    private void givenSingleActivityWithNoSessions() {
+        givenActivities(activity(1L, BREATHING, "Breathing Guided"));
+        givenSessions();
+    }
+
+    private void givenActivities(Activity... activities) {
+        when(activityRepository.findAll()).thenReturn(List.of(activities));
+    }
+
+    private void givenSessions(ActivitySession... sessions) {
+        when(activitySessionRepository.findAllAfter(any())).thenReturn(List.of(sessions));
+    }
+
+    private Activity activity(long id, ActivityType type, String title) {
+        return Activity.builder().id(id).type(type).title(title).build();
+    }
+
+    private ActivitySession session(ActivityType type) {
+        return ActivitySession.builder().activityType(type).createdAt(BASE).build();
+    }
+
+    // --- act ---
+
+    private List<ActivityPopularityStats> calculatePopularity(Timeframe timeframe) {
+        return useCase.execute(timeframe);
+    }
+
+    // --- assert ---
+
+    private void thenPopularityHasSize(List<ActivityPopularityStats> result, int size) {
+        assertThat(result).hasSize(size);
+    }
+
+    private void thenActivityPopularityIs(List<ActivityPopularityStats> result, String activityType,
+                                          String activityName, long totalSessions) {
+        ActivityPopularityStats stats = findByType(result, activityType);
+        assertThat(stats.getActivityName()).isEqualTo(activityName);
+        assertThat(stats.getTotalSessions()).isEqualTo(totalSessions);
+    }
+
+    private ActivityPopularityStats findByType(List<ActivityPopularityStats> result, String activityType) {
+        return result.stream()
+                .filter(s -> s.getActivityType().equals(activityType))
+                .findFirst()
+                .orElseThrow();
     }
 }
