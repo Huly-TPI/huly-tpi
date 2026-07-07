@@ -138,6 +138,17 @@ class JwtAuthFilterTest {
         thenUserDetailsServiceWasNotUsed();
     }
 
+    @Test
+    @DisplayName("No autentica cuando el token válido no contiene un userId")
+    void doFilter_shouldNotAuthenticate_whenValidTokenHasNoUserId() throws Exception {
+        givenValidAccessTokenWithUserId("validToken", null);
+
+        filter();
+
+        thenNoAuthenticationSet();
+        thenUserDetailsServiceWasNotUsed();
+    }
+
     // --- arrange ---
 
     private void givenExistingAuthentication(String username) {
@@ -164,6 +175,10 @@ class JwtAuthFilterTest {
     private void thenAuthenticationNameIs(String expected) {
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName())
                 .isEqualTo(expected);
+    }
+
+    private void thenNoAuthenticationSet() {
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
     private void thenUserDetailsServiceWasNotUsed() {
