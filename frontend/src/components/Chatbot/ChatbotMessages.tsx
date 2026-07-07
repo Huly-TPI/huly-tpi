@@ -148,6 +148,7 @@ export default function ChatbotMessages({
                 <ChatbotChallengeCard
                   title={message.generated_challenge.title}
                   description={message.generated_challenge.description}
+                  onClose={onClose}
                   decision={message.challengeDecision}
                   onAccept={() => onChallengeDecision(index, 'accepted')}
                   onReject={() => onChallengeDecision(index, 'rejected')}
