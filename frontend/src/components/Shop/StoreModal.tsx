@@ -20,8 +20,6 @@ import {
   Trees,
   LayoutGrid,
   Shirt,
-  SportShoe,
-  GraduationCap,
 } from "lucide-react";
 import HulyAvatar from "../HulyAvatar/HulyAvatar";
 import { getEquippedAvatarItems } from "../HulyAvatar/avatarEquip";
@@ -362,7 +360,7 @@ export default function StoreModal({
          * 
          * Hay que chequear el monitor de cada uno pero con la actual configuracion deberia estar bien para todos los monitores
          */}
-          <HulyAvatar equippedItems={previewItems} />
+          <HulyAvatar equippedItems={previewItems} animation="wave" />
         </div>
       </div>
     </div>

@@ -1,0 +1,37 @@
+.anim-wave-hand {
+  transform-origin: 148.27px 370.86px;
+  animation: wave-hand 6s ease-in-out infinite;
+}
+
+@keyframes wave-hand {
+  0% { transform: rotate(0deg); }
+  12.5% { transform: rotate(-10deg); }
+  25% { transform: rotate(10deg); }
+  37.5% { transform: rotate(-10deg); }
+  50% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.anim-happy-face {
+  animation: show-during-wave 6s infinite;
+}
+
+.anim-normal-face {
+  animation: hide-during-wave 6s infinite;
+}
+
+.hidden-face {
+  opacity: 0;
+}
+
+@keyframes show-during-wave {
+  0% { opacity: 0; }
+  3%, 47% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes hide-during-wave {
+  0% { opacity: 1; }
+  3%, 47% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
