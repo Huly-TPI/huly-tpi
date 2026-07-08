@@ -5,6 +5,7 @@ import defaultCharacter from '../../assets/register/huly.webp'
 import cardFrame from '../../assets/register/cardFrame.webp'
 import cardFrameLogin from '../../assets/register/cardFrame-login.webp'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
+import BackButton from '../../components/Buttons/BackButton/BackButton'
 
 interface AuthPageLayoutProps {
   children: ReactNode
@@ -19,6 +20,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
   const frame = variant === 'login' ? cardFrameLogin : cardFrame
   return (
     <div className="relative h-full flex items-center justify-center overflow-hidden">
+      <BackButton to="/" label="Volver al jardín" />
       <ThemeBackground
         lightSrc={background}
         darkSrc={backgroundNight}

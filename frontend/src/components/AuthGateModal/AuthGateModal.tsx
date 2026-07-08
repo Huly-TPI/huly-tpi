@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { X } from 'lucide-react'
 
 import cardFrame from '../../assets/register/cardFrame.webp'
 
@@ -33,7 +34,7 @@ export default function AuthGateModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center pt-24 sm:pt-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-gate-title"
@@ -60,6 +61,31 @@ export default function AuthGateModal({
           backgroundRepeat: 'no-repeat',
         }}
       >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="
+          absolute
+          -right-4
+          -top-4
+          z-10
+          flex
+          h-9
+          w-9
+          items-center
+          justify-center
+          rounded-full
+          bg-[#a06f9e]
+          text-white
+          shadow-md
+          transition
+          hover:bg-[#875a86]
+        "
+        >
+          <X className="h-5 w-5" />
+        </button>
+
         <h2
           id="auth-gate-title"
           className="
