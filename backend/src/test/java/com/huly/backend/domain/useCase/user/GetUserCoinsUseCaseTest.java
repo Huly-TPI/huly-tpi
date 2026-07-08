@@ -5,6 +5,7 @@ import com.huly.backend.domain.dto.user.GetUserCoinsResponse;
 import com.huly.backend.domain.mapper.user.GetUserCoinsMapper;
 import com.huly.backend.domain.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -17,7 +18,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class GetUserCoinsUseCaseTest {
 
-    @Mock private UserRepository userRepository;
+    @Mock
+    private UserRepository userRepository;
+
     private GetUserCoinsUseCase useCase;
 
     @BeforeEach
@@ -26,30 +29,55 @@ class GetUserCoinsUseCaseTest {
     }
 
     @Test
-    void execute_shouldReturnCoins_whenUserHasCoins() {
-        when(userRepository.getCoins(10L)).thenReturn(500);
+    @DisplayName("Devuelve las monedas del usuario cuando tiene saldo")
+    void executeReturnsCoinsWhenUserHasCoins() {
+        givenUserCoins(10L, 500);
 
-        GetUserCoinsResponse result = useCase.execute(new GetUserCoinsRequest(10L));
+        GetUserCoinsResponse result = getCoins(10L);
 
-        assertThat(result.coins()).isEqualTo(500);
-        verify(userRepository).getCoins(10L);
+        thenCoinsAre(result, 500);
+        thenRepositoryWasQueried(10L);
     }
 
     @Test
-    void execute_shouldReturnZero_whenUserHasNoCoins() {
-        when(userRepository.getCoins(10L)).thenReturn(0);
+    @DisplayName("Devuelve cero cuando el usuario no tiene monedas")
+    void executeReturnsZeroWhenUserHasNoCoins() {
+        givenUserCoins(10L, 0);
 
-        GetUserCoinsResponse result = useCase.execute(new GetUserCoinsRequest(10L));
+        GetUserCoinsResponse result = getCoins(10L);
 
-        assertThat(result.coins()).isZero();
+        thenCoinsAre(result, 0);
     }
 
     @Test
-    void execute_shouldDelegateToRepository_withCorrectUserId() {
-        when(userRepository.getCoins(42L)).thenReturn(1500);
+    @DisplayName("Delega en el repositorio con el id de usuario recibido")
+    void executeDelegatesToRepositoryWithCorrectUserId() {
+        givenUserCoins(42L, 1500);
 
-        useCase.execute(new GetUserCoinsRequest(42L));
+        getCoins(42L);
 
-        verify(userRepository).getCoins(42L);
+        thenRepositoryWasQueried(42L);
+    }
+
+    // --- arrange ---
+
+    private void givenUserCoins(long userId, int coins) {
+        when(userRepository.getCoins(userId)).thenReturn(coins);
+    }
+
+    // --- act ---
+
+    private GetUserCoinsResponse getCoins(long userId) {
+        return useCase.execute(new GetUserCoinsRequest(userId));
+    }
+
+    // --- assert ---
+
+    private void thenCoinsAre(GetUserCoinsResponse result, int expected) {
+        assertThat(result.coins()).isEqualTo(expected);
+    }
+
+    private void thenRepositoryWasQueried(long userId) {
+        verify(userRepository).getCoins(userId);
     }
 }

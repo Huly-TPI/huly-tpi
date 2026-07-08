@@ -37,7 +37,7 @@ vi.mock('../../hooks/useUserGoals', () => ({
 vi.mock('../../api/activities', () => ({
   registerActivitySession: vi.fn().mockResolvedValue({}),
   ActivityType: {
-    RETO: 'RETO',
+    CHALLENGE: 'CHALLENGE',
   },
 }))
 
@@ -49,32 +49,13 @@ import Challenges from '../../pages/Challenges/Challenges'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import type { UserGoalResponse } from '../../api/userGoals'
 import { registerActivitySession } from '../../api/activities'
+import { typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, clearAllMocks } from '../testHelpers'
 
 const mockedUseUserGoals = vi.mocked(useUserGoals)
 
-const makePageResponse = (goals: Partial<UserGoalResponse>[] = []) => ({
-  content: goals as UserGoalResponse[],
-  pageNumber: 0,
-  pageSize: 50,
-  totalElements: goals.length,
-  totalPages: 1,
-  first: true,
-  last: true,
-})
 
-const makeGoal = (overrides: Partial<UserGoalResponse> = {}): UserGoalResponse => ({
-  id: 1,
-  userId: 10,
-  title: 'Reto de prueba',
-  description: null,
-  status: 'PENDING',
-  createdAt: '2026-01-01T00:00:00Z',
-  activityId: null,
-  imageUrl: null,
-  coinsReward: 10,
-  coinsRewardWithImage: 25,
-  ...overrides,
-})
+
+
 
 const defaultHookReturn = {
   pendientes: makePageResponse([]),
@@ -89,168 +70,121 @@ const defaultHookReturn = {
 }
 
 describe('Challenges', () => {
+  let user: ReturnType<typeof userEvent.setup>
+  let activeUnmount: () => void
+  let dateNowSpy: any
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     mockedUseUserGoals.mockReturnValue(defaultHookReturn)
     mockRequireAuth.mockImplementation((fn: () => void) => fn())
   })
 
-  const renderChallenges = () => {
-    const user = userEvent.setup()
-    const view = render(
-      <ThemeProvider>
-        <MemoryRouter>
-          <Challenges />
-        </MemoryRouter>
-      </ThemeProvider>
-    )
-
-    return { user, ...view }
-  }
-
   it('renderiza el título de la página', () => {
-    renderChallenges()
-    expect(screen.getByText('Mis Retos')).toBeInTheDocument()
+    renderChallengesPage()
+    verifyPageTitleVisible()
   })
 
   it('muestra el estado de carga', () => {
-    mockedUseUserGoals.mockReturnValue({ ...defaultHookReturn, loading: true })
-    renderChallenges()
-    expect(screen.getByText('Cargando retos…')).toBeInTheDocument()
+    setupLoadingState(true)
+    renderChallengesPage()
+    verifyLoadingMessageVisible()
   })
 
   it('muestra mensaje vacío cuando no hay retos pendientes', () => {
-    renderChallenges()
-    expect(screen.getByText('Sembrá tus metas. ¡Creá un nuevo reto!')).toBeInTheDocument()
+    renderChallengesPage()
+    verifyEmptyStateMessageVisible()
   })
 
   it('muestra el botón para agregar un nuevo reto', () => {
-    renderChallenges()
-    expect(screen.getByText('+ Nuevo reto')).toBeInTheDocument()
+    renderChallengesPage()
+    verifyNewChallengeButtonVisible()
   })
 
   it('muestra los retos pendientes', () => {
-    mockedUseUserGoals.mockReturnValue({
-      ...defaultHookReturn,
-      pendientes: makePageResponse([makeGoal({ id: 1, title: 'Mi primer reto' })]),
-    })
-    renderChallenges()
-    expect(screen.getByText('Mi primer reto')).toBeInTheDocument()
+    setupPendientesGoals([makeGoal({ id: 1, title: 'Mi primer reto' })])
+    renderChallengesPage()
+    verifyChallengeTitleVisible('Mi primer reto')
   })
 
   it('muestra los retos completados', () => {
-    mockedUseUserGoals.mockReturnValue({
-      ...defaultHookReturn,
-      completados: makePageResponse([makeGoal({ id: 2, title: 'Reto completado', status: 'COMPLETED' })]),
-    })
-    renderChallenges()
-    expect(screen.getByText('Reto completado')).toBeInTheDocument()
+    setupCompletadosGoals([makeGoal({ id: 2, title: 'Reto completado', status: 'COMPLETED' })])
+    renderChallengesPage()
+    verifyChallengeTitleVisible('Reto completado')
   })
 
   it('muestra error de la API', () => {
-    mockedUseUserGoals.mockReturnValue({ ...defaultHookReturn, error: 'Error de red' })
-    renderChallenges()
-    expect(screen.getByText('Error de red')).toBeInTheDocument()
+    setupErrorState('Error de red')
+    renderChallengesPage()
+    verifyErrorMessageVisible('Error de red')
   })
 
   it('muestra el progreso del ciclo en 0 cuando no hay completados', () => {
-    renderChallenges()
-    expect(screen.getByRole('progressbar', { name: 'Progreso: 0%' })).toBeInTheDocument()
+    renderChallengesPage()
+    verifyProgressBarProgress('0')
   })
 
-  it('abre el modal de creación al hacer click en Nuevo reto', async () => {
-    const { user } = renderChallenges()
-    await user.click(screen.getByText('+ Nuevo reto'))
-    expect(screen.getByPlaceholderText('¿Qué querés lograr?')).toBeInTheDocument()
+  it('abre el modal de creación al hacer click en Nuevo reto', () => {
+    renderChallengesPage()
+    return clickNewChallengeButton().then(() => {
+      verifyCreateModalPlaceholderVisible()
+    })
   })
 
-  it('cierra el modal de creación al hacer click en Cancelar', async () => {
-    const { user } = renderChallenges()
-    await user.click(screen.getByText('+ Nuevo reto'))
-    await user.click(screen.getByText('Cancelar'))
-    expect(screen.queryByPlaceholderText('¿Qué querés lograr?')).not.toBeInTheDocument()
-  })
-
-  it('llama a createGoal al guardar el formulario', async () => {
-    const { user } = renderChallenges()
-    await user.click(screen.getByText('+ Nuevo reto'))
-    await user.type(screen.getByPlaceholderText('¿Qué querés lograr?'), 'Reto nuevo')
-    await user.click(screen.getByText('Guardar'))
-
-    await waitFor(() => {
-      expect(defaultHookReturn.createGoal).toHaveBeenCalledWith({
-        title: 'Reto nuevo',
+  it('cierra el modal de creación al hacer click en Cancelar', () => {
+    renderChallengesPage()
+    return clickNewChallengeButton().then(() => {
+      return clickCancelButton().then(() => {
+        verifyCreateModalPlaceholderNotVisible()
       })
     })
   })
 
-  it('registra una sola sesión al salir aunque cree varios retos en la misma visita', async () => {
-    const nowSpy = vi.spyOn(Date, 'now')
-    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:00Z').getTime())
-
-    const { user, unmount } = renderChallenges()
-
-    await user.click(screen.getByText('+ Nuevo reto'))
-    await user.type(screen.getByPlaceholderText('¿Qué querés lograr?'), 'Reto uno')
-    await user.click(screen.getByText('Guardar'))
-
-    await user.click(screen.getByText('+ Nuevo reto'))
-    await user.type(screen.getByPlaceholderText('¿Qué querés lograr?'), 'Reto dos')
-    await user.click(screen.getByText('Guardar'))
-
-    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:04Z').getTime())
-    unmount()
-
-    await waitFor(() => {
-      expect(registerActivitySession).toHaveBeenCalledTimes(1)
-      expect(registerActivitySession).toHaveBeenCalledWith({
-        activityType: 'RETO',
-      }, { keepalive: true })
+  it('llama a createGoal al guardar el formulario', () => {
+    renderChallengesPage()
+    return clickNewChallengeButton().then(() => {
+      return fillChallengeTitle('Reto nuevo').then(() => {
+        return clickSaveButton().then(() => {
+          return waitForCreateGoalCall('Reto nuevo')
+        })
+      })
     })
-
-    nowSpy.mockRestore()
   })
 
-  it('registra la sesión al completar un reto', async () => {
-    const nowSpy = vi.spyOn(Date, 'now')
-    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:00Z').getTime())
-
-    mockedUseUserGoals.mockReturnValue({
-      ...defaultHookReturn,
-      pendientes: makePageResponse([makeGoal({ id: 7, title: 'Completar hoy' })]),
+  it('no registra sesión al salir si solo creó retos sin completarlos', () => {
+    setupDateNowMock('2025-01-01T10:00:00Z')
+    renderChallengesPage()
+    return createTwoChallengesAndUnmount('Reto uno', 'Reto dos', '2025-01-01T10:00:04Z').then(() => {
+      return waitForActivitySessionNotCalled().then(() => {
+        restoreDateMock()
+      })
     })
+  })
 
-    const { user } = renderChallenges()
-
-    nowSpy.mockReturnValue(new Date('2025-01-01T10:00:06Z').getTime())
-    await user.click(screen.getByLabelText('Completar reto'))
-
-    await waitFor(() => {
-      expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(7, undefined)
-      expect(registerActivitySession).toHaveBeenCalledWith({
-        activityType: 'RETO',
-      }, undefined)
+  it('registra la sesión al completar un reto', () => {
+    setupDateNowMock('2025-01-01T10:00:00Z')
+    setupPendientesGoals([makeGoal({ id: 7, title: 'Completar hoy' })])
+    renderChallengesPage()
+    setupDateNowMockTime('2025-01-01T10:00:06Z')
+    return clickCompleteChallengeButton().then(() => {
+      return waitForCompleteAndSessionRegistration(7, 'CHALLENGE').then(() => {
+        restoreDateMock()
+      })
     })
-
-    nowSpy.mockRestore()
   })
 
   it('no registra sesión si entra y se va sin crear ni completar retos', () => {
-    const { unmount } = renderChallenges()
-
-    unmount()
-
-    expect(registerActivitySession).not.toHaveBeenCalled()
+    renderChallengesPage()
+    unmountChallenges()
+    verifyRegisterActivitySessionNotCalled()
   })
 
-  it('abre el modal de detalle al hacer click en un reto', async () => {
-    mockedUseUserGoals.mockReturnValue({
-      ...defaultHookReturn,
-      pendientes: makePageResponse([makeGoal({ title: 'Ver detalle' })]),
+  it('abre el modal de detalle al hacer click en un reto', () => {
+    setupPendientesGoals([makeGoal({ title: 'Ver detalle' })])
+    renderChallengesPage()
+    return clickChallengeDetailButton('Ver detalle').then(() => {
+      verifyChallengeDetailHeadingVisible('Ver detalle')
     })
-    const { user } = renderChallenges()
-    await user.click(screen.getByLabelText('Ver detalles: Ver detalle'))
-    expect(screen.getByRole('heading', { name: 'Ver detalle' })).toBeInTheDocument()
   })
 
   describe('acceso sin login', () => {
@@ -258,16 +192,219 @@ describe('Challenges', () => {
       mockRequireAuth.mockImplementation(() => {})
     })
 
-    it('llama a requireAuth al hacer click en Nuevo reto', async () => {
-      const { user } = renderChallenges()
-      await user.click(screen.getByText('+ Nuevo reto'))
-      expect(mockRequireAuth).toHaveBeenCalled()
+    it('llama a requireAuth al hacer click en Nuevo reto', () => {
+      setupRequireAuthNoSession()
+      renderChallengesPage()
+      return clickNewChallengeButton().then(() => {
+        verifyRequireAuthCalled()
+      })
     })
 
-    it('no abre el modal de creación cuando no hay sesión', async () => {
-      const { user } = renderChallenges()
-      await user.click(screen.getByText('+ Nuevo reto'))
-      expect(screen.queryByPlaceholderText('¿Qué querés lograr?')).not.toBeInTheDocument()
+    it('no abre el modal de creación cuando no hay sesión', () => {
+      setupRequireAuthNoSession()
+      renderChallengesPage()
+      return clickNewChallengeButton().then(() => {
+        verifyCreateModalPlaceholderNotVisible()
+      })
     })
   })
+
+  /* helpers */
+
+  const renderChallengesPage = () => {
+    user = userEvent.setup()
+    const { unmount } = render(
+      <ThemeProvider>
+        <MemoryRouter>
+          <Challenges />
+        </MemoryRouter>
+      </ThemeProvider>
+    )
+    activeUnmount = unmount
+  }
+
+  const unmountChallenges = () => {
+    activeUnmount()
+  }
+
+  const setupLoadingState = (loading: boolean) => {
+    mockedUseUserGoals.mockReturnValue({ ...defaultHookReturn, loading })
+  }
+
+  const setupErrorState = (error: string) => {
+    mockedUseUserGoals.mockReturnValue({ ...defaultHookReturn, error })
+  }
+
+  const setupPendientesGoals = (goals: any[]) => {
+    mockedUseUserGoals.mockReturnValue({
+      ...defaultHookReturn,
+      pendientes: makePageResponse(goals),
+    })
+  }
+
+  const setupCompletadosGoals = (goals: any[]) => {
+    mockedUseUserGoals.mockReturnValue({
+      ...defaultHookReturn,
+      completados: makePageResponse(goals),
+    })
+  }
+
+  const setupRequireAuthNoSession = () => {
+    mockRequireAuth.mockImplementation(() => {})
+  }
+
+  const verifyPageTitleVisible = () => {
+    verifyTextPresent('Mis Retos')
+  }
+
+  const verifyLoadingMessageVisible = () => {
+    verifyTextPresent('Cargando retos…')
+  }
+
+  const verifyEmptyStateMessageVisible = () => {
+    verifyTextPresent('Sembrá tus metas. ¡Creá un nuevo reto!')
+  }
+
+  const verifyNewChallengeButtonVisible = () => {
+    verifyTextPresent('+ Nuevo reto')
+  }
+
+  const verifyChallengeTitleVisible = (title: string) => {
+    verifyTextPresent(title)
+  }
+
+  const verifyErrorMessageVisible = (error: string) => {
+    verifyTextPresent(error)
+  }
+
+  const verifyProgressBarProgress = (progress: string) => {
+    expect(screen.getByRole('progressbar', { name: `Progreso: ${progress}%` })).toBeInTheDocument()
+  }
+
+  const clickNewChallengeButton = () => {
+    return user.click(screen.getByText('+ Nuevo reto'))
+  }
+
+  const verifyCreateModalPlaceholderVisible = () => {
+    verifyPlaceholderPresent('¿Qué querés lograr?')
+  }
+
+  const verifyCreateModalPlaceholderNotVisible = () => {
+    expect(screen.queryByPlaceholderText('¿Qué querés lograr?')).not.toBeInTheDocument()
+  }
+
+  const clickCancelButton = () => {
+    return user.click(screen.getByText('Cancelar'))
+  }
+
+  const fillChallengeTitle = (title: string) => {
+    return typePlaceholder(user, '¿Qué querés lograr?', title)
+  }
+
+  const clickSaveButton = () => {
+    return user.click(screen.getByText('Guardar'))
+  }
+
+  const waitForCreateGoalCall = (title: string) => {
+    return waitFor(() => {
+      expect(defaultHookReturn.createGoal).toHaveBeenCalledWith({
+        title,
+      })
+    })
+  }
+
+  const setupDateNowMock = (isoString: string) => {
+    dateNowSpy = vi.spyOn(Date, 'now')
+    dateNowSpy.mockReturnValue(new Date(isoString).getTime())
+  }
+
+  const setupDateNowMockTime = (isoString: string) => {
+    dateNowSpy.mockReturnValue(new Date(isoString).getTime())
+  }
+
+  const restoreDateMock = () => {
+    if (dateNowSpy) {
+      dateNowSpy.mockRestore()
+    }
+  }
+
+  const createChallengeSequence = (title: string) => {
+    return clickNewChallengeButton().then(() => {
+      return fillChallengeTitle(title).then(() => {
+        return clickSaveButton()
+      })
+    })
+  }
+
+  const createTwoChallengesAndUnmount = (title1: string, title2: string, finalIsoString: string) => {
+    return createChallengeSequence(title1).then(() => {
+      return createChallengeSequence(title2).then(() => {
+        setupDateNowMockTime(finalIsoString)
+        unmountChallenges()
+      })
+    })
+  }
+
+  const waitForActivitySessionNotCalled = () => {
+    return waitFor(() => {
+      expect(registerActivitySession).not.toHaveBeenCalled()
+    })
+  }
+
+  const verifyRegisterActivitySessionNotCalled = () => {
+    expect(registerActivitySession).not.toHaveBeenCalled()
+  }
+
+  const clickCompleteChallengeButton = () => {
+    return user.click(screen.getByLabelText('Completar reto'))
+  }
+
+  const waitForCompleteAndSessionRegistration = (goalId: number, activityType: string) => {
+    return waitFor(() => {
+      expect(defaultHookReturn.completeGoal).toHaveBeenCalledWith(goalId, undefined)
+      expect(registerActivitySession).toHaveBeenCalledWith({
+        activityType,
+      }, undefined)
+    })
+  }
+
+  const clickChallengeDetailButton = (title: string) => {
+    return user.click(screen.getByLabelText(`Ver detalles: ${title}`))
+  }
+
+  const verifyChallengeDetailHeadingVisible = (title: string) => {
+    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
+  }
+
+  const verifyRequireAuthCalled = () => {
+    expect(mockRequireAuth).toHaveBeenCalled()
+  }
 })
+
+function makePageResponse(goals: Partial<UserGoalResponse>[] = []) {
+  return ({
+  content: goals as UserGoalResponse[],
+  pageNumber: 0,
+  pageSize: 50,
+  totalElements: goals.length,
+  totalPages: 1,
+  first: true,
+  last: true,
+})
+}
+
+function makeGoal(overrides: Partial<UserGoalResponse> = {}): UserGoalResponse {
+  return ({
+  id: 1,
+  userId: 10,
+  title: 'Reto de prueba',
+  description: null,
+  status: 'PENDING',
+  createdAt: '2026-01-01T00:00:00Z',
+  activityId: null,
+  imageUrl: null,
+  coinsReward: 10,
+  coinsRewardWithImage: 25,
+  ...overrides,
+})
+}

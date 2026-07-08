@@ -14,4 +14,6 @@ public interface ActivitySessionRepository {
     List<ActivitySession> findRecentByUserIdAndCreatedAtAfter(Long userId, Instant start, int limit);
     long countByUserIdAndCreatedAtAfter(Long userId, Instant start);
     Optional<ActivitySession> findOldestSessionByUserId(Long userId);
+    List<ActivitySession> findAll();
+    List<ActivitySession> findAllAfter(Instant start);
 }

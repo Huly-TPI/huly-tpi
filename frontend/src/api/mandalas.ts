@@ -24,6 +24,10 @@ export interface MandalaPageResponse {
   last: boolean
 }
 
+export interface MandalaSessionStatusResponse {
+  sessionRegistered: boolean
+}
+
 interface MandalaPageParams {
   page?: number
   size?: number
@@ -33,6 +37,8 @@ export const mandalasApi = {
   getAvailable: ({ page = 0, size = 6 }: MandalaPageParams = {}) =>
     api.get<MandalaPageResponse>(`/mandalas?page=${page}&size=${size}`),
   getProgress: (mandalaId: string) => api.getBlob(`/mandalas/${mandalaId}/progress`),
+  getSessionStatus: (mandalaId: string) =>
+    api.get<MandalaSessionStatusResponse>(`/mandalas/${mandalaId}/session-status`),
   saveProgress: (mandalaId: string, blob: Blob) =>
     api.putBlob<void>(`/mandalas/${mandalaId}/progress`, blob),
   clearProgress: (mandalaId: string) =>

@@ -40,17 +40,106 @@ vi.mock('../../api/client', () => ({
 vi.mock('../../assets/brand/color-logo.webp', () => ({ default: 'color-logo.webp' }))
 
 import { backofficeLogin } from '../../api/auth'
+import { clickButton, typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, verifyButtonDisabled, clearAllMocks } from '../testHelpers'
 
 const mockedBackofficeLogin = vi.mocked(backofficeLogin)
 
 describe('BackofficeLogin', () => {
+    let user: ReturnType<typeof userEvent.setup>
+
     beforeEach(() => {
-        vi.clearAllMocks()
+        clearAllMocks()
         window.localStorage.clear()
     })
 
-    const renderWithRouter = () => {
-        const user = userEvent.setup()
+    it('renderiza el formulario de login', () => {
+        setupRouter()
+        verifyLoginFormFields()
+    })
+
+    it('muestra error de validación si el email está vacío', () => {
+        setupRouter()
+        return clickLoginButton().then(() => {
+            verifyRequiredFieldErrorShown()
+            verifyBackofficeLoginNotCalled()
+        })
+    })
+
+    it('muestra error de validación si la contraseña está vacía', () => {
+        setupRouter()
+        return fillEmailAndClickLogin('admin@huly.com').then(() => {
+            verifyRequiredFieldErrorShown()
+            verifyBackofficeLoginNotCalled()
+        })
+    })
+
+    it('muestra error de validación si el email tiene formato inválido', () => {
+        setupRouter()
+        return fillEmailAndClickLogin('noesmail').then(() => {
+            verifyInvalidEmailErrorShown()
+            verifyBackofficeLoginNotCalled()
+        })
+    })
+
+    it('inicia sesión exitosamente y redirige al backoffice', () => {
+        setupLoginResponseSuccess('token-123', 'ADMIN')
+        setupRouter()
+        return fillFormAndClickLogin('admin@huly.com', 'password123').then(() => {
+            return waitForBackofficeRedirect()
+        })
+    })
+
+    it('guarda el token en memoria y el role en localStorage al iniciar sesión', () => {
+        setupLoginResponseSuccess('token-123', 'ADMIN')
+        setupRouter()
+        return fillFormAndClickLogin('admin@huly.com', 'password123').then(() => {
+            return waitForStorageAndTokenVerification('token-123', 'ADMIN')
+        })
+    })
+
+    it('muestra mensaje amigable para credenciales inválidas', () => {
+        setupLoginResponseError(new Error('Invalid credentials'))
+        setupRouter()
+        return fillFormAndClickLogin('admin@huly.com', 'password123').then(() => {
+            return waitForTextToAppear('Credenciales incorrectas')
+        })
+    })
+
+    it('muestra error genérico del backend', () => {
+        setupLoginResponseError(new ApiError('Error del servidor', {}))
+        setupRouter()
+        return fillFormAndClickLogin('admin@huly.com', 'password123').then(() => {
+            return waitForTextToAppear('Error del servidor')
+        })
+    })
+
+    it('deshabilita el botón mientras carga', () => {
+        setupLoginResponsePending()
+        setupRouter()
+        return fillFormAndClickLogin('admin@huly.com', 'password123').then(() => {
+            verifyButtonIsDisabledWithText('Ingresando...')
+        })
+    })
+
+    it('redirige al backoffice si ya tiene el rol ADMIN en localStorage', () => {
+        setupLocalStorageRole('ADMIN')
+        renderRouterWithRoleAdmin()
+        verifyRedirectedToBackofficeDirectly()
+    })
+
+    it('alterna la visibilidad de la contraseña al hacer clic en el ojo', () => {
+        setupRouter()
+        verifyPasswordInputType('password')
+        return togglePasswordVisibility().then(() => {
+            verifyPasswordInputType('text')
+            verifyHidePasswordIconVisible()
+            return togglePasswordVisibility().then(() => {
+                verifyPasswordInputType('password')
+            })
+        })
+    })
+    const setupRouter = () => {
+        user = userEvent.setup()
         render(
             <MemoryRouter initialEntries={['/backoffice/login']}>
                 <Routes>
@@ -59,112 +148,9 @@ describe('BackofficeLogin', () => {
                 </Routes>
             </MemoryRouter>,
         )
-        return { user }
     }
 
-    const fillForm = async (user: ReturnType<typeof userEvent.setup>) => {
-        await user.type(screen.getByPlaceholderText('Correo electrónico'), 'admin@huly.com')
-        await user.type(screen.getByPlaceholderText('••••••••'), 'password123')
-    }
-
-    it('renderiza el formulario de login', () => {
-        renderWithRouter()
-
-        expect(screen.getByPlaceholderText('Correo electrónico')).toBeInTheDocument()
-        expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
-    })
-
-    it('muestra error de validación si el email está vacío', async () => {
-        const { user } = renderWithRouter()
-
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        expect(screen.getAllByText('Campo requerido').length).toBeGreaterThan(0)
-        expect(mockedBackofficeLogin).not.toHaveBeenCalled()
-    })
-
-    it('muestra error de validación si la contraseña está vacía', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Correo electrónico'), 'admin@huly.com')
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        expect(screen.getByText('Campo requerido')).toBeInTheDocument()
-        expect(mockedBackofficeLogin).not.toHaveBeenCalled()
-    })
-
-    it('muestra error de validación si el email tiene formato inválido', async () => {
-        const { user } = renderWithRouter()
-
-        await user.type(screen.getByPlaceholderText('Correo electrónico'), 'noesmail')
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        expect(screen.getByText('Email inválido')).toBeInTheDocument()
-        expect(mockedBackofficeLogin).not.toHaveBeenCalled()
-    })
-
-    it('inicia sesión exitosamente y redirige al backoffice', async () => {
-        mockedBackofficeLogin.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        await waitFor(() => {
-            expect(screen.getByText('Backoffice')).toBeInTheDocument()
-        })
-    })
-
-    it('guarda el token en memoria y el role en localStorage al iniciar sesión', async () => {
-        mockedBackofficeLogin.mockResolvedValueOnce({ accessToken: 'token-123', role: 'ADMIN' })
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        await waitFor(() => {
-            expect(mockLoginWithToken).toHaveBeenCalledWith('token-123')
-            expect(localStorage.getItem('role')).toBe('ADMIN')
-        })
-    })
-
-    it('muestra mensaje amigable para credenciales inválidas', async () => {
-        mockedBackofficeLogin.mockRejectedValueOnce(new Error('Invalid credentials'))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        await waitFor(() => {
-            expect(screen.getByText('Credenciales incorrectas')).toBeInTheDocument()
-        })
-    })
-
-    it('muestra error genérico del backend', async () => {
-        mockedBackofficeLogin.mockRejectedValueOnce(new ApiError('Error del servidor', {}))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        await waitFor(() => {
-            expect(screen.getByText('Error del servidor')).toBeInTheDocument()
-        })
-    })
-
-    it('deshabilita el botón mientras carga', async () => {
-        mockedBackofficeLogin.mockImplementation(() => new Promise(() => {}))
-        const { user } = renderWithRouter()
-
-        await fillForm(user)
-        await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-
-        expect(screen.getByRole('button', { name: 'Ingresando...' })).toBeDisabled()
-    })
-
-    it('redirige al backoffice si ya tiene el rol ADMIN en localStorage', () => {
-        localStorage.setItem('role', 'ADMIN')
+    const renderRouterWithRoleAdmin = () => {
         render(
             <MemoryRouter initialEntries={['/backoffice/login']}>
                 <Routes>
@@ -173,23 +159,101 @@ describe('BackofficeLogin', () => {
                 </Routes>
             </MemoryRouter>
         )
-        expect(screen.getByText('Backoffice')).toBeInTheDocument()
+    }
+
+    const setupLocalStorageRole = (role: string) => {
+        localStorage.setItem('role', role)
+    }
+
+    const setupLoginResponseSuccess = (accessToken: string, role: string) => {
+        mockedBackofficeLogin.mockResolvedValueOnce({ accessToken, role })
+    }
+
+    const setupLoginResponseError = (error: Error) => {
+        mockedBackofficeLogin.mockRejectedValueOnce(error)
+    }
+
+    const setupLoginResponsePending = () => {
+        mockedBackofficeLogin.mockImplementation(() => new Promise(() => {}))
+    }
+
+    const fillEmail = (email: string) => {
+        return typePlaceholder(user, 'Correo electrónico', email)
+    }
+
+    const clickLoginButton = () => {
+        return clickButton(user, 'Iniciar sesión')
+    }
+
+    const fillEmailAndClickLogin = (email: string) => {
+        return fillEmail(email).then(() => clickLoginButton())
+    }
+
+    const fillFormAndClickLogin = (email: string, password: string) => {
+        return typePlaceholder(user, 'Correo electrónico', email).then(() => {
+            return typePlaceholder(user, '••••••••', password).then(() => {
+                return clickLoginButton()
+            })
+        })
+    }
+
+    const verifyLoginFormFields = () => {
+        verifyPlaceholderPresent('Correo electrónico')
+        verifyPlaceholderPresent('••••••••')
+        expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
+    }
+
+    const verifyRequiredFieldErrorShown = () => {
+        expect(screen.getAllByText('Campo requerido').length).toBeGreaterThan(0)
+    }
+
+    const verifyInvalidEmailErrorShown = () => {
+        verifyTextPresent('Email inválido')
+    }
+
+    const verifyBackofficeLoginNotCalled = () => {
+        expect(mockedBackofficeLogin).not.toHaveBeenCalled()
+    }
+
+    const waitForBackofficeRedirect = () => {
+        return waitFor(() => {
+            verifyTextPresent('Backoffice')
+        })
+    }
+
+    const waitForStorageAndTokenVerification = (token: string, role: string) => {
+        return waitFor(() => {
+            expect(mockLoginWithToken).toHaveBeenCalledWith(token)
+            expect(localStorage.getItem('role')).toBe(role)
+        })
+    }
+
+    const waitForTextToAppear = (text: string) => {
+        return waitFor(() => {
+            verifyTextPresent(text)
+        })
+    }
+
+    const verifyButtonIsDisabledWithText = (text: string) => {
+        verifyButtonDisabled(text)
+    }
+
+    const verifyRedirectedToBackofficeDirectly = () => {
+        verifyTextPresent('Backoffice')
         expect(screen.queryByPlaceholderText('Correo electrónico')).not.toBeInTheDocument()
-    })
+    }
 
-    it('alterna la visibilidad de la contraseña al hacer clic en el ojo', async () => {
-        const { user } = renderWithRouter()
+    const verifyPasswordInputType = (type: string) => {
         const passwordInput = screen.getByPlaceholderText('••••••••') as HTMLInputElement
+        expect(passwordInput.type).toBe(type)
+    }
 
-        expect(passwordInput.type).toBe('password')
+    const togglePasswordVisibility = () => {
+        const toggleButton = screen.queryByLabelText('Mostrar contraseña') || screen.queryByLabelText('Ocultar contraseña')
+        return user.click(toggleButton!)
+    }
 
-        const toggleButton = screen.getByLabelText('Mostrar contraseña')
-        await user.click(toggleButton)
-
-        expect(passwordInput.type).toBe('text')
+    const verifyHidePasswordIconVisible = () => {
         expect(screen.getByLabelText('Ocultar contraseña')).toBeInTheDocument()
-
-        await user.click(toggleButton)
-        expect(passwordInput.type).toBe('password')
-    })
+    }
 })

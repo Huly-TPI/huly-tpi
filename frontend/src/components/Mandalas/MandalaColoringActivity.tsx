@@ -1,9 +1,11 @@
 import { ImageDown, RotateCcw } from "lucide-react";
-import galleryImage from "../../assets/mandalas/galery.webp";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityType } from "../../api/activities";
 import mandalaBackgroundDark from "../../assets/mandalas/dark-theme/background/mandala-background-dark.webp";
 import mandalaBackgroundLight from "../../assets/mandalas/light-theme/background/mandala-background-light.webp";
+import galleryImage from "../../assets/mandalas/galery.webp";
 import mandalaEasel from "../../assets/mandalas/mi_atril.webp";
+import { useActivitySessionTracker } from "../../hooks/useActivitySessionTracker";
 import { useMandalaProgress } from "../../hooks/useMandalaProgress";
 import { downloadImageBlob } from "../../utils/downloadImage";
 import ThemeBackground from "../ThemeBackground/ThemeBackground";
@@ -13,8 +15,8 @@ import type { MandalaCatalogItem } from "./mandalaTypes";
 import "./MandalaColoringActivity.css";
 
 const COLORS = [
-  "#EF4444", // Rojo
-  "#1A202C", // Negro
+  "#EF4444",
+  "#1A202C",
   "#8869AC",
   "#7BCDBA",
   "#80B8F0",
@@ -37,16 +39,55 @@ export default function MandalaColoringActivity({
   const canvasRef = useRef<MandalaCanvasHandle>(null);
   const [brushSize, setBrushSize] = useState(40);
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [canTrackSession, setCanTrackSession] = useState(false);
   const {
     clearProgress,
     loading: progressLoading,
     paintBlob,
     saveProgress,
+    sessionRegistered,
   } = useMandalaProgress(mandala.id);
+  const { markConditionMet, saveSession, startSession, stopSession } = useActivitySessionTracker(
+    ActivityType.MANDALA,
+    {
+      autoStart: false,
+      contextId: mandala.id,
+      minDurationSeconds: 10,
+    },
+  );
 
-  const handleClear = () => {
+  useEffect(() => {
+    if (progressLoading) {
+      return;
+    }
+
+    if (sessionRegistered) {
+      setCanTrackSession(false);
+      stopSession();
+      return;
+    }
+
+    setCanTrackSession(true);
+    startSession();
+  }, [progressLoading, sessionRegistered, startSession, stopSession]);
+
+  const handlePaintChange = useCallback(
+    async (blob: Blob) => {
+      await saveProgress(blob);
+      if (!canTrackSession) {
+        return;
+      }
+      markConditionMet();
+    },
+    [canTrackSession, markConditionMet, saveProgress],
+  );
+
+  const handleClear = async () => {
     canvasRef.current?.clear();
-    void clearProgress();
+    await clearProgress();
+    stopSession();
+    setCanTrackSession(true);
+    startSession();
   };
 
   const handleExport = async () => {
@@ -54,6 +95,11 @@ export default function MandalaColoringActivity({
     if (!blob) return;
 
     await downloadImageBlob(blob, `${mandala.id}.png`);
+  };
+
+  const handleBackToGallery = () => {
+    void saveSession();
+    onBackToGallery();
   };
 
   return (
@@ -66,17 +112,17 @@ export default function MandalaColoringActivity({
           <ThemeBackground
             lightSrc={mandalaBackgroundLight}
             darkSrc={mandalaBackgroundDark}
-            lightAlt="Fondo de día para pintar mandalas"
+            lightAlt="Fondo de dia para pintar mandalas"
             darkAlt="Fondo nocturno para pintar mandalas"
           />
 
           <button
-            aria-label="Ir a galería"
+            aria-label="Ir a galeria"
             className="fixed top-20 right-4 z-50 h-20 w-20 transition hover:scale-105 active:scale-95"
-            onClick={onBackToGallery}
+            onClick={handleBackToGallery}
             type="button"
           >
-            <img src={galleryImage} alt="Ir a galería" className="h-full w-full object-contain" />
+            <img src={galleryImage} alt="Ir a galeria" className="h-full w-full object-contain" />
           </button>
 
           <div className="mandala-easel-stage">
@@ -103,7 +149,7 @@ export default function MandalaColoringActivity({
                   color={selectedColor}
                   initialPaintBlob={paintBlob}
                   mandalaSrc={mandala.src}
-                  onPaintChange={saveProgress}
+                  onPaintChange={handlePaintChange}
                 />
               )}
             </div>
@@ -111,7 +157,7 @@ export default function MandalaColoringActivity({
             <button
               aria-label="Limpiar mandala"
               className="mandala-canvas-clear-btn"
-              onClick={handleClear}
+              onClick={() => void handleClear()}
               type="button"
             >
               <RotateCcw aria-hidden="true" size={28} />

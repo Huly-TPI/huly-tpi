@@ -25,4 +25,10 @@ public interface IEmotionalEventJpaRepository extends JpaRepository<EmotionalEve
     List<EmotionalEventEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<EmotionalEventEntity> findByUserIdAndRecommendationDecisionIsNotNullOrderByCreatedAtDesc(Long userId);
+
+    List<EmotionalEventEntity> findByRecommendationDecisionIsNotNull();
+
+    List<EmotionalEventEntity> findByRecommendationDecisionIsNotNullAndCreatedAtAfter(java.time.Instant start);
+
+    List<EmotionalEventEntity> findByUserIdInOrderByCreatedAtAsc(List<Long> userIds);
 }

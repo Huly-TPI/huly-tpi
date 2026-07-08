@@ -7,6 +7,7 @@ import com.huly.backend.domain.model.enums.ActivityType;
  *
  * @param userId       usuario que realiza la actividad.
  * @param activityType tipo de actividad realizada.
+ * @param contextId    identificador contextual opcional para actividades que requieren deduplicacion.
  */
-public record RegisterActivitySessionRequest(Long userId, ActivityType activityType) {
+public record RegisterActivitySessionRequest(Long userId, ActivityType activityType, String contextId) {
 }

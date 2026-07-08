@@ -58,7 +58,7 @@ export default function Challenges() {
   const { pendientes, completados, loading, error, createGoal, updateGoal, deleteGoal, completeGoal } =
     useUserGoals()
 
-  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.RETO, {
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.CHALLENGE, {
     autoStart: true,
   })
 
@@ -81,8 +81,7 @@ export default function Challenges() {
 
   const handleCreate = useCallback(async (data: { title: string; description: string }) => {
     await createGoal({ title: data.title, description: data.description || undefined })
-    markConditionMet()
-  }, [createGoal, markConditionMet])
+  }, [createGoal])
 
   const handleUpdate = useCallback(async (id: number, data: { title: string; description: string }) => {
     await updateGoal(id, { title: data.title, description: data.description || undefined })
@@ -105,6 +104,9 @@ export default function Challenges() {
       const coinsEarned = image
         ? (result.goal.coinsRewardWithImage ?? 25)
         : (result.goal.coinsReward ?? 10)
+      if (!image) {
+        showToast('📸 Tip: subí una foto como evidiencia la próxima vez y ganás más semillas', 'info')
+      }
       setCoinToast(coinsEarned)
       if (result.harvestTriggered) {
         setHarvestPlant(result.harvestedPlantNumber)

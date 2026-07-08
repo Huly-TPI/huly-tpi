@@ -5,18 +5,27 @@ import { useTheme } from '../../context/theme'
 import { completeProfileTutorial } from '../../api/onboarding'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
+import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
+import AccountSettingsModal from '../../components/Profile/AccountSettingsModal'
 import AudioSettingsModal from '../../components/Profile/AudioSettingsModal'
 import ChangePasswordModal from '../../components/Profile/ChangePasswordModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useSceneOnboarding } from '../../hooks/useSceneOnboarding'
+import dayBackgroundImage from '../../assets/profile/light-theme/background/day-background.webp'
+import dayMobileBackgroundImage from '../../assets/profile/light-theme/background/mobile/day-background.webp'
+import nightBackgroundImage from '../../assets/profile/dark-theme/background/night-background.png'
+import nightMobileBackgroundImage from '../../assets/profile/dark-theme/background/mobile/night-background.png'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
 import clockImage from '../../assets/profile/light-theme/clock.webp'
 import mirrorImage from '../../assets/profile/light-theme/mirror.webp'
 import musicImage from '../../assets/profile/light-theme/music.webp'
 import windowImage from '../../assets/profile/light-theme/window.webp'
+import nightWindowImage from '../../assets/profile/dark-theme/night-window.png'
+import notificationImage from '../../assets/profile/light-theme/notification.webp'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { profileOnboardingSteps } from './profileOnboardingSteps'
+import NotificationSettingsModal from '../../components/Profile/NotificationSettingsModal'
 import './Profile.css'
 
 const FULL_WIDTH = 'w-full'
@@ -39,7 +48,7 @@ const profileElements: SceneElementDefinition[] = [
     id: 'window',
     title: 'Volver al jardin',
     imageAlt: 'Ventana hacia el jardin',
-    image: { light: windowImage },
+    image: { light: windowImage, dark: nightWindowImage },
     placementClassName: 'left-[23%] top-[14%] z-[2] w-[50%] md:left-[42%] md:top-[16.5%] md:w-[20.8%]',
     imageClassName: FULL_WIDTH,
     hotspotClassName: DEFAULT_HOTSPOT,
@@ -90,12 +99,14 @@ function getFirstName(name: string): string {
 }
 
 export default function Profile() {
-  const { user, loading } = useAuth()
+  const { user, loading, refreshUser } = useAuth()
   const { theme } = useTheme()
-  const { isSubscribed, isLoading: pushLoading, isSupported, subscribe, unsubscribe } = usePushNotifications()
+  const { isSubscribed, isLoading: pushLoading, isSupported, subscribe, unsubscribe, notificationHour, updateHour } = usePushNotifications()
   const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
   const [showAudioSettingsModal, setShowAudioSettingsModal] = useState(false)
+  const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false)
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
+  const [showNotifModal, setShowNotifModal] = useState(false)
   const {
     onboardingMode,
     onboardingStepIndex,
@@ -139,9 +150,9 @@ export default function Profile() {
   const renderedElements = profileElements.map(element => {
     const baseElement = shouldRenderOnboarding
       ? {
-          ...element,
-          interactive: false,
-        }
+        ...element,
+        interactive: false,
+      }
       : element
 
     if (element.id === 'chest') {
@@ -150,6 +161,15 @@ export default function Profile() {
         onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
           e.preventDefault()
           setShowChangePasswordModal(true)
+        },
+      }
+    }
+    if (element.id === 'mirror') {
+      return {
+        ...baseElement,
+        onClick: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+          e.preventDefault()
+          setShowAccountSettingsModal(true)
         },
       }
     }
@@ -178,39 +198,23 @@ export default function Profile() {
     <main className="profile-page" aria-label="Perfil de usuario">
       <div className="profile-scene-scroll" aria-label="Habitacion de perfil">
         <section className="profile-scene">
-             {renderedElements.map(element => (
-                <SceneElement key={element.id} theme={theme} {...element} />
-              ))}
+          <ThemeBackground
+            lightSrc={dayBackgroundImage}
+            darkSrc={nightBackgroundImage}
+            lightAlt="Habitacion de perfil de dia"
+            darkAlt="Habitacion de perfil de noche"
+            lightMobileSrc={dayMobileBackgroundImage}
+            darkMobileSrc={nightMobileBackgroundImage}
+          />
+
+          {renderedElements.map(element => (
+            <SceneElement key={element.id} theme={theme} {...element} />
+          ))}
 
           <div className="profile-welcome" aria-label={`Bienvenido ${getFirstName(user.name)}`}>
             <span>Bienvenido</span>
             <strong>{getFirstName(user.name)}</strong>
           </div>
-          {isSupported && (
-            <button
-              onClick={isSubscribed ? unsubscribe : subscribe}
-              disabled={pushLoading}
-              className="profile-bell"
-              aria-pressed={isSubscribed}
-              aria-label={isSubscribed ? 'Desactivar recordatorios diarios' : 'Activar recordatorios diarios'}
-              title={isSubscribed ? 'Recordatorios activados' : 'Activar recordatorios'}
-            >
-              {isSubscribed ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                  <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
-                  <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
-                  <path d="M18 8a6 6 0 0 0-9.33-5" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              )}
-            </button>
-          )}
           {onboardingMode !== 'hidden' ? (
             <HomeOnboarding
               mode={onboardingMode}
@@ -229,8 +233,39 @@ export default function Profile() {
           ) : null}
         </section>
       </div>
+      {isSupported && (
+        <div className="scene-element fixed top-20 right-6 z-40 w-20">
+          <img
+            src={notificationImage}
+            alt="Recordatorios"
+            className="scene-element__image scene-element__shadow w-full select-none"
+          />
+          <div
+            aria-hidden="true"
+            className="scene-element__tooltip pointer-events-none absolute right-0 top-full z-[130] mt-5 w-max max-w-[12rem] rounded-2xl border border-white/50 bg-[#fffaf0]/95 px-3 py-2 text-center shadow-lg backdrop-blur-sm"
+          >
+            <p className="text-sm font-semibold text-[#5e4030]">
+              {isSubscribed ? 'Recordatorios activados' : 'Activar recordatorios'}
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label={isSubscribed ? 'Desactivar recordatorios diarios' : 'Activar recordatorios diarios'}
+            onClick={() => setShowNotifModal(true)}
+            disabled={pushLoading}
+            className="scene-element__hotspot scene-element__hotspot--interactive absolute inset-0 cursor-pointer rounded-full"
+          />
+        </div>
+      )}
+
       {showAntiScrollModal && (
         <AntiScrollConsentModal onClose={() => setShowAntiScrollModal(false)} />
+      )}
+      {showAccountSettingsModal && (
+        <AccountSettingsModal
+          onClose={() => setShowAccountSettingsModal(false)}
+          onSaved={refreshUser}
+        />
       )}
       {showAudioSettingsModal && (
         <AudioSettingsModal onClose={() => setShowAudioSettingsModal(false)} />
@@ -238,6 +273,17 @@ export default function Profile() {
       {showChangePasswordModal && (
         <ChangePasswordModal onClose={() => setShowChangePasswordModal(false)} />
       )}
+      {showNotifModal && (
+        <NotificationSettingsModal
+          isSubscribed={isSubscribed}
+          isLoading={pushLoading}
+          notificationHour={notificationHour}
+          onToggle={isSubscribed ? unsubscribe : subscribe}
+          onHourChange={updateHour}
+          onClose={() => setShowNotifModal(false)}
+        />
+      )}
     </main>
+
   )
 }

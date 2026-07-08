@@ -1,11 +1,12 @@
 import { useUsers } from '../../hooks/backoffice/useUsers'
 import { SectionCard } from '../../components/backoffice/SectionCard'
-import { ChevronLeft, ShieldAlert, Brain, Activity, DollarSign, Check, X } from 'lucide-react'
+import { ShieldAlert, Brain, Activity, DollarSign, Check, X } from 'lucide-react'
 import { UsageTab } from './components/UsageTab'
 import { AiDiagnosticsTab } from './components/AiDiagnosticsTab'
 import { AntiScrollTab } from './components/AntiScrollTab'
 import { FinanceTab } from './components/FinanceTab'
 import seedIcon from '../../assets/rewards/seed.webp'
+import PageHeader from '../../components/backoffice/PageHeader'
 
 export default function UserDetailPage() {
   const {
@@ -49,21 +50,13 @@ export default function UserDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 animate-fadeIn lg:h-full h-auto">
-      {/* Header */}
-      <div className="flex flex-col gap-0.5 shrink-0">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleBack}
-            className="text-gray-400 dark:text-gray-555 hover:text-violeta dark:hover:text-violeta-claro transition duration-150 flex items-center justify-center p-0.5"
-            aria-label="volver"
-          >
-            <ChevronLeft className="h-5 w-5" strokeWidth={2} />
-          </button>
-          <h1 className="text-[30px] lg:text-[34px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">Detalle de usuario</h1>
-        </div>
-        <p className="text-[16px] lg:text-[18px] text-[#A0AEC0] dark:text-gray-400">Ver información general y estadísticas de navegación</p>
-      </div>
+    <div className="flex flex-col gap-6 animate-fadeIn lg:h-full h-auto">
+      <PageHeader 
+        title="Detalle de usuario"
+        subtitle="Ver información general y estadísticas de navegación"
+        showBackButton={true}
+        onBackButtonClick={handleBack}
+      />
 
       {/* Main Grid: stretches to fill remaining height on lg+ */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr] lg:flex-1 lg:min-h-0">

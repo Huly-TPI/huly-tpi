@@ -10,7 +10,10 @@ import AntiScrollPage from './pages/Backoffice/AntiScrollPage'
 import DashboardPage from './pages/Backoffice/DashboardPage'
 import UsersPage from './pages/Backoffice/UsersPage'
 import UserDetailPage from './pages/Backoffice/UserDetailPage'
+import ActivitiesPage from './pages/Backoffice/ActivitiesPage'
 import BackofficeNotFound from './pages/Backoffice/BackofficeNotFound'
+import SeedProductsPage from './pages/Backoffice/SeedProductsPage'
+import ProductsPage from './pages/Backoffice/ProductsPage'
 import Breathing from './pages/Breathing/Breathing'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Challenges from './pages/Challenges/Challenges'
@@ -23,9 +26,11 @@ import NotFound from './pages/NotFound/NotFound.tsx'
 import Onboarding from './pages/Onboarding/Onboarding'
 import Register from './pages/Register/Register'
 import SandZenGarden from './pages/SandZenGarden/SandZenGarden.tsx'
+import Stones from './pages/Stones/Stones'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
+import Pending from './pages/Pending/Pending'
 import Privacy from './pages/Privacy/Privacy'
 import LanternActivity from './pages/Lanterns/Lanterns'
 
@@ -35,22 +40,23 @@ import { usePreloadImages } from './hooks/usePreloadImages'
 const App = () => {
   usePreloadImages()
   return (
-
     <AuthProvider>
       <SubscriptionModalProvider>
-      <ToastProvider>
-        <Routes>
-        <Route path="/backoffice/login" element={<BackofficeLogin />} />
-        <Route path="/unsubscribe" element={<Unsubscribe />} />
-        <Route path="/backoffice" element={<BackofficeLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="chatbot" element={<ChatbotPage />} />
-          <Route path="antiscroll" element={<AntiScrollPage />} />
-          <Route path="usuarios" element={<UsersPage />} />
-          <Route path="usuarios/:id" element={<UserDetailPage />} />
-          <Route path="*" element={<BackofficeNotFound />} />
-        </Route>
-
+        <ToastProvider>
+          <Routes>
+            <Route path="/backoffice/login" element={<BackofficeLogin />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/backoffice" element={<BackofficeLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="chatbot" element={<ChatbotPage />} />
+              <Route path="antiscroll" element={<AntiScrollPage />} />
+              <Route path="actividades" element={<ActivitiesPage />} />
+              <Route path="usuarios" element={<UsersPage />} />
+              <Route path="usuarios/:id" element={<UserDetailPage />} />
+              <Route path="productos" element={<ProductsPage />} />
+              <Route path="semillas" element={<SeedProductsPage />} />
+              <Route path="*" element={<BackofficeNotFound />} />
+            </Route>
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
@@ -59,6 +65,7 @@ const App = () => {
           <Route path="/diary" element={<Diary />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/challenges" element={<Challenges />} />
+          <Route path="/pending" element={<Pending />} />
           <Route path="/orchard" element={<Orchard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/register" element={<Register />} />
@@ -68,6 +75,7 @@ const App = () => {
           <Route path="/bubbles" element={<BubblesActivity />} />
           <Route path="/mandalas" element={<Mandalas />} />
           <Route path="/zen-sand-garden" element={<SandZenGarden />} />
+          <Route path="/stones" element={<Stones />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Route>

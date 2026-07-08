@@ -5,7 +5,7 @@ import com.huly.backend.infrastructure.repository.entity.AppUserEntity;
 import com.huly.backend.infrastructure.repository.entity.UserSettingEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IUserSettingJpaRepository;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,11 +17,15 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserAntiScrollSettingsRepositoryImplTest {
+
+    private static final Long USER_ID = 1L;
+    private static final Long MISSING_USER_ID = 99L;
 
     @Mock
     private IUserSettingJpaRepository userSettingJpaRepository;
@@ -33,19 +37,166 @@ class UserAntiScrollSettingsRepositoryImplTest {
     private UserAntiScrollSettingsRepositoryImpl repository;
 
     @Test
-    void findByUserId_shouldReturnMappedSettings_whenFoundWithNonNullFields() {
-        Long userId = 1L;
-        UserSettingEntity entity = UserSettingEntity.builder()
+    @DisplayName("Mapea la configuración cuando existe con campos no nulos")
+    void findByUserIdShouldReturnMappedSettingsWhenFoundWithNonNullFields() {
+        givenSettingsFound(settingsEntityWithNonNullFields());
+
+        Optional<UserAntiScrollSettings> result = findByUserId(USER_ID);
+
+        thenMappedSettingsWithNonNullFields(result);
+    }
+
+    @Test
+    @DisplayName("Aplica valores por defecto cuando los campos son nulos")
+    void findByUserIdShouldReturnSettingsWithDefaultFallbackValuesWhenFoundWithNullFields() {
+        givenSettingsFound(settingsEntityWithNullFields());
+
+        Optional<UserAntiScrollSettings> result = findByUserId(USER_ID);
+
+        thenSettingsWithDefaultFallbacks(result);
+    }
+
+    @Test
+    @DisplayName("Usa los minutos heredados cuando la columna de segundos es nula")
+    void findByUserIdShouldFallbackToLegacyMinutesWhenSecondsColumnIsNull() {
+        givenSettingsFound(settingsEntityWithLegacyMinutes());
+
+        Optional<UserAntiScrollSettings> result = findByUserId(USER_ID);
+
+        thenPauseIntervalSecondsFromLegacyMinutes(result);
+    }
+
+    @Test
+    @DisplayName("Aplica dominios por defecto cuando la cadena de dominios está vacía")
+    void findByUserIdShouldReturnSettingsWithDefaultDomainsWhenDomainsIsEmptyString() {
+        givenSettingsFound(settingsEntityWithBlankDomains());
+
+        Optional<UserAntiScrollSettings> result = findByUserId(USER_ID);
+
+        thenSettingsWithDefaultDomains(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío cuando no se encuentra la configuración")
+    void findByUserIdShouldReturnEmptyWhenNotFound() {
+        givenNoSettingsForUser(MISSING_USER_ID);
+
+        Optional<UserAntiScrollSettings> result = findByUserId(MISSING_USER_ID);
+
+        thenAbsent(result);
+    }
+
+    @Test
+    @DisplayName("Actualiza la configuración cuando ya existe")
+    void saveShouldUpdateSettingsWhenSettingsAlreadyExist() {
+        UserSettingEntity existing = existingSettingsSpy();
+        givenSettingsFound(existing);
+
+        save(settingsToUpdate());
+
+        thenExistingSettingsUpdated(existing);
+    }
+
+    @Test
+    @DisplayName("Crea la configuración cuando no existe")
+    void saveShouldCreateSettingsWhenSettingsDoNotExist() {
+        AppUserEntity user = referencedUser();
+        givenNoSettingsForUser(USER_ID);
+        givenReferencedUser(user);
+
+        save(settingsToCreate());
+
+        thenCreatedSettingsPersisted(user);
+    }
+
+    // --- arrange ---
+    private void givenSettingsFound(UserSettingEntity entity) {
+        when(userSettingJpaRepository.findByAppUser_Id(USER_ID)).thenReturn(Optional.of(entity));
+    }
+
+    private void givenNoSettingsForUser(Long userId) {
+        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.empty());
+    }
+
+    private void givenReferencedUser(AppUserEntity user) {
+        when(appUserRepository.getReferenceById(USER_ID)).thenReturn(user);
+    }
+
+    private UserSettingEntity settingsEntityWithNonNullFields() {
+        return UserSettingEntity.builder()
                 .antiScrollEnabled(true)
                 .pauseIntervalSeconds(30)
                 .monitoredDomains("youtube.com, tiktok.com, , x.com")
                 .dataSharingConsent(true)
                 .build();
+    }
 
-        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
+    private UserSettingEntity settingsEntityWithNullFields() {
+        return UserSettingEntity.builder()
+                .antiScrollEnabled(null)
+                .pauseIntervalMinutes(null)
+                .pauseIntervalSeconds(null)
+                .monitoredDomains(null)
+                .dataSharingConsent(null)
+                .build();
+    }
 
-        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
+    private UserSettingEntity settingsEntityWithLegacyMinutes() {
+        return UserSettingEntity.builder()
+                .pauseIntervalMinutes(12)
+                .pauseIntervalSeconds(null)
+                .build();
+    }
 
+    private UserSettingEntity settingsEntityWithBlankDomains() {
+        return UserSettingEntity.builder()
+                .monitoredDomains("   ")
+                .build();
+    }
+
+    private UserSettingEntity existingSettingsSpy() {
+        return spy(UserSettingEntity.builder()
+                .antiScrollEnabled(false)
+                .pauseIntervalMinutes(15)
+                .pauseIntervalSeconds(900)
+                .monitoredDomains("instagram.com")
+                .dataSharingConsent(false)
+                .build());
+    }
+
+    private AppUserEntity referencedUser() {
+        return AppUserEntity.builder().id(USER_ID).build();
+    }
+
+    private UserAntiScrollSettings settingsToUpdate() {
+        return UserAntiScrollSettings.builder()
+                .enabled(true)
+                .pauseIntervalSeconds(45)
+                .monitoredDomains(List.of("twitter.com", "reddit.com"))
+                .dataSharingConsent(true)
+                .build();
+    }
+
+    private UserAntiScrollSettings settingsToCreate() {
+        return UserAntiScrollSettings.builder()
+                .enabled(true)
+                .pauseIntervalSeconds(35)
+                .monitoredDomains(null)
+                .dataSharingConsent(false)
+                .build();
+    }
+
+    // --- act ---
+    private Optional<UserAntiScrollSettings> findByUserId(Long userId) {
+        return repository.findByUserId(userId);
+    }
+
+    private void save(UserAntiScrollSettings settings) {
+        repository.save(USER_ID, settings);
+    }
+
+    // --- assert ---
+    private void thenMappedSettingsWithNonNullFields(Optional<UserAntiScrollSettings> result) {
         assertThat(result).isPresent();
         UserAntiScrollSettings settings = result.get();
         assertThat(settings.isEnabled()).isTrue();
@@ -54,21 +205,7 @@ class UserAntiScrollSettingsRepositoryImplTest {
         assertThat(settings.isDataSharingConsent()).isTrue();
     }
 
-    @Test
-    void findByUserId_shouldReturnSettingsWithDefaultFallbackValues_whenFoundWithNullFields() {
-        Long userId = 1L;
-        UserSettingEntity entity = UserSettingEntity.builder()
-                .antiScrollEnabled(null)
-                .pauseIntervalMinutes(null)
-                .pauseIntervalSeconds(null)
-                .monitoredDomains(null)
-                .dataSharingConsent(null)
-                .build();
-
-        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
-
-        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
-
+    private void thenSettingsWithDefaultFallbacks(Optional<UserAntiScrollSettings> result) {
         assertThat(result).isPresent();
         UserAntiScrollSettings settings = result.get();
         assertThat(settings.isEnabled()).isTrue(); // Default value fallback
@@ -77,97 +214,34 @@ class UserAntiScrollSettingsRepositoryImplTest {
         assertThat(settings.isDataSharingConsent()).isFalse(); // Default value fallback
     }
 
-    @Test
-    void findByUserId_shouldFallbackToLegacyMinutes_whenSecondsColumnIsNull() {
-        Long userId = 1L;
-        UserSettingEntity entity = UserSettingEntity.builder()
-                .pauseIntervalMinutes(12)
-                .pauseIntervalSeconds(null)
-                .build();
-
-        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
-
-        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
-
+    private void thenPauseIntervalSecondsFromLegacyMinutes(Optional<UserAntiScrollSettings> result) {
         assertThat(result).isPresent();
         assertThat(result.get().getPauseIntervalSeconds()).isEqualTo(720);
     }
 
-    @Test
-    void findByUserId_shouldReturnSettingsWithDefaultDomains_whenDomainsIsEmptyString() {
-        Long userId = 1L;
-        UserSettingEntity entity = UserSettingEntity.builder()
-                .monitoredDomains("   ")
-                .build();
-
-        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(entity));
-
-        Optional<UserAntiScrollSettings> result = repository.findByUserId(userId);
-
+    private void thenSettingsWithDefaultDomains(Optional<UserAntiScrollSettings> result) {
         assertThat(result).isPresent();
-        UserAntiScrollSettings settings = result.get();
-        assertThat(settings.getMonitoredDomains()).hasSize(6); // Default list fallback
+        assertThat(result.get().getMonitoredDomains()).hasSize(6); // Default list fallback
     }
 
-    @Test
-    void findByUserId_shouldReturnEmpty_whenNotFound() {
-        Long userId = 99L;
-        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.empty());
-
-        assertThat(repository.findByUserId(userId)).isEmpty();
+    private void thenAbsent(Optional<UserAntiScrollSettings> result) {
+        assertThat(result).isEmpty();
     }
 
-    @Test
-    void save_shouldUpdateSettings_whenSettingsAlreadyExist() {
-        Long userId = 1L;
-        UserSettingEntity existingEntity = spy(UserSettingEntity.builder()
-                .antiScrollEnabled(false)
-                .pauseIntervalMinutes(15)
-                .pauseIntervalSeconds(900)
-                .monitoredDomains("instagram.com")
-                .dataSharingConsent(false)
-                .build());
-
-        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.of(existingEntity));
-
-        UserAntiScrollSettings settingsToSave = UserAntiScrollSettings.builder()
-                .enabled(true)
-                .pauseIntervalSeconds(45)
-                .monitoredDomains(List.of("twitter.com", "reddit.com"))
-                .dataSharingConsent(true)
-                .build();
-
-        repository.save(userId, settingsToSave);
-
-        verify(existingEntity).setAntiScrollEnabled(true);
-        verify(existingEntity).setPauseIntervalSeconds(45);
-        verify(existingEntity).setPauseIntervalMinutes(0);
-        verify(existingEntity).setDataSharingConsent(true);
-        verify(existingEntity).setMonitoredDomains("twitter.com,reddit.com");
-        verify(userSettingJpaRepository).save(existingEntity);
+    private void thenExistingSettingsUpdated(UserSettingEntity existing) {
+        verify(existing).setAntiScrollEnabled(true);
+        verify(existing).setPauseIntervalSeconds(45);
+        verify(existing).setPauseIntervalMinutes(0);
+        verify(existing).setDataSharingConsent(true);
+        verify(existing).setMonitoredDomains("twitter.com,reddit.com");
+        verify(userSettingJpaRepository).save(existing);
     }
 
-    @Test
-    void save_shouldCreateSettings_whenSettingsDoNotExist() {
-        Long userId = 1L;
-        AppUserEntity mockUser = AppUserEntity.builder().id(userId).build();
-        when(userSettingJpaRepository.findByAppUser_Id(userId)).thenReturn(Optional.empty());
-        when(appUserRepository.getReferenceById(userId)).thenReturn(mockUser);
-
-        UserAntiScrollSettings settingsToSave = UserAntiScrollSettings.builder()
-                .enabled(true)
-                .pauseIntervalSeconds(35)
-                .monitoredDomains(null)
-                .dataSharingConsent(false)
-                .build();
-
-        repository.save(userId, settingsToSave);
-
+    private void thenCreatedSettingsPersisted(AppUserEntity user) {
         ArgumentCaptor<UserSettingEntity> captor = ArgumentCaptor.forClass(UserSettingEntity.class);
         verify(userSettingJpaRepository).save(captor.capture());
-
         UserSettingEntity saved = captor.getValue();
-        assertThat(saved.getAppUser()).isEqualTo(mockUser);
+        assertThat(saved.getAppUser()).isEqualTo(user);
         assertThat(saved.getAntiScrollEnabled()).isTrue();
         assertThat(saved.getPauseIntervalSeconds()).isEqualTo(35);
         assertThat(saved.getPauseIntervalMinutes()).isEqualTo(0);

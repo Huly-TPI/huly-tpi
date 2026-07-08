@@ -25,6 +25,31 @@ public class StoreItemRepositoryImpl implements StoreItemRepository {
         return jpaRepository.findById(id).map(this::toDomain);
     }
 
+    @Override 
+    public StoreItem save(StoreItem item) { 
+        StoreItemEntity saved = jpaRepository.save(toEntity(item));
+        return toDomain(saved);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    private StoreItemEntity toEntity(StoreItem item) {
+        return StoreItemEntity.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .category(item.getCategory())
+                .assetKey(item.getAssetKey())
+                .priceCoins(item.getPriceCoins())
+                .price(item.getPrice())
+                .premiumOnly(item.isPremiumOnly())
+                .imageUrl(item.getImageUrl())
+                .build();
+    }
+
     private StoreItem toDomain(StoreItemEntity entity) {
         return StoreItem.builder()
                 .id(entity.getId())
@@ -35,6 +60,7 @@ public class StoreItemRepositoryImpl implements StoreItemRepository {
                 .priceCoins(entity.getPriceCoins())
                 .price(entity.getPrice())
                 .premiumOnly(entity.isPremiumOnly())
+                .imageUrl(entity.getImageUrl())
                 .build();
     }
     

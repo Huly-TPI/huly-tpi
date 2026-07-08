@@ -41,7 +41,8 @@ yarn-error.log*
 # ========================
 # CLAUDE CODE
 # ========================
-.claude/
+.claude/*
+!.claude/skills/
 
 # ========================
 # IDE - Spring Tool Suite
@@ -158,3 +159,6 @@ dist/
 # ========================
 antiscroll-extension/node_modules/
 antiscroll-extension/dist/
+
+# UPLOADS 
+uploads/

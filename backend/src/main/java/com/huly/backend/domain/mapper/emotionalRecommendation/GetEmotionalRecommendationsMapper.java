@@ -39,7 +39,8 @@ public class GetEmotionalRecommendationsMapper {
                 item.title(),
                 item.description(),
                 item.score(),
-                item.reason()
+                item.reason(),
+                item.routePath()
         );
     }
 }

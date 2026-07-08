@@ -9,6 +9,8 @@ import {
   User,
   Wind,
   X,
+  ShoppingBag,
+  Coins
 } from 'lucide-react'
 import colorLogo from '../../assets/brand/color-logo.webp'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
@@ -55,6 +57,18 @@ const NAV_ITEMS = [
     label: 'Usuarios',
     end: false,
     icon: <User className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
+  },
+  {
+    to: '/backoffice/productos',
+    label: 'Productos',
+    end: false,
+    icon: <ShoppingBag className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
+  },
+  {
+    to: '/backoffice/semillas',
+    label: 'Semillas',
+    end: false,
+    icon: <Coins className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
 ]
 

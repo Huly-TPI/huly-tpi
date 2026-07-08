@@ -8,6 +8,7 @@ import com.huly.backend.infrastructure.repository.entity.JournalEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.AppUserRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IJournalEntryJpaRepository;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IJournalJpaRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +35,152 @@ class JournalEntryRepositoryImplTest {
 
     @InjectMocks private JournalEntryRepositoryImpl repositoryImpl;
 
+    // ── save ──────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Crea un journal nuevo cuando el usuario no tiene uno")
+    void saveShouldCreateNewJournalWhenNoneExistsForUser() {
+        AppUserEntity user = user(1L);
+        JournalEntity newJournal = journal(10L, user);
+        givenReferencedUser(1L, user);
+        givenNoJournalForUser(1L);
+        givenJournalSaved(newJournal);
+        givenEntrySaved(entry(100L, newJournal, "Hoy fue un buen día", Mood.HAPPY));
+
+        save(1L, "Hoy fue un buen día", Mood.HAPPY);
+
+        thenNewJournalWasSaved();
+    }
+
+    @Test
+    @DisplayName("Usa el journal existente cuando el usuario ya tiene uno")
+    void saveShouldUseExistingJournalWhenOneAlreadyExistsForUser() {
+        AppUserEntity user = user(1L);
+        JournalEntity existingJournal = journal(10L, user);
+        givenReferencedUser(1L, user);
+        givenExistingJournal(1L, existingJournal);
+        givenEntrySaved(entry(100L, existingJournal, "Segunda entrada", Mood.CALM));
+
+        save(1L, "Segunda entrada", Mood.CALM);
+
+        thenNoNewJournalWasSaved();
+        thenEntryWasSaved();
+    }
+
+    @Test
+    @DisplayName("Devuelve el dominio con los campos correctos")
+    void saveShouldReturnDomainWithCorrectFields() {
+        AppUserEntity user = user(1L);
+        JournalEntity journal = journal(10L, user);
+        givenReferencedUser(1L, user);
+        givenExistingJournal(1L, journal);
+        givenEntrySaved(entry(100L, journal, "Contenido de prueba", Mood.NEUTRAL));
+
+        JournalEntry result = save(1L, "Contenido de prueba", Mood.NEUTRAL);
+
+        thenDomainFieldsMatch(result);
+    }
+
+    @Test
+    @DisplayName("Persiste la entrada con el contenido y mood correctos")
+    void saveShouldPersistEntryWithCorrectContentAndMood() {
+        AppUserEntity user = user(1L);
+        JournalEntity journal = journal(10L, user);
+        givenReferencedUser(1L, user);
+        givenExistingJournal(1L, journal);
+        givenEntrySaved(entry(100L, journal, "Me sentí ansioso", Mood.ANXIOUS));
+
+        save(1L, "Me sentí ansioso", Mood.ANXIOUS);
+
+        thenPersistedEntryMatches(journal);
+    }
+
+    @Test
+    @DisplayName("Permite mood nulo al guardar")
+    void saveShouldAllowNullMood() {
+        AppUserEntity user = user(1L);
+        JournalEntity journal = journal(10L, user);
+        givenReferencedUser(1L, user);
+        givenExistingJournal(1L, journal);
+        givenEntrySaved(entry(100L, journal, "Sin mood", null));
+
+        JournalEntry result = save(1L, "Sin mood", null);
+
+        thenMoodIsNull(result);
+    }
+
+    // ── findAllByUserId ────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Devuelve las entradas de dominio mapeadas")
+    void findAllByUserIdShouldReturnMappedDomainEntries() {
+        JournalEntity journal = journal(2L, user(1L));
+        givenEntriesForUser(1L, List.of(
+                entry(10L, journal, "Segunda entrada", Mood.CALM),
+                entry(9L, journal, "Primera entrada", Mood.HAPPY)));
+
+        List<JournalEntry> result = findAll(1L);
+
+        thenMappedEntriesMatch(result, 1L);
+    }
+
+    @Test
+    @DisplayName("Devuelve lista vacía cuando el usuario no tiene entradas")
+    void findAllByUserIdShouldReturnEmptyListWhenUserHasNoEntries() {
+        givenEntriesForUser(99L, List.of());
+
+        List<JournalEntry> result = findAll(99L);
+
+        thenEmpty(result);
+        thenEntriesQueriedFor(99L);
+    }
+
+    @Test
+    @DisplayName("Mapea correctamente el mood nulo")
+    void findAllByUserIdShouldMapNullMoodCorrectly() {
+        JournalEntity journal = journal(1L, user(1L));
+        givenEntriesForUser(1L, List.of(entry(5L, journal, "Sin mood", null)));
+
+        List<JournalEntry> result = findAll(1L);
+
+        thenSingleEntryHasNullMood(result);
+    }
+
+    @Test
+    @DisplayName("Delega la búsqueda en el repositorio JPA")
+    void findAllByUserIdShouldDelegateToJpaRepository() {
+        givenEntriesForUser(3L, List.of());
+
+        findAll(3L);
+
+        thenEntriesQueriedFor(3L);
+    }
+
+    // --- arrange ---
+    private void givenReferencedUser(Long userId, AppUserEntity user) {
+        when(appUserRepository.getReferenceById(userId)).thenReturn(user);
+    }
+
+    private void givenNoJournalForUser(Long userId) {
+        when(journalJpaRepository.findFirstByAppUser_Id(userId)).thenReturn(Optional.empty());
+    }
+
+    private void givenExistingJournal(Long userId, JournalEntity journal) {
+        when(journalJpaRepository.findFirstByAppUser_Id(userId)).thenReturn(Optional.of(journal));
+    }
+
+    private void givenJournalSaved(JournalEntity journal) {
+        when(journalJpaRepository.save(any(JournalEntity.class))).thenReturn(journal);
+    }
+
+    private void givenEntrySaved(JournalEntriesEntity entry) {
+        when(journalEntryJpaRepository.save(any(JournalEntriesEntity.class))).thenReturn(entry);
+    }
+
+    private void givenEntriesForUser(Long userId, List<JournalEntriesEntity> entries) {
+        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId)).thenReturn(entries);
+    }
+
     private AppUserEntity user(Long id) {
         return AppUserEntity.builder().id(id).build();
     }
@@ -47,52 +194,29 @@ class JournalEntryRepositoryImplTest {
                 .id(id).journal(journal).content(content).mood(mood).createdAt(Instant.now()).build();
     }
 
-    // ── save ──────────────────────────────────────────────────────────────────
+    // --- act ---
+    private JournalEntry save(Long userId, String content, Mood mood) {
+        return repositoryImpl.save(userId, content, mood);
+    }
 
-    @Test
-    void save_shouldCreateNewJournal_whenNoneExistsForUser() {
-        AppUserEntity user = user(1L);
-        JournalEntity newJournal = journal(10L, user);
-        JournalEntriesEntity savedEntry = entry(100L, newJournal, "Hoy fue un buen día", Mood.HAPPY);
+    private List<JournalEntry> findAll(Long userId) {
+        return repositoryImpl.findAllByUserId(userId);
+    }
 
-        when(appUserRepository.getReferenceById(1L)).thenReturn(user);
-        when(journalJpaRepository.findFirstByAppUser_Id(1L)).thenReturn(Optional.empty());
-        when(journalJpaRepository.save(any(JournalEntity.class))).thenReturn(newJournal);
-        when(journalEntryJpaRepository.save(any(JournalEntriesEntity.class))).thenReturn(savedEntry);
-
-        repositoryImpl.save(1L, "Hoy fue un buen día", Mood.HAPPY);
-
+    // --- assert ---
+    private void thenNewJournalWasSaved() {
         verify(journalJpaRepository).save(any(JournalEntity.class));
     }
 
-    @Test
-    void save_shouldUseExistingJournal_whenOneAlreadyExistsForUser() {
-        AppUserEntity user = user(1L);
-        JournalEntity existingJournal = journal(10L, user);
-        JournalEntriesEntity savedEntry = entry(100L, existingJournal, "Segunda entrada", Mood.CALM);
-
-        when(appUserRepository.getReferenceById(1L)).thenReturn(user);
-        when(journalJpaRepository.findFirstByAppUser_Id(1L)).thenReturn(Optional.of(existingJournal));
-        when(journalEntryJpaRepository.save(any(JournalEntriesEntity.class))).thenReturn(savedEntry);
-
-        repositoryImpl.save(1L, "Segunda entrada", Mood.CALM);
-
+    private void thenNoNewJournalWasSaved() {
         verify(journalJpaRepository, never()).save(any(JournalEntity.class));
+    }
+
+    private void thenEntryWasSaved() {
         verify(journalEntryJpaRepository).save(any(JournalEntriesEntity.class));
     }
 
-    @Test
-    void save_shouldReturnDomainWithCorrectFields() {
-        AppUserEntity user = user(1L);
-        JournalEntity journal = journal(10L, user);
-        JournalEntriesEntity savedEntry = entry(100L, journal, "Contenido de prueba", Mood.NEUTRAL);
-
-        when(appUserRepository.getReferenceById(1L)).thenReturn(user);
-        when(journalJpaRepository.findFirstByAppUser_Id(1L)).thenReturn(Optional.of(journal));
-        when(journalEntryJpaRepository.save(any())).thenReturn(savedEntry);
-
-        JournalEntry result = repositoryImpl.save(1L, "Contenido de prueba", Mood.NEUTRAL);
-
+    private void thenDomainFieldsMatch(JournalEntry result) {
         assertThat(result.getId()).isEqualTo(100L);
         assertThat(result.getUserId()).isEqualTo(1L);
         assertThat(result.getJournalId()).isEqualTo(10L);
@@ -101,21 +225,9 @@ class JournalEntryRepositoryImplTest {
         assertThat(result.getCreatedAt()).isNotNull();
     }
 
-    @Test
-    void save_shouldPersistEntryWithCorrectContentAndMood() {
-        AppUserEntity user = user(1L);
-        JournalEntity journal = journal(10L, user);
-        JournalEntriesEntity savedEntry = entry(100L, journal, "Me sentí ansioso", Mood.ANXIOUS);
-
-        when(appUserRepository.getReferenceById(1L)).thenReturn(user);
-        when(journalJpaRepository.findFirstByAppUser_Id(1L)).thenReturn(Optional.of(journal));
-        when(journalEntryJpaRepository.save(any(JournalEntriesEntity.class))).thenReturn(savedEntry);
-
-        repositoryImpl.save(1L, "Me sentí ansioso", Mood.ANXIOUS);
-
+    private void thenPersistedEntryMatches(JournalEntity journal) {
         ArgumentCaptor<JournalEntriesEntity> captor = ArgumentCaptor.forClass(JournalEntriesEntity.class);
         verify(journalEntryJpaRepository).save(captor.capture());
-
         JournalEntriesEntity captured = captor.getValue();
         assertThat(captured.getContent()).isEqualTo("Me sentí ansioso");
         assertThat(captured.getMood()).isEqualTo(Mood.ANXIOUS);
@@ -123,39 +235,11 @@ class JournalEntryRepositoryImplTest {
         assertThat(captured.getCreatedAt()).isNotNull();
     }
 
-    @Test
-    void save_shouldAllowNullMood() {
-        AppUserEntity user = user(1L);
-        JournalEntity journal = journal(10L, user);
-        JournalEntriesEntity savedEntry = entry(100L, journal, "Sin mood", null);
-
-        when(appUserRepository.getReferenceById(1L)).thenReturn(user);
-        when(journalJpaRepository.findFirstByAppUser_Id(1L)).thenReturn(Optional.of(journal));
-        when(journalEntryJpaRepository.save(any())).thenReturn(savedEntry);
-
-        JournalEntry result = repositoryImpl.save(1L, "Sin mood", null);
-
+    private void thenMoodIsNull(JournalEntry result) {
         assertThat(result.getMood()).isNull();
     }
 
-    // ── findAllByUserId ────────────────────────────────────────────────────────
-
-    @Test
-    void findAllByUserId_shouldReturnMappedDomainEntries() {
-        Long userId = 1L;
-        AppUserEntity user = user(userId);
-        JournalEntity journal = journal(2L, user);
-
-        List<JournalEntriesEntity> entities = List.of(
-                entry(10L, journal, "Segunda entrada", Mood.CALM),
-                entry(9L, journal, "Primera entrada", Mood.HAPPY)
-        );
-
-        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
-                .thenReturn(entities);
-
-        List<JournalEntry> result = repositoryImpl.findAllByUserId(userId);
-
+    private void thenMappedEntriesMatch(List<JournalEntry> result, Long userId) {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getId()).isEqualTo(10L);
         assertThat(result.get(0).getContent()).isEqualTo("Segunda entrada");
@@ -165,43 +249,16 @@ class JournalEntryRepositoryImplTest {
         assertThat(result.get(1).getId()).isEqualTo(9L);
     }
 
-    @Test
-    void findAllByUserId_shouldReturnEmptyList_whenUserHasNoEntries() {
-        Long userId = 99L;
-
-        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
-                .thenReturn(List.of());
-
-        List<JournalEntry> result = repositoryImpl.findAllByUserId(userId);
-
-        assertThat(result).isEmpty();
-        verify(journalEntryJpaRepository).findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId);
-    }
-
-    @Test
-    void findAllByUserId_shouldMapNullMoodCorrectly() {
-        Long userId = 1L;
-        AppUserEntity user = user(userId);
-        JournalEntity journal = journal(1L, user);
-
-        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
-                .thenReturn(List.of(entry(5L, journal, "Sin mood", null)));
-
-        List<JournalEntry> result = repositoryImpl.findAllByUserId(userId);
-
+    private void thenSingleEntryHasNullMood(List<JournalEntry> result) {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getMood()).isNull();
     }
 
-    @Test
-    void findAllByUserId_shouldDelegateToJpaRepository() {
-        Long userId = 3L;
+    private void thenEmpty(List<JournalEntry> result) {
+        assertThat(result).isEmpty();
+    }
 
-        when(journalEntryJpaRepository.findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId))
-                .thenReturn(List.of());
-
-        repositoryImpl.findAllByUserId(userId);
-
+    private void thenEntriesQueriedFor(Long userId) {
         verify(journalEntryJpaRepository).findAllByJournal_AppUser_IdOrderByCreatedAtDesc(userId);
     }
 }

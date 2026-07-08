@@ -9,4 +9,5 @@ public class MandalaProgress {
     private final Long userId;
     private final String mandalaId;
     private final byte[] paintBlob;
+    private final boolean sessionRegistered;
 }

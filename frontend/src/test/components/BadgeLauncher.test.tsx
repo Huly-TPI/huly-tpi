@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import BadgeLauncher from '../../components/Badges/BadgeLauncher'
+import { verifyTextPresent, clearAllMocks } from '../testHelpers'
 
 const mockUseAuth = vi.fn()
 vi.mock('../../context/auth', () => ({
@@ -17,50 +18,64 @@ vi.mock('../../components/Badges/BadgeModal', () => ({
 
 describe('BadgeLauncher', () => {
    beforeEach(() => {
-       vi.clearAllMocks()
+       clearAllMocks()
        document.body.removeAttribute('data-home-onboarding-active')
    })
 
    it('no renderiza cuando no está autenticado', () => {
-        mockUseAuth.mockReturnValue({ isAuthenticated: false })
-        render(
-            <MemoryRouter>
-                <BadgeLauncher />
-            </MemoryRouter>,
-        )
-        expect(screen.queryByRole('button', { name: 'Abrir insignias' })).not.toBeInTheDocument()
+        setupAuth(false)
+        renderLauncher()
+        verifyLauncherButtonNotPresent()
    })
 
    it('renderiza cuando está autenticado', () => {
-        mockUseAuth.mockReturnValue({ isAuthenticated: true })
-        render(
-            <MemoryRouter>
-                <BadgeLauncher />
-            </MemoryRouter>,
-        )
-        expect(screen.getByRole('button', { name: 'Abrir insignias' })).toBeInTheDocument()
+        setupAuth(true)
+        renderLauncher()
+        verifyLauncherButtonPresent()
    })
 
-   it('abre el modal al hacer click', async () => {
-        mockUseAuth.mockReturnValue({ isAuthenticated: true })
-        render(
-            <MemoryRouter>
-                <BadgeLauncher />
-            </MemoryRouter>,
-        )
-        await userEvent.click(screen.getByRole('button', { name: 'Abrir insignias' }))
-        expect(screen.getByText('modal-open')).toBeInTheDocument()
+   it('abre el modal al hacer click', () => {
+        setupAuth(true)
+        renderLauncher()
+        return clickLauncherButton().then(() => {
+            verifyModalOpen()
+        })
    })
 
    it('no renderiza en la ruta /onboarding', () => {
-        mockUseAuth.mockReturnValue({ isAuthenticated: true })
-        render(
-            <MemoryRouter initialEntries={['/onboarding']}>
-                <BadgeLauncher />
-            </MemoryRouter>,
-        )
-        expect(screen.queryByRole('button', { name: 'Abrir insignias' })).not.toBeInTheDocument()
+        setupAuth(true)
+        renderLauncher('/onboarding')
+        verifyLauncherButtonNotPresent()
    })
-})
 
-    
+  /* helpers */
+
+  const setupAuth = (isAuthenticated: boolean) => {
+    mockUseAuth.mockReturnValue({ isAuthenticated })
+  }
+
+  const renderLauncher = (initialRoute: string = '/') => {
+    render(
+      <MemoryRouter initialEntries={[initialRoute]}>
+        <BadgeLauncher />
+      </MemoryRouter>
+    )
+  }
+
+  const verifyLauncherButtonPresent = () => {
+    expect(screen.getByRole('button', { name: 'Abrir insignias' })).toBeInTheDocument()
+  }
+
+  const verifyLauncherButtonNotPresent = () => {
+    expect(screen.queryByRole('button', { name: 'Abrir insignias' })).not.toBeInTheDocument()
+  }
+
+  const clickLauncherButton = () => {
+    const user = userEvent.setup()
+    return user.click(screen.getByRole('button', { name: 'Abrir insignias' }))
+  }
+
+  const verifyModalOpen = () => {
+    verifyTextPresent('modal-open')
+  }
+})

@@ -9,4 +9,9 @@ import java.time.LocalDate;
  * @param lastClaimDate fecha del último reclamo (null si nunca reclamó).
  */
 public record DailyClaimState(int streak, LocalDate lastClaimDate) {
+
+    /** True si el usuario ya reclamó su recompensa en la fecha dada. */
+    public boolean claimedOn(LocalDate today) {
+        return today.equals(lastClaimDate);
+    }
 }

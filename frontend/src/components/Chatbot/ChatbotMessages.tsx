@@ -29,6 +29,27 @@ import { type ChatbotMessage } from './chatbotTypes'
 import ChatMessageBubble from './ChatMessageBubble'
 import ChatbotQuotaLimitCard from './ChatbotQuotaLimitCard'
 
+function getSuggestedActionRoute(type: string, actionUrl: string) {
+  switch (type) {
+    case 'BREATHING':
+      return '/guided-breathing'
+    case 'DIARY':
+      return '/diary'
+    case 'LANTERN':
+      return '/lanterns'
+    case 'BUBBLE':
+      return '/bubbles'
+    case 'CHALLENGE':
+      return '/challenges'
+    case 'ZEN_GARDEN':
+      return '/zen-sand-garden'
+    case 'MANDALA':
+      return '/mandalas'
+    default:
+      return actionUrl.startsWith('/api/') ? '/' : actionUrl
+  }
+}
+
 interface ChatbotMessagesProps {
   messages: ChatbotMessage[]
   isSending: boolean
@@ -42,21 +63,6 @@ interface ChatbotMessagesProps {
   bottomRef: RefObject<HTMLDivElement>
   containerRef?: RefObject<HTMLElement>
   onScroll?: UIEventHandler<HTMLElement>
-}
-
-function getSuggestedActionRoute(type: string, actionUrl: string) {
-  switch (type) {
-    case 'RESPIRACION':
-      return '/guided-breathing'
-    case 'DIARIO':
-      return '/diary'
-    case 'NUBE':
-      return '/lanterns'
-    case 'BURBUJA':
-      return '/bubbles'
-    default:
-      return actionUrl.startsWith('/api/') ? '/' : actionUrl
-  }
 }
 
 export default function ChatbotMessages({
@@ -142,6 +148,7 @@ export default function ChatbotMessages({
                 <ChatbotChallengeCard
                   title={message.generated_challenge.title}
                   description={message.generated_challenge.description}
+                  onClose={onClose}
                   decision={message.challengeDecision}
                   onAccept={() => onChallengeDecision(index, 'accepted')}
                   onReject={() => onChallengeDecision(index, 'rejected')}

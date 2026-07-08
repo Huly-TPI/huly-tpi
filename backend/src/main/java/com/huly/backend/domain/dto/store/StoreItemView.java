@@ -15,6 +15,7 @@ public record StoreItemView(
         String assetKey,
         int priceCoins,
         BigDecimal price,
-        boolean premiumOnly
+        boolean premiumOnly,
+        String imageUrl
 ) {
 }
