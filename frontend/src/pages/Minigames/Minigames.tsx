@@ -12,11 +12,11 @@ import darkLanternImage from '../../assets/lanterns/dark-theme/lantern-dark.webp
 import lanternImage from '../../assets/lanterns/ligth-theme/Lantern-Ligth.webp'
 import darkFishImage from '../../assets/minigames/dark-theme/fish.webp'
 import darkEaselImage from '../../assets/minigames/dark-theme/paddle.webp'
-// import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
+import darkStonesImage from '../../assets/minigames/dark-theme/rocks.webp'
 import darkSandImage from '../../assets/minigames/dark-theme/sand.webp'
 import fishImage from '../../assets/minigames/light-theme/fish.webp'
 import easelImage from '../../assets/minigames/light-theme/paddle.webp'
-// import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
+import stonesImage from '../../assets/minigames/light-theme/rocks.webp'
 import sandImage from '../../assets/minigames/light-theme/sand.webp'
 
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
@@ -91,18 +91,18 @@ const minigameElements: SceneElementDefinition[] = [
         tooltipClassName: 'bottom-full mb-2',
         to: '/bubbles',
     },
-    // {
-    //     id: 'stones',
-    //     title: 'Piedras del lago',
-    //     imageAlt: 'Piedras a la orilla del lago',
-    //     image: { light: stonesImage, dark: darkStonesImage },
-    //     placementClassName: 'left-[38%] top-[74%] z-30 w-[28%] md:left-[58%] md:top-[80%] md:w-[9%]',
-    //     imageClassName: FULL_WIDTH,
-    //     hotspotClassName: DEFAULT_HOTSPOT,
-    //     clipPath: RECT_CLIP_PATH,
-    //     tooltipClassName: 'bottom-full mb-2',
-    //     to: '/stones',
-    // },
+    {
+        id: 'stones',
+        title: 'Piedras del lago',
+        imageAlt: 'Piedras a la orilla del lago',
+        image: { light: stonesImage, dark: darkStonesImage },
+        placementClassName: 'left-[38%] top-[74%] z-30 w-[28%] md:left-[58%] md:top-[80%] md:w-[9%]',
+        imageClassName: FULL_WIDTH,
+        hotspotClassName: DEFAULT_HOTSPOT,
+        clipPath: RECT_CLIP_PATH,
+        tooltipClassName: 'bottom-full mb-2',
+        to: '/stones',
+    },
     {
         id: 'mandalas',
         title: 'Colorear mandalas',

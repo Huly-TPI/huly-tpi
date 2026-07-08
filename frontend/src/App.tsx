@@ -25,6 +25,7 @@ import NotFound from './pages/NotFound/NotFound.tsx'
 import Onboarding from './pages/Onboarding/Onboarding'
 import Register from './pages/Register/Register'
 import SandZenGarden from './pages/SandZenGarden/SandZenGarden.tsx'
+import Stones from './pages/Stones/Stones'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
@@ -55,7 +56,6 @@ const App = () => {
               <Route path="*" element={<BackofficeNotFound />} />
             </Route>
 
-
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -73,6 +73,7 @@ const App = () => {
           <Route path="/bubbles" element={<BubblesActivity />} />
           <Route path="/mandalas" element={<Mandalas />} />
           <Route path="/zen-sand-garden" element={<SandZenGarden />} />
+          <Route path="/stones" element={<Stones />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Route>
