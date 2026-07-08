@@ -43,4 +43,8 @@ public class ProductEntity {
 
     @Column(name = "audio_daily_limit")
     private Integer audioDailyLimit;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean active = true;
 }
