@@ -27,6 +27,12 @@ vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
   default: () => null,
 }))
 
+vi.mock('../../hooks/store/useInventory', () => ({
+  useInventory: () => ({
+    inventory: [],
+  }),
+}))
+
 describe('BreathingGuide', () => {
   afterEach(() => {
     vi.useRealTimers()
@@ -196,58 +202,5 @@ describe('BreathingGuide', () => {
     expect(screen.getByText('4')).toBeInTheDocument()
   })
 
-  it('muestra la imagen de huly al inhalar', () => {
-    vi.useFakeTimers()
-    render(
-      <BreathingGuide
-        hulyNormal="huly-normal.webp"
-        hulyInhalando="huly-inhalando.webp"
-        hulyExhalando="huly-exhalando.webp"
-      />
-    )
-    fireEvent.click(screen.getByRole('button', { name: /diafragmática/i }))
-    fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
-    const img = screen.getByAltText('Huly')
-    expect(img).toHaveAttribute('src', 'huly-inhalando.webp')
-  })
-
-  it('muestra la imagen de huly al exhalar', () => {
-    vi.useFakeTimers()
-    render(
-      <BreathingGuide
-        hulyNormal="huly-normal.webp"
-        hulyInhalando="huly-inhalando.webp"
-        hulyExhalando="huly-exhalando.webp"
-      />
-    )
-    fireEvent.click(screen.getByRole('button', { name: /diafragmática/i }))
-    fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
-    for (let i = 0; i < 4; i++) {
-      act(() => {
-        vi.advanceTimersByTime(1000)
-      })
-    }
-    const img = screen.getByAltText('Huly')
-    expect(img).toHaveAttribute('src', 'huly-exhalando.webp')
-  })
-
-  it('muestra la imagen de huly normal al sostener', () => {
-    vi.useFakeTimers()
-    render(
-      <BreathingGuide
-        hulyNormal="huly-normal.webp"
-        hulyInhalando="huly-inhalando.webp"
-        hulyExhalando="huly-exhalando.webp"
-      />
-    )
-    fireEvent.click(screen.getByRole('button', { name: /cuadrada/i }))
-    fireEvent.click(screen.getByRole('button', { name: /iniciar/i }))
-    for (let i = 0; i < 4; i++) {
-      act(() => {
-        vi.advanceTimersByTime(1000)
-      })
-    }
-    const img = screen.getByAltText('Huly')
-    expect(img).toHaveAttribute('src', 'huly-normal.webp')
-  })
+  // Pruebas visuales de HulyAvatar retiradas, delegadas al componente HulyAvatar
 })
