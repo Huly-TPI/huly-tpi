@@ -127,6 +127,10 @@ export default function Login() {
     }
   }
 
+  if (authLoading || isAuthenticated) {
+    return null
+  }
+
   if (step === 'forgot') {
     return (
       <AuthPageLayout variant="login">
