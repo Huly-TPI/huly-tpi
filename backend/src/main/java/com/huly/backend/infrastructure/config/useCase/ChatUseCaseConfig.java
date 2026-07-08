@@ -40,7 +40,8 @@ public class ChatUseCaseConfig {
             UserRepository userRepository,
             ChatConversationPreferenceRepository chatConversationPreferenceRepository,
             ChatPreferenceHandlingService chatPreferenceHandlingService,
-            ChatMapper chatMapper
+            ChatMapper chatMapper,
+            ChatMessageRepository chatMessageRepository
     ) {
         return new ChatUseCase(
                 llmChatPort,
@@ -54,7 +55,8 @@ public class ChatUseCaseConfig {
                 userRepository,
                 chatConversationPreferenceRepository,
                 chatPreferenceHandlingService,
-                chatMapper
+                chatMapper,
+                chatMessageRepository
         );
     }
 

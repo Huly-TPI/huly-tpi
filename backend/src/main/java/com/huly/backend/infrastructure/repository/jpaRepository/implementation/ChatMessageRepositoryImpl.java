@@ -14,6 +14,7 @@ import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChat
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IChatSessionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -115,4 +116,14 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
                 });
     }
 
+    @Override
+    public List<ConversationMessage> findRecentChallengesByUserId(Long userId, int limit) {
+        if (userId == null)
+            return List.of();
+
+        Pageable pageable = PageRequest.of(0, limit);
+        return jpa.findChallengesByUserId(userId, MessageRole.ASSISTANT, pageable).stream()
+                .map(chatMessageMapper::toConversationMessage)
+                .toList();
+    }
 }
