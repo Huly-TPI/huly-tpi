@@ -3,12 +3,6 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
-vi.mock('../../context/authGate', () => ({
-  useAuthGate: () => ({
-    requireAuth: (action: () => void) => action(),
-  }),
-}))
-
 const mockStartSession = vi.fn()
 const mockMarkConditionMet = vi.fn()
 const mockStopSession = vi.fn()
