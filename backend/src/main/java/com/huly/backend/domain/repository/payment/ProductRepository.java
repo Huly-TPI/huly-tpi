@@ -11,4 +11,6 @@ public interface ProductRepository {
     Optional<Product> findById(Long id);
     List<Product> findByIds(List<Long> ids);
     List<Product> findByType(ProductType type);
+    Product save(Product product);
+    List<Product> findByTypeAndActive(ProductType type, boolean active);
 }

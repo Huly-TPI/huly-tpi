@@ -60,7 +60,7 @@ class ListProductsUseCaseTest {
     // --- arrange ---
 
     private void givenCoinPacks() {
-        when(productRepository.findByType(ProductType.COIN_PACK)).thenReturn(List.of(
+        when(productRepository.findByTypeAndActive(ProductType.COIN_PACK, true)).thenReturn(List.of(
                 Product.builder().id(1L).name("Pack Inicial").description("100 monedas")
                         .price(new BigDecimal("499")).coinsAmount(100).build(),
                 Product.builder().id(2L).name("Pack Estándar").description("500 monedas")
@@ -70,7 +70,7 @@ class ListProductsUseCaseTest {
     }
 
     private void givenNoCoinPacks() {
-        when(productRepository.findByType(ProductType.COIN_PACK)).thenReturn(Collections.emptyList());
+        when(productRepository.findByTypeAndActive(ProductType.COIN_PACK, true)).thenReturn(Collections.emptyList());
     }
 
     // --- act ---
@@ -94,6 +94,6 @@ class ListProductsUseCaseTest {
     }
 
     private void thenRepositoryQueriedForCoinPacks() {
-        verify(productRepository).findByType(ProductType.COIN_PACK);
+        verify(productRepository).findByTypeAndActive(ProductType.COIN_PACK, true);
     }
 }
