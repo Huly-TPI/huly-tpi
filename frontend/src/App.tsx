@@ -14,6 +14,7 @@ import ActivitiesPage from './pages/Backoffice/ActivitiesPage'
 import BackofficeNotFound from './pages/Backoffice/BackofficeNotFound'
 import SeedProductsPage from './pages/Backoffice/SeedProductsPage'
 import ProductsPage from './pages/Backoffice/ProductsPage'
+import PlansAdminPage from './pages/Backoffice/PlansAdminPage'
 import Breathing from './pages/Breathing/Breathing'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Challenges from './pages/Challenges/Challenges'
@@ -55,6 +56,7 @@ const App = () => {
               <Route path="usuarios/:id" element={<UserDetailPage />} />
               <Route path="productos" element={<ProductsPage />} />
               <Route path="semillas" element={<SeedProductsPage />} />
+              <Route path="suscripciones" element={<PlansAdminPage />} />
               <Route path="*" element={<BackofficeNotFound />} />
             </Route>
 

@@ -8,5 +8,7 @@ public record PlanResponse(
         String description,
         BigDecimal price,
         Integer coinsAmount,
-        String planCode
+        String planCode,
+        Integer chatDailyLimit,
+        Integer audioDailyLimit
 ) {}

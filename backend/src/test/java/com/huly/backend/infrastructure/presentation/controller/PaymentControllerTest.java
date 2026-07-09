@@ -180,7 +180,8 @@ class PaymentControllerTest {
         return Product.builder()
                 .id(10L).name("Plan Premium").description("Acceso premium")
                 .price(new BigDecimal("9999")).coinsAmount(500)
-                .type(ProductType.PLAN).planCode("PREMIUM").build();
+                .type(ProductType.PLAN).planCode("PREMIUM")
+                .chatDailyLimit(50).audioDailyLimit(10).build();
     }
 
     // --- act ---
@@ -219,7 +220,9 @@ class PaymentControllerTest {
                 .andExpect(jsonPath("$[0].description").value("Acceso premium"))
                 .andExpect(jsonPath("$[0].price").value(9999))
                 .andExpect(jsonPath("$[0].coinsAmount").value(500))
-                .andExpect(jsonPath("$[0].planCode").value("PREMIUM"));
+                .andExpect(jsonPath("$[0].planCode").value("PREMIUM"))
+                .andExpect(jsonPath("$[0].chatDailyLimit").value(50))
+                .andExpect(jsonPath("$[0].audioDailyLimit").value(10));
     }
 
     private void thenOkWithEmptyArray(ResultActions result) throws Exception {
