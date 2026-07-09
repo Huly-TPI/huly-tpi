@@ -391,7 +391,7 @@ export default function StoreModal({
          * 
          * Hay que chequear el monitor de cada uno pero con la actual configuracion deberia estar bien para todos los monitores
          */}
-          <HulyAvatar equippedItems={previewItems} animation="wave" />
+          <HulyAvatar equippedItems={previewItems} animation={localError ? "stop-blow" : "wave"} />
         </div>
       </div>
     </div>

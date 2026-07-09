@@ -6,7 +6,7 @@ import { AvatarShoes } from "./AvatarShoes";
 import { AVATAR_COLORS } from "./AvatarConstants";
 
 export type AvatarAnimation =
-  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale" | "walking";
+  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale" | "walking" | "stop-blow";
 
 export interface AvatarEquippedItem {
   assetKey: string;
@@ -679,7 +679,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               ? "anim-fade-out-mouth"
               : animation === "blow" ||
                 animation === "exhale" ||
-                animation === "inhale"
+                animation === "inhale" ||
+                animation === "stop-blow"
                 ? "idle-pop-in-mouth"
                 : "idle-fade-out-mouth"
               }`}
@@ -698,7 +699,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
             id="g61"
             className={`organic-transform ${animation === "blow" ||
               animation === "exhale" ||
-              animation === "inhale"
+              animation === "inhale" ||
+              animation === "stop-blow"
               ? "idle-fade-out-mouth"
               : "idle-pop-in-mouth"
               }`}
@@ -712,15 +714,17 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               fill={AVATAR_COLORS.tongue}
               fillOpacity=".60392"
             />
-            <path
-              id="mejilla-cachete"
-              d="m262.33 313.6s3.3302-0.8432 6.538-5.2235c1.1711-1.5992 2.3756-7.92 1.7629-9.9859-0.69012-2.3271-2.4652-5.642-6.5914-7.2455"
-              fill="none"
-              stroke={AVATAR_COLORS.skinShadow4}
-              strokeLinecap="square"
-              strokeLinejoin="bevel"
-              strokeWidth="2.7155"
-            />
+            {animation !== "stop-blow" && (
+              <path
+                id="mejilla-cachete"
+                d="m262.33 313.6s3.3302-0.8432 6.538-5.2235c1.1711-1.5992 2.3756-7.92 1.7629-9.9859-0.69012-2.3271-2.4652-5.642-6.5914-7.2455"
+                fill="none"
+                stroke={AVATAR_COLORS.skinShadow4}
+                strokeLinecap="square"
+                strokeLinejoin="bevel"
+                strokeWidth="2.7155"
+              />
+            )}
             <g
               id="g74"
               fill="none"
