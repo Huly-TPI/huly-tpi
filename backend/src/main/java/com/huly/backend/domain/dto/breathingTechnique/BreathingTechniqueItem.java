@@ -1,4 +1,4 @@
-package com.huly.backend.domain.dto.BreathingSession;
+package com.huly.backend.domain.dto.breathingTechnique;
 
 /**
  * Representacion de una tecnica de respiracion dentro de la respuesta de dominio.

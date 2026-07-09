@@ -1,7 +1,7 @@
 package com.huly.backend.domain.mapper.BreathingSession;
 
-import com.huly.backend.domain.dto.BreathingSession.BreathingTechniqueItem;
-import com.huly.backend.domain.dto.BreathingSession.GetBreathingTechniquesResponse;
+import com.huly.backend.domain.dto.breathingTechnique.BreathingTechniqueItem;
+import com.huly.backend.domain.dto.breathingTechnique.GetBreathingTechniquesResponse;
 import com.huly.backend.domain.model.breathingTechnique.BreathingTechnique;
 
 import java.util.List;

@@ -8,7 +8,7 @@ import lombok.*;
 @Setter
 @Builder
 
-public class BreathingTechnique { 
+public class BreathingTechnique {
     private Long id;
     private String name;
     private String description;
@@ -17,4 +17,5 @@ public class BreathingTechnique {
     private int exhaleSeconds;
     private int roundsInterval;
     private int rounds;
+    private boolean active;
 }

@@ -1,4 +1,4 @@
-package com.huly.backend.domain.dto.BreathingSession;
+package com.huly.backend.domain.dto.breathingTechnique;
 
 import java.util.List;
 
