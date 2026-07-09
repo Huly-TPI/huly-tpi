@@ -264,14 +264,16 @@ export default function Diary() {
       <BackButton to="/"/>
 
       <div className="relative w-full max-w-4xl flex items-center justify-center h-screen md:max-h-[calc(100dvh-120px)]" style={{ zIndex: 1 }}>
-        {/* Botón de retroceder página (Izquierda) */}
-        <button
-          onClick={goToPrev}
-          disabled={pageIndex === 0}
-          className="absolute left-1 sm:left-[-40px] md:left-[-60px] top-1/2 -translate-y-1/2 flex w-12 h-12 md:w-14 md:h-14 items-center justify-center rounded-full bg-white dark:bg-[#2b1f3d] hover:bg-[#f5ebd6] dark:hover:bg-[#3a2b54] text-[#7a5c38] dark:text-[#a7f3d0] border border-[#d5c2b1] dark:border-[#5c4a86] shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:scale-110 active:scale-95 transition-all z-20 text-3xl md:text-4xl font-bold disabled:opacity-25 disabled:pointer-events-none select-none"
-        >
-          ‹
-        </button>
+        {/* Botón de retroceder página (Izquierda) - Solo en desktop */}
+        {!isMobile && (
+          <button
+            onClick={goToPrev}
+            disabled={pageIndex === 0}
+            className="absolute left-[-40px] md:left-[-60px] top-1/2 -translate-y-1/2 flex w-12 h-12 md:w-14 md:h-14 items-center justify-center rounded-full bg-white dark:bg-[#2b1f3d] hover:bg-[#f5ebd6] dark:hover:bg-[#3a2b54] text-[#7a5c38] dark:text-[#a7f3d0] border border-[#d5c2b1] dark:border-[#5c4a86] shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:scale-110 active:scale-95 transition-all z-20 text-3xl md:text-4xl font-bold disabled:opacity-25 disabled:pointer-events-none select-none"
+          >
+            ‹
+          </button>
+        )}
 
         <div
           className="diary-card relative h-full w-full bg-no-repeat [background-size:100%_100%] bg-center rounded-[6px] overflow-hidden drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] flex flex-col"
@@ -291,9 +293,31 @@ export default function Diary() {
               <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: '#8869AC' }}>{displayDate}</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              <span className="text-xs sm:text-sm min-w-[28px] sm:min-w-[40px] text-center font-medium" style={{ color: '#3d2b1a' }}>
-                {pageIndex + 1} / {totalPages}
-              </span>
+              {isMobile ? (
+                <div className="flex items-center gap-1 bg-[#7a5c38]/5 rounded px-1.5 py-0.5 border border-[#7a5c38]/10">
+                  <button
+                    onClick={goToPrev}
+                    disabled={pageIndex === 0}
+                    className="w-7 h-7 flex items-center justify-center rounded-full bg-white/70 active:bg-white disabled:opacity-25 text-[#3d2b1a] transition-colors text-lg font-bold select-none"
+                  >
+                    ‹
+                  </button>
+                  <span className="text-xs min-w-[28px] text-center font-medium" style={{ color: '#3d2b1a' }}>
+                    {pageIndex + 1} / {totalPages}
+                  </span>
+                  <button
+                    onClick={goToNext}
+                    disabled={pageIndex >= totalPages - 1}
+                    className="w-7 h-7 flex items-center justify-center rounded-full bg-white/70 active:bg-white disabled:opacity-25 text-[#3d2b1a] transition-colors text-lg font-bold select-none"
+                  >
+                    ›
+                  </button>
+                </div>
+              ) : (
+                <span className="text-sm min-w-[40px] text-center font-medium" style={{ color: '#3d2b1a' }}>
+                  {pageIndex + 1} / {totalPages}
+                </span>
+              )}
               <Button
                 variant="primary"
                 size="sm"
@@ -426,14 +450,16 @@ export default function Diary() {
         </div>
       </div>
 
-      {/* Botón de avanzar página (Derecha) */}
-      <button
-        onClick={goToNext}
-        disabled={pageIndex >= totalPages - 1}
-        className="absolute right-1 sm:right-[-40px] md:right-[-60px] top-1/2 -translate-y-1/2 flex w-12 h-12 md:w-14 md:h-14 items-center justify-center rounded-full bg-white dark:bg-[#2b1f3d] hover:bg-[#f5ebd6] dark:hover:bg-[#3a2b54] text-[#7a5c38] dark:text-[#a7f3d0] border border-[#d5c2b1] dark:border-[#5c4a86] shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:scale-110 active:scale-95 transition-all z-20 text-3xl md:text-4xl font-bold disabled:opacity-25 disabled:pointer-events-none select-none"
-      >
-        ›
-      </button>
+      {/* Botón de avanzar página (Derecha) - Solo en desktop */}
+      {!isMobile && (
+        <button
+          onClick={goToNext}
+          disabled={pageIndex >= totalPages - 1}
+          className="absolute right-[-40px] md:left-auto md:right-[-60px] top-1/2 -translate-y-1/2 flex w-12 h-12 md:w-14 md:h-14 items-center justify-center rounded-full bg-white dark:bg-[#2b1f3d] hover:bg-[#f5ebd6] dark:hover:bg-[#3a2b54] text-[#7a5c38] dark:text-[#a7f3d0] border border-[#d5c2b1] dark:border-[#5c4a86] shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:scale-110 active:scale-95 transition-all z-20 text-3xl md:text-4xl font-bold disabled:opacity-25 disabled:pointer-events-none select-none"
+        >
+          ›
+        </button>
+      )}
     </div>
 
       {!loadingEntries && (
