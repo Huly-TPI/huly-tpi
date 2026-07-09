@@ -17,6 +17,7 @@ import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.port.LLMChatPort;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationService;
@@ -43,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -67,6 +69,7 @@ class ChatUseCaseTest {
     @Mock private UserRepository userRepository;
     @Mock private ChatConversationPreferenceRepository chatConversationPreferenceRepository;
     @Mock private ChatPreferenceHandlingService chatPreferenceHandlingService;
+    @Mock private ChatMessageRepository chatMessageRepository;
     @Spy private ChatMapper mapper = new ChatMapper();
 
     @InjectMocks
@@ -80,6 +83,8 @@ class ChatUseCaseTest {
                 .thenReturn(ChatRecommendationOutcome.none(EmotionalAnalysisResult.neutral()));
         lenient().when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
         lenient().when(chatConversationPreferenceRepository.findByUserId(anyLong())).thenReturn(Optional.empty());
+        lenient().when(chatMessageRepository.findRecentChallengesByUserId(anyLong(), anyInt()))
+                .thenReturn(List.of());
     }
 
     @Test
@@ -308,6 +313,43 @@ class ChatUseCaseTest {
         ChatReplyResponse result = execute(1L, "conv-1", "Rechazo este reto por ahora");
         // --- assert ---
         thenChallengeNullified(result);
+    }
+
+    @Test
+    @DisplayName("Carga y pasa el historial de retos propuestos al prompt builder")
+    void processMessageShouldPassChallengeHistoryToPromptBuilder() {
+        // --- arrange ---
+        List<ConversationMessage> mockRecentChallenges = List.of(
+                new ConversationMessage(MessageRole.ASSISTANT, "Mensaje", null, false, null, null,
+                        new ChatReply.GeneratedChallenge("Reto respiracion", "Respira"), null, "REJECTED"),
+                new ConversationMessage(MessageRole.ASSISTANT, "Mensaje", null, false, null, null,
+                        new ChatReply.GeneratedChallenge("Reto caminar", "Camina"), null, "ACCEPTED")
+        );
+        when(chatMessageRepository.findRecentChallengesByUserId(anyLong(), anyInt()))
+                .thenReturn(mockRecentChallenges);
+
+        givenDefaultSetup("base-prompt", List.of(), "hola", List.of(),
+                new ChatReply("Respuesta", EmotionType.NEUTRAL, 5, false, null, null, null));
+
+        // --- act ---
+        execute(1L, "conv-1", "hola");
+
+        // --- assert ---
+        ArgumentCaptor<ChatPersonalizationContext> captor = ArgumentCaptor.forClass(ChatPersonalizationContext.class);
+        verify(promptBuilderService).buildEnrichedPrompt(any(), any(), any(), any(), any(), captor.capture());
+        
+        List<ChatPersonalizationContext.ChallengeHistoryEntry> history = captor.getValue().challengeHistory();
+        assertThat(history).hasSize(2);
+        
+        ChatPersonalizationContext.ChallengeHistoryEntry respiracion = history.stream()
+                .filter(e -> "Reto respiracion".equals(e.title())).findFirst().orElseThrow();
+        assertThat(respiracion.rejectedCount()).isEqualTo(1);
+        assertThat(respiracion.acceptedCount()).isEqualTo(0);
+
+        ChatPersonalizationContext.ChallengeHistoryEntry caminar = history.stream()
+                .filter(e -> "Reto caminar".equals(e.title())).findFirst().orElseThrow();
+        assertThat(caminar.rejectedCount()).isEqualTo(0);
+        assertThat(caminar.acceptedCount()).isEqualTo(1);
     }
 
     /*

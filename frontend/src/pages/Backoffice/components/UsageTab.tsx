@@ -52,6 +52,8 @@ export function UsageTab({
     [ActivityType.CHALLENGE]: distribution['CHALLENGE'] || 0,
     [ActivityType.ZEN_GARDEN]: distribution['ZEN_GARDEN'] || 0,
     [ActivityType.MANDALA]: distribution['MANDALA'] || 0,
+    [ActivityType.STONES]: distribution['STONES'] || 0,
+    [ActivityType.PENDING]: distribution['PENDING'] || 0,
   }
   const maxCount = Math.max(...Object.values(counts), 1)
 

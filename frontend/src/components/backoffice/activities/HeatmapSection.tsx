@@ -33,7 +33,7 @@ export default function HeatmapSection({
 
       <div className="flex flex-col gap-3.5 mt-2">
         {/* X-Axis headers */}
-        <div className="grid grid-cols-7 gap-1 items-center pl-24">
+        <div className="grid grid-cols-9 gap-1 items-center pl-24">
           {Object.keys(activityIcons).map((actKey) => {
             const Icon = activityIcons[actKey]
             const theme = activityThemes[actKey] || { bg: 'bg-gray-100 text-gray-500' }
@@ -51,7 +51,7 @@ export default function HeatmapSection({
         <div className="flex flex-col gap-3">
           {HEATMAP_EMOTIONS.map((emotionLabel) => {
             return (
-              <div key={emotionLabel} className="grid grid-cols-7 gap-1 items-center relative pl-24">
+              <div key={emotionLabel} className="grid grid-cols-9 gap-1 items-center relative pl-24">
                 <div className="absolute left-0 w-24 text-xs font-bold text-gray-450 dark:text-gray-400 truncate">
                   {emotionLabel}
                 </div>

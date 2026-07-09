@@ -246,6 +246,28 @@ class PromptBuilderServiceTest {
                 "\nActividad: \nTipo: \nDescripción: ");
     }
 
+    @Test
+    @DisplayName("Incluye la sección de historial de retos propuestos si existen en el contexto de personalización")
+    void buildEnrichedPromptShouldIncludeChallengeHistorySectionWhenPresent() {
+        String result = buildEnrichedWithPersonalization(
+                new ChatPersonalizationContext(
+                        "Sergio",
+                        "Checho",
+                        CommunicationStyle.DIRECT,
+                        List.of(
+                                new ChatPersonalizationContext.ChallengeHistoryEntry("Reto de respiración", 1, 2),
+                                new ChatPersonalizationContext.ChallengeHistoryEntry("Reto de caminar", 0, 1)
+                        )
+                )
+        );
+
+        thenContains(result,
+                "HISTORIAL DE RETOS PROPUESTOS AL USUARIO",
+                "- Reto: \"Reto de respiración\" -> Aceptado 1 veces, Rechazado 2 veces",
+                "- Reto: \"Reto de caminar\" -> Rechazado 1 veces",
+                "Reglas de adaptación de retos:");
+    }
+
     // --- arrange ---
     private RiskWord riskWord(String word, RiskSeverity severity, String description) {
         return RiskWord.builder()

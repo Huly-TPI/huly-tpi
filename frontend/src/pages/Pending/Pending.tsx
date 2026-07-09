@@ -12,6 +12,8 @@ import { usePostitDrag } from '../../hooks/usePostitDrag'
 import { useToast } from '../../context/toast'
 import dayBackground from '../../assets/shared/day-background.webp'
 import nightBackground from '../../assets/shared/dark-background.webp'
+import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
+import { ActivityType } from '../../api/activities'
 
 type ModalState = { mode: 'create' } | { mode: 'edit'; taskId: number } | null
 
@@ -44,6 +46,9 @@ export default function Pending() {
   )
 
   const { dragState, pickUp } = usePostitDrag(boardRef, handlePlace, followLayerRef)
+  const { markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.PENDING, {
+    autoStart: true,
+  })
 
   const handleSubmit = async (data: PendingTaskFormData) => {
     if (modal?.mode === 'create') {
@@ -70,6 +75,8 @@ export default function Pending() {
     if (modal?.mode !== 'edit') return
     try {
       await completeTask(modal.taskId)
+      markConditionMet()
+      await saveSession()
       setModal(null)
     } catch {
       showToast('No se pudo completar la tarea', 'error')

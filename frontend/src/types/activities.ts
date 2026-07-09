@@ -13,4 +13,6 @@ export const ACTIVITY_METADATA: Record<ActivityType, ActivityMetadata> = {
   [ActivityType.CHALLENGE]: { title: 'Retos Diarios', color: 'from-amber-400 to-orange-500' },
   [ActivityType.ZEN_GARDEN]: { title: 'Jardin Zen de Arena', color: 'from-stone-400 to-yellow-600' },
   [ActivityType.MANDALA]: { title: 'Mandalas', color: 'from-rose-400 to-fuchsia-500' },
+  [ActivityType.STONES]: { title: 'Piedras del Lago', color: 'from-sky-400 to-blue-500' },
+  [ActivityType.PENDING]: { title: 'Pendientes', color: 'from-slate-400 to-indigo-600' },
 }
