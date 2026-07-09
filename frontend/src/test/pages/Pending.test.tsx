@@ -3,6 +3,26 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Pending from '../../pages/Pending/Pending'
 
+vi.mock('../../context/toast', () => ({
+    useToast: vi.fn(() => ({
+        showToast: vi.fn(),
+    }))
+}))
+
+vi.mock('../../context/theme', () => ({
+    useTheme: vi.fn(() => ({
+        theme: 'garden',
+        setTheme: vi.fn(),
+    }))
+}))
+
+vi.mock('../../context/authGate', () => ({
+    useAuthGate: vi.fn(() => ({
+        requireAuth: (cb: () => void) => cb(),
+        user: { id: 1, email: 'test@example.com' },
+    }))
+}))
+
 vi.mock('../../hooks/usePendingTasks', () => ({
     usePendingTasks: vi.fn(() => ({
         tasks: [],
