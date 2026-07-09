@@ -43,10 +43,10 @@ export default function OrchardPlantSlot({ plant, onClick, hideBadge, onHoverSta
           className={`flex flex-col items-center transition-opacity duration-150 ${hideBadge ? 'opacity-0' : 'opacity-100'}`}
           style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', zIndex: 10 }}
         >
-          <span className="text-m font-bold px-3 py-1 rounded-full shadow-sm leading-none" style={{ background: '#f5e6c8', color: '#7a5c2e', border: '1px solid #d4b483' }}>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm leading-none" style={{ background: '#f5e6c8', color: '#7a5c2e', border: '1px solid #d4b483' }}>
             Creciendo
           </span>
-          <div style={{ width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #f5e6c8' }} />
+          <div style={{ width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #f5e6c8' }} />
         </div>
       )}
 
