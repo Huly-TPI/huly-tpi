@@ -16,13 +16,16 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductRepositoryImplTest {
 
-    @Mock private IProductJpaRepository jpaRepository;
-    @InjectMocks private ProductRepositoryImpl repository;
+    @Mock
+    private IProductJpaRepository jpaRepository;
+    @InjectMocks
+    private ProductRepositoryImpl repository;
 
     @Test
     @DisplayName("Mapea todas las entidades a dominio")
@@ -94,6 +97,26 @@ class ProductRepositoryImplTest {
         thenProductsByIdsMapped(result);
     }
 
+    @Test
+    @DisplayName("Guarda el producto mapeando dominio a entidad y de vuelta")
+    void saveShouldMapDomainToEntityAndBack() {
+        givenSavedEntity(coinPackEntity());
+
+        Product result = save(coinPackDomain());
+
+        thenSavedProductMapped(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve los productos activos de un tipo")
+    void findByTypeAndActiveShouldReturnMappedProducts() {
+        givenProductsByTypeAndActive(ProductType.COIN_PACK, true, coinPackEntity());
+
+        List<Product> result = findByTypeAndActive(ProductType.COIN_PACK, true);
+
+        thenProductsByTypeAndActiveMapped(result);
+    }
+
     // --- arrange ---
     private void givenAllProducts(ProductEntity... entities) {
         when(jpaRepository.findAll()).thenReturn(List.of(entities));
@@ -127,6 +150,22 @@ class ProductRepositoryImplTest {
                 .build();
     }
 
+    private void givenSavedEntity(ProductEntity entity) {
+        when(jpaRepository.save(any(ProductEntity.class))).thenReturn(entity);
+    }
+
+    private void givenProductsByTypeAndActive(ProductType type, boolean active, ProductEntity... entities) {
+        when(jpaRepository.findByTypeAndActive(type, active)).thenReturn(List.of(entities));
+    }
+
+    private Product coinPackDomain() {
+        return Product.builder()
+                .name("Pack Inicial").description("100 monedas")
+                .price(new BigDecimal("499")).coinsAmount(100)
+                .type(ProductType.COIN_PACK).active(true)
+                .build();
+    }
+
     // --- act ---
     private List<Product> findAll() {
         return repository.findAll();
@@ -142,6 +181,14 @@ class ProductRepositoryImplTest {
 
     private List<Product> findByIds(List<Long> ids) {
         return repository.findByIds(ids);
+    }
+
+    private Product save(Product product) {
+        return repository.save(product);
+    }
+
+    private List<Product> findByTypeAndActive(ProductType type, boolean active) {
+        return repository.findByTypeAndActive(type, active);
     }
 
     // --- assert ---
@@ -183,5 +230,16 @@ class ProductRepositoryImplTest {
 
     private void thenEmptyOptional(Optional<Product> result) {
         assertThat(result).isEmpty();
+    }
+
+    private void thenSavedProductMapped(Product result) {
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getName()).isEqualTo("Pack Inicial");
+    }
+
+    private void thenProductsByTypeAndActiveMapped(List<Product> result) {
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getType()).isEqualTo(ProductType.COIN_PACK);
+        assertThat(result.get(0).isActive()).isTrue();
     }
 }

@@ -42,6 +42,14 @@ describe('Minigames', () => {
     verifyHotspotLinkTarget('Burbujas', '/bubbles')
     verifyHotspotLinkTarget('Colorear mandalas', '/mandalas')
     verifyHotspotLinkTarget('Arena zen', '/zen-sand-garden')
+    verifyHotspotLinkTarget('Piedras del lago', '/stones')
+  })
+
+  it('redirige a piedras al hacer click en el hotspot de las piedras', () => {
+    renderMinigamesWithRoutes('/stones', <h1>Vista Piedras</h1>)
+    return clickHotspot('Piedras del lago').then(() => {
+      return verifyHeadingVisible('Vista Piedras')
+    })
   })
 
   it('usa el arbol cosmetico equipado para volver al jardin', () => {

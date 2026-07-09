@@ -15,6 +15,8 @@ export interface Plan {
   price: number
   coinsAmount: number
   planCode: string
+  chatDailyLimit: number | null
+  audioDailyLimit: number | null
 }
 
 export interface CreatePreferenceResponse {
