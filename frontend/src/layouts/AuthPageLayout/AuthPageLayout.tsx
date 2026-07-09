@@ -5,6 +5,7 @@ import defaultCharacter from '../../assets/register/huly.webp'
 import cardFrame from '../../assets/register/cardFrame.webp'
 import cardFrameLogin from '../../assets/register/cardFrame-login.webp'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
+import BackButton from '../../components/Buttons/BackButton/BackButton'
 
 interface AuthPageLayoutProps {
   children: ReactNode
@@ -19,6 +20,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
   const frame = variant === 'login' ? cardFrameLogin : cardFrame
   return (
     <div className="relative h-full flex items-center justify-center overflow-hidden">
+      <BackButton to="/" label="Volver al jardín" />
       <ThemeBackground
         lightSrc={background}
         darkSrc={backgroundNight}
@@ -27,7 +29,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
       />
       <div className="absolute inset-0 backdrop-blur-md" />
 
-      <div className={`relative z-10 flex w-full max-w-5xl items-center justify-center gap-12 px-4 md:px-10 pt-0 pb-8 ${reversed ? 'flex-row-reverse' : ''}`}>
+      <div className={`relative z-10 flex w-full max-w-5xl items-center justify-center gap-12 px-4 md:px-10 pt-16 md:pt-0 pb-8 ${reversed ? 'flex-row-reverse' : ''}`}>
         <img
           src={character}
           alt="Mascota de Huly"
@@ -43,7 +45,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
             height: cardHeight,
           }}
         >
-          <div className="h-full overflow-y-auto px-8 py-8 md:px-14 md:py-10">
+          <div className="h-full overflow-y-auto px-10 pt-4 pb-8 md:px-14 md:py-10">
             {children}
           </div>
         </div>

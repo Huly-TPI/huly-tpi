@@ -5,7 +5,9 @@ import {
   CirclePlay, 
   Activity, 
   Shell, 
-  Brush 
+  Brush,
+  Waves,
+  ListTodo
 } from 'lucide-react'
 import { ActivityType } from '../../../api/activities'
 
@@ -17,6 +19,8 @@ export const ACTIVITY_ICONS: Record<ActivityType, React.ComponentType<any>> = {
   [ActivityType.CHALLENGE]: Activity,
   [ActivityType.ZEN_GARDEN]: Shell,
   [ActivityType.MANDALA]: Brush,
+  [ActivityType.STONES]: Waves,
+  [ActivityType.PENDING]: ListTodo,
 }
 
 export const ACTIVITY_THEMES: Record<ActivityType, { bg: string; text: string; bar: string; bullet: string }> = {
@@ -61,5 +65,17 @@ export const ACTIVITY_THEMES: Record<ActivityType, { bg: string; text: string; b
     text: 'text-purple-600 dark:text-purple-400',
     bar: 'bg-gradient-to-r from-purple-500/40 to-purple-400',
     bullet: 'bg-purple-500 dark:bg-purple-400',
+  },
+  [ActivityType.STONES]: {
+    bg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+    text: 'text-sky-600 dark:text-sky-400',
+    bar: 'bg-gradient-to-r from-sky-500/40 to-sky-400',
+    bullet: 'bg-sky-500 dark:bg-sky-400',
+  },
+  [ActivityType.PENDING]: {
+    bg: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+    text: 'text-slate-600 dark:text-slate-400',
+    bar: 'bg-gradient-to-r from-slate-500/40 to-slate-400',
+    bullet: 'bg-slate-500 dark:bg-slate-400',
   },
 }

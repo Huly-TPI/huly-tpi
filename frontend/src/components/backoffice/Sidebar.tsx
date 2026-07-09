@@ -10,7 +10,8 @@ import {
   Wind,
   X,
   ShoppingBag,
-  Coins
+  Coins, 
+  CreditCard
 } from 'lucide-react'
 import colorLogo from '../../assets/brand/color-logo.webp'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
@@ -69,6 +70,12 @@ const NAV_ITEMS = [
     label: 'Semillas',
     end: false,
     icon: <Coins className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
+  },
+  {
+    to: '/backoffice/suscripciones',
+    label: 'Suscripciones',
+    end: false,
+    icon: <CreditCard className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
 ]
 

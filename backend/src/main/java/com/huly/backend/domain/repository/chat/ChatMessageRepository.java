@@ -23,4 +23,6 @@ public interface ChatMessageRepository {
     long countUserMessagesSince(Long userId, Instant since);
 
     long countUserAudioMessagesSince(Long userId, Instant since);
+
+    List<ConversationMessage> findRecentChallengesByUserId(Long userId, int limit);
 }

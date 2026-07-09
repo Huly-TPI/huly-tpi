@@ -60,7 +60,7 @@ class ListPlansUseCaseTest {
     // --- arrange ---
 
     private void givenPlans() {
-        when(productRepository.findByType(ProductType.PLAN)).thenReturn(List.of(
+        when(productRepository.findByTypeAndActive(ProductType.PLAN, true)).thenReturn(List.of(
                 Product.builder().id(10L).name("Plan Premium").description("Acceso premium")
                         .price(new BigDecimal("9999")).coinsAmount(0)
                         .type(ProductType.PLAN).planCode("PREMIUM").build(),
@@ -70,7 +70,7 @@ class ListPlansUseCaseTest {
     }
 
     private void givenNoPlans() {
-        when(productRepository.findByType(ProductType.PLAN)).thenReturn(Collections.emptyList());
+        when(productRepository.findByTypeAndActive(ProductType.PLAN, true)).thenReturn(Collections.emptyList());
     }
 
     // --- act ---
@@ -94,6 +94,6 @@ class ListPlansUseCaseTest {
     }
 
     private void thenRepositoryQueriedForPlans() {
-        verify(productRepository).findByType(ProductType.PLAN);
+        verify(productRepository).findByTypeAndActive(ProductType.PLAN, true);
     }
 }

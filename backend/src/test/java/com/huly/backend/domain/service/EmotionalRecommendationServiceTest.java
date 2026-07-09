@@ -8,6 +8,7 @@ import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommenda
 import com.huly.backend.domain.model.emotionalRecommendation.Vad;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.domain.model.enums.RecommendationDecision;
+import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.emotionalRecommendation.EmotionalRecommendationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class EmotionalRecommendationServiceTest {
 
-    private final EmotionalRecommendationService service = new EmotionalRecommendationService();
+    private final EmotionalRecommendationPolicy policy = new EmotionalRecommendationPolicy();
+    private final EmotionalRecommendationService service = new EmotionalRecommendationService(policy);
 
     private EmotionalRecommendation query;
     private List<Activity> activities;
@@ -139,6 +141,52 @@ class EmotionalRecommendationServiceTest {
     }
 
     @Test
+    @DisplayName("Baja la prioridad de la actividad significativamente si fue ignorada 2 veces recientemente")
+    void recommendShouldLowerPriorityWhenIgnoredTwice() {
+        givenQuery(query(-0.7, 0.8, -0.6, 0.8, "calmarme"));
+        givenActivities(defaultActivities());
+
+        EmotionalRecommendationResult base = recommend();
+        givenHistory(historyOf(
+                event(RecommendationDecision.IGNORED, 1L, null, null),
+                event(RecommendationDecision.IGNORED, 1L, null, null)
+        ));
+        EmotionalRecommendationResult result = recommendWithHistory();
+
+        assertThat(scoreFor(result, ActivityType.BREATHING)).isLessThan(scoreFor(base, ActivityType.BREATHING));
+        assertThat(result.recommendations().get(0).type()).isNotEqualTo(ActivityType.BREATHING);
+    }
+
+    @Test
+    @DisplayName("Sube el score de la actividad si el evento posterior muestra una mejora emocional (valence delta positivo)")
+    void recommendShouldRaiseScoreWhenEmotionalImprovementDetected() {
+        givenQuery(query(-0.7, 0.8, -0.6, 0.8, "calmarme"));
+        givenActivities(defaultActivities());
+
+        EmotionalRecommendationResult base = recommend();
+
+        EmotionalEvent oldestEvent = EmotionalEvent.builder()
+                .userId(1L)
+                .recommendedActivityId(1L)
+                .recommendationDecision(RecommendationDecision.ACCEPTED)
+                .valence(-0.8)
+                .createdAt(Instant.now().minusSeconds(3600))
+                .build();
+        EmotionalEvent newestEvent = EmotionalEvent.builder()
+                .userId(1L)
+                .recommendedActivityId(1L)
+                .recommendationDecision(RecommendationDecision.ACCEPTED)
+                .valence(-0.2)
+                .createdAt(Instant.now())
+                .build();
+
+        givenHistory(List.of(newestEvent, oldestEvent));
+        EmotionalRecommendationResult result = recommendWithHistory();
+
+        assertThat(scoreFor(result, ActivityType.BREATHING)).isGreaterThan(scoreFor(base, ActivityType.BREATHING));
+    }
+
+    @Test
     @DisplayName("Usa la actividad elegida como señal positiva cuando el usuario eligió otra")
     void recommendShouldUseChosenActivityAsPositiveSignalWhenUserChoseOther() {
         givenQuery(query(-0.7, 0.8, -0.6, 0.8, "calmarme"));
@@ -166,6 +214,23 @@ class EmotionalRecommendationServiceTest {
 
         thenScoreHigher(highFeedback, base, ActivityType.DIARY);
         thenScoreLower(lowFeedback, base, ActivityType.DIARY);
+    }
+
+    @Test
+    @DisplayName("Baja la prioridad significativamente de una actividad si fue aceptada pero no aportó valor repetidamente")
+    void recommendShouldLowerScoreSignificantlyWhenActivityIsAcceptedButUnhelpfulRepetitively() {
+        givenQuery(query(-0.7, 0.8, -0.6, 0.8, "calmarme"));
+        givenActivities(defaultActivities());
+
+        EmotionalRecommendationResult base = recommend();
+        givenHistory(historyOf(
+                event(RecommendationDecision.ACCEPTED, 2L, null, 1),
+                event(RecommendationDecision.ACCEPTED, 2L, null, 1),
+                event(RecommendationDecision.ACCEPTED, 2L, null, 1)
+        ));
+        EmotionalRecommendationResult result = recommendWithHistory();
+
+        assertThat(scoreFor(result, ActivityType.DIARY)).isLessThan(scoreFor(base, ActivityType.DIARY) - 0.5);
     }
 
     @Test
@@ -513,7 +578,7 @@ class EmotionalRecommendationServiceTest {
 
     // --- act ---
     private EmotionalRecommendationResult recommend() {
-        return service.recommend(query, activities);
+        return service.recommend(query, activities, List.of());
     }
 
     private EmotionalRecommendationResult recommendWithHistory() {
