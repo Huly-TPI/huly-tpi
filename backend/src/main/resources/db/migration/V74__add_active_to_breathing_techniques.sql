@@ -1,0 +1,1 @@
+ALTER TABLE breathing_techniques ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;
