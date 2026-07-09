@@ -215,6 +215,22 @@ class GetCloudRecommendationUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recomienda el diario cuando la actividad mejor puntuada no tiene tipo")
+    void executeShouldRecommendDiaryWhenTopActivityTypeIsNull() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(null);
+
+        GetCloudRecommendationResponse result = recommend();
+
+        thenRecommendationIs(result, "diary", "/diary");
+    }
+
+    @Test
     @DisplayName("Usa el fallback cuando el ranking no devuelve recomendaciones")
     void executeShouldUseFallbackWhenNoRecommendations() {
         givenPromptTemplate();
