@@ -112,6 +112,8 @@ public class EmotionalRecommendationPolicy {
             case DIARY -> query.vad().arousal() <= JOURNAL_MAX_AROUSAL ? 0.6 : 0.2;
             case ZEN_GARDEN -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD ? 0.9 : 0.2;
             case MANDALA -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD ? 0.8 : 0.2;
+            case STONES -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD ? 0.75 : 0.2;
+            case PENDING -> query.vad().arousal() > HIGH_AROUSAL_THRESHOLD ? 0.7 : 0.2;
             default -> 0.2;
         };
     }
@@ -129,6 +131,8 @@ public class EmotionalRecommendationPolicy {
             case ZEN_GARDEN -> "Recomendada para calmar la mente a traves de dibujos en la arena.";
             case MANDALA -> "Recomendada para centrar la atencion coloreando formas complejas.";
             case CHALLENGE -> "Recomendada para activarte mediante un reto adaptado a tu estado actual.";
+            case STONES -> "Recomendada para relajarte y soltar preocupaciones observando las ondas del lago.";
+            case PENDING -> "Recomendada para ordenar tus tareas pendientes y reducir tu carga mental.";
             default -> "Recomendada por compatibilidad con el estado emocional y sus efectos esperados.";
         };
     }

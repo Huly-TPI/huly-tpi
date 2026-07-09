@@ -7,7 +7,9 @@ public enum ActivityType {
     BUBBLE("Burbujas relajantes"),
     CHALLENGE("Reto diario"),
     ZEN_GARDEN("Jardín Zen de arena"),
-    MANDALA("Mandalas para colorear");
+    MANDALA("Mandalas para colorear"),
+    STONES("Piedras del lago"),
+    PENDING("Pendientes");
 
     private final String description;
 
