@@ -449,7 +449,7 @@ export default function Home() {
               alt="Recompensas diarias"
               className="w-full h-auto scale-[0.97] origin-top"
             />
-            <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523] whitespace-nowrap">
+            <span className="absolute bottom-[22%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523] whitespace-nowrap">
               Reclamar
             </span>
           </button>
@@ -465,7 +465,7 @@ export default function Home() {
               className="w-full h-auto"
             />
             {coins !== null && (
-              <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523]">
+              <span className="absolute bottom-[22.5%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523]">
                 {coins.toLocaleString("es-AR")}
               </span>
             )}
