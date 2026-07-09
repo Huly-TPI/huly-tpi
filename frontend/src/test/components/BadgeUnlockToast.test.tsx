@@ -91,7 +91,4 @@ describe('BadgeUnlockToast', () => {
     expect(onDismissMock).toHaveBeenCalledOnce()
   }
 
-  const verifyAutoDismissScheduled = (setTimeoutSpy: ReturnType<typeof vi.spyOn>) => {
-    expect(setTimeoutSpy).toHaveBeenCalledWith(onDismissMock, 10000)
-  }
 })
