@@ -68,7 +68,10 @@ public class GetCloudRecommendationUseCase {
                     true
             );
 
-            EmotionalRecommendation query = toQuery(recommendationAnalysis, userId);
+            EmotionalRecommendation query = toQuery(recommendationAnalysis, userId, userMessage);
+            log.info("cloud_recommendation_query userId={} userGoal='{}' valence={} arousal={} dominance={} intensity={}",
+                    userId, query.userGoal(), query.vad().valence(), query.vad().arousal(),
+                    query.vad().dominance(), query.intensity());
             EmotionalRecommendationResult result = recommendationService.recommend(
                     query,
                     activities(),
@@ -99,13 +102,20 @@ public class GetCloudRecommendationUseCase {
         return result == null ? EmotionalAnalysisResult.neutral() : result;
     }
 
-    private EmotionalRecommendation toQuery(EmotionalAnalysisResult analysis, Long userId) {
+    private EmotionalRecommendation toQuery(EmotionalAnalysisResult analysis, Long userId, String userMessage) {
         return new EmotionalRecommendation(
                 userId,
                 analysis.vad(),
                 analysis.intensity(),
-                analysis.userGoal()
+                combineGoalSignal(analysis.userGoal(), userMessage)
         );
+    }
+
+    private String combineGoalSignal(String analysisGoal, String userMessage) {
+        if (analysisGoal == null || analysisGoal.isBlank()) {
+            return userMessage;
+        }
+        return analysisGoal + " " + userMessage;
     }
 
     private List<Activity> activities() {
