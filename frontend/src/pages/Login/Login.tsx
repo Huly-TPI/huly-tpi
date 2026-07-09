@@ -40,13 +40,13 @@ const RESET_RULES = {
 
 export default function Login() {
   const navigate = useNavigate()
-  const { login, isAuthenticated, loading: authLoading } = useAuth()
+  const { login, isAuthenticated, loading: authLoading, user } = useAuth()
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate('/', { replace: true })
+      navigate(user?.onBoardingCompleted === false ? '/onboarding' : '/', { replace: true })
     }
-  }, [authLoading, isAuthenticated, navigate])
+  }, [authLoading, isAuthenticated, navigate, user])
 
   const [step, setStep] = useState<Step>('login')
   const [loading, setLoading] = useState(false)

@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { CalendarDays } from 'lucide-react'
 import { ApiError } from '../../api/apiError'
 import { getAccountSettings, updateAccountSettings, type AccountSettings } from '../../api/auth'
 import Button from '../Buttons/Button/Button'
@@ -61,6 +62,7 @@ export default function AccountSettingsModal({ onClose, onSaved }: AccountSettin
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const birthDateRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let active = true
@@ -192,15 +194,26 @@ export default function AccountSettingsModal({ onClose, onSaved }: AccountSettin
               <label htmlFor="account-birth-date" className="text-sm font-semibold text-[var(--text-primary)]">
                 Fecha de nacimiento
               </label>
-              <input
-                id="account-birth-date"
-                type="date"
-                value={values.birthDate}
-                onChange={event => handleChange('birthDate', event.target.value)}
-                aria-invalid={!!errors.birthDate}
-                aria-describedby={errors.birthDate ? 'account-birth-date-error' : undefined}
-                className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
-              />
+              <div className="relative">
+                <input
+                  ref={birthDateRef}
+                  id="account-birth-date"
+                  type="date"
+                  value={values.birthDate}
+                  onChange={event => handleChange('birthDate', event.target.value)}
+                  aria-invalid={!!errors.birthDate}
+                  aria-describedby={errors.birthDate ? 'account-birth-date-error' : undefined}
+                  className="w-full appearance-none rounded-xl border border-[var(--border-soft)] bg-[var(--surface-primary)] px-3 py-2 pr-10 text-sm text-[var(--text-primary)] [&::-webkit-calendar-picker-indicator]:hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => birthDateRef.current?.showPicker()}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                  aria-label="Abrir calendario"
+                >
+                  <CalendarDays className="size-5" strokeWidth={2} />
+                </button>
+              </div>
               {errors.birthDate && <p id="account-birth-date-error" role="alert" className="text-xs font-semibold text-red-600 dark:text-red-400">{errors.birthDate}</p>}
             </div>
 
