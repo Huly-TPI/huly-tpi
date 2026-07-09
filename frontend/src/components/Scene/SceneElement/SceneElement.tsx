@@ -41,7 +41,7 @@ export default function SceneElement({
   const imageSrc = theme === 'dark' && image.dark ? image.dark : image.light
 
   return (
-    <div className={`group scene-element absolute hover:z-[120] focus-within:z-[120] ${placementClassName}`}>
+    <div className={`group scene-element absolute ${placementClassName}`}>
       <img
         src={imageSrc}
         alt={imageAlt}
