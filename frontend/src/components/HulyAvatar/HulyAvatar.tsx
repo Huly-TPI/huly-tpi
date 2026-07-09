@@ -224,7 +224,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <stop id="stop84" stopColor={AVATAR_COLORS.skinBase2} offset="1" />
         </radialGradient>
       </defs>
-      <g className={animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : (animation === "walking" ? "anim-walk-arm-der" : ""))}>
+      <g className={animation === "stop-blow" ? "pose-error-arm-der" : (animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : (animation === "walking" ? "anim-walk-arm-der" : "")))}>
         <g
           id="g101-5-2"
           transform="matrix(-.0010412 1 1 .0010412 -63.159 191.73)"
@@ -677,12 +677,13 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
             id="g36"
             className={`organic-transform ${animation === "wave"
               ? "anim-fade-out-mouth"
-              : animation === "blow" ||
-                animation === "exhale" ||
-                animation === "inhale" ||
-                animation === "stop-blow"
-                ? "idle-pop-in-mouth"
-                : "idle-fade-out-mouth"
+              : animation === "stop-blow"
+                ? "error-fade-out-mouth"
+                : animation === "blow" ||
+                  animation === "exhale" ||
+                  animation === "inhale"
+                  ? "idle-pop-in-mouth"
+                  : "idle-fade-out-mouth"
               }`}
           >
             <path
@@ -697,12 +698,13 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
           <g
             id="g61"
-            className={`organic-transform ${animation === "blow" ||
-              animation === "exhale" ||
-              animation === "inhale" ||
-              animation === "stop-blow"
-              ? "idle-fade-out-mouth"
-              : "idle-pop-in-mouth"
+            className={`organic-transform ${animation === "stop-blow"
+              ? "error-pop-in-mouth"
+              : animation === "blow" ||
+                animation === "exhale" ||
+                animation === "inhale"
+                ? "idle-fade-out-mouth"
+                : "idle-pop-in-mouth"
               }`}
           >
             <ellipse

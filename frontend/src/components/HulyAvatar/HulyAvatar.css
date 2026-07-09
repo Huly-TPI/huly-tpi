@@ -352,21 +352,59 @@
 }
 
 @keyframes walk-swing {
-  0% { transform: rotate(-15deg); }
-  100% { transform: rotate(15deg); }
+  0% {
+    transform: rotate(-15deg);
+  }
+
+  100% {
+    transform: rotate(15deg);
+  }
 }
 
 @keyframes walk-swing-reverse {
-  0% { transform: rotate(15deg); }
-  100% { transform: rotate(-15deg); }
+  0% {
+    transform: rotate(15deg);
+  }
+
+  100% {
+    transform: rotate(-15deg);
+  }
 }
 
 @keyframes walk-knee {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(35deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(35deg);
+  }
 }
 
 @keyframes walk-knee-reverse {
-  0% { transform: rotate(35deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(35deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.pose-error-arm-der {
+  transform-origin: 307.5px 340.4px;
+  transform: translate(-35px, 20px) rotate(80deg);
+  transition: transform cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.error-pop-in-mouth {
+  transform: scale(1);
+  opacity: 1;
+  transition: all cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s;
+}
+
+.error-fade-out-mouth {
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
