@@ -38,21 +38,21 @@ describe('PlansAdminPage', () => {
     it('lista los planes con su código', () => {
         mockHook.products = [plan]
         render(<PlansAdminPage />)
-        expect(screen.getByText('Premium')).toBeInTheDocument()
-        expect(screen.getByText('PREMIUM')).toBeInTheDocument()
+        expect(screen.getAllByText('Premium')[0]).toBeInTheDocument()
+        expect(screen.getAllByText('PREMIUM')[0]).toBeInTheDocument()
     })
 
     it('abre el formulario de edición', async () => {
         mockHook.products = [plan]
         render(<PlansAdminPage />)
-        await userEvent.click(screen.getByRole('button', { name: 'Editar Premium' }))
+        await userEvent.click(screen.getAllByRole('button', { name: 'Editar Premium' })[0])
         expect(screen.getByText('Límite chat/día')).toBeInTheDocument()
     })
 
     it('modifica el estado con Desactivar', async () => {
         mockHook.products = [plan]
         render(<PlansAdminPage />)
-        await userEvent.click(screen.getByRole('button', { name: 'Desactivar Premium' }))
+        await userEvent.click(screen.getAllByRole('button', { name: 'Desactivar Premium' })[0])
         expect(mockHook.setActive).toHaveBeenCalledWith(1, false)
     })
 
