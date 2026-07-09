@@ -74,7 +74,7 @@
 }
 
 .walking-avatar-container {
-  animation: walk-across-screen 24s linear infinite;
+  animation: walk-across-screen 36s linear infinite;
 }
 
 .walking-avatar-bob {

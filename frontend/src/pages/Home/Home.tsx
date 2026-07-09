@@ -343,7 +343,11 @@ export default function Home() {
         
         {/* Walking Avatar */}
         <div className="absolute z-[35] bottom-[20%] w-[25%] md:w-[15%] h-[25%] pointer-events-none walking-avatar-container">
-          <div className="walking-avatar-bob w-full h-full">
+          {/* Shadow (doesn't bob) */}
+          <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/25 blur-[6px]" />
+          
+          {/* Avatar (bobs) */}
+          <div className="walking-avatar-bob relative z-10 w-full h-full">
             <HulyAvatar equippedItems={equippedItems} animation="walking" />
           </div>
         </div>

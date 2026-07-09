@@ -572,11 +572,12 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         )}
       </g>
-      <g
-        id="g101-5"
-        className={view === "guided-breathing" ? "pose-guided-breathing-arm-izq" : (animation === "walking" ? "anim-walk-arm-izq" : "")}
-        transform={view === "guided-breathing" ? undefined : "translate(34.507 -.33232)"}
-      >
+      <g className={animation === "walking" ? "anim-walk-arm-izq-wrap" : ""}>
+        <g
+          id="g101-5"
+          className={view === "guided-breathing" ? "pose-guided-breathing-arm-izq" : ""}
+          transform={view === "guided-breathing" ? undefined : "translate(34.507 -.33232)"}
+        >
         <g fill={AVATAR_COLORS.skinBase}>
           <ellipse
             id="circulo-union-brazo-inferior-izq"
@@ -639,6 +640,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               />
             </g>
           )}
+        </g>
         </g>
       </g>
       <g
