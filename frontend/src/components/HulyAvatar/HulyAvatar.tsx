@@ -1,41 +1,9 @@
 import React from "react";
 import "./HulyAvatar.css";
+import { AvatarBodyClothing } from "./AvatarBodyClothing";
+import { AvatarVisor } from "./AvatarVisor";
+import { AVATAR_COLORS } from "./AvatarConstants";
 
-export const AVATAR_COLORS = {
-  skinBase: "#edc89e",
-  skinBase2: "#ecc79d",
-  skinBase3: "#ecc69a",
-  skinShadow1: "#e5af74",
-  skinShadow2: "#dfa45c",
-  skinShadow3: "#e7b276",
-  skinShadow4: "#e5b279",
-  blush: "#eab2a2",
-  eyeBase: "#363636",
-  eyeShadow: "#1d1e1e",
-  white: "#fff",
-  gray: "#919191",
-  mouthDark: "#462727",
-  tongue: "#e76767",
-  tongueLight: "#fb6fddff",
-  shirtVioletBase: "#553560",
-  shirtVioletShadow: "#412848",
-  shirtVioletStroke: "#492c58",
-  overallsBase: "#5981b9",
-  overallsShadow: "#6991c3",
-  pantsGreenBase: "#687139",
-  pantsGreenShadow1: "#7a6e41",
-  pantsGreenShadow2: "#808c46",
-  pantsGreenShadow3: "#6e7c43",
-  pantsGreenLight: "#a7af5a",
-  pantsGreenStroke: "#8f9b0d",
-  shoeBlueBase: "#7185ac",
-  shoeBlueShadow: "#4e6b9b",
-  shoeBlueLight: "#7787a6",
-  shoeBlueStroke: "#4e6984",
-  shoeGrayStroke: "#76818f",
-  shoeLaceStroke: "#b6afa8",
-  black: "#000",
-};
 
 
 export type AvatarAnimation =
@@ -63,6 +31,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
   const hasShirtEquipped = equippedItems.some(
     (item) => item.category === "SHIRT",
   );
+  const activeShirtKey = equippedItems.find((item) => item.category === "SHIRT")?.assetKey;
+  const activeHatKey = equippedItems.find((item) => item.category === "HAT")?.assetKey;
 
   return (
     <svg
@@ -311,19 +281,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               fill={AVATAR_COLORS.skinBase}
               strokeWidth=".15875"
             />
-            {hasShirtEquipped &&
-              equippedAssetKeys.includes("remera-violeta") && (
-                <g id="g21">
-                  <path
-                    id="manga-violeta-der"
-                    transform="matrix(-.0010412 1 1 .0010412 -191.8 62.96)"
-                    d="m293.89 361.82s7.0602-39.393-0.0661-40.812c-2.6418-0.52601-36.579-4.4318-43.127 13.031 0 0-7.8714 15.28 5.0271 26.789 0 0 37.306 4.0262 38.166 0.99218 0-1e-5 -4e-5 0-4e-5 0z"
-                    fill="url(#radialGradient18)"
-                    stroke={AVATAR_COLORS.shirtVioletStroke}
-                    strokeWidth="2"
-                  />
-                </g>
-              )}
+            {hasShirtEquipped && <AvatarBodyClothing assetKey={activeShirtKey} part="right-arm" />}
           </g>
         </g>
       </g>
@@ -349,16 +307,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           />
         </g>
 
-        {equippedAssetKeys.includes("pantalon-negro") && (
-          <path
-            id="manga-pantalon-der"
-            transform="translate(20.206 -112.25)"
-            d="m229.81 554.94s-1.749 25.345 2.6409 33.41c2.0264 3.7229 7.4332 4.4872 11.616 5.1738 6.5822 1.0804 14.709-4.8671 19.923-1.871 3.8102 2.1895 4.266-11.652 4.8438-18.305 1.0102-5.3561 6.8603-30.554 6.5477-39.963-0.33939-10.216-40.022-14.496-41.341-7.983-2.206 10.895-4.2302 29.538-4.2302 29.538z"
-            fill="url(#radialGradient113)"
-            stroke={AVATAR_COLORS.black}
-            strokeWidth="2"
-          />
-        )}
+
 
         <g className={pose === "sitting" ? "pose-sit-calf-der" : ""}>
           <ellipse
@@ -445,21 +394,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         </g>
 
-        {equippedAssetKeys.includes("pantalon-negro") && (
-          <g id="manga-pantalon-izq" transform="translate(20.206 -112.25)">
-            <path
-              id="path129"
-              d="m171.5 539.17s-3.5418 36.693 6.5919 50.181c2.2049 2.9347 6.474 3.7712 10.087 4.4172 7.2879 1.303 16.642-3.6708 22.172-1.3073 4.0409 1.7271 2.8689-12.072 2.6619-18.747 0.37453-5.4377 4.7005-35.585 3.2856-44.893-1.5361-10.106-44.066-8.1895-44.612-1.5671-0.91205 11.078-0.18709 11.916-0.18709 11.916z"
-              fill="url(#radialGradient98)"
-              stopColor={AVATAR_COLORS.black}
-            />
-            <path
-              id="path130"
-              d="m193.62 520.76c-5.5104 0.0221-10.976 0.56668-15.172 1.5449-2.098 0.48912-3.8781 1.0795-5.2285 1.8184s-2.4138 1.6874-2.5254 3.043c-0.45797 5.5627-0.50972 8.5703-0.43945 10.236 0.0351 0.83302 0.1001 1.3298 0.17187 1.666 0.0196 0.0919 0.0425 0.15384 0.0644 0.22656-0.0324 0.34037-0.86877 9.2113-0.49218 19.938 0.38385 10.933 1.9348 23.576 7.2969 30.713 2.5224 3.3574 7.0846 4.1524 10.711 4.8008 3.9339 0.70335 8.1886-0.27237 12.115-1.0547 3.9266-0.78232 7.4955-1.3184 9.8398-0.31641 0.71834 0.30703 1.5823 0.28805 2.2109-0.11133 0.62863-0.39937 0.99092-1.0158 1.2617-1.7031 0.54162-1.3746 0.74652-3.2018 0.8418-5.2832 0.18954-4.1403-0.15531-9.2293-0.25977-12.531 0.18056-2.5971 1.3566-11.547 2.3086-20.932 0.95338-9.3991 1.7191-19.186 0.96484-24.148-0.24388-1.6044-1.3038-2.9139-2.7578-3.9141-1.454-1.0002-3.3361-1.754-5.5117-2.3418-4.3512-1.1757-9.89-1.6725-15.4-1.6504zm8e-3 2c5.3824-0.0216 10.799 0.4817 14.871 1.582 2.0362 0.55016 3.7323 1.2532 4.9004 2.0566 1.168 0.80348 1.7739 1.6444 1.9141 2.5664 0.66055 4.3456-0.029 14.286-0.97852 23.646-0.94951 9.3609-2.1197 18.172-2.3164 21.027l-4e-3 0.0508 2e-3 0.0488c0.10467 3.3743 0.44363 8.4755 0.26172 12.449-0.091 1.9869-0.33641 3.703-0.70507 4.6387-0.18434 0.46783-0.39274 0.69727-0.47266 0.74805-0.0799 0.0508-0.0616 0.0857-0.35352-0.0391-3.1853-1.3615-7.0607-0.59265-11.016 0.19531-3.9549 0.78797-8.0191 1.6465-11.373 1.0469-3.6006-0.64375-7.5775-1.5211-9.4648-4.0332-4.7717-6.3512-6.5159-18.797-6.8945-29.582s0.5-19.902 0.5-19.902l0.041-0.42578-0.1582-0.18164v-2e-3c-0.0357-0.16701-0.0968-0.57091-0.12891-1.332-0.0642-1.5222-0.0205-4.4728 0.4336-9.9883 0.0247-0.29997 0.40834-0.85907 1.4941-1.4531 1.0858-0.59406 2.7308-1.1611 4.7207-1.625 3.9797-0.92782 9.3442-1.4706 14.727-1.4922z"
-              stopColor={AVATAR_COLORS.black}
-            />
-          </g>
-        )}
+
 
 
         <g className={pose === "sitting" ? "pose-sit-calf-izq" : ""}>
@@ -536,41 +471,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           d="m192.92 407.78s69.022 6.414 102.14 7.2559c0 0 1.2114 9.808-1.3625 17.1 0 0-30.516-5.089-37.849 8.0808 0 0-16.948 2.3453-24.618-2.0513 0 0-6.3025-10.209-39.511-13.484 0 0 0.29546-8.8993 1.2033-16.902z"
           fill={AVATAR_COLORS.skinBase}
         />
-        {equippedAssetKeys.includes("pantalon-negro") && (
-          <path
-            id="cintura-pantalon-negro"
-            d="m193.17 408.04c1.1565-2.7863 89.911 1.5667 101.72 7.1971 4.0238 1.9185 1.939 9.6096-0.63487 16.901 0 0-31.078-5.089-38.411 8.0808 0 0-16.948 2.3453-24.618-2.0513 0 0-6.0048-10.441-39.213-13.715 0 0-1.1706-10.806 1.1566-16.413z"
-            fill={AVATAR_COLORS.eyeBase}
-            stroke={AVATAR_COLORS.black}
-            strokeWidth="2"
-          />
-        )}
-        {hasShirtEquipped && equippedAssetKeys.includes("remera-violeta") && (
-          <g id="g14">
-            <path
-              id="remera-violeta"
-              d="m195.89 375.19c-7.1332 34.689-11.913 56.631-7.3552 59.771 11.703 8.0618 79.535 14.433 108.96 1.127 6.0003-2.7138-9.3312-57.098-13.365-71.725-4.6852-15.868-11.103-36.302-14.113-39.477-0.4303-0.45377-3.1037 0.54465-7.1626 1.1104 0.0388 0.55387 0.0584 1.1168 0.0584 1.6879 9e-5 9.9433-8.1294 15.667-12.885 15.223-7.0309-0.65684-15.368-5.8478-16.045-15.036-0.92285-0.0412-27.878-3.0615-28.874-3.101-5.0868 2.3816-5.7725 25.325-9.2139 50.421z"
-              fill="url(#radialGradient16)"
-              stroke={AVATAR_COLORS.shirtVioletStroke}
-              strokeWidth="2.0923"
-            />
-          </g>
-        )}
-        {!hasShirtEquipped && (
-          <g id="g15">
-            <path
-              id="jardinero-default"
-              d="m205.8 325.72s17.212 3.9288 12.348 23.573c0 0-0.74835 29.186-24.322 33.863 0 0-0.37418 0.37418-1.8709 5.7998 0 0 20.206 0.46773 23.199 6.5481 2.9934 6.0804-18.02 37.025-5.0139 44.023 22.054 11.865 50.061 16.881 86.21 3.3106 0 0 10.243-44.597-27.362-116.44 0 0-5.096-2.9262-5.6281 1.3252-0.52059 4.1597 5.8682 17.03 0.91737 22.808-3.7752 4.4056-11.853 3.9891-17.293 1.9733-10.175-3.7701-12.543-18.792-22.13-23.874-5.6771-3.0093-16.048-2.3743-19.055-2.91z"
-              fill={AVATAR_COLORS.overallsBase}
-            />
-            <path
-              id="bolsillo-jardinero-default"
-              d="m235.65 382.96s22.254 9.2045 39.516-3.8138c0 0 12.119 42.913-22.64 39.035-15.836-1.7668-17.409-16.59-16.877-35.222z"
-              fill={AVATAR_COLORS.overallsShadow}
-              style={{ mixBlendMode: "normal" }}
-            />
-          </g>
-        )}
+
+        <AvatarBodyClothing assetKey={activeShirtKey} part="torso" />
       </g>
       <g className={animation === "walking" ? "anim-walk-arm-izq-wrap" : ""}>
         <g
@@ -578,69 +480,58 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           className={view === "guided-breathing" ? "pose-guided-breathing-arm-izq" : ""}
           transform={view === "guided-breathing" ? undefined : "translate(34.507 -.33232)"}
         >
-        <g fill={AVATAR_COLORS.skinBase}>
-          <ellipse
-            id="circulo-union-brazo-inferior-izq"
-            cx="148.27"
-            cy="370.86"
-            rx="15.456"
-            ry="16.233"
-            strokeWidth=".13372"
-          />
-          <path
-            id="brazo-inferior-izq"
-            d="m161.32 379.56s-5.6597 11.046-15.717 21.756c0.0577-0.0866-20.34-8.8498-20.701-9.1029 0 0 0.21854-2.6558 3.4809-8.3931 0 0 4.0178-10.56 4.6491-15.654"
-            strokeWidth=".15875"
-          />
-          <ellipse
-            id="circulo-union-muneca-izq"
-            cx="135.03"
-            cy="398.92"
-            rx="11.553"
-            ry="11.553"
-          />
-          <ellipse
-            id="circulo-union-mano-izq"
-            cx="135.03"
-            cy="398.92"
-            rx="11.553"
-            ry="11.553"
-          />
-          <path
-            id="mano-izq"
-            d="m142.97 407.28s10.6-8.6651 12.154-19.745c0 0 1.7859-9.8888-6.9453-9.955 0 0-5.4034 0.70525-18.64 11.229"
-          />
-        </g>
-        <g id="g88">
-          <ellipse
-            id="circulo-union-brazo-superior-izq"
-            cx="148.24"
-            cy="370.83"
-            rx="15.456"
-            ry="16.233"
-            fill={AVATAR_COLORS.skinBase}
-            strokeWidth=".13372"
-          />
-          <path
-            id="brazo-superior-izq"
-            d="m132.85 369.67s-4.0712-32.918 1.2608-42.6c0 0 3.7232-12.083 16.857-12.94 0 0 14.407-0.56372 18.195 11.316 0 0 2.5476 7.9103 0.79145 20.721-1.4487 10.568-2.8014 18.428-7.5253 31.103"
-            fill={AVATAR_COLORS.skinBase}
-            strokeWidth=".15875"
-            transform="rotate(15, 150, 370)"
-          />
-          {hasShirtEquipped && equippedAssetKeys.includes("remera-violeta") && (
-            <g id="g20">
-              <path
-                id="manga-violeta-izq"
-                transform="translate(-34.507 .33232)"
-                d="m170.99 345.28c-1.8672 10.849 22.954 18.595 35.785 16.073 2.4868-0.4888 9.9727-20.197 8.599-27.054-1.5081-7.5272-7.1526-21.027-26.524-16.801-9.0023 1.9636-14.023 5.4901-17.859 27.781z"
-                fill="url(#radialGradient20)"
-                stroke={AVATAR_COLORS.shirtVioletStroke}
-                strokeWidth="2"
-              />
-            </g>
-          )}
-        </g>
+          <g fill={AVATAR_COLORS.skinBase}>
+            <ellipse
+              id="circulo-union-brazo-inferior-izq"
+              cx="148.27"
+              cy="370.86"
+              rx="15.456"
+              ry="16.233"
+              strokeWidth=".13372"
+            />
+            <path
+              id="brazo-inferior-izq"
+              d="m161.32 379.56s-5.6597 11.046-15.717 21.756c0.0577-0.0866-20.34-8.8498-20.701-9.1029 0 0 0.21854-2.6558 3.4809-8.3931 0 0 4.0178-10.56 4.6491-15.654"
+              strokeWidth=".15875"
+            />
+            <ellipse
+              id="circulo-union-muneca-izq"
+              cx="135.03"
+              cy="398.92"
+              rx="11.553"
+              ry="11.553"
+            />
+            <ellipse
+              id="circulo-union-mano-izq"
+              cx="135.03"
+              cy="398.92"
+              rx="11.553"
+              ry="11.553"
+            />
+            <path
+              id="mano-izq"
+              d="m142.97 407.28s10.6-8.6651 12.154-19.745c0 0 1.7859-9.8888-6.9453-9.955 0 0-5.4034 0.70525-18.64 11.229"
+            />
+          </g>
+          <g id="g88">
+            <ellipse
+              id="circulo-union-brazo-superior-izq"
+              cx="148.24"
+              cy="370.83"
+              rx="15.456"
+              ry="16.233"
+              fill={AVATAR_COLORS.skinBase}
+              strokeWidth=".13372"
+            />
+            <path
+              id="brazo-superior-izq"
+              d="m132.85 369.67s-4.0712-32.918 1.2608-42.6c0 0 3.7232-12.083 16.857-12.94 0 0 14.407-0.56372 18.195 11.316 0 0 2.5476 7.9103 0.79145 20.721-1.4487 10.568-2.8014 18.428-7.5253 31.103"
+              fill={AVATAR_COLORS.skinBase}
+              strokeWidth=".15875"
+              transform="rotate(15, 150, 370)"
+            />
+            {hasShirtEquipped && <AvatarBodyClothing assetKey={activeShirtKey} part="left-arm" />}
+          </g>
         </g>
       </g>
       <g
@@ -949,37 +840,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
             strokeWidth="2"
           />
         </g>
-        {equippedAssetKeys.includes("vicera-azul") && (
-          <g id="vicera-azul" strokeWidth="2">
-            <ellipse
-              id="vicera-azul-superior"
-              cx="179.26"
-              cy="9.0714"
-              rx="16.725"
-              ry="12.095"
-              fill="url(#radialGradient56)"
-              stroke={AVATAR_COLORS.shoeBlueStroke}
-            />
-            <path
-              id="vicera-azul-sombra"
-              d="m357.19 105.46s5.5589 11.847-16.364 13.926l-12.549-14.547-15.918-14.641 32.546 2.033z"
-              fill={AVATAR_COLORS.shoeBlueShadow}
-              stroke={AVATAR_COLORS.shoeBlueShadow}
-            />
-            <path
-              id="vicera-azul-delantera"
-              d="m155.73 116.04s29.671 27.214 70.493 27.781c0 0 20.789 5.1027 51.216-20.033 0 0 19.088-18.332 41.199-27.781 0 0 26.458-7.7485 38.365 9.0714 0 0 2.6458-14.552-56.696-31.75l-85.234-26.647z"
-              fill="url(#radialGradient74)"
-              stroke={AVATAR_COLORS.shoeBlueStroke}
-            />
-            <path
-              id="vicera-azul-central"
-              d="m178.71 7.2288c-0.76119 1.6742-40.956 23.506-26.387 99.738m-54.051 30.427s47.625-16.064 57.452-21.545l144.58-41.766s-13.229-38.176-42.333-54.996c0 0-24.946-20.6-79.375-11.906 0 0-41.199 9.4494-66.713 41.955 0 0-25.891 32.128-13.607 88.257z"
-              fill="url(#radialGradient72)"
-              stroke={AVATAR_COLORS.shoeBlueStroke}
-            />
-          </g>
-        )}
+        <AvatarVisor assetKey={activeHatKey} />
       </g>
     </svg>
   );

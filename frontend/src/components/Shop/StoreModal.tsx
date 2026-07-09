@@ -34,7 +34,7 @@ const CATEGORY_SECTIONS: {
     { id: "NOTEBOOK", categories: ["NOTEBOOK"], label: "Diarios", Icon: Notebook },
     { id: "TREE", categories: ["TREE"], label: "Árboles", Icon: Trees },
     { id: "MANDALA", categories: ["MANDALA"], label: "Mandalas", Icon: Flower2 },
-    { id: "CLOTHES", categories: ["SHIRT", "PANTS", "SHOES", "HAT"], label: "Ropa", Icon: Shirt },
+    { id: "CLOTHES", categories: ["SHIRT", "SHOES", "HAT"], label: "Ropa", Icon: Shirt },
   ];
 
 const PURCHASE_FILTERS: { type: string; label: string; Icon: LucideIcon }[] = [
