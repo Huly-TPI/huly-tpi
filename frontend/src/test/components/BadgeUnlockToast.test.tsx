@@ -1,11 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BadgeUnlockToast from '../../components/Badges/BadgeUnlockToast'
 import { verifyTextPresent } from '../testHelpers'
 
-describe('BadgeUnloackToast', () => {
-  let onDismissMock: any
+interface Badge {
+  id: number
+  code: string
+  name: string
+  description: string
+  imageUrl: string
+  createdAt: string
+}
+
+describe('BadgeUnlockToast', () => {
+  let onDismissMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     onDismissMock = vi.fn()
@@ -13,6 +22,7 @@ describe('BadgeUnloackToast', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -32,24 +42,21 @@ describe('BadgeUnloackToast', () => {
     verifyUnlockMessagePresent()
   })
 
-  it('llama onDismiss al hacer click', () => {
+  it('llama onDismiss al hacer click', async () => {
     renderToast(makeBadge())
-    return clickCloseButton().then(() => {
-      verifyOnDismissCalled()
-    })
+    await clickCloseButton()
+    verifyOnDismissCalled()
   })
 
   it('programa el auto-dismiss a los 10 segundos', () => {
+    vi.useFakeTimers()
     const setTimeoutSpy = vi.spyOn(window, 'setTimeout')
     renderToast(makeBadge())
-    return waitFor(() => {
-      verifyAutoDismissScheduled(setTimeoutSpy)
-    })
+    expect(setTimeoutSpy).toHaveBeenCalledWith(onDismissMock, 10000)
   })
-
   /* helpers */
 
-  const makeBadge = () => ({
+  const makeBadge = (): Badge => ({
     id: 1,
     code: 'PRIMER_PASO',
     name: 'Primer paso',
@@ -58,7 +65,7 @@ describe('BadgeUnloackToast', () => {
     createdAt: '',
   })
 
-  const renderToast = (badge: any) => {
+  const renderToast = (badge: Badge | null) => {
     render(<BadgeUnlockToast badge={badge} onDismiss={onDismissMock} />)
   }
 
@@ -84,7 +91,7 @@ describe('BadgeUnloackToast', () => {
     expect(onDismissMock).toHaveBeenCalledOnce()
   }
 
-  const verifyAutoDismissScheduled = (setTimeoutSpy: any) => {
+  const verifyAutoDismissScheduled = (setTimeoutSpy: ReturnType<typeof vi.spyOn>) => {
     expect(setTimeoutSpy).toHaveBeenCalledWith(onDismissMock, 10000)
   }
 })
