@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BadgeUnlockToast from '../../components/Badges/BadgeUnlockToast'
@@ -9,10 +9,11 @@ describe('BadgeUnloackToast', () => {
 
   beforeEach(() => {
     onDismissMock = vi.fn()
-    vi.spyOn(global, 'setTimeout').mockImplementation((cb: any) => {
-      cb()
-      return 123 as any
-    })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -39,8 +40,11 @@ describe('BadgeUnloackToast', () => {
     })
   })
 
-  it('llama onDismiss automáticamente después de 3 segundos', () => {
+  it('llama onDismiss automáticamente después de 10 segundos', () => {
     renderToast(makeBadge())
+    act(() => {
+      vi.advanceTimersByTime(10000)
+    })
     verifyOnDismissCalled()
   })
 
@@ -72,7 +76,7 @@ describe('BadgeUnloackToast', () => {
   }
 
   const clickCloseButton = () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const button = screen.getByRole('button', { name: 'Cerrar' })
     return act(async () => {
       await user.click(button)
