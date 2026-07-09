@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import modalBg from '../../assets/suscription/modalSuscripcion.webp'
 import cardGreen from '../../assets/suscription/cardGreen.webp'
@@ -8,7 +8,12 @@ import { usePlans } from '../../hooks/shop/usePlans'
 import { useMembership } from '../../hooks/shop/useMembership'
 import { usePurchase } from '../../hooks/shop/usePurchase'
 import { useRefreshOnReturn } from '../../hooks/shop/useRefreshOnReturn'
+import { useMediaQuery } from '../../hooks/UseMediaQuery'
 import type { Plan } from '../../api/payment'
+
+const MOBILE_QUERY = '(max-width: 640px)'
+/* En mobile el asset ancho se estira a cuadrado para dar alto a las cards. */
+const MOBILE_ASPECT = '1 / 1'
 
 interface SubscriptionModalProps {
   isOpen: boolean
@@ -32,8 +37,6 @@ interface PaidCardProps {
 
 const FREE_FEATURES = ['5 mensajes al día']
 
-
-
 const PLAN_CARD: Record<string, { image: string; theme: 'yellow' | 'purple' }> = {
   BASIC: { image: cardYellow, theme: 'yellow' },
   PREMIUM: { image: cardPurple, theme: 'purple' },
@@ -54,12 +57,12 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
 
       <div className="absolute inset-x-[8%] top-[7%] bottom-[8%] flex flex-col items-center text-center overflow-hidden">
         <h3 className="text-[13px] sm:text-[15px] lg:text-[18px] font-black text-[#1a4a1a] leading-none">Gratuito</h3>
-        <div className="mt-3">
+        <div className="mt-3 max-[640px]:mt-2">
           <p className="font-black text-[16px] sm:text-[19px] lg:text-[24px] text-[#2a6a2a] leading-none">$0</p>
           <p className="mt-1 text-[7px] sm:text-[10px] lg:text-[12px] font-bold text-[#3a5c2a]">Siempre gratis</p>
         </div>
 
-        <div className="mt-3 mb-2 w-[78%] h-px bg-gradient-to-r from-transparent via-[#6abf55]/35 to-transparent" />
+        <div className="mt-3 mb-2 max-[640px]:mt-2 max-[640px]:mb-1 w-[78%] h-px bg-gradient-to-r from-transparent via-[#6abf55]/35 to-transparent" />
 
         <ul className="w-full flex-1 space-y-1">
           {FREE_FEATURES.map((feature, index) => (
@@ -70,7 +73,7 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
           ))}
         </ul>
 
-        <div className="mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] lg:text-[12px] whitespace-nowrap bg-[#7b8f45] border border-[#5f7332]">
+        <div className="mt-2 rounded-full border-b-[3px] px-4 py-1.5 max-[640px]:px-3 max-[640px]:py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] lg:text-[12px] whitespace-nowrap bg-[#7b8f45] border border-[#5f7332]">
           {isCurrentPlan ? 'Plan actual' : 'Plan base'}
         </div>
       </div>
@@ -113,7 +116,7 @@ function PaidCard({
           {displayName}
         </h3>
 
-        <div className="mt-3">
+        <div className="mt-3 max-[640px]:mt-2">
           <p className={`font-black text-[16px] sm:text-[19px] lg:text-[24px] leading-none ${textColor}`}>
             ${plan.price.toLocaleString('es-AR')}
             <span className="text-[10px] sm:text-[12px] lg:text-[14px] font-black"> ARS</span>
@@ -123,7 +126,7 @@ function PaidCard({
           </p>
         </div>
 
-        <div className="mt-3 mb-2 w-[78%] h-px bg-gradient-to-r from-transparent via-[#c9a96e]/40 to-transparent" />
+        <div className="mt-3 mb-2 max-[640px]:mt-2 max-[640px]:mb-1 w-[78%] h-px bg-gradient-to-r from-transparent via-[#c9a96e]/40 to-transparent" />
 
         <ul className={`w-full flex-1 overflow-hidden ${compact ? 'space-y-[2px]' : 'space-y-[3px]'}`}>
           {showSeeds && (
@@ -142,7 +145,7 @@ function PaidCard({
         </ul>
 
         {isCurrentPlan ? (
-          <div className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] lg:text-[12px] whitespace-nowrap ${buttonClass}`}>
+          <div className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 max-[640px]:px-3 max-[640px]:py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] text-[8px] sm:text-[10px] lg:text-[12px] whitespace-nowrap ${buttonClass}`}>
             Plan actual
           </div>
         ) : (
@@ -150,7 +153,7 @@ function PaidCard({
             type="button"
             onClick={() => onBuy(plan.id)}
             disabled={buttonDisabled}
-            className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] lg:text-[12px] ${buttonClass}`}
+            className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 max-[640px]:px-3 max-[640px]:py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] lg:text-[12px] ${buttonClass}`}
           >
             {buying ? 'Procesando…' : label}
           </button>
@@ -164,6 +167,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
   const { plans, loading: plansLoading, error: plansError } = usePlans()
   const { membership, refresh: refreshMembership } = useMembership()
   const { buyingId, error: purchaseError, buy } = usePurchase()
+  const isMobile = useMediaQuery(MOBILE_QUERY)
 
   const markPendingPayment = useRefreshOnReturn(
     useCallback(() => {
@@ -189,67 +193,97 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
   const gapClass = many ? 'gap-1.5 sm:gap-2 lg:gap-3' : 'gap-2 sm:gap-3 lg:gap-6'
   const cardClass = many ? 'flex-1 min-w-0 max-w-[30%] h-full' : 'w-[28%] shrink-0 h-full'
 
-  return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Planes de suscripción" className="relative z-10 w-full max-w-[720px] max-[640px]:max-w-[390px] lg:max-w-[980px]" onClick={e => e.stopPropagation()}>
-        <img src={modalBg} alt="" aria-hidden="true" className="w-full h-auto select-none pointer-events-none block" draggable={false} />
+  /* Contenido compartido por desktop y mobile. */
+  const content: ReactNode = (
+    <>
+      <button onClick={onClose} aria-label="Cerrar planes de suscripción" className="absolute top-[3%] right-[3%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20">
+        <X className="w-5 h-5" />
+      </button>
 
-        <div className="absolute inset-0 px-[10.5%] pt-[9%] pb-[8%] flex flex-col overflow-hidden lg:px-[9.5%]">
-          <button onClick={onClose} aria-label="Cerrar planes de suscripción" className="absolute top-[3%] right-[3%] w-8 h-8 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20">
-            <X className="w-5 h-5" />
-          </button>
-
-          <div className="text-center shrink-0">
-            <h2 className="text-[16px] sm:text-[20px] lg:text-[24px] font-black text-[#9b5718] leading-none">
-              Planes de Suscripción
-            </h2>
-          </div>
-
-          <p className="shrink-0 text-center mt-[5%] text-[10px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
-            Elegí el plan que mejor se adapte a vos
-          </p>
-
-          <div className={`flex justify-center items-stretch mt-2 px-[1%] flex-1 min-h-0 lg:mt-4 ${gapClass}`}>
-            {plansLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (
-              <>
-                <div className={cardClass}>
-                  <FreeCard isCurrentPlan={!activeProductId} />
-                </div>
-                {sortedPlans.map(plan => {
-                  const card = PLAN_CARD[plan.planCode] ?? { image: cardPurple, theme: 'purple' as const }
-                  const features = buildFeatures(plan)
-                  return (
-                    <div key={plan.id} className={cardClass}>
-                      <PaidCard
-                        plan={plan}
-                        displayName={plan.name}
-                        cardImage={card.image}
-                        features={features}
-                        compact={features.length > 5}
-                        buying={buyingId === plan.id}
-                        disabled={buyingId !== null}
-                        activeProductId={activeProductId}
-                        buttonTheme={card.theme}
-                        onBuy={handleBuy}
-                      />
-                    </div>
-                  )
-                })}
-              </>
-            )}
-          </div>
-
-          {(plansError || purchaseError) && (
-            <p className="shrink-0 mt-1 text-red-600 text-[10px] text-center px-4 font-bold">
-              {plansError ?? purchaseError}
-            </p>
-          )}
-        </div>
+      <div className="text-center shrink-0">
+        <h2 className="text-[16px] sm:text-[20px] lg:text-[24px] font-black text-[#9b5718] leading-none">
+          Planes de Suscripción
+        </h2>
       </div>
+
+      <p className="shrink-0 text-center mt-[5%] max-[640px]:mt-[3%] text-[10px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
+        Elegí el plan que mejor se adapte a vos
+      </p>
+
+      <div className={`flex justify-center items-stretch mt-2 px-[1%] flex-1 min-h-0 lg:mt-4 ${gapClass}`}>
+        {plansLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className={cardClass}>
+              <FreeCard isCurrentPlan={!activeProductId} />
+            </div>
+            {sortedPlans.map(plan => {
+              const card = PLAN_CARD[plan.planCode] ?? { image: cardPurple, theme: 'purple' as const }
+              const features = buildFeatures(plan)
+              return (
+                <div key={plan.id} className={cardClass}>
+                  <PaidCard
+                    plan={plan}
+                    displayName={plan.name}
+                    cardImage={card.image}
+                    features={features}
+                    compact={features.length > 5}
+                    buying={buyingId === plan.id}
+                    disabled={buyingId !== null}
+                    activeProductId={activeProductId}
+                    buttonTheme={card.theme}
+                    onBuy={handleBuy}
+                  />
+                </div>
+              )
+            })}
+          </>
+        )}
+      </div>
+
+      {(plansError || purchaseError) && (
+        <p className="shrink-0 mt-1 text-red-600 text-[10px] text-center px-4 font-bold">
+          {plansError ?? purchaseError}
+        </p>
+      )}
+    </>
+  )
+
+  return (
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-2 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      {isMobile ? (
+        /*
+          Mobile -> mismo modalSuscripcion.webp, pero como fondo con aspect-ratio
+          cuadrado: el modal queda más alto que su proporción natural (ancha), así
+          las cards ganan altura y la lista de beneficios entra completa.
+        */
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Planes de suscripción"
+          onClick={e => e.stopPropagation()}
+          style={{
+            backgroundImage: `url(${modalBg})`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: MOBILE_ASPECT,
+          }}
+          className="relative z-10 w-full max-w-[440px] px-[8%] pt-[13%] pb-[9%] flex flex-col overflow-hidden"
+        >
+          {content}
+        </div>
+      ) : (
+        <div role="dialog" aria-modal="true" aria-label="Planes de suscripción" className="relative z-10 w-full max-w-[720px] lg:max-w-[980px]" onClick={e => e.stopPropagation()}>
+          <img src={modalBg} alt="" aria-hidden="true" className="w-full h-auto select-none pointer-events-none block" draggable={false} />
+
+          <div className="absolute inset-0 px-[10.5%] pt-[9%] pb-[8%] flex flex-col overflow-hidden lg:px-[9.5%]">
+            {content}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
