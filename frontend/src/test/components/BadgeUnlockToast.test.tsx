@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BadgeUnlockToast from '../../components/Badges/BadgeUnlockToast'
 import { verifyTextPresent } from '../testHelpers'
@@ -9,11 +9,10 @@ describe('BadgeUnloackToast', () => {
 
   beforeEach(() => {
     onDismissMock = vi.fn()
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
   // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -40,12 +39,12 @@ describe('BadgeUnloackToast', () => {
     })
   })
 
-  it('llama onDismiss automáticamente después de 10 segundos', () => {
+  it('programa el auto-dismiss a los 10 segundos', () => {
+    const setTimeoutSpy = vi.spyOn(window, 'setTimeout')
     renderToast(makeBadge())
-    act(() => {
-      vi.advanceTimersByTime(10000)
+    return waitFor(() => {
+      verifyAutoDismissScheduled(setTimeoutSpy)
     })
-    verifyOnDismissCalled()
   })
 
   /* helpers */
@@ -76,14 +75,16 @@ describe('BadgeUnloackToast', () => {
   }
 
   const clickCloseButton = () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const user = userEvent.setup()
     const button = screen.getByRole('button', { name: 'Cerrar' })
-    return act(async () => {
-      await user.click(button)
-    })
+    return user.click(button)
   }
 
   const verifyOnDismissCalled = () => {
     expect(onDismissMock).toHaveBeenCalledOnce()
+  }
+
+  const verifyAutoDismissScheduled = (setTimeoutSpy: any) => {
+    expect(setTimeoutSpy).toHaveBeenCalledWith(onDismissMock, 10000)
   }
 })
