@@ -83,6 +83,8 @@ export default function Diary() {
   const moodIdle   = isDark ? '#4a3d6e' : '#e8e0f5'
   const moodSelected = isDark ? '#5f4a8a' : '#D1CAEF'
   const moodRing   = isDark ? '#a7f3d0' : '#8869AC'
+  const labelGreen  = isDark ? '#ACCCA4' : '#649959'
+  const labelViolet = isDark ? '#D3CCEB' : '#8869AC'
 
   const lineBackground = {
     backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, ${lineColor} 31px, ${lineColor} 32px)`,
@@ -281,8 +283,8 @@ export default function Diary() {
         >
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-bold text-green-800 text-lg tracking-tight flex-shrink-0 dark:text-menta">huly</span>
-            <span className="sm:hidden text-xs capitalize" style={{ color: '#8869AC' }}>{displayDateMobile}</span>
-            <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: '#8869AC' }}>{displayDate}</span>
+            <span className="sm:hidden text-xs capitalize" style={{ color: labelViolet }}>{displayDateMobile}</span>
+            <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: labelViolet }}>{displayDate}</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <div className="flex items-center gap-1">
@@ -323,11 +325,11 @@ export default function Diary() {
 
         <div className="diary-content flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden" style={{ ...lineBackground }}>
           <div className="diary-left md:flex-1 md:min-h-0 px-2 py-5 flex flex-col">
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3 lg:text-[11px]" style={{ color: '#649959' }}>
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3 lg:text-[11px]" style={{ color: labelGreen }}>
               Hoy
             </p>
 
-            <p className="text-xs font-bold uppercase tracking-wide mb-3 lg:text-[13px]" style={{ color: '#649959' }}>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 lg:text-[13px]" style={{ color: labelGreen }}>
               ¿Cómo me sentí hoy?
             </p>
             <div className="diary-mood-grid grid grid-cols-4 gap-x-2 gap-y-3 mb-5">
@@ -366,7 +368,7 @@ export default function Diary() {
               })}
             </div>
 
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 lg:text-[11px]" style={{ color: '#8869AC' }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 lg:text-[11px]" style={{ color: labelViolet }}>
               Lo que pasa adentro
             </p>
             <textarea
@@ -381,7 +383,7 @@ export default function Diary() {
 
 
 
-            <p className="text-[10px] italic mt-3" style={{ color: '#649959' }}>
+            <p className="text-[10px] italic mt-3" style={{ color: labelGreen }}>
               Tu espacio privado y seguro
             </p>
           </div>
@@ -391,7 +393,7 @@ export default function Diary() {
 
           <div className="diary-right md:flex-1 md:min-h-0 px-2 md:pl-6 md:pr-2 pt-5 pb-8 flex flex-col gap-5">
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: '#8869AC' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: labelViolet }}>
                 ☁️ Un pensamiento que quiero soltar
               </p>
               <textarea
@@ -406,7 +408,7 @@ export default function Diary() {
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: '#649959' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: labelGreen }}>
                 🌱 Algo que me salió bien hoy
               </p>
               <textarea

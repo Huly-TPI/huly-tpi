@@ -29,8 +29,15 @@ export default function Pending() {
     deleteSubtask,
     placeTask,
   } = usePendingTasks()
-  const { recommendation, hasUnrespondedRecommendation, recommendedTaskIds, accept, reject, requestOnDemand } =
-    usePendingRecommendation()
+  const {
+    recommendation,
+    hasUnrespondedRecommendation,
+    recommendedTaskIds,
+    fetchRecommendation,
+    accept,
+    reject,
+    requestOnDemand,
+  } = usePendingRecommendation()
   const { showToast } = useToast()
   const [modal, setModal] = useState<ModalState>(null)
   const boardRef = useRef<HTMLDivElement>(null)
@@ -38,9 +45,9 @@ export default function Pending() {
 
   const handlePlace = useCallback(
     (taskId: number, x: number, y: number) => {
-      void placeTask(taskId, x, y)
+      void placeTask(taskId, x, y).then(() => fetchRecommendation())
     },
-    [placeTask],
+    [placeTask, fetchRecommendation],
   )
 
   const { dragState, pickUp } = usePostitDrag(boardRef, handlePlace, followLayerRef)
@@ -53,6 +60,7 @@ export default function Pending() {
     } else if (modal?.mode === 'edit') {
       await updateTask(modal.taskId, data)
       setModal(null)
+      void fetchRecommendation()
     }
   }
 
@@ -61,6 +69,7 @@ export default function Pending() {
     try {
       await deleteTask(modal.taskId)
       setModal(null)
+      void fetchRecommendation()
     } catch {
       showToast('No se pudo eliminar la tarea', 'error')
     }
@@ -71,6 +80,7 @@ export default function Pending() {
     try {
       await completeTask(modal.taskId)
       setModal(null)
+      void fetchRecommendation()
     } catch {
       showToast('No se pudo completar la tarea', 'error')
     }
@@ -136,9 +146,30 @@ export default function Pending() {
           onSubmit={handleSubmit}
           onDelete={modal.mode === 'edit' ? handleDelete : undefined}
           onComplete={modal.mode === 'edit' ? handleComplete : undefined}
-          onAddSubtask={modal.mode === 'edit' ? text => addSubtask(modal.taskId, text) : undefined}
-          onToggleSubtask={modal.mode === 'edit' ? subtaskId => toggleSubtask(modal.taskId, subtaskId) : undefined}
-          onDeleteSubtask={modal.mode === 'edit' ? subtaskId => deleteSubtask(modal.taskId, subtaskId) : undefined}
+          onAddSubtask={
+            modal.mode === 'edit'
+              ? async text => {
+                  await addSubtask(modal.taskId, text)
+                  void fetchRecommendation()
+                }
+              : undefined
+          }
+          onToggleSubtask={
+            modal.mode === 'edit'
+              ? async subtaskId => {
+                  await toggleSubtask(modal.taskId, subtaskId)
+                  void fetchRecommendation()
+                }
+              : undefined
+          }
+          onDeleteSubtask={
+            modal.mode === 'edit'
+              ? async subtaskId => {
+                  await deleteSubtask(modal.taskId, subtaskId)
+                  void fetchRecommendation()
+                }
+              : undefined
+          }
         />
       )}
     </div>

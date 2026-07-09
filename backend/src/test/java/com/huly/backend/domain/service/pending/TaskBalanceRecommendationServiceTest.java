@@ -137,6 +137,55 @@ class TaskBalanceRecommendationServiceTest {
     }
 
     @Test
+    @DisplayName("Incluye una tarea de carga alta que vence dentro de los próximos 3 días aunque el presupuesto diario ya esté agotado")
+    void recommendShouldForceIncludeTaskDueWithinNextThreeDaysEvenWhenBudgetIsExhausted() {
+        LocalDate today = LocalDate.of(2026, 7, 9);
+        LocalDate tomorrow = today.plusDays(1);
+        List<PendingTask> tasks = List.of(
+                task(1L, 0.2, MentalLoadBucket.LOW, null),
+                task(2L, 0.5, MentalLoadBucket.MEDIUM, null),
+                task(3L, 1.0, MentalLoadBucket.HIGH, tomorrow)
+        );
+
+        TaskBalanceRecommendationResult result = recommend(tasks, 1.6, today);
+
+        thenRecommendedTasksContains(result, 3L);
+    }
+
+    @Test
+    @DisplayName("No incluye por vencimiento próximo una tarea de carga alta perdedora del límite diario de una por día")
+    void recommendShouldNotForceIncludeADueSoonTaskExcludedByTheDailyHighCap() {
+        LocalDate today = LocalDate.of(2026, 7, 6);
+        LocalDate tomorrow = today.plusDays(1);
+        List<PendingTask> tasks = List.of(
+                task(1L, 0.2, MentalLoadBucket.LOW, null),
+                task(2L, 0.2, MentalLoadBucket.LOW, null),
+                task(3L, 0.9, MentalLoadBucket.HIGH, today),
+                task(4L, 0.9, MentalLoadBucket.HIGH, tomorrow)
+        );
+
+        TaskBalanceRecommendationResult result = recommend(tasks, 1.6, today);
+
+        thenRecommendedTasksDoesNotContain(result, 4L);
+    }
+
+    @Test
+    @DisplayName("No fuerza la inclusión de una tarea cuyo vencimiento está a más de 3 días")
+    void recommendShouldNotForceIncludeATaskDueBeyondTheThreeDayHorizon() {
+        LocalDate today = LocalDate.of(2026, 7, 9);
+        LocalDate farAway = today.plusDays(4);
+        List<PendingTask> tasks = List.of(
+                task(1L, 0.2, MentalLoadBucket.LOW, null),
+                task(2L, 0.5, MentalLoadBucket.MEDIUM, null),
+                task(3L, 1.0, MentalLoadBucket.HIGH, farAway)
+        );
+
+        TaskBalanceRecommendationResult result = recommend(tasks, 1.6, today);
+
+        thenRecommendedTasksDoesNotContain(result, 3L);
+    }
+
+    @Test
     @DisplayName("Genera la misma recomendación de forma determinista sin importar el orden de los elementos en la lista de entrada")
     void recommendShouldBeDeterministicRegardlessOfInputOrder() {
         List<PendingTask> ordered = List.of(
