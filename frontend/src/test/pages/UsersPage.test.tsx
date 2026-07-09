@@ -9,7 +9,7 @@ import { verifyTextPresent, verifyTextNotPresent, clearAllMocks } from '../testH
 
 vi.mock('../../api/admin', () => ({
   getUsers: vi.fn(),
-  getAntiScrollDashboard: vi.fn(),
+  getAdminDashboard: vi.fn(),
   getUserActivities: vi.fn(),
   getUserAiDiagnostics: vi.fn(),
   getUserFinancials: vi.fn(),
