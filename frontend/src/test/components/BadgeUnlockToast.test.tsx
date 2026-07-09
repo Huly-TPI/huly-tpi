@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BadgeUnlockToast from '../../components/Badges/BadgeUnlockToast'
@@ -18,13 +18,6 @@ describe('BadgeUnlockToast', () => {
 
   beforeEach(() => {
     onDismissMock = vi.fn()
-    vi.useFakeTimers()
-  })
-
-  afterEach(() => {
-    vi.runOnlyPendingTimers()
-    vi.useRealTimers()
-    vi.restoreAllMocks()
   })
 
   // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -78,7 +71,7 @@ describe('BadgeUnlockToast', () => {
   }
 
   const clickCloseButton = () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const user = userEvent.setup()
     const button = screen.getByRole('button', { name: 'Cerrar' })
     return user.click(button)
   }
