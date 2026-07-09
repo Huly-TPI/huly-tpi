@@ -53,9 +53,6 @@ export default function HarvestModal({ plantNumber, onCreateNew, onGoToOrchard }
           <Button variant="success" size="sm" fullWidth onClick={onGoToOrchard}>
             Ver Vivero
           </Button>
-          <Button variant="successSecondary" size="sm" fullWidth onClick={onCreateNew}>
-            + Crear nuevo reto
-          </Button>
         </div>
       </div>
     </div>

@@ -180,6 +180,16 @@ const sceneElements = [...cloudElements, ...gardenElements];
 const cloudElementIds = cloudElements.map((element) => element.id);
 const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds);
 
+function formatCoinsDisplay(coins: number): string {
+  if (coins >= 10_000_000) {
+    return `${Math.trunc(coins / 1_000_000)}M`;
+  }
+  if (coins >= 10_000) {
+    return `${Math.trunc(coins / 1_000)}k`;
+  }
+  return coins.toLocaleString("es-AR");
+}
+
 let rewardAutoOpenedForUserId: number | null = null;
 
 function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
@@ -466,7 +476,7 @@ export default function Home() {
             />
             {coins !== null && (
               <span className="absolute bottom-[22.5%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523]">
-                {coins.toLocaleString("es-AR")}
+                {formatCoinsDisplay(coins)}
               </span>
             )}
           </button>
