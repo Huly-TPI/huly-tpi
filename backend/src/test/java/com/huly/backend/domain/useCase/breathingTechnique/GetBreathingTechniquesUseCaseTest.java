@@ -1,9 +1,10 @@
-package com.huly.backend.domain.useCase.BreathingSession;
+package com.huly.backend.domain.useCase.breathingTechnique;
 
-import com.huly.backend.domain.dto.BreathingSession.GetBreathingTechniquesResponse;
+import com.huly.backend.domain.dto.breathingTechnique.GetBreathingTechniquesResponse;
 import com.huly.backend.domain.mapper.BreathingSession.GetBreathingTechniquesMapper;
 import com.huly.backend.domain.model.breathingTechnique.BreathingTechnique;
 import com.huly.backend.domain.repository.breathingTechnique.BreathingTechniqueRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,11 +84,11 @@ class GetBreathingTechniquesUseCaseTest {
                         .exhaleSeconds(4).roundsInterval(1).rounds(4).build(),
                 BreathingTechnique.builder().id(ID_TWO).name(NAME_TWO).inhaleSeconds(4).holdSeconds(4)
                         .exhaleSeconds(4).roundsInterval(1).rounds(4).build());
-        when(breathingTechniqueRepository.findAll()).thenReturn(techniques);
+        when(breathingTechniqueRepository.findByActive(true)).thenReturn(techniques);
     }
 
     private void givenNoConfiguredTechniques() {
-        when(breathingTechniqueRepository.findAll()).thenReturn(List.of());
+        when(breathingTechniqueRepository.findByActive(true)).thenReturn(List.of());
     }
 
     private void givenSingleFullyDetailedTechnique() {
@@ -101,7 +102,7 @@ class GetBreathingTechniquesUseCaseTest {
                 .roundsInterval(3)
                 .rounds(5)
                 .build();
-        when(breathingTechniqueRepository.findAll()).thenReturn(List.of(technique));
+        when(breathingTechniqueRepository.findByActive(true)).thenReturn(List.of(technique));
     }
 
     // --- act ---
@@ -116,12 +117,12 @@ class GetBreathingTechniquesUseCaseTest {
         assertThat(result.techniques()).hasSize(2);
         assertThat(result.techniques()).extracting("id").containsExactly(ID_ONE, ID_TWO);
         assertThat(result.techniques()).extracting("name").containsExactly(NAME_ONE, NAME_TWO);
-        verify(breathingTechniqueRepository).findAll();
+        verify(breathingTechniqueRepository).findByActive(true);
     }
 
     private void thenNoTechniquesAreReturned(GetBreathingTechniquesResponse result) {
         assertThat(result.techniques()).isEmpty();
-        verify(breathingTechniqueRepository).findAll();
+        verify(breathingTechniqueRepository).findByActive(true);
     }
 
     private void thenTechniqueFieldsAreMapped(GetBreathingTechniquesResponse result) {
@@ -134,6 +135,6 @@ class GetBreathingTechniquesUseCaseTest {
         assertThat(result.techniques().get(0).exhaleSeconds()).isEqualTo(6);
         assertThat(result.techniques().get(0).roundsInterval()).isEqualTo(3);
         assertThat(result.techniques().get(0).rounds()).isEqualTo(5);
-        verify(breathingTechniqueRepository).findAll();
+        verify(breathingTechniqueRepository).findByActive(true);
     }
 }

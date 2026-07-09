@@ -33,6 +33,16 @@ vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
   default: () => null,
 }))
 
+vi.mock('../../hooks/store/useInventory', () => ({
+  useInventory: () => ({
+    inventory: [],
+  }),
+}))
+
+vi.mock('../../components/HulyAvatar/HulyAvatar', () => ({
+  default: ({ animation }: any) => <div data-testid="huly-avatar-mock" data-animation={animation} />
+}))
+
 describe('BreathingGuide', () => {
   let user: ReturnType<typeof userEvent.setup>
 
@@ -185,28 +195,28 @@ describe('BreathingGuide', () => {
 
   it('muestra la imagen de huly al inhalar', () => {
     enableFakeTimers()
-    renderBreathingWithHuly('huly-normal.webp', 'huly-inhalando.webp', 'huly-exhalando.webp')
+    renderBreathing()
     selectTechniqueSync('Diafragmática')
     startExerciseSync()
-    verifyHulyImageSrc('huly-inhalando.webp')
+    verifyHulyAnimation('inhale')
   })
 
   it('muestra la imagen de huly al exhalar', () => {
     enableFakeTimers()
-    renderBreathingWithHuly('huly-normal.webp', 'huly-inhalando.webp', 'huly-exhalando.webp')
+    renderBreathing()
     selectTechniqueSync('Diafragmática')
     startExerciseSync()
     advanceTimeSeconds(4)
-    verifyHulyImageSrc('huly-exhalando.webp')
+    verifyHulyAnimation('blow')
   })
 
   it('muestra la imagen de huly normal al sostener', () => {
     enableFakeTimers()
-    renderBreathingWithHuly('huly-normal.webp', 'huly-inhalando.webp', 'huly-exhalando.webp')
+    renderBreathing()
     selectTechniqueSync('Cuadrada')
     startExerciseSync()
     advanceTimeSeconds(4)
-    verifyHulyImageSrc('huly-normal.webp')
+    verifyHulyAnimation('hold')
   })
 
   /* helpers */
@@ -214,17 +224,6 @@ describe('BreathingGuide', () => {
   const renderBreathing = (techniques?: any[]) => {
     user = userEvent.setup()
     render(<BreathingGuide techniques={techniques} />)
-  }
-
-  const renderBreathingWithHuly = (hulyNormal: string, hulyInhalando: string, hulyExhalando: string) => {
-    user = userEvent.setup()
-    render(
-      <BreathingGuide
-        hulyNormal={hulyNormal}
-        hulyInhalando={hulyInhalando}
-        hulyExhalando={hulyExhalando}
-      />
-    )
   }
 
   const enableFakeTimers = () => {
@@ -280,8 +279,8 @@ describe('BreathingGuide', () => {
     expect(circle).toHaveClass(className)
   }
 
-  const verifyHulyImageSrc = (src: string) => {
-    const img = screen.getByAltText('Huly') as HTMLImageElement
-    expect(img.src).toContain(src)
+  const verifyHulyAnimation = (expectedAnimation: string) => {
+    const avatar = screen.getByTestId('huly-avatar-mock')
+    expect(avatar).toHaveAttribute('data-animation', expectedAnimation)
   }
 })

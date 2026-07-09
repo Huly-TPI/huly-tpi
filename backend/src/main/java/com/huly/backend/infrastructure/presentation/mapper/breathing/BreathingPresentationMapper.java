@@ -1,7 +1,7 @@
 package com.huly.backend.infrastructure.presentation.mapper.breathing;
 
-import com.huly.backend.domain.dto.BreathingSession.BreathingTechniqueItem;
-import com.huly.backend.domain.dto.BreathingSession.GetBreathingTechniquesResponse;
+import com.huly.backend.domain.dto.breathingTechnique.BreathingTechniqueItem;
+import com.huly.backend.domain.dto.breathingTechnique.GetBreathingTechniquesResponse;
 import com.huly.backend.infrastructure.presentation.dto.breathingTechniques.BreathingTechniqueResponse;
 import org.springframework.stereotype.Component;
 
