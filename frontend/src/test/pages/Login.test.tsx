@@ -6,12 +6,13 @@ import Login from '../../pages/Login/Login'
 import { ApiError } from '../../api/apiError'
 import { ThemeProvider } from '../../context/theme'
 import { forgotPassword, resetPassword } from '../../api/auth'
-import { clickButton, typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled, verifyButtonPresent, verifyTextPresentAsync, verifyHeadingPresentAsync, clearAllMocks, verifyValidationAlertsShown } from '../testHelpers'
+import { clickButton, typePlaceholder, verifyTextPresent, verifyTextNotPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled, verifyButtonPresent, verifyTextPresentAsync, verifyHeadingPresentAsync, clearAllMocks, verifyValidationAlertsShown } from '../testHelpers'
 
 // --- SIMULACIONES GLOBALES (MOCKS) ---
 const mockLogin = vi.fn()
+const mockUseAuth = vi.fn()
 vi.mock('../../context/auth', () => ({
-    useAuth: () => ({ login: mockLogin }),
+    useAuth: () => mockUseAuth(),
 }))
 
 vi.mock('../../api/auth', () => ({
@@ -29,6 +30,7 @@ describe('Login', () => {
         clearAllMocks()
         mockForgotPassword.mockResolvedValue(undefined)
         mockResetPassword.mockResolvedValue(undefined)
+        mockUseAuth.mockReturnValue({ login: mockLogin, isAuthenticated: false, loading: false })
     })
 
     // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -36,6 +38,18 @@ describe('Login', () => {
     it('renderiza el formulario de login', () => {
         renderLoginForm()
         verifyLoginFormIsVisible()
+    })
+
+    it('redirige al home si ya hay una sesión iniciada', () => {
+        mockUseAuth.mockReturnValue({ login: mockLogin, isAuthenticated: true, loading: false })
+        renderLoginForm()
+        return verifyTextPresentAsync('Home')
+    })
+
+    it('no muestra el formulario mientras se está verificando la sesión', () => {
+        mockUseAuth.mockReturnValue({ login: mockLogin, isAuthenticated: false, loading: true })
+        renderLoginForm()
+        verifyTextNotPresent('¡Bienvenido!')
     })
 
     it('muestra errores de validación al enviar vacío', () => {
