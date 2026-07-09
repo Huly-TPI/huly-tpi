@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { register } from '../../api/auth'
 import { useAuth } from '../../context/auth'
@@ -69,7 +69,14 @@ const VALIDATION_RULES = {
 
 export default function Register() {
   const navigate = useNavigate()
-  const { loginWithToken } = useAuth()
+  const { loginWithToken, isAuthenticated, loading: authLoading } = useAuth()
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/', { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate])
+
   const { values, errors, handleChange, validateAll, setFieldErrors, getSanitizedValues } = useForm(
     INITIAL_VALUES,
     VALIDATION_RULES,
@@ -106,6 +113,10 @@ export default function Register() {
       }
       setLoading(false)
     }
+  }
+
+  if (authLoading || isAuthenticated) {
+    return null
   }
 
   return (
