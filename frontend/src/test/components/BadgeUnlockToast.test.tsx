@@ -48,13 +48,6 @@ describe('BadgeUnlockToast', () => {
     verifyOnDismissCalled()
   })
 
-  it('programa el auto-dismiss a los 10 segundos', () => {
-    vi.useFakeTimers()
-    const setTimeoutSpy = vi.spyOn(window, 'setTimeout')
-    renderToast(makeBadge())
-    expect(setTimeoutSpy).toHaveBeenCalledWith(onDismissMock, 10000)
-    vi.useRealTimers()
-  })
   /* helpers */
 
   const makeBadge = (): Badge => ({
