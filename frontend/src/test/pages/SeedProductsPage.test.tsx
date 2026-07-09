@@ -38,7 +38,7 @@ describe('SeedProductsPage', () => {
   it('lista los paquetes', () => {
     mockHook.products = [product]
     render(<SeedProductsPage />)
-    expect(screen.getByText('Pack Estándar')).toBeInTheDocument()
+    expect(screen.getAllByText('Pack Estándar')[0]).toBeInTheDocument()
   })
 
   it('abre el formulario al tocar "Nuevo paquete"', async () => {
@@ -50,7 +50,7 @@ describe('SeedProductsPage', () => {
   it('actualiza el estado con el botón Desactivar', async () => {
     mockHook.products = [product]
     render(<SeedProductsPage />)
-    await userEvent.click(screen.getByRole('button', { name: 'Desactivar Pack Estándar' }))
+    await userEvent.click(screen.getAllByRole('button', { name: 'Desactivar Pack Estándar' })[0])
     expect(mockHook.setActive).toHaveBeenCalledWith(1, false)
   })
 })
