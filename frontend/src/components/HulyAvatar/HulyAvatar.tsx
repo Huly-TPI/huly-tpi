@@ -1,9 +1,45 @@
 import React from "react";
 import "./HulyAvatar.css";
 
+export const AVATAR_COLORS = {
+  skinBase: "#edc89e",
+  skinBase2: "#ecc79d",
+  skinBase3: "#ecc69a",
+  skinShadow1: "#e5af74",
+  skinShadow2: "#dfa45c",
+  skinShadow3: "#e7b276",
+  skinShadow4: "#e5b279",
+  blush: "#eab2a2",
+  eyeBase: "#363636",
+  eyeShadow: "#1d1e1e",
+  white: "#fff",
+  gray: "#919191",
+  mouthDark: "#462727",
+  tongue: "#e76767",
+  tongueLight: "#fb6fddff",
+  shirtVioletBase: "#553560",
+  shirtVioletShadow: "#412848",
+  shirtVioletStroke: "#492c58",
+  overallsBase: "#5981b9",
+  overallsShadow: "#6991c3",
+  pantsGreenBase: "#687139",
+  pantsGreenShadow1: "#7a6e41",
+  pantsGreenShadow2: "#808c46",
+  pantsGreenShadow3: "#6e7c43",
+  pantsGreenLight: "#a7af5a",
+  pantsGreenStroke: "#8f9b0d",
+  shoeBlueBase: "#7185ac",
+  shoeBlueShadow: "#4e6b9b",
+  shoeBlueLight: "#7787a6",
+  shoeBlueStroke: "#4e6984",
+  shoeGrayStroke: "#76818f",
+  shoeLaceStroke: "#b6afa8",
+  black: "#000",
+};
+
+
 export type AvatarAnimation =
   "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale";
-export type AvatarPose = "standing" | "sitting";
 
 export interface AvatarEquippedItem {
   assetKey: string;
@@ -13,13 +49,15 @@ export interface AvatarEquippedItem {
 interface HulyAvatarProps {
   equippedItems?: AvatarEquippedItem[];
   animation?: AvatarAnimation;
-  pose?: AvatarPose;
+  pose?: "default" | "sitting";
+  view?: "default" | "guided-breathing";
 }
 
 const HulyAvatar: React.FC<HulyAvatarProps> = ({
   equippedItems = [],
   animation = "idle",
-  pose = "standing",
+  pose = "default",
+  view = "default",
 }) => {
   const equippedAssetKeys = equippedItems.map((item) => item.assetKey);
   const hasShirtEquipped = equippedItems.some(
@@ -29,7 +67,6 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
   return (
     <svg
       id="svg1"
-      data-pose={pose}
       width="100%"
       height="100%"
       version="1.1"
@@ -40,12 +77,12 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
     >
       <defs id="defs1">
         <linearGradient id="linearGradient97">
-          <stop id="stop97" stopColor="#363636" offset=".43215" />
-          <stop id="stop98" stopColor="#1d1e1e" offset=".43215" />
+          <stop id="stop97" stopColor={AVATAR_COLORS.eyeBase} offset=".43215" />
+          <stop id="stop98" stopColor={AVATAR_COLORS.eyeShadow} offset=".43215" />
         </linearGradient>
         <linearGradient id="linearGradient90">
-          <stop id="stop90" stopColor="#fff" offset=".3501" />
-          <stop id="stop91" stopColor="#919191" offset=".3501" />
+          <stop id="stop90" stopColor={AVATAR_COLORS.white} offset=".3501" />
+          <stop id="stop91" stopColor={AVATAR_COLORS.gray} offset=".3501" />
         </linearGradient>
         <linearGradient
           id="linearGradient35"
@@ -56,8 +93,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(1 0 0 .74863 0 73.969)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop34" stopColor="#edc89e" offset="0" />
-          <stop id="stop35" stopColor="#e5af74" offset="1" />
+          <stop id="stop34" stopColor={AVATAR_COLORS.skinBase} offset="0" />
+          <stop id="stop35" stopColor={AVATAR_COLORS.skinShadow1} offset="1" />
         </linearGradient>
         <linearGradient
           id="linearGradient41"
@@ -67,8 +104,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           y2="448.11"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop40" stopColor="#edc89e" offset="0" />
-          <stop id="stop41" stopColor="#dfa45c" offset="1" />
+          <stop id="stop40" stopColor={AVATAR_COLORS.skinBase} offset="0" />
+          <stop id="stop41" stopColor={AVATAR_COLORS.skinShadow2} offset="1" />
         </linearGradient>
         <linearGradient
           id="linearGradient43"
@@ -78,8 +115,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           y2="441.52"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop42" stopColor="#edc89e" offset="0" />
-          <stop id="stop43" stopColor="#e7b276" offset="1" />
+          <stop id="stop42" stopColor={AVATAR_COLORS.skinBase} offset="0" />
+          <stop id="stop43" stopColor={AVATAR_COLORS.skinShadow3} offset="1" />
         </linearGradient>
         <radialGradient
           id="radialGradient56"
@@ -89,8 +126,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(-.055449 .67746 -.97904 -.080133 205.63 -109.86)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop55" stopColor="#7185ac" offset=".9999" />
-          <stop id="stop56" stopColor="#4e6b9b" offset=".9999" />
+          <stop id="stop55" stopColor={AVATAR_COLORS.shoeBlueBase} offset=".9999" />
+          <stop id="stop56" stopColor={AVATAR_COLORS.shoeBlueShadow} offset=".9999" />
         </radialGradient>
         <radialGradient
           id="radialGradient72"
@@ -100,9 +137,9 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(-1.0705 -1.5752 1.8399 -1.2504 297.39 90.655)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop72" stopColor="#7787a6" offset=".45113" />
-          <stop id="stop75" stopColor="#462727" offset=".45113" />
-          <stop id="stop71" stopColor="#4e6b9b" offset=".45113" />
+          <stop id="stop72" stopColor={AVATAR_COLORS.shoeBlueLight} offset=".45113" />
+          <stop id="stop75" stopColor={AVATAR_COLORS.mouthDark} offset=".45113" />
+          <stop id="stop71" stopColor={AVATAR_COLORS.shoeBlueShadow} offset=".45113" />
         </radialGradient>
         <radialGradient
           id="radialGradient74"
@@ -112,8 +149,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(1.6385 -.57244 .38093 1.0904 -194.29 140.97)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop73" stopColor="#7787a6" offset=".58356" />
-          <stop id="stop74" stopColor="#4e6b9b" offset=".58356" />
+          <stop id="stop73" stopColor={AVATAR_COLORS.shoeBlueLight} offset=".58356" />
+          <stop id="stop74" stopColor={AVATAR_COLORS.shoeBlueShadow} offset=".58356" />
         </radialGradient>
         <radialGradient
           id="radialGradient91"
@@ -159,8 +196,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(2.8288 -.59163 1.9979 9.553 -1211.3 -3157.4)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop15" stopColor="#553560" offset=".35537" />
-          <stop id="stop16" stopColor="#412848" offset=".35537" />
+          <stop id="stop15" stopColor={AVATAR_COLORS.shirtVioletBase} offset=".35537" />
+          <stop id="stop16" stopColor={AVATAR_COLORS.shirtVioletShadow} offset=".35537" />
         </radialGradient>
         <radialGradient
           id="radialGradient18"
@@ -170,8 +207,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(3.0442 .11656 -.252 6.5817 -471.34 -1947.3)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop17" stopColor="#553560" offset=".2978" />
-          <stop id="stop18" stopColor="#412848" offset=".2978" />
+          <stop id="stop17" stopColor={AVATAR_COLORS.shirtVioletBase} offset=".2978" />
+          <stop id="stop18" stopColor={AVATAR_COLORS.shirtVioletShadow} offset=".2978" />
         </radialGradient>
         <radialGradient
           id="radialGradient20"
@@ -181,8 +218,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(2.8387 1.2232 -1.5269 3.5435 166.79 -1105.8)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop19" stopColor="#553560" offset=".37596" />
-          <stop id="stop20" stopColor="#412848" offset=".37596" />
+          <stop id="stop19" stopColor={AVATAR_COLORS.shirtVioletBase} offset=".37596" />
+          <stop id="stop20" stopColor={AVATAR_COLORS.shirtVioletShadow} offset=".37596" />
         </radialGradient>
         <clipPath id="clipPath26">
           <ellipse
@@ -191,7 +228,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
             cy="257.14"
             rx="6.9618"
             ry="21.09"
-            fill="#687139"
+            fill={AVATAR_COLORS.pantsGreenBase}
           />
         </clipPath>
         <radialGradient
@@ -202,8 +239,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(2.9858 0 0 1.392 -222.82 -129.2)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop80" stopColor="#eab2a2" offset=".050035" />
-          <stop id="stop81" stopColor="#ecc79d" stopOpacity="0" offset="1" />
+          <stop id="stop80" stopColor={AVATAR_COLORS.blush} offset=".050035" />
+          <stop id="stop81" stopColor={AVATAR_COLORS.skinBase2} stopOpacity="0" offset="1" />
         </radialGradient>
         <radialGradient
           id="radialGradient84"
@@ -213,16 +250,16 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           gradientTransform="matrix(1 0 0 .46622 0 166.45)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop id="stop83" stopColor="#eab2a2" offset="0" />
-          <stop id="stop84" stopColor="#ecc79d" offset="1" />
+          <stop id="stop83" stopColor={AVATAR_COLORS.blush} offset="0" />
+          <stop id="stop84" stopColor={AVATAR_COLORS.skinBase2} offset="1" />
         </radialGradient>
       </defs>
-      <g className={animation === "wave" ? "anim-wave-hand" : ""}>
+      <g className={animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : "")}>
         <g
           id="g101-5-2"
           transform="matrix(-.0010412 1 1 .0010412 -63.159 191.73)"
         >
-          <g fill="#edc89e">
+          <g fill={AVATAR_COLORS.skinBase}>
             <ellipse
               id="circulo-union-brazo-inferior-der"
               cx="148.27"
@@ -265,13 +302,13 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               cy="370.83"
               rx="15.456"
               ry="16.233"
-              fill="#edc89e"
+              fill={AVATAR_COLORS.skinBase}
               strokeWidth=".13372"
             />
             <path
               id="brazo-superior-der"
               d="m132.85 369.67s-4.0712-32.918 1.2608-42.6c0 0 3.7232-12.083 16.857-12.94 0 0 14.407-0.56372 18.195 11.316 0 0 2.5476 7.9103 0.79145 20.721-1.4487 10.568-2.8014 18.428-7.5253 31.103"
-              fill="#edc89e"
+              fill={AVATAR_COLORS.skinBase}
               strokeWidth=".15875"
             />
             {hasShirtEquipped &&
@@ -282,7 +319,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                     transform="matrix(-.0010412 1 1 .0010412 -191.8 62.96)"
                     d="m293.89 361.82s7.0602-39.393-0.0661-40.812c-2.6418-0.52601-36.579-4.4318-43.127 13.031 0 0-7.8714 15.28 5.0271 26.789 0 0 37.306 4.0262 38.166 0.99218 0-1e-5 -4e-5 0-4e-5 0z"
                     fill="url(#radialGradient18)"
-                    stroke="#492c58"
+                    stroke={AVATAR_COLORS.shirtVioletStroke}
                     strokeWidth="2"
                   />
                 </g>
@@ -290,8 +327,8 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         </g>
       </g>
-      <g id="pierna-der-completa">
-        <g id="piel-pierna-der" fill="#edc89e">
+      <g id="pierna-der-completa" className={pose === "sitting" ? "pose-sit-leg-der" : ""}>
+        <g id="piel-muslo-der" fill={AVATAR_COLORS.skinBase}>
           <ellipse
             id="circulo-union-pierna-superior-der"
             cx="272.16"
@@ -299,93 +336,136 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
             rx="17.693"
             ry="17.765"
           />
-          <path
-            id="pierna-inferior-der"
-            d="m289.66 453.34s-3.447 22.58-10.26 42.292c0 0-1.7604 7.9184-14.015 1.9784 0 0-13.47-7.2965-12.114-17.212l1.2628-30.542"
-          />
+          {/* <ellipse
+            id="circulo-union-pierna-inferior-der"
+            cx="289.66"
+            cy="453.34"
+            rx="17.693"
+            ry="17.765"
+          /> */}
           <path
             id="pierna-superior-der"
             d="m254.53 449.9 0.60804-20.206s19.165-18.732 38.545 1.8395l-3.9688 21.894"
           />
-          <ellipse
-            id="circulo-union-pierna-inferior-der"
-            cx="272.16"
-            cy="451.28"
-            rx="17.693"
-            ry="17.765"
-          />
-          <ellipse
-            id="path63"
-            cx="268.14"
-            cy="486.16"
-            rx="14.403"
-            ry="14.403"
-          />
         </g>
-        <g id="pie-der">
-          <g id="piel-pie-der-folder">
-            <path
-              id="piel-pie-der"
-              d="m253.97 484.49s-1.4032 13.497 7.684 18.575c0 0 14.165 9.3544 23.319 1.9377 0 0 9.6217-9.8222-2.4054-19.444 0 0-13.297-13.898-28.598-1.0691z"
-              fill="url(#linearGradient41)"
-              strokeWidth=".15875"
-            />
-            <ellipse
-              id="circulo-union-tobillo-der"
-              cx="268.14"
-              cy="486.16"
-              rx="14.403"
-              ry="14.403"
-              fill="#edc89e"
-            />
-          </g>
-          {equippedAssetKeys.includes("zapatillas-blancas") && (
-            <g
-              id="zapatilla-blanca-pie-der"
-              transform="translate(-90.419 -84.431)"
-              stroke="#76818f"
-            >
-              <path
-                id="path79-7-7"
-                d="m379.43 569.32s-8.5045-3.4018-15.308 2.5514m17.73 0.38629s-8.5045-3.4018-15.308 2.5514m19.56 10.867s-23.057 10.583-41.577-9.7329m38.932-0.47247s-14.93-5.9531-18.993 11.434m-3.0238-16.631 7.5595 7.3706m-24.663-11.245s17.292 6.4256 18.048 2.6458c0 0 4.8192-10.016 13.891-1.9844 0 0 12.568 10.205 9.0714 18.993 0 0-0.47247 6.4256-11.434 7.087 0 0-11.434 1.5119-22.868-5.1027 0 0-8.5045-1.6064-6.7091-21.639z"
-                fill="url(#radialGradient91-4)"
-              />
-              <g fill="#fff" strokeWidth=".35714">
-                <path
-                  id="path91-8"
-                  d="m369.09 587.79c-0.15592-0.0212-0.75123-0.0849-1.3229-0.14166-5.6614-0.56173-11.518-2.82-16.37-6.3122-1.8235-1.3124-1.6493-1.0897-1.8439-2.357-0.26395-1.7186-0.32472-5.1007-0.12378-6.8895 0.14241-1.2678 0.45727-3.1066 0.54737-3.1967 0.0177-0.0177 0.79608 0.17923 1.7297 0.43762 3.5764 0.98975 6.1732 1.4356 8.1396 1.3973l1.2448-0.0241 3.6284 3.5389 3.6284 3.5389-0.46049 0.51972c-1.0676 1.2049-2.2466 3.2586-2.9471 5.1336-0.43514 1.1647-1.0198 3.1827-0.96411 3.3278 0.0231 0.0601 0.25833 0.15206 0.52282 0.20434l0.4809 0.0951 0.0943-0.38801c0.0519-0.21341 0.30787-1.0471 0.56883-1.8527 1.7832-5.5047 5.1138-8.7579 9.8256-9.5976 1.1918-0.21238 3.4999-0.2136 4.7719-3e-3 1.2391 0.20566 2.7611 0.61651 2.9801 0.80449 0.19613 0.16831 0.9727 1.702 1.364 2.6938 0.14201 0.35996 0.36737 1.0616 0.50079 1.5592 0.21394 0.7978 0.24265 1.0888 0.24313 2.4638 5.3e-4 1.2675-0.0336 1.674-0.18214 2.1734l-0.18269 0.6142-0.89693 0.31366c-2.1206 0.74158-4.8176 1.3641-7.4643 1.723-1.1499 0.15595-2.0839 0.20543-4.3467 0.23032-1.5851 0.0175-3.0096 0.0143-3.1656-7e-3z"
-                />
-                <path
-                  id="path92-6"
-                  d="m368.12 576-0.97471-0.97803 0.36218-0.28223c1.6543-1.289 3.577-2.166 5.7979-2.6446 0.64587-0.13915 1.2126-0.1718 2.9271-0.1686 1.9287 4e-3 2.2344 0.0271 3.2918 0.25258 0.68521 0.1461 1.242 0.31763 1.3508 0.41616 0.24286 0.21979 1.4398 1.8285 1.3935 1.8729-0.0197 0.0188-0.39371-0.0437-0.83117-0.13903-2.7642-0.60249-6.0538-0.45286-8.3334 0.37906-1.0413 0.38003-2.3898 1.1057-3.2307 1.7386-0.38817 0.29213-0.72216 0.53118-0.7422 0.53118-0.02 0-0.47505-0.44013-1.0111-0.97806z"
-                />
-                <path
-                  id="path93-8"
-                  d="m365.27 573.25c-0.54385-0.5457-0.94025-0.99219-0.88091-0.99219 0.0594 0 0.4963-0.29165 0.971-0.64812 2.6296-1.9747 5.9999-2.9169 9.4888-2.6528 1.138 0.0861 2.1718 0.24614 2.9577 0.45775 0.28284 0.0762 0.53231 0.27837 1.0575 0.85723 0.37806 0.41666 0.6526 0.75723 0.61009 0.75681-0.0425 0-0.58594-0.0642-1.2076-0.14174-4.1271-0.51477-8.1301 0.48565-11.2 2.7992-0.40589 0.30583-0.75358 0.55607-0.77264 0.55607-0.019 0-0.47963-0.44648-1.0235-0.99219z"
-                />
-              </g>
-            </g>
-          )}
-        </g>
+
         {equippedAssetKeys.includes("pantalon-negro") && (
           <path
             id="manga-pantalon-der"
             transform="translate(20.206 -112.25)"
             d="m229.81 554.94s-1.749 25.345 2.6409 33.41c2.0264 3.7229 7.4332 4.4872 11.616 5.1738 6.5822 1.0804 14.709-4.8671 19.923-1.871 3.8102 2.1895 4.266-11.652 4.8438-18.305 1.0102-5.3561 6.8603-30.554 6.5477-39.963-0.33939-10.216-40.022-14.496-41.341-7.983-2.206 10.895-4.2302 29.538-4.2302 29.538z"
             fill="url(#radialGradient113)"
-            stroke="#000"
+            stroke={AVATAR_COLORS.black}
             strokeWidth="2"
           />
         )}
+
+        <g className={pose === "sitting" ? "pose-sit-calf-der" : ""}>
+          <ellipse
+            id="circulo-union-pierna-inferior-der"
+            cx="272.16"
+            cy="451.28"
+            rx="17.693"
+            ry="17.765"
+            fill={AVATAR_COLORS.skinBase}
+          />
+          <g id="piel-pantorrilla-der" fill={AVATAR_COLORS.skinBase}>
+            <path
+              id="pierna-inferior-der"
+              d="m289.66 453.34s-3.447 22.58-10.26 42.292c0 0-1.7604 7.9184-14.015 1.9784 0 0-13.47-7.2965-12.114-17.212l1.2628-30.542"
+            />
+          </g>
+
+          <g id="pie-der">
+            <g id="piel-pie-der-folder">
+              <path
+                id="piel-pie-der"
+                d="m253.97 484.49s-1.4032 13.497 7.684 18.575c0 0 14.165 9.3544 23.319 1.9377 0 0 9.6217-9.8222-2.4054-19.444 0 0-13.297-13.898-28.598-1.0691z"
+                fill="url(#linearGradient41)"
+                strokeWidth=".15875"
+              />
+              {!equippedAssetKeys.includes("zapatillas-blancas") && (
+                <ellipse
+                  id="circulo-union-tobillo-der"
+                  cx="268.14"
+                  cy="486.16"
+                  rx="14.403"
+                  ry="14.403"
+                  fill={AVATAR_COLORS.skinBase}
+                />
+              )}
+            </g>
+            {equippedAssetKeys.includes("zapatillas-blancas") && (
+              <g
+                id="zapatilla-blanca-pie-der"
+                transform="translate(-90.419 -84.431)"
+                stroke={AVATAR_COLORS.shoeGrayStroke}
+              >
+                <path
+                  id="path79-7-7"
+                  d="m379.43 569.32s-8.5045-3.4018-15.308 2.5514m17.73 0.38629s-8.5045-3.4018-15.308 2.5514m19.56 10.867s-23.057 10.583-41.577-9.7329m38.932-0.47247s-14.93-5.9531-18.993 11.434m-3.0238-16.631 7.5595 7.3706m-24.663-11.245s17.292 6.4256 18.048 2.6458c0 0 4.8192-10.016 13.891-1.9844 0 0 12.568 10.205 9.0714 18.993 0 0-0.47247 6.4256-11.434 7.087 0 0-11.434 1.5119-22.868-5.1027 0 0-8.5045-1.6064-6.7091-21.639z"
+                  fill="url(#radialGradient91-4)"
+                />
+                <g fill={AVATAR_COLORS.white} strokeWidth=".35714">
+                  <path
+                    id="path91-8"
+                    d="m369.09 587.79c-0.15592-0.0212-0.75123-0.0849-1.3229-0.14166-5.6614-0.56173-11.518-2.82-16.37-6.3122-1.8235-1.3124-1.6493-1.0897-1.8439-2.357-0.26395-1.7186-0.32472-5.1007-0.12378-6.8895 0.14241-1.2678 0.45727-3.1066 0.54737-3.1967 0.0177-0.0177 0.79608 0.17923 1.7297 0.43762 3.5764 0.98975 6.1732 1.4356 8.1396 1.3973l1.2448-0.0241 3.6284 3.5389 3.6284 3.5389-0.46049 0.51972c-1.0676 1.2049-2.2466 3.2586-2.9471 5.1336-0.43514 1.1647-1.0198 3.1827-0.96411 3.3278 0.0231 0.0601 0.25833 0.15206 0.52282 0.20434l0.4809 0.0951 0.0943-0.38801c0.0519-0.21341 0.30787-1.0471 0.56883-1.8527 1.7832-5.5047 5.1138-8.7579 9.8256-9.5976 1.1918-0.21238 3.4999-0.2136 4.7719-3e-3 1.2391 0.20566 2.7611 0.61651 2.9801 0.80449 0.19613 0.16831 0.9727 1.702 1.364 2.6938 0.14201 0.35996 0.36737 1.0616 0.50079 1.5592 0.21394 0.7978 0.24265 1.0888 0.24313 2.4638 5.3e-4 1.2675-0.0336 1.674-0.18214 2.1734l-0.18269 0.6142-0.89693 0.31366c-2.1206 0.74158-4.8176 1.3641-7.4643 1.723-1.1499 0.15595-2.0839 0.20543-4.3467 0.23032-1.5851 0.0175-3.0096 0.0143-3.1656-7e-3z"
+                  />
+                  <path
+                    id="path92-6"
+                    d="m368.12 576-0.97471-0.97803 0.36218-0.28223c1.6543-1.289 3.577-2.166 5.7979-2.6446 0.64587-0.13915 1.2126-0.1718 2.9271-0.1686 1.9287 4e-3 2.2344 0.0271 3.2918 0.25258 0.68521 0.1461 1.242 0.31763 1.3508 0.41616 0.24286 0.21979 1.4398 1.8285 1.3935 1.8729-0.0197 0.0188-0.39371-0.0437-0.83117-0.13903-2.7642-0.60249-6.0538-0.45286-8.3334 0.37906-1.0413 0.38003-2.3898 1.1057-3.2307 1.7386-0.38817 0.29213-0.72216 0.53118-0.7422 0.53118-0.02 0-0.47505-0.44013-1.0111-0.97806z"
+                  />
+                  <path
+                    id="path93-8"
+                    d="m365.27 573.25c-0.54385-0.5457-0.94025-0.99219-0.88091-0.99219 0.0594 0 0.4963-0.29165 0.971-0.64812 2.6296-1.9747 5.9999-2.9169 9.4888-2.6528 1.138 0.0861 2.1718 0.24614 2.9577 0.45775 0.28284 0.0762 0.53231 0.27837 1.0575 0.85723 0.37806 0.41666 0.6526 0.75723 0.61009 0.75681-0.0425 0-0.58594-0.0642-1.2076-0.14174-4.1271-0.51477-8.1301 0.48565-11.2 2.7992-0.40589 0.30583-0.75358 0.55607-0.77264 0.55607-0.019 0-0.47963-0.44648-1.0235-0.99219z"
+                  />
+                </g>
+              </g>
+            )}
+          </g>
+        </g>
       </g>
-      <g id="g110">
+      <g id="g110" className={pose === "sitting" ? "pose-sit-leg-izq" : ""}>
         <g
           id="g56"
           transform="matrix(.98268 -.20431 .18529 1.0836 -138.2 10.849)"
         >
-          <g fill="#edc89e">
+          <g fill={AVATAR_COLORS.skinBase}>
             <ellipse
               id="circulo-union-pierna-superior-izq"
+              cx="272.16"
+              cy="451.28"
+              rx="17.563"
+              ry="17.765"
+            />
+            <path
+              id="pierna-superior-izq"
+              d="m254.53 449.9 0.60804-20.206s19.165-18.732 38.545 1.8395l-3.9688 21.894"
+            />
+          </g>
+        </g>
+
+        {equippedAssetKeys.includes("pantalon-negro") && (
+          <g id="manga-pantalon-izq" transform="translate(20.206 -112.25)">
+            <path
+              id="path129"
+              d="m171.5 539.17s-3.5418 36.693 6.5919 50.181c2.2049 2.9347 6.474 3.7712 10.087 4.4172 7.2879 1.303 16.642-3.6708 22.172-1.3073 4.0409 1.7271 2.8689-12.072 2.6619-18.747 0.37453-5.4377 4.7005-35.585 3.2856-44.893-1.5361-10.106-44.066-8.1895-44.612-1.5671-0.91205 11.078-0.18709 11.916-0.18709 11.916z"
+              fill="url(#radialGradient98)"
+              stopColor={AVATAR_COLORS.black}
+            />
+            <path
+              id="path130"
+              d="m193.62 520.76c-5.5104 0.0221-10.976 0.56668-15.172 1.5449-2.098 0.48912-3.8781 1.0795-5.2285 1.8184s-2.4138 1.6874-2.5254 3.043c-0.45797 5.5627-0.50972 8.5703-0.43945 10.236 0.0351 0.83302 0.1001 1.3298 0.17187 1.666 0.0196 0.0919 0.0425 0.15384 0.0644 0.22656-0.0324 0.34037-0.86877 9.2113-0.49218 19.938 0.38385 10.933 1.9348 23.576 7.2969 30.713 2.5224 3.3574 7.0846 4.1524 10.711 4.8008 3.9339 0.70335 8.1886-0.27237 12.115-1.0547 3.9266-0.78232 7.4955-1.3184 9.8398-0.31641 0.71834 0.30703 1.5823 0.28805 2.2109-0.11133 0.62863-0.39937 0.99092-1.0158 1.2617-1.7031 0.54162-1.3746 0.74652-3.2018 0.8418-5.2832 0.18954-4.1403-0.15531-9.2293-0.25977-12.531 0.18056-2.5971 1.3566-11.547 2.3086-20.932 0.95338-9.3991 1.7191-19.186 0.96484-24.148-0.24388-1.6044-1.3038-2.9139-2.7578-3.9141-1.454-1.0002-3.3361-1.754-5.5117-2.3418-4.3512-1.1757-9.89-1.6725-15.4-1.6504zm8e-3 2c5.3824-0.0216 10.799 0.4817 14.871 1.582 2.0362 0.55016 3.7323 1.2532 4.9004 2.0566 1.168 0.80348 1.7739 1.6444 1.9141 2.5664 0.66055 4.3456-0.029 14.286-0.97852 23.646-0.94951 9.3609-2.1197 18.172-2.3164 21.027l-4e-3 0.0508 2e-3 0.0488c0.10467 3.3743 0.44363 8.4755 0.26172 12.449-0.091 1.9869-0.33641 3.703-0.70507 4.6387-0.18434 0.46783-0.39274 0.69727-0.47266 0.74805-0.0799 0.0508-0.0616 0.0857-0.35352-0.0391-3.1853-1.3615-7.0607-0.59265-11.016 0.19531-3.9549 0.78797-8.0191 1.6465-11.373 1.0469-3.6006-0.64375-7.5775-1.5211-9.4648-4.0332-4.7717-6.3512-6.5159-18.797-6.8945-29.582s0.5-19.902 0.5-19.902l0.041-0.42578-0.1582-0.18164v-2e-3c-0.0357-0.16701-0.0968-0.57091-0.12891-1.332-0.0642-1.5222-0.0205-4.4728 0.4336-9.9883 0.0247-0.29997 0.40834-0.85907 1.4941-1.4531 1.0858-0.59406 2.7308-1.1611 4.7207-1.625 3.9797-0.92782 9.3442-1.4706 14.727-1.4922z"
+              stopColor={AVATAR_COLORS.black}
+            />
+          </g>
+        )}
+
+
+        <g className={pose === "sitting" ? "pose-sit-calf-izq" : ""}>
+          <g transform="matrix(.98268 -.20431 .18529 1.0836 -138.2 10.849)" fill={AVATAR_COLORS.skinBase}>
+            <ellipse
+              id="circulo-union-pierna-inferior-izq"
               cx="272.16"
               cy="451.28"
               rx="17.563"
@@ -395,86 +475,54 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               id="pierna-inferior-izq"
               d="m289.66 453.34s-3.447 22.58-10.26 42.292c0 0-1.7604 7.9184-14.015 1.9784 0 0-13.47-7.2965-12.114-17.212l1.2628-30.542"
             />
-            <path
-              id="pierna-superior-izq"
-              d="m254.53 449.9 0.60804-20.206s19.165-18.732 38.545 1.8395l-3.9688 21.894"
-            />
-            <ellipse
-              id="circulo-union-pierna-inferior-izq"
-              cx="272.16"
-              cy="451.28"
-              rx="17.563"
-              ry="17.765"
-            />
           </g>
-          <ellipse
-            id="circulo-union-tobillo-izq"
-            transform="matrix(.98268 .18529 -.16803 .89118 137.63 15.939)"
-            cx="215.12"
-            cy="484.6"
-            rx="13.781"
-            ry="13.781"
-            fill="#ecc598"
-          />
-        </g>
-        <g id="pie-izq">
-          <g id="piel-pie-izq-folder">
-            <path
-              id="piel-pie-izq"
-              d="m201.39 485.76s3.4745 21.382 16.036 22.785c0 0 11.96 3.4077 18.375-5.7463 0 0 5.479-8.6863-5.3454-16.638 0 0-15.769-16.972-29.066-0.40091z"
-              fill="url(#linearGradient43)"
-              strokeWidth=".15875"
-            />
-            <ellipse
-              id="circulo-union-pie-der"
-              cx="215.12"
-              cy="484.6"
-              rx="13.781"
-              ry="13.781"
-              fill="#ecc69a"
-            />
-          </g>
-          {equippedAssetKeys.includes("zapatillas-blancas") && (
-            <g id="zapatilla-blanca-pie-izq" stroke="#76818f">
+
+          <g id="pie-izq">
+            <g id="piel-pie-izq-folder">
               <path
-                id="path79-7"
-                d="m235.8 486.92s-8.5045-3.4018-15.308 2.5514m17.73 0.38629s-8.5045-3.4018-15.308 2.5514m19.56 10.867s-23.057 10.583-41.577-9.7329m38.932-0.47247s-14.93-5.9531-18.993 11.434m-3.0238-16.631 7.5595 7.3706m-24.663-11.245s17.292 6.4256 18.048 2.6458c0 0 4.8192-10.016 13.891-1.9844 0 0 12.568 10.205 9.0714 18.993 0 0-0.47247 6.4256-11.434 7.087 0 0-11.434 1.5119-22.868-5.1027 0 0-8.5045-1.6064-6.7091-21.639z"
-                fill="url(#radialGradient91)"
+                id="piel-pie-izq"
+                d="m201.39 485.76s3.4745 21.382 16.036 22.785c0 0 11.96 3.4077 18.375-5.7463 0 0 5.479-8.6863-5.3454-16.638 0 0-15.769-16.972-29.066-0.40091z"
+                fill="url(#linearGradient43)"
+                strokeWidth=".15875"
               />
-              <g fill="#fff" strokeWidth=".35714">
-                <path
-                  id="path91"
-                  d="m225.46 505.39c-0.15592-0.0212-0.75123-0.0849-1.3229-0.14166-5.6614-0.56173-11.518-2.82-16.37-6.3122-1.8235-1.3124-1.6493-1.0897-1.8439-2.357-0.26395-1.7186-0.32472-5.1007-0.12378-6.8895 0.14241-1.2678 0.45727-3.1066 0.54737-3.1967 0.0177-0.0177 0.79608 0.17923 1.7297 0.43762 3.5764 0.98975 6.1732 1.4356 8.1396 1.3973l1.2448-0.0241 3.6284 3.5389 3.6284 3.5389-0.46049 0.51972c-1.0676 1.2049-2.2466 3.2586-2.9471 5.1336-0.43514 1.1647-1.0198 3.1827-0.96411 3.3278 0.0231 0.0601 0.25833 0.15206 0.52282 0.20434l0.4809 0.0951 0.0943-0.38801c0.0519-0.21341 0.30787-1.0471 0.56883-1.8527 1.7832-5.5047 5.1138-8.7579 9.8256-9.5976 1.1918-0.21238 3.4999-0.2136 4.7719-3e-3 1.2391 0.20566 2.7611 0.61651 2.9801 0.80449 0.19613 0.16831 0.9727 1.702 1.364 2.6938 0.14201 0.35996 0.36737 1.0616 0.50079 1.5592 0.21394 0.7978 0.24265 1.0888 0.24313 2.4638 5.3e-4 1.2675-0.0336 1.674-0.18214 2.1734l-0.18269 0.6142-0.89693 0.31366c-2.1206 0.74158-4.8176 1.3641-7.4643 1.723-1.1499 0.15595-2.0839 0.20543-4.3467 0.23032-1.5851 0.0175-3.0096 0.0143-3.1656-7e-3z"
+              {!equippedAssetKeys.includes("zapatillas-blancas") && (
+                <ellipse
+                  id="circulo-union-tobillo-izq"
+                  cx="215.12"
+                  cy="484.6"
+                  rx="13.781"
+                  ry="13.781"
+                  fill={AVATAR_COLORS.skinBase3}
                 />
-                <path
-                  id="path92"
-                  d="m224.48 493.6-0.97471-0.97803 0.36218-0.28223c1.6543-1.289 3.577-2.166 5.7979-2.6446 0.64587-0.13915 1.2126-0.1718 2.9271-0.1686 1.9287 4e-3 2.2344 0.0271 3.2918 0.25258 0.68521 0.1461 1.242 0.31763 1.3508 0.41616 0.24286 0.21979 1.4398 1.8285 1.3935 1.8729-0.0197 0.0188-0.39371-0.0437-0.83117-0.13903-2.7642-0.60249-6.0538-0.45286-8.3334 0.37906-1.0413 0.38003-2.3898 1.1057-3.2307 1.7386-0.38817 0.29213-0.72216 0.53118-0.7422 0.53118-0.02 0-0.47505-0.44013-1.0111-0.97806z"
-                />
-                <path
-                  id="path93"
-                  d="m221.64 490.85c-0.54385-0.5457-0.94025-0.99219-0.88091-0.99219 0.0594 0 0.4963-0.29165 0.971-0.64812 2.6296-1.9747 5.9999-2.9169 9.4888-2.6528 1.138 0.0861 2.1718 0.24614 2.9577 0.45775 0.28284 0.0762 0.53231 0.27837 1.0575 0.85723 0.37806 0.41666 0.6526 0.75723 0.61009 0.75681-0.0425 0-0.58594-0.0642-1.2076-0.14174-4.1271-0.51477-8.1301 0.48565-11.2 2.7992-0.40589 0.30583-0.75358 0.55607-0.77264 0.55607-0.019 0-0.47963-0.44648-1.0235-0.99219z"
-                />
-              </g>
+              )}
             </g>
-          )}
-        </g>
-        {equippedAssetKeys.includes("pantalon-negro") && (
-          <g id="manga-pantalon-izq" transform="translate(20.206 -112.25)">
-            <path
-              id="path129"
-              d="m171.5 539.17s-3.5418 36.693 6.5919 50.181c2.2049 2.9347 6.474 3.7712 10.087 4.4172 7.2879 1.303 16.642-3.6708 22.172-1.3073 4.0409 1.7271 2.8689-12.072 2.6619-18.747 0.37453-5.4377 4.7005-35.585 3.2856-44.893-1.5361-10.106-44.066-8.1895-44.612-1.5671-0.91205 11.078-0.18709 11.916-0.18709 11.916z"
-              fill="url(#radialGradient98)"
-              stopColor="#000000"
-            />
-            <path
-              id="path130"
-              d="m193.62 520.76c-5.5104 0.0221-10.976 0.56668-15.172 1.5449-2.098 0.48912-3.8781 1.0795-5.2285 1.8184s-2.4138 1.6874-2.5254 3.043c-0.45797 5.5627-0.50972 8.5703-0.43945 10.236 0.0351 0.83302 0.1001 1.3298 0.17187 1.666 0.0196 0.0919 0.0425 0.15384 0.0644 0.22656-0.0324 0.34037-0.86877 9.2113-0.49218 19.938 0.38385 10.933 1.9348 23.576 7.2969 30.713 2.5224 3.3574 7.0846 4.1524 10.711 4.8008 3.9339 0.70335 8.1886-0.27237 12.115-1.0547 3.9266-0.78232 7.4955-1.3184 9.8398-0.31641 0.71834 0.30703 1.5823 0.28805 2.2109-0.11133 0.62863-0.39937 0.99092-1.0158 1.2617-1.7031 0.54162-1.3746 0.74652-3.2018 0.8418-5.2832 0.18954-4.1403-0.15531-9.2293-0.25977-12.531 0.18056-2.5971 1.3566-11.547 2.3086-20.932 0.95338-9.3991 1.7191-19.186 0.96484-24.148-0.24388-1.6044-1.3038-2.9139-2.7578-3.9141-1.454-1.0002-3.3361-1.754-5.5117-2.3418-4.3512-1.1757-9.89-1.6725-15.4-1.6504zm8e-3 2c5.3824-0.0216 10.799 0.4817 14.871 1.582 2.0362 0.55016 3.7323 1.2532 4.9004 2.0566 1.168 0.80348 1.7739 1.6444 1.9141 2.5664 0.66055 4.3456-0.029 14.286-0.97852 23.646-0.94951 9.3609-2.1197 18.172-2.3164 21.027l-4e-3 0.0508 2e-3 0.0488c0.10467 3.3743 0.44363 8.4755 0.26172 12.449-0.091 1.9869-0.33641 3.703-0.70507 4.6387-0.18434 0.46783-0.39274 0.69727-0.47266 0.74805-0.0799 0.0508-0.0616 0.0857-0.35352-0.0391-3.1853-1.3615-7.0607-0.59265-11.016 0.19531-3.9549 0.78797-8.0191 1.6465-11.373 1.0469-3.6006-0.64375-7.5775-1.5211-9.4648-4.0332-4.7717-6.3512-6.5159-18.797-6.8945-29.582s0.5-19.902 0.5-19.902l0.041-0.42578-0.1582-0.18164v-2e-3c-0.0357-0.16701-0.0968-0.57091-0.12891-1.332-0.0642-1.5222-0.0205-4.4728 0.4336-9.9883 0.0247-0.29997 0.40834-0.85907 1.4941-1.4531 1.0858-0.59406 2.7308-1.1611 4.7207-1.625 3.9797-0.92782 9.3442-1.4706 14.727-1.4922z"
-              stopColor="#000000"
-            />
+            {equippedAssetKeys.includes("zapatillas-blancas") && (
+              <g id="zapatilla-blanca-pie-izq" stroke={AVATAR_COLORS.shoeGrayStroke}>
+                <path
+                  id="path79-7"
+                  d="m235.8 486.92s-8.5045-3.4018-15.308 2.5514m17.73 0.38629s-8.5045-3.4018-15.308 2.5514m19.56 10.867s-23.057 10.583-41.577-9.7329m38.932-0.47247s-14.93-5.9531-18.993 11.434m-3.0238-16.631 7.5595 7.3706m-24.663-11.245s17.292 6.4256 18.048 2.6458c0 0 4.8192-10.016 13.891-1.9844 0 0 12.568 10.205 9.0714 18.993 0 0-0.47247 6.4256-11.434 7.087 0 0-11.434 1.5119-22.868-5.1027 0 0-8.5045-1.6064-6.7091-21.639z"
+                  fill="url(#radialGradient91)"
+                />
+                <g fill={AVATAR_COLORS.white} strokeWidth=".35714">
+                  <path
+                    id="path91"
+                    d="m225.46 505.39c-0.15592-0.0212-0.75123-0.0849-1.3229-0.14166-5.6614-0.56173-11.518-2.82-16.37-6.3122-1.8235-1.3124-1.6493-1.0897-1.8439-2.357-0.26395-1.7186-0.32472-5.1007-0.12378-6.8895 0.14241-1.2678 0.45727-3.1066 0.54737-3.1967 0.0177-0.0177 0.79608 0.17923 1.7297 0.43762 3.5764 0.98975 6.1732 1.4356 8.1396 1.3973l1.2448-0.0241 3.6284 3.5389 3.6284 3.5389-0.46049 0.51972c-1.0676 1.2049-2.2466 3.2586-2.9471 5.1336-0.43514 1.1647-1.0198 3.1827-0.96411 3.3278 0.0231 0.0601 0.25833 0.15206 0.52282 0.20434l0.4809 0.0951 0.0943-0.38801c0.0519-0.21341 0.30787-1.0471 0.56883-1.8527 1.7832-5.5047 5.1138-8.7579 9.8256-9.5976 1.1918-0.21238 3.4999-0.2136 4.7719-3e-3 1.2391 0.20566 2.7611 0.61651 2.9801 0.80449 0.19613 0.16831 0.9727 1.702 1.364 2.6938 0.14201 0.35996 0.36737 1.0616 0.50079 1.5592 0.21394 0.7978 0.24265 1.0888 0.24313 2.4638 5.3e-4 1.2675-0.0336 1.674-0.18214 2.1734l-0.18269 0.6142-0.89693 0.31366c-2.1206 0.74158-4.8176 1.3641-7.4643 1.723-1.1499 0.15595-2.0839 0.20543-4.3467 0.23032-1.5851 0.0175-3.0096 0.0143-3.1656-7e-3z"
+                  />
+                  <path
+                    id="path92"
+                    d="m224.48 493.6-0.97471-0.97803 0.36218-0.28223c1.6543-1.289 3.577-2.166 5.7979-2.6446 0.64587-0.13915 1.2126-0.1718 2.9271-0.1686 1.9287 4e-3 2.2344 0.0271 3.2918 0.25258 0.68521 0.1461 1.242 0.31763 1.3508 0.41616 0.24286 0.21979 1.4398 1.8285 1.3935 1.8729-0.0197 0.0188-0.39371-0.0437-0.83117-0.13903-2.7642-0.60249-6.0538-0.45286-8.3334 0.37906-1.0413 0.38003-2.3898 1.1057-3.2307 1.7386-0.38817 0.29213-0.72216 0.53118-0.7422 0.53118-0.02 0-0.47505-0.44013-1.0111-0.97806z"
+                  />
+                  <path
+                    id="path93"
+                    d="m221.64 490.85c-0.54385-0.5457-0.94025-0.99219-0.88091-0.99219 0.0594 0 0.4963-0.29165 0.971-0.64812 2.6296-1.9747 5.9999-2.9169 9.4888-2.6528 1.138 0.0861 2.1718 0.24614 2.9577 0.45775 0.28284 0.0762 0.53231 0.27837 1.0575 0.85723 0.37806 0.41666 0.6526 0.75723 0.61009 0.75681-0.0425 0-0.58594-0.0642-1.2076-0.14174-4.1271-0.51477-8.1301 0.48565-11.2 2.7992-0.40589 0.30583-0.75358 0.55607-0.77264 0.55607-0.019 0-0.47963-0.44648-1.0235-0.99219z"
+                  />
+                </g>
+              </g>
+            )}
           </g>
-        )}
+        </g>
       </g>
-      <g id="g99">
+      <g id="g99" className={pose === "sitting" ? "pose-sit-torso" : ""}>
         <g id="piel-torso" transform="translate(2.3221e-6)">
           <path
             id="piel-torso-completo"
@@ -486,14 +534,14 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
         <path
           id="piel-cintura"
           d="m192.92 407.78s69.022 6.414 102.14 7.2559c0 0 1.2114 9.808-1.3625 17.1 0 0-30.516-5.089-37.849 8.0808 0 0-16.948 2.3453-24.618-2.0513 0 0-6.3025-10.209-39.511-13.484 0 0 0.29546-8.8993 1.2033-16.902z"
-          fill="#edc89e"
+          fill={AVATAR_COLORS.skinBase}
         />
         {equippedAssetKeys.includes("pantalon-negro") && (
           <path
             id="cintura-pantalon-negro"
             d="m193.17 408.04c1.1565-2.7863 89.911 1.5667 101.72 7.1971 4.0238 1.9185 1.939 9.6096-0.63487 16.901 0 0-31.078-5.089-38.411 8.0808 0 0-16.948 2.3453-24.618-2.0513 0 0-6.0048-10.441-39.213-13.715 0 0-1.1706-10.806 1.1566-16.413z"
-            fill="#363636"
-            stroke="#000"
+            fill={AVATAR_COLORS.eyeBase}
+            stroke={AVATAR_COLORS.black}
             strokeWidth="2"
           />
         )}
@@ -503,7 +551,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               id="remera-violeta"
               d="m195.89 375.19c-7.1332 34.689-11.913 56.631-7.3552 59.771 11.703 8.0618 79.535 14.433 108.96 1.127 6.0003-2.7138-9.3312-57.098-13.365-71.725-4.6852-15.868-11.103-36.302-14.113-39.477-0.4303-0.45377-3.1037 0.54465-7.1626 1.1104 0.0388 0.55387 0.0584 1.1168 0.0584 1.6879 9e-5 9.9433-8.1294 15.667-12.885 15.223-7.0309-0.65684-15.368-5.8478-16.045-15.036-0.92285-0.0412-27.878-3.0615-28.874-3.101-5.0868 2.3816-5.7725 25.325-9.2139 50.421z"
               fill="url(#radialGradient16)"
-              stroke="#492c58"
+              stroke={AVATAR_COLORS.shirtVioletStroke}
               strokeWidth="2.0923"
             />
           </g>
@@ -513,19 +561,23 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
             <path
               id="jardinero-default"
               d="m205.8 325.72s17.212 3.9288 12.348 23.573c0 0-0.74835 29.186-24.322 33.863 0 0-0.37418 0.37418-1.8709 5.7998 0 0 20.206 0.46773 23.199 6.5481 2.9934 6.0804-18.02 37.025-5.0139 44.023 22.054 11.865 50.061 16.881 86.21 3.3106 0 0 10.243-44.597-27.362-116.44 0 0-5.096-2.9262-5.6281 1.3252-0.52059 4.1597 5.8682 17.03 0.91737 22.808-3.7752 4.4056-11.853 3.9891-17.293 1.9733-10.175-3.7701-12.543-18.792-22.13-23.874-5.6771-3.0093-16.048-2.3743-19.055-2.91z"
-              fill="#5981b9"
+              fill={AVATAR_COLORS.overallsBase}
             />
             <path
               id="bolsillo-jardinero-default"
               d="m235.65 382.96s22.254 9.2045 39.516-3.8138c0 0 12.119 42.913-22.64 39.035-15.836-1.7668-17.409-16.59-16.877-35.222z"
-              fill="#6991c3"
+              fill={AVATAR_COLORS.overallsShadow}
               style={{ mixBlendMode: "normal" }}
             />
           </g>
         )}
       </g>
-      <g id="g101-5" transform="translate(34.507 -.33232)">
-        <g fill="#edc89e">
+      <g
+        id="g101-5"
+        className={view === "guided-breathing" ? "pose-guided-breathing-arm-izq" : ""}
+        transform={view === "guided-breathing" ? undefined : "translate(34.507 -.33232)"}
+      >
+        <g fill={AVATAR_COLORS.skinBase}>
           <ellipse
             id="circulo-union-brazo-inferior-izq"
             cx="148.27"
@@ -541,41 +593,39 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           />
           <ellipse
             id="circulo-union-muneca-izq"
-            cx="136.17"
-            cy="394.67"
+            cx="135.03"
+            cy="398.92"
             rx="11.553"
             ry="11.553"
           />
           <ellipse
             id="circulo-union-mano-izq"
-            transform="translate(-1.1042e-6)"
-            cx="136.17"
-            cy="394.67"
+            cx="135.03"
+            cy="398.92"
             rx="11.553"
             ry="11.553"
           />
           <path
             id="mano-izq"
-            transform="translate(-1.1042e-6)"
-            d="m145.62 401.32s-7.2067 8.4551-18.572 11.776c0 0-10.176 2.1023-11.466-4.9753 0 0-1.0253-7.6729 9.7896-17.628"
+            d="m142.97 407.28s10.6-8.6651 12.154-19.745c0 0 1.7859-9.8888-6.9453-9.955 0 0-5.4034 0.70525-18.64 11.229"
           />
         </g>
-        <g id="g63">
+        <g id="g88">
           <ellipse
             id="circulo-union-brazo-superior-izq"
-            transform="translate(-1.1042e-6)"
             cx="148.24"
             cy="370.83"
             rx="15.456"
             ry="16.233"
-            fill="#edc89e"
+            fill={AVATAR_COLORS.skinBase}
             strokeWidth=".13372"
           />
           <path
             id="brazo-superior-izq"
-            d="m132.95 368.25s7.0047-29.5 12.337-39.182c0 0 5.7062-10.758 19.036-9.1673 0 0 11.693 0.88866 15.482 12.769 0 0 4.724 11.693-6.2207 21.375 0 0-6.4312 10.553-11.155 23.228"
-            fill="#edc89e"
+            d="m132.85 369.67s-4.0712-32.918 1.2608-42.6c0 0 3.7232-12.083 16.857-12.94 0 0 14.407-0.56372 18.195 11.316 0 0 2.5476 7.9103 0.79145 20.721-1.4487 10.568-2.8014 18.428-7.5253 31.103"
+            fill={AVATAR_COLORS.skinBase}
             strokeWidth=".15875"
+            transform="rotate(15, 150, 370)"
           />
           {hasShirtEquipped && equippedAssetKeys.includes("remera-violeta") && (
             <g id="g20">
@@ -584,7 +634,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                 transform="translate(-34.507 .33232)"
                 d="m170.99 345.28c-1.8672 10.849 22.954 18.595 35.785 16.073 2.4868-0.4888 9.9727-20.197 8.599-27.054-1.5081-7.5272-7.1526-21.027-26.524-16.801-9.0023 1.9636-14.023 5.4901-17.859 27.781z"
                 fill="url(#radialGradient20)"
-                stroke="#492c58"
+                stroke={AVATAR_COLORS.shirtVioletStroke}
                 strokeWidth="2"
               />
             </g>
@@ -593,15 +643,15 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
       </g>
       <g
         id="g102"
-        className={animation === "wave" ? "anim-head-bob" : "idle-head-bob"}
+        className={pose === "sitting" ? "pose-sit-head" : (animation === "wave" ? "anim-head-bob" : "idle-head-bob")}
       >
         <g id="piel-cara">
           <path
             id="path3"
             transform="scale(.26458)"
             d="m873.57 1240.5c-78.911-2.8491-153.03-19.492-218.57-49.078-8.25-3.7242-22.518-10.123-31.707-14.22-78.598-35.041-151.33-95.911-201.47-168.6-71.086-103.07-100.91-229.17-83.122-351.43 15.554-106.91 64.038-203.5 140.56-280.02 80.346-80.352 183.15-129.42 297.88-142.17 23.763-2.6417 74.251-2.9699 97.857-0.63611 115.55 11.423 220.48 60.764 302.24 142.12 113.87 113.31 165.4 271.91 139.7 430-3.0828 18.965-2.0176 58.533 2.2252 82.651 4.1386 23.526 9.6547 38.906 23.565 65.703 29.554 56.934 33.233 83.08 16.579 117.81-20.209 42.144-50.928 66.126-124.31 97.047-82.519 34.771-168.57 57.123-257 66.752-20.266 2.207-76.851 5.2508-88 4.7338-3.1429-0.1458-10.536-0.4391-16.429-0.6519z"
-            fill="#ecc79d"
-            stroke="#e5b279"
+            fill={AVATAR_COLORS.skinBase2}
+            stroke={AVATAR_COLORS.skinShadow4}
             strokeWidth="7.5591"
           />
         </g>
@@ -628,7 +678,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                 cy="311.84"
                 rx="10.131"
                 ry="4.7233"
-                fill="#eab2a2"
+                fill={AVATAR_COLORS.blush}
                 strokeWidth=".16192"
               />
             )}
@@ -656,7 +706,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                 cy="306.07"
                 rx="10.131"
                 ry="4.7233"
-                fill="#eab2a2"
+                fill={AVATAR_COLORS.blush}
                 strokeWidth=".16192"
               />
             )}
@@ -668,7 +718,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <path
             id="path10-3"
             d="m309.27 204.19s9.8044-6.7331 22.769 0.97448c0 0 1.3091 2.3578-1.6292 2.4781 0 0-9.4306-6.0685-19.413-0.66826 0 0-2.4466-0.48784-1.7277-2.7843z"
-            fill="#7a6e41"
+            fill={AVATAR_COLORS.pantsGreenShadow1}
             strokeWidth=".15875"
           />
         </g>
@@ -679,7 +729,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <path
             id="path10"
             d="m194.04 222.23s7.0826-9.5549 21.849-6.4813c0 0 2.0045 1.8041-0.73499 2.8731 0 0-10.891-2.6727-18.575 5.6795 0 0-2.4722 0.33409-2.5391-2.0713z"
-            fill="#7a6e41"
+            fill={AVATAR_COLORS.pantsGreenShadow1}
             strokeWidth=".15875"
           />
         </g>
@@ -692,19 +742,19 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               <path
                 id="ojo-cerrado-alegre-der"
                 d="m311.68 264.81s0-20.127 9.2604-20.6c0 0 10.489-3.7798 14.647 17.103 0 0 2.0789 3.1183 3.3073 0.56698 0 0 2.7403-15.686-10.394-24.19 0 0-10.583-5.1972-18.143 5.1972 0 0-5.6696 10.678-2.1734 21.45 0 0 1.6064 4.0632 3.4963 0.47246z"
-                fill="#687139"
+                fill={AVATAR_COLORS.pantsGreenBase}
                 strokeWidth=".15875"
               />
             </g>
             <g
               id="ojo-cerrado-feliz-izq"
               className={`organic-transform ${animation === "wave" ? "anim-happy-eyes" : "idle-happy-eyes"}`}
-              fill="#687139"
+              fill={AVATAR_COLORS.pantsGreenBase}
             >
               <path
                 id="ojo-cerrado-alegre-izq"
                 d="m207.13 278.47s0-20.127 9.2604-20.6c0 0 10.489-3.7798 14.647 17.103 0 0 2.0789 3.1183 3.3073 0.56698 0 0 2.7403-15.686-10.394-24.19 0 0-10.583-5.1972-18.143 5.1972 0 0-5.6696 10.678-2.1734 21.45 0 0 1.6064 4.0632 3.4963 0.47246z"
-                fill="#687139"
+                fill={AVATAR_COLORS.pantsGreenBase}
                 strokeWidth=".15875"
               />
             </g>
@@ -722,7 +772,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                 cy="257.14"
                 rx="6.3667"
                 ry="21.09"
-                fill="#687139"
+                fill={AVATAR_COLORS.pantsGreenBase}
               />
               <ellipse
                 id="ellipse29"
@@ -732,7 +782,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                 rx="2.909"
                 ry="8.8125"
                 clipPath="url(#clipPath26)"
-                fill="#808c46"
+                fill={AVATAR_COLORS.pantsGreenShadow2}
               />
             </g>
             <g id="g28">
@@ -742,7 +792,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                 cy="257.14"
                 rx="6.962"
                 ry="21.09"
-                fill="#687139"
+                fill={AVATAR_COLORS.pantsGreenBase}
               />
               <ellipse
                 id="ojo-pupila"
@@ -751,7 +801,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
                 rx="2.909"
                 ry="8.8125"
                 clipPath="url(#clipPath26)"
-                fill="#808c46"
+                fill={AVATAR_COLORS.pantsGreenShadow2}
               />
             </g>
           </g>
@@ -761,134 +811,139 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <path
             id="hoja-verde-cabeza"
             d="m171.31 6.998c-0.85077 0.030292-1.1276 2.357-1.1276 2.357-0.94494 25.891 8.8821 35.813 8.8821 35.813 9.5439 11.245 18.623 13.071 21.64 13.04 3.1179-0.0318 6.099 1.0366 7.9437 1.8707 3.5123 7.2924 5.8779 16.015 5.5671 26.115 0 0 4.5435 1.6037 7.6171-0.26717 0 0-0.90365-14.565-9.7317-29.593 1.8276-9.7695-4.2995-19.384-4.2995-19.384-5.3454-10.023-22.499-17.39-22.499-17.39-12.379-4.9137-13.04-11.812-13.04-11.812-0.3765-0.55368-0.69092-0.75961-0.95136-0.75034z"
-            fill="#6e7c43"
+            fill={AVATAR_COLORS.pantsGreenShadow3}
             strokeWidth=".15875"
           />
         </g>
-        <g id="g31" fill="#687139">
+        <g id="g31" fill={AVATAR_COLORS.pantsGreenBase}>
           <g
             id="boca-feliz-abierta"
             className={`organic-transform ${animation === "wave" ? "anim-pop-in-mouth" : "idle-pop-in-mouth"}`}
-            fill="#e83e8c"
+            fill={AVATAR_COLORS.tongueLight}
           >
             <path
               id="path17"
               d="m257.07 287.36 40.821-5.2444s3.638 14.505-11.009 22.962c0 0-12.237 5.8114-24.001-2.7403 0 0-6.4728-6.6618-5.8114-14.977z"
-              fill="#e83e8c"
+              fill={AVATAR_COLORS.tongueLight}
               strokeWidth=".15875"
             />
           </g>
           <g
             id="g36"
-            className={`organic-transform ${animation === "wave" ? "anim-fade-out-mouth" : "idle-fade-out-mouth"}`}
-            style={{
-              opacity:
-                animation === "blow" ||
+            className={`organic-transform ${animation === "wave"
+              ? "anim-fade-out-mouth"
+              : animation === "blow" ||
                 animation === "exhale" ||
                 animation === "inhale"
-                  ? 0
-                  : undefined,
-            }}
+                ? "idle-pop-in-mouth"
+                : "idle-fade-out-mouth"
+              }`}
           >
             <path
               id="boca-sonriente"
               d="m265.52 293.98s2.484 4.4087 9.9488 7.278c2.7252 1.0475 12.175 0.32028 14.876-1.348 3.0417-1.8792 7.0689-5.682 7.7559-12.166"
               fill="none"
-              stroke="#687139"
+              stroke={AVATAR_COLORS.pantsGreenBase}
               strokeLinecap="square"
               strokeLinejoin="bevel"
               strokeWidth="4"
             />
           </g>
-          {(animation === "blow" ||
-            animation === "exhale" ||
-            animation === "inhale") && (
-            <g id="g61">
-              <ellipse
-                id="boca-soplando"
-                cx="276.93"
-                cy="302.63"
-                rx="7.203"
-                ry="9.1673"
-                fill="#e76767"
-                fillOpacity=".60392"
-              />
-              <path
-                id="mejilla-cachete"
-                d="m262.33 313.6s3.3302-0.8432 6.538-5.2235c1.1711-1.5992 2.3756-7.92 1.7629-9.9859-0.69012-2.3271-2.4652-5.642-6.5914-7.2455"
-                fill="none"
-                stroke="#e5b279"
-                strokeLinecap="square"
-                strokeLinejoin="bevel"
-                strokeWidth="2.7155"
-              />
-              {(animation === "blow" || animation === "exhale") && (
-                <g
-                  id="g74"
-                  fill="none"
-                  stroke="#b6afa8"
-                  strokeLinecap="round"
-                  className="anim-viento-soplado"
-                >
-                  <g strokeLinejoin="bevel">
-                    <path
-                      id="viento-10"
-                      d="m288.12 299.72s113.52-1.266 103.47-34.604c0 0-6.929-14.601-20.025 1.863"
-                      strokeWidth="3"
-                    />
-                    <path
-                      id="viento-9"
-                      d="m288.12 301.96s60.617 8.0448 43.966 28.25"
-                      strokeWidth="2"
-                    />
-                    <path
-                      id="viento-8"
-                      d="m289.85 300.51s61.834 1.4411 89.563-6.9487"
-                      strokeWidth="2.1119"
-                    />
-                    <path
-                      id="viento-7"
-                      d="m288.74 302.1s90.564-6.2442 101.74 26.061c4.877 14.103-5.4146 20.142-13.728 20.97-7.3463 0.73112-17.812-4.3058-15.545-15.776"
-                      strokeWidth="2.6453"
-                    />
-                  </g>
-                  <g strokeWidth="1.5">
-                    <path
-                      id="viento-6"
-                      d="m366.58 302.02s25.929 4.101 28.707 16.536"
-                    />
-                    <path
-                      id="viento-5"
-                      d="m357.06 312.74c11.642 3.4396 15.346 9.6573 15.346 9.6573"
-                    />
-                    <path
-                      id="viento-4"
-                      d="m365.26 352.29s12.435 7.4083 20.373 0"
-                    />
-                    <path
-                      id="viento-3"
-                      d="m372.93 281.25s9.2604-2.249 10.716-8.599"
-                    />
-                    <path
-                      id="path73"
-                      d="m379.28 254.66s8.3344-3.9688 13.229 3.7042"
-                    />
-                    <path
-                      id="path74"
-                      d="m334.14 309.82s10.29 3.1805 6.7352 13.47"
-                    />
-                  </g>
-                </g>
-              )}
+          <g
+            id="g61"
+            className={`organic-transform ${animation === "blow" ||
+              animation === "exhale" ||
+              animation === "inhale"
+              ? "idle-fade-out-mouth"
+              : "idle-pop-in-mouth"
+              }`}
+          >
+            <ellipse
+              id="boca-soplando"
+              cx="276.93"
+              cy="302.63"
+              rx="7.203"
+              ry="9.1673"
+              fill={AVATAR_COLORS.tongue}
+              fillOpacity=".60392"
+            />
+            <path
+              id="mejilla-cachete"
+              d="m262.33 313.6s3.3302-0.8432 6.538-5.2235c1.1711-1.5992 2.3756-7.92 1.7629-9.9859-0.69012-2.3271-2.4652-5.642-6.5914-7.2455"
+              fill="none"
+              stroke={AVATAR_COLORS.skinShadow4}
+              strokeLinecap="square"
+              strokeLinejoin="bevel"
+              strokeWidth="2.7155"
+            />
+            <g
+              id="g74"
+              fill="none"
+              stroke={AVATAR_COLORS.shoeLaceStroke}
+              strokeLinecap="round"
+              className={
+                animation === "blow" || animation === "exhale"
+                  ? "anim-viento-soplado"
+                  : "hidden-wind"
+              }
+            >
+              <g strokeLinejoin="bevel">
+                <path
+                  id="viento-10"
+                  d="m288.12 299.72s113.52-1.266 103.47-34.604c0 0-6.929-14.601-20.025 1.863"
+                  strokeWidth="3"
+                />
+                <path
+                  id="viento-9"
+                  d="m288.12 301.96s60.617 8.0448 43.966 28.25"
+                  strokeWidth="2"
+                />
+                <path
+                  id="viento-8"
+                  d="m289.85 300.51s61.834 1.4411 89.563-6.9487"
+                  strokeWidth="2.1119"
+                />
+                <path
+                  id="viento-7"
+                  d="m288.74 302.1s90.564-6.2442 101.74 26.061c4.877 14.103-5.4146 20.142-13.728 20.97-7.3463 0.73112-17.812-4.3058-15.545-15.776"
+                  strokeWidth="2.6453"
+                />
+              </g>
+              <g strokeWidth="1.5">
+                <path
+                  id="viento-6"
+                  d="m366.58 302.02s25.929 4.101 28.707 16.536"
+                />
+                <path
+                  id="viento-5"
+                  d="m357.06 312.74c11.642 3.4396 15.346 9.6573 15.346 9.6573"
+                />
+                <path
+                  id="viento-4"
+                  d="m365.26 352.29s12.435 7.4083 20.373 0"
+                />
+                <path
+                  id="viento-3"
+                  d="m372.93 281.25s9.2604-2.249 10.716-8.599"
+                />
+                <path
+                  id="path73"
+                  d="m379.28 254.66s8.3344-3.9688 13.229 3.7042"
+                />
+                <path
+                  id="path74"
+                  d="m334.14 309.82s10.29 3.1805 6.7352 13.47"
+                />
+              </g>
             </g>
-          )}
+          </g>
         </g>
         <g id="pelo-verde">
           <path
             id="path5"
             d="m224.22 61.408s48.681-6.0342 98.574 40.268c0 0 20.789 14.552 35.53 58.208 0 0 6.9926 14.741 14.174 25.513 0 0 15.119 15.875 3.2128 17.576 0 0-5.6696 5.1027-25.513-12.095l-0.25984 9.5203s3.4726-29.931-52.09-61.114c0 0-6.8036 38.176-37.42 60.098 0 0-5.1027 1.7009-6.2366-4.7247 0 0-4.1577-32.884-39.876-58.775 0 0-4.3467-7.1816-8.3155 7.1816 0 0-3.2128 20.6-25.135 33.64 0 0-22.49 12.851-30.427 18.899 0 0-60.382 25.135-22.773 90.525 0 0-20.883-20.033-34.112-52.917 0 0-5.6696 6.9926-19.466 14.174 0 0-11.717 2.6458-5.1027-12.284s17.576-21.356 15.308-48.381c0 0 2.0789-56.885 46.491-91.848 0 0 43.387-38.166 93.438-33.464z"
-            fill="#a7af5a"
-            stroke="#8f9b0d"
+            fill={AVATAR_COLORS.pantsGreenLight}
+            stroke={AVATAR_COLORS.pantsGreenStroke}
             strokeWidth="2"
           />
         </g>
@@ -901,25 +956,25 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               rx="16.725"
               ry="12.095"
               fill="url(#radialGradient56)"
-              stroke="#4e6984"
+              stroke={AVATAR_COLORS.shoeBlueStroke}
             />
             <path
               id="vicera-azul-sombra"
               d="m357.19 105.46s5.5589 11.847-16.364 13.926l-12.549-14.547-15.918-14.641 32.546 2.033z"
-              fill="#4e6b9b"
-              stroke="#4e6b9b"
+              fill={AVATAR_COLORS.shoeBlueShadow}
+              stroke={AVATAR_COLORS.shoeBlueShadow}
             />
             <path
               id="vicera-azul-delantera"
               d="m155.73 116.04s29.671 27.214 70.493 27.781c0 0 20.789 5.1027 51.216-20.033 0 0 19.088-18.332 41.199-27.781 0 0 26.458-7.7485 38.365 9.0714 0 0 2.6458-14.552-56.696-31.75l-85.234-26.647z"
               fill="url(#radialGradient74)"
-              stroke="#4e6984"
+              stroke={AVATAR_COLORS.shoeBlueStroke}
             />
             <path
               id="vicera-azul-central"
               d="m178.71 7.2288c-0.76119 1.6742-40.956 23.506-26.387 99.738m-54.051 30.427s47.625-16.064 57.452-21.545l144.58-41.766s-13.229-38.176-42.333-54.996c0 0-24.946-20.6-79.375-11.906 0 0-41.199 9.4494-66.713 41.955 0 0-25.891 32.128-13.607 88.257z"
               fill="url(#radialGradient72)"
-              stroke="#4e6984"
+              stroke={AVATAR_COLORS.shoeBlueStroke}
             />
           </g>
         )}

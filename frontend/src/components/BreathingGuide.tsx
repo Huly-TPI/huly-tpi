@@ -7,6 +7,7 @@ import { ActivityType } from "../api/activities";
 import HulyAvatar, { type AvatarAnimation } from "./HulyAvatar/HulyAvatar";
 import { getEquippedAvatarItems } from "./HulyAvatar/avatarEquip";
 import { useInventory } from "../hooks/store/useInventory";
+import cloudBreathing from "../assets/breathing/cloud-breathing.png";
 
 export interface BreathingTechnique {
   id: number;
@@ -144,13 +145,25 @@ export function BreathingGuide({
   const hulyEl = (
     <div
       key={`${currentPhaseIndex}-${isRunning}`}
-      className="fixed top-20 right-3 w-20 sm:top-auto sm:bottom-8 sm:right-8 sm:w-48 z-20 huly-wind"
+      className="fixed top-20 right-3 sm:top-auto sm:bottom-8 sm:right-8 z-20 huly-wind"
     >
-      <HulyAvatar
-        equippedItems={equippedItems}
-        animation={avatarAnimation}
-        pose="sitting"
-      />
+      <div className="relative h-[40vh] sm:h-[50vh] aspect-square flex justify-center items-end">
+        <img
+          src={cloudBreathing}
+          alt="Nube"
+          className="w-full absolute bottom-0 left-0 z-10 pointer-events-none"
+        />
+        <div className="absolute z-[15] w-[20%] h-[20%] bottom-[52%] right-[30%] bg-black/25 blur-md rounded-[100%] rotate-[10deg]"></div>
+
+        <div className="absolute z-20 w-[80%] bottom-[50%] right-[5%] scale-x-[-1] rotate-[15deg] drop-shadow-lg">
+          <HulyAvatar
+            equippedItems={equippedItems}
+            animation={avatarAnimation}
+            pose="sitting"
+            view="guided-breathing"
+          />
+        </div>
+      </div>
     </div>
   );
 
@@ -285,11 +298,10 @@ export function BreathingGuide({
             <div key={technique.id} className="relative flex flex-col">
               <button
                 onClick={() => requireAuth(() => setSelected(technique))}
-                className={`w-full py-3 lg:py-4 rounded-full border transition-colors font-medium ${
-                  isDark
-                    ? "border-[#8d78bd] bg-[rgba(95,74,138,0.18)] text-[#d8c9f5] hover:bg-[rgba(95,74,138,0.3)]"
-                    : "border-violeta text-violeta hover:bg-violeta-claro"
-                }`}
+                className={`w-full py-3 lg:py-4 rounded-full border transition-colors font-medium ${isDark
+                  ? "border-[#8d78bd] bg-[rgba(95,74,138,0.18)] text-[#d8c9f5] hover:bg-[rgba(95,74,138,0.3)]"
+                  : "border-violeta text-violeta hover:bg-violeta-claro"
+                  }`}
               >
                 {technique.name}
               </button>

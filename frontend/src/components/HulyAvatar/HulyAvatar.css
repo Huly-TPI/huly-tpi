@@ -1,5 +1,5 @@
 .anim-wave-hand {
-  transform-origin: 148.27px 370.86px;
+  transform-origin: 307.5px 340.4px;
   animation: wave-hand 6s ease-in-out infinite;
 }
 
@@ -34,7 +34,6 @@
   transform-origin: center;
   transform-box: fill-box;
 }
-
 
 /* Happy Eyes (Ojo Cerrado Alegre) */
 .anim-happy-eyes {
@@ -241,14 +240,82 @@
     transform: translateX(-10px);
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     transform: translateX(15px);
     opacity: 0;
   }
+}
+
+.hidden-wind {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+/* Sitting Pose */
+/* Sitting Pose */
+/* Sitting Pose */
+/* Sitting Pose */
+.pose-sit-leg-der {
+  transform-origin: 274px 430px;
+  /* Right Hip */
+  transform: translate(-42px, 14px) rotate(-90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-calf-der {
+  transform-origin: 272px 451px;
+  /* Right Knee */
+  transform: rotate(90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-leg-izq {
+  transform-origin: 221px 421px;
+  /* Left Hip */
+  transform: translate(-52px, 5px) rotate(-90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-calf-izq {
+  transform-origin: 213px 444px;
+  /* Left Knee */
+  transform: rotate(90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+/* Mirror Right Arm (Horizontal and Vertical) */
+.pose-sit-arm-der {
+  transform-origin: 307.5px 340.4px;
+  transform: translate(-55px, 55px) rotate(100deg) scale(1, -1);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-torso {
+  transform-origin: 244px 407px;
+  /* Base of the torso (waist) */
+  transform: rotate(10deg) translate(-20px, 10px);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-head {
+  transform-origin: 207px 296px;
+  /* Base of the neck */
+  transform: rotate(15deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-guided-breathing-arm-izq {
+  transform-origin: 148.24px 370.83px;
+  /* Upper arm anchor */
+  transform: translate(5.507px, -15.33232px) rotate(45deg);
+  transition: transform 0.4s ease-in-out;
 }

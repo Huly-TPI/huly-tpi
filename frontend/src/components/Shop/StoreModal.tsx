@@ -345,7 +345,7 @@ export default function StoreModal({
             )}
           </div>
         </div>
-        <div className="absolute top-1/2 right-0 hidden aspect-square h-[70dvh] max-h-[600px] -translate-y-1/2 translate-x-[90%] scale-x-[-1] lg:block">
+        <div className="absolute top-1/2 right-0 hidden aspect-square h-[70dvh] max-h-[1400px] -translate-y-1/2 translate-x-[90%] scale-x-[-1] lg:block">
           {/**
          * 
          * PARA CAMBIAR EL TAMAÑO DEL AVATAR
