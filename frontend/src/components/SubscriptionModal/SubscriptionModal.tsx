@@ -32,13 +32,14 @@ interface PaidCardProps {
 
 const FREE_FEATURES = ['5 mensajes al día']
 
-const PLAN_DISPLAY_NAMES: Record<string, string> = {
-  BASIC: 'Basico',
-  PREMIUM: 'Huly',
+const PLAN_FEATURES: Record<string, string[]> = {
+  BASIC: ['Chatbot libre', 'Items exclusivos de la tienda', 'Mandalas exclusivos', '3 audios por día', '1.5x recompensas diarias'],
+  PREMIUM: ['Chatbot libre', 'Items exclusivos de la tienda', 'Mandalas exclusivos', 'Audios libres', '1.5x recompensas diarias', '1000 monedas'],
 }
 
-function getDisplayName(planCode: string, fallback: string): string {
-  return PLAN_DISPLAY_NAMES[planCode] ?? fallback
+const PLAN_CARD: Record<string, { image: string; theme: 'yellow' | 'purple' }> = {
+  BASIC: { image: cardYellow, theme: 'yellow' },
+  PREMIUM: { image: cardPurple, theme: 'purple' },
 }
 
 function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
@@ -128,7 +129,7 @@ function PaidCard({
           )}
 
           {features.map((feature, index) => (
-            <li key={index} className={`flex items-start gap-1.5 text-left text-[10px] ${compact ? 'sm:text-[10px] lg:text-[12px]' : 'sm:text-[10px] lg:text-[12px]'} text-[#7b5c3c] leading-tight`}>
+            <li key={index} className={`flex items-start gap-1.5 text-left text-[10px] sm:text-[10px] lg:text-[12px] text-[#7b5c3c] leading-tight`}>
               <span className={`mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full ${checkBg} text-white text-[7px] font-black`}>✓</span>
               <span className="font-bold">{feature}</span>
             </li>
@@ -176,9 +177,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
 
   if (!isOpen) return null
 
-  const basicPlan = plans.find(p => p.planCode === 'BASIC')
-  const premiumPlan = plans.find(p => p.planCode === 'PREMIUM')
   const activeProductId = membership?.active ? membership.productId : null
+
+  const sortedPlans = [...plans].sort((a, b) => a.price - b.price)
+  const many = 1 + sortedPlans.length > 3
+  const gapClass = many ? 'gap-1.5 sm:gap-2 lg:gap-3' : 'gap-2 sm:gap-3 lg:gap-6'
+  const cardClass = many ? 'flex-1 min-w-0 max-w-[30%] h-full' : 'w-[28%] shrink-0 h-full'
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -200,64 +204,36 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
             Elegí el plan que mejor se adapte a vos
           </p>
 
-          <div className="flex justify-center items-stretch gap-2 sm:gap-3 mt-2 px-[1%] flex-1 min-h-0 lg:mt-4 lg:gap-6">
+          <div className={`flex justify-center items-stretch mt-2 px-[1%] flex-1 min-h-0 lg:mt-4 ${gapClass}`}>
             {plansLoading ? (
               <div className="flex justify-center py-12">
                 <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <>
-                <div className="w-[28%] h-full">
+                <div className={cardClass}>
                   <FreeCard isCurrentPlan={!activeProductId} />
                 </div>
-
-                {basicPlan && (
-                  <div className="w-[28%] h-full">
-                    <PaidCard
-                      plan={basicPlan}
-                      displayName={getDisplayName(basicPlan.planCode, basicPlan.name)}
-                      cardImage={cardYellow}
-                      showSeeds={false}
-                      features={[
-                        'Chatbot libre',
-                        'Items exclusivos de la tienda',
-                        'Mandalas exclusivos',
-                        '3 audios por día',
-                        '1.5x recompensas diarias',
-                      ]}
-                      buying={buyingId === basicPlan.id}
-                      disabled={buyingId !== null}
-                      activeProductId={activeProductId}
-                      buttonTheme="yellow"
-                      onBuy={handleBuy}
-                    />
-                  </div>
-                )}
-
-                {premiumPlan && (
-                  <div className="w-[28%] h-full">
-                    <PaidCard
-                      plan={premiumPlan}
-                      displayName={getDisplayName(premiumPlan.planCode, premiumPlan.name)}
-                      cardImage={cardPurple}
-                      showSeeds={false}
-                      compact
-                      features={[
-                        'Chatbot libre',
-                        'Items exclusivos de la tienda',
-                        'Mandalas exclusivos',
-                        'Audios libres',
-                        '1.5x recompensas diarias',
-                        '1000 monedas',
-                      ]}
-                      buying={buyingId === premiumPlan.id}
-                      disabled={buyingId !== null}
-                      activeProductId={activeProductId}
-                      buttonTheme="purple"
-                      onBuy={handleBuy}
-                    />
-                  </div>
-                )}
+                {sortedPlans.map(plan => {
+                  const card = PLAN_CARD[plan.planCode] ?? { image: cardPurple, theme: 'purple' as const }
+                  const features = PLAN_FEATURES[plan.planCode] ?? []
+                  return (
+                    <div key={plan.id} className={cardClass}>
+                      <PaidCard
+                        plan={plan}
+                        displayName={plan.name}
+                        cardImage={card.image}
+                        features={features}
+                        compact={features.length > 5}
+                        buying={buyingId === plan.id}
+                        disabled={buyingId !== null}
+                        activeProductId={activeProductId}
+                        buttonTheme={card.theme}
+                        onBuy={handleBuy}
+                      />
+                    </div>
+                  )
+                })}
               </>
             )}
           </div>

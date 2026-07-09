@@ -19,6 +19,9 @@ export interface ProductFormData {
     price: number
     coinsAmount: number | null
     type: string
+    planCode?: string | null
+    chatDailyLimit?: number | null
+    audioDailyLimit?: number | null
 }
 
 export const adminProductsApi = {
