@@ -5,17 +5,23 @@ import { useTheme } from '../../context/theme'
 import { completeProfileTutorial } from '../../api/onboarding'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
+import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
 import AccountSettingsModal from '../../components/Profile/AccountSettingsModal'
 import AudioSettingsModal from '../../components/Profile/AudioSettingsModal'
 import ChangePasswordModal from '../../components/Profile/ChangePasswordModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useSceneOnboarding } from '../../hooks/useSceneOnboarding'
+import dayBackgroundImage from '../../assets/profile/light-theme/background/day-background.webp'
+import dayMobileBackgroundImage from '../../assets/profile/light-theme/background/mobile/day-background.webp'
+import nightBackgroundImage from '../../assets/profile/dark-theme/background/night-background.png'
+import nightMobileBackgroundImage from '../../assets/profile/dark-theme/background/mobile/night-background.png'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
 import clockImage from '../../assets/profile/light-theme/clock.webp'
 import mirrorImage from '../../assets/profile/light-theme/mirror.webp'
 import musicImage from '../../assets/profile/light-theme/music.webp'
 import windowImage from '../../assets/profile/light-theme/window.webp'
+import nightWindowImage from '../../assets/profile/dark-theme/night-window.png'
 import notificationImage from '../../assets/profile/light-theme/notification.webp'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { profileOnboardingSteps } from './profileOnboardingSteps'
@@ -42,7 +48,7 @@ const profileElements: SceneElementDefinition[] = [
     id: 'window',
     title: 'Volver al jardin',
     imageAlt: 'Ventana hacia el jardin',
-    image: { light: windowImage },
+    image: { light: windowImage, dark: nightWindowImage },
     placementClassName: 'left-[23%] top-[14%] z-[2] w-[50%] md:left-[42%] md:top-[16.5%] md:w-[20.8%]',
     imageClassName: FULL_WIDTH,
     hotspotClassName: DEFAULT_HOTSPOT,
@@ -192,6 +198,15 @@ export default function Profile() {
     <main className="profile-page" aria-label="Perfil de usuario">
       <div className="profile-scene-scroll" aria-label="Habitacion de perfil">
         <section className="profile-scene">
+          <ThemeBackground
+            lightSrc={dayBackgroundImage}
+            darkSrc={nightBackgroundImage}
+            lightAlt="Habitacion de perfil de dia"
+            darkAlt="Habitacion de perfil de noche"
+            lightMobileSrc={dayMobileBackgroundImage}
+            darkMobileSrc={nightMobileBackgroundImage}
+          />
+
           {renderedElements.map(element => (
             <SceneElement key={element.id} theme={theme} {...element} />
           ))}

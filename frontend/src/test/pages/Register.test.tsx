@@ -6,7 +6,7 @@ import Register from '../../pages/Register/Register'
 import { ApiError } from '../../api/apiError'
 import { ThemeProvider } from '../../context/theme'
 import { register } from '../../api/auth'
-import { clickButton, clickCheckbox, typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled, verifyTextPresentAsync, clearAllMocks, verifyValidationAlertsShown } from '../testHelpers'
+import { clickButton, clickCheckbox, typePlaceholder, verifyTextPresent, verifyTextNotPresent, verifyPlaceholderPresent, verifyButtonDisabled, verifyButtonEnabled, verifyTextPresentAsync, clearAllMocks, verifyValidationAlertsShown } from '../testHelpers'
 
 // --- SIMULACIONES GLOBALES (MOCKS) ---
 vi.mock('../../api/auth', () => ({
@@ -14,8 +14,9 @@ vi.mock('../../api/auth', () => ({
 }))
 
 const mockLoginWithToken = vi.fn()
+const mockUseAuth = vi.fn()
 vi.mock('../../context/auth', () => ({
-    useAuth: () => ({ loginWithToken: mockLoginWithToken }),
+    useAuth: () => mockUseAuth(),
 }))
 
 const mockedRegister = vi.mocked(register)
@@ -25,6 +26,7 @@ describe('Register', () => {
 
     beforeEach(() => {
         clearAllMocks()
+        mockUseAuth.mockReturnValue({ loginWithToken: mockLoginWithToken, isAuthenticated: false, loading: false })
     })
 
     // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -32,6 +34,18 @@ describe('Register', () => {
     it('renderiza el formulario de registro', () => {
         renderRegisterForm()
         verifyRegisterFormIsVisible()
+    })
+
+    it('redirige al home si ya hay una sesión iniciada', () => {
+        mockUseAuth.mockReturnValue({ loginWithToken: mockLoginWithToken, isAuthenticated: true, loading: false })
+        renderRegisterForm()
+        return verifyTextPresentAsync('Home')
+    })
+
+    it('no muestra el formulario mientras se está verificando la sesión', () => {
+        mockUseAuth.mockReturnValue({ loginWithToken: mockLoginWithToken, isAuthenticated: false, loading: true })
+        renderRegisterForm()
+        verifyTextNotPresent('¡Creá tu cuenta!')
     })
 
     it('muestra errores de validación al enviar vacío', () => {

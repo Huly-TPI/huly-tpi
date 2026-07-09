@@ -103,4 +103,24 @@ public class ChatMessageMapper {
                 generatedChallenge.getDescription()
         );
     }
+
+    public ConversationMessage toConversationMessage(ChatMessageEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        EmotionType emotion = entity.getEmotions() != null && !entity.getEmotions().isEmpty()
+                ? entity.getEmotions().get(0).getEmotionDetected()
+                : null;
+        return new ConversationMessage(
+                entity.getRole(),
+                entity.getContent(),
+                emotion,
+                entity.getRiskDetected(),
+                null,
+                toSuggestedAction(entity.getSuggestedAction()),
+                toGeneratedChallenge(entity.getGeneratedChallenge()),
+                entity.getSuggestedAction() != null ? entity.getSuggestedAction().getDecision() : null,
+                entity.getGeneratedChallenge() != null ? entity.getGeneratedChallenge().getDecision() : null
+        );
+    }
 }

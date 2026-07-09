@@ -45,6 +45,10 @@ function getSuggestedActionRoute(type: string, actionUrl: string) {
       return '/zen-sand-garden'
     case 'MANDALA':
       return '/mandalas'
+    case 'STONES':
+      return '/stones'
+    case 'PENDING':
+      return '/pending'
     default:
       return actionUrl.startsWith('/api/') ? '/' : actionUrl
   }

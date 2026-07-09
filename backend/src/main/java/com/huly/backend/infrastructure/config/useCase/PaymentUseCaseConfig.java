@@ -11,6 +11,10 @@ import com.huly.backend.domain.useCase.payment.CreateStoreItemPreferenceUseCase;
 import com.huly.backend.domain.useCase.payment.HandleWebhookUseCase;
 import com.huly.backend.domain.useCase.payment.ListPlansUseCase;
 import com.huly.backend.domain.useCase.payment.ListProductsUseCase;
+import com.huly.backend.domain.useCase.payment.CreateProductUseCase;
+import com.huly.backend.domain.useCase.payment.UpdateProductUseCase;
+import com.huly.backend.domain.useCase.payment.SetProductActiveUseCase;
+import com.huly.backend.domain.useCase.payment.ListAdminProductsUseCase;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import com.huly.backend.domain.repository.UserStoreItemRepository;
 import org.springframework.context.annotation.Bean;
@@ -59,6 +63,26 @@ public class PaymentUseCaseConfig {
             PlanService planDomainService) {
         return new HandleWebhookUseCase(paymentEventRepository, mercadoPagoPort, coinDomainService, planDomainService,
                 storeItemRepository, userStoreItemRepository);
+    }
+
+    @Bean
+    public ListAdminProductsUseCase listAdminProductsUseCase(ProductRepository productRepository) {
+        return new ListAdminProductsUseCase(productRepository);
+    }
+
+    @Bean
+    public CreateProductUseCase createProductUseCase(ProductRepository productRepository) {
+        return new CreateProductUseCase(productRepository);
+    }
+
+    @Bean
+    public UpdateProductUseCase updateProductUseCase(ProductRepository productRepository) {
+        return new UpdateProductUseCase(productRepository);
+    }
+
+    @Bean
+    public SetProductActiveUseCase setProductActiveUseCase(ProductRepository productRepository) {
+        return new SetProductActiveUseCase(productRepository);
     }
 
 }

@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -40,4 +42,18 @@ public interface IChatMessageJpaRepository extends JpaRepository<ChatMessageEnti
 
     long countByChatSessionAppUserIdAndRoleAndContentStartingWithAndCreatedAtAfter(
             Long userId, MessageRole role, String contentPrefix, Instant since);
+
+    @Query("""
+            SELECT m
+            FROM ChatMessageEntity m
+            WHERE m.chatSession.appUser.id = :userId
+              AND m.role = :role
+              AND m.generatedChallenge.title IS NOT NULL
+            ORDER BY m.createdAt DESC
+            """)
+    List<ChatMessageEntity> findChallengesByUserId(
+            @Param("userId") Long userId,
+            @Param("role") MessageRole role,
+            Pageable pageable
+    );
 }

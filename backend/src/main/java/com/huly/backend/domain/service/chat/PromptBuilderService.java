@@ -66,6 +66,33 @@ public class PromptBuilderService {
         sb.append("\nUsá el nombre preferido para dirigirte al usuario cuando resulte natural; si no existe, usá el nombre registrado.");
         sb.append("\nRespetá siempre el estilo preferido, sin perder empatía, seguridad ni claridad.");
         sb.append("\nSi el usuario pide explícitamente cambiar su nombre o el estilo, reconocé su pedido y actuá de acuerdo con la preferencia más reciente.");
+
+        appendChallengeHistory(sb, personalization.challengeHistory());
+    }
+
+    private void appendChallengeHistory(
+            StringBuilder sb,
+            List<ChatPersonalizationContext.ChallengeHistoryEntry> challengeHistory) {
+        if (challengeHistory == null || challengeHistory.isEmpty()) {
+            return;
+        }
+        sb.append("\n\n=== HISTORIAL DE RETOS PROPUESTOS AL USUARIO ===");
+        sb.append("\nEl usuario ha respondido a los siguientes retos propuestos recientemente:");
+        for (ChatPersonalizationContext.ChallengeHistoryEntry entry : challengeHistory) {
+            sb.append("\n- Reto: \"").append(entry.title()).append("\" -> ");
+            if (entry.acceptedCount() > 0 && entry.rejectedCount() > 0) 
+                sb.append("Aceptado ").append(entry.acceptedCount()).append(" veces, Rechazado ").append(entry.rejectedCount()).append(" veces");
+            else if (entry.acceptedCount() > 0) 
+                sb.append("Aceptado ").append(entry.acceptedCount()).append(" veces");
+            else if (entry.rejectedCount() > 0) 
+                sb.append("Rechazado ").append(entry.rejectedCount()).append(" veces");
+            else 
+                sb.append("Sin respuesta");
+        }
+        sb.append("\nReglas de adaptación de retos:");
+        sb.append("\n1. Si un reto ha sido rechazado 2 o más veces en total, NO lo vuelvas a sugerir por el momento.");
+        sb.append("\n2. Analiza qué tipos de retos prefiere (los que ha aceptado) y cuáles tiende a evitar.");
+        sb.append("\n3. Sé flexible y creativo: si el usuario rechaza retos exigentes, propone retos significativamente más simples o con otro enfoque.");
     }
 
     private void appendTrustedValue(StringBuilder sb, String label, String value) {
@@ -92,6 +119,7 @@ public class PromptBuilderService {
     private void appendResponseInstructions(StringBuilder sb) {
         sb.append("\n\n=== INSTRUCCIONES DE RESPUESTA ===");
         sb.append("\nSi el mensaje incluye metadatos de voz (ej. 'Tono de voz: ...'), úsalos como contexto emocional interno para guiar tu respuesta, pero NO los menciones ni hagas referencia a ellos en huly_reply. Nunca uses las palabras 'activación', 'activado' ni 'activada' en tu respuesta.");
+        sb.append("\nEn 'huly_reply', usa obligatoriamente saltos de línea dobles (\\n\\n) para separar párrafos o ideas distintas, de manera que la respuesta se pueda subdividir correctamente en burbujas en la interfaz del usuario.");
         sb.append("\nRespondé SIEMPRE con un JSON válido con exactamente este formato (sin texto fuera del JSON):");
         sb.append("\n{");
         sb.append("\n  \"huly_reply\": \"<tu respuesta empática>\",");

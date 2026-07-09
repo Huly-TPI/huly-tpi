@@ -50,7 +50,9 @@ public class PaymentController {
                         p.getDescription(),
                         p.getPrice(),
                         p.getCoinsAmount(),
-                        p.getPlanCode()))
+                        p.getPlanCode(),
+                        p.getChatDailyLimit(),
+                        p.getAudioDailyLimit()))
                 .toList();
         return ResponseEntity.ok(plans);
     }
