@@ -132,29 +132,37 @@ public class GetCloudRecommendationUseCase {
     }
 
     private String toPublicActivityType(ActivityType type) {
-        if (type == ActivityType.BREATHING) {
-            return "breathing";
+        if (type == null) {
+            return "diary";
         }
-        if (type == ActivityType.LANTERN) {
-            return "lanterns";
-        }
-        if (type == ActivityType.BUBBLE) {
-            return "bubbles";
-        }
-        return "diary";
+        return switch (type) {
+            case BREATHING -> "breathing";
+            case LANTERN -> "lanterns";
+            case BUBBLE -> "bubbles";
+            case CHALLENGE -> "challenge";
+            case ZEN_GARDEN -> "zen_garden";
+            case MANDALA -> "mandala";
+            case STONES -> "stones";
+            case PENDING -> "pending";
+            case DIARY -> "diary";
+        };
     }
 
     private String redirectUrl(ActivityType type) {
-        if (type == ActivityType.BREATHING) {
-            return "/guided-breathing";
+        if (type == null) {
+            return "/diary";
         }
-        if (type == ActivityType.LANTERN) {
-            return "/lanterns";
-        }
-        if (type == ActivityType.BUBBLE) {
-            return "/bubbles";
-        }
-        return "/diary";
+        return switch (type) {
+            case BREATHING -> "/guided-breathing";
+            case LANTERN -> "/lanterns";
+            case BUBBLE -> "/bubbles";
+            case CHALLENGE -> "/challenges";
+            case ZEN_GARDEN -> "/zen-sand-garden";
+            case MANDALA -> "/mandalas";
+            case STONES -> "/stones";
+            case PENDING -> "/pending";
+            case DIARY -> "/diary";
+        };
     }
 
     private CloudRecommendation fallback() {
