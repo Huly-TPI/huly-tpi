@@ -40,6 +40,10 @@ public class BreathingTechniquesEntity {
     @Column(name = "rounds")
     private Integer rounds;
 
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     @OneToMany(mappedBy = "breathingTechnique", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BreathingSessionsEntity> breathingSessions;
 

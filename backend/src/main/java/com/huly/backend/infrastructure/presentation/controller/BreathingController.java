@@ -1,5 +1,5 @@
 package com.huly.backend.infrastructure.presentation.controller;
-import com.huly.backend.domain.useCase.BreathingSession.GetBreathingTechniquesUseCase;
+import com.huly.backend.domain.useCase.breathingTechnique.GetBreathingTechniquesUseCase;
 import com.huly.backend.infrastructure.presentation.dto.breathingTechniques.BreathingTechniqueResponse;
 import com.huly.backend.infrastructure.presentation.mapper.breathing.BreathingPresentationMapper;
 import lombok.RequiredArgsConstructor;
