@@ -70,6 +70,7 @@ export default function AuthGateModal({
           -right-4
           -top-4
           z-10
+          max-sm:hidden
           flex
           h-9
           w-9

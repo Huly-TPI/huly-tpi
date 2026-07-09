@@ -128,12 +128,11 @@ export default function AuthForm({
             </label>
             {renderField(field, index)}
             {errors[field.name] && (
-  <p
-    id={`error-${field.name}`}
-    role="alert"
-    // en el <p> del error de campo:
-className="ml-2 max-sm:hidden flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400"
-  >
+              <p
+                id={`error-${field.name}`}
+                role="alert"
+                className="ml-2 max-sm:hidden flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400"
+              >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-600 dark:bg-red-400 shrink-0" />
                 {errors[field.name]}
               </p>
@@ -146,11 +145,11 @@ className="ml-2 max-sm:hidden flex items-center gap-1.5 text-xs font-semibold te
         )}
 
         {successMessage && (
-        <p className="mt-3 text-center text-sm font-semibold text-[#4C7C64]">
-          {successMessage}
-        </p>
+          <p className="mt-3 text-center text-sm font-semibold text-[#4C7C64]">
+            {successMessage}
+          </p>
         )}
-        
+
         {onTermsChange !== undefined && (
           <label className="mt-1 flex items-center gap-2 cursor-pointer select-none">
             <input
@@ -199,17 +198,17 @@ className="ml-2 max-sm:hidden flex items-center gap-1.5 text-xs font-semibold te
 
 
       {switchText && switchLabel && onSwitchMode && (
-  <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66]">
-    <span className="hidden sm:inline">{switchText} </span>
-    <button
-      type="button"
-      onClick={onSwitchMode}
-      className="font-semibold text-[#4C7C64] hover:underline focus-visible:outline-none focus-visible:underline"
-    >
-      {switchLabel}
-    </button>
-  </p>
-)}
+        <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66]">
+          <span className="hidden sm:inline">{switchText} </span>
+          <button
+            type="button"
+            onClick={onSwitchMode}
+            className="font-semibold text-[#4C7C64] hover:underline focus-visible:outline-none focus-visible:underline"
+          >
+            {switchLabel}
+          </button>
+        </p>
+      )}
     </div>
   )
 }
