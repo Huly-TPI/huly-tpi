@@ -1,8 +1,8 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
-import com.huly.backend.domain.dto.BreathingSession.BreathingTechniqueItem;
-import com.huly.backend.domain.dto.BreathingSession.GetBreathingTechniquesResponse;
-import com.huly.backend.domain.useCase.BreathingSession.GetBreathingTechniquesUseCase;
+import com.huly.backend.domain.dto.breathingTechnique.BreathingTechniqueItem;
+import com.huly.backend.domain.dto.breathingTechnique.GetBreathingTechniquesResponse;
+import com.huly.backend.domain.useCase.breathingTechnique.GetBreathingTechniquesUseCase;
 import com.huly.backend.infrastructure.presentation.mapper.breathing.BreathingPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
