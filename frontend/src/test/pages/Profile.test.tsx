@@ -81,6 +81,20 @@ describe('Profile', () => {
     verifySceneImagesVisible()
   })
 
+  it('usa los assets de dia en modo claro', () => {
+    renderProfilePage()
+    verifyActiveProfileBackground('Habitacion de perfil de dia')
+    verifyImageSource('Ventana hacia el jardin', 'window.webp')
+  })
+
+  it('usa los assets nocturnos disponibles en modo oscuro y fallback claro donde faltan', () => {
+    setupStoredTheme('dark')
+    renderProfilePage()
+    verifyActiveProfileBackground('Habitacion de perfil de noche')
+    verifyImageSource('Ventana hacia el jardin', 'night-window.png')
+    verifyImageSource('Reloj del perfil', 'clock.webp')
+  })
+
   it('redirige al jardin al hacer click en la ventana', () => {
     renderProfileWithRoutes('/', <h1>Vista Jardin</h1>)
     return clickVolverAlJardinLink().then(() => {
@@ -230,6 +244,18 @@ describe('Profile', () => {
     expect(screen.getByAltText('Baúl del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Reloj del perfil')).toBeInTheDocument()
     expect(screen.getByAltText('Equipo de musica del perfil')).toBeInTheDocument()
+  }
+
+  const verifyActiveProfileBackground = (alt: string) => {
+    expect(screen.getByRole('img', { name: alt })).toBeInTheDocument()
+  }
+
+  const verifyImageSource = (alt: string, fileName: string) => {
+    expect(screen.getByAltText(alt)).toHaveAttribute('src', expect.stringContaining(fileName))
+  }
+
+  const setupStoredTheme = (theme: string) => {
+    window.localStorage.setItem('huly:scene-theme', theme)
   }
 
   const clickVolverAlJardinLink = () => {
