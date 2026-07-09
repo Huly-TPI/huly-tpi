@@ -17,10 +17,25 @@ export const getBodyClothingConfig = (assetKey?: string): BodyClothingConfig | n
             return { type: 'remera', base: AVATAR_COLORS.shirtPinkBase, shadow: AVATAR_COLORS.shirtPinkShadow, stroke: AVATAR_COLORS.shirtPinkStroke };
         case 'remera-azul':
             return { type: 'remera', base: AVATAR_COLORS.shirtBlueBase, shadow: AVATAR_COLORS.shirtBlueShadow, stroke: AVATAR_COLORS.shirtBlueStroke };
+        case 'remera-mostaza':
+            return { type: 'remera', base: AVATAR_COLORS.mustardBase, shadow: AVATAR_COLORS.mustardShadow, stroke: AVATAR_COLORS.mustardStroke };
+        case 'remera-turquesa':
+            return { type: 'remera', base: AVATAR_COLORS.tealBase, shadow: AVATAR_COLORS.tealShadow, stroke: AVATAR_COLORS.tealStroke };
+        case 'remera-carmesi':
+            return { type: 'remera', base: AVATAR_COLORS.crimsonBase, shadow: AVATAR_COLORS.crimsonShadow, stroke: AVATAR_COLORS.crimsonStroke };
+        case 'remera-lavanda':
+            return { type: 'remera', base: AVATAR_COLORS.lavenderBase, shadow: AVATAR_COLORS.lavenderShadow, stroke: AVATAR_COLORS.lavenderStroke };
+        case 'remera-carbon':
+            return { type: 'remera', base: AVATAR_COLORS.charcoalBase, shadow: AVATAR_COLORS.charcoalShadow, stroke: AVATAR_COLORS.charcoalStroke };
+        
         case 'jardinero-rosa':
             return { type: 'jardinero', base: AVATAR_COLORS.overallsPinkBase, shadow: AVATAR_COLORS.overallsPinkShadow, stroke: AVATAR_COLORS.overallsPinkBase };
         case 'jardinero-gris':
             return { type: 'jardinero', base: AVATAR_COLORS.overallsGreyBase, shadow: AVATAR_COLORS.overallsGreyShadow, stroke: AVATAR_COLORS.overallsGreyBase, pocket: AVATAR_COLORS.white };
+        case 'jardinero-mostaza':
+            return { type: 'jardinero', base: AVATAR_COLORS.mustardBase, shadow: AVATAR_COLORS.mustardShadow, stroke: AVATAR_COLORS.mustardBase };
+        case 'jardinero-carbon':
+            return { type: 'jardinero', base: AVATAR_COLORS.charcoalBase, shadow: AVATAR_COLORS.charcoalShadow, stroke: AVATAR_COLORS.charcoalBase, pocket: AVATAR_COLORS.white };
         default:
             return null;
     }

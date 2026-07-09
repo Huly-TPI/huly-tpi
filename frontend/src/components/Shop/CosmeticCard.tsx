@@ -34,14 +34,9 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
     <div className="flex flex-col gap-1.5 rounded-2xl border border-[#ACCCA4]/50 bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:gap-2 sm:p-3">
       {preview && (
         <div 
-          onClick={() => onPreview?.(item)}
-          className={`mx-auto flex h-20 w-full items-center justify-center rounded-xl bg-gradient-to-b from-[#E9F1EA]/70 to-transparent sm:h-24 relative ${onPreview ? 'cursor-pointer hover:bg-[#E9F1EA]' : ''}`}
-          title={onPreview ? "Probar" : ""}
+          className="mx-auto flex h-20 w-full items-center justify-center rounded-xl bg-gradient-to-b from-[#E9F1EA]/70 to-transparent sm:h-24 relative"
         >
           <img src={preview} alt={item.name} className="h-14 w-14 object-contain sm:h-20 sm:w-20" />
-          {onPreview && (
-            <div className="absolute top-1.5 right-1.5 text-xs opacity-60">👁️</div>
-          )}
         </div>
       )}
       {item.premiumOnly && (

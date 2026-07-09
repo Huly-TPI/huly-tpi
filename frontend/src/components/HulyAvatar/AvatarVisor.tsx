@@ -15,6 +15,12 @@ export const getVisorConfig = (assetKey?: string): VisorConfig | null => {
             return { light: AVATAR_COLORS.visorPinkLight, shadow: AVATAR_COLORS.visorPinkShadow, stroke: AVATAR_COLORS.visorPinkStroke };
         case 'vicera-cafe':
             return { light: AVATAR_COLORS.visorBrownLight, shadow: AVATAR_COLORS.visorBrownShadow, stroke: AVATAR_COLORS.visorBrownStroke };
+        case 'vicera-turquesa':
+            return { light: AVATAR_COLORS.tealBase, shadow: AVATAR_COLORS.tealShadow, stroke: AVATAR_COLORS.tealStroke };
+        case 'vicera-carmesi':
+            return { light: AVATAR_COLORS.crimsonBase, shadow: AVATAR_COLORS.crimsonShadow, stroke: AVATAR_COLORS.crimsonStroke };
+        case 'vicera-carbon':
+            return { light: AVATAR_COLORS.charcoalBase, shadow: AVATAR_COLORS.charcoalShadow, stroke: AVATAR_COLORS.charcoalStroke };
         default:
             return null;
     }

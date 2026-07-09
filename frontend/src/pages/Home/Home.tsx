@@ -416,7 +416,9 @@ export default function Home() {
           <NotificationsPrompt onClose={closeNotificationsPrompt} />
         )}
 
-        <HomeWanderingAvatar equippedItems={equippedItems} />
+        {user?.id && user?.onboardingTutorialCompleted && !isStoreOpen && (
+          <HomeWanderingAvatar equippedItems={equippedItems} />
+        )}
       </section>
 
       {user?.onboardingTutorialCompleted && (
