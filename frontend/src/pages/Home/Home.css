@@ -73,35 +73,8 @@
   }
 }
 
-.walking-avatar-container {
-  animation: walk-across-screen 36s linear infinite;
-}
-
 .walking-avatar-bob {
-  animation: walk-bob 0.6s infinite alternate ease-in-out;
-}
-
-@keyframes walk-across-screen {
-  0% {
-    left: -20%;
-    transform: scaleX(1);
-  }
-  45% {
-    left: 110%;
-    transform: scaleX(1);
-  }
-  50% {
-    left: 110%;
-    transform: scaleX(-1);
-  }
-  95% {
-    left: -20%;
-    transform: scaleX(-1);
-  }
-  100% {
-    left: -20%;
-    transform: scaleX(1);
-  }
+  animation: walk-bob 0.5s infinite alternate ease-in-out;
 }
 
 @keyframes walk-bob {

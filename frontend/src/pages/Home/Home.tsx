@@ -2,7 +2,7 @@ import seedIcon from "../../assets/garden/seedIcon.webp";
 import rewardsIcon from "../../assets/garden/rewardsIcon.webp";
 import dayBackgroundImage from "../../assets/garden/light-theme/background/day-background.webp";
 import dayMobileBackgroundImage from "../../assets/garden/light-theme/background/mobile/day-background.webp";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import cloudImage from "../../assets/garden/light-theme/cloud.webp";
 import houseImage from "../../assets/garden/light-theme/house.webp";
 import notebookImage from "../../assets/garden/light-theme/notebook.webp";
@@ -152,7 +152,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Regadera y maceta en el jardin",
     image: { light: wateringCanImage, dark: darkWateringCanImage },
     placementClassName:
-      "left-[10%] top-[75.5%] z-40 w-[28%] md:left-[26%] md:top-[70.4%] md:w-[11.5%]",
+      "left-[10%] top-[75.5%] z-[85] w-[28%] md:left-[26%] md:top-[70.4%] md:w-[11.5%]",
     imageClassName: "w-full",
     hotspotClassName: "left-[2%] top-[4%] h-[92%] w-[96%]",
     clipPath:
@@ -166,7 +166,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Banco con cuaderno en el jardin",
     image: { light: notebookImage, dark: darkNotebookImage },
     placementClassName:
-      "left-[7%] top-[61%] z-40 w-[28%] md:left-[73%] md:top-[70.8%] md:w-[14.5%]",
+      "left-[7%] top-[61%] z-[75] w-[28%] md:left-[73%] md:top-[70.8%] md:w-[14.5%]",
     imageClassName: "w-full",
     imageVariantClassName: "scene-element__image--mirror-mobile",
     hotspotClassName: "left-[2%] top-[8%] h-[84%] w-[96%]",
@@ -181,6 +181,81 @@ const cloudElementIds = cloudElements.map((element) => element.id);
 const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds);
 
 let rewardAutoOpenedForUserId: number | null = null;
+
+function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
+  const [pos, setPos] = useState({ x: 10, y: 60 });
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [isWalking, setIsWalking] = useState(false);
+  const [duration, setDuration] = useState(0);
+
+  const posRef = useRef(pos);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let isMounted = true;
+
+    const wander = () => {
+      if (!isMounted) return;
+
+      const currentPos = posRef.current;
+      // Grass area bounds
+      const nextX = Math.random() * 70 + 5;
+      const nextY = Math.random() * 40 + 45;
+
+      const dist = Math.hypot(nextX - currentPos.x, nextY - currentPos.y);
+      const time = dist * 180; // 180ms per 1% distance
+
+      setDuration(time);
+      setDirection(nextX < currentPos.x ? -1 : 1);
+      setIsWalking(true);
+
+      const nextPos = { x: nextX, y: nextY };
+      setPos(nextPos);
+      posRef.current = nextPos;
+
+      timeoutId = setTimeout(() => {
+        if (!isMounted) return;
+        setIsWalking(false);
+        timeoutId = setTimeout(wander, Math.random() * 3000 + 2000);
+      }, time);
+    };
+
+    timeoutId = setTimeout(wander, 1000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  return (
+    <div
+      className="absolute w-[25%] md:w-[15%] h-[25%] pointer-events-none"
+      style={{
+        left: `${pos.x}%`,
+        top: `${pos.y}%`,
+        zIndex: Math.floor(pos.y + 25), // El z-index se calcula en base a los pies (pos.y + altura del 25%)
+        transition: isWalking ? `left ${duration}ms linear, top ${duration}ms linear` : 'none',
+      }}
+    >
+      <div
+        className="w-full h-full"
+        style={{
+          transform: `scaleX(${direction})`,
+          transition: 'transform 0.3s ease'
+        }}
+      >
+        {/* Shadow (doesn't bob) */}
+        <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/25 blur-[6px]" />
+
+        {/* Avatar (bobs only when walking) */}
+        <div className={isWalking ? "walking-avatar-bob relative z-10 w-full h-full" : "relative z-10 w-full h-full"}>
+          <HulyAvatar equippedItems={equippedItems} animation={isWalking ? "walking" : "idle"} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { theme: sceneTheme } = useTheme();
@@ -341,12 +416,7 @@ export default function Home() {
           <NotificationsPrompt onClose={closeNotificationsPrompt} />
         )}
 
-        <div className="absolute z-[35] bottom-[20%] w-[25%] md:w-[15%] h-[25%] pointer-events-none walking-avatar-container">
-          <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/25 blur-[6px]" />
-          <div className="walking-avatar-bob relative z-10 w-full h-full">
-            <HulyAvatar equippedItems={equippedItems} animation="walking" />
-          </div>
-        </div>
+        <HomeWanderingAvatar equippedItems={equippedItems} />
       </section>
 
       {user?.onboardingTutorialCompleted && (
@@ -354,7 +424,7 @@ export default function Home() {
           type="button"
           onClick={() => setIsStoreOpen(true)}
           aria-label="Abrir tienda"
-          className="fixed bottom-24 right-4 z-40 h-20 w-20 transition hover:scale-105 active:scale-95"
+          className="fixed bottom-24 right-4 z-[150] h-20 w-20 transition hover:scale-105 active:scale-95"
         >
           <img
             src={storeButtonImage}
@@ -365,7 +435,7 @@ export default function Home() {
       )}
 
       {user?.onboardingTutorialCompleted && (
-        <div className="fixed top-16 right-4 z-40 select-none flex gap-2 items-start">
+        <div className="fixed top-16 right-4 z-[150] select-none flex gap-2 items-start">
           <button
             type="button"
             aria-label="Ver recompensas diarias"
