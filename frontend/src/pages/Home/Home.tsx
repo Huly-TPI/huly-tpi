@@ -36,6 +36,8 @@ import { useUserCoins } from "../../hooks/shop/useUserCoins";
 import { useDailyRewards } from "../../hooks/shop/useDailyRewards";
 import { resolveEquippedImages } from "../../components/Scene/cosmeticAssets";
 import { createHomeOnboardingSteps } from "./homeOnboardingSteps";
+import HulyAvatar from "../../components/HulyAvatar/HulyAvatar";
+import { getEquippedAvatarItems } from "../../components/HulyAvatar/avatarEquip";
 import "./Home.css";
 
 const THEME_BEHAVIOR: Record<
@@ -150,7 +152,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Regadera y maceta en el jardin",
     image: { light: wateringCanImage, dark: darkWateringCanImage },
     placementClassName:
-      "left-[10%] top-[75.5%] z-30 w-[28%] md:left-[26%] md:top-[70.4%] md:w-[11.5%]",
+      "left-[10%] top-[75.5%] z-40 w-[28%] md:left-[26%] md:top-[70.4%] md:w-[11.5%]",
     imageClassName: "w-full",
     hotspotClassName: "left-[2%] top-[4%] h-[92%] w-[96%]",
     clipPath:
@@ -164,7 +166,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Banco con cuaderno en el jardin",
     image: { light: notebookImage, dark: darkNotebookImage },
     placementClassName:
-      "left-[7%] top-[61%] z-30 w-[28%] md:left-[73%] md:top-[70.8%] md:w-[14.5%]",
+      "left-[7%] top-[61%] z-40 w-[28%] md:left-[73%] md:top-[70.8%] md:w-[14.5%]",
     imageClassName: "w-full",
     imageVariantClassName: "scene-element__image--mirror-mobile",
     hotspotClassName: "left-[2%] top-[8%] h-[84%] w-[96%]",
@@ -193,6 +195,7 @@ export default function Home() {
   const { coins, refresh: refreshCoins } = useUserCoins();
   const { status: rewardsStatus } = useDailyRewards();
   const equippedByCategory = resolveEquippedImages(inventory);
+  const equippedItems = getEquippedAvatarItems(inventory);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -337,6 +340,13 @@ export default function Home() {
         {showNotificationsPrompt && (
           <NotificationsPrompt onClose={closeNotificationsPrompt} />
         )}
+        
+        {/* Walking Avatar */}
+        <div className="absolute z-[35] bottom-[20%] w-[25%] md:w-[15%] h-[25%] pointer-events-none walking-avatar-container">
+          <div className="walking-avatar-bob w-full h-full">
+            <HulyAvatar equippedItems={equippedItems} animation="walking" />
+          </div>
+        </div>
       </section>
 
       {user?.onboardingTutorialCompleted && (

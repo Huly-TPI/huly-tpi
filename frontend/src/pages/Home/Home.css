@@ -72,3 +72,39 @@
     object-position: center 56%;
   }
 }
+
+.walking-avatar-container {
+  animation: walk-across-screen 24s linear infinite;
+}
+
+.walking-avatar-bob {
+  animation: walk-bob 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes walk-across-screen {
+  0% {
+    left: -20%;
+    transform: scaleX(1);
+  }
+  45% {
+    left: 110%;
+    transform: scaleX(1);
+  }
+  50% {
+    left: 110%;
+    transform: scaleX(-1);
+  }
+  95% {
+    left: -20%;
+    transform: scaleX(-1);
+  }
+  100% {
+    left: -20%;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes walk-bob {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}

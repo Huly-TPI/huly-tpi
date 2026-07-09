@@ -39,7 +39,7 @@ export const AVATAR_COLORS = {
 
 
 export type AvatarAnimation =
-  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale";
+  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale" | "walking";
 
 export interface AvatarEquippedItem {
   assetKey: string;
@@ -254,7 +254,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <stop id="stop84" stopColor={AVATAR_COLORS.skinBase2} offset="1" />
         </radialGradient>
       </defs>
-      <g className={animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : "")}>
+      <g className={animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : (animation === "walking" ? "anim-walk-arm-der" : ""))}>
         <g
           id="g101-5-2"
           transform="matrix(-.0010412 1 1 .0010412 -63.159 191.73)"
@@ -327,7 +327,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         </g>
       </g>
-      <g id="pierna-der-completa" className={pose === "sitting" ? "pose-sit-leg-der" : ""}>
+      <g id="pierna-der-completa" className={pose === "sitting" ? "pose-sit-leg-der" : (animation === "walking" ? "anim-walk-leg-der" : "")}>
         <g id="piel-muslo-der" fill={AVATAR_COLORS.skinBase}>
           <ellipse
             id="circulo-union-pierna-superior-der"
@@ -425,7 +425,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         </g>
       </g>
-      <g id="g110" className={pose === "sitting" ? "pose-sit-leg-izq" : ""}>
+      <g id="g110" className={pose === "sitting" ? "pose-sit-leg-izq" : (animation === "walking" ? "anim-walk-leg-izq" : "")}>
         <g
           id="g56"
           transform="matrix(.98268 -.20431 .18529 1.0836 -138.2 10.849)"
@@ -574,7 +574,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
       </g>
       <g
         id="g101-5"
-        className={view === "guided-breathing" ? "pose-guided-breathing-arm-izq" : ""}
+        className={view === "guided-breathing" ? "pose-guided-breathing-arm-izq" : (animation === "walking" ? "anim-walk-arm-izq" : "")}
         transform={view === "guided-breathing" ? undefined : "translate(34.507 -.33232)"}
       >
         <g fill={AVATAR_COLORS.skinBase}>
