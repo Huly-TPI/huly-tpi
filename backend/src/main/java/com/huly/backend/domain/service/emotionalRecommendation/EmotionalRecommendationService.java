@@ -105,7 +105,7 @@ public class EmotionalRecommendationService {
         for (int index = 0; index < userHistory.size(); index++) {
             EmotionalEvent event = userHistory.get(index);
             if (event != null && isActivityCompleted(event, activityId)
-                    && isUnhelpfulInteraction(event, index, userHistory)) {
+                    && event.isUnhelpful(index, userHistory)) {
                 count++;
             }
         }
@@ -116,23 +116,6 @@ public class EmotionalRecommendationService {
         RecommendationDecision decision = event.getRecommendationDecision();
         return (decision == RecommendationDecision.ACCEPTED && activityId.equals(event.getRecommendedActivityId()))
                 || (decision == RecommendationDecision.CHOSE_OTHER && activityId.equals(event.getChosenActivityId()));
-    }
-
-    private boolean isUnhelpfulInteraction(EmotionalEvent event, int index, List<EmotionalEvent> userHistory) {
-        boolean hasLowFeedback = event.getFeedbackScore() != null && event.getFeedbackScore() <= 2;
-        return hasLowFeedback || hasNoEmotionalImprovement(event, index, userHistory);
-    }
-
-    private boolean hasNoEmotionalImprovement(EmotionalEvent event, int index, List<EmotionalEvent> userHistory) {
-        if (index <= 0)
-            return false;
-
-        EmotionalEvent nextEvent = userHistory.get(index - 1);
-        if (nextEvent == null || nextEvent.getValence() == null || event.getValence() == null)
-            return false;
-
-        double valenceDelta = nextEvent.getValence() - event.getValence();
-        return valenceDelta <= 0.0;
     }
 
     private double preferenceAdjustment(ActivityType type, Map<ActivityType, PreferenceTracker> userPreferences) {
