@@ -53,6 +53,7 @@ describe('BadgeUnlockToast', () => {
     const setTimeoutSpy = vi.spyOn(window, 'setTimeout')
     renderToast(makeBadge())
     expect(setTimeoutSpy).toHaveBeenCalledWith(onDismissMock, 10000)
+    vi.useRealTimers()
   })
   /* helpers */
 
