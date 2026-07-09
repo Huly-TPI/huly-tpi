@@ -32,14 +32,19 @@ interface PaidCardProps {
 
 const FREE_FEATURES = ['5 mensajes al día']
 
-const PLAN_FEATURES: Record<string, string[]> = {
-  BASIC: ['Chatbot libre', 'Items exclusivos de la tienda', 'Mandalas exclusivos', '3 audios por día', '1.5x recompensas diarias'],
-  PREMIUM: ['Chatbot libre', 'Items exclusivos de la tienda', 'Mandalas exclusivos', 'Audios libres', '1.5x recompensas diarias', '1000 monedas'],
-}
+
 
 const PLAN_CARD: Record<string, { image: string; theme: 'yellow' | 'purple' }> = {
   BASIC: { image: cardYellow, theme: 'yellow' },
   PREMIUM: { image: cardPurple, theme: 'purple' },
+}
+
+function buildFeatures(plan: Plan): string[] {
+  const chat = plan.chatDailyLimit == null ? 'Chatbot libre' : `${plan.chatDailyLimit} mensajes al día`
+  const audio = plan.audioDailyLimit == null ? 'Audios libres' : `${plan.audioDailyLimit} audios por día`
+  const features = [chat, 'Items exclusivos de la tienda', 'Mandalas exclusivos', audio, '1.5x recompensas diarias']
+  if (plan.coinsAmount > 0) features.push(`${plan.coinsAmount} monedas`)
+  return features
 }
 
 function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
@@ -216,7 +221,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
                 </div>
                 {sortedPlans.map(plan => {
                   const card = PLAN_CARD[plan.planCode] ?? { image: cardPurple, theme: 'purple' as const }
-                  const features = PLAN_FEATURES[plan.planCode] ?? []
+                  const features = buildFeatures(plan)
                   return (
                     <div key={plan.id} className={cardClass}>
                       <PaidCard

@@ -19,8 +19,8 @@ vi.mock('../../hooks/shop/usePurchase', () => ({ usePurchase: () => mockUsePurch
 vi.mock('../../hooks/shop/useRefreshOnReturn', () => ({ useRefreshOnReturn: () => mockMarkPending }))
 // --- DATOS DE PRUEBA ---
 const PLANS: Plan[] = [
-  { id: 'plan-basic', name: 'Plan Basico', description: 'Acceso por 30 días', price: 5999, coinsAmount: 0, planCode: 'BASIC' },
-  { id: 'plan-premium', name: 'Plan Premium', description: 'Acceso premium por 30 días', price: 9999, coinsAmount: 0, planCode: 'PREMIUM' },
+  { id: 'plan-basic', name: 'Plan Basico', description: 'Acceso por 30 días', price: 5999, coinsAmount: 0, planCode: 'BASIC', chatDailyLimit: null, audioDailyLimit: 3 },
+  { id: 'plan-premium', name: 'Plan Premium', description: 'Acceso premium por 30 días', price: 9999, coinsAmount: 1000, planCode: 'PREMIUM', chatDailyLimit: null, audioDailyLimit: null },
 ]
 
 const NO_MEMBERSHIP: Membership = { active: false, planCode: null, productId: null, expiresAt: null }
