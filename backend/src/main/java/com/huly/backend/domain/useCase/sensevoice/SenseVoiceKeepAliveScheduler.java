@@ -27,7 +27,7 @@ public class SenseVoiceKeepAliveScheduler {
     public void keepAlive() {
         boolean ok = audioTranscriptionPort.ping();
         if (ok) {
-            log.debug("SenseVoice keep-alive OK");
+            log.info("SenseVoice keep-alive OK");
         } else {
             log.warn("SenseVoice keep-alive falló (microservicio no respondió)");
         }
