@@ -5,7 +5,6 @@ import { CosmeticCard } from "./CosmeticCard";
 import { X } from "lucide-react";
 import seedIcon from "../../assets/rewards/seed.webp";
 import type { InventoryItemResponse } from "../../api/store";
-import { InlineError } from "../feedback/InlineError";
 import { createStoreItemPreference } from "../../api/payment";
 import { useEffect, useRef, useState } from "react";
 import { useMembership } from "../../hooks/shop/useMembership";
@@ -94,10 +93,26 @@ export default function StoreModal({
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set());
   const [activeTabId, setActiveTabId] = useState<string>("ALL");
   const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen) setPreviewOverrides({});
+    if (!isOpen) {
+      setPreviewOverrides({});
+      setLocalError(null);
+    }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (actionError) {
+      setLocalError(actionError);
+    }
+  }, [actionError]);
+
+  useEffect(() => {
+    if (itemsError) {
+      setLocalError(itemsError);
+    }
+  }, [itemsError]);
 
   const baseEquipped = getEquippedAvatarItems(inventory);
   const previewItems = baseEquipped.map(item => {
@@ -235,13 +250,6 @@ export default function StoreModal({
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
-            {(actionError || itemsError) && (
-              <InlineError
-                message={(actionError ?? itemsError) || ""}
-                className="mb-4"
-              />
-            )}
-
             {itemsLoading ? (
               <p className="py-8 text-center text-sm text-[#4C7C64] dark:text-slate-300">
                 Cargando tienda...
@@ -344,6 +352,29 @@ export default function StoreModal({
               </>
             )}
           </div>
+
+          {localError && (
+            <div className="absolute inset-0 z-[500] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-2xl bg-[#fdfbf6] p-6 shadow-2xl dark:bg-[#172033] border border-[#ACCCA4]/40 text-center animate-in fade-in zoom-in-95 duration-200">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#E9F1EA] dark:bg-slate-800 text-3xl">
+                  🌱
+                </div>
+                <h3 className="font-nunito text-lg font-extrabold text-[#4C7C64] dark:text-slate-100">
+                  ¡Ups! Algo pasó
+                </h3>
+                <p className="mt-2 text-sm text-gray-600 dark:text-slate-300 px-2 leading-relaxed">
+                  {localError}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setLocalError(null)}
+                  className="mt-5 w-full rounded-xl bg-[#4C7C64] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#375847] active:scale-95 shadow-md shadow-[#4C7C64]/20"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="absolute top-1/2 right-0 hidden aspect-square h-[70dvh] max-h-[1400px] -translate-y-1/2 translate-x-[90%] scale-x-[-1] lg:block">
           {/**
