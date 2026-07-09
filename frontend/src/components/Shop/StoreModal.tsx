@@ -187,7 +187,7 @@ export default function StoreModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70">
       <button
         type="button"
         aria-label="Cerrar tienda"
@@ -199,9 +199,9 @@ export default function StoreModal({
           role="dialog"
           aria-modal="true"
           aria-label="Tienda de decoración"
-          className="relative z-10 flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl"
+          className="relative z-10 flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-2xl bg-[#fdfbf6] shadow-2xl dark:bg-[#172033]"
         >
-          <div className="flex items-center justify-between gap-2 bg-[#4C7C64] px-4 py-3 text-white sm:px-5 sm:py-4">
+          <div className="flex items-center justify-between gap-2 bg-[#4C7C64] px-4 py-3 text-white sm:px-5 sm:py-4 dark:bg-[#375847] dark:border-b dark:border-slate-800">
             <div className="min-w-0">
               <p className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-70">
                 Decorá tu jardín
@@ -243,7 +243,7 @@ export default function StoreModal({
             )}
 
             {itemsLoading ? (
-              <p className="py-8 text-center text-sm text-[#4C7C64]">
+              <p className="py-8 text-center text-sm text-[#4C7C64] dark:text-slate-300">
                 Cargando tienda...
               </p>
             ) : (
@@ -265,8 +265,8 @@ export default function StoreModal({
                         aria-label={tab.label}
                         onClick={() => setActiveTabId(tab.id)}
                         className={`flex flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[13px] font-semibold transition-colors ${active
-                          ? "bg-[#4C7C64] text-white"
-                          : "bg-[#E9F1EA]/60 text-[#4C7C64] hover:bg-[#E9F1EA]"
+                          ? "bg-[#4C7C64] text-white dark:bg-[#4C7C64]"
+                          : "bg-[#E9F1EA]/60 text-[#4C7C64] hover:bg-[#E9F1EA] dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
                           }`}
                       >
                         <tab.Icon
@@ -276,7 +276,7 @@ export default function StoreModal({
                         />
                         <span className="truncate">{tab.label}</span>
                         <span
-                          className={`shrink-0 rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white/25 text-white" : "bg-white text-[#4C7C64]"}`}
+                          className={`shrink-0 rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white/25 text-white" : "bg-white text-[#4C7C64] dark:bg-slate-700 dark:text-slate-200"}`}
                         >
                           {count}
                         </span>
@@ -295,8 +295,8 @@ export default function StoreModal({
                         aria-pressed={active}
                         onClick={() => toggleType(filter.type)}
                         className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95 sm:text-[13px] ${active
-                          ? "border-[#4C7C64] bg-[#4C7C64] text-white shadow-sm shadow-[#4C7C64]/30"
-                          : "border-[#ACCCA4]/60 bg-white text-[#4C7C64] hover:border-[#ACCCA4] hover:bg-[#E9F1EA]"
+                          ? "border-[#4C7C64] bg-[#4C7C64] text-white shadow-sm shadow-[#4C7C64]/30 dark:border-[#4C7C64] dark:bg-[#4C7C64] dark:shadow-none"
+                          : "border-[#ACCCA4]/60 bg-white text-[#4C7C64] hover:border-[#ACCCA4] hover:bg-[#E9F1EA] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                           }`}
                       >
                         <filter.Icon
@@ -311,7 +311,7 @@ export default function StoreModal({
                 </div>
 
                 {sectionItems.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-[#4C7C64]">
+                  <p className="py-8 text-center text-sm text-[#4C7C64] dark:text-slate-400">
                     No hay items para este filtro.
                   </p>
                 ) : (
