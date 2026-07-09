@@ -18,11 +18,13 @@ describe('BadgeUnlockToast', () => {
 
   beforeEach(() => {
     onDismissMock = vi.fn()
+    vi.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.runOnlyPendingTimers()
     vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
   // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -76,7 +78,7 @@ describe('BadgeUnlockToast', () => {
   }
 
   const clickCloseButton = () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const button = screen.getByRole('button', { name: 'Cerrar' })
     return user.click(button)
   }
@@ -84,5 +86,4 @@ describe('BadgeUnlockToast', () => {
   const verifyOnDismissCalled = () => {
     expect(onDismissMock).toHaveBeenCalledOnce()
   }
-
 })
