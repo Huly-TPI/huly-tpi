@@ -19,8 +19,8 @@ vi.mock('../../hooks/shop/usePurchase', () => ({ usePurchase: () => mockUsePurch
 vi.mock('../../hooks/shop/useRefreshOnReturn', () => ({ useRefreshOnReturn: () => mockMarkPending }))
 // --- DATOS DE PRUEBA ---
 const PLANS: Plan[] = [
-  { id: 'plan-basic', name: 'Plan Basico', description: 'Acceso por 30 días', price: 5999, coinsAmount: 0, planCode: 'BASIC' },
-  { id: 'plan-premium', name: 'Plan Premium', description: 'Acceso premium por 30 días', price: 9999, coinsAmount: 0, planCode: 'PREMIUM' },
+  { id: 'plan-basic', name: 'Plan Basico', description: 'Acceso por 30 días', price: 5999, coinsAmount: 0, planCode: 'BASIC', chatDailyLimit: null, audioDailyLimit: 3 },
+  { id: 'plan-premium', name: 'Plan Premium', description: 'Acceso premium por 30 días', price: 9999, coinsAmount: 1000, planCode: 'PREMIUM', chatDailyLimit: null, audioDailyLimit: null },
 ]
 
 const NO_MEMBERSHIP: Membership = { active: false, planCode: null, productId: null, expiresAt: null }
@@ -97,8 +97,8 @@ describe('SubscriptionModal', () => {
   describe('cards de planes pagos', () => {
     it('muestra el nombre visual de cada plan', () => {
       renderModal()
-      verifyTextPresent('Basico')
-      verifyTextPresent('Huly')
+      verifyTextPresent('Plan Basico')
+      verifyTextPresent('Plan Premium')
     })
 
     it('muestra los precios en ARS', () => {
@@ -133,8 +133,8 @@ describe('SubscriptionModal', () => {
 
     it('muestra botones Elegir cuando no hay plan activo', () => {
       renderModal()
-      verifyChooseButtonVisible('Basico')
-      verifyChooseButtonVisible('Huly')
+      verifyChooseButtonVisible('Plan Basico')
+      verifyChooseButtonVisible('Plan Premium')
     })
 
     it('muestra Plan actual en la card del plan activo del usuario', () => {
@@ -146,8 +146,8 @@ describe('SubscriptionModal', () => {
     it('no muestra botón de compra en el plan activo del usuario', () => {
       setupMembership(BASIC_MEMBERSHIP)
       renderModal()
-      verifyChooseButtonNotVisible('Basico')
-      verifyChooseButtonVisible('Huly')
+      verifyChooseButtonNotVisible('Plan Basico')
+      verifyChooseButtonVisible('Plan Premium')
     })
 
     it('muestra Plan actual en el plan activo del usuario', () => {
@@ -167,7 +167,7 @@ describe('SubscriptionModal', () => {
     it('no muestra las cards mientras carga', () => {
       setupPlansLoading()
       renderModal()
-      verifyTextNotPresent('Basico')
+      verifyTextNotPresent('Plan Basico')
     })
 
     it('no muestra el spinner cuando terminó de cargar', () => {
@@ -179,14 +179,14 @@ describe('SubscriptionModal', () => {
   describe('compra', () => {
     it('llama a buy con el id del plan Basico', () => {
       renderModal()
-      return clickChooseButton('Basico').then(() => {
+      return clickChooseButton('Plan Basico').then(() => {
         verifyBuyCalledWith('plan-basic')
       })
     })
 
     it('llama a buy con el id del plan Huly', () => {
       renderModal()
-      return clickChooseButton('Huly').then(() => {
+       return clickChooseButton('Plan Premium').then(() => {
         verifyBuyCalledWith('plan-premium')
       })
     })

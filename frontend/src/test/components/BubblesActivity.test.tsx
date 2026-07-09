@@ -17,6 +17,13 @@ vi.mock('../../hooks/useActivitySessionTracker', () => ({
   })),
 }))
 
+const mockPlayPop = vi.fn()
+vi.mock('../../hooks/useBubbleAudio', () => ({
+  useBubbleAudio: () => ({
+    playPop: mockPlayPop,
+  }),
+}))
+
 import BubblesActivity from '../../components/Bubbles/BubblesActivity.tsx'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import { clickButton, clearAllMocks } from '../testHelpers'
@@ -70,6 +77,14 @@ describe('BubblesActivity component', () => {
       .then(() => verifyMarkConditionMetNotCalled())
       .then(() => clickFirstBubble())
       .then(() => verifyMarkConditionMetCalled())
+  })
+
+  it('reproduce el sonido de burbuja al interactuar con una burbuja', () => {
+    renderActivityComponent()
+    return clickComenzar()
+      .then(() => expect(mockPlayPop).not.toHaveBeenCalled())
+      .then(() => clickFirstBubble())
+      .then(() => expect(mockPlayPop).toHaveBeenCalledOnce())
   })
 
   it('usa los valores retornados por el hook mockeado', () => {

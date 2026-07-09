@@ -41,7 +41,7 @@ export default function ImpactSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9">
         {configs.map((config) => {
           const Icon = activityIcons[config.type] || CirclePlay
           const theme = activityThemes[config.type] || { bg: 'bg-gray-100 text-gray-500', text: 'text-gray-500' }
