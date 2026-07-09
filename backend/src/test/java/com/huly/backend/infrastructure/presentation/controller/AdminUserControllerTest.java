@@ -13,6 +13,7 @@ import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGloba
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigRequest;
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
+import com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesResponse;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
@@ -25,8 +26,11 @@ import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUse
 import com.huly.backend.infrastructure.presentation.exception.GlobalExceptionHandler;
 import com.huly.backend.infrastructure.presentation.mapper.AdminPresentationMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
@@ -34,10 +38,13 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class AdminUserControllerTest {
+
+    private static final String DEFAULT_TERMS = "El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!";
 
     private MockMvc mockMvc;
     private ListBackofficeUsersUseCase listBackofficeUsersUseCase;
@@ -63,7 +70,7 @@ class AdminUserControllerTest {
 
         when(getAntiScrollGlobalConfigUseCase.execute()).thenReturn(new GetAntiScrollGlobalConfigResponse(
                 20,
-                "El modo anti-scroll es simplemente una herramienta para acompa\u00f1arte cuando sientas que necesit\u00e1s frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentraci\u00f3n o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. \u00a1Cero presiones, el ritmo lo marc\u00e1s vos!"
+                "El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!"
         ));
 
         AdminUserController controller = new AdminUserController(
@@ -84,8 +91,217 @@ class AdminUserControllerTest {
     }
 
     @Test
-    void getBackofficeUsers_shouldReturnList() throws Exception {
-        BackofficeUserSummary summary = BackofficeUserSummary.builder()
+    @DisplayName("Devuelve 200 con la lista de usuarios de backoffice")
+    void getBackofficeUsersShouldReturnList() throws Exception {
+        givenBackofficeUsers(fullUserSummary());
+
+        ResultActions result = performGetUsers();
+
+        thenOkWithFullUser(result);
+    }
+
+    @Test
+    @DisplayName("Pasa el parámetro de búsqueda al use case")
+    void getBackofficeUsersWithSearchParamShouldPassSearchParamToUseCase() throws Exception {
+        givenSearchReturnsEmpty("alice");
+
+        ResultActions result = performGetUsersWithSearch("alice");
+
+        thenOk(result);
+        thenUsersSearchedWith("alice");
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con las estadísticas del dashboard")
+    void getDashboardStatsShouldReturnStats() throws Exception {
+        givenDashboardStats();
+
+        ResultActions result = performGetDashboard();
+
+        thenOkWithDashboardStats(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con la configuración global")
+    void getAntiScrollGlobalConfigShouldReturnConfig() throws Exception {
+        givenGlobalConfig(25, "terminos de prueba");
+
+        ResultActions result = performGetConfig();
+
+        thenOkWithConfig(result, 25, "terminos de prueba");
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 manejando valores nulos del usuario")
+    void getBackofficeUsersShouldHandleNulls() throws Exception {
+        givenBackofficeUsers(userSummaryWithNulls());
+
+        ResultActions result = performGetUsers();
+
+        thenOkWithUserHandlingNulls(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con la configuración global por defecto")
+    void getAntiScrollGlobalConfigShouldReturnDefaultConfig() throws Exception {
+        ResultActions result = performGetConfig();
+
+        thenOkWithConfig(result, 20, DEFAULT_TERMS);
+    }
+
+    @Test
+    @DisplayName("Guarda la configuración global anti-scroll")
+    void updateAntiScrollGlobalConfigShouldSaveConfig() throws Exception {
+        String body = antiScrollConfigRequestJson(15, "nuevos terminos");
+
+        ResultActions result = performUpdateConfig(body);
+
+        thenOk(result);
+        thenConfigUpdatedWith(15, "nuevos terminos");
+    }
+
+    @Test
+    @DisplayName("Delega el request de configuración tal cual")
+    void updateAntiScrollGlobalConfigShouldDelegateRequestAsIs() throws Exception {
+        String body = antiScrollConfigRequestJson(15, "nuevos terminos");
+
+        ResultActions result = performUpdateConfig(body);
+
+        thenOk(result);
+        thenConfigUpdatedWith(15, "nuevos terminos");
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con las actividades del usuario")
+    void getUserActivitiesShouldReturnActivities() throws Exception {
+        givenUserActivities(userActivitiesResult());
+
+        ResultActions result = performGetUserActivities();
+
+        thenOkWithUserActivities(result);
+    }
+
+    @Test
+    @DisplayName("Pasa el timeframe convertido al use case de actividades")
+    void getUserActivitiesWithSpecificTimeframeShouldPassConvertedTimeframeToUseCase() throws Exception {
+        givenUserActivitiesForWeek(emptyUserActivitiesResult());
+
+        ResultActions result = performGetUserActivitiesWithTimeframe("week");
+
+        thenOk(result);
+        thenUserActivitiesQueriedForWeek();
+    }
+
+    @Test
+    @DisplayName("Devuelve 500 cuando el timeframe es inválido")
+    void getUserActivitiesWithInvalidTimeframeShouldReturnInternalServerError() throws Exception {
+        ResultActions result = performGetUserActivitiesWithTimeframe("invalid");
+
+        thenInternalServerError(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con el diagnóstico de IA del usuario")
+    void getUserAiDiagnosticsShouldReturnAiDiagnostics() throws Exception {
+        givenUserAiDiagnostics();
+
+        ResultActions result = performGetUserAiDiagnostics();
+
+        thenOkWithAiDiagnostics(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con las finanzas del usuario")
+    void getUserFinancialsShouldReturnFinancials() throws Exception {
+        givenUserFinancials();
+
+        ResultActions result = performGetUserFinancials();
+
+        thenOkWithFinancials(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con las estadísticas anti-scroll del usuario")
+    void getUserAntiScrollStatsShouldReturnStats() throws Exception {
+        givenUserAntiScrollStats();
+
+        ResultActions result = performGetUserAntiScrollStats();
+
+        thenOkWithAntiScrollStats(result);
+    }
+
+    // --- arrange ---
+    private void givenBackofficeUsers(BackofficeUserSummary summary) {
+        when(listBackofficeUsersUseCase.execute(any())).thenReturn(List.of(summary));
+    }
+
+    private void givenSearchReturnsEmpty(String search) {
+        when(listBackofficeUsersUseCase.execute(search)).thenReturn(List.of());
+    }
+
+    private void givenDashboardStats() {
+        AntiScrollDashboardStats stats = AntiScrollDashboardStats.builder()
+                .totalModalsShown(100)
+                .totalRedirects(40)
+                .totalUsersCount(50)
+                .activeExtensionUsersCount(30)
+                .dataSharingConsentUsersCount(20)
+                .topUsedApps(List.of(new TopAppStats("instagram.com", 3600)))
+                .build();
+        when(getAntiScrollDashboardUseCase.execute()).thenReturn(stats);
+    }
+
+    private void givenGlobalConfig(int minutes, String terms) {
+        when(getAntiScrollGlobalConfigUseCase.execute())
+                .thenReturn(new GetAntiScrollGlobalConfigResponse(minutes, terms));
+    }
+
+    private void givenUserActivities(GetUserActivitiesResponse result) {
+        when(getUserActivitiesUseCase.execute(any())).thenReturn(result);
+    }
+
+    private void givenUserActivitiesForWeek(GetUserActivitiesResponse result) {
+        when(getUserActivitiesUseCase.execute(eq(new GetUserActivitiesRequest(2L, Timeframe.WEEK)))).thenReturn(result);
+    }
+
+    private void givenUserAiDiagnostics() {
+        com.huly.backend.domain.useCase.admin.userAiDiagnostics.VectorMemoryResponse memory =
+                new com.huly.backend.domain.useCase.admin.userAiDiagnostics.VectorMemoryResponse("mem-1", "content", "USER", "FACT", "2026-06-16T00:00:00Z");
+        com.huly.backend.domain.useCase.admin.userAiDiagnostics.EmotionalEventResponse event =
+                new com.huly.backend.domain.useCase.admin.userAiDiagnostics.EmotionalEventResponse(
+                        10L, "source", "inputText", "detectedEmotion", 0.9, 0.8, 0.7, 0.6, 0.5, "userGoal", "recommendation", 100L, 200L, "ACCEPTED", 5, "feedbackText", java.time.Instant.now()
+                );
+        GetUserAiDiagnosticsResponse result = new GetUserAiDiagnosticsResponse(
+                java.util.List.of(memory), java.util.List.of(event), "Alice", "style", "summary",
+                java.util.List.of("topic1"), java.util.List.of("strategy1"), 80, "HIGH", java.util.List.of("act1"), java.util.List.of("act2"), "JOY", java.util.Map.of("JOY", 10)
+        );
+        when(getUserAiDiagnosticsUseCase.execute(any())).thenReturn(result);
+    }
+
+    private void givenUserFinancials() {
+        com.huly.backend.domain.useCase.admin.userFinancials.PaymentEventResponse payment =
+                new com.huly.backend.domain.useCase.admin.userFinancials.PaymentEventResponse(
+                        100L, 200L, "product", java.math.BigDecimal.TEN, "ref", 300L, "SUCCESS", 100, "COIN_PACK", java.time.Instant.now()
+                );
+        GetUserFinancialsResponse result = new GetUserFinancialsResponse(java.util.List.of(payment), java.math.BigDecimal.TEN);
+        when(getUserFinancialsUseCase.execute(any())).thenReturn(result);
+    }
+
+    private void givenUserAntiScrollStats() {
+        GetUserAntiScrollStatsResponse result = new GetUserAntiScrollStatsResponse(
+                true,
+                true,
+                "instagram.com",
+                300,
+                500,
+                java.util.Map.of("current_0", 100),
+                List.of(new TopAppStats("instagram.com", 300))
+        );
+        when(getUserAntiScrollStatsUseCase.execute(any())).thenReturn(result);
+    }
+
+    private BackofficeUserSummary fullUserSummary() {
+        return BackofficeUserSummary.builder()
                 .id(2L)
                 .name("John Doe")
                 .email("john@example.com")
@@ -102,11 +318,100 @@ class AdminUserControllerTest {
                 .coins(100)
                 .plan("PREMIUM_PLAN")
                 .build();
+    }
 
-        when(listBackofficeUsersUseCase.execute(any())).thenReturn(List.of(summary));
+    private BackofficeUserSummary userSummaryWithNulls() {
+        return BackofficeUserSummary.builder()
+                .id(3L)
+                .name("Jane Doe")
+                .email("jane@example.com")
+                .role(null)
+                .status(null)
+                .birthDate(LocalDate.of(2000, 1, 1))
+                .antiScrollEnabled(false)
+                .dataSharingConsent(false)
+                .mostUsedApp(null)
+                .mostUsedAppActiveSeconds(0)
+                .totalScrollTimeSeconds(0)
+                .dailyScrollTimeSeconds(null)
+                .topApps(null)
+                .coins(null)
+                .plan(null)
+                .build();
+    }
 
-        mockMvc.perform(get("/api/admin/users"))
-                .andExpect(status().isOk())
+    private GetUserActivitiesResponse userActivitiesResult() {
+        ActivitySessionResponse session =
+                new ActivitySessionResponse(1L, "BREATHING", "Respiración guiada", java.time.Instant.now());
+        return new GetUserActivitiesResponse(
+                java.util.List.of(session),
+                5L,
+                "BREATHING",
+                "1.5",
+                java.util.Map.of("BREATHING", 5),
+                java.util.Map.of("BREATHING", "Respiración guiada")
+        );
+    }
+
+    private GetUserActivitiesResponse emptyUserActivitiesResult() {
+        return new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null, java.util.Map.of());
+    }
+
+    private String antiScrollConfigRequestJson(int minutes, String terms) throws Exception {
+        return objectMapper.writeValueAsString(
+                new com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest(minutes, terms));
+    }
+
+    // --- act ---
+    private ResultActions performGetUsers() throws Exception {
+        return mockMvc.perform(get("/api/admin/users"));
+    }
+
+    private ResultActions performGetUsersWithSearch(String search) throws Exception {
+        return mockMvc.perform(get("/api/admin/users").param("search", search));
+    }
+
+    private ResultActions performGetDashboard() throws Exception {
+        return mockMvc.perform(get("/api/admin/users/antiscroll/dashboard"));
+    }
+
+    private ResultActions performGetConfig() throws Exception {
+        return mockMvc.perform(get("/api/admin/users/antiscroll/config"));
+    }
+
+    private ResultActions performUpdateConfig(String body) throws Exception {
+        return mockMvc.perform(post("/api/admin/users/antiscroll/config")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+    }
+
+    private ResultActions performGetUserActivities() throws Exception {
+        return mockMvc.perform(get("/api/admin/users/2/statistics/activities"));
+    }
+
+    private ResultActions performGetUserActivitiesWithTimeframe(String timeframe) throws Exception {
+        return mockMvc.perform(get("/api/admin/users/2/statistics/activities").param("timeframe", timeframe));
+    }
+
+    private ResultActions performGetUserAiDiagnostics() throws Exception {
+        return mockMvc.perform(get("/api/admin/users/2/statistics/ai"));
+    }
+
+    private ResultActions performGetUserFinancials() throws Exception {
+        return mockMvc.perform(get("/api/admin/users/2/statistics/finance"));
+    }
+
+    private ResultActions performGetUserAntiScrollStats() throws Exception {
+        return mockMvc.perform(get("/api/admin/users/2/statistics/antiscroll"));
+    }
+
+    // --- assert ---
+    private void thenOk(ResultActions result) throws Exception {
+        result.andExpect(status().isOk());
+    }
+
+    private void thenOkWithFullUser(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(2))
                 .andExpect(jsonPath("$[0].name").value("John Doe"))
                 .andExpect(jsonPath("$[0].email").value("john@example.com"))
@@ -124,74 +429,8 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$[0].plan").value("PREMIUM_PLAN"));
     }
 
-    @Test
-    void getBackofficeUsers_withSearchParam_shouldPassSearchParamToUseCase() throws Exception {
-        when(listBackofficeUsersUseCase.execute("alice")).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/admin/users").param("search", "alice"))
-                .andExpect(status().isOk());
-
-        verify(listBackofficeUsersUseCase).execute("alice");
-    }
-
-    @Test
-    void getDashboardStats_shouldReturnStats() throws Exception {
-        AntiScrollDashboardStats stats = AntiScrollDashboardStats.builder()
-                .totalModalsShown(100)
-                .totalRedirects(40)
-                .totalUsersCount(50)
-                .activeExtensionUsersCount(30)
-                .dataSharingConsentUsersCount(20)
-                .topUsedApps(List.of(new TopAppStats("instagram.com", 3600)))
-                .build();
-
-        when(getAntiScrollDashboardUseCase.execute()).thenReturn(stats);
-
-        mockMvc.perform(get("/api/admin/users/antiscroll/dashboard"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalModalsShown").value(100))
-                .andExpect(jsonPath("$.totalRedirects").value(40))
-                .andExpect(jsonPath("$.totalUsersCount").value(50))
-                .andExpect(jsonPath("$.activeExtensionUsersCount").value(30))
-                .andExpect(jsonPath("$.dataSharingConsentUsersCount").value(20))
-                .andExpect(jsonPath("$.topUsedApps[0].domain").value("instagram.com"))
-                .andExpect(jsonPath("$.topUsedApps[0].totalActiveSeconds").value(3600));
-    }
-
-    @Test
-    void getAntiScrollGlobalConfig_shouldReturnConfig() throws Exception {
-        when(getAntiScrollGlobalConfigUseCase.execute()).thenReturn(new GetAntiScrollGlobalConfigResponse(25, "terminos de prueba"));
-
-        mockMvc.perform(get("/api/admin/users/antiscroll/config"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.defaultPauseIntervalMinutes").value(25))
-                .andExpect(jsonPath("$.termsAndConditions").value("terminos de prueba"));
-    }
-
-    @Test
-    void getBackofficeUsers_shouldHandleNulls() throws Exception {
-        BackofficeUserSummary summary = BackofficeUserSummary.builder()
-                .id(3L)
-                .name("Jane Doe")
-                .email("jane@example.com")
-                .role(null)
-                .status(null)
-                .birthDate(LocalDate.of(2000, 1, 1))
-                .antiScrollEnabled(false)
-                .dataSharingConsent(false)
-                .mostUsedApp(null)
-                .mostUsedAppActiveSeconds(0)
-                .totalScrollTimeSeconds(0)
-                .dailyScrollTimeSeconds(null)
-                .topApps(null)
-                .coins(null)
-                .plan(null)
-                .build();
-
-        when(listBackofficeUsersUseCase.execute(any())).thenReturn(List.of(summary));
-
-        mockMvc.perform(get("/api/admin/users"))
-                .andExpect(status().isOk())
+    private void thenOkWithUserHandlingNulls(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(3))
                 .andExpect(jsonPath("$[0].name").value("Jane Doe"))
                 .andExpect(jsonPath("$[0].email").value("jane@example.com"))
@@ -203,88 +442,53 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$[0].topApps").isEmpty());
     }
 
-    @Test
-    void getAntiScrollGlobalConfig_shouldReturnDefaultConfig() throws Exception {
-        mockMvc.perform(get("/api/admin/users/antiscroll/config"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.defaultPauseIntervalMinutes").value(20))
-                .andExpect(jsonPath("$.termsAndConditions").value("El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!"));
+    private void thenOkWithDashboardStats(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalModalsShown").value(100))
+                .andExpect(jsonPath("$.totalRedirects").value(40))
+                .andExpect(jsonPath("$.totalUsersCount").value(50))
+                .andExpect(jsonPath("$.activeExtensionUsersCount").value(30))
+                .andExpect(jsonPath("$.dataSharingConsentUsersCount").value(20))
+                .andExpect(jsonPath("$.topUsedApps[0].domain").value("instagram.com"))
+                .andExpect(jsonPath("$.topUsedApps[0].totalActiveSeconds").value(3600));
     }
 
-    @Test
-    void updateAntiScrollGlobalConfig_shouldSaveConfig() throws Exception {
-        com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest request = new com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest(15, "nuevos terminos");
-
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/admin/users/antiscroll/config")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(updateAntiScrollGlobalConfigUseCase).execute(new UpdateAntiScrollGlobalConfigRequest(15, "nuevos terminos"));
+    private void thenOkWithConfig(ResultActions result, int minutes, String terms) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultPauseIntervalMinutes").value(minutes))
+                .andExpect(jsonPath("$.termsAndConditions").value(terms));
     }
 
-    @Test
-    void updateAntiScrollGlobalConfig_shouldDelegateRequestAsIs() throws Exception {
-        com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest request = new com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest(15, "nuevos terminos");
-
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/admin/users/antiscroll/config")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(updateAntiScrollGlobalConfigUseCase).execute(new UpdateAntiScrollGlobalConfigRequest(15, "nuevos terminos"));
+    private void thenUsersSearchedWith(String search) {
+        verify(listBackofficeUsersUseCase).execute(search);
     }
 
-    @Test
-    void getUserActivities_shouldReturnActivities() throws Exception {
-        com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse session =
-                new com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse(1L, "BREATHING", java.time.Instant.now());
-        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(session), 5L, "BREATHING", "1.5", java.util.Map.of("BREATHING", 5));
-        when(getUserActivitiesUseCase.execute(any())).thenReturn(result);
-
-        mockMvc.perform(get("/api/admin/users/2/statistics/activities"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.todayActivitiesCount").value(5))
-                .andExpect(jsonPath("$.activitySessions[0].id").value(1))
-                .andExpect(jsonPath("$.activitySessions[0].activityType").value("BREATHING"))
-                .andExpect(jsonPath("$.favoriteActivity").value("BREATHING"))
-                .andExpect(jsonPath("$.averageSessionsText").value("1.5"))
-                .andExpect(jsonPath("$.activityDistribution.BREATHING").value(5));
+    private void thenConfigUpdatedWith(int minutes, String terms) {
+        verify(updateAntiScrollGlobalConfigUseCase).execute(new UpdateAntiScrollGlobalConfigRequest(minutes, terms));
     }
 
-    @Test
-    void getUserActivities_withSpecificTimeframe_shouldPassConvertedTimeframeToUseCase() throws Exception {
-        GetUserActivitiesResponse result = new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null);
-        when(getUserActivitiesUseCase.execute(eq(new GetUserActivitiesRequest(2L, Timeframe.WEEK)))).thenReturn(result);
-
-        mockMvc.perform(get("/api/admin/users/2/statistics/activities").param("timeframe", "week"))
-                .andExpect(status().isOk());
-
+    private void thenUserActivitiesQueriedForWeek() {
         verify(getUserActivitiesUseCase).execute(new GetUserActivitiesRequest(2L, Timeframe.WEEK));
     }
 
-    @Test
-    void getUserActivities_withInvalidTimeframe_shouldReturnInternalServerError() throws Exception {
-        mockMvc.perform(get("/api/admin/users/2/statistics/activities").param("timeframe", "invalid"))
-                .andExpect(status().isInternalServerError());
+    private void thenInternalServerError(ResultActions result) throws Exception {
+        result.andExpect(status().isInternalServerError());
     }
 
-    @Test
-    void getUserAiDiagnostics_shouldReturnAiDiagnostics() throws Exception {
-        com.huly.backend.domain.useCase.admin.userAiDiagnostics.VectorMemoryResponse memory =
-                new com.huly.backend.domain.useCase.admin.userAiDiagnostics.VectorMemoryResponse("mem-1", "content", "USER", "FACT", "2026-06-16T00:00:00Z");
-        com.huly.backend.domain.useCase.admin.userAiDiagnostics.EmotionalEventResponse event =
-                new com.huly.backend.domain.useCase.admin.userAiDiagnostics.EmotionalEventResponse(
-                        10L, "source", "inputText", "detectedEmotion", 0.9, 0.8, 0.7, 0.6, 0.5, "userGoal", "recommendation", 100L, 200L, "ACCEPTED", 5, "feedbackText", java.time.Instant.now()
-                );
-        GetUserAiDiagnosticsResponse result = new GetUserAiDiagnosticsResponse(
-                java.util.List.of(memory), java.util.List.of(event), "Alice", "style", "summary",
-                java.util.List.of("topic1"), java.util.List.of("strategy1"), 80, "HIGH", java.util.List.of("act1"), java.util.List.of("act2"), "JOY", java.util.Map.of("JOY", 10)
-        );
-        when(getUserAiDiagnosticsUseCase.execute(any())).thenReturn(result);
+    private void thenOkWithUserActivities(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.todayActivitiesCount").value(5))
+                .andExpect(jsonPath("$.activitySessions[0].id").value(1))
+                .andExpect(jsonPath("$.activitySessions[0].activityType").value("BREATHING"))
+                .andExpect(jsonPath("$.activitySessions[0].activityName").value("Respiración guiada"))
+                .andExpect(jsonPath("$.favoriteActivity").value("BREATHING"))
+                .andExpect(jsonPath("$.averageSessionsText").value("1.5"))
+                .andExpect(jsonPath("$.activityDistribution.BREATHING").value(5))
+                .andExpect(jsonPath("$.activityNames.BREATHING").value("Respiración guiada"));
+    }
 
-        mockMvc.perform(get("/api/admin/users/2/statistics/ai"))
-                .andExpect(status().isOk())
+    private void thenOkWithAiDiagnostics(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.aiMemories[0].id").value("mem-1"))
                 .andExpect(jsonPath("$.aiMemories[0].content").value("content"))
                 .andExpect(jsonPath("$.emotionalEvents[0].id").value(10))
@@ -295,37 +499,15 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$.dominantEmotion").value("JOY"));
     }
 
-    @Test
-    void getUserFinancials_shouldReturnFinancials() throws Exception {
-        com.huly.backend.domain.useCase.admin.userFinancials.PaymentEventResponse payment =
-                new com.huly.backend.domain.useCase.admin.userFinancials.PaymentEventResponse(
-                        100L, 200L, "product", java.math.BigDecimal.TEN, "ref", 300L, "SUCCESS", 100, "COIN_PACK", java.time.Instant.now()
-                );
-        GetUserFinancialsResponse result = new GetUserFinancialsResponse(java.util.List.of(payment), java.math.BigDecimal.TEN);
-        when(getUserFinancialsUseCase.execute(any())).thenReturn(result);
-
-        mockMvc.perform(get("/api/admin/users/2/statistics/finance"))
-                .andExpect(status().isOk())
+    private void thenOkWithFinancials(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentEvents[0].id").value(100))
                 .andExpect(jsonPath("$.paymentEvents[0].productName").value("product"))
                 .andExpect(jsonPath("$.totalEarnings").value(10));
     }
 
-    @Test
-    void getUserAntiScrollStats_shouldReturnStats() throws Exception {
-        GetUserAntiScrollStatsResponse result = new GetUserAntiScrollStatsResponse(
-                true,
-                true,
-                "instagram.com",
-                300,
-                500,
-                java.util.Map.of("current_0", 100),
-                List.of(new TopAppStats("instagram.com", 300))
-        );
-        when(getUserAntiScrollStatsUseCase.execute(any())).thenReturn(result);
-
-        mockMvc.perform(get("/api/admin/users/2/statistics/antiscroll"))
-                .andExpect(status().isOk())
+    private void thenOkWithAntiScrollStats(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.antiScrollEnabled").value(true))
                 .andExpect(jsonPath("$.dataSharingConsent").value(true))
                 .andExpect(jsonPath("$.mostUsedApp").value("instagram.com"))

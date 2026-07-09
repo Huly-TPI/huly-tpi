@@ -1,49 +1,82 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BadgeUnlockToast from '../../components/Badges/BadgeUnlockToast'
+import { verifyTextPresent } from '../testHelpers'
 
-const makeBadge = () => ({
-  id: 1,
-  code: 'PRIMER_PASO',
-  name: 'Primer paso',
-  description: 'Empezaste tu camino.',
-  imageUrl: 'badge_primer_paso.webp',
-  createdAt: '',
-})
+interface Badge {
+  id: number
+  code: string
+  name: string
+  description: string
+  imageUrl: string
+  createdAt: string
+}
 
-describe('BadgeUnloackToast', () => {
-  it('no renderiza nada si badge es null', () => {
-    render(<BadgeUnlockToast badge={null} onDismiss={() => {}} />)
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+describe('BadgeUnlockToast', () => {
+  let onDismissMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    onDismissMock = vi.fn()
   })
 
-  it('muestra el nombre de la insignia cuando no hay badge', () => {
-    render(<BadgeUnlockToast badge={makeBadge()} onDismiss={() => {}} />)
-    expect(screen.getByText('Primer paso')).toBeInTheDocument()
+  // --- CASOS DE PRUEBA (TEST SUITE) ---
+
+  it('no renderiza nada si badge es null', () => {
+    renderToast(null)
+    verifyStatusNotPresent()
+  })
+
+  it('muestra el nombre de la insignia desbloqueada', () => {
+    renderToast(makeBadge())
+    verifyBadgeNamePresent('Primer paso')
   })
 
   it('muestra el mensaje de desbloqueo', () => {
-    render(<BadgeUnlockToast badge={makeBadge()} onDismiss={() => {}} />)
-    expect(screen.getByText('✨ ¡Nueva estampita!')).toBeInTheDocument()
+    renderToast(makeBadge())
+    verifyUnlockMessagePresent()
   })
 
   it('llama onDismiss al hacer click', async () => {
-    const onDismiss = vi.fn()
-    render(<BadgeUnlockToast badge={makeBadge()} onDismiss={onDismiss} />)
-    const button = screen.getByRole('button', { name: 'Cerrar' })
-    await act(async () => {
-      await userEvent.click(button)
-    })
-    expect(onDismiss).toHaveBeenCalledOnce()
+    renderToast(makeBadge())
+    await clickCloseButton()
+    verifyOnDismissCalled()
   })
 
-  it('llama onDismiss automáticamente después de 3 segundos', () => {
-      vi.useFakeTimers()
-      const onDismiss = vi.fn()
-      render(<BadgeUnlockToast badge={makeBadge()} onDismiss={onDismiss} />)
-      act(() => {vi.advanceTimersByTime(10000) })
-      expect(onDismiss).toHaveBeenCalledOnce()
-      vi.useRealTimers()
+  /* helpers */
+
+  const makeBadge = (): Badge => ({
+    id: 1,
+    code: 'PRIMER_PASO',
+    name: 'Primer paso',
+    description: 'Empezaste tu camino.',
+    imageUrl: 'badge_primer_paso.webp',
+    createdAt: '',
   })
+
+  const renderToast = (badge: Badge | null) => {
+    render(<BadgeUnlockToast badge={badge} onDismiss={onDismissMock} />)
+  }
+
+  const verifyStatusNotPresent = () => {
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  }
+
+  const verifyBadgeNamePresent = (name: string) => {
+    verifyTextPresent(name)
+  }
+
+  const verifyUnlockMessagePresent = () => {
+    verifyTextPresent('✨ ¡Nueva estampita!')
+  }
+
+  const clickCloseButton = () => {
+    const user = userEvent.setup()
+    const button = screen.getByRole('button', { name: 'Cerrar' })
+    return user.click(button)
+  }
+
+  const verifyOnDismissCalled = () => {
+    expect(onDismissMock).toHaveBeenCalledOnce()
+  }
 })

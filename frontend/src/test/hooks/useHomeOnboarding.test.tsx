@@ -1,3 +1,4 @@
+import { clearAllMocks } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useHomeOnboarding } from '../../hooks/useHomeOnboarding'
@@ -8,16 +9,17 @@ vi.mock('../../context/auth', () => ({
     useAuth: vi.fn(),
 }))
 
-
 vi.mock('../../api/onboarding', () => ({
     completeTutorial: vi.fn(),
 }))
+
+const mockedCompleteTutorial = vi.mocked(completeTutorial)
 
 describe('useHomeOnboarding - prompt de notificaciones', () => {
     const refreshUser = vi.fn()
 
     beforeEach(() => {
-        vi.clearAllMocks()
+        clearAllMocks()
         vi.mocked(useAuth).mockReturnValue({
             user: { onBoardingCompleted: true, onboardingTutorialCompleted: false },
             refreshUser,
@@ -25,29 +27,68 @@ describe('useHomeOnboarding - prompt de notificaciones', () => {
     })
 
     it('no muestra el prompt antes de completar el tutorial', () => {
-        const { result } = renderHook(() => useHomeOnboarding(3))
-
-        expect(result.current.showNotificationsPrompt).toBe(false)    
+        setupHook(3)
+        verifyShowNotificationsPrompt(false)
     })
 
-    it('al completar el tutorial muestra el prompt de notificaciones', async () => {
-        vi.mocked(completeTutorial).mockResolvedValue(undefined) 
-        const { result } = renderHook(() => useHomeOnboarding(1))
-        act(() => { result.current.startOnboarding() })
-        expect(result.current.onboardingMode).toBe('steps')
-        await act(async () => { await result.current.advanceOnboarding() })
-
-        expect(completeTutorial).toHaveBeenCalledTimes(1)
-        expect(result.current.showNotificationsPrompt).toBe(true)
+    it('al completar el tutorial muestra el prompt de notificaciones', () => {
+        setupCompleteTutorialResolved()
+        setupHook(1)
+        callStartOnboarding()
+        verifyOnboardingMode('steps')
+        return callAdvanceOnboarding().then(() => {
+            verifyCompleteTutorialCalledTimes(1)
+            verifyShowNotificationsPrompt(true)
+        })
     })
 
-    it('closeNotificationPrompt oculta el prompt' , async () => {
-        vi.mocked(completeTutorial).mockResolvedValue(undefined)
-        const { result } = renderHook(() => useHomeOnboarding(1))
-        act(() => { result.current.startOnboarding() })
-        await act(async () => { await result.current.advanceOnboarding() })
-        expect(result.current.showNotificationsPrompt).toBe(true)
-        act(() => { result.current.closeNotificationsPrompt() })
-        expect(result.current.showNotificationsPrompt).toBe(false)
+    it('closeNotificationPrompt oculta el prompt', () => {
+        setupCompleteTutorialResolved()
+        setupHook(1)
+        callStartOnboarding()
+        return callAdvanceOnboarding().then(() => {
+            verifyShowNotificationsPrompt(true)
+            callCloseNotificationsPrompt()
+            verifyShowNotificationsPrompt(false)
+        })
     })
+    let rendered: ReturnType<typeof renderHook<ReturnType<typeof useHomeOnboarding>, undefined>>
+
+    const setupHook = (steps: number) => {
+        rendered = renderHook(() => useHomeOnboarding(steps))
+    }
+
+    const setupCompleteTutorialResolved = () => {
+        mockedCompleteTutorial.mockResolvedValue(undefined)
+    }
+
+    const callStartOnboarding = () => {
+        act(() => {
+            rendered.result.current.startOnboarding()
+        })
+    }
+
+    const callAdvanceOnboarding = async () => {
+        await act(async () => {
+            await rendered.result.current.advanceOnboarding()
+        })
+    }
+
+    const callCloseNotificationsPrompt = () => {
+        act(() => {
+            rendered.result.current.closeNotificationsPrompt()
+        })
+    }
+
+    const verifyShowNotificationsPrompt = (expected: boolean) => {
+        expect(rendered.result.current.showNotificationsPrompt).toBe(expected)
+    }
+
+    const verifyOnboardingMode = (expected: string) => {
+        expect(rendered.result.current.onboardingMode).toBe(expected)
+    }
+
+    const verifyCompleteTutorialCalledTimes = (times: number) => {
+        expect(mockedCompleteTutorial).toHaveBeenCalledTimes(times)
+    }
 })

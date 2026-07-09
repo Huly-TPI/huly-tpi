@@ -1,3 +1,4 @@
+import { clearAllMocks } from '../testHelpers'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
@@ -21,256 +22,174 @@ const mockedRegister = vi.mocked(activitiesApi.registerActivitySession)
 
 describe('useActivitySessionTracker', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     mockedRegister.mockResolvedValue(null)
     vi.spyOn(Date, 'now').mockReturnValue(100_000)
   })
 
   it('startSession establece el timestamp de inicio', () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE),
-    )
-
-    act(() => {
-      result.current.startSession()
+    setupHook(ActivityType.BUBBLE)
+    callStartSession()
+    callMarkConditionMet()
+    return callSaveSession().then(() => {
+      verifyRegisterCalledWith({ activityType: ActivityType.BUBBLE, contextId: undefined }, undefined)
     })
-
-    // After starting, saveSession should not skip due to "not started"
-    // We verify indirectly by calling markConditionMet + saveSession
-    act(() => {
-      result.current.markConditionMet()
-    })
-
-    act(() => {
-      void result.current.saveSession()
-    })
-
-    expect(mockedRegister).toHaveBeenCalledWith(
-      { activityType: ActivityType.BUBBLE, contextId: undefined },
-      undefined,
-    )
   })
 
   it('startSession es idempotente – solo establece el timestamp una vez', () => {
-    const dateNowSpy = vi.spyOn(Date, 'now')
-    dateNowSpy.mockReturnValue(100_000)
-
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE, { minDurationSeconds: 5 }),
-    )
-
-    act(() => {
-      result.current.startSession()
+    setupDateNowSpy(100_000)
+    setupHook(ActivityType.BUBBLE, { minDurationSeconds: 5 })
+    callStartSession()
+    setupDateNowSpy(200_000)
+    callStartSession()
+    callMarkConditionMet()
+    return callSaveSession().then(() => {
+      verifyRegisterCalled()
     })
-
-    // Advance Date.now and call start again — should NOT overwrite timestamp
-    dateNowSpy.mockReturnValue(200_000)
-
-    act(() => {
-      result.current.startSession()
-    })
-
-    act(() => {
-      result.current.markConditionMet()
-    })
-
-    // With minDurationSeconds: 5, if startedAt were 200_000 the elapsed
-    // time would be 0 and save would be skipped. Since it's idempotent
-    // the original 100_000 is used, so elapsed = 100s > 5s => passes.
-    act(() => {
-      void result.current.saveSession()
-    })
-
-    expect(mockedRegister).toHaveBeenCalled()
   })
 
   it('markConditionMet establece la condición', () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE),
-    )
-
-    act(() => {
-      result.current.startSession()
+    setupHook(ActivityType.BUBBLE)
+    callStartSession()
+    return callSaveSession().then(() => {
+      verifyRegisterNotCalled()
+      callMarkConditionMet()
+      return callSaveSession().then(() => {
+        verifyRegisterCalledTimes(1)
+      })
     })
+  })
 
-    // Without markConditionMet, saveSession should skip
-    act(() => {
-      void result.current.saveSession()
+  it('saveSession llama a registerActivitySession cuando las condiciones se cumplen', () => {
+    setupHook(ActivityType.BREATHING)
+    callStartSession()
+    callMarkConditionMet()
+    return callSaveSession().then(() => {
+      verifyRegisterCalledOnce()
+      verifyRegisterCalledWith({ activityType: ActivityType.BREATHING, contextId: undefined }, undefined)
     })
+  })
 
+  it('saveSession no llama si no se inició la sesión', () => {
+    setupHook(ActivityType.BUBBLE)
+    callMarkConditionMet()
+    return callSaveSession().then(() => {
+      verifyRegisterNotCalled()
+    })
+  })
+
+  it('saveSession no llama si ya fue guardada', () => {
+    setupHook(ActivityType.BUBBLE)
+    callStartSession()
+    callMarkConditionMet()
+    return callSaveSession()
+      .then(() => {
+        verifyRegisterCalledOnce()
+        return callSaveSession()
+      })
+      .then(() => {
+        verifyRegisterCalledOnce()
+      })
+  })
+
+  it('saveSession no llama si la condición no se cumplió', () => {
+    setupHook(ActivityType.BUBBLE)
+    callStartSession()
+    return callSaveSession().then(() => {
+      verifyRegisterNotCalled()
+    })
+  })
+
+  it('saveSession no llama si minDurationSeconds no se alcanzó', () => {
+    setupDateNowSpy(100_000)
+    setupHook(ActivityType.BUBBLE, { minDurationSeconds: 60 })
+    callStartSession()
+    callMarkConditionMet()
+    setupDateNowSpy(110_000)
+    return callSaveSession().then(() => {
+      verifyRegisterNotCalled()
+    })
+  })
+
+  it('saveSession con force: true omite las verificaciones de condición y duración', () => {
+    setupDateNowSpy(100_000)
+    setupHook(ActivityType.BUBBLE, { minDurationSeconds: 60 })
+    callStartSession()
+    return callSaveSession({ force: true }).then(() => {
+      verifyRegisterCalledOnce()
+    })
+  })
+
+  it('autoStart activa startSession al montar', () => {
+    setupHook(ActivityType.BUBBLE, { autoStart: true })
+    callMarkConditionMet()
+    return callSaveSession().then(() => {
+      verifyRegisterCalledOnce()
+    })
+  })
+
+  it('stopSession reinicia todos los estados', () => {
+    setupHook(ActivityType.BUBBLE)
+    callStartSession()
+    callMarkConditionMet()
+    callStopSession()
+    return callSaveSession().then(() => {
+      verifyRegisterNotCalled()
+    })
+  })
+  let rendered: ReturnType<typeof renderHook<any, any>>
+
+  /* helpers */
+
+  const setupHook = (activityType: ActivityType, options?: Parameters<typeof useActivitySessionTracker>[1]) => {
+    rendered = renderHook(() => useActivitySessionTracker(activityType, options))
+  }
+
+  const setupDateNowSpy = (time: number) => {
+    vi.spyOn(Date, 'now').mockReturnValue(time)
+  }
+
+  const callStartSession = () => {
+    act(() => {
+      rendered.result.current.startSession()
+    })
+  }
+
+  const callMarkConditionMet = () => {
+    act(() => {
+      rendered.result.current.markConditionMet()
+    })
+  }
+
+  const callStopSession = () => {
+    act(() => {
+      rendered.result.current.stopSession()
+    })
+  }
+
+  const callSaveSession = async (options?: { force?: boolean }) => {
+    await act(async () => {
+      await rendered.result.current.saveSession(options)
+    })
+  }
+
+  const verifyRegisterCalled = () => {
+    expect(mockedRegister).toHaveBeenCalled()
+  }
+
+  const verifyRegisterNotCalled = () => {
     expect(mockedRegister).not.toHaveBeenCalled()
+  }
 
-    // Now mark it and try again
-    act(() => {
-      result.current.markConditionMet()
-    })
-
-    act(() => {
-      void result.current.saveSession()
-    })
-
-    expect(mockedRegister).toHaveBeenCalledTimes(1)
-  })
-
-  it('saveSession llama a registerActivitySession cuando las condiciones se cumplen', async () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BREATHING),
-    )
-
-    act(() => {
-      result.current.startSession()
-      result.current.markConditionMet()
-    })
-
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
+  const verifyRegisterCalledOnce = () => {
     expect(mockedRegister).toHaveBeenCalledOnce()
-    expect(mockedRegister).toHaveBeenCalledWith(
-      { activityType: ActivityType.BREATHING, contextId: undefined },
-      undefined,
-    )
-  })
+  }
 
-  it('saveSession no llama si no se inició la sesión', async () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE),
-    )
+  const verifyRegisterCalledTimes = (times: number) => {
+    expect(mockedRegister).toHaveBeenCalledTimes(times)
+  }
 
-    act(() => {
-      result.current.markConditionMet()
-    })
-
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
-    expect(mockedRegister).not.toHaveBeenCalled()
-  })
-
-  it('saveSession no llama si ya fue guardada', async () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE),
-    )
-
-    act(() => {
-      result.current.startSession()
-      result.current.markConditionMet()
-    })
-
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
-    expect(mockedRegister).toHaveBeenCalledOnce()
-
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
-    // Should still be 1 — second call skipped
-    expect(mockedRegister).toHaveBeenCalledOnce()
-  })
-
-  it('saveSession no llama si la condición no se cumplió', async () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE),
-    )
-
-    act(() => {
-      result.current.startSession()
-    })
-
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
-    expect(mockedRegister).not.toHaveBeenCalled()
-  })
-
-  it('saveSession no llama si minDurationSeconds no se alcanzó', async () => {
-    vi.spyOn(Date, 'now').mockReturnValue(100_000)
-
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE, {
-        minDurationSeconds: 60,
-      }),
-    )
-
-    act(() => {
-      result.current.startSession()
-      result.current.markConditionMet()
-    })
-
-    // Only 10 seconds have passed (110_000 - 100_000 = 10_000ms = 10s < 60s)
-    vi.spyOn(Date, 'now').mockReturnValue(110_000)
-
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
-    expect(mockedRegister).not.toHaveBeenCalled()
-  })
-
-  it('saveSession con force: true omite las verificaciones de condición y duración', async () => {
-    vi.spyOn(Date, 'now').mockReturnValue(100_000)
-
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE, {
-        minDurationSeconds: 60,
-      }),
-    )
-
-    act(() => {
-      result.current.startSession()
-    })
-
-    // Condition not met, duration not reached, but force: true
-    await act(async () => {
-      await result.current.saveSession({ force: true })
-    })
-
-    expect(mockedRegister).toHaveBeenCalledOnce()
-  })
-
-  it('autoStart activa startSession al montar', async () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE, { autoStart: true }),
-    )
-
-    // Since autoStart triggers startSession on mount, we should be
-    // able to save after marking condition met
-    act(() => {
-      result.current.markConditionMet()
-    })
-
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
-    expect(mockedRegister).toHaveBeenCalledOnce()
-  })
-
-  it('stopSession reinicia todos los estados', async () => {
-    const { result } = renderHook(() =>
-      useActivitySessionTracker(ActivityType.BUBBLE),
-    )
-
-    act(() => {
-      result.current.startSession()
-      result.current.markConditionMet()
-    })
-
-    act(() => {
-      result.current.stopSession()
-    })
-
-    // After stop, saveSession should skip (not started)
-    await act(async () => {
-      await result.current.saveSession()
-    })
-
-    expect(mockedRegister).not.toHaveBeenCalled()
-  })
+  const verifyRegisterCalledWith = (firstArg: any, secondArg: any) => {
+    expect(mockedRegister).toHaveBeenCalledWith(firstArg, secondArg)
+  }
 })

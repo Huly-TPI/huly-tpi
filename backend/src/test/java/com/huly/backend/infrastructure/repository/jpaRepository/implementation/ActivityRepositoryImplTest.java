@@ -1,68 +1,159 @@
 package com.huly.backend.infrastructure.repository.jpaRepository.implementation;
+
 import com.huly.backend.domain.model.activity.Activity;
 import com.huly.backend.domain.model.enums.ActivityType;
 import com.huly.backend.infrastructure.repository.entity.ActivityEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IActivityJpaRepository;
+import com.huly.backend.infrastructure.repository.mapper.ActivityMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.util.List;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 @ExtendWith(MockitoExtension.class)
-public class ActivityRepositoryImplTest {
-    
+class ActivityRepositoryImplTest {
 
     @Mock
-    private IActivityJpaRepository activityJpaRepository;
+    private IActivityJpaRepository jpaRepository;
 
-    @InjectMocks
-    private ActivityRepositoryImpl activityRepository;
+    @Spy
+    private ActivityMapper activityMapper = new ActivityMapper();
 
-    @Test
-    void findAll_shouldReturnMappedDomainList() { 
-        ActivityEntity entity = ActivityEntity.builder() 
-        .id(1L)
-        .type(ActivityType.BREATHING)
-        .valenceMin(-1.0).valenceMax(1.0)
-        .arousalMin(-1.0).arousalMax(1.0)
-        .dominanceMin(-1.0).dominanceMax(1.0)
-        .effectValence(0.3).effectArousal(0.2).effectDominance(0.1)
-        .build();
+    private ActivityRepositoryImpl repository;
 
-        when(activityJpaRepository.findAll()).thenReturn(List.of(entity));
-        
-        List<Activity> result = activityRepository.findAll();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getId()).isEqualTo(1L);
-        assertThat(result.get(0).getType()).isEqualTo(ActivityType.BREATHING);
-        assertThat(result.get(0).getValenceMin()).isEqualTo(-1.0);
-        verify(activityJpaRepository).findAll();
+    @BeforeEach
+    void setUp() {
+        repository = new ActivityRepositoryImpl(jpaRepository, activityMapper);
     }
 
     @Test
-    void findAll_shouldReturnEmptyList_whenNoEntities() {
-        when(activityJpaRepository.findAll()).thenReturn(List.of());
+    @DisplayName("Devuelve la lista de dominio mapeada")
+    void findAllShouldReturnMappedDomainList() {
+        givenAllActivities(
+                activityEntity(1L, ActivityType.BREATHING, "Respirar"),
+                activityEntity(2L, ActivityType.DIARY, "Diario"));
 
-        List<Activity> result = activityRepository.findAll();
+        List<Activity> result = findAll();
 
-        assertThat(result).isEmpty();
-        verify(activityJpaRepository).findAll();
+        thenActivitiesMapped(result);
     }
 
     @Test
-    void existsById_shouldDelegateToJpaRepository() {
-        when(activityJpaRepository.existsById(1L)).thenReturn(true);
+    @DisplayName("Delega la existencia por id en el repositorio JPA")
+    void existsByIdShouldCallJpaRepository() {
+        givenExists(1L, true);
+        givenExists(2L, false);
 
-        boolean result = activityRepository.existsById(1L);
+        boolean existing = existsById(1L);
+        boolean missing = existsById(2L);
 
-        assertThat(result).isTrue();
-        verify(activityJpaRepository).existsById(1L);
+        thenExists(existing, missing);
+    }
+
+    @Test
+    @DisplayName("Devuelve el dominio opcional según exista el id")
+    void findByIdShouldReturnOptionalDomain() {
+        givenActivityById(1L, activityEntity(1L, ActivityType.BREATHING, "Respirar"));
+        givenActivityByIdMissing(2L);
+
+        Optional<Activity> present = findById(1L);
+        Optional<Activity> absent = findById(2L);
+
+        thenActivityFoundAndMissing(present, absent);
+    }
+
+    @Test
+    @DisplayName("Mapea, guarda y devuelve el dominio al guardar")
+    void saveShouldMapAndSaveAndReturnDomain() {
+        givenSaved(activityEntity(1L, ActivityType.BREATHING, "Respirar"));
+
+        Activity saved = save(activity(1L, ActivityType.BREATHING, "Respirar"));
+
+        thenActivitySaved(saved);
+    }
+
+    // --- arrange ---
+    private void givenAllActivities(ActivityEntity... entities) {
+        when(jpaRepository.findAll()).thenReturn(List.of(entities));
+    }
+
+    private void givenExists(Long id, boolean exists) {
+        when(jpaRepository.existsById(id)).thenReturn(exists);
+    }
+
+    private void givenActivityById(Long id, ActivityEntity entity) {
+        when(jpaRepository.findById(id)).thenReturn(Optional.of(entity));
+    }
+
+    private void givenActivityByIdMissing(Long id) {
+        when(jpaRepository.findById(id)).thenReturn(Optional.empty());
+    }
+
+    private void givenSaved(ActivityEntity entity) {
+        when(jpaRepository.save(any(ActivityEntity.class))).thenReturn(entity);
+    }
+
+    private ActivityEntity activityEntity(Long id, ActivityType type, String title) {
+        return ActivityEntity.builder().id(id).type(type).title(title).build();
+    }
+
+    private Activity activity(Long id, ActivityType type, String title) {
+        return Activity.builder().id(id).type(type).title(title).build();
+    }
+
+    // --- act ---
+    private List<Activity> findAll() {
+        return repository.findAll();
+    }
+
+    private boolean existsById(Long id) {
+        return repository.existsById(id);
+    }
+
+    private Optional<Activity> findById(Long id) {
+        return repository.findById(id);
+    }
+
+    private Activity save(Activity activity) {
+        return repository.save(activity);
+    }
+
+    // --- assert ---
+    private void thenActivitiesMapped(List<Activity> result) {
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getTitle()).isEqualTo("Respirar");
+        assertThat(result.get(1).getTitle()).isEqualTo("Diario");
+        verify(jpaRepository).findAll();
+    }
+
+    private void thenExists(boolean existing, boolean missing) {
+        assertThat(existing).isTrue();
+        assertThat(missing).isFalse();
+        verify(jpaRepository).existsById(1L);
+        verify(jpaRepository).existsById(2L);
+    }
+
+    private void thenActivityFoundAndMissing(Optional<Activity> present, Optional<Activity> absent) {
+        assertThat(present).isPresent();
+        assertThat(present.get().getTitle()).isEqualTo("Respirar");
+        assertThat(absent).isEmpty();
+        verify(jpaRepository).findById(1L);
+        verify(jpaRepository).findById(2L);
+    }
+
+    private void thenActivitySaved(Activity saved) {
+        assertThat(saved.getTitle()).isEqualTo("Respirar");
+        verify(jpaRepository).save(any(ActivityEntity.class));
     }
 }

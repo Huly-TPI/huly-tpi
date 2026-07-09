@@ -6,6 +6,8 @@ import Navbar from '../../components/Navbar'
 import { ThemeProvider } from '../../context/theme'
 import { SubscriptionModalProvider } from '../../context/subscriptionModal'
 import type { Membership } from '../../api/auth'
+import { clickButton, verifyTextPresent, clearAllMocks } from '../testHelpers'
+
 
 /* ─── Mocks ─── */
 
@@ -36,24 +38,12 @@ const NO_MEMBERSHIP: Membership = { active: false, planCode: null, productId: nu
 const BASIC_MEMBERSHIP: Membership = { active: true, planCode: 'BASIC', productId: 'plan-basic', expiresAt: null }
 const PREMIUM_MEMBERSHIP: Membership = { active: true, planCode: 'PREMIUM', productId: 'plan-premium', expiresAt: null }
 
-/* ─── Setup Helpers ─── */
-
-const renderWithRouter = () =>
-  render(
-    <SubscriptionModalProvider>
-      <ThemeProvider>
-        <MemoryRouter>
-          <Navbar />
-        </MemoryRouter>
-      </ThemeProvider>
-    </SubscriptionModalProvider>,
-  )
 
 /* ─── Tests ─── */
 
 describe('Navbar', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       user: null,
@@ -64,39 +54,38 @@ describe('Navbar', () => {
   })
 
   it('renderiza el logo de Huly', () => {
-    const { container } = renderWithRouter()
-    expect(container.querySelector('nav')).toHaveClass('z-[300]')
-    expect(screen.getByAltText('Huly logo')).toBeInTheDocument()
+    renderDefaultNavbar()
+    verifyNavHasClass('z-[300]')
+    verifyLogoImagePresent()
   })
 
   it('renderiza el toggle de tema en navbar', () => {
-    renderWithRouter()
-    expect(screen.getByRole('button', { name: 'Cambiar a modo noche' })).toBeInTheDocument()
+    renderDefaultNavbar()
+    verifyThemeToggleButtonPresent()
   })
 
   it('renderiza todos los links de navegación', () => {
-    renderWithRouter()
-    expect(screen.getByText('Jardín')).toBeInTheDocument()
-    expect(screen.getByText('Pendientes')).toBeInTheDocument()
-    expect(screen.getByText('Minijuegos')).toBeInTheDocument()
-    expect(screen.getByText('Diario')).toBeInTheDocument()
-    expect(screen.getByText('Regar planta')).toBeInTheDocument()
+    renderDefaultNavbar()
+    verifyTextPresent('Jardín')
+    verifyTextPresent('Pendientes')
+    verifyTextPresent('Minijuegos')
+    verifyTextPresent('Diario')
+    verifyTextPresent('Regar planta')
   })
 
   it('cada link tiene el href correcto', () => {
-    renderWithRouter()
-    expect(screen.getByText('Jardín').closest('a')).toHaveAttribute('href', '/')
-    expect(screen.getByText('Pendientes').closest('a')).toHaveAttribute('href', '/pending')
-    expect(screen.getByText('Minijuegos').closest('a')).toHaveAttribute('href', '/minigames')
-    expect(screen.getByText('Diario').closest('a')).toHaveAttribute('href', '/diary')
-    expect(screen.getByText('Regar planta').closest('a')).toHaveAttribute('href', '/challenges')
+    renderDefaultNavbar()
+    verifyLinkHref('Jardín', '/')
+    verifyLinkHref('Pendientes', '/pending')
+    verifyLinkHref('Minijuegos', '/minigames')
+    verifyLinkHref('Diario', '/diary')
+    verifyLinkHref('Regar planta', '/challenges')
   })
 
   describe('usuario deslogueado', () => {
     it('muestra los botones de iniciar sesión y registrarse', () => {
-      renderWithRouter()
-      expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'Registrarse' })).toBeInTheDocument()
+      renderDefaultNavbar()
+      verifyAuthLinksPresent()
     })
   })
 
@@ -111,96 +100,177 @@ describe('Navbar', () => {
     })
 
     it('muestra el nombre del usuario', () => {
-      renderWithRouter()
-      expect(screen.getByText('Mili')).toBeInTheDocument()
+      renderDefaultNavbar()
+      verifyTextPresent('Mili')
     })
 
     it('no muestra los botones de auth', () => {
-      renderWithRouter()
-      expect(screen.queryByRole('link', { name: 'Iniciar sesión' })).not.toBeInTheDocument()
+      renderDefaultNavbar()
+      verifyAuthLinksNotPresent()
     })
 
-    it('abre el dropdown al hacer click en el botón de usuario', async () => {
-      const user = userEvent.setup()
-      renderWithRouter()
-
-      await user.click(screen.getByRole('button', { name: /Mili/ }))
-
-      expect(screen.getByRole('menuitem', { name: 'Mi perfil' })).toBeInTheDocument()
-      expect(screen.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    it('abre el dropdown al hacer click en el botón de usuario', () => {
+      renderDefaultNavbarWithUser()
+      return clickUserButton(/Mili/).then(() => {
+        verifyDropdownMenuitemPresent('Mi perfil')
+        verifyDropdownMenuitemPresent('Cerrar sesión')
+      })
     })
 
-    it('muestra el item Suscripciones en el dropdown', async () => {
-      const user = userEvent.setup()
-      renderWithRouter()
-
-      await user.click(screen.getByRole('button', { name: /Mili/ }))
-
-      expect(screen.getByRole('menuitem', { name: 'Suscripciones' })).toBeInTheDocument()
+    it('muestra el item Suscripciones en el dropdown', () => {
+      renderDefaultNavbarWithUser()
+      return clickUserButton(/Mili/).then(() => {
+        verifyDropdownMenuitemPresent('Suscripciones')
+      })
     })
 
-    it('abre el modal de suscripciones al hacer click en Suscripciones', async () => {
-      const user = userEvent.setup()
-      renderWithRouter()
-
-      await user.click(screen.getByRole('button', { name: /Mili/ }))
-      await user.click(screen.getByRole('menuitem', { name: 'Suscripciones' }))
-
-      expect(screen.getByRole('dialog', { name: 'Planes de suscripción' })).toBeInTheDocument()
+    it('abre el modal de suscripciones al hacer click en Suscripciones', () => {
+      renderDefaultNavbarWithUser()
+      return clickUserButton(/Mili/)
+        .then(() => clickDropdownMenuitem('Suscripciones'))
+        .then(() => {
+          verifySubscriptionDialogPresent()
+        })
     })
 
     describe('icono de suscripción', () => {
       it('muestra el icono bud cuando no hay plan activo', () => {
-        mockUseMembership.mockReturnValue({ membership: NO_MEMBERSHIP, refresh: vi.fn() })
-        renderWithRouter()
-        const btn = screen.getByRole('button', { name: /Mili/ })
-        expect(btn.querySelector('img')).toBeInTheDocument()
+        setupMembershipMock(NO_MEMBERSHIP)
+        renderDefaultNavbar()
+        verifyUserButtonHasImage(/Mili/)
       })
 
       it('muestra un icono cuando el plan es BASIC', () => {
-        mockUseMembership.mockReturnValue({ membership: BASIC_MEMBERSHIP, refresh: vi.fn() })
-        renderWithRouter()
-        const btn = screen.getByRole('button', { name: /Mili/ })
-        expect(btn.querySelector('img')).toBeInTheDocument()
+        setupMembershipMock(BASIC_MEMBERSHIP)
+        renderDefaultNavbar()
+        verifyUserButtonHasImage(/Mili/)
       })
 
       it('muestra un icono cuando el plan es PREMIUM', () => {
-        mockUseMembership.mockReturnValue({ membership: PREMIUM_MEMBERSHIP, refresh: vi.fn() })
-        renderWithRouter()
-        const btn = screen.getByRole('button', { name: /Mili/ })
-        expect(btn.querySelector('img')).toBeInTheDocument()
+        setupMembershipMock(PREMIUM_MEMBERSHIP)
+        renderDefaultNavbar()
+        verifyUserButtonHasImage(/Mili/)
       })
     })
   })
 
   describe('menú mobile', () => {
-    it('abre el menú al hacer click en el hamburguesa', async () => {
-      const user = userEvent.setup()
-      renderWithRouter()
-
-      await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
-
-      expect(screen.getAllByText('Jardín').length).toBeGreaterThan(1)
+    it('abre el menú al hacer click en el hamburguesa', () => {
+      renderDefaultNavbarWithUser()
+      return clickMenuButton('Abrir menú').then(() => {
+        verifyGardenLinkCountGreaterThan(1)
+      })
     })
 
-    it('muestra el control de tema dentro del menú mobile', async () => {
-      const user = userEvent.setup()
-      renderWithRouter()
-
-      await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
-
-      expect(screen.getByText('Tema')).toBeInTheDocument()
-      expect(screen.getAllByRole('button', { name: 'Cambiar a modo noche' }).length).toBeGreaterThan(1)
+    it('muestra el control de tema dentro del menú mobile', () => {
+      renderDefaultNavbarWithUser()
+      return clickMenuButton('Abrir menú').then(() => {
+        verifyTextPresent('Tema')
+        verifyThemeToggleButtonCountGreaterThan(1)
+      })
     })
 
-    it('muestra los botones de auth dentro del menú mobile cuando está deslogueado', async () => {
-      const user = userEvent.setup()
-      renderWithRouter()
-
-      await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
-
-      expect(screen.getAllByRole('link', { name: 'Iniciar sesión' }).length).toBe(2)
-      expect(screen.getAllByRole('link', { name: 'Registrarse' }).length).toBe(2)
+    it('muestra los botones de auth dentro del menú mobile cuando está deslogueado', () => {
+      renderDefaultNavbarWithUser()
+      return clickMenuButton('Abrir menú').then(() => {
+        verifyLoginLinkCount(2)
+        verifyRegisterLinkCount(2)
+      })
     })
   })
+  let user: any
+  let renderResult: any
+
+  /* helpers */
+
+  const renderDefaultNavbar = () => {
+    renderResult = renderWithRouter()
+  }
+
+  const renderDefaultNavbarWithUser = () => {
+    user = userEvent.setup()
+    renderResult = renderWithRouter()
+  }
+
+  const verifyNavHasClass = (className: string) => {
+    expect(renderResult.container.querySelector('nav')).toHaveClass(className)
+  }
+
+  const verifyLogoImagePresent = () => {
+    expect(screen.getByAltText('Huly logo')).toBeInTheDocument()
+  }
+
+  const verifyThemeToggleButtonPresent = () => {
+    expect(screen.getByRole('button', { name: 'Cambiar a modo noche' })).toBeInTheDocument()
+  }
+
+  const verifyLinkHref = (text: string, href: string) => {
+    expect(screen.getByText(text).closest('a')).toHaveAttribute('href', href)
+  }
+
+  const verifyAuthLinksPresent = () => {
+    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Registrarse' })).toBeInTheDocument()
+  }
+
+  const verifyAuthLinksNotPresent = () => {
+    expect(screen.queryByRole('link', { name: 'Iniciar sesión' })).not.toBeInTheDocument()
+  }
+
+  const clickUserButton = (name: RegExp) => {
+    return clickButton(user, name)
+  }
+
+  const verifyDropdownMenuitemPresent = (name: string) => {
+    expect(screen.getByRole('menuitem', { name })).toBeInTheDocument()
+  }
+
+  const clickDropdownMenuitem = (name: string) => {
+    return user.click(screen.getByRole('menuitem', { name }))
+  }
+
+  const verifySubscriptionDialogPresent = () => {
+    expect(screen.getByRole('dialog', { name: 'Planes de suscripción' })).toBeInTheDocument()
+  }
+
+  const setupMembershipMock = (membership: Membership) => {
+    mockUseMembership.mockReturnValue({ membership, refresh: vi.fn() })
+  }
+
+  const verifyUserButtonHasImage = (name: RegExp) => {
+    const btn = screen.getByRole('button', { name })
+    expect(btn.querySelector('img')).toBeInTheDocument()
+  }
+
+  const clickMenuButton = (name: string) => {
+    return clickButton(user, name)
+  }
+
+  const verifyGardenLinkCountGreaterThan = (count: number) => {
+    expect(screen.getAllByText('Jardín').length).toBeGreaterThan(count)
+  }
+
+  const verifyThemeToggleButtonCountGreaterThan = (count: number) => {
+    expect(screen.getAllByRole('button', { name: 'Cambiar a modo noche' }).length).toBeGreaterThan(count)
+  }
+
+  const verifyLoginLinkCount = (count: number) => {
+    expect(screen.getAllByRole('link', { name: 'Iniciar sesión' }).length).toBe(count)
+  }
+
+  const verifyRegisterLinkCount = (count: number) => {
+    expect(screen.getAllByRole('link', { name: 'Registrarse' }).length).toBe(count)
+  }
 })
+
+function renderWithRouter() {
+  return render(
+    <SubscriptionModalProvider>
+      <ThemeProvider>
+        <MemoryRouter>
+          <Navbar />
+        </MemoryRouter>
+      </ThemeProvider>
+    </SubscriptionModalProvider>,
+  )
+}

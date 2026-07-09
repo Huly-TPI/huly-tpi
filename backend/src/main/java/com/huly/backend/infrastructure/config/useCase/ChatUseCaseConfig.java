@@ -2,21 +2,20 @@ package com.huly.backend.infrastructure.config.useCase;
 
 import com.huly.backend.domain.port.AudioTranscriptionPort;
 import com.huly.backend.domain.port.ChatMemoryPort;
-import com.huly.backend.domain.port.ChatPreferenceExtractionPort;
-import com.huly.backend.domain.port.EmotionalAnalysisPort;
 import com.huly.backend.domain.port.LLMChatPort;
 import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
 import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
+import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationService;
+import com.huly.backend.domain.service.chat.ChatPreferenceHandlingService;
+import com.huly.backend.domain.service.chat.ChatPreferenceInitializationService;
 import com.huly.backend.domain.service.chat.ChatQuotaService;
 import com.huly.backend.domain.service.chat.PromptBuilderService;
-import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationPolicy;
 import com.huly.backend.domain.service.vector.UserVectorMemoryService;
+import com.huly.backend.domain.mapper.chat.ChatMapper;
 import com.huly.backend.domain.useCase.chat.*;
-import com.huly.backend.domain.useCase.emotionalEvent.CreateEmotionalEventUseCase;
-import com.huly.backend.domain.useCase.emotionalRecommendation.GetEmotionalRecommendationsUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,54 +23,8 @@ import org.springframework.context.annotation.Configuration;
 public class ChatUseCaseConfig {
 
     @Bean
-    public InitializeChatPreferencesUseCase initializeChatPreferencesUseCase(
-            ChatConversationPreferenceRepository preferenceRepository,
-            UserRepository userRepository,
-            ChatMemoryPort chatMemoryPort,
-            ChatConfigRepository chatConfigRepository
-    ) {
-        return new InitializeChatPreferencesUseCase(
-                preferenceRepository,
-                userRepository,
-                chatMemoryPort,
-                chatConfigRepository
-        );
-    }
-
-    @Bean
-    public HandleChatPreferencesUseCase handleChatPreferencesUseCase(
-            ChatConversationPreferenceRepository preferenceRepository,
-            ChatPreferenceExtractionPort extractionPort,
-            InitializeChatPreferencesUseCase initializeChatPreferencesUseCase,
-            ChatMemoryPort chatMemoryPort,
-            ChatQuotaService chatQuotaService,
-            ChatConfigRepository chatConfigRepository
-    ) {
-        return new HandleChatPreferencesUseCase(
-                preferenceRepository,
-                extractionPort,
-                initializeChatPreferencesUseCase,
-                chatMemoryPort,
-                chatQuotaService,
-                chatConfigRepository
-        );
-    }
-
-    @Bean
-    public GetChatEmotionalRecommendationUseCase getChatEmotionalRecommendationUseCase(
-            EmotionalAnalysisPort emotionalAnalysisPort,
-            PromptBuilderService promptBuilderService,
-            ChatEmotionalRecommendationPolicy recommendationPolicy,
-            GetEmotionalRecommendationsUseCase recommendationsUseCase,
-            CreateEmotionalEventUseCase createEmotionalEventUseCase
-    ) {
-        return new GetChatEmotionalRecommendationUseCase(
-                emotionalAnalysisPort,
-                promptBuilderService,
-                recommendationPolicy,
-                recommendationsUseCase,
-                createEmotionalEventUseCase
-        );
+    public ChatMapper chatMapper() {
+        return new ChatMapper();
     }
 
     @Bean
@@ -82,11 +35,13 @@ public class ChatUseCaseConfig {
             RiskWordRepository riskWordRepository,
             PromptBuilderService promptBuilderService,
             UserVectorMemoryService userVectorMemoryService,
-            GetChatEmotionalRecommendationUseCase getChatEmotionalRecommendationUseCase,
+            ChatEmotionalRecommendationService chatEmotionalRecommendationService,
             ChatQuotaService chatQuotaService,
             UserRepository userRepository,
             ChatConversationPreferenceRepository chatConversationPreferenceRepository,
-            HandleChatPreferencesUseCase handleChatPreferencesUseCase
+            ChatPreferenceHandlingService chatPreferenceHandlingService,
+            ChatMapper chatMapper,
+            ChatMessageRepository chatMessageRepository
     ) {
         return new ChatUseCase(
                 llmChatPort,
@@ -95,11 +50,13 @@ public class ChatUseCaseConfig {
                 riskWordRepository,
                 promptBuilderService,
                 userVectorMemoryService,
-                getChatEmotionalRecommendationUseCase,
+                chatEmotionalRecommendationService,
                 chatQuotaService,
                 userRepository,
                 chatConversationPreferenceRepository,
-                handleChatPreferencesUseCase
+                chatPreferenceHandlingService,
+                chatMapper,
+                chatMessageRepository
         );
     }
 
@@ -114,11 +71,13 @@ public class ChatUseCaseConfig {
     @Bean
     public ListChatHistoryUseCase listChatHistoryUseCase(
             ChatMessageRepository chatMessageRepository,
-            InitializeChatPreferencesUseCase initializeChatPreferencesUseCase
+            ChatPreferenceInitializationService chatPreferenceInitializationService,
+            ChatMapper chatMapper
     ) {
         return new ListChatHistoryUseCase(
                 chatMessageRepository,
-                initializeChatPreferencesUseCase
+                chatPreferenceInitializationService,
+                chatMapper
         );
     }
 

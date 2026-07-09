@@ -34,7 +34,7 @@ import { useHomeOnboarding } from "../../hooks/useHomeOnboarding";
 import { useInventory } from "../../hooks/store/useInventory";
 import { useUserCoins } from "../../hooks/shop/useUserCoins";
 import { useDailyRewards } from "../../hooks/shop/useDailyRewards";
-import { resolveEquippedImages } from "../../components/Scene/cosmeticAssets";
+import { resolveEquippedImages } from "../../components/Scene/CosmeticAssets";
 import { createHomeOnboardingSteps } from "./homeOnboardingSteps";
 import HulyAvatar from "../../components/HulyAvatar/HulyAvatar";
 import { getEquippedAvatarItems } from "../../components/HulyAvatar/avatarEquip";
@@ -340,13 +340,9 @@ export default function Home() {
         {showNotificationsPrompt && (
           <NotificationsPrompt onClose={closeNotificationsPrompt} />
         )}
-        
-        {/* Walking Avatar */}
+
         <div className="absolute z-[35] bottom-[20%] w-[25%] md:w-[15%] h-[25%] pointer-events-none walking-avatar-container">
-          {/* Shadow (doesn't bob) */}
           <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/25 blur-[6px]" />
-          
-          {/* Avatar (bobs) */}
           <div className="walking-avatar-bob relative z-10 w-full h-full">
             <HulyAvatar equippedItems={equippedItems} animation="walking" />
           </div>

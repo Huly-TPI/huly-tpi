@@ -11,8 +11,12 @@ import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsRequest;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsResponse;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUseCase;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,58 +25,212 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class GetUserFinancialsUseCaseTest {
 
+    private static final Long USER_ID = 1L;
+
+    @Mock
     private UserRepository userRepository;
+
+    @Mock
     private PaymentEventRepository paymentEventRepository;
+
+    @Mock
     private ProductRepository productRepository;
+
+    @InjectMocks
     private GetUserFinancialsUseCase useCase;
 
-    @BeforeEach
-    void setUp() {
-        userRepository = mock(UserRepository.class);
-        paymentEventRepository = mock(PaymentEventRepository.class);
-        productRepository = mock(ProductRepository.class);
-        useCase = new GetUserFinancialsUseCase(userRepository, paymentEventRepository, productRepository);
+    @Test
+    @DisplayName("Lanza excepción cuando el usuario no existe")
+    void executeShouldThrowWhenUserNotFound() {
+        // --- arrange ---
+        givenUserNotFound();
+
+        // --- assert ---
+        thenFinancialsThrowsUserNotFound();
     }
 
     @Test
-    void execute_shouldThrowException_whenUserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+    @DisplayName("Arma la respuesta a partir de los objetos de dominio")
+    void executeShouldBuildResponseFromDomainObjects() {
+        // --- arrange ---
+        givenUserExists();
+        givenPayments(approvedPayment(200L, 100L));
+        givenApprovedPayments(approvedPayment(200L, 100L));
+        givenProductLookup(List.of(100L), premiumPlan());
 
-        assertThatThrownBy(() -> useCase.execute(new GetUserFinancialsRequest(1L)))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Usuario no encontrado");
+        // --- act ---
+        GetUserFinancialsResponse response = financials();
+
+        // --- assert ---
+        thenSinglePremiumPayment(response);
     }
 
     @Test
-    void execute_shouldBuildUseCaseResponseFromDomainObjects() {
-        Long userId = 1L;
-        Product product = Product.builder()
+    @DisplayName("Lanza excepción cuando falta el producto de un pago")
+    void executeShouldThrowWhenProductIsMissing() {
+        // --- arrange ---
+        givenUserExists();
+        givenPayments(approvedPayment(200L, 999L));
+        givenProductLookup(List.of(999L));
+
+        // --- assert ---
+        thenFinancialsThrowsMissingProduct("Missing product for paymentEventId=200, productId=999");
+    }
+
+    @Test
+    @DisplayName("Lanza excepción cuando el pago no tiene productId")
+    void executeShouldThrowWhenProductIdIsNull() {
+        // --- arrange ---
+        givenUserExists();
+        givenPayments(payment(200L, null, null, null));
+        givenProductLookup(List.of());
+
+        // --- assert ---
+        thenFinancialsThrowsMissingProduct("Missing product for paymentEventId=200, productId=null");
+    }
+
+    @Test
+    @DisplayName("Deduplica los productIds y suma las ganancias de pagos repetidos")
+    void executeShouldHandleDuplicateProductIds() {
+        // --- arrange ---
+        givenUserExists();
+        givenPayments(approvedPayment(200L, 100L), approvedPayment(201L, 100L));
+        givenApprovedPayments(approvedPayment(200L, 100L), approvedPayment(201L, 100L));
+        givenProductLookup(List.of(100L), premiumPlan(), premiumPlan());
+
+        // --- act ---
+        GetUserFinancialsResponse response = financials();
+
+        // --- assert ---
+        thenTwoPaymentsTotalling(response, "39.98");
+    }
+
+    @Test
+    @DisplayName("Devuelve respuesta vacía y ganancias en cero cuando no hay pagos")
+    void executeShouldReturnEmptyWhenNoPayments() {
+        // --- arrange ---
+        givenUserExists();
+        givenNoPayments();
+        givenApprovedPayments();
+        givenProductLookup(List.of());
+
+        // --- act ---
+        GetUserFinancialsResponse response = financials();
+
+        // --- assert ---
+        thenEmptyFinancials(response);
+    }
+
+    @Test
+    @DisplayName("Lanza excepción cuando el pago no tiene estado")
+    void executeShouldThrowWhenPaymentStatusIsNull() {
+        // --- arrange ---
+        givenUserExists();
+        givenPayments(payment(200L, 100L, null, ProductType.PLAN));
+        givenProductLookup(List.of(100L), premiumPlan());
+
+        // --- assert ---
+        thenFinancialsThrowsNullPointer("PaymentEvent status is required");
+    }
+
+    @Test
+    @DisplayName("Lanza excepción cuando el pago no tiene tipo de producto")
+    void executeShouldThrowWhenProductTypeIsNull() {
+        // --- arrange ---
+        givenUserExists();
+        givenPayments(payment(200L, 100L, PaymentStatus.APPROVED, null));
+        givenProductLookup(List.of(100L), premiumPlan());
+
+        // --- assert ---
+        thenFinancialsThrowsNullPointer("PaymentEvent productType is required");
+    }
+
+    @Test
+    @DisplayName("Lanza excepción cuando el producto aprobado no tiene precio")
+    void executeShouldThrowWhenApprovedProductPriceIsNull() {
+        // --- arrange ---
+        givenUserExists();
+        givenPayments(approvedPayment(200L, 100L));
+        givenApprovedPayments(approvedPayment(200L, 100L));
+        givenProductLookup(List.of(100L), planWithoutPrice());
+
+        // --- assert ---
+        thenFinancialsThrowsNullPointer("Product price is required");
+    }
+
+    // --- arrange ---
+
+    private void givenUserExists() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(AppUser.builder().id(USER_ID).build()));
+    }
+
+    private void givenUserNotFound() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+    }
+
+    private void givenPayments(PaymentEvent... payments) {
+        when(paymentEventRepository.findByUserId(USER_ID)).thenReturn(List.of(payments));
+    }
+
+    private void givenNoPayments() {
+        when(paymentEventRepository.findByUserId(USER_ID)).thenReturn(List.of());
+    }
+
+    private void givenApprovedPayments(PaymentEvent... payments) {
+        when(paymentEventRepository.findByUserIdAndStatus(USER_ID, PaymentStatus.APPROVED)).thenReturn(List.of(payments));
+    }
+
+    private void givenProductLookup(List<Long> expectedIds, Product... products) {
+        when(productRepository.findByIds(expectedIds)).thenReturn(List.of(products));
+    }
+
+    private PaymentEvent approvedPayment(Long id, Long productId) {
+        return payment(id, productId, PaymentStatus.APPROVED, ProductType.PLAN);
+    }
+
+    private PaymentEvent payment(Long id, Long productId, PaymentStatus status, ProductType productType) {
+        return PaymentEvent.builder()
+                .id(id)
+                .userId(USER_ID)
+                .productId(productId)
+                .status(status)
+                .productType(productType)
+                .createdAt(Instant.now())
+                .build();
+    }
+
+    private Product premiumPlan() {
+        return Product.builder()
                 .id(100L)
                 .name("Premium Plan")
                 .price(new BigDecimal("19.99"))
                 .type(ProductType.PLAN)
                 .build();
-        PaymentEvent payment = PaymentEvent.builder()
-                .id(200L)
-                .userId(userId)
-                .productId(100L)
-                .status(PaymentStatus.APPROVED)
-                .productType(ProductType.PLAN)
-                .createdAt(Instant.now())
+    }
+
+    private Product planWithoutPrice() {
+        return Product.builder()
+                .id(100L)
+                .name("Premium Plan")
+                .price(null)
+                .type(ProductType.PLAN)
                 .build();
+    }
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(AppUser.builder().id(userId).build()));
-        when(paymentEventRepository.findByUserId(userId)).thenReturn(List.of(payment));
-        when(paymentEventRepository.findByUserIdAndStatus(userId, PaymentStatus.APPROVED)).thenReturn(List.of(payment));
-        when(productRepository.findByIds(List.of(100L))).thenReturn(List.of(product));
+    // --- act ---
 
-        GetUserFinancialsResponse response = useCase.execute(new GetUserFinancialsRequest(userId));
+    private GetUserFinancialsResponse financials() {
+        return useCase.execute(new GetUserFinancialsRequest(USER_ID));
+    }
 
+    // --- assert ---
+
+    private void thenSinglePremiumPayment(GetUserFinancialsResponse response) {
         assertThat(response.totalEarnings()).isEqualByComparingTo("19.99");
         assertThat(response.paymentEvents()).singleElement().satisfies(item -> {
             assertThat(item.productId()).isEqualTo(100L);
@@ -82,78 +240,31 @@ class GetUserFinancialsUseCaseTest {
         });
     }
 
-    @Test
-    void execute_shouldThrowException_whenProductIsMissing() {
-        Long userId = 1L;
-        PaymentEvent payment = PaymentEvent.builder()
-                .id(200L)
-                .userId(userId)
-                .productId(999L)
-                .status(PaymentStatus.APPROVED)
-                .productType(ProductType.PLAN)
-                .build();
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(AppUser.builder().id(userId).build()));
-        when(paymentEventRepository.findByUserId(userId)).thenReturn(List.of(payment));
-        when(productRepository.findByIds(List.of(999L))).thenReturn(List.of());
-
-        assertThatThrownBy(() -> useCase.execute(new GetUserFinancialsRequest(userId)))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Missing product for paymentEventId=200, productId=999");
-    }
-
-    @Test
-    void execute_shouldThrowException_whenProductIdIsNull() {
-        Long userId = 1L;
-        PaymentEvent payment = PaymentEvent.builder()
-                .id(200L)
-                .userId(userId)
-                .productId(null)
-                .build();
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(AppUser.builder().id(userId).build()));
-        when(paymentEventRepository.findByUserId(userId)).thenReturn(List.of(payment));
-        when(productRepository.findByIds(List.of())).thenReturn(List.of());
-
-        assertThatThrownBy(() -> useCase.execute(new GetUserFinancialsRequest(userId)))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Missing product for paymentEventId=200, productId=null");
-    }
-
-    @Test
-    void execute_shouldHandleDuplicateProductIds() {
-        Long userId = 1L;
-        Product product = Product.builder()
-                .id(100L)
-                .name("Premium Plan")
-                .price(new BigDecimal("19.99"))
-                .type(ProductType.PLAN)
-                .build();
-        PaymentEvent payment1 = PaymentEvent.builder()
-                .id(200L)
-                .userId(userId)
-                .productId(100L)
-                .status(PaymentStatus.APPROVED)
-                .productType(ProductType.PLAN)
-                .createdAt(Instant.now())
-                .build();
-        PaymentEvent payment2 = PaymentEvent.builder()
-                .id(201L)
-                .userId(userId)
-                .productId(100L)
-                .status(PaymentStatus.APPROVED)
-                .productType(ProductType.PLAN)
-                .createdAt(Instant.now())
-                .build();
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(AppUser.builder().id(userId).build()));
-        when(paymentEventRepository.findByUserId(userId)).thenReturn(List.of(payment1, payment2));
-        when(paymentEventRepository.findByUserIdAndStatus(userId, PaymentStatus.APPROVED)).thenReturn(List.of(payment1, payment2));
-        when(productRepository.findByIds(List.of(100L))).thenReturn(List.of(product, product));
-
-        GetUserFinancialsResponse response = useCase.execute(new GetUserFinancialsRequest(userId));
-
-        assertThat(response.totalEarnings()).isEqualByComparingTo("39.98");
+    private void thenTwoPaymentsTotalling(GetUserFinancialsResponse response, String expectedTotal) {
+        assertThat(response.totalEarnings()).isEqualByComparingTo(expectedTotal);
         assertThat(response.paymentEvents()).hasSize(2);
+    }
+
+    private void thenEmptyFinancials(GetUserFinancialsResponse response) {
+        assertThat(response.paymentEvents()).isEmpty();
+        assertThat(response.totalEarnings()).isEqualByComparingTo("0");
+    }
+
+    private void thenFinancialsThrowsUserNotFound() {
+        assertThatThrownBy(this::financials)
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Usuario no encontrado");
+    }
+
+    private void thenFinancialsThrowsMissingProduct(String message) {
+        assertThatThrownBy(this::financials)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(message);
+    }
+
+    private void thenFinancialsThrowsNullPointer(String message) {
+        assertThatThrownBy(this::financials)
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining(message);
     }
 }

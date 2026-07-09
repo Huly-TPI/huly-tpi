@@ -5,6 +5,7 @@ import com.huly.backend.domain.mapper.extension.SaveUserAntiScrollSettingsMapper
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,25 +23,37 @@ class SaveUserAntiScrollSettingsUseCaseTest {
     @Mock
     private UserAntiScrollSettingsRepository settingsRepository;
 
-    private SaveUserAntiScrollSettingsUseCase saveUserAntiScrollSettingsUseCase;
+    private SaveUserAntiScrollSettingsUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        saveUserAntiScrollSettingsUseCase =
-                new SaveUserAntiScrollSettingsUseCase(settingsRepository, new SaveUserAntiScrollSettingsMapper());
+        useCase = new SaveUserAntiScrollSettingsUseCase(settingsRepository, new SaveUserAntiScrollSettingsMapper());
     }
 
     @Test
-    void execute_shouldSaveSettingsInRepository() {
-        SaveUserAntiScrollSettingsRequest request = new SaveUserAntiScrollSettingsRequest(
-                10L, true, 15, List.of("x.com"), false);
+    @DisplayName("Guarda las opciones mapeadas en el repositorio")
+    void executeSavesSettingsInRepository() {
+        save(10L, true, 15, List.of("x.com"), false);
 
-        saveUserAntiScrollSettingsUseCase.execute(request);
+        thenSettingsSaved(10L, true, 15, List.of("x.com"), false);
+    }
 
-        verify(settingsRepository).save(eq(10L), argThat((UserAntiScrollSettings settings) ->
-                settings.isEnabled()
-                        && settings.getPauseIntervalSeconds() == 15
-                        && settings.getMonitoredDomains().equals(List.of("x.com"))
-                        && !settings.isDataSharingConsent()));
+    // --- act ---
+
+    private void save(long userId, boolean enabled, int pauseIntervalSeconds,
+                      List<String> monitoredDomains, boolean dataSharingConsent) {
+        useCase.execute(new SaveUserAntiScrollSettingsRequest(
+                userId, enabled, pauseIntervalSeconds, monitoredDomains, dataSharingConsent));
+    }
+
+    // --- assert ---
+
+    private void thenSettingsSaved(long userId, boolean enabled, int pauseIntervalSeconds,
+                                   List<String> monitoredDomains, boolean dataSharingConsent) {
+        verify(settingsRepository).save(eq(userId), argThat((UserAntiScrollSettings settings) ->
+                settings.isEnabled() == enabled
+                        && settings.getPauseIntervalSeconds() == pauseIntervalSeconds
+                        && settings.getMonitoredDomains().equals(monitoredDomains)
+                        && settings.isDataSharingConsent() == dataSharingConsent));
     }
 }

@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
 import { ThemeProvider } from '../../context/theme'
 import { updateThemePreference } from '../../api/auth'
+import { clickButton, clearAllMocks } from '../testHelpers'
+
 
 vi.mock('../../api/auth', () => ({
   updateThemePreference: vi.fn(() => Promise.resolve()),
@@ -11,7 +13,7 @@ vi.mock('../../api/auth', () => ({
 
 describe('ThemeToggle', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    clearAllMocks()
     window.localStorage.clear()
     delete document.documentElement.dataset.theme
     document.documentElement.classList.remove('dark')
@@ -40,52 +42,63 @@ describe('ThemeToggle', () => {
 
   it('arranca con el tema del sistema cuando no hay usuario', () => {
     renderToggle()
-    expect(screen.getByRole('button', { name: 'Cambiar a modo noche' })).toBeInTheDocument()
+    verifyButtonPresent('Cambiar a modo noche')
   })
 
-  it('toma el tema que llega desde el perfil del usuario', async () => {
+  it('toma el tema que llega desde el perfil del usuario', () => {
     renderToggle()
-    act(() => {
-      window.dispatchEvent(new CustomEvent('auth:user-loaded', {
-        detail: {
-          id: 1,
-          name: 'Mili',
-          email: 'mili@huly.com',
-          role: 'USER',
-          themePreference: 'DARK',
-        },
-      }))
+    dispatchUserLoaded('DARK')
+    return verifyButtonAsync('Cambiar a modo dia')
+  })
+
+  it('alterna y persiste el tema local cuando no hay usuario', () => {
+    setupUser()
+    renderToggle()
+    return clickBtn('Cambiar a modo noche').then(() => {
+      verifyButtonPresent('Cambiar a modo dia')
+      verifyHtmlDatasetTheme('dark')
+      verifyHtmlClassContains('dark', true)
+      verifyLocalStorageTheme('dark')
+      verifyUpdateThemePreferenceNotCalled()
     })
-
-    await screen.findByRole('button', { name: 'Cambiar a modo dia' })
-  })
-
-  it('alterna y persiste el tema local cuando no hay usuario', async () => {
-    const user = userEvent.setup()
-    renderToggle()
-
-    await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
-
-    expect(screen.getByRole('button', { name: 'Cambiar a modo dia' })).toBeInTheDocument()
-    expect(document.documentElement.dataset.theme).toBe('dark')
-    expect(document.documentElement.classList.contains('dark')).toBe(true)
-    expect(window.localStorage.getItem('huly:scene-theme')).toBe('dark')
-    expect(updateThemePreference).not.toHaveBeenCalled()
   })
 
   it('recupera el tema persistido al montar sin usuario', () => {
-    window.localStorage.setItem('huly:scene-theme', 'dark')
-
+    setupLocalStorageTheme('dark')
     renderToggle()
-
-    expect(screen.getByRole('button', { name: 'Cambiar a modo dia' })).toBeInTheDocument()
-    expect(document.documentElement.dataset.theme).toBe('dark')
+    verifyButtonPresent('Cambiar a modo dia')
+    verifyHtmlDatasetTheme('dark')
   })
 
-  it('mantiene el tema elegido al limpiar la sesion', async () => {
-    const user = userEvent.setup()
+  it('mantiene el tema elegido al limpiar la sesión', () => {
+    setupUser()
     renderToggle()
+    dispatchUserLoaded('LIGHT')
+    return clickBtn('Cambiar a modo noche').then(() => {
+      verifyLocalStorageTheme('dark')
+      dispatchUserCleared()
+      verifyButtonPresent('Cambiar a modo dia')
+      verifyHtmlDatasetTheme('dark')
+    })
+  })
 
+  it('persiste el tema al cambiarlo cuando hay usuario', () => {
+    setupUser()
+    renderToggle()
+    dispatchUserLoaded('LIGHT')
+    return clickBtn('Cambiar a modo noche').then(() => {
+      verifyUpdateThemePreferenceCalledWith('DARK')
+    })
+  })
+  let user: any
+
+  /* helpers */
+
+  const verifyButtonPresent = (name: string) => {
+    expect(screen.getByRole('button', { name })).toBeInTheDocument()
+  }
+
+  const dispatchUserLoaded = (themePreference: string) => {
     act(() => {
       window.dispatchEvent(new CustomEvent('auth:user-loaded', {
         detail: {
@@ -93,39 +106,51 @@ describe('ThemeToggle', () => {
           name: 'Mili',
           email: 'mili@huly.com',
           role: 'USER',
-          themePreference: 'LIGHT',
+          themePreference,
         },
       }))
     })
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
-    expect(window.localStorage.getItem('huly:scene-theme')).toBe('dark')
+  const verifyButtonAsync = (name: string) => {
+    return screen.findByRole('button', { name }).then(() => {})
+  }
 
+  const setupUser = () => {
+    user = userEvent.setup()
+  }
+
+  const clickBtn = (name: string) => {
+    return clickButton(user, name)
+  }
+
+  const verifyHtmlDatasetTheme = (theme: string) => {
+    expect(document.documentElement.dataset.theme).toBe(theme)
+  }
+
+  const verifyHtmlClassContains = (className: string, value: boolean) => {
+    expect(document.documentElement.classList.contains(className)).toBe(value)
+  }
+
+  const verifyLocalStorageTheme = (theme: string) => {
+    expect(window.localStorage.getItem('huly:scene-theme')).toBe(theme)
+  }
+
+  const setupLocalStorageTheme = (theme: string) => {
+    window.localStorage.setItem('huly:scene-theme', theme)
+  }
+
+  const verifyUpdateThemePreferenceNotCalled = () => {
+    expect(updateThemePreference).not.toHaveBeenCalled()
+  }
+
+  const verifyUpdateThemePreferenceCalledWith = (theme: string) => {
+    expect(updateThemePreference).toHaveBeenCalledWith(theme)
+  }
+
+  const dispatchUserCleared = () => {
     act(() => {
       window.dispatchEvent(new CustomEvent('auth:user-cleared'))
     })
-
-    expect(screen.getByRole('button', { name: 'Cambiar a modo dia' })).toBeInTheDocument()
-    expect(document.documentElement.dataset.theme).toBe('dark')
-  })
-
-  it('persiste el tema al cambiarlo cuando hay usuario', async () => {
-    const user = userEvent.setup()
-    renderToggle()
-    act(() => {
-      window.dispatchEvent(new CustomEvent('auth:user-loaded', {
-        detail: {
-          id: 1,
-          name: 'Mili',
-          email: 'mili@huly.com',
-          role: 'USER',
-          themePreference: 'LIGHT',
-        },
-      }))
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Cambiar a modo noche' }))
-
-    expect(updateThemePreference).toHaveBeenCalledWith('DARK')
-  })
+  }
 })

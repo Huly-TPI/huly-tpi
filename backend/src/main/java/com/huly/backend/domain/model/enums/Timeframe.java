@@ -19,6 +19,10 @@ public enum Timeframe {
         };
     }
 
+    public static Instant getStartInstantFor(Timeframe timeframe) {
+        return timeframe != null ? timeframe.getStartInstant(Instant.now(), ZoneId.systemDefault()) : null;
+    }
+
     public static Timeframe fromString(String value) {
         if (value == null) return TOTAL;
         try {

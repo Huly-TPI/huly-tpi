@@ -23,12 +23,12 @@
   aspect-ratio: auto;
   min-height: 0;
   overflow: hidden;
-  background-image: url('../../assets/profile/light-theme/background/day-background.webp');
-  background-position: center;
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
   box-shadow: inset 0 0 40px rgb(47 42 32 / 18%);
   flex: 0 0 auto;
+}
+
+.profile-scene .theme-background {
+  object-fit: fill;
 }
 
 .profile-welcome {
@@ -59,9 +59,11 @@
     height: 100%;
     max-height: none;
     aspect-ratio: auto;
-    background-image: url('../../assets/profile/light-theme/background/mobile/day-background.webp');
-    background-position: center top;
-    background-size: cover;
+  }
+
+  .profile-scene .theme-background {
+    object-fit: cover;
+    object-position: center top;
   }
 
   .profile-welcome {

@@ -1,153 +1,135 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import ChatbotMessages from '../../components/Chatbot/ChatbotMessages'
+import { clickButton, verifyTextPresent } from '../testHelpers'
+
+const PARAGRAPH_1 =
+  'La ansiedad es una respuesta natural del cuerpo ante situaciones que percibe como amenazantes o desafiantes, generando tensión muscular y sensaciones de alerta que pueden resultar muy incómodas.'
+const PARAGRAPH_2 =
+  'Para manejarla de manera efectiva, lo más útil es reconocer qué situaciones la disparan y observar cómo se manifiesta en el cuerpo, los pensamientos y las emociones, sin juzgarse por ello.'
+
+const SHORT_PARAGRAPH = 'Lo importante es que no estás solo.'
+const NEXT_PARAGRAPH =
+  'Hay muchas formas de trabajar con la ansiedad y encontrar alivio en el día a día, incluso con pequeños cambios.'
 
 describe('ChatbotMessages', () => {
-  it('renders empty prompt when no messages', () => {
+  let onChallengeDecisionMock: any
+  let onSuggestedActionDecisionMock: any
+  let onCloseMock: any
+  let onDeleteAudioMessageMock: any
+
+  beforeEach(() => {
+    onChallengeDecisionMock = vi.fn()
+    onSuggestedActionDecisionMock = vi.fn()
+    onCloseMock = vi.fn()
+    onDeleteAudioMessageMock = vi.fn()
+  })
+
+  it('renderiza la indicación vacía cuando no hay mensajes', () => {
+    renderMessages([])
+    verifyEmptyPromptPresent()
+  })
+
+  it('llama a los manejadores de reto al hacer click en los botones', () => {
+    renderMessages([
+      {
+        role: 'assistant',
+        content: 'te propongo',
+        generated_challenge: {
+          title: 'Reto',
+          description: 'Descripcion',
+        },
+      },
+    ])
+    return clickAccept()
+      .then(() => clickReject())
+      .then(() => {
+        verifyChallengeDecisionCalledWith(0, 1, 'accepted')
+        verifyChallengeDecisionCalledWith(0, 2, 'rejected')
+      })
+  })
+
+  it('renderiza múltiples burbujas cuando el mensaje del asistente tiene varios párrafos largos', () => {
+    renderMessages([{ role: 'assistant', content: `${PARAGRAPH_1}\n\n${PARAGRAPH_2}` }])
+    verifyTextIsPresent(PARAGRAPH_1)
+    verifyTextIsPresent(PARAGRAPH_2)
+  })
+
+  it('fusiona un párrafo corto con el siguiente en una sola burbuja', () => {
+    renderMessages([{ role: 'assistant', content: `${SHORT_PARAGRAPH}\n\n${NEXT_PARAGRAPH}` }])
+    verifyMergedParagraphPresent(SHORT_PARAGRAPH, NEXT_PARAGRAPH)
+  })
+
+  it('llama al manejador de rechazo de la acción sugerida', () => {
+    renderMessages([
+      {
+        role: 'assistant',
+        content: 'actividad sugerida',
+        suggested_action: {
+          type: 'INTERNAL',
+          action_id: 'X',
+          title: 'Respiracion',
+          description: 'desc',
+          action_url: '/activities',
+        },
+      },
+    ])
+    return clickReject().then(() => {
+      verifySuggestedActionDecisionCalledWith(0, 'rejected')
+    })
+  })
+
+  /* helpers */
+
+  const renderMessages = (messages: any[]) => {
     render(
       <MemoryRouter>
         <ChatbotMessages
-          messages={[]}
+          messages={messages}
           isSending={false}
           isLoadingHistory={false}
           error=""
-          onClose={vi.fn()}
-          onChallengeDecision={vi.fn()}
-          onSuggestedActionDecision={vi.fn()}
-          onDeleteAudioMessage={vi.fn()}
+          onClose={onCloseMock}
+          onChallengeDecision={onChallengeDecisionMock}
+          onSuggestedActionDecision={onSuggestedActionDecisionMock}
+          onDeleteAudioMessage={onDeleteAudioMessageMock}
           bottomRef={{ current: null }}
         />
-      </MemoryRouter>,
+      </MemoryRouter>
     )
+  }
 
-    expect(screen.getByText('Contame cómo te sentís hoy')).toBeInTheDocument()
-  })
+  const verifyEmptyPromptPresent = () => {
+    verifyTextPresent('Contame cómo te sentís hoy')
+  }
 
-  it('calls challenge handlers on buttons', async () => {
+  const clickAccept = () => {
     const user = userEvent.setup()
-    const onChallengeDecision = vi.fn()
+    return clickButton(user, 'Aceptar')
+  }
 
-    render(
-      <MemoryRouter>
-        <ChatbotMessages
-          messages={[
-            {
-              role: 'assistant',
-              content: 'te propongo',
-              generated_challenge: {
-                title: 'Reto',
-                description: 'Descripcion',
-              },
-            },
-          ]}
-          isSending={false}
-          isLoadingHistory={false}
-          error=""
-          onClose={vi.fn()}
-          onChallengeDecision={onChallengeDecision}
-          onSuggestedActionDecision={vi.fn()}
-          onDeleteAudioMessage={vi.fn()}
-          bottomRef={{ current: null }}
-        />
-      </MemoryRouter>,
-    )
+  const clickReject = () => {
+    const user = userEvent.setup()
+    return clickButton(user, 'Rechazar')
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Aceptar' }))
-    await user.click(screen.getByRole('button', { name: 'Rechazar' }))
+  const verifyChallengeDecisionCalledWith = (index: number, callIndex: number, decision: 'accepted' | 'rejected') => {
+    expect(onChallengeDecisionMock).toHaveBeenNthCalledWith(callIndex, index, decision)
+  }
 
-    expect(onChallengeDecision).toHaveBeenNthCalledWith(1, 0, 'accepted')
-    expect(onChallengeDecision).toHaveBeenNthCalledWith(2, 0, 'rejected')
-  })
+  const verifyTextIsPresent = (text: string) => {
+    verifyTextPresent(text)
+  }
 
-  it('renders multiple bubbles when assistant message has multiple long paragraphs', () => {
-    const paragraph1 =
-      'La ansiedad es una respuesta natural del cuerpo ante situaciones que percibe como amenazantes o desafiantes, generando tensión muscular y sensaciones de alerta que pueden resultar muy incómodas.'
-    const paragraph2 =
-      'Para manejarla de manera efectiva, lo más útil es reconocer qué situaciones la disparan y observar cómo se manifiesta en el cuerpo, los pensamientos y las emociones, sin juzgarse por ello.'
-
-    render(
-      <MemoryRouter>
-        <ChatbotMessages
-          messages={[{ role: 'assistant', content: `${paragraph1}\n\n${paragraph2}` }]}
-          isSending={false}
-          isLoadingHistory={false}
-          error=""
-          onClose={vi.fn()}
-          onChallengeDecision={vi.fn()}
-          onSuggestedActionDecision={vi.fn()}
-          onDeleteAudioMessage={vi.fn()}
-          bottomRef={{ current: null }}
-        />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByText(paragraph1)).toBeInTheDocument()
-    expect(screen.getByText(paragraph2)).toBeInTheDocument()
-  })
-
-  it('merges short paragraph with the next one into a single bubble', () => {
-    const shortParagraph = 'Lo importante es que no estás solo.'
-    const nextParagraph =
-      'Hay muchas formas de trabajar con la ansiedad y encontrar alivio en el día a día, incluso con pequeños cambios.'
-
-    render(
-      <MemoryRouter>
-        <ChatbotMessages
-          messages={[{ role: 'assistant', content: `${shortParagraph}\n\n${nextParagraph}` }]}
-          isSending={false}
-          isLoadingHistory={false}
-          error=""
-          onClose={vi.fn()}
-          onChallengeDecision={vi.fn()}
-          onSuggestedActionDecision={vi.fn()}
-          onDeleteAudioMessage={vi.fn()}
-          bottomRef={{ current: null }}
-        />
-      </MemoryRouter>,
-    )
-
+  const verifyMergedParagraphPresent = (shortPar: string, nextPar: string) => {
     expect(
-      screen.getByText((content) => content.includes(shortParagraph) && content.includes(nextParagraph)),
+      screen.getByText((content) => content.includes(shortPar) && content.includes(nextPar))
     ).toBeInTheDocument()
-  })
+  }
 
-  it('calls suggested action reject handler', async () => {
-    const user = userEvent.setup()
-    const onSuggestedActionDecision = vi.fn()
-
-    render(
-      <MemoryRouter>
-        <ChatbotMessages
-          messages={[
-            {
-              role: 'assistant',
-              content: 'actividad sugerida',
-              suggested_action: {
-                type: 'INTERNAL',
-                action_id: 'X',
-                title: 'Respiracion',
-                description: 'desc',
-                action_url: '/activities',
-              },
-            },
-          ]}
-          isSending={false}
-          isLoadingHistory={false}
-          error=""
-          onClose={vi.fn()}
-          onChallengeDecision={vi.fn()}
-          onSuggestedActionDecision={onSuggestedActionDecision}
-          onDeleteAudioMessage={vi.fn()}
-          bottomRef={{ current: null }}
-        />
-      </MemoryRouter>,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Rechazar' }))
-
-    expect(onSuggestedActionDecision).toHaveBeenCalledWith(0, 'rejected')
-  })
+  const verifySuggestedActionDecisionCalledWith = (index: number, decision: 'accepted' | 'rejected') => {
+    expect(onSuggestedActionDecisionMock).toHaveBeenCalledWith(index, decision)
+  }
 })
-

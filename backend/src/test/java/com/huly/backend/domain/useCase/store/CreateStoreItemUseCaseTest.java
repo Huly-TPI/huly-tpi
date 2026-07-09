@@ -8,6 +8,7 @@ import com.huly.backend.domain.model.shop.StoreItem;
 import com.huly.backend.domain.repository.StoreItemRepository;
 import com.huly.backend.domain.service.store.StoreItemImageService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CreateStoreItemUseCaseTest {
 
-     private static final String IMAGE_URL = "http://x/light-theme/u.webp";
+    private static final String IMAGE_URL = "http://x/light-theme/u.webp";
 
     @Mock
     private StoreItemRepository storeItemRepository;
@@ -32,11 +33,30 @@ class CreateStoreItemUseCaseTest {
     @Mock
     private StoreItemImageService imageService;
 
+    private final ArgumentCaptor<StoreItem> storeItemCaptor = ArgumentCaptor.forClass(StoreItem.class);
+
     private CreateStoreItemUseCase useCase;
 
     @BeforeEach
     void setUp() {
         useCase = new CreateStoreItemUseCase(storeItemRepository, new StoreItemMapper(), imageService);
+    }
+
+    @Test
+    @DisplayName("Sube las imágenes y guarda el nuevo item")
+    void executeShouldUploadImagesAndSaveNewItem() {
+        givenImagesUploadedAndItemSaved();
+
+        StoreItemView result = create();
+
+        thenNewItemSavedWithUploadedImage(result);
+    }
+
+    // --- arrange ---
+
+    private void givenImagesUploadedAndItemSaved() {
+        when(imageService.uploadThemePair(any(), any(), any())).thenReturn(IMAGE_URL);
+        when(storeItemRepository.save(any(StoreItem.class))).thenReturn(saved());
     }
 
     private CreateStoreItemRequest request() {
@@ -65,17 +85,18 @@ class CreateStoreItemUseCaseTest {
                 .build();
     }
 
-    @Test
-    void execute_shouldUploadImagesAndSaveNewItem() {
-        when(imageService.uploadThemePair(any(), any(), any())).thenReturn(IMAGE_URL);
-        when(storeItemRepository.save(any(StoreItem.class))).thenReturn(saved());
+    // --- act ---
 
-        StoreItemView result = useCase.execute(request());
+    private StoreItemView create() {
+        return useCase.execute(request());
+    }
 
+    // --- assert ---
+
+    private void thenNewItemSavedWithUploadedImage(StoreItemView result) {
         verify(imageService).uploadThemePair(any(), any(), any());
-        ArgumentCaptor<StoreItem> captor = ArgumentCaptor.forClass(StoreItem.class);
-        verify(storeItemRepository).save(captor.capture());
-        StoreItem toSave = captor.getValue();
+        verify(storeItemRepository).save(storeItemCaptor.capture());
+        StoreItem toSave = storeItemCaptor.getValue();
         assertThat(toSave.getId()).isNull();
         assertThat(toSave.getAssetKey()).isNull();
         assertThat(toSave.getName()).isEqualTo("Casa nueva");
@@ -83,5 +104,4 @@ class CreateStoreItemUseCaseTest {
         assertThat(result.id()).isEqualTo(7L);
         assertThat(result.imageUrl()).isEqualTo(IMAGE_URL);
     }
-
 }

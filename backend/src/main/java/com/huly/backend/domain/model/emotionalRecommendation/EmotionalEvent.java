@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Builder(toBuilder = true)
@@ -29,4 +30,21 @@ public class EmotionalEvent {
     private String feedbackText;
     private Instant createdAt;
     private Instant updatedAt;
+
+    public boolean isUnhelpful(int index, List<EmotionalEvent> userHistory) {
+        boolean hasLowFeedback = this.feedbackScore != null && this.feedbackScore <= 2;
+        return hasLowFeedback || hasNoEmotionalImprovement(index, userHistory);
+    }
+
+    public boolean hasNoEmotionalImprovement(int index, List<EmotionalEvent> userHistory) {
+        if (userHistory == null || index <= 0 || index >= userHistory.size())
+            return false;
+
+        EmotionalEvent nextEvent = userHistory.get(index - 1);
+        if (nextEvent == null || nextEvent.getValence() == null || this.valence == null)
+            return false;
+
+        double valenceDelta = nextEvent.getValence() - this.valence;
+        return valenceDelta <= 0.0;
+    }
 }

@@ -46,6 +46,31 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .toList();
     }
 
+    @Override
+    public Product save(Product product) {
+        return toDomain(jpaRepository.save(toEntity(product)));
+    }
+
+    @Override
+    public List<Product> findByTypeAndActive(ProductType type, boolean active) {
+        return jpaRepository.findByTypeAndActive(type, active).stream().map(this::toDomain).toList();
+    }
+
+    private ProductEntity toEntity(Product p) {
+        return ProductEntity.builder()
+                .id(p.getId())
+                .name(p.getName())
+                .description(p.getDescription())
+                .price(p.getPrice())
+                .coinsAmount(p.getCoinsAmount())
+                .type(p.getType())
+                .planCode(p.getPlanCode())
+                .chatDailyLimit(p.getChatDailyLimit())
+                .audioDailyLimit(p.getAudioDailyLimit())
+                .active(p.isActive())
+                .build();
+    }
+
     private Product toDomain(ProductEntity entity) {
         return Product.builder()
                 .id(entity.getId())
@@ -57,6 +82,7 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .planCode(entity.getPlanCode())
                 .chatDailyLimit(entity.getChatDailyLimit())
                 .audioDailyLimit(entity.getAudioDailyLimit())
+                .active(entity.isActive())
                 .build();
     }
 }

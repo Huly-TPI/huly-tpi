@@ -13,11 +13,13 @@ import com.huly.backend.domain.dto.userGoal.UserGoalItem;
 import com.huly.backend.domain.dto.userGoal.UserGoalPage;
 import com.huly.backend.domain.dto.userPlant.UserPlantItem;
 import com.huly.backend.domain.useCase.userGoal.*;
+import com.huly.backend.infrastructure.presentation.dto.userGoal.AcceptChallengeRequest;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalRequest;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.UserGoalUpdateRequest;
 import com.huly.backend.infrastructure.presentation.mapper.userGoal.UserGoalPresentationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.HttpMethod;
@@ -28,6 +30,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.io.IOException;
@@ -80,14 +83,264 @@ class UserGoalControllerTest {
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
 
-        UserDetails userDetails = new User(String.valueOf(USER_ID), "", Collections.emptyList());
-        SecurityContextHolder.getContext().setAuthentication(
-                new TestingAuthenticationToken(userDetails, null));
+        authenticateAs(String.valueOf(USER_ID));
     }
 
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    @DisplayName("Devuelve 201 al aceptar un reto con datos válidos")
+    void acceptChallengeShouldReturn201WhenRequestIsValid() throws Exception {
+        givenAcceptChallengeSucceeds();
+
+        ResultActions result = performAcceptChallenge("Reto", "Desc", 2L);
+
+        thenCreatedWithGoal(result, 1L, "Reto", "PENDING");
+    }
+
+    @Test
+    @DisplayName("Devuelve 201 al agregar una meta con datos válidos")
+    void addShouldReturn201WhenRequestIsValid() throws Exception {
+        givenAddSucceedsForValidRequest();
+
+        ResultActions result = performAdd("Respirar", "Desc", 2L);
+
+        thenCreatedWithGoal(result, 1L, "Respirar", "PENDING");
+    }
+
+    @Test
+    @DisplayName("Devuelve 201 al agregar una meta con activityId nulo")
+    void addShouldReturn201WithNullActivityId() throws Exception {
+        givenAddSucceedsForNullFields();
+
+        ResultActions result = performAdd("Respirar", null, null);
+
+        thenCreated(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 400 al agregar una meta con título vacío")
+    void addShouldReturn400WhenTitleIsBlank() throws Exception {
+        ResultActions result = performAdd("", null, null);
+
+        thenBadRequest(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 401 al agregar una meta sin estar autenticado")
+    void addShouldReturn401WhenNotAuthenticated() throws Exception {
+        givenNoAuthentication();
+
+        ResultActions result = performAdd("Titulo", null, null);
+
+        thenUnauthorized(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con metas completadas y pendientes paginadas")
+    void listByUserShouldReturn200WithPaginatedCompletadosAndPendientes() throws Exception {
+        givenGoalsPage();
+
+        ResultActions result = performListByUser();
+
+        thenOkWithPaginatedGoals(result);
+    }
+
+    @Test
+    @DisplayName("Usa los parámetros size y page al listar las metas")
+    void listByUserShouldUseSizeAndPageParams() throws Exception {
+        givenGoalsPageForParams();
+
+        ResultActions result = performListByUser(1, 3);
+
+        thenOkWithPageParams(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con páginas vacías cuando no hay metas")
+    void listByUserShouldReturn200WithEmptyPagesWhenNoGoals() throws Exception {
+        givenEmptyGoalsPage();
+
+        ResultActions result = performListByUser();
+
+        thenOkWithEmptyPages(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 al actualizar una meta con datos válidos")
+    void updateShouldReturn200WhenRequestIsValid() throws Exception {
+        givenUpdateSucceeds();
+
+        ResultActions result = performUpdate(1L, "Nuevo", "Desc", 2L);
+
+        thenOkWithUpdatedGoal(result, 1L, "Nuevo");
+    }
+
+    @Test
+    @DisplayName("Devuelve 400 al actualizar una meta con título vacío")
+    void updateShouldReturn400WhenTitleIsBlank() throws Exception {
+        ResultActions result = performUpdate(1L, "", null, null);
+
+        thenBadRequest(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 204 al eliminar una meta existente")
+    void deleteShouldReturn204WhenGoalExists() throws Exception {
+        ResultActions result = performDelete(1L);
+
+        thenNoContent(result);
+        thenDeleteWasCalledWith(1L);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con estado completado cuando la meta existe")
+    void completeShouldReturn200WithCompletedStatusWhenGoalExists() throws Exception {
+        givenCompleteSucceeds(1L);
+
+        ResultActions result = performComplete(1L);
+
+        thenOkWithCompletedGoal(result, 1L);
+    }
+
+    @Test
+    @DisplayName("Delega en el caso de uso con el id correcto al completar")
+    void completeShouldDelegateToUseCaseWithCorrectId() throws Exception {
+        givenCompleteSucceeds(42L);
+
+        ResultActions result = performComplete(42L);
+
+        thenOk(result);
+        thenCompleteWasCalledWith(42L);
+    }
+
+    @Test
+    @DisplayName("Devuelve 404 al pedir una imagen que no existe")
+    void getImageShouldReturn404WhenFileDoesNotExist() throws Exception {
+        givenMissingImage("missing.jpg");
+
+        ResultActions result = performGetImage("missing.jpg");
+
+        thenNotFound(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con contenido de imagen JPEG cuando el archivo existe")
+    void getImageShouldReturn200WithImageContentWhenFileExists() throws Exception {
+        givenStoredImage("photo.jpg");
+
+        ResultActions result = performGetImage("photo.jpg");
+
+        thenOkWithContentType(result, MediaType.IMAGE_JPEG);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con content-type PNG cuando el nombre es .png")
+    void getImageShouldReturn200WithPngContentTypeWhenFilenameIsPng() throws Exception {
+        givenStoredImage("photo.png");
+
+        ResultActions result = performGetImage("photo.png");
+
+        thenOkWithContentType(result, MediaType.IMAGE_PNG);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con content-type GIF cuando el nombre es .gif")
+    void getImageShouldReturn200WithGifContentTypeWhenFilenameIsGif() throws Exception {
+        givenStoredImage("anim.gif");
+
+        ResultActions result = performGetImage("anim.gif");
+
+        thenOkWithContentType(result, MediaType.IMAGE_GIF);
+    }
+
+    @Test
+    @DisplayName("Devuelve 200 con content-type JPEG cuando el nombre no tiene extensión")
+    void getImageShouldReturn200WithJpegContentTypeWhenFilenameHasNoExtension() throws Exception {
+        givenStoredImage("noextension");
+
+        ResultActions result = performGetImage("noextension");
+
+        thenOkWithContentType(result, MediaType.IMAGE_JPEG);
+    }
+
+    // --- arrange ---
+    private void authenticateAs(String username) {
+        UserDetails userDetails = new User(username, "", Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(userDetails, null));
+    }
+
+    private void givenNoAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void givenAcceptChallengeSucceeds() {
+        when(acceptChallengeUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && "Reto".equals(r.title())
+                        && "Desc".equals(r.description()) && Long.valueOf(2L).equals(r.activityId()))))
+                .thenReturn(new AcceptChallengeResponse(goalItem(1L, "Reto", "PENDING")));
+    }
+
+    private void givenAddSucceedsForValidRequest() {
+        when(addUserGoalUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && "Respirar".equals(r.title())
+                        && "Desc".equals(r.description()) && Long.valueOf(2L).equals(r.activityId()))))
+                .thenReturn(new AddUserGoalResponse(goalItem(1L, "Respirar", "PENDING")));
+    }
+
+    private void givenAddSucceedsForNullFields() {
+        when(addUserGoalUseCase.execute(argThat(r ->
+                r != null && USER_ID.equals(r.userId()) && r.description() == null && r.activityId() == null)))
+                .thenReturn(new AddUserGoalResponse(goalItem(1L, "Respirar", "PENDING")));
+    }
+
+    private void givenGoalsPage() {
+        GetUserGoalsResponse response = new GetUserGoalsResponse(
+                page(List.of(goalItem(1L, "Completado", "COMPLETED")), 0, 5, 1),
+                page(List.of(goalItem(2L, "Pendiente", "PENDING")), 0, 5, 1));
+        when(getUserGoalsByUserUseCase.execute(any(GetUserGoalsRequest.class))).thenReturn(response);
+    }
+
+    private void givenGoalsPageForParams() {
+        GetUserGoalsResponse response = new GetUserGoalsResponse(
+                page(List.of(), 1, 3, 0),
+                page(List.of(), 1, 3, 0));
+        when(getUserGoalsByUserUseCase.execute(argThat(r -> r != null && r.page() == 1 && r.size() == 3)))
+                .thenReturn(response);
+    }
+
+    private void givenEmptyGoalsPage() {
+        GetUserGoalsResponse response = new GetUserGoalsResponse(
+                page(List.of(), 0, 5, 0),
+                page(List.of(), 0, 5, 0));
+        when(getUserGoalsByUserUseCase.execute(any(GetUserGoalsRequest.class))).thenReturn(response);
+    }
+
+    private void givenUpdateSucceeds() {
+        when(updateUserGoalUseCase.execute(argThat(r ->
+                r != null && Long.valueOf(1L).equals(r.id()) && "Nuevo".equals(r.title())
+                        && "Desc".equals(r.description()) && Long.valueOf(2L).equals(r.activityId()))))
+                .thenReturn(new UpdateUserGoalResponse(goalItem(1L, "Nuevo", "PENDING")));
+    }
+
+    private void givenCompleteSucceeds(long id) {
+        when(completeUserGoalUseCase.execute(argThat(r -> r != null && Long.valueOf(id).equals(r.id())), isNull()))
+                .thenReturn(completeResponse(id));
+    }
+
+    private void givenMissingImage(String filename) {
+        when(getGoalImageUseCase.execute(argThat(r -> r != null && filename.equals(r.filename()))))
+                .thenReturn(Path.of("nonexistent-xyz-dir", filename));
+    }
+
+    private void givenStoredImage(String filename) throws IOException {
+        Path imageFile = tempDir.resolve(filename);
+        Files.write(imageFile, new byte[]{1, 2, 3});
+        when(getGoalImageUseCase.execute(argThat(r -> r != null && filename.equals(r.filename()))))
+                .thenReturn(imageFile);
     }
 
     private UserGoalItem goalItem(Long id, String title, String status) {
@@ -100,51 +353,86 @@ class UserGoalControllerTest {
                 pageNumber >= Math.max(totalPages - 1, 0));
     }
 
-    @Test
-    void add_shouldReturn201_whenRequestIsValid() throws Exception {
-        when(addUserGoalUseCase.execute(argThat(r ->
-                r != null && USER_ID.equals(r.userId()) && "Respirar".equals(r.title())
-                        && "Desc".equals(r.description()) && Long.valueOf(2L).equals(r.activityId()))))
-                .thenReturn(new AddUserGoalResponse(goalItem(1L, "Respirar", "PENDING")));
-
-        mockMvc.perform(post("/api/user-goals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest("Respirar", "Desc", 2L))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.title").value("Respirar"))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+    private CompleteUserGoalResponse completeResponse(Long goalId) {
+        UserPlantItem plant = new UserPlantItem(1L, 1, 5, 1L, "GROWING", Instant.now(), null);
+        return new CompleteUserGoalResponse(goalItem(goalId, "Meta", "COMPLETED"), false, null, plant);
     }
 
-    @Test
-    void add_shouldReturn201_withNullActivityId() throws Exception {
-        when(addUserGoalUseCase.execute(argThat(r ->
-                r != null && USER_ID.equals(r.userId()) && r.description() == null && r.activityId() == null)))
-                .thenReturn(new AddUserGoalResponse(goalItem(1L, "Respirar", "PENDING")));
-
-        mockMvc.perform(post("/api/user-goals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest("Respirar", null, null))))
-                .andExpect(status().isCreated());
+    // --- act ---
+    private ResultActions performAcceptChallenge(String title, String description, Long activityId) throws Exception {
+        return mockMvc.perform(post("/api/user-goals/accept")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new AcceptChallengeRequest(title, description, activityId))));
     }
 
-    @Test
-    void add_shouldReturn400_whenTitleIsBlank() throws Exception {
-        mockMvc.perform(post("/api/user-goals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest("", null, null))))
-                .andExpect(status().isBadRequest());
+    private ResultActions performAdd(String title, String description, Long activityId) throws Exception {
+        return mockMvc.perform(post("/api/user-goals")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UserGoalRequest(title, description, activityId))));
     }
 
-    @Test
-    void listByUser_shouldReturn200WithPaginatedCompletadosAndPendientes() throws Exception {
-        GetUserGoalsResponse response = new GetUserGoalsResponse(
-                page(List.of(goalItem(1L, "Completado", "COMPLETED")), 0, 5, 1),
-                page(List.of(goalItem(2L, "Pendiente", "PENDING")), 0, 5, 1));
-        when(getUserGoalsByUserUseCase.execute(any(GetUserGoalsRequest.class))).thenReturn(response);
+    private ResultActions performListByUser() throws Exception {
+        return mockMvc.perform(get("/api/user-goals/me"));
+    }
 
-        mockMvc.perform(get("/api/user-goals/me"))
-                .andExpect(status().isOk())
+    private ResultActions performListByUser(int page, int size) throws Exception {
+        return mockMvc.perform(get("/api/user-goals/me")
+                .param("page", String.valueOf(page))
+                .param("size", String.valueOf(size)));
+    }
+
+    private ResultActions performUpdate(long id, String title, String description, Long activityId) throws Exception {
+        return mockMvc.perform(put("/api/user-goals/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UserGoalUpdateRequest(title, description, activityId))));
+    }
+
+    private ResultActions performDelete(long id) throws Exception {
+        return mockMvc.perform(delete("/api/user-goals/" + id));
+    }
+
+    private ResultActions performComplete(long id) throws Exception {
+        return mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user-goals/" + id + "/complete"));
+    }
+
+    private ResultActions performGetImage(String filename) throws Exception {
+        return mockMvc.perform(get("/api/user-goals/images/" + filename));
+    }
+
+    // --- assert ---
+    private void thenCreatedWithGoal(ResultActions result, long id, String title, String status) throws Exception {
+        result.andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.title").value(title))
+                .andExpect(jsonPath("$.status").value(status));
+    }
+
+    private void thenCreated(ResultActions result) throws Exception {
+        result.andExpect(status().isCreated());
+    }
+
+    private void thenBadRequest(ResultActions result) throws Exception {
+        result.andExpect(status().isBadRequest());
+    }
+
+    private void thenUnauthorized(ResultActions result) throws Exception {
+        result.andExpect(status().isUnauthorized());
+    }
+
+    private void thenOk(ResultActions result) throws Exception {
+        result.andExpect(status().isOk());
+    }
+
+    private void thenNoContent(ResultActions result) throws Exception {
+        result.andExpect(status().isNoContent());
+    }
+
+    private void thenNotFound(ResultActions result) throws Exception {
+        result.andExpect(status().isNotFound());
+    }
+
+    private void thenOkWithPaginatedGoals(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.completados.content[0].title").value("Completado"))
                 .andExpect(jsonPath("$.completados.totalElements").value(1))
                 .andExpect(jsonPath("$.completados.pageSize").value(5))
@@ -152,143 +440,40 @@ class UserGoalControllerTest {
                 .andExpect(jsonPath("$.pendientes.totalElements").value(1));
     }
 
-    @Test
-    void listByUser_shouldUseSizeAndPageParams() throws Exception {
-        GetUserGoalsResponse response = new GetUserGoalsResponse(
-                page(List.of(), 1, 3, 0),
-                page(List.of(), 1, 3, 0));
-        when(getUserGoalsByUserUseCase.execute(argThat(r -> r != null && r.page() == 1 && r.size() == 3)))
-                .thenReturn(response);
-
-        mockMvc.perform(get("/api/user-goals/me").param("page", "1").param("size", "3"))
-                .andExpect(status().isOk())
+    private void thenOkWithPageParams(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.completados.pageNumber").value(1))
                 .andExpect(jsonPath("$.completados.pageSize").value(3));
     }
 
-    @Test
-    void listByUser_shouldReturn200WithEmptyPages_whenNoGoals() throws Exception {
-        GetUserGoalsResponse response = new GetUserGoalsResponse(
-                page(List.of(), 0, 5, 0),
-                page(List.of(), 0, 5, 0));
-        when(getUserGoalsByUserUseCase.execute(any(GetUserGoalsRequest.class))).thenReturn(response);
-
-        mockMvc.perform(get("/api/user-goals/me"))
-                .andExpect(status().isOk())
+    private void thenOkWithEmptyPages(ResultActions result) throws Exception {
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.completados.content").isEmpty())
                 .andExpect(jsonPath("$.pendientes.content").isEmpty());
     }
 
-    @Test
-    void update_shouldReturn200_whenRequestIsValid() throws Exception {
-        when(updateUserGoalUseCase.execute(argThat(r ->
-                r != null && Long.valueOf(1L).equals(r.id()) && "Nuevo".equals(r.title())
-                        && "Desc".equals(r.description()) && Long.valueOf(2L).equals(r.activityId()))))
-                .thenReturn(new UpdateUserGoalResponse(goalItem(1L, "Nuevo", "PENDING")));
-
-        mockMvc.perform(put("/api/user-goals/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalUpdateRequest("Nuevo", "Desc", 2L))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.title").value("Nuevo"));
+    private void thenOkWithUpdatedGoal(ResultActions result, long id, String title) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.title").value(title));
     }
 
-    @Test
-    void update_shouldReturn400_whenTitleIsBlank() throws Exception {
-        mockMvc.perform(put("/api/user-goals/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalUpdateRequest("", null, null))))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void delete_shouldReturn204_whenGoalExists() throws Exception {
-        mockMvc.perform(delete("/api/user-goals/1"))
-                .andExpect(status().isNoContent());
-
-        verify(deleteUserGoalUseCase).execute(argThat(r -> r != null && Long.valueOf(1L).equals(r.id())));
-    }
-
-    private CompleteUserGoalResponse completeResponse(Long goalId) {
-        UserPlantItem plant = new UserPlantItem(1L, 1, 5, 1L, "GROWING", Instant.now(), null);
-        return new CompleteUserGoalResponse(goalItem(goalId, "Meta", "COMPLETED"), false, null, plant);
-    }
-
-    @Test
-    void complete_shouldReturn200WithCompletedStatus_whenGoalExists() throws Exception {
-        when(completeUserGoalUseCase.execute(argThat(r -> r != null && Long.valueOf(1L).equals(r.id())), isNull()))
-                .thenReturn(completeResponse(1L));
-
-        mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user-goals/1/complete"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.goal.id").value(1L))
+    private void thenOkWithCompletedGoal(ResultActions result, long id) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.goal.id").value(id))
                 .andExpect(jsonPath("$.goal.status").value("COMPLETED"));
     }
 
-    @Test
-    void complete_shouldDelegateToUseCase_withCorrectId() throws Exception {
-        when(completeUserGoalUseCase.execute(argThat(r -> r != null && Long.valueOf(42L).equals(r.id())), isNull()))
-                .thenReturn(completeResponse(42L));
-
-        mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user-goals/42/complete"))
-                .andExpect(status().isOk());
-
-        verify(completeUserGoalUseCase).execute(argThat(r -> r != null && Long.valueOf(42L).equals(r.id())), isNull());
+    private void thenOkWithContentType(ResultActions result, MediaType mediaType) throws Exception {
+        result.andExpect(status().isOk())
+                .andExpect(content().contentType(mediaType));
     }
 
-    @Test
-    void getImage_shouldReturn404_whenFileDoesNotExist() throws Exception {
-        when(getGoalImageUseCase.execute(argThat(r -> r != null && "missing.jpg".equals(r.filename()))))
-                .thenReturn(Path.of("nonexistent-xyz-dir", "missing.jpg"));
-
-        mockMvc.perform(get("/api/user-goals/images/missing.jpg"))
-                .andExpect(status().isNotFound());
+    private void thenDeleteWasCalledWith(long id) throws Exception {
+        verify(deleteUserGoalUseCase).execute(argThat(r -> r != null && Long.valueOf(id).equals(r.id())));
     }
 
-    @Test
-    void getImage_shouldReturn200WithImageContent_whenFileExists() throws Exception, IOException {
-        Path imageFile = tempDir.resolve("photo.jpg");
-        Files.write(imageFile, new byte[]{1, 2, 3});
-        when(getGoalImageUseCase.execute(argThat(r -> r != null && "photo.jpg".equals(r.filename()))))
-                .thenReturn(imageFile);
-
-        mockMvc.perform(get("/api/user-goals/images/photo.jpg"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.IMAGE_JPEG));
-    }
-
-    @Test
-    void getImage_shouldReturn200WithPngContentType_whenFilenameIsPng() throws Exception, IOException {
-        Path imageFile = tempDir.resolve("photo.png");
-        Files.write(imageFile, new byte[]{1, 2, 3});
-        when(getGoalImageUseCase.execute(argThat(r -> r != null && "photo.png".equals(r.filename()))))
-                .thenReturn(imageFile);
-
-        mockMvc.perform(get("/api/user-goals/images/photo.png"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.IMAGE_PNG));
-    }
-
-    @Test
-    void getImage_shouldReturn200WithGifContentType_whenFilenameIsGif() throws Exception, IOException {
-        Path imageFile = tempDir.resolve("anim.gif");
-        Files.write(imageFile, new byte[]{1, 2, 3});
-        when(getGoalImageUseCase.execute(argThat(r -> r != null && "anim.gif".equals(r.filename()))))
-                .thenReturn(imageFile);
-
-        mockMvc.perform(get("/api/user-goals/images/anim.gif"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.IMAGE_GIF));
-    }
-
-    @Test
-    void add_shouldReturn401_whenNotAuthenticated() throws Exception {
-        SecurityContextHolder.clearContext();
-
-        mockMvc.perform(post("/api/user-goals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserGoalRequest("Titulo", null, null))))
-                .andExpect(status().isUnauthorized());
+    private void thenCompleteWasCalledWith(long id) throws Exception {
+        verify(completeUserGoalUseCase).execute(argThat(r -> r != null && Long.valueOf(id).equals(r.id())), isNull());
     }
 }

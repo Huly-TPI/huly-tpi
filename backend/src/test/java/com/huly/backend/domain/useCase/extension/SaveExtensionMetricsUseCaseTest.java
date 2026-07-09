@@ -8,6 +8,7 @@ import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -16,9 +17,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SaveExtensionMetricsUseCaseTest {
@@ -29,58 +34,78 @@ class SaveExtensionMetricsUseCaseTest {
     @Mock
     private UserAntiScrollSettingsRepository settingsRepository;
 
-    private SaveExtensionMetricsUseCase saveExtensionMetricsUseCase;
+    private SaveExtensionMetricsUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        saveExtensionMetricsUseCase = new SaveExtensionMetricsUseCase(
+        useCase = new SaveExtensionMetricsUseCase(
                 metricsRepository, settingsRepository, new SaveExtensionMetricsMapper());
     }
 
     @Test
-    void execute_shouldSaveMetrics_whenUserHasConsented() {
-        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
-                .dataSharingConsent(true)
-                .build();
-        when(settingsRepository.findByUserId(1L)).thenReturn(Optional.of(settings));
+    @DisplayName("Guarda las métricas cuando el usuario dio su consentimiento")
+    void executeSavesMetricsWhenUserHasConsented() {
+        givenConsentedUser(1L);
 
-        SaveExtensionMetricsRequest request = new SaveExtensionMetricsRequest(1L, List.of(
-                new ExtensionMetricItem("twitter.com", 120, 5, 1, 0)
-        ));
+        saveMetrics(1L, "twitter.com", 120);
 
-        saveExtensionMetricsUseCase.execute(request);
-
-        verify(metricsRepository).saveAll(eq(1L), argThat((List<ExtensionMetric> metrics) ->
-                metrics.size() == 1 && metrics.get(0).getDomain().equals("twitter.com")
-                        && metrics.get(0).getActiveSeconds() == 120));
+        thenMetricsSaved(1L, "twitter.com", 120);
     }
 
     @Test
-    void execute_shouldNotSaveMetrics_whenUserHasNotConsented() {
-        UserAntiScrollSettings settings = UserAntiScrollSettings.builder()
-                .dataSharingConsent(false)
-                .build();
-        when(settingsRepository.findByUserId(1L)).thenReturn(Optional.of(settings));
+    @DisplayName("No guarda las métricas cuando el usuario no dio su consentimiento")
+    void executeDoesNotSaveMetricsWhenUserHasNotConsented() {
+        givenNonConsentedUser(1L);
 
-        SaveExtensionMetricsRequest request = new SaveExtensionMetricsRequest(1L, List.of(
-                new ExtensionMetricItem("twitter.com", 120, 0, 0, 0)
-        ));
+        saveMetrics(1L, "twitter.com", 120);
 
-        saveExtensionMetricsUseCase.execute(request);
-
-        verify(metricsRepository, never()).saveAll(anyLong(), anyList());
+        thenNoMetricsSaved();
     }
 
     @Test
-    void execute_shouldNotSaveMetrics_whenUserSettingsDoNotExist() {
-        when(settingsRepository.findByUserId(1L)).thenReturn(Optional.empty());
+    @DisplayName("No guarda las métricas cuando el usuario no tiene opciones almacenadas")
+    void executeDoesNotSaveMetricsWhenUserSettingsDoNotExist() {
+        givenNoStoredSettings(1L);
 
-        SaveExtensionMetricsRequest request = new SaveExtensionMetricsRequest(1L, List.of(
-                new ExtensionMetricItem("twitter.com", 120, 0, 0, 0)
-        ));
+        saveMetrics(1L, "twitter.com", 120);
 
-        saveExtensionMetricsUseCase.execute(request);
+        thenNoMetricsSaved();
+    }
 
+    // --- arrange ---
+
+    private void givenConsentedUser(long userId) {
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder().dataSharingConsent(true).build();
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    }
+
+    private void givenNonConsentedUser(long userId) {
+        UserAntiScrollSettings settings = UserAntiScrollSettings.builder().dataSharingConsent(false).build();
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    }
+
+    private void givenNoStoredSettings(long userId) {
+        when(settingsRepository.findByUserId(userId)).thenReturn(Optional.empty());
+    }
+
+    // --- act ---
+
+    private void saveMetrics(long userId, String domain, int activeSeconds) {
+        useCase.execute(new SaveExtensionMetricsRequest(userId, List.of(
+                new ExtensionMetricItem(domain, activeSeconds, 5, 1, 0)
+        )));
+    }
+
+    // --- assert ---
+
+    private void thenMetricsSaved(long userId, String domain, int activeSeconds) {
+        verify(metricsRepository).saveAll(eq(userId), argThat((List<ExtensionMetric> metrics) ->
+                metrics.size() == 1
+                        && metrics.get(0).getDomain().equals(domain)
+                        && metrics.get(0).getActiveSeconds() == activeSeconds));
+    }
+
+    private void thenNoMetricsSaved() {
         verify(metricsRepository, never()).saveAll(anyLong(), anyList());
     }
 }

@@ -5,6 +5,7 @@ import java.time.Instant;
 public record ActivitySessionResponse(
         Long id,
         String activityType,
+        String activityName,
         Instant createdAt
 ) {
 }

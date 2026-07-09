@@ -2,22 +2,74 @@ import { describe, it, expect, vi } from 'vitest'
 import { preloadImages } from '../../utils/preloadImages'
 
 describe('preloadImages', () => {
-  it('carga todas las urls y las devuelve en loaded', async () => {
-    const loader = vi.fn().mockResolvedValue(undefined)
-    const urls = ['a.webp', 'b.webp', 'c.webp']
-
-    const result = await preloadImages(urls, { loader })
-
-    expect(loader).toHaveBeenCalledTimes(3)
-    expect(result.loaded).toEqual(expect.arrayContaining(urls))
-    expect(result.failed).toEqual([])
+  it('carga todas las urls y las devuelve en loaded', () => {
+    setupLoaderMock()
+    return callPreloadImages(['a.webp', 'b.webp', 'c.webp']).then((result) => {
+      verifyLoaderCalledTimes(3)
+      verifyResultLoadedContains(result, ['a.webp', 'b.webp', 'c.webp'])
+      verifyResultFailedIsEmpty(result)
+    })
   })
 
-  it('nunca supera el límite de concurrencia', async () => {
-    let inFlight = 0
-    let maxInFlight = 0
-    const resolvers: Array<() => void> = []
-    const loader = vi.fn().mockImplementation(() => {
+  it('nunca supera el límite de concurrencia', () => {
+    setupConcurrencyLoaderMock()
+    const promise = callPreloadImagesWithConcurrency(10, 3)
+    verifyMaxInFlight(3)
+    return resolveAllPromises(promise).then(() => {
+      verifyMaxInFlight(3)
+      verifyLoaderCalledTimes(10)
+    })
+  })
+
+  it('reintenta las que fallan y las cuenta como cargadas si el reintento tiene éxito', () => {
+    setupFlakyLoaderMock()
+    return callPreloadImagesWithRetries(['flaky.webp'], 1).then((result) => {
+      verifyLoaderCalledTimes(2)
+      verifyResultLoadedContains(result, ['flaky.webp'])
+      verifyResultFailedIsEmpty(result)
+    })
+  })
+
+  it('manda a failed las que agotan los reintentos', () => {
+    setupAlwaysFailingLoaderMock()
+    return callPreloadImagesWithRetries(['broken.webp'], 2).then((result) => {
+      verifyLoaderCalledTimes(3)
+      verifyResultLoadedIsEmpty(result)
+      verifyResultFailedContains(result, ['broken.webp'])
+    })
+  })
+
+  it('reporta progreso a medida que cargan', () => {
+    setupLoaderMock()
+    setupProgressMock()
+    return callPreloadImagesWithProgress(['a.webp', 'b.webp']).then(() => {
+      verifyProgressReportedWith(2, 2)
+    })
+  })
+
+  /* helpers */
+
+  let sharedLoader = vi.fn()
+  let sharedOnProgress = vi.fn()
+  let inFlight = 0
+  let maxInFlight = 0
+  let resolvers: Array<() => void> = []
+  let done = false
+
+  const setupLoaderMock = () => {
+    sharedLoader = vi.fn().mockResolvedValue(undefined)
+  }
+
+  const setupProgressMock = () => {
+    sharedOnProgress = vi.fn()
+  }
+
+  const setupConcurrencyLoaderMock = () => {
+    inFlight = 0
+    maxInFlight = 0
+    resolvers = []
+    done = false
+    sharedLoader = vi.fn().mockImplementation(() => {
       inFlight++
       maxInFlight = Math.max(maxInFlight, inFlight)
       return new Promise<void>((resolve) => {
@@ -27,57 +79,74 @@ describe('preloadImages', () => {
         })
       })
     })
+  }
 
-    const urls = Array.from({ length: 10 }, (_, i) => `img-${i}.webp`)
-     let done = false
-    const promise = preloadImages(urls, { loader, concurrency: 3 }).then((r) => {
+  const setupFlakyLoaderMock = () => {
+    sharedLoader = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('fail'))
+      .mockResolvedValue(undefined)
+  }
+
+  const setupAlwaysFailingLoaderMock = () => {
+    sharedLoader = vi.fn().mockRejectedValue(new Error('fail'))
+  }
+
+  const callPreloadImages = (urls: string[]) => {
+    return preloadImages(urls, { loader: sharedLoader })
+  }
+
+  const callPreloadImagesWithConcurrency = (count: number, concurrency: number) => {
+    const urls = Array.from({ length: count }, (_, i) => `img-${i}.webp`)
+    return preloadImages(urls, { loader: sharedLoader, concurrency }).then((r) => {
       done = true
       return r
     })
+  }
 
-    expect(maxInFlight).toBe(3)
+  const callPreloadImagesWithRetries = (urls: string[], retries: number) => {
+    return preloadImages(urls, { loader: sharedLoader, retries })
+  }
 
+  const callPreloadImagesWithProgress = (urls: string[]) => {
+    return preloadImages(urls, { loader: sharedLoader, onProgress: sharedOnProgress })
+  }
+
+  const resolveAllPromises = async (promise: Promise<any>) => {
     while (!done) {
       if (resolvers.length > 0) {
         resolvers.shift()!()
       }
       await Promise.resolve()
     }
-    await promise
+    return promise
+  }
 
-    expect(maxInFlight).toBe(3)
-    expect(loader).toHaveBeenCalledTimes(10)
-  })
+  const verifyLoaderCalledTimes = (times: number) => {
+    expect(sharedLoader).toHaveBeenCalledTimes(times)
+  }
 
-  it('reintenta las que fallan y las cuenta como cargadas si el reintento tiene éxito', async () => {
-    const loader = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('fail'))
-      .mockResolvedValue(undefined)
+  const verifyResultLoadedContains = (result: any, urls: string[]) => {
+    expect(result.loaded).toEqual(expect.arrayContaining(urls))
+  }
 
-    const result = await preloadImages(['flaky.webp'], { loader, retries: 1 })
-
-    expect(loader).toHaveBeenCalledTimes(2) 
-    expect(result.loaded).toEqual(['flaky.webp'])
-    expect(result.failed).toEqual([])
-  })
-
-  it('manda a failed las que agotan los reintentos', async () => {
-    const loader = vi.fn().mockRejectedValue(new Error('fail'))
-
-    const result = await preloadImages(['broken.webp'], { loader, retries: 2 })
-
-    expect(loader).toHaveBeenCalledTimes(3)
+  const verifyResultLoadedIsEmpty = (result: any) => {
     expect(result.loaded).toEqual([])
-    expect(result.failed).toEqual(['broken.webp'])
-  })
+  }
 
-  it('reporta progreso a medida que cargan', async () => {
-    const loader = vi.fn().mockResolvedValue(undefined)
-    const onProgress = vi.fn()
+  const verifyResultFailedIsEmpty = (result: any) => {
+    expect(result.failed).toEqual([])
+  }
 
-    await preloadImages(['a.webp', 'b.webp'], { loader, onProgress })
+  const verifyResultFailedContains = (result: any, urls: string[]) => {
+    expect(result.failed).toEqual(expect.arrayContaining(urls))
+  }
 
-    expect(onProgress).toHaveBeenLastCalledWith(2, 2)
-  })
+  const verifyMaxInFlight = (val: number) => {
+    expect(maxInFlight).toBe(val)
+  }
+
+  const verifyProgressReportedWith = (current: number, total: number) => {
+    expect(sharedOnProgress).toHaveBeenLastCalledWith(current, total)
+  }
 })

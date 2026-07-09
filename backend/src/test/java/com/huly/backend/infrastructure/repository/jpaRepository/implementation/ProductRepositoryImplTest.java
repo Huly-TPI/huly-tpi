@@ -4,6 +4,7 @@ import com.huly.backend.domain.model.payment.Product;
 import com.huly.backend.domain.model.enums.ProductType;
 import com.huly.backend.infrastructure.repository.entity.ProductEntity;
 import com.huly.backend.infrastructure.repository.jpaRepository.interfaces.IProductJpaRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,13 +16,123 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductRepositoryImplTest {
 
-    @Mock private IProductJpaRepository jpaRepository;
-    @InjectMocks private ProductRepositoryImpl repository;
+    @Mock
+    private IProductJpaRepository jpaRepository;
+    @InjectMocks
+    private ProductRepositoryImpl repository;
+
+    @Test
+    @DisplayName("Mapea todas las entidades a dominio")
+    void findAllShouldMapAllEntitiesToDomain() {
+        givenAllProducts(coinPackEntity(), planEntity());
+
+        List<Product> result = findAll();
+
+        thenAllProductsMapped(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve lista vacía cuando no hay entidades")
+    void findAllShouldReturnEmptyListWhenNoEntities() {
+        givenAllProducts();
+
+        List<Product> result = findAll();
+
+        thenEmptyList(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve el producto mapeado por id cuando existe")
+    void findByIdShouldReturnMappedProductWhenFound() {
+        givenProductById(10L, planEntity());
+
+        Optional<Product> result = findById(10L);
+
+        thenProductFoundById(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío al buscar por id cuando no existe")
+    void findByIdShouldReturnEmptyWhenNotFound() {
+        givenProductById(99L, null);
+
+        Optional<Product> result = findById(99L);
+
+        thenEmptyOptional(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve los productos mapeados de un tipo")
+    void findByTypeShouldReturnMappedProductsOfType() {
+        givenProductsByType(ProductType.PLAN, planEntity());
+
+        List<Product> result = findByType(ProductType.PLAN);
+
+        thenProductsOfTypeMapped(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve lista vacía cuando no hay productos del tipo")
+    void findByTypeShouldReturnEmptyListWhenNoneOfType() {
+        givenProductsByType(ProductType.COIN_PACK);
+
+        List<Product> result = findByType(ProductType.COIN_PACK);
+
+        thenEmptyList(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve los productos mapeados al buscar por ids")
+    void findByIdsShouldReturnMappedProductsWhenFound() {
+        givenProductsByIds(List.of(1L, 10L), coinPackEntity(), planEntity());
+
+        List<Product> result = findByIds(List.of(1L, 10L));
+
+        thenProductsByIdsMapped(result);
+    }
+
+    @Test
+    @DisplayName("Guarda el producto mapeando dominio a entidad y de vuelta")
+    void saveShouldMapDomainToEntityAndBack() {
+        givenSavedEntity(coinPackEntity());
+
+        Product result = save(coinPackDomain());
+
+        thenSavedProductMapped(result);
+    }
+
+    @Test
+    @DisplayName("Devuelve los productos activos de un tipo")
+    void findByTypeAndActiveShouldReturnMappedProducts() {
+        givenProductsByTypeAndActive(ProductType.COIN_PACK, true, coinPackEntity());
+
+        List<Product> result = findByTypeAndActive(ProductType.COIN_PACK, true);
+
+        thenProductsByTypeAndActiveMapped(result);
+    }
+
+    // --- arrange ---
+    private void givenAllProducts(ProductEntity... entities) {
+        when(jpaRepository.findAll()).thenReturn(List.of(entities));
+    }
+
+    private void givenProductById(Long id, ProductEntity entity) {
+        when(jpaRepository.findById(id)).thenReturn(Optional.ofNullable(entity));
+    }
+
+    private void givenProductsByType(ProductType type, ProductEntity... entities) {
+        when(jpaRepository.findByType(type)).thenReturn(List.of(entities));
+    }
+
+    private void givenProductsByIds(List<Long> ids, ProductEntity... entities) {
+        when(jpaRepository.findAllById(ids)).thenReturn(List.of(entities));
+    }
 
     private ProductEntity coinPackEntity() {
         return ProductEntity.builder()
@@ -39,12 +150,49 @@ class ProductRepositoryImplTest {
                 .build();
     }
 
-    @Test
-    void findAll_shouldMapAllEntitiesToDomain() {
-        when(jpaRepository.findAll()).thenReturn(List.of(coinPackEntity(), planEntity()));
+    private void givenSavedEntity(ProductEntity entity) {
+        when(jpaRepository.save(any(ProductEntity.class))).thenReturn(entity);
+    }
 
-        List<Product> result = repository.findAll();
+    private void givenProductsByTypeAndActive(ProductType type, boolean active, ProductEntity... entities) {
+        when(jpaRepository.findByTypeAndActive(type, active)).thenReturn(List.of(entities));
+    }
 
+    private Product coinPackDomain() {
+        return Product.builder()
+                .name("Pack Inicial").description("100 monedas")
+                .price(new BigDecimal("499")).coinsAmount(100)
+                .type(ProductType.COIN_PACK).active(true)
+                .build();
+    }
+
+    // --- act ---
+    private List<Product> findAll() {
+        return repository.findAll();
+    }
+
+    private Optional<Product> findById(Long id) {
+        return repository.findById(id);
+    }
+
+    private List<Product> findByType(ProductType type) {
+        return repository.findByType(type);
+    }
+
+    private List<Product> findByIds(List<Long> ids) {
+        return repository.findByIds(ids);
+    }
+
+    private Product save(Product product) {
+        return repository.save(product);
+    }
+
+    private List<Product> findByTypeAndActive(ProductType type, boolean active) {
+        return repository.findByTypeAndActive(type, active);
+    }
+
+    // --- assert ---
+    private void thenAllProductsMapped(List<Product> result) {
         assertThat(result).hasSize(2);
         Product first = result.get(0);
         assertThat(first.getId()).isEqualTo(1L);
@@ -56,19 +204,7 @@ class ProductRepositoryImplTest {
         assertThat(first.getPlanCode()).isNull();
     }
 
-    @Test
-    void findAll_shouldReturnEmptyList_whenNoEntities() {
-        when(jpaRepository.findAll()).thenReturn(List.of());
-
-        assertThat(repository.findAll()).isEmpty();
-    }
-
-    @Test
-    void findById_shouldReturnMappedProduct_whenFound() {
-        when(jpaRepository.findById(10L)).thenReturn(Optional.of(planEntity()));
-
-        Optional<Product> result = repository.findById(10L);
-
+    private void thenProductFoundById(Optional<Product> result) {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo(10L);
         assertThat(result.get().getType()).isEqualTo(ProductType.PLAN);
@@ -76,39 +212,34 @@ class ProductRepositoryImplTest {
         assertThat(result.get().getChatDailyLimit()).isEqualTo(20);
     }
 
-    @Test
-    void findById_shouldReturnEmpty_whenNotFound() {
-        when(jpaRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThat(repository.findById(99L)).isEmpty();
-    }
-
-    @Test
-    void findByType_shouldReturnMappedProductsOfType() {
-        when(jpaRepository.findByType(ProductType.PLAN)).thenReturn(List.of(planEntity()));
-
-        List<Product> result = repository.findByType(ProductType.PLAN);
-
+    private void thenProductsOfTypeMapped(List<Product> result) {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getType()).isEqualTo(ProductType.PLAN);
         assertThat(result.get(0).getName()).isEqualTo("Plan Premium");
     }
 
-    @Test
-    void findByType_shouldReturnEmptyList_whenNoneOfType() {
-        when(jpaRepository.findByType(ProductType.COIN_PACK)).thenReturn(List.of());
-
-        assertThat(repository.findByType(ProductType.COIN_PACK)).isEmpty();
-    }
-
-    @Test
-    void findByIds_shouldReturnMappedProducts_whenFound() {
-        when(jpaRepository.findAllById(List.of(1L, 10L))).thenReturn(List.of(coinPackEntity(), planEntity()));
-
-        List<Product> result = repository.findByIds(List.of(1L, 10L));
-
+    private void thenProductsByIdsMapped(List<Product> result) {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(1).getId()).isEqualTo(10L);
+    }
+
+    private void thenEmptyList(List<Product> result) {
+        assertThat(result).isEmpty();
+    }
+
+    private void thenEmptyOptional(Optional<Product> result) {
+        assertThat(result).isEmpty();
+    }
+
+    private void thenSavedProductMapped(Product result) {
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getName()).isEqualTo("Pack Inicial");
+    }
+
+    private void thenProductsByTypeAndActiveMapped(List<Product> result) {
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getType()).isEqualTo(ProductType.COIN_PACK);
+        assertThat(result.get(0).isActive()).isTrue();
     }
 }

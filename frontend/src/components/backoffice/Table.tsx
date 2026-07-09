@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 
 export interface Column<T> {
-  header: string
+  header: ReactNode
   render: (item: T) => ReactNode
   className?: string
 }
@@ -13,9 +13,14 @@ interface TableProps<T> {
   className?: string
 }
 
-export function Table<T>({ data, columns, keyExtractor, className = '' }: TableProps<T>) {
+export function Table<T>({ 
+  data, 
+  columns, 
+  keyExtractor, 
+  className = ''
+}: TableProps<T>) {
   return (
-    <div className={className}>
+    <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
       {/* Vista Mobile: Lista de Tarjetas */}
       <div className="block md:hidden space-y-4">
         {data.map((item) => (
@@ -25,7 +30,7 @@ export function Table<T>({ data, columns, keyExtractor, className = '' }: TableP
           >
             {columns.map((col, idx) => (
               <div key={idx} className="flex justify-between items-start text-xs gap-3">
-                <span className="font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider shrink-0 mt-0.5">
+                <span className="font-bold text-gray-400 dark:text-gray-555 uppercase tracking-wider shrink-0 mt-0.5">
                   {col.header}
                 </span>
                 <div className={`text-gray-700 dark:text-gray-200 font-medium text-right ${col.className || ''}`}>
@@ -38,12 +43,15 @@ export function Table<T>({ data, columns, keyExtractor, className = '' }: TableP
       </div>
 
       {/* Vista Desktop: Tabla Estándar */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden md:block overflow-y-auto overflow-x-auto flex-1 min-h-0 scrollbar-thin">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 text-xs lg:text-[13px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <tr className="text-xs lg:text-[13px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               {columns.map((col, idx) => (
-                <th key={idx} className={`pb-3 pr-4 ${col.className || ''}`}>
+                <th 
+                  key={idx} 
+                  className={`pb-3 pt-2 pr-4 sticky top-0 bg-white dark:bg-[#172033] border-b border-gray-100 dark:border-gray-800 z-10 ${col.className || ''}`}
+                >
                   {col.header}
                 </th>
               ))}
