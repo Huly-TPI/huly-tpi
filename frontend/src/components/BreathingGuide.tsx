@@ -153,7 +153,7 @@ export function BreathingGuide({
           alt="Nube"
           className="w-full absolute bottom-0 left-0 z-10 pointer-events-none"
         />
-        <div className="absolute z-[15] w-[20%] h-[20%] bottom-[52%] right-[30%] bg-black/25 blur-md rounded-[100%] rotate-[10deg] [z-index:100]"></div>
+        <div className="absolute z-[15] w-[20%] h-[20%] bottom-[52%] right-[30%] bg-black/25 blur-md rounded-[100%] rotate-[10deg] "></div>
 
         <div className="absolute z-20 w-[80%] bottom-[50%] right-[5%] scale-x-[-1] rotate-[15deg] drop-shadow-lg">
           <HulyAvatar
@@ -188,7 +188,7 @@ export function BreathingGuide({
         >
           ← Volver
         </button>
-        <div className="relative flex items-center justify-center z-30 sm:z-10">
+        <div className="relative flex items-center justify-center">
           <div className="absolute rounded-full bg-white/30 w-64 h-64 sm:w-80 sm:h-80" />
           <div
             key={`${currentPhaseIndex}-${currentRound}`}
@@ -203,6 +203,7 @@ export function BreathingGuide({
                 boxShadow: isDark
                   ? "0 18px 48px rgba(2, 6, 23, 0.55), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -10px 24px rgba(0,0,0,0.18)"
                   : "0 18px 48px rgba(15, 23, 42, 0.16)",
+                zIndex: 200,
               } as React.CSSProperties
             }
           >
