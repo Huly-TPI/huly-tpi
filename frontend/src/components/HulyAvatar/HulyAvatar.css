@@ -408,3 +408,54 @@
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
+
+/* Look Around Animation */
+.anim-look-around {
+  transform-origin: 207px 296px; /* Neck base */
+  animation: look-around 4s ease-in-out infinite;
+}
+
+@keyframes look-around {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-15deg);
+  }
+  30% {
+    transform: rotate(-15deg);
+  }
+  45% {
+    transform: rotate(15deg);
+  }
+  60% {
+    transform: rotate(15deg);
+  }
+  75% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Jump Animation */
+.anim-jump-wrap {
+  animation: jump-bounce 1.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes jump-bounce {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  20% {
+    transform: translateY(0) scaleY(0.9); /* Squat before jump */
+  }
+  40% {
+    transform: translateY(-40px) scaleY(1.05); /* Up in the air */
+  }
+  60% {
+    transform: translateY(0) scaleY(0.95); /* Landing squash */
+  }
+  80% {
+    transform: translateY(0) scaleY(1); /* Recover */
+  }
+}

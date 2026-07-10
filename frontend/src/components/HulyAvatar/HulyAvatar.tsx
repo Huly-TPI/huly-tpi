@@ -6,7 +6,16 @@ import { AvatarShoes } from "./AvatarShoes";
 import { AVATAR_COLORS } from "./AvatarConstants";
 
 export type AvatarAnimation =
-  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale" | "walking" | "stop-blow";
+  | "idle"
+  | "wave"
+  | "blow"
+  | "inhale"
+  | "hold"
+  | "exhale"
+  | "walking"
+  | "stop-blow"
+  | "jump"
+  | "look-around";
 
 export interface AvatarEquippedItem {
   assetKey: string;
@@ -37,6 +46,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
   return (
     <svg
       id="svg1"
+      className={animation === "jump" ? "anim-jump-wrap" : ""}
       width="100%"
       height="100%"
       version="1.1"
@@ -488,7 +498,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
       </g>
       <g
         id="g102"
-        className={pose === "sitting" ? "pose-sit-head" : (animation === "wave" ? "anim-head-bob" : "idle-head-bob")}
+        className={pose === "sitting" ? "pose-sit-head" : (animation === "wave" ? "anim-head-bob" : (animation === "look-around" ? "anim-look-around" : "idle-head-bob"))}
       >
         <g id="piel-cara">
           <path

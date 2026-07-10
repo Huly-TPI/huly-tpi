@@ -187,6 +187,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isWalking, setIsWalking] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [idleAnimation, setIdleAnimation] = useState<"idle" | "wave" | "jump" | "look-around">("idle");
 
   const posRef = useRef(pos);
 
@@ -199,7 +200,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
 
       const currentPos = posRef.current;
       const gardenElement = document.querySelector('.garden-scene');
-      
+
       let nextX = 0;
       let nextY = 0;
       let isValidPath = false;
@@ -217,7 +218,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
 
         const rect = gardenElement.getBoundingClientRect();
         // Estimamos el tamaño del avatar en píxeles para calcular donde estarían los pies
-        const avatarSizePx = rect.width * 0.15; 
+        const avatarSizePx = rect.width * 0.15;
 
         let collision = false;
         const steps = 5;
@@ -226,17 +227,17 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
           const t = i / steps;
           const testX = currentPos.x + (nextX - currentPos.x) * t;
           const testY = currentPos.y + (nextY - currentPos.y) * t;
-          
+
           // Coordenadas de los pies (centro inferior)
           const px = rect.left + (testX / 100) * rect.width + (avatarSizePx / 2);
-          const py = rect.top + (testY / 100) * rect.height + avatarSizePx; 
+          const py = rect.top + (testY / 100) * rect.height + avatarSizePx;
 
           // Si el punto cae fuera de la ventana visible elementsFromPoint puede fallar, pero lo ignoramos
           if (px >= 0 && px <= window.innerWidth && py >= 0 && py <= window.innerHeight) {
             const elements = document.elementsFromPoint(px, py);
             // Si tocamos el hotspot de algun elemento, es una colision
             const hitObject = elements.some(el => el.classList.contains('scene-element__hotspot'));
-            
+
             if (hitObject) {
               collision = true;
               break;
@@ -268,6 +269,12 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
 
       timeoutId = setTimeout(() => {
         if (!isMounted) return;
+
+        // Elegimos una animación aleatoria para el tiempo de espera
+        const idleAnims: ("idle" | "wave" | "jump" | "look-around")[] = ["idle", "idle", "idle", "wave", "jump", "look-around"];
+        const randomAnim = idleAnims[Math.floor(Math.random() * idleAnims.length)];
+        setIdleAnimation(randomAnim);
+
         setIsWalking(false);
         timeoutId = setTimeout(wander, Math.random() * 3000 + 2000);
       }, time);
@@ -298,12 +305,10 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
           transition: 'transform 0.3s ease'
         }}
       >
-        {/* Shadow (doesn't bob) */}
         <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/40 blur-[6px]" />
 
-        {/* Avatar (bobs only when walking) */}
         <div className={isWalking ? "walking-avatar-bob relative z-10 w-full h-full" : "relative z-10 w-full h-full"}>
-          <HulyAvatar equippedItems={equippedItems} animation={isWalking ? "walking" : "idle"} />
+          <HulyAvatar equippedItems={equippedItems} animation={isWalking ? "walking" : idleAnimation as any} />
         </div>
       </div>
     </div>
