@@ -78,7 +78,7 @@ export default function ActivitiesConfigTab({
       ),
       className: 'text-center',
       render: (config) => (
-        <div className="flex flex-col items-center gap-0.5 font-mono text-[11px] text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col items-center gap-0.5 font-mono text-[11px] text-gray-600 dark:text-gray-400 whitespace-nowrap">
           <p>
             <span className="text-violeta dark:text-violeta-claro font-bold mr-1">V</span>
             {formatVal(config.valenceMin)} &nbsp; {formatVal(config.valenceMax)}
@@ -122,7 +122,7 @@ export default function ActivitiesConfigTab({
       ),
       className: 'text-center',
       render: (config) => (
-        <div className="flex flex-col items-center gap-0.5 font-mono text-[11px] text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col items-center gap-0.5 font-mono text-[11px] text-gray-600 dark:text-gray-400 whitespace-nowrap">
           <p>
             <span className="text-violeta dark:text-violeta-claro font-bold mr-1">ΔV</span>
             {formatDelta(config.effectValence)}
@@ -141,7 +141,7 @@ export default function ActivitiesConfigTab({
     {
       header: 'Palabras Clave',
       render: (config) => (
-        <span className="text-xs text-gray-500 max-w-[180px] truncate block" title={config.goalKeywords}>
+        <span className="text-xs text-gray-500 truncate max-w-[150px] md:max-w-[180px] block" title={config.goalKeywords}>
           {config.goalKeywords || <span className="italic text-gray-300">Ninguna</span>}
         </span>
       ),
@@ -155,13 +155,13 @@ export default function ActivitiesConfigTab({
       ),
     },
     {
-      header: 'Acción',
+      header: 'Acciones',
       className: 'text-center',
       render: (config) => (
         <div className="flex justify-center">
           <button
             onClick={() => handleEditClick(config)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-550 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-555 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
             aria-label={`Editar configuración de ${config.title}`}
           >
             <Edit2 className="h-5 w-5" strokeWidth={2} />
@@ -172,7 +172,7 @@ export default function ActivitiesConfigTab({
   ]
 
   return (
-    <SectionCard className="bg-white dark:bg-[#172033] flex-1 min-h-0 flex flex-col">
+    <SectionCard className="bg-white dark:bg-[#172033] md:flex-1 md:min-h-0 flex flex-col">
       <CardHeader title="Configuración de Rangos VAD y Parámetros" />
       <Table
         data={configs}

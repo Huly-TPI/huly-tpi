@@ -39,6 +39,7 @@ export const AVATAR_COLORS = {
   pantsGreenShadow1: "#7a6e41",
   pantsGreenShadow2: "#808c46",
   pantsGreenShadow3: "#6e7c43",
+  hairColor: "#44647eff",
   pantsGreenLight: "#a7af5a",
   pantsGreenStroke: "#8f9b0d",
   shoeBlueBase: "#7185ac",

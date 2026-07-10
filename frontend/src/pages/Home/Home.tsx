@@ -110,7 +110,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Arbol con hamaca en el jardin",
     image: { light: treeImage, dark: darkTreeImage },
     placementClassName:
-      "left-[5%] top-[32%] z-20 w-[47%] md:left-[2.5%] md:top-[29%] md:w-[29%] min-[1400px]:top-[18%]",
+      "left-[5%] top-[32%] z-[60] w-[47%] md:left-[2.5%] md:top-[29%] md:w-[29%] min-[1400px]:top-[18%]",
     imageClassName: "w-full",
     hotspotClassName: "left-[5%] top-[3%] h-[94%] w-[88%]",
     clipPath:
@@ -125,7 +125,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Casa con forma de hongo en el jardin",
     image: { light: houseImage, dark: darkHouseImage },
     placementClassName:
-      "left-[44%] top-[39%] z-30 w-[50%] md:left-[38.2%] md:top-[36%] md:w-[24.8%] min-[1400px]:top-[28.2%]",
+      "left-[44%] top-[39%] z-[65] w-[50%] md:left-[38.2%] md:top-[36%] md:w-[24.8%] min-[1400px]:top-[28.2%]",
     imageClassName: "w-full",
     hotspotClassName: "left-[6%] top-[1%] h-[92%] w-[88%]",
     clipPath:
@@ -139,7 +139,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Cartel de pendientes en el jardin",
     image: { light: todoBoardImage, dark: darkTodoBoardImage },
     placementClassName:
-      "left-[72.5%] top-[63.5%] z-20 w-[22%] md:left-[66.2%] md:top-[50%] md:w-[10.5%] min-[1400px]:top-[44%]",
+      "left-[72.5%] top-[63.5%] z-[92] w-[22%] md:left-[66.2%] md:top-[50%] md:z-[77] md:w-[10.5%] min-[1400px]:top-[44%] min-[1400px]:z-[65]",
     imageClassName: "w-full",
     hotspotClassName: "left-[7%] top-[1%] h-[98%] w-[86%]",
     clipPath: "polygon(12% 5%, 84% 0%, 97% 13%, 98% 99%, 7% 99%, 1% 15%)",
@@ -152,7 +152,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Regadera y maceta en el jardin",
     image: { light: wateringCanImage, dark: darkWateringCanImage },
     placementClassName:
-      "left-[10%] top-[75.5%] z-[85] w-[28%] md:left-[26%] md:top-[70.4%] md:w-[11.5%]",
+      "left-[10%] top-[75.5%] z-[102] w-[28%] md:left-[26%] md:top-[70.4%] md:z-[88] md:w-[11.5%]",
     imageClassName: "w-full",
     hotspotClassName: "left-[2%] top-[4%] h-[92%] w-[96%]",
     clipPath:
@@ -166,7 +166,7 @@ const gardenElements: SceneElementDefinition[] = [
     imageAlt: "Banco con cuaderno en el jardin",
     image: { light: notebookImage, dark: darkNotebookImage },
     placementClassName:
-      "left-[7%] top-[61%] z-[75] w-[28%] md:left-[73%] md:top-[70.8%] md:w-[14.5%]",
+      "left-[7%] top-[61%] z-[88] w-[28%] md:left-[73%] md:top-[70.8%] md:z-[90] md:w-[14.5%]",
     imageClassName: "w-full",
     imageVariantClassName: "scene-element__image--mirror-mobile",
     hotspotClassName: "left-[2%] top-[8%] h-[84%] w-[96%]",
@@ -197,6 +197,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isWalking, setIsWalking] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [idleAnimation, setIdleAnimation] = useState<"idle" | "wave" | "jump" | "look-around" | "stretch" | "dance">("idle");
 
   const posRef = useRef(pos);
 
@@ -208,12 +209,65 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
       if (!isMounted) return;
 
       const currentPos = posRef.current;
-      // Grass area bounds
-      const nextX = Math.random() * 70 + 5;
-      const nextY = Math.random() * 40 + 45;
+      const gardenElement = document.querySelector('.garden-scene');
+
+      let nextX = 0;
+      let nextY = 0;
+      let isValidPath = false;
+      let attempts = 0;
+
+      while (!isValidPath && attempts < 10) {
+        attempts++;
+        nextX = Math.random() * 70 + 5;
+        nextY = Math.random() * 40 + 45;
+
+        if (!gardenElement) {
+          isValidPath = true;
+          break;
+        }
+
+        const rect = gardenElement.getBoundingClientRect();
+        // Estimamos el tamaño del avatar en píxeles para calcular donde estarían los pies
+        const avatarSizePx = rect.width * 0.15;
+
+        let collision = false;
+        const steps = 5;
+        // Revisamos varios puntos en la trayectoria proyectada
+        for (let i = 1; i <= steps; i++) {
+          const t = i / steps;
+          const testX = currentPos.x + (nextX - currentPos.x) * t;
+          const testY = currentPos.y + (nextY - currentPos.y) * t;
+
+          // Coordenadas de los pies (centro inferior)
+          const px = rect.left + (testX / 100) * rect.width + (avatarSizePx / 2);
+          const py = rect.top + (testY / 100) * rect.height + avatarSizePx;
+
+          // Si el punto cae fuera de la ventana visible elementsFromPoint puede fallar, pero lo ignoramos
+          if (px >= 0 && px <= window.innerWidth && py >= 0 && py <= window.innerHeight) {
+            const elements = document.elementsFromPoint(px, py);
+            // Si tocamos el hotspot de algun elemento, es una colision
+            const hitObject = elements.some(el => el.classList.contains('scene-element__hotspot'));
+
+            if (hitObject) {
+              collision = true;
+              break;
+            }
+          }
+        }
+
+        if (!collision) {
+          isValidPath = true;
+        }
+      }
+
+      // Si después de varios intentos no encontramos un camino despejado, hacemos un movimiento muy cortito para intentar desatascarnos
+      if (!isValidPath) {
+        nextX = currentPos.x + (Math.random() * 10 - 5);
+        nextY = currentPos.y + (Math.random() * 10 - 5);
+      }
 
       const dist = Math.hypot(nextX - currentPos.x, nextY - currentPos.y);
-      const time = dist * 180; // 180ms per 1% distance
+      const time = dist * 150; // 150ms per 1% distance
 
       setDuration(time);
       setDirection(nextX < currentPos.x ? -1 : 1);
@@ -225,6 +279,14 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
 
       timeoutId = setTimeout(() => {
         if (!isMounted) return;
+
+        // Elegimos una animación aleatoria para el tiempo de espera
+        const idleAnims: ("idle" | "wave" | "jump" | "look-around" | "stretch" | "dance")[] = [
+          "idle", "idle", "idle", "wave", "jump", "look-around", "stretch", "dance"
+        ];
+        const randomAnim = idleAnims[Math.floor(Math.random() * idleAnims.length)];
+        setIdleAnimation(randomAnim);
+
         setIsWalking(false);
         timeoutId = setTimeout(wander, Math.random() * 3000 + 2000);
       }, time);
@@ -240,7 +302,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
 
   return (
     <div
-      className="absolute w-[30%] md:w-[15%] aspect-square pointer-events-none"
+      className="absolute w-[20%] md:w-[10%] aspect-square pointer-events-none"
       style={{
         left: `${pos.x}%`,
         top: `${pos.y}%`,
@@ -255,12 +317,10 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
           transition: 'transform 0.3s ease'
         }}
       >
-        {/* Shadow (doesn't bob) */}
         <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/40 blur-[6px]" />
 
-        {/* Avatar (bobs only when walking) */}
         <div className={isWalking ? "walking-avatar-bob relative z-10 w-full h-full" : "relative z-10 w-full h-full"}>
-          <HulyAvatar equippedItems={equippedItems} animation={isWalking ? "walking" : "idle"} />
+          <HulyAvatar equippedItems={equippedItems} animation={isWalking ? "walking" : idleAnimation as any} />
         </div>
       </div>
     </div>

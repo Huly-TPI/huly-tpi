@@ -174,8 +174,9 @@ export function BreathingGuide({
     return (
       <div className="flex flex-col items-center justify-center w-full relative">
         {hulyEl}
-        <button
-          onClick={() => {
+        <BackButton
+          to="/guided-breathing"
+          onBeforeNavigate={() => {
             void saveSession().catch(console.error);
             setSelected(null);
             setCurrentPhaseIndex(0);
@@ -184,10 +185,7 @@ export function BreathingGuide({
             setIsPaused(false);
             stopSession();
           }}
-          className="fixed top-20 left-6 rounded-full bg-[var(--surface-tertiary)] px-4 py-2 text-sm text-violeta shadow-sm backdrop-blur-sm transition-colors hover:brightness-110 flex items-center gap-2"
-        >
-          ← Volver
-        </button>
+        />
         <div className="relative flex items-center justify-center">
           <div className="absolute rounded-full bg-white/30 w-64 h-64 sm:w-80 sm:h-80" />
           <div
@@ -231,12 +229,7 @@ export function BreathingGuide({
     return (
       <div className="flex flex-col items-center justify-center w-full">
         {hulyEl}
-        <button
-          onClick={() => setSelected(null)}
-          className="fixed top-20 left-6 rounded-full bg-[var(--surface-tertiary)] px-4 py-2 text-sm text-violeta shadow-sm backdrop-blur-sm transition-colors hover:brightness-110 flex items-center gap-2"
-        >
-          ← Volver
-        </button>
+        <BackButton to="/guided-breathing" onBeforeNavigate={() => setSelected(null)} />
 
         <div
           className="backdrop-blur-sm rounded-2xl p-6 shadow-md w-72 sm:w-80 lg:w-96"

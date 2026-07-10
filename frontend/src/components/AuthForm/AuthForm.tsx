@@ -122,7 +122,7 @@ export default function AuthForm({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
         {fields.map((field, index) => (
-          <div key={field.name} className="flex flex-col gap-1">
+          <div key={field.name} className="flex flex-col gap-1 min-w-0">
             <label htmlFor={`field-${field.name}`} className="sr-only">
               {field.placeholder}
             </label>
