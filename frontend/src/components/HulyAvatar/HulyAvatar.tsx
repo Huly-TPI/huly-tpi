@@ -6,7 +6,19 @@ import { AvatarShoes } from "./AvatarShoes";
 import { AVATAR_COLORS } from "./AvatarConstants";
 
 export type AvatarAnimation =
-  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale" | "walking" | "stop-blow";
+  | "idle"
+  | "wave"
+  | "blow"
+  | "inhale"
+  | "hold"
+  | "exhale"
+  | "walking"
+  | "stop-blow"
+  | "jump"
+  | "look-around"
+  | "stretch"
+  | "dance"
+  | "blink";
 
 export interface AvatarEquippedItem {
   assetKey: string;
@@ -37,6 +49,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
   return (
     <svg
       id="svg1"
+      className={animation === "jump" ? "anim-jump-wrap" : (animation === "dance" ? "anim-dance-wrap" : "")}
       width="100%"
       height="100%"
       version="1.1"
@@ -224,7 +237,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <stop id="stop84" stopColor={AVATAR_COLORS.skinBase2} offset="1" />
         </radialGradient>
       </defs>
-      <g className={animation === "stop-blow" ? "pose-error-arm-der" : (animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : (animation === "walking" ? "anim-walk-arm-der" : "")))}>
+      <g className={animation === "stop-blow" ? "pose-error-arm-der" : (animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : (animation === "walking" ? "anim-walk-arm-der" : (animation === "stretch" ? "anim-stretch-arm-der" : (animation === "dance" ? "anim-dance-arm-der" : "")))))}>
         <g
           id="g101-5-2"
           transform="matrix(-.0010412 1 1 .0010412 -63.159 191.73)"
@@ -285,7 +298,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         </g>
       </g>
-      <g id="pierna-der-completa" className={pose === "sitting" ? "pose-sit-leg-der" : (animation === "walking" ? "anim-walk-leg-der" : "")}>
+      <g id="pierna-der-completa" className={pose === "sitting" ? "pose-sit-leg-der" : (animation === "walking" ? "anim-walk-leg-der" : (animation === "dance" ? "anim-dance-leg-der" : ""))}>
         <g id="piel-muslo-der" fill={AVATAR_COLORS.skinBase}>
           <ellipse
             id="circulo-union-pierna-superior-der"
@@ -348,7 +361,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         </g>
       </g>
-      <g id="g110" className={pose === "sitting" ? "pose-sit-leg-izq" : (animation === "walking" ? "anim-walk-leg-izq" : "")}>
+      <g id="g110" className={pose === "sitting" ? "pose-sit-leg-izq" : (animation === "walking" ? "anim-walk-leg-izq" : (animation === "dance" ? "anim-dance-leg-izq" : ""))}>
         <g
           id="g56"
           transform="matrix(.98268 -.20431 .18529 1.0836 -138.2 10.849)"
@@ -409,7 +422,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
         </g>
       </g>
-      <g id="g99" className={pose === "sitting" ? "pose-sit-torso" : ""}>
+      <g id="g99" className={pose === "sitting" ? "pose-sit-torso" : (animation === "stretch" ? "anim-stretch-torso" : (animation === "dance" ? "anim-dance-torso" : ""))}>
         <g id="piel-torso" transform="translate(2.3221e-6)">
           <path
             id="piel-torso-completo"
@@ -426,7 +439,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
 
         <AvatarBodyClothing assetKey={activeShirtKey} part="torso" />
       </g>
-      <g className={animation === "walking" ? "anim-walk-arm-izq-wrap" : ""}>
+      <g className={animation === "walking" ? "anim-walk-arm-izq-wrap" : (animation === "stretch" ? "anim-stretch-arm-izq" : (animation === "dance" ? "anim-dance-arm-izq" : ""))}>
         <g
           id="g101-5"
           className={view === "guided-breathing" ? "pose-guided-breathing-arm-izq" : ""}
@@ -488,7 +501,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
       </g>
       <g
         id="g102"
-        className={pose === "sitting" ? "pose-sit-head" : (animation === "wave" ? "anim-head-bob" : "idle-head-bob")}
+        className={pose === "sitting" ? "pose-sit-head" : (animation === "wave" ? "anim-head-bob" : (animation === "look-around" ? "anim-look-around" : (animation === "stretch" ? "anim-stretch-head" : "idle-head-bob")))}
       >
         <g id="piel-cara">
           <path
@@ -606,9 +619,9 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
           <g
             id="g27"
-            className={
-              animation === "wave" ? "anim-normal-eyes" : "idle-normal-eyes"
-            }
+            className={`organic-transform ${
+              animation === "wave" ? "anim-normal-eyes" : (animation === "blink" ? "anim-blink-eyes" : "idle-normal-eyes")
+            }`}
           >
             <g id="g29" transform="translate(103.27 -10.477)">
               <ellipse
@@ -656,7 +669,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <path
             id="hoja-verde-cabeza"
             d="m171.31 6.998c-0.85077 0.030292-1.1276 2.357-1.1276 2.357-0.94494 25.891 8.8821 35.813 8.8821 35.813 9.5439 11.245 18.623 13.071 21.64 13.04 3.1179-0.0318 6.099 1.0366 7.9437 1.8707 3.5123 7.2924 5.8779 16.015 5.5671 26.115 0 0 4.5435 1.6037 7.6171-0.26717 0 0-0.90365-14.565-9.7317-29.593 1.8276-9.7695-4.2995-19.384-4.2995-19.384-5.3454-10.023-22.499-17.39-22.499-17.39-12.379-4.9137-13.04-11.812-13.04-11.812-0.3765-0.55368-0.69092-0.75961-0.95136-0.75034z"
-            fill={AVATAR_COLORS.pantsGreenShadow3}
+            fill={AVATAR_COLORS.hairColor}
             strokeWidth=".15875"
           />
         </g>

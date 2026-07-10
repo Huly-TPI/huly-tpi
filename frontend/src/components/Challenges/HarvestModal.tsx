@@ -14,7 +14,7 @@ export interface HarvestModalProps {
   onGoToOrchard: () => void
 }
 
-export default function HarvestModal({ plantNumber, onCreateNew, onGoToOrchard }: HarvestModalProps) {
+export default function HarvestModal({ plantNumber, onGoToOrchard }: HarvestModalProps) {
   return (
     <div className="fixed inset-0 bg-black/[0.42] flex items-center justify-center z-[1000] p-4 backdrop-blur-[3px]" role="dialog" aria-modal="true">
       <div className="harvest-modal bg-white rounded-3xl p-[2rem_1.75rem_1.75rem] w-full max-w-[320px] text-center shadow-[0_24px_64px_rgba(0,0,0,0.28)]">
@@ -52,9 +52,6 @@ export default function HarvestModal({ plantNumber, onCreateNew, onGoToOrchard }
         <div className="flex flex-col gap-2">
           <Button variant="success" size="sm" fullWidth onClick={onGoToOrchard}>
             Ver Vivero
-          </Button>
-          <Button variant="successSecondary" size="sm" fullWidth onClick={onCreateNew}>
-            + Crear nuevo reto
           </Button>
         </div>
       </div>

@@ -180,7 +180,7 @@ export default function LanternsActivity() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex w-fit items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-[#4C7C64] backdrop-blur-sm transition-colors hover:bg-white/90 md:px-4 md:py-1.5 md:text-sm"
+          className="flex w-fit items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-[#4C7C64] backdrop-blur-sm transition-colors hover:bg-white/90 md:px-4 md:py-1.5 md:text-sm"
         >
           ← Volver
         </button>
@@ -213,7 +213,7 @@ export default function LanternsActivity() {
                 animatingId === selectedLantern.id ? 'lantern-main-enter-mobile' : 'lantern-main-mobile'
               }`}
             >
-              <div className="relative w-full max-w-[220px]">
+              <div className="relative w-full max-w-[320px]">
                 <img
                   src={currentLanternImage}
                   alt="Farolito con tu pensamiento"
@@ -374,7 +374,7 @@ export default function LanternsActivity() {
       )}
 
       {/* Papel inferior */}
-      <div className="paper-wrapper relative z-20 mt-auto flex justify-center px-3 md:px-4">
+      <div className="paper-wrapper relative z-20 mt-auto flex justify-start md:justify-center px-3 md:px-4">
         <div className="paper-panel">
           <img src={paperImage} alt="" className="paper-bg-img" draggable={false} />
 

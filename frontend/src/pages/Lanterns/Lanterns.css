@@ -24,8 +24,8 @@
 }
 
 .lantern-subtitle {
-  font-size: clamp(0.85rem, 2.5vw, 1.1rem);
-  font-weight: 600;
+  font-size: clamp(1rem, 2.5vw, 1.1rem);
+  font-weight: 800;
   color: #5b3d8a;
   opacity: 0.75;
   margin: 0;
@@ -203,12 +203,8 @@
 
 /* ── Panel de papel (input) ── */
 
-.paper-wrapper {
-  padding-bottom: 5.5rem; /* sube el input por encima del botón flotante en mobile */
-}
-
 .paper-panel {
-  width: min(90%, 600px);
+  width: min(75%, 600px);
   position: relative;
   display: flex;
   flex-direction: column;
