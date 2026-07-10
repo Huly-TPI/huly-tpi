@@ -181,7 +181,7 @@ export default function Challenges() {
 
       <div className="challenges-right relative z-10 flex-none md:flex-1 flex items-start md:items-center justify-center md:justify-end p-4 pt-0 md:py-8 md:pr-4 md:pl-0">
         <section
-          className="board-zone relative w-full max-w-[360px] md:w-[850px] h-full md:h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden"
+          className="board-zone relative w-full max-w-[360px] md:max-w-none md:w-[850px] h-full md:h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden"
           style={{ backgroundImage: `url(${boardBg})` }}
           aria-label="Listado de retos"
         >
