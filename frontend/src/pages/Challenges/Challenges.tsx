@@ -102,7 +102,7 @@ export default function Challenges() {
         ? (result.goal.coinsRewardWithImage ?? 25)
         : (result.goal.coinsReward ?? 10)
       if (!image) {
-        showToast('📸 Tip: subí una foto como evidiencia la próxima vez y ganás más semillas', 'info')
+        showToast('📸 Tip: subí una foto como evidencia la próxima vez y ganás más semillas', 'info')
       }
       setToastsRaised(true)
       setCoinToast(coinsEarned)
