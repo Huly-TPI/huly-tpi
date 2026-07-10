@@ -162,7 +162,7 @@ export default function AuthForm({
             <span className="text-xs text-[#8c7b66]">
               Acepto los{' '}
               <a
-                href="/terminos"
+                href="/privacy/terms"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-bold text-[#4C7C64] hover:underline"

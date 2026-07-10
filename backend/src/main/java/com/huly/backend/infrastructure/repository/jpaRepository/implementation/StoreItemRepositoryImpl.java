@@ -17,7 +17,7 @@ public class StoreItemRepositoryImpl implements StoreItemRepository {
     
     @Override
     public List<StoreItem> findAll() {
-         return jpaRepository.findAllByOrderByIdAsc().stream().map(this::toDomain).toList();
+         return jpaRepository.findAllByOrderByPriceCoinsAscPriceAsc().stream().map(this::toDomain).toList();
     }
 
     @Override

@@ -192,7 +192,7 @@ function formatCoinsDisplay(coins: number): string {
 
 let rewardAutoOpenedForUserId: number | null = null;
 
-function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
+function HomeWanderingAvatar({ equippedItems, hoveredElementZ }: { equippedItems: any, hoveredElementZ: number | null }) {
   const [pos, setPos] = useState({ x: 10, y: 60 });
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isWalking, setIsWalking] = useState(false);
@@ -306,7 +306,13 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
       style={{
         left: `${pos.x}%`,
         top: `${pos.y}%`,
-        zIndex: Math.floor(pos.y + 25), // El z-index se calcula en base a los pies (pos.y + altura del 25%)
+        zIndex: (() => {
+          const baseZ = Math.floor(pos.y + 18);
+          if (hoveredElementZ !== null && baseZ > hoveredElementZ) {
+            return 210; // Mayor que el z-index 200 de los elementos del escenario en hover
+          }
+          return baseZ;
+        })(),
         transition: isWalking ? `left ${duration}ms linear, top ${duration}ms linear` : 'none',
       }}
     >
@@ -332,6 +338,7 @@ export default function Home() {
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [isRewardsOpen, setIsRewardsOpen] = useState(false);
   const [isSeedShopOpen, setIsSeedShopOpen] = useState(false);
+  const [hoveredElementZ, setHoveredElementZ] = useState<number | null>(null);
   const {
     inventory,
     loading: inventoryLoading,
@@ -466,9 +473,19 @@ export default function Home() {
         <div
           className={`absolute inset-0 transition-opacity duration-300 ${inventoryLoading ? "opacity-0" : "opacity-100"}`}
         >
-          {renderedSceneElements.map((element) => (
-            <SceneElement key={element.id} theme={sceneTheme} {...element} />
-          ))}
+          {renderedSceneElements.map((element) => {
+            const zMatch = element.placementClassName.match(/z-\[(\d+)\]/);
+            const zIndexBase = zMatch ? parseInt(zMatch[1], 10) : 0;
+            return (
+              <SceneElement
+                key={element.id}
+                theme={sceneTheme}
+                {...element}
+                onMouseEnter={() => setHoveredElementZ(zIndexBase)}
+                onMouseLeave={() => setHoveredElementZ(null)}
+              />
+            );
+          })}
         </div>
 
         {onboardingMode !== "hidden" ? (
@@ -487,7 +504,7 @@ export default function Home() {
         )}
 
         {user?.id && user?.onboardingTutorialCompleted && !isStoreOpen && (
-          <HomeWanderingAvatar equippedItems={equippedItems} />
+          <HomeWanderingAvatar equippedItems={equippedItems} hoveredElementZ={hoveredElementZ} />
         )}
       </section>
 
