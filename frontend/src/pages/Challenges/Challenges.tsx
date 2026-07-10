@@ -10,7 +10,6 @@ import Plant from '../../components/Challenges/Plant'
 import BoardItem from '../../components/Challenges/BoardItem'
 import PostitModal from '../../components/Challenges/PostitModal'
 import HarvestModal from '../../components/Challenges/HarvestModal'
-import Button from '../../components/Buttons/Button/Button'
 import BackButton from '../../components/Buttons/BackButton/BackButton'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import dayBackground from '../../assets/shared/day-background.webp'
@@ -20,7 +19,6 @@ import stumpImg from '../../assets/challenges/stump.png'
 import nurseryImg from '../../assets/challenges/nursery.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
-import { useAuthGate } from '../../context/authGate'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
@@ -46,7 +44,6 @@ type ModalState =
 export default function Challenges() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { requireAuth } = useAuthGate()
   const navigate = useNavigate()
   const { showToast, setToastsRaised } = useToast()
   const [modal, setModal] = useState<ModalState>(null)
@@ -158,7 +155,7 @@ export default function Challenges() {
             <p className="text-[0.78rem] font-bold text-bosque mt-[0.2rem] m-0 lg:text-[0.95rem]">{cyclePct}%</p>
           </div>
 
-          <p className="challenges-plant-hint text-[0.72rem] text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
+          <p className="challenges-plant-hint text-[1rem] text-bold text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
             {PLANT_HINTS[plantStage]}
           </p>
 
