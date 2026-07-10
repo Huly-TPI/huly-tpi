@@ -13,9 +13,7 @@ import { useMediaQuery } from '../../hooks/useMediaquery'
 import type { Plan } from '../../api/payment'
 
 const MOBILE_QUERY = '(max-width: 640px)'
-/* Un poco más alto que el natural (1194/899) para que el contenido de las cards
-   entre completo, con tope de alto para que no se agranden de más. */
-const MOBILE_ASPECT = '10 / 9'
+const MOBILE_ASPECT = '1 / 1'
 
 interface SubscriptionModalProps {
   isOpen: boolean
@@ -68,7 +66,7 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
 
         <ul className="w-full flex-1 space-y-1">
           {FREE_FEATURES.map((feature, index) => (
-            <li key={index} className="flex items-start gap-1.5 text-left text-[10px] sm:text-[10px] lg:text-[12px] text-[#3a5c2a] leading-tight">
+            <li key={index} className="flex items-start gap-1.5 text-left text-[10px] sm:text-[10px] lg:text-[12px] max-[640px]:text-[9px] text-[#3a5c2a] leading-tight max-[640px]:leading-[1.15]">
               <span className="mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-[#8ccf65] text-white text-[7px] font-black">✓</span>
               <span className="font-bold">{feature}</span>
             </li>
@@ -99,8 +97,8 @@ function PaidCard({
   const isCurrentPlan = activeProductId === plan.id
   const buttonDisabled = disabled
   const isBasic = buttonTheme === 'yellow'
-  const label = `Elegir ${displayName}`
   const shortName = displayName.replace(/^Plan\s+/i, '')
+  const label = `Elegir ${shortName}`
   const textColor = isBasic ? 'text-[#8f541f]' : 'text-[#5d3a80]'
   const checkBg = isBasic ? 'bg-[#f5a623]' : 'bg-[#8b5a8e]'
 
@@ -139,7 +137,7 @@ function PaidCard({
           )}
 
           {features.map((feature, index) => (
-            <li key={index} className={`flex items-start gap-1.5 text-left text-[10px] sm:text-[10px] lg:text-[12px] text-[#7b5c3c] leading-tight`}>
+            <li key={index} className={`flex items-start gap-1.5 text-left text-[10px] sm:text-[10px] lg:text-[12px] max-[640px]:text-[9px] text-[#7b5c3c] leading-tight max-[640px]:leading-[1.15]`}>
               <span className={`mt-[1px] flex h-3 w-3 shrink-0 items-center justify-center rounded-full ${checkBg} text-white text-[7px] font-black`}>✓</span>
               <span className="font-bold">{feature}</span>
             </li>
@@ -155,7 +153,7 @@ function PaidCard({
             type="button"
             onClick={() => onBuy(plan.id)}
             disabled={buttonDisabled}
-            className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 max-[640px]:px-3 max-[640px]:py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] lg:text-[12px] ${buttonClass}`}
+            className={`mt-2 rounded-full border-b-[3px] px-4 py-1.5 max-[640px]:px-2.5 max-[640px]:py-1 font-black text-white shadow-[0_2px_2px_rgba(91,60,24,0.18)] transition-all active:translate-y-[1px] active:border-b-[1px] disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-1 text-[8px] sm:text-[10px] lg:text-[12px] ${buttonClass}`}
           >
             {buying ? 'Procesando…' : label}
           </button>
@@ -259,11 +257,6 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center px-1 pt-16 pb-2 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       {isMobile ? (
-        /*
-          Mobile -> modalSuscripcionMobile en su proporción NATURAL (1194/899):
-          no se deforma, las cards quedan en tamaño normal (no enormes) y, al ser
-          aspecto fijo, el título cae dentro de la solapa. Ancho forzado por vw.
-        */
         <div
           role="dialog"
           aria-modal="true"
@@ -275,7 +268,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
             backgroundRepeat: 'no-repeat',
             aspectRatio: MOBILE_ASPECT,
           }}
-          className="relative z-10 w-[96vw] max-w-[560px] max-h-[440px] px-[5%] pt-[6%] pb-[5%] flex flex-col overflow-hidden"
+          className="relative z-10 w-[96vw] max-w-[520px] max-h-[500px] px-[5%] pt-[7%] pb-[3%] flex flex-col overflow-hidden"
         >
           {content}
         </div>
