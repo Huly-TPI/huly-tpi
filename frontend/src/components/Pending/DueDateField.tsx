@@ -49,32 +49,32 @@ export default function DueDateField({ value, onChange }: DueDateFieldProps) {
 
   return (
     <div className="mt-2">
-      <label className="text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.8)]">
+      <label className="text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.8)] dark:text-slate-400">
         Fecha límite
       </label>
-      <div className="mt-1 rounded-lg border border-[rgba(92,61,30,0.25)] bg-[#fffdf5] p-2">
+      <div className="mt-1 rounded-lg border border-[rgba(92,61,30,0.25)] dark:border-slate-800 bg-[#fffdf5] dark:bg-[#172033]/90 p-2">
         <div className="flex items-center justify-between px-1">
           <button
             type="button"
             onClick={() => goToMonth(-1)}
             disabled={isAtEarliestMonth}
             aria-label="Mes anterior"
-            className="rounded-full p-1 text-[#5c3d1e] transition-colors hover:bg-[rgba(92,61,30,0.1)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+            className="rounded-full p-1 text-[#5c3d1e] dark:text-slate-300 transition-colors hover:bg-[rgba(92,61,30,0.1)] dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-xs font-bold text-[#3b2510]">{monthLabel}</span>
+          <span className="text-xs font-bold text-[#3b2510] dark:text-slate-200">{monthLabel}</span>
           <button
             type="button"
             onClick={() => goToMonth(1)}
             aria-label="Mes siguiente"
-            className="rounded-full p-1 text-[#5c3d1e] transition-colors hover:bg-[rgba(92,61,30,0.1)]"
+            className="rounded-full p-1 text-[#5c3d1e] dark:text-slate-300 transition-colors hover:bg-[rgba(92,61,30,0.1)] dark:hover:bg-slate-800"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[0.7rem] font-bold text-[rgba(92,61,30,0.8)]">
+        <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[0.7rem] font-bold text-[rgba(92,61,30,0.8)] dark:text-slate-400">
           {WEEKDAY_LABELS.map(day => (
             <span key={day}>{day}</span>
           ))}
@@ -96,8 +96,8 @@ export default function DueDateField({ value, onChange }: DueDateFieldProps) {
                   isSelected
                     ? 'bg-violeta font-bold text-white'
                     : isPast
-                      ? 'cursor-not-allowed text-[rgba(92,61,30,0.3)]'
-                      : `text-[#3b2510] hover:bg-[rgba(92,61,30,0.12)] ${isToday ? 'ring-1 ring-inset ring-violeta' : ''}`
+                      ? 'cursor-not-allowed text-[rgba(92,61,30,0.3)] dark:text-slate-600'
+                      : `text-[#3b2510] dark:text-slate-200 hover:bg-[rgba(92,61,30,0.12)] dark:hover:bg-slate-800 ${isToday ? 'ring-1 ring-inset ring-violeta' : ''}`
                 }`}
               >
                 {date.getDate()}
@@ -110,7 +110,7 @@ export default function DueDateField({ value, onChange }: DueDateFieldProps) {
           <button
             type="button"
             onClick={() => onChange('')}
-            className="mt-2 w-full text-center text-[0.75rem] text-[#7a5c38] underline"
+            className="mt-2 w-full text-center text-[0.75rem] text-[#7a5c38] dark:text-slate-400 underline"
           >
             Quitar fecha
           </button>
