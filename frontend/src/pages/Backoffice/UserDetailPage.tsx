@@ -71,7 +71,7 @@ export default function UserDetailPage() {
               <h2 className="text-xl lg:text-[24px] font-bold text-gray-800 dark:text-gray-100 truncate w-full px-2">
                 {selectedUser.name || 'sin nombre'}
               </h2>
-              <p className="text-sm lg:text-[15px] text-gray-400 dark:text-gray-500 truncate w-full px-2">
+              <p className="text-sm lg:text-[15px] font-medium text-gray-500 dark:text-gray-400 truncate w-full px-2">
                 {selectedUser.email}
               </p>
             </div>

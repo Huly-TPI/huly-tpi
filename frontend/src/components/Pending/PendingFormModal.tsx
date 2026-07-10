@@ -126,11 +126,11 @@ export default function PendingFormModal({
           />
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col">
-            <p className="text-[0.7rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.07em] mb-3">
+            <p className="text-[0.8rem] font-bold text-[rgba(92,61,30,0.8)] uppercase tracking-[0.07em] mb-3">
               {mode === 'create' ? 'Nueva tarea' : 'Editar tarea'}
             </p>
 
-            <label className="text-[0.65rem] font-bold uppercase text-[rgba(92,61,30,0.5)]" htmlFor="pending-title">
+            <label className="text-[0.75rem] font-bold uppercase text-[rgba(92,61,30,0.8)]" htmlFor="pending-title">
               Título
             </label>
             <input
@@ -144,7 +144,7 @@ export default function PendingFormModal({
               placeholder="¿Qué necesitás hacer?"
             />
 
-            <label className="text-[0.65rem] font-bold uppercase text-[rgba(92,61,30,0.5)]" htmlFor="pending-description">
+            <label className="text-[0.75rem] font-bold uppercase text-[rgba(92,61,30,0.8)]" htmlFor="pending-description">
               Descripción
             </label>
             <textarea

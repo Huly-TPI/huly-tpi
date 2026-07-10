@@ -27,7 +27,7 @@ export default function Tray({ tasks, onPickUp, onCreateNew, onGenerateRecommend
       </button>
 
       {tasks.length === 0 && (
-        <p className="text-xs italic text-[#7a5c38] px-2">
+        <p className="text-sm font-semibold italic text-[#7a5c38] px-2">
           No tenés tareas sin ubicar — ¡creá una nueva!
         </p>
       )}
@@ -41,7 +41,7 @@ export default function Tray({ tasks, onPickUp, onCreateNew, onGenerateRecommend
         >
           <p className="text-xs font-bold text-[#3b2510] truncate">{task.title}</p>
           {task.description && (
-            <p className="text-[10px] text-[#5c3d1e] line-clamp-2">{task.description}</p>
+            <p className="text-[11px] font-medium text-[#5c3d1e] line-clamp-2">{task.description}</p>
           )}
         </button>
       ))}

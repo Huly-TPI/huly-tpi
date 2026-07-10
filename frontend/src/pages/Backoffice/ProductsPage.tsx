@@ -72,7 +72,7 @@ export default function ProductsPage() {
                     className="h-full w-full object-contain"
                   />
                 ) : (
-                  <span className="px-1 text-center text-[9px] text-[#A0AEC0]">
+                  <span className="px-1 text-center text-[11px] text-[#A0AEC0]">
                     {p.assetKey}
                   </span>
                 )}
@@ -82,7 +82,7 @@ export default function ProductsPage() {
                   <h3 className="truncate font-bold text-[#4A5568] dark:text-gray-200">
                     {p.name}
                   </h3>
-                  <span className="shrink-0 rounded-full bg-[#D1CAEF]/40 px-2 py-0.5 text-[10px] font-semibold text-violeta">
+                  <span className="shrink-0 rounded-full bg-[#D1CAEF]/40 px-2 py-0.5 text-[11px] font-semibold text-violeta">
                     {CATEGORY_LABELS[p.category] ?? p.category}
                   </span>
                 </div>

@@ -34,7 +34,7 @@ export default function DateInput({
   }
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <input
         ref={inputRef}
         id={id}
@@ -49,7 +49,7 @@ export default function DateInput({
         aria-describedby={errorId}
         className={getInputClassName(
           hasError,
-          'pr-12 [&::-webkit-calendar-picker-indicator]:hidden',
+          'pr-12 min-w-0 [&::-webkit-calendar-picker-indicator]:hidden',
         )}
       />
       <button

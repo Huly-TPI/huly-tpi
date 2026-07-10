@@ -39,7 +39,7 @@ export default function ActivitiesConfigTab({
             </div>
             <div>
               <p className="font-bold text-gray-800 dark:text-gray-100">{config.title}</p>
-              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{config.type}</p>
+              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider">{config.type}</p>
             </div>
           </div>
         )
@@ -70,7 +70,7 @@ export default function ActivitiesConfigTab({
                 <span className="block pl-3 text-gray-500">Valores bajos = Abrumado, desprotegido, sin control.</span>
               </li>
             </ul>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 italic mt-1 border-t border-gray-100 dark:border-gray-800 pt-1.5 font-normal">
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 italic mt-1 border-t border-gray-100 dark:border-gray-800 pt-1.5 font-normal">
               * El chatbot sugerirá esta actividad cuando el estado emocional detectado en los mensajes del usuario coincida con los rangos configurados.
             </p>
           </InfoPopup>
@@ -78,7 +78,7 @@ export default function ActivitiesConfigTab({
       ),
       className: 'text-center',
       render: (config) => (
-        <div className="flex flex-col items-center gap-0.5 font-mono text-[11px] text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col items-center gap-0.5 font-mono text-[12px] text-gray-600 dark:text-gray-400">
           <p>
             <span className="text-violeta dark:text-violeta-claro font-bold mr-1">V</span>
             {formatVal(config.valenceMin)} &nbsp; {formatVal(config.valenceMax)}
@@ -108,7 +108,7 @@ export default function ActivitiesConfigTab({
               </li>
               <li>
                 <strong>ΔA (Cambio en Energía/Estrés):</strong> Cómo impacta en su nivel de agitación:
-                <div className="pl-3 mt-1 text-[11px] font-normal leading-normal">
+                <div className="pl-3 mt-1 text-[12px] font-normal leading-normal">
                   <span className="text-blue-500 font-bold block">• Calmante (Valores bajo cero):</span> Ideal para bajar revoluciones, calmar la ansiedad, el estrés o el enojo (ej: Respiración).
                   <span className="text-orange-500 font-bold block">• Activante (Valores sobre cero):</span> Ideal para recargar pilas, despertar la mente y combatir el desgano o aburrimiento (ej: Retos).
                 </div>
@@ -122,7 +122,7 @@ export default function ActivitiesConfigTab({
       ),
       className: 'text-center',
       render: (config) => (
-        <div className="flex flex-col items-center gap-0.5 font-mono text-[11px] text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col items-center gap-0.5 font-mono text-[12px] text-gray-600 dark:text-gray-400">
           <p>
             <span className="text-violeta dark:text-violeta-claro font-bold mr-1">ΔV</span>
             {formatDelta(config.effectValence)}
@@ -141,7 +141,7 @@ export default function ActivitiesConfigTab({
     {
       header: 'Palabras Clave',
       render: (config) => (
-        <span className="text-xs text-gray-500 max-w-[180px] truncate block" title={config.goalKeywords}>
+        <span className="text-xs text-gray-500 truncate max-w-[150px] md:max-w-[180px] block" title={config.goalKeywords}>
           {config.goalKeywords || <span className="italic text-gray-300">Ninguna</span>}
         </span>
       ),
@@ -155,13 +155,13 @@ export default function ActivitiesConfigTab({
       ),
     },
     {
-      header: 'Acción',
+      header: 'Acciones',
       className: 'text-center',
       render: (config) => (
         <div className="flex justify-center">
           <button
             onClick={() => handleEditClick(config)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-550 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-555 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
             aria-label={`Editar configuración de ${config.title}`}
           >
             <Edit2 className="h-5 w-5" strokeWidth={2} />
@@ -172,7 +172,7 @@ export default function ActivitiesConfigTab({
   ]
 
   return (
-    <SectionCard className="bg-white dark:bg-[#172033] flex-1 min-h-0 flex flex-col">
+    <SectionCard className="bg-white dark:bg-[#172033] md:flex-1 md:min-h-0 flex flex-col">
       <CardHeader title="Configuración de Rangos VAD y Parámetros" />
       <Table
         data={configs}

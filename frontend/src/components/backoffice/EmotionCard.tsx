@@ -41,17 +41,17 @@ export function EmotionCard({ category }: EmotionCardProps) {
       </div>
 
       <p className="mt-3 text-[13px] font-bold text-[#2D3748] dark:text-gray-100 truncate" title={category.name}>{category.name}</p>
-      <p className="mt-0.5 text-[10px] text-[#A0AEC0] dark:text-gray-500">
+      <p className="mt-0.5 text-[11px] text-[#A0AEC0] dark:text-gray-500">
         {category.detections} {category.detections === 1 ? 'detección' : 'detecciones'}
       </p>
-      <p className="mt-0.5 text-[10px] text-[#A0AEC0] dark:text-gray-500">
+      <p className="mt-0.5 text-[11px] text-[#A0AEC0] dark:text-gray-500">
         {category.detect}% conf.
       </p>
 
       <ProgressBar pct={category.detect} colorClass={sev.bar} height="h-[3px]" className="mt-2" />
 
       <div className="mt-2 flex items-center justify-between">
-        <span className={`text-[10px] font-bold ${sev.text}`}>
+        <span className={`text-[11px] font-bold ${sev.text}`}>
           {category.severity}
         </span>
       </div>

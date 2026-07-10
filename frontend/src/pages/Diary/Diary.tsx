@@ -75,7 +75,8 @@ export default function Diary() {
   const { showToast } = useToast()
   const isDark = theme === 'dark'
   const { requireAuth } = useAuthGate()
-  const cardText = isDark ? '#000000' : '#3d2b1a'
+  const darkText = 'rgb(33, 32, 32)'
+  const cardText = isDark ? darkText : '#3d2b1a'
   const lineColor = isDark ? 'rgba(148, 163, 184, 0.18)' : 'rgba(120, 90, 50, 0.12)'
   const accentBg   = isDark ? 'rgba(92, 120, 172, 0.20)' : 'rgba(209, 202, 239, 0.28)'
   const successBg  = isDark ? 'rgba(109, 138, 152, 0.20)' : 'rgba(171, 203, 167, 0.30)'
@@ -83,8 +84,8 @@ export default function Diary() {
   const moodIdle   = isDark ? '#4a3d6e' : '#e8e0f5'
   const moodSelected = isDark ? '#5f4a8a' : '#D1CAEF'
   const moodRing   = isDark ? '#a7f3d0' : '#8869AC'
-  const labelGreen  = isDark ? '#ACCCA4' : '#649959'
-  const labelViolet = isDark ? '#D3CCEB' : '#8869AC'
+  const labelGreen  = isDark ? darkText : '#649959'
+  const labelViolet = isDark ? darkText : '#8869AC'
 
   const lineBackground = {
     backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, ${lineColor} 31px, ${lineColor} 32px)`,
@@ -290,7 +291,7 @@ export default function Diary() {
             style={{ borderColor: lineColor }}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <span className="font-bold text-green-800 text-lg tracking-tight flex-shrink-0 dark:text-menta">huly</span>
+              <span className="font-bold text-green-800 text-lg tracking-tight flex-shrink-0" style={{ color: isDark ? darkText : undefined }}>huly</span>
               <span className="sm:hidden text-xs capitalize" style={{ color: labelViolet }}>{displayDateMobile}</span>
               <span className="hidden sm:inline text-sm capitalize truncate" style={{ color: labelViolet }}>{displayDate}</span>
             </div>
@@ -304,7 +305,7 @@ export default function Diary() {
                   >
                     ‹
                   </button>
-                  <span className="text-xs min-w-[28px] text-center font-medium" style={{ color: '#3d2b1a' }}>
+                  <span className="text-xs min-w-[28px] text-center font-medium" style={{ color: isDark ? darkText : '#3d2b1a' }}>
                     {pageIndex + 1} / {totalPages}
                   </span>
                   <button
@@ -316,7 +317,7 @@ export default function Diary() {
                   </button>
                 </div>
               ) : (
-                <span className="text-sm min-w-[40px] text-center font-medium" style={{ color: '#3d2b1a' }}>
+                <span className="text-sm min-w-[40px] text-center font-medium" style={{ color: isDark ? darkText : '#3d2b1a' }}>
                   {pageIndex + 1} / {totalPages}
                 </span>
               )}
@@ -336,7 +337,7 @@ export default function Diary() {
 
         <div className="diary-content flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden" style={{ ...lineBackground }}>
           <div className="diary-left md:flex-1 md:min-h-0 px-2 py-5 flex flex-col">
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3 lg:text-[11px]" style={{ color: labelGreen }}>
+            <p className="text-[11px] uppercase tracking-widest font-semibold mb-3 lg:text-[11px]" style={{ color: labelGreen }}>
               Hoy
             </p>
 
@@ -369,8 +370,8 @@ export default function Diary() {
                       {mood.emoji}
                     </div>
                     <span
-                      className={`text-[11px] lg:text-[12px] ${isSelected ? 'font-semibold' : ''}`}
-                      style={{ color: isSelected ? '#433266' : '#4f3b24' }}
+                      className={`text-[12px] lg:text-[12px] ${isSelected ? 'font-semibold' : ''}`}
+                      style={{ color: isDark ? darkText : (isSelected ? '#433266' : '#4f3b24') }}
                     >
                       {mood.label}
                     </span>
@@ -379,7 +380,7 @@ export default function Diary() {
               })}
             </div>
 
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 lg:text-[11px]" style={{ color: labelViolet }}>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-1 lg:text-[11px]" style={{ color: labelViolet }}>
               Lo que pasa adentro
             </p>
             <textarea
@@ -394,7 +395,7 @@ export default function Diary() {
 
 
 
-            <p className="text-[10px] italic mt-3" style={{ color: labelGreen }}>
+            <p className="text-[11px] italic mt-3" style={{ color: labelGreen }}>
               Tu espacio privado y seguro
             </p>
           </div>
@@ -404,7 +405,7 @@ export default function Diary() {
 
           <div className="diary-right md:flex-1 md:min-h-0 px-2 md:pl-6 md:pr-2 pt-5 pb-8 flex flex-col gap-5">
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: labelViolet }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: labelViolet }}>
                 ☁️ Un pensamiento que quiero soltar
               </p>
               <textarea
@@ -419,7 +420,7 @@ export default function Diary() {
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: labelGreen }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: labelGreen }}>
                 🌱 Algo que me salió bien hoy
               </p>
               <textarea
@@ -434,7 +435,7 @@ export default function Diary() {
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: '#805b20' }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-1 flex-shrink-0 lg:text-[11px]" style={{ color: isDark ? darkText : '#805b20' }}>
                 ☀️ Lo que quiero para mañana
               </p>
               <textarea
