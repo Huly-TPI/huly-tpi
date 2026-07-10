@@ -46,6 +46,16 @@ export function useUserGoals() {
     void fetchGoals()
   }, [fetchGoals])
 
+  useEffect(() => {
+    const handleChallengeAccepted = () => {
+      void silentRefetch()
+    }
+    window.addEventListener('huly-challenge-accepted', handleChallengeAccepted)
+    return () => {
+      window.removeEventListener('huly-challenge-accepted', handleChallengeAccepted)
+    }
+  }, [silentRefetch])
+
   const createGoal = useCallback(
     async (data: CreateUserGoalRequest) => {
       await userGoalsApi.create(data)

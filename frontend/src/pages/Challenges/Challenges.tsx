@@ -122,7 +122,7 @@ export default function Challenges() {
 
   return (
     <div
-      className="challenges-page relative h-full flex flex-row items-stretch overflow-hidden"
+      className="challenges-page relative h-full flex flex-col md:flex-row items-stretch overflow-hidden"
     >
       <ThemeBackground
         lightSrc={dayBackground}
@@ -132,7 +132,7 @@ export default function Challenges() {
       />
       <BackButton to="/" />
 
-      <aside className="plant-zone relative z-10 flex-shrink-0 w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-hidden">
+      <aside className="plant-zone relative z-10 flex-shrink-0 w-full md:w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-visible md:overflow-hidden">
         <div className="plant-zone__info flex flex-col items-center gap-[0.6rem] w-full">
           <h1 className="challenges-title text-2xl font-extrabold text-bosque m-0 text-center tracking-[-0.01em] lg:text-[2rem]">
             Mis Retos
@@ -168,7 +168,7 @@ export default function Challenges() {
           </button>
         </div>
 
-        <div className="plant-on-stump mt-auto flex flex-col items-center relative mr-3 translate-y-[140px]">
+        <div className="plant-on-stump mt-[8vh] md:mt-auto flex flex-col items-center relative mr-0 md:mr-3 translate-y-0 md:translate-y-[140px] scale-[0.8] md:scale-100 origin-bottom">
           <Plant stage={plantStage} isWatering={isWatering} plantType={currentPlant?.plantNumber ?? 1} />
           <img
             src={stumpImg}
@@ -179,9 +179,9 @@ export default function Challenges() {
         </div>
       </aside>
 
-      <div className="challenges-right relative z-10 flex-1 flex items-center justify-end py-8 pr-4">
+      <div className="challenges-right relative z-10 flex-none md:flex-1 flex items-start md:items-center justify-center md:justify-end p-4 pt-0 md:py-8 md:pr-4 md:pl-0">
         <section
-          className="board-zone relative w-[850px] h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden"
+          className="board-zone relative w-full max-w-[360px] md:w-[850px] h-full md:h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden"
           style={{ backgroundImage: `url(${boardBg})` }}
           aria-label="Listado de retos"
         >
@@ -191,7 +191,7 @@ export default function Challenges() {
               aria-hidden="true"
             />
           )}
-          <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-[4rem] pl-[6rem] pr-[5rem] pb-[6rem] overflow-hidden min-h-0">
+          <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-10 px-6 pb-10 md:pt-[4rem] md:pl-[6rem] md:pr-[5rem] md:pb-[6rem] overflow-hidden min-h-0">
 
             {loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
             {error && !loading && <InlineError message={error} className="mt-2" />}
