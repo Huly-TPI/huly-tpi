@@ -29,7 +29,7 @@ export default function SubtasksField({ items, onAdd, onToggle, onDelete, readOn
     <div className="mt-2">
       {!readOnly && (
         <>
-          <label className="text-[0.65rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.5)]">
+          <label className="text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.8)]">
             Subtareas
           </label>
           <div className="mt-1 flex gap-1">

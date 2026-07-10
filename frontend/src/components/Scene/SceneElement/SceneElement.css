@@ -37,6 +37,11 @@
   .scene-element:has(.scene-element__hotspot--interactive:focus-visible) .scene-element__image {
     transform: scaleX(var(--scene-element-scale-x)) scale(1.05);
   }
+
+  .scene-element:has(.scene-element__hotspot--interactive:hover),
+  .scene-element:has(.scene-element__hotspot--interactive:focus-visible) {
+    z-index: 200;
+  }
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -48,5 +53,10 @@
   .scene-element:has(.scene-element__hotspot--interactive:focus-visible) .scene-element__image,
   .scene-element:has(.scene-element__hotspot--interactive:active) .scene-element__image {
     transform: scaleX(var(--scene-element-scale-x)) scale(1.05);
+  }
+
+  .scene-element:has(.scene-element__hotspot--interactive:focus-visible),
+  .scene-element:has(.scene-element__hotspot--interactive:active) {
+    z-index: 200;
   }
 }

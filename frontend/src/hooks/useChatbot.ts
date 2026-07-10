@@ -456,6 +456,7 @@ export function useChatbot() {
     if (decision === 'accepted') {
       try {
         await userGoalsApi.acceptChallenge({ title, description: description ?? undefined })
+        window.dispatchEvent(new Event('huly-challenge-accepted'))
       } catch {
         // no bloquea el flujo si falla el guardado
       }

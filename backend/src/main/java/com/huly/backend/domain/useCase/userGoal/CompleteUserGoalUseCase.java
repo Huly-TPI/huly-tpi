@@ -128,6 +128,6 @@ public class CompleteUserGoalUseCase {
             throw new InvalidGoalImageException(result.reason());
         }
 
-        return imageStorageService.save(image);
+        return imageStorageService.save(bytes, image.getContentType());
     }
 }

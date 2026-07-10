@@ -139,7 +139,7 @@ export function UsageTab({
                         {(activities.activityNames && activities.activityNames[key]) || key}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 font-mono text-gray-400 text-[11px]">
+                    <div className="flex items-center gap-2 font-mono text-gray-400 text-[12px]">
                       <span className="text-gray-700 dark:text-gray-200">{count} {count === 1 ? 'sesión' : 'sesiones'}</span>
                     </div>
                   </div>
@@ -163,7 +163,7 @@ export function UsageTab({
           <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Historial de uso reciente</h2>
         </div>
         {sessions.length === 0 ? (
-          <div className="py-8 text-center text-xs text-gray-400">No hay sesiones de actividad registradas.</div>
+          <div className="py-8 text-center text-xs font-medium text-gray-500 dark:text-gray-400">No hay sesiones de actividad registradas.</div>
         ) : (
           <div className={`space-y-3 pr-1 transition-opacity duration-200 ${activitiesLoading ? 'opacity-40 pointer-events-none' : ''}`}>
             {sessions.map((s) => {

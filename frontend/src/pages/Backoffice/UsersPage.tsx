@@ -104,13 +104,13 @@ export default function UsersPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-6 animate-fadeIn h-[calc(100vh-160px)] min-h-0">
+    <div className="flex flex-col gap-6 animate-fadeIn md:h-[calc(100vh-160px)] md:min-h-0">
       <PageHeader 
         title="Usuarios" 
         subtitle="Administra los usuarios registrados en el sistema y visualiza sus consentimientos y configuraciones de extensión."
       />
 
-      <SectionCard className="bg-white dark:bg-[#172033] flex-1 min-h-0 flex flex-col">
+      <SectionCard className="bg-white dark:bg-[#172033] md:flex-1 md:min-h-0 flex flex-col">
         <div className="flex flex-col gap-4 flex-1 min-h-0">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
             <h2 className="text-lg lg:text-[22px] font-bold text-gray-700 dark:text-gray-200">Listado de usuarios</h2>

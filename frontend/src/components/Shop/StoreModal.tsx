@@ -94,6 +94,46 @@ export default function StoreModal({
   const [activeTabId, setActiveTabId] = useState<string>("ALL");
   const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
   const [localError, setLocalError] = useState<string | null>(null);
+  const [storeAnimation, setStoreAnimation] = useState<"idle" | "wave" | "jump" | "dance" | "look-around" | "blink">("idle");
+  const equipAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isEquipAnimatingRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen || localError) return;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+    let resetTimeoutId: ReturnType<typeof setTimeout>;
+
+    const triggerNextAnimation = () => {
+      if (isEquipAnimatingRef.current) {
+        timeoutId = setTimeout(triggerNextAnimation, 1000);
+        return;
+      }
+
+      // Elegimos entre blink (muy frecuente) y wave (menos frecuente)
+      const anims: ("blink" | "wave")[] = ["blink", "blink", "blink", "blink", "wave"];
+      const nextAnim = anims[Math.floor(Math.random() * anims.length)];
+      setStoreAnimation(nextAnim);
+
+      const animDuration = nextAnim === "blink" ? 300 : 4000;
+
+      // Volvemos a idle despues de que termina para poder repetir la misma animacion luego
+      resetTimeoutId = setTimeout(() => {
+        if (!isEquipAnimatingRef.current) setStoreAnimation("idle");
+      }, animDuration);
+
+      // Programamos la proxima animacion
+      const nextWait = animDuration + (Math.random() * 2000 + 500); // Espera entre 0.5s y 2.5s en idle
+      timeoutId = setTimeout(triggerNextAnimation, nextWait);
+    };
+
+    timeoutId = setTimeout(triggerNextAnimation, 1000); // Primer inicio rapido
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(resetTimeoutId);
+    };
+  }, [isOpen, localError]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -191,6 +231,20 @@ export default function StoreModal({
     const ok = await equip(id);
     if (ok) {
       await refetchInventory();
+
+      const item = items.find((i) => i.id === id);
+      const isClothing = item && ["SHIRT", "SHOES", "HAT"].includes(item.category);
+
+      if (isClothing) {
+        const anims: ("wave" | "jump" | "dance")[] = ["wave", "jump", "dance"];
+        setStoreAnimation(anims[Math.floor(Math.random() * anims.length)]);
+        isEquipAnimatingRef.current = true;
+        if (equipAnimationTimeoutRef.current) clearTimeout(equipAnimationTimeoutRef.current);
+        equipAnimationTimeoutRef.current = setTimeout(() => {
+          setStoreAnimation("idle");
+          isEquipAnimatingRef.current = false;
+        }, 4000);
+      }
     }
   };
 
@@ -218,7 +272,7 @@ export default function StoreModal({
         >
           <div className="flex items-center justify-between gap-2 bg-[#4C7C64] px-4 py-3 text-white sm:px-5 sm:py-4 dark:bg-[#375847] dark:border-b dark:border-slate-800">
             <div className="min-w-0">
-              <p className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-70">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-70">
                 Decorá tu jardín
               </p>
               <h2 className="font-nunito text-xl font-black leading-tight sm:text-2xl">
@@ -284,7 +338,7 @@ export default function StoreModal({
                         />
                         <span className="truncate">{tab.label}</span>
                         <span
-                          className={`shrink-0 rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white/25 text-white" : "bg-white text-[#4C7C64] dark:bg-slate-700 dark:text-slate-200"}`}
+                          className={`shrink-0 rounded-full px-1.5 text-[12px] font-bold ${active ? "bg-white/25 text-white" : "bg-white text-[#4C7C64] dark:bg-slate-700 dark:text-slate-200"}`}
                         >
                           {count}
                         </span>
@@ -391,7 +445,7 @@ export default function StoreModal({
          * 
          * Hay que chequear el monitor de cada uno pero con la actual configuracion deberia estar bien para todos los monitores
          */}
-          <HulyAvatar equippedItems={previewItems} animation={localError ? "stop-blow" : "wave"} />
+          <HulyAvatar equippedItems={previewItems} animation={localError ? "stop-blow" : storeAnimation} />
         </div>
       </div>
     </div>

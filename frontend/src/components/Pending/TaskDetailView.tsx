@@ -33,7 +33,7 @@ export default function TaskDetailView({ task, onEdit, onClose, onDelete, onComp
 
   return (
     <div className="flex flex-col">
-      <p className="text-[0.7rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.07em] mb-3">Tarea</p>
+      <p className="text-[0.8rem] font-bold text-[rgba(92,61,30,0.8)] uppercase tracking-[0.07em] mb-3">Tarea</p>
 
       <p className="mb-1 text-base font-bold text-[#3b2510]">{task.title}</p>
 

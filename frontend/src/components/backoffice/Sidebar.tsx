@@ -104,7 +104,7 @@ export default function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
             </div>
             <div className="min-w-0">
               <img src={colorLogo} alt="Huly" className="h-9 w-auto object-contain object-left" />
-              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
+              <p className="mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
                 Bienestar emocional
               </p>
             </div>

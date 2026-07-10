@@ -10,7 +10,6 @@ import Plant from '../../components/Challenges/Plant'
 import BoardItem from '../../components/Challenges/BoardItem'
 import PostitModal from '../../components/Challenges/PostitModal'
 import HarvestModal from '../../components/Challenges/HarvestModal'
-import Button from '../../components/Buttons/Button/Button'
 import BackButton from '../../components/Buttons/BackButton/BackButton'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import dayBackground from '../../assets/shared/day-background.webp'
@@ -20,7 +19,6 @@ import stumpImg from '../../assets/challenges/stump.png'
 import nurseryImg from '../../assets/challenges/nursery.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
-import { useAuthGate } from '../../context/authGate'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
@@ -46,9 +44,8 @@ type ModalState =
 export default function Challenges() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { requireAuth } = useAuthGate()
   const navigate = useNavigate()
-  const { showToast } = useToast()
+  const { showToast, setToastsRaised } = useToast()
   const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
@@ -65,7 +62,7 @@ export default function Challenges() {
   useEffect(() => {
     userPlantsApi.getCurrent()
       .then(setCurrentPlant)
-      .catch(() => {/* no plant yet, will be created on first complete */})
+      .catch(() => {/* no plant yet, will be created on first complete */ })
   }, [])
 
   const cycleProgress = currentPlant?.completedGoalsCount ?? 0
@@ -105,8 +102,9 @@ export default function Challenges() {
         ? (result.goal.coinsRewardWithImage ?? 25)
         : (result.goal.coinsReward ?? 10)
       if (!image) {
-        showToast('📸 Tip: subí una foto como evidiencia la próxima vez y ganás más semillas', 'info')
+        showToast('📸 Tip: subí una foto como evidencia la próxima vez y ganás más semillas', 'info')
       }
+      setToastsRaised(true)
       setCoinToast(coinsEarned)
       if (result.harvestTriggered) {
         setHarvestPlant(result.harvestedPlantNumber)
@@ -116,14 +114,15 @@ export default function Challenges() {
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al completar el reto', 'error')
     }
-  }, [completeGoal, triggerWatering, markConditionMet, saveSession, showToast])
+  }, [completeGoal, triggerWatering, markConditionMet, saveSession, showToast, setToastsRaised])
 
-  const hasPending  = (pendientes?.totalElements ?? 0) > 0
+  const hasPending = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0
+  const hasAnyGoal = hasPending || hasCompleted
 
   return (
     <div
-      className="challenges-page relative h-full flex flex-row items-stretch overflow-hidden"
+      className="challenges-page relative h-full flex flex-col md:flex-row items-stretch overflow-hidden"
     >
       <ThemeBackground
         lightSrc={dayBackground}
@@ -133,7 +132,7 @@ export default function Challenges() {
       />
       <BackButton to="/" />
 
-      <aside className="plant-zone relative z-10 flex-shrink-0 w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-hidden">
+      <aside className="plant-zone relative z-10 flex-shrink-0 w-full md:w-[44%] flex flex-col items-center gap-[0.6rem] pt-6 px-2 justify-start overflow-visible md:overflow-hidden">
         <div className="plant-zone__info flex flex-col items-center gap-[0.6rem] w-full">
           <h1 className="challenges-title text-2xl font-extrabold text-bosque m-0 text-center tracking-[-0.01em] lg:text-[2rem]">
             Mis Retos
@@ -156,7 +155,7 @@ export default function Challenges() {
             <p className="text-[0.78rem] font-bold text-bosque mt-[0.2rem] m-0 lg:text-[0.95rem]">{cyclePct}%</p>
           </div>
 
-          <p className="challenges-plant-hint text-[0.72rem] text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
+          <p className="challenges-plant-hint text-[0.82rem] font-semibold text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
             {PLANT_HINTS[plantStage]}
           </p>
 
@@ -169,7 +168,7 @@ export default function Challenges() {
           </button>
         </div>
 
-        <div className="plant-on-stump mt-auto flex flex-col items-center relative mr-3 translate-y-[140px]">
+        <div className="plant-on-stump mt-[8vh] md:mt-auto flex flex-col items-center relative mr-0 md:mr-3 translate-y-0 md:translate-y-[140px] scale-[0.8] md:scale-100 origin-bottom">
           <Plant stage={plantStage} isWatering={isWatering} plantType={currentPlant?.plantNumber ?? 1} />
           <img
             src={stumpImg}
@@ -180,9 +179,9 @@ export default function Challenges() {
         </div>
       </aside>
 
-      <div className="challenges-right relative z-10 flex-1 flex items-center justify-end py-8 pr-4">
+      <div className="challenges-right relative z-10 flex-none md:flex-1 flex items-start md:items-center justify-center md:justify-end p-4 pt-0 md:py-8 md:pr-4 md:pl-0">
         <section
-          className="board-zone relative w-[850px] h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden"
+          className="board-zone relative w-full max-w-[360px] md:w-[850px] h-full md:h-[calc(100dvh-8rem)] bg-no-repeat [background-size:100%_100%] bg-center flex items-stretch rounded-[6px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden"
           style={{ backgroundImage: `url(${boardBg})` }}
           aria-label="Listado de retos"
         >
@@ -192,20 +191,20 @@ export default function Challenges() {
               aria-hidden="true"
             />
           )}
-          <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-[4rem] pl-[6rem] pr-[5rem] pb-[6rem] overflow-hidden min-h-0">
-
-
-            <div className="flex justify-end mb-[0.1rem]">
-              <Button variant="primary" size="sm" onClick={() => requireAuth(() => setModal({ mode: 'create' }))}>
-                + Nuevo reto
-              </Button>
-            </div>
+          <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-10 px-6 pb-10 md:pt-[4rem] md:pl-[6rem] md:pr-[5rem] md:pb-[6rem] overflow-hidden min-h-0">
 
             {loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
             {error && !loading && <InlineError message={error} className="mt-2" />}
 
             {!loading && !error && (
               <ul className="board-list list-none p-0 m-0 flex flex-col gap-[0.35rem] flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
+
+                {hasAnyGoal && (
+                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)] lg:text-[0.9rem]">
+                    Huly creó estos retos para vos. ¡Completalos y hacé florecer tu planta!
+                  </li>
+                )}
+
                 {hasPending ? (
                   pendientes!.content.map(goal => (
                     <li key={goal.id}>
@@ -217,11 +216,13 @@ export default function Challenges() {
                       />
                     </li>
                   ))
-                ) : (
-                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)] lg:text-[0.9rem]">
-                    Sembrá tus metas. ¡Creá un nuevo reto!
+                ) : !hasCompleted ? (
+                  <li className="list-none py-3 text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)]">
+                    <p className="m-0 mt-1 text-[0.82rem] italic leading-[1.4] lg:text-[0.9rem]">
+                      Aún no tenés retos. Hablá con Huly y va a crear unos personalizados para vos
+                    </p>
                   </li>
-                )}
+                ) : null}
 
                 {hasCompleted && (
                   <li
@@ -268,7 +269,7 @@ export default function Challenges() {
       {coinToast !== null && (
         <RewardToast
           coins={coinToast}
-          onClose={() => setCoinToast(null)}
+          onClose={() => { setCoinToast(null); setToastsRaised(false) }}
           message="¡Reto completado!"
         />
       )}

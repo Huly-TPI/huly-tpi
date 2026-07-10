@@ -49,7 +49,7 @@ import Challenges from '../../pages/Challenges/Challenges'
 import { useUserGoals } from '../../hooks/useUserGoals'
 import type { UserGoalResponse } from '../../api/userGoals'
 import { registerActivitySession } from '../../api/activities'
-import { typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, clearAllMocks } from '../testHelpers'
+import { verifyTextPresent, clearAllMocks } from '../testHelpers'
 
 const mockedUseUserGoals = vi.mocked(useUserGoals)
 
@@ -96,11 +96,6 @@ describe('Challenges', () => {
     verifyEmptyStateMessageVisible()
   })
 
-  it('muestra el botón para agregar un nuevo reto', () => {
-    renderChallengesPage()
-    verifyNewChallengeButtonVisible()
-  })
-
   it('muestra los retos pendientes', () => {
     setupPendientesGoals([makeGoal({ id: 1, title: 'Mi primer reto' })])
     renderChallengesPage()
@@ -122,43 +117,6 @@ describe('Challenges', () => {
   it('muestra el progreso del ciclo en 0 cuando no hay completados', () => {
     renderChallengesPage()
     verifyProgressBarProgress('0')
-  })
-
-  it('abre el modal de creación al hacer click en Nuevo reto', () => {
-    renderChallengesPage()
-    return clickNewChallengeButton().then(() => {
-      verifyCreateModalPlaceholderVisible()
-    })
-  })
-
-  it('cierra el modal de creación al hacer click en Cancelar', () => {
-    renderChallengesPage()
-    return clickNewChallengeButton().then(() => {
-      return clickCancelButton().then(() => {
-        verifyCreateModalPlaceholderNotVisible()
-      })
-    })
-  })
-
-  it('llama a createGoal al guardar el formulario', () => {
-    renderChallengesPage()
-    return clickNewChallengeButton().then(() => {
-      return fillChallengeTitle('Reto nuevo').then(() => {
-        return clickSaveButton().then(() => {
-          return waitForCreateGoalCall('Reto nuevo')
-        })
-      })
-    })
-  })
-
-  it('no registra sesión al salir si solo creó retos sin completarlos', () => {
-    setupDateNowMock('2025-01-01T10:00:00Z')
-    renderChallengesPage()
-    return createTwoChallengesAndUnmount('Reto uno', 'Reto dos', '2025-01-01T10:00:04Z').then(() => {
-      return waitForActivitySessionNotCalled().then(() => {
-        restoreDateMock()
-      })
-    })
   })
 
   it('registra la sesión al completar un reto', () => {
@@ -184,28 +142,6 @@ describe('Challenges', () => {
     renderChallengesPage()
     return clickChallengeDetailButton('Ver detalle').then(() => {
       verifyChallengeDetailHeadingVisible('Ver detalle')
-    })
-  })
-
-  describe('acceso sin login', () => {
-    beforeEach(() => {
-      mockRequireAuth.mockImplementation(() => {})
-    })
-
-    it('llama a requireAuth al hacer click en Nuevo reto', () => {
-      setupRequireAuthNoSession()
-      renderChallengesPage()
-      return clickNewChallengeButton().then(() => {
-        verifyRequireAuthCalled()
-      })
-    })
-
-    it('no abre el modal de creación cuando no hay sesión', () => {
-      setupRequireAuthNoSession()
-      renderChallengesPage()
-      return clickNewChallengeButton().then(() => {
-        verifyCreateModalPlaceholderNotVisible()
-      })
     })
   })
 
@@ -249,10 +185,6 @@ describe('Challenges', () => {
     })
   }
 
-  const setupRequireAuthNoSession = () => {
-    mockRequireAuth.mockImplementation(() => {})
-  }
-
   const verifyPageTitleVisible = () => {
     verifyTextPresent('Mis Retos')
   }
@@ -262,11 +194,7 @@ describe('Challenges', () => {
   }
 
   const verifyEmptyStateMessageVisible = () => {
-    verifyTextPresent('Sembrá tus metas. ¡Creá un nuevo reto!')
-  }
-
-  const verifyNewChallengeButtonVisible = () => {
-    verifyTextPresent('+ Nuevo reto')
+    verifyTextPresent('Aún no tenés retos. Hablá con Huly y va a crear unos personalizados para vos')
   }
 
   const verifyChallengeTitleVisible = (title: string) => {
@@ -279,38 +207,6 @@ describe('Challenges', () => {
 
   const verifyProgressBarProgress = (progress: string) => {
     expect(screen.getByRole('progressbar', { name: `Progreso: ${progress}%` })).toBeInTheDocument()
-  }
-
-  const clickNewChallengeButton = () => {
-    return user.click(screen.getByText('+ Nuevo reto'))
-  }
-
-  const verifyCreateModalPlaceholderVisible = () => {
-    verifyPlaceholderPresent('¿Qué querés lograr?')
-  }
-
-  const verifyCreateModalPlaceholderNotVisible = () => {
-    expect(screen.queryByPlaceholderText('¿Qué querés lograr?')).not.toBeInTheDocument()
-  }
-
-  const clickCancelButton = () => {
-    return user.click(screen.getByText('Cancelar'))
-  }
-
-  const fillChallengeTitle = (title: string) => {
-    return typePlaceholder(user, '¿Qué querés lograr?', title)
-  }
-
-  const clickSaveButton = () => {
-    return user.click(screen.getByText('Guardar'))
-  }
-
-  const waitForCreateGoalCall = (title: string) => {
-    return waitFor(() => {
-      expect(defaultHookReturn.createGoal).toHaveBeenCalledWith({
-        title,
-      })
-    })
   }
 
   const setupDateNowMock = (isoString: string) => {
@@ -326,29 +222,6 @@ describe('Challenges', () => {
     if (dateNowSpy) {
       dateNowSpy.mockRestore()
     }
-  }
-
-  const createChallengeSequence = (title: string) => {
-    return clickNewChallengeButton().then(() => {
-      return fillChallengeTitle(title).then(() => {
-        return clickSaveButton()
-      })
-    })
-  }
-
-  const createTwoChallengesAndUnmount = (title1: string, title2: string, finalIsoString: string) => {
-    return createChallengeSequence(title1).then(() => {
-      return createChallengeSequence(title2).then(() => {
-        setupDateNowMockTime(finalIsoString)
-        unmountChallenges()
-      })
-    })
-  }
-
-  const waitForActivitySessionNotCalled = () => {
-    return waitFor(() => {
-      expect(registerActivitySession).not.toHaveBeenCalled()
-    })
   }
 
   const verifyRegisterActivitySessionNotCalled = () => {
@@ -374,10 +247,6 @@ describe('Challenges', () => {
 
   const verifyChallengeDetailHeadingVisible = (title: string) => {
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
-  }
-
-  const verifyRequireAuthCalled = () => {
-    expect(mockRequireAuth).toHaveBeenCalled()
   }
 })
 

@@ -32,6 +32,12 @@ vi.mock('../../hooks/store/useInventory', () => ({
   }),
 }))
 
+const mockUseUserCoins = vi.fn()
+
+vi.mock('../../hooks/shop/useUserCoins', () => ({
+  useUserCoins: () => mockUseUserCoins(),
+}))
+
 describe('Home', () => {
   let user: ReturnType<typeof userEvent.setup>
   let testContainer: HTMLElement
@@ -55,6 +61,7 @@ describe('Home', () => {
     })
     vi.mocked(completeTutorial).mockResolvedValue(undefined)
     mockRefreshUser.mockResolvedValue(undefined)
+    mockUseUserCoins.mockReturnValue({ coins: null, error: null, refresh: vi.fn() })
   })
 
   afterEach(() => {
@@ -139,7 +146,29 @@ describe('Home', () => {
       })
   })
 
+  it('muestra la cantidad de semillas sin abreviar cuando es menor a 10000', () => {
+    setupCoins(950)
+    renderHome()
+    verifyTextPresent('950')
+  })
+
+  it('abrevia la cantidad de semillas con "k" cuando es igual o supera 10000', () => {
+    setupCoins(15000)
+    renderHome()
+    verifyTextPresent('15k')
+  })
+
+  it('abrevia la cantidad de semillas con "M" cuando es igual o supera 10000000', () => {
+    setupCoins(15000000)
+    renderHome()
+    verifyTextPresent('15M')
+  })
+
   /* helpers */
+
+  const setupCoins = (coins: number) => {
+    mockUseUserCoins.mockReturnValue({ coins, error: null, refresh: vi.fn() })
+  }
 
   const renderHome = () => {
     user = userEvent.setup()
