@@ -8,7 +8,7 @@ import { usePlans } from '../../hooks/shop/usePlans'
 import { useMembership } from '../../hooks/shop/useMembership'
 import { usePurchase } from '../../hooks/shop/usePurchase'
 import { useRefreshOnReturn } from '../../hooks/shop/useRefreshOnReturn'
-import { useMediaQuery } from '../../hooks/UseMediaQuery'
+import { useMediaQuery } from '../../hooks/useMediaquery'
 import type { Plan } from '../../api/payment'
 
 const MOBILE_QUERY = '(max-width: 640px)'
@@ -201,12 +201,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
       </button>
 
       <div className="text-center shrink-0">
-        <h2 className="text-[16px] sm:text-[20px] lg:text-[24px] font-black text-[#9b5718] leading-none">
+        <h2 className="text-[10px] sm:text-[20px] lg:text-[24px] font-black text-[#9b5718] leading-none">
           Planes de Suscripción
         </h2>
       </div>
 
-      <p className="shrink-0 text-center mt-[5%] max-[640px]:mt-[3%] text-[10px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
+      <p className="shrink-0 text-center mt-[5%] max-[640px]:text-[12px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
         Elegí el plan que mejor se adapte a vos
       </p>
 
