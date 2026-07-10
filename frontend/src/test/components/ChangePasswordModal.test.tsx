@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ChangePasswordModal from '../../components/Profile/ChangePasswordModal'
+import { ApiError } from '../../api/apiError'
 import { clickButton, typePlaceholder, verifyTextPresent, verifyPlaceholderPresent, verifyButtonDisabled, clearAllMocks } from '../testHelpers'
 
 const mockChangePassword = vi.fn()
@@ -166,7 +167,7 @@ describe('ChangePasswordModal', () => {
   }
 
   const setupChangePasswordRejected = (status: number) => {
-    mockChangePassword.mockRejectedValueOnce({ response: { status } })
+    mockChangePassword.mockRejectedValueOnce(new ApiError('Current password is incorrect', {}, status))
   }
 
   const verifyChangePasswordCalledWith = (current: string, newPass: string) => {
