@@ -92,7 +92,7 @@ export default function UsersPage() {
       render: (u) => (
         <button
           onClick={() => {
-            navigate(`/backoffice/usuarios/${u.id}`)
+            navigate(`/backoffice/users/${u.id}`)
           }}
           className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#D1CAEF]/30 dark:hover:bg-[#D1CAEF]/10 text-gray-400 dark:text-gray-555 hover:text-violeta dark:hover:text-violeta-claro transition duration-150"
           aria-label={`Ver detalles de ${u.name}`}

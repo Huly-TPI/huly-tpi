@@ -24,6 +24,7 @@ const VISUAL: Record<string, { Icon: LucideIcon; color: string }> = {
   Ansiedad: { Icon: Zap, color: '#F59E0B' },
   'Estrés': { Icon: Wind, color: '#EF4444' },
   Agobio: { Icon: Wind, color: '#06B6D4' },
+  Abrumación: { Icon: Wind, color: '#06B6D4' },
   'Pánico': { Icon: CircleHelp, color: '#DC2626' },
   Desesperanza: { Icon: Moon, color: '#475569' },
   Vacío: { Icon: CircleHelp, color: '#94A3B8' },
@@ -39,6 +40,7 @@ const VISUAL: Record<string, { Icon: LucideIcon; color: string }> = {
   Motivación: { Icon: Zap, color: '#8B5CF6' },
   Agotamiento: { Icon: Moon, color: '#6B7280' },
   Entumecimiento: { Icon: CloudRain, color: '#93C5FD' },
+  Adormecimiento: { Icon: CloudRain, color: '#93C5FD' },
   Confusión: { Icon: CircleHelp, color: '#A78BFA' },
   Neutral: { Icon: Smile, color: '#A0AEC0' },
 }
@@ -48,7 +50,7 @@ function toEmotionCategory(r: EmotionalCategoryResponse): EmotionCategory {
   return {
     Icon: v.Icon,
     name: r.name,
-    flows: r.flows,
+    detections: r.detections,
     detect: r.detect,
     severity: r.severity,
     iconBg: `${v.color}33`,

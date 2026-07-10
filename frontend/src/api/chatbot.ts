@@ -28,8 +28,10 @@ export interface RiskWordRequest {
 
 export interface BotConfigResponse {
   id: number
-  risk_detection_enabled: boolean
-  system_prompt: string
+  riskDetectionEnabled: boolean
+  systemPrompt: string
+  preferredNameQuestionEnabled?: boolean
+  communicationStyleQuestionEnabled?: boolean
 }
 
 export interface UpdateBotConfigRequest {
@@ -43,25 +45,20 @@ export type EmotionSeverityLabel = 'ALTA' | 'MEDIA' | 'BAJA'
 
 export interface EmotionalCategoryResponse {
   name: string
-  flows: number
+  detections: number
   detect: number
   severity: EmotionSeverityLabel
 }
 
 export interface ActivityResponse {
   name: string
+  type: string
   pct: number
 }
 
 export interface WellbeingResponse {
   points: number[]
   labels: string[]
-}
-
-export interface TrainingLogResponse {
-  message: string
-  emotion: string
-  confidence: number
 }
 
 export const chatbotApi = {
@@ -99,7 +96,4 @@ export const chatbotApi = {
 
   getWellbeing: () =>
     api.get<WellbeingResponse>('/admin/chatbot/wellbeing'),
-
-  getTrainingLogs: () =>
-    api.get<TrainingLogResponse[]>('/admin/chatbot/training-logs'),
 }

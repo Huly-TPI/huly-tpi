@@ -1,9 +1,9 @@
-package com.huly.backend.domain.useCase.admin;
+package com.huly.backend.domain.useCase.admin.antiscroll;
 
 import com.huly.backend.domain.model.user.AppUser;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.model.admin.AntiScrollDashboardStats;
+import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.model.extension.ExtensionMetric;
 import com.huly.backend.domain.model.extension.UserAntiScrollSettings;
 import com.huly.backend.domain.repository.user.UserRepository;
@@ -52,7 +52,7 @@ class GetAntiScrollDashboardUseCaseTest {
                 metric("twitter.com", 2000, 10, 4));
 
         // --- act ---
-        AntiScrollDashboardStats stats = dashboard();
+        GetAntiScrollDashboardResponse stats = dashboard();
 
         // --- assert ---
         thenTwoUserAggregate(stats);
@@ -67,7 +67,7 @@ class GetAntiScrollDashboardUseCaseTest {
         givenNoConsentingMetrics();
 
         // --- act ---
-        AntiScrollDashboardStats stats = dashboard();
+        GetAntiScrollDashboardResponse stats = dashboard();
 
         // --- assert ---
         thenUserCountedButNotActiveNorConsenting(stats);
@@ -81,7 +81,7 @@ class GetAntiScrollDashboardUseCaseTest {
         givenNoConsentingMetrics();
 
         // --- act ---
-        AntiScrollDashboardStats stats = dashboard();
+        GetAntiScrollDashboardResponse stats = dashboard();
 
         // --- assert ---
         thenZeroStats(stats);
@@ -132,38 +132,38 @@ class GetAntiScrollDashboardUseCaseTest {
 
     // --- act ---
 
-    private AntiScrollDashboardStats dashboard() {
+    private GetAntiScrollDashboardResponse dashboard() {
         return useCase.execute();
     }
 
     // --- assert ---
 
-    private void thenTwoUserAggregate(AntiScrollDashboardStats stats) {
-        assertThat(stats.getTotalUsersCount()).isEqualTo(2);
-        assertThat(stats.getActiveExtensionUsersCount()).isEqualTo(1);
-        assertThat(stats.getDataSharingConsentUsersCount()).isEqualTo(1);
-        assertThat(stats.getTotalModalsShown()).isEqualTo(15);
-        assertThat(stats.getTotalRedirects()).isEqualTo(6);
-        assertThat(stats.getTopUsedApps()).hasSize(2);
-        assertThat(stats.getTopUsedApps().get(0).getDomain()).isEqualTo("twitter.com");
-        assertThat(stats.getTopUsedApps().get(0).getTotalActiveSeconds()).isEqualTo(2000);
-        assertThat(stats.getTopUsedApps().get(1).getDomain()).isEqualTo("instagram.com");
-        assertThat(stats.getTopUsedApps().get(1).getTotalActiveSeconds()).isEqualTo(1000);
+    private void thenTwoUserAggregate(GetAntiScrollDashboardResponse stats) {
+        assertThat(stats.totalUsersCount()).isEqualTo(2);
+        assertThat(stats.activeExtensionUsersCount()).isEqualTo(1);
+        assertThat(stats.dataSharingConsentUsersCount()).isEqualTo(1);
+        assertThat(stats.totalModalsShown()).isEqualTo(15);
+        assertThat(stats.totalRedirects()).isEqualTo(6);
+        assertThat(stats.topUsedApps()).hasSize(2);
+        assertThat(stats.topUsedApps().get(0).getDomain()).isEqualTo("twitter.com");
+        assertThat(stats.topUsedApps().get(0).getTotalActiveSeconds()).isEqualTo(2000);
+        assertThat(stats.topUsedApps().get(1).getDomain()).isEqualTo("instagram.com");
+        assertThat(stats.topUsedApps().get(1).getTotalActiveSeconds()).isEqualTo(1000);
     }
 
-    private void thenUserCountedButNotActiveNorConsenting(AntiScrollDashboardStats stats) {
-        assertThat(stats.getTotalUsersCount()).isEqualTo(1);
-        assertThat(stats.getActiveExtensionUsersCount()).isEqualTo(0);
-        assertThat(stats.getDataSharingConsentUsersCount()).isEqualTo(0);
-        assertThat(stats.getTopUsedApps()).isEmpty();
+    private void thenUserCountedButNotActiveNorConsenting(GetAntiScrollDashboardResponse stats) {
+        assertThat(stats.totalUsersCount()).isEqualTo(1);
+        assertThat(stats.activeExtensionUsersCount()).isEqualTo(0);
+        assertThat(stats.dataSharingConsentUsersCount()).isEqualTo(0);
+        assertThat(stats.topUsedApps()).isEmpty();
     }
 
-    private void thenZeroStats(AntiScrollDashboardStats stats) {
-        assertThat(stats.getTotalUsersCount()).isEqualTo(0);
-        assertThat(stats.getActiveExtensionUsersCount()).isEqualTo(0);
-        assertThat(stats.getDataSharingConsentUsersCount()).isEqualTo(0);
-        assertThat(stats.getTotalModalsShown()).isEqualTo(0);
-        assertThat(stats.getTotalRedirects()).isEqualTo(0);
-        assertThat(stats.getTopUsedApps()).isEmpty();
+    private void thenZeroStats(GetAntiScrollDashboardResponse stats) {
+        assertThat(stats.totalUsersCount()).isEqualTo(0);
+        assertThat(stats.activeExtensionUsersCount()).isEqualTo(0);
+        assertThat(stats.dataSharingConsentUsersCount()).isEqualTo(0);
+        assertThat(stats.totalModalsShown()).isEqualTo(0);
+        assertThat(stats.totalRedirects()).isEqualTo(0);
+        assertThat(stats.topUsedApps()).isEmpty();
     }
 }

@@ -10,7 +10,9 @@ import com.huly.backend.domain.port.VectorMemoryPort;
 import com.huly.backend.domain.repository.extension.AntiScrollGlobalConfigRepository;
 import com.huly.backend.domain.repository.extension.ExtensionMetricsRepository;
 import com.huly.backend.domain.repository.extension.UserAntiScrollSettingsRepository;
-import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
+import com.huly.backend.domain.useCase.admin.dashboard.GetAdminDashboardUseCase;
+import com.huly.backend.domain.useCase.admin.antiscroll.GetAntiScrollDashboardUseCase;
+import com.huly.backend.domain.repository.user.UserDetailDomainRepository;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
@@ -33,6 +35,9 @@ import com.huly.backend.domain.useCase.admin.activities.GetActivityCorrelationUs
 import com.huly.backend.domain.useCase.admin.activities.GetActivityImpactUseCase;
 import com.huly.backend.domain.mapper.activities.UpdateActivityConfigMapper;
 
+import com.huly.backend.domain.useCase.admin.chatbot.GetEmotionalCategoriesUseCase;
+import com.huly.backend.domain.useCase.admin.chatbot.GetWellbeingUseCase;
+
 @Configuration
 public class AdminUseCaseConfig {
 
@@ -45,6 +50,16 @@ public class AdminUseCaseConfig {
             EmotionalEventRepository emotionalEventRepository
     ) {
         return new ListBackofficeUsersUseCase(userRepository, settingsRepository, metricsRepository, userPlanRepository, emotionalEventRepository);
+    }
+
+    @Bean
+    public GetAdminDashboardUseCase getAdminDashboardUseCase(
+            UserRepository userRepository,
+            UserAntiScrollSettingsRepository settingsRepository,
+            UserDetailDomainRepository userDetailRepository,
+            ActivitySessionRepository activitySessionRepository
+    ) {
+        return new GetAdminDashboardUseCase(userRepository, settingsRepository, userDetailRepository, activitySessionRepository);
     }
 
     @Bean
@@ -164,4 +179,19 @@ public class AdminUseCaseConfig {
     ) {
         return new GetActivityImpactUseCase(activityRepository, emotionalEventRepository);
     }
+
+    @Bean
+    public GetEmotionalCategoriesUseCase getEmotionalCategoriesUseCase(
+            EmotionalEventRepository emotionalEventRepository
+    ) {
+        return new GetEmotionalCategoriesUseCase(emotionalEventRepository);
+    }
+
+    @Bean
+    public GetWellbeingUseCase getWellbeingUseCase(
+            EmotionalEventRepository emotionalEventRepository
+    ) {
+        return new GetWellbeingUseCase(emotionalEventRepository);
+    }
+
 }
