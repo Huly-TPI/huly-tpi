@@ -37,9 +37,9 @@ interface DecorativeCloud {
 }
 
 const cloudElements: DecorativeCloud[] = [
-    { id: 'cloud-left',   placementClassName: 'left-[8%]  top-[16%] z-[5] w-[24%] md:left-[18%] md:top-[12%] md:w-[11%]' },
-    { id: 'cloud-center', placementClassName: 'left-[38%] top-[24%] z-[5] w-[28%] md:left-[45%] md:top-[7%]  md:w-[15%]' },
-    { id: 'cloud-right',  placementClassName: 'left-[64%] top-[18%] z-[5] w-[22%] md:left-[76%] md:top-[14%] md:w-[11%]' },
+    { id: 'cloud-left',   placementClassName: 'left-[8%]  top-[19%] z-[5] w-[24%] md:left-[18%] md:top-[12%] md:w-[11%]' },
+    { id: 'cloud-center', placementClassName: 'left-[38%] top-[27%] z-[5] w-[28%] md:left-[45%] md:top-[7%]  md:w-[15%]' },
+    { id: 'cloud-right',  placementClassName: 'left-[64%] top-[21%] z-[5] w-[22%] md:left-[76%] md:top-[14%] md:w-[11%]' },
 ]
 
 const createLanternElement = (
@@ -62,19 +62,19 @@ const createLanternElement = (
 const lanternElements: SceneElementDefinition[] = [
     createLanternElement(
         'lantern-top-left',
-        'left-[7%] top-[7%] z-10 w-[10%] md:left-[8%] md:top-[6%] md:w-[8.8%]',
+        'left-[7%] top-[10%] z-10 w-[10%] md:left-[8%] md:top-[6%] md:w-[8.8%]',
     ),
     createLanternElement(
         'lantern-upper-left',
-        'left-[25%] top-[9%] z-10 w-[22%] md:left-[29%] md:top-[9%] md:w-[11%]',
+        'left-[25%] top-[12%] z-10 w-[22%] md:left-[29%] md:top-[9%] md:w-[11%]',
     ),
     createLanternElement(
         'lantern-center',
-        'left-[47%] top-[1%] z-10 w-[24%] md:left-[56%] md:top-[1%] md:w-[12%]',
+        'left-[47%] top-[4%] z-10 w-[24%] md:left-[56%] md:top-[1%] md:w-[12%]',
     ),
     createLanternElement(
         'lantern-right',
-        'left-[82%] top-[9%] z-10 w-[10%] md:left-[82.6%] md:top-[9%] md:w-[7.5%]',
+        'left-[82%] top-[12%] z-10 w-[10%] md:left-[82.6%] md:top-[9%] md:w-[7.5%]',
     ),
 ]
 
@@ -84,7 +84,7 @@ const minigameElements: SceneElementDefinition[] = [
         title: 'Burbujas',
         imageAlt: 'Pez en el lago minijuego de burbujas',
         image: { light: fishImage, dark: darkFishImage },
-        placementClassName: 'left-[1%] top-[61%] z-20 w-[36%] md:left-[19%] md:top-[64%] md:w-[19%]',
+        placementClassName: 'left-[1%] top-[66%] z-20 w-[36%] md:left-[19%] md:top-[64%] md:w-[19%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
         clipPath: RECT_CLIP_PATH,
@@ -120,7 +120,7 @@ const minigameElements: SceneElementDefinition[] = [
         title: 'Arena zen',
         imageAlt: 'Tablero de arena para dibujar libremente',
         image: { light: sandImage, dark: darkSandImage },
-        placementClassName: 'left-[68%] top-[67%] z-30 w-[34%] md:left-[70%] md:top-[62%] md:w-[15%]',
+        placementClassName: 'left-[62%] top-[67%] z-30 w-[34%] md:left-[70%] md:top-[62%] md:w-[15%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
         clipPath: RECT_CLIP_PATH,
