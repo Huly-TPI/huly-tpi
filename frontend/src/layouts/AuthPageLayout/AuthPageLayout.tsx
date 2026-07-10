@@ -29,7 +29,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
       />
       <div className="absolute inset-0 backdrop-blur-md" />
 
-      <div className={`relative z-10 flex w-full max-w-5xl items-center justify-center gap-12 px-4 md:px-10 pt-16 md:pt-0 pb-8 ${reversed ? 'flex-row-reverse' : ''}`}>
+      <div className={`relative z-10 flex w-full max-w-5xl min-w-0 items-center justify-center gap-12 px-4 md:px-10 pt-16 md:pt-0 pb-8 ${reversed ? 'flex-row-reverse' : ''}`}>
         <img
           src={character}
           alt="Mascota de Huly"
@@ -37,7 +37,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
         />
 
         <div
-          className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-md"
+          className="relative w-full min-w-0 max-w-[calc(100%-2rem)] sm:max-w-md"
           style={{
             backgroundImage: `url(${frame})`,
             backgroundSize: '100% 100%',
@@ -45,7 +45,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
             height: cardHeight,
           }}
         >
-          <div className="h-full overflow-y-auto px-10 pt-4 pb-8 md:px-14 md:py-10">
+          <div className="h-full overflow-y-auto overflow-x-hidden px-10 pt-4 pb-8 md:px-14 md:py-10">
             {children}
           </div>
         </div>
