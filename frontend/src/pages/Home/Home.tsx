@@ -187,7 +187,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isWalking, setIsWalking] = useState(false);
   const [duration, setDuration] = useState(0);
-  const [idleAnimation, setIdleAnimation] = useState<"idle" | "wave" | "jump" | "look-around">("idle");
+  const [idleAnimation, setIdleAnimation] = useState<"idle" | "wave" | "jump" | "look-around" | "stretch" | "dance">("idle");
 
   const posRef = useRef(pos);
 
@@ -271,7 +271,9 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
         if (!isMounted) return;
 
         // Elegimos una animación aleatoria para el tiempo de espera
-        const idleAnims: ("idle" | "wave" | "jump" | "look-around")[] = ["idle", "idle", "idle", "wave", "jump", "look-around"];
+        const idleAnims: ("idle" | "wave" | "jump" | "look-around" | "stretch" | "dance")[] = [
+          "idle", "idle", "idle", "wave", "jump", "look-around", "stretch", "dance"
+        ];
         const randomAnim = idleAnims[Math.floor(Math.random() * idleAnims.length)];
         setIdleAnimation(randomAnim);
 

@@ -1,5 +1,5 @@
 .anim-wave-hand {
-  transform-origin: 307.5px 340.4px;
+  transform-origin: 263px 343.7px;
   animation: wave-hand 6s ease-in-out infinite;
 }
 
@@ -294,8 +294,8 @@
 
 /* Mirror Right Arm (Horizontal and Vertical) */
 .pose-sit-arm-der {
-  transform-origin: 307.5px 340.4px;
-  transform: translate(-55px, 55px) rotate(100deg) scale(1, -1);
+  transform-origin: 263px 343.7px;
+  transform: rotate(100deg) scale(1, -1);
   transition: transform 0.4s ease-in-out;
 }
 
@@ -314,20 +314,20 @@
 }
 
 .pose-guided-breathing-arm-izq {
-  transform-origin: 148.24px 370.83px;
+  transform-origin: 151.6px 326.3px;
   /* Upper arm anchor */
-  transform: translate(5.507px, -15.33232px) rotate(45deg);
+  transform: translate(34.507px, -0.33232px) rotate(45deg);
   transition: transform 0.4s ease-in-out;
 }
 
 /* Walking Animations */
 .anim-walk-arm-der {
-  transform-origin: 307.5px 340.4px;
+  transform-origin: 263px 343.7px;
   animation: walk-swing 0.5s infinite alternate ease-in-out;
 }
 
 .anim-walk-arm-izq-wrap {
-  transform-origin: 182.7px 370.5px;
+  transform-origin: 186.1px 325.9px;
   animation: walk-swing-reverse 0.5s infinite alternate ease-in-out;
 }
 
@@ -392,8 +392,8 @@
 }
 
 .pose-error-arm-der {
-  transform-origin: 307.5px 340.4px;
-  transform: translate(-35px, 20px) rotate(80deg);
+  transform-origin: 263px 343.7px;
+  transform: rotate(80deg);
   transition: transform cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -457,5 +457,124 @@
   }
   80% {
     transform: translateY(0) scaleY(1); /* Recover */
+  }
+}
+/* ==============================================
+   Complex Animations (Stretch)
+   ============================================== */
+.anim-stretch-arm-der {
+  transform-origin: 263px 343.7px;
+  animation: stretch-arm-der 6s ease-in-out infinite;
+}
+
+.anim-stretch-arm-izq {
+  transform-origin: 186.1px 325.9px;
+  animation: stretch-arm-izq 6s ease-in-out infinite;
+}
+
+.anim-stretch-head {
+  transform-origin: 207px 296px;
+  animation: stretch-head 6s ease-in-out infinite;
+}
+
+.anim-stretch-torso {
+  transform-origin: 244px 407px;
+  animation: stretch-torso 6s ease-in-out infinite;
+}
+
+@keyframes stretch-arm-der {
+  0%, 10%, 90%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(-130deg); } /* Brazo derecho arriba */
+}
+
+@keyframes stretch-arm-izq {
+  0%, 10%, 90%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(130deg); } /* Brazo izquierdo arriba */
+}
+
+@keyframes stretch-head {
+  0%, 10%, 90%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(-15deg); } /* Cabeza hacia atras */
+}
+
+@keyframes stretch-torso {
+  0%, 10%, 90%, 100% { transform: scaleY(1) translateY(0); }
+  30%, 70% { transform: scaleY(1.03) translateY(-8px); } /* Toma aire */
+}
+
+/* ==============================================
+   Complex Animations (Dance)
+   ============================================== */
+.anim-dance-wrap {
+  transform-origin: bottom center;
+  animation: dance-bounce 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-torso {
+  transform-origin: 244px 407px;
+  animation: dance-torso 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-arm-der {
+  transform-origin: 263px 343.7px;
+  animation: dance-arm-der 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-arm-izq {
+  transform-origin: 186.1px 325.9px;
+  animation: dance-arm-izq 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-leg-der {
+  transform-origin: 274px 430px;
+  animation: dance-leg-der 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-leg-izq {
+  transform-origin: 221px 421px;
+  animation: dance-leg-izq 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes dance-bounce {
+  0% { transform: translateY(0) scaleY(0.95); }
+  100% { transform: translateY(-15px) scaleY(1.02); }
+}
+
+@keyframes dance-torso {
+  0% { transform: rotate(-5deg); }
+  100% { transform: rotate(5deg); }
+}
+
+@keyframes dance-arm-der {
+  0% { transform: rotate(-40deg); }
+  100% { transform: rotate(40deg); }
+}
+
+@keyframes dance-arm-izq {
+  0% { transform: rotate(40deg); }
+  100% { transform: rotate(-40deg); }
+}
+
+@keyframes dance-leg-der {
+  0% { transform: rotate(-10deg); }
+  100% { transform: rotate(20deg); }
+}
+
+@keyframes dance-leg-izq {
+  0% { transform: rotate(20deg); }
+  100% { transform: rotate(-10deg); }
+}
+
+/* Blink Eyes */
+.anim-blink-eyes {
+  animation: blink-eyes 0.2s ease-in-out;
+}
+
+@keyframes blink-eyes {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.1);
   }
 }
