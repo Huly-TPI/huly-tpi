@@ -18,11 +18,14 @@ import nightBackgroundImage from '../../assets/profile/dark-theme/background/nig
 import nightMobileBackgroundImage from '../../assets/profile/dark-theme/background/mobile/night-background.png'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
 import clockImage from '../../assets/profile/light-theme/clock.webp'
-import mirrorImage from '../../assets/profile/light-theme/mirror.webp'
+import mirrorImage from '../../assets/profile/light-theme/mirror-new.png'
 import musicImage from '../../assets/profile/light-theme/music.webp'
 import windowImage from '../../assets/profile/light-theme/window.webp'
 import nightWindowImage from '../../assets/profile/dark-theme/night-window.png'
 import notificationImage from '../../assets/profile/light-theme/notification.webp'
+import HulyAvatar from '../../components/HulyAvatar/HulyAvatar'
+import { getEquippedAvatarItems } from '../../components/HulyAvatar/avatarEquip'
+import { useInventory } from '../../hooks/store/useInventory'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { profileOnboardingSteps } from './profileOnboardingSteps'
 import NotificationSettingsModal from '../../components/Profile/NotificationSettingsModal'
@@ -38,7 +41,7 @@ const profileElements: SceneElementDefinition[] = [
     title: 'Espejo',
     imageAlt: 'Espejo del perfil',
     image: { light: mirrorImage },
-    placementClassName: 'left-[3%] bottom-[3.5%] z-[3] w-[38%] md:left-[11.5%] md:bottom-[9%] md:w-[20%]',
+    placementClassName: 'left-[2%] bottom-[15%] z-[3] w-[52%] md:left-[11.5%] md:bottom-[9%] md:w-[20%] [clip-path:inset(0_0_0_10%)]',
     imageClassName: FULL_WIDTH,
     hotspotClassName: DEFAULT_HOTSPOT,
     clipPath: RECT_CLIP_PATH,
@@ -100,6 +103,8 @@ function getFirstName(name: string): string {
 
 export default function Profile() {
   const { user, loading, refreshUser } = useAuth()
+  const { inventory } = useInventory()
+  const equippedItems = getEquippedAvatarItems(inventory)
   const { theme } = useTheme()
   const { isSubscribed, isLoading: pushLoading, isSupported, subscribe, unsubscribe, notificationHour, updateHour } = usePushNotifications()
   const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
@@ -208,7 +213,18 @@ export default function Profile() {
           />
 
           {renderedElements.map(element => (
-            <SceneElement key={element.id} theme={theme} {...element} />
+            <SceneElement key={element.id} theme={theme} {...element}>
+              {element.id === 'mirror' && (
+                <div
+                  className="absolute top-[18%] left-[25%] w-[50%] h-[72%] overflow-hidden pointer-events-none [&_*]:!animate-none flex items-end justify-center"
+                  style={{ borderRadius: '50% 50% 45% 45%' }}
+                >
+                  <div className="w-[180%] translate-y-[-50%] translate-x-[15%]">
+                    <HulyAvatar equippedItems={equippedItems} />
+                  </div>
+                </div>
+              )}
+            </SceneElement>
           ))}
 
           <div className="profile-welcome" aria-label={`Bienvenido ${getFirstName(user.name)}`}>

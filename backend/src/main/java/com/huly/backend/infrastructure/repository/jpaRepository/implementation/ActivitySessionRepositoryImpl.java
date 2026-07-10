@@ -14,15 +14,18 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ActivitySessionRepositoryImpl implements ActivitySessionRepository {
 
     private final IActivitySessionJpaRepository activitySessionJpaRepository;
     private final AppUserRepository appUserRepository;
 
     @Override
+    @Transactional
     public ActivitySession save(ActivitySession session) {
         AppUserEntity user = appUserRepository.getReferenceById(session.getUserId());
         ActivitySessionEntity entity = ActivitySessionEntity.builder()

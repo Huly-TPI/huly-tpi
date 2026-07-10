@@ -118,12 +118,12 @@ export function RiskDetectionSection({
             value={newWord}
             onChange={e => setNewWord(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-violeta focus:outline-none dark:border-gray-800 dark:bg-[#09111f] dark:text-gray-200 dark:focus:border-violeta-claro"
+            className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 focus:border-violeta focus:outline-none dark:border-gray-800 dark:bg-[#09111f] dark:text-gray-200 dark:focus:border-violeta-claro"
           />
           <select
             value={newSeverity}
             onChange={e => setNewSeverity(e.target.value as RiskSeverity)}
-            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-[#4A5568] focus:border-violeta focus:outline-none dark:border-gray-800 dark:bg-[#09111f] dark:text-gray-200 dark:focus:border-violeta-claro"
+            className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-[#4A5568] focus:border-violeta focus:outline-none dark:border-gray-800 dark:bg-[#09111f] dark:text-gray-200 dark:focus:border-violeta-claro"
           >
             <option value="HIGH">CRÍTICO (Alto)</option>
             <option value="MEDIUM">ALTO (Medio)</option>

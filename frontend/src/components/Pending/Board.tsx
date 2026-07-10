@@ -8,7 +8,7 @@ export interface BoardProps {
   tasks: PendingTaskResponse[]
   followingTaskId: number | null
   recommendedTaskIds: Set<number>
-  onPickUp: (taskId: number) => void
+  onPickUp: (taskId: number, origin?: { x: number; y: number }) => void
   onOpen: (task: PendingTaskResponse) => void
 }
 
@@ -25,7 +25,7 @@ export default function Board({ boardRef, tasks, followingTaskId, recommendedTas
         src={boardBg}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-full w-full object-contain object-bottom"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-full w-full object-cover"
       />
       {visibleTasks.map((task, index) => (
         <div
@@ -41,7 +41,7 @@ export default function Board({ boardRef, tasks, followingTaskId, recommendedTas
           <Postit
             task={task}
             isRecommended={recommendedTaskIds.has(task.id)}
-            onPickUp={() => onPickUp(task.id)}
+            onPickUp={origin => onPickUp(task.id, origin)}
             onOpen={() => onOpen(task)}
           />
         </div>

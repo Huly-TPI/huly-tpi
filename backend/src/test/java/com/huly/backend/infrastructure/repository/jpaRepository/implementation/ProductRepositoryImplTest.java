@@ -127,7 +127,7 @@ class ProductRepositoryImplTest {
     }
 
     private void givenProductsByType(ProductType type, ProductEntity... entities) {
-        when(jpaRepository.findByType(type)).thenReturn(List.of(entities));
+        when(jpaRepository.findByTypeOrderByIdAsc(type)).thenReturn(List.of(entities));
     }
 
     private void givenProductsByIds(List<Long> ids, ProductEntity... entities) {

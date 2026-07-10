@@ -7,4 +7,5 @@ public interface IBreathingTechniqueJpaRepository extends JpaRepository<Breathin
     boolean existsByNameIgnoreCase(String name);
     boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
     List<BreathingTechniquesEntity> findByActive(boolean active);
+    List<BreathingTechniquesEntity> findAllByOrderByIdAsc();
 }

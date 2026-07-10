@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import Button from './Buttons/Button/Button'
-import colorLogo from '../assets/brand/color-logo.webp'
 import { getExtensionSettings, saveExtensionSettings, ExtensionSettings } from '../api/extension'
 
 const CHROME_WEB_STORE_URL =
@@ -36,6 +35,8 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
   const [isEnabled, setIsEnabled] = useState(false)
   const [consent, setConsent] = useState(false)
   const [extId, setExtId] = useState<string | null>(null)
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768
 
   useEffect(() => {
     const syncFromAttributes = () => {
@@ -156,8 +157,7 @@ export default function AntiScrollConsentModal({ onClose }: AntiScrollConsentMod
           &times;
         </button>
 
-        <img src={colorLogo} alt="Huly" className="h-12 object-contain mx-auto mb-4" />
-        <h2 className="mb-4 text-[1.9rem] font-bold text-[#8869AC] dark:text-violeta-claro max-[420px]:text-[1.7rem]">
+        <h2 className="mb-4 mt-2 text-[1.9rem] font-bold text-[#8869AC] dark:text-violeta-claro max-[420px]:text-[1.7rem]">
           Pausa digital: Anti-Scroll
         </h2>
 
@@ -169,7 +169,13 @@ Activalo cuando quieras priorizar tu concentracion o desconectar del ruido, y ap
           )}
         </div>
 
-        {loading ? (
+        {isMobile ? (
+          <div className="mb-6 rounded-xl bg-[var(--surface-secondary)] border border-[var(--border-soft)] p-4 text-center">
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              La extensión <strong>Anti-Scroll</strong> solo está disponible para navegadores de escritorio. Podés instalarla y configurarla ingresando a Huly desde tu computadora!
+            </p>
+          </div>
+        ) : loading ? (
           <div className="text-sm text-[var(--text-secondary)] py-4">Cargando estado...</div>
         ) : (
           <div className="mb-6 space-y-4 border-t border-b border-[var(--border-soft)] py-4">

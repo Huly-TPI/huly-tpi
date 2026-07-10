@@ -160,11 +160,11 @@ export default function Challenges() {
           </p>
 
           <button
-            className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 border border-bosque/20 shadow-sm cursor-pointer hover:bg-white/90 hover:shadow-md transition-all duration-150"
+            className="challenges-nursery-btn mt-1 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 border border-bosque/20 shadow-sm cursor-pointer hover:bg-white/90 hover:shadow-md transition-all duration-150"
             onClick={() => navigate('/orchard')}
           >
             <img src={nurseryImg} alt="" aria-hidden="true" className="w-12 h-12 object-contain" />
-            <span className="text-sm font-semibold text-bosque lg:text-[1rem]">Ver Vivero</span>
+            <span className="challenges-nursery-label text-sm font-semibold text-bosque lg:text-[1rem]">Ver Vivero</span>
           </button>
         </div>
 

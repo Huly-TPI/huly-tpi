@@ -21,4 +21,6 @@ public interface EmotionalEventRepository {
     List<EmotionalEvent> findAllRecommendationEventsAfter(java.time.Instant start);
 
     List<EmotionalEvent> findByUserIds(List<Long> userIds);
+
+    List<EmotionalEvent> findAll();
 }

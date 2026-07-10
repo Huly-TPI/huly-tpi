@@ -121,7 +121,7 @@ class BotConfigControllerTest {
     }
 
     private String nullPromptRequestJson() {
-        return "{\"risk_detection_enabled\": true, \"systemPrompt\": null}";
+        return "{\"riskDetectionEnabled\": true, \"systemPrompt\": null}";
     }
 
     // --- act ---
@@ -139,25 +139,25 @@ class BotConfigControllerTest {
     private void thenOkWithCurrentConfig(ResultActions result) throws Exception {
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.risk_detection_enabled").value(true))
-                .andExpect(jsonPath("$.system_prompt").value("mi prompt"))
-                .andExpect(jsonPath("$.preferred_name_question_enabled").value(true))
-                .andExpect(jsonPath("$.communication_style_question_enabled").value(false));
+                .andExpect(jsonPath("$.riskDetectionEnabled").value(true))
+                .andExpect(jsonPath("$.systemPrompt").value("mi prompt"))
+                .andExpect(jsonPath("$.preferredNameQuestionEnabled").value(true))
+                .andExpect(jsonPath("$.communicationStyleQuestionEnabled").value(false));
     }
 
     private void thenOkWithoutNullFields(ResultActions result) throws Exception {
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").doesNotExist())
-                .andExpect(jsonPath("$.risk_detection_enabled").doesNotExist());
+                .andExpect(jsonPath("$.riskDetectionEnabled").doesNotExist());
     }
 
     private void thenOkWithUpdatedConfig(ResultActions result) throws Exception {
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.risk_detection_enabled").value(false))
-                .andExpect(jsonPath("$.system_prompt").value("nuevo"))
-                .andExpect(jsonPath("$.preferred_name_question_enabled").value(false))
-                .andExpect(jsonPath("$.communication_style_question_enabled").value(true));
+                .andExpect(jsonPath("$.riskDetectionEnabled").value(false))
+                .andExpect(jsonPath("$.systemPrompt").value("nuevo"))
+                .andExpect(jsonPath("$.preferredNameQuestionEnabled").value(false))
+                .andExpect(jsonPath("$.communicationStyleQuestionEnabled").value(true));
     }
 
     private void thenBadRequest(ResultActions result) throws Exception {

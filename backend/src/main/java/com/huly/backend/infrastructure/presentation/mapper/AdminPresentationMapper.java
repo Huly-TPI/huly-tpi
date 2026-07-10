@@ -1,6 +1,6 @@
 package com.huly.backend.infrastructure.presentation.mapper;
 
-import com.huly.backend.domain.model.admin.AntiScrollDashboardStats;
+import com.huly.backend.domain.useCase.admin.dashboard.GetAdminDashboardResponse;
 import com.huly.backend.domain.model.admin.BackofficeUserSummary;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigResponse;
@@ -10,7 +10,9 @@ import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsRes
 import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.ActivitySessionDto;
 import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigResponse;
+import com.huly.backend.infrastructure.presentation.dto.admin.AdminDashboardResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollDashboardResponse;
+import com.huly.backend.domain.useCase.admin.antiscroll.GetAntiScrollDashboardResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.BackofficeUserResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.EmotionalEventDto;
 import com.huly.backend.infrastructure.presentation.dto.admin.PaymentEventDto;
@@ -158,14 +160,22 @@ public class AdminPresentationMapper {
                 .build();
     }
 
-    public AntiScrollDashboardResponse toAntiScrollDashboardResponse(AntiScrollDashboardStats stats) {
+    public AdminDashboardResponse toAdminDashboardResponse(GetAdminDashboardResponse stats) {
+        return AdminDashboardResponse.builder()
+                .activeExtensionUsersCount(stats.activeExtensionUsersCount())
+                .usersRegisteredThisWeek(stats.usersRegisteredThisWeek())
+                .activitiesThisWeek(stats.activitiesThisWeek())
+                .build();
+    }
+
+    public AntiScrollDashboardResponse toAntiScrollDashboardResponse(GetAntiScrollDashboardResponse stats) {
         return AntiScrollDashboardResponse.builder()
-                .totalModalsShown(stats.getTotalModalsShown())
-                .totalRedirects(stats.getTotalRedirects())
-                .totalUsersCount(stats.getTotalUsersCount())
-                .activeExtensionUsersCount(stats.getActiveExtensionUsersCount())
-                .dataSharingConsentUsersCount(stats.getDataSharingConsentUsersCount())
-                .topUsedApps(stats.getTopUsedApps().stream().map(this::toTopAppResponse).toList())
+                .totalModalsShown(stats.totalModalsShown())
+                .totalRedirects(stats.totalRedirects())
+                .totalUsersCount(stats.totalUsersCount())
+                .activeExtensionUsersCount(stats.activeExtensionUsersCount())
+                .dataSharingConsentUsersCount(stats.dataSharingConsentUsersCount())
+                .topUsedApps(stats.topUsedApps().stream().map(this::toTopAppResponse).toList())
                 .build();
     }
 

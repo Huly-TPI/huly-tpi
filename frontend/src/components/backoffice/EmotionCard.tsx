@@ -1,4 +1,4 @@
-import { ChevronRight, type LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 import { ProgressBar } from './ProgressBar'
 
 export type EmotionSeverity = 'ALTA' | 'MEDIA' | 'BAJA'
@@ -6,7 +6,7 @@ export type EmotionSeverity = 'ALTA' | 'MEDIA' | 'BAJA'
 export interface EmotionCategory {
   Icon: LucideIcon
   name: string
-  flows: number
+  detections: number
   detect: number
   severity: EmotionSeverity
   /** Hex color with alpha for icon background, e.g. "#EF444433" */
@@ -25,40 +25,35 @@ const SEVERITY_STYLE: Record<EmotionSeverity, { bar: string; text: string }> = {
 
 interface EmotionCardProps {
   category: EmotionCategory
-  onManage?: () => void
 }
 
-export function EmotionCard({ category, onManage }: EmotionCardProps) {
+export function EmotionCard({ category }: EmotionCardProps) {
   const sev = SEVERITY_STYLE[category.severity]
   const Icon = category.Icon
 
   return (
-    <div className="flex flex-col rounded-2xl bg-white dark:bg-[#172033] p-5 shadow-sm transition-shadow hover:shadow-md cursor-default">
+    <div className="flex flex-col rounded-2xl bg-gray-50 dark:bg-[#09111f] p-4 shadow-sm transition-shadow hover:shadow-md cursor-default">
       <div
-        className="flex h-14 w-14 items-center justify-center rounded-2xl"
+        className="flex h-11 w-11 items-center justify-center rounded-xl"
         style={{ backgroundColor: category.iconBg }}
       >
-        <Icon className="h-7 w-7" strokeWidth={2} style={{ color: category.badgeColor }} />
+        <Icon className="h-5 w-5" strokeWidth={2} style={{ color: category.badgeColor }} />
       </div>
 
-      <p className="mt-4 text-[15px] font-bold text-[#2D3748] dark:text-gray-100">{category.name}</p>
-      <p className="mt-1 text-xs text-[#A0AEC0] dark:text-gray-500">
-        {category.flows} flujos · {category.detect}% detect.
+      <p className="mt-3 text-[13px] font-bold text-[#2D3748] dark:text-gray-100 truncate" title={category.name}>{category.name}</p>
+      <p className="mt-0.5 text-[10px] text-[#A0AEC0] dark:text-gray-500">
+        {category.detections} {category.detections === 1 ? 'detección' : 'detecciones'}
+      </p>
+      <p className="mt-0.5 text-[10px] text-[#A0AEC0] dark:text-gray-500">
+        {category.detect}% conf.
       </p>
 
-      <ProgressBar pct={category.detect} colorClass={sev.bar} height="h-[3px]" />
+      <ProgressBar pct={category.detect} colorClass={sev.bar} height="h-[3px]" className="mt-2" />
 
-      <div className="mt-3 flex items-center justify-between">
-        <span className={`text-xs font-bold ${sev.text}`}>
+      <div className="mt-2 flex items-center justify-between">
+        <span className={`text-[10px] font-bold ${sev.text}`}>
           {category.severity}
         </span>
-        <button
-          onClick={onManage}
-          className="text-[#A0AEC0] dark:text-gray-500 hover:text-violeta dark:hover:text-violeta-claro transition-colors"
-          aria-label={`Gestionar ${category.name}`}
-        >
-          <ChevronRight className="w-4 h-4" strokeWidth={2} />
-        </button>
       </div>
     </div>
   )

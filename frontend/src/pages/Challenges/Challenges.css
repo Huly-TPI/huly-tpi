@@ -147,7 +147,8 @@
     flex-direction: column;
     height: 100dvh;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .plant-zone {
@@ -184,7 +185,7 @@
   }
 
   .plant-on-stump {
-    margin-top: 240px;
+    margin-top: 24vh;
     transform: none;
     margin-right: 0;
     position: relative;
@@ -196,7 +197,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 40vh;
+    height: 52vh;
     padding: 0 1rem 1rem;
     z-index: 1;
     display: flex;
@@ -212,10 +213,32 @@
   }
 
   .board-inner {
-    padding: 2rem 2rem 3rem;
+    padding: 1rem 1.5rem 1rem;
   }
 
   .challenges-title {
     margin-top: 30px;
+  }
+
+  .challenges-nursery-btn {
+    align-self: flex-start;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    gap: 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .challenges-nursery-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }

@@ -12,6 +12,10 @@ import SubscriptionModal from './SubscriptionModal/SubscriptionModal'
 import budIcon from '../assets/suscription/budIcon.webp'
 import flowerpotIcon from '../assets/suscription/flowerpotIcon.webp'
 import crownIcon from '../assets/suscription/crownIcon.webp'
+import { useInventory } from '../hooks/store/useInventory'
+import { useUserCoins } from '../hooks/shop/useUserCoins'
+import StoreModal from './Shop/StoreModal'
+import storeButtonImage from '../assets/garden/store-button.webp'
 
 const NAV_LINKS = [
   { to: '/', label: 'Jardín' },
@@ -40,6 +44,10 @@ export default function Navbar() {
   const { isAuthenticated, user, loading } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [badgesOpen, setBadgesOpen] = useState(false)
+  const [storeOpen, setStoreOpen] = useState(false)
+  const { inventory, refetch: refetchInventory } = useInventory()
+  const { coins, refresh: refetchCoins } = useUserCoins()
+
   const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -114,7 +122,7 @@ export default function Navbar() {
 
       {/* Menú mobile */}
       {menuOpen && (
-        <div className="relative border-t border-white/10 px-4 pb-4 md:hidden">
+        <div className={`absolute top-16 left-0 right-0 z-[300] border-t border-white/10 px-4 pb-4 shadow-lg md:hidden ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}>
           <ul className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map(link => (
               <li key={link.to}>
@@ -138,20 +146,31 @@ export default function Navbar() {
           {loading && hasSessionFlag() ? (
             <div className="mx-3 my-2 h-10 w-3/4 animate-pulse rounded-lg bg-white/10" aria-hidden="true" />
           ) : isAuthenticated ? (
-            <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
-              <span>Mis estampitas</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setBadgesOpen(true)
-                  closeMenu()
-                }}
-                aria-label="Abrir insignias"
-                className="flex h-11 w-11 items-center justify-center transition hover:scale-105"
-              >
-                <img src="/badges/badge_launcher.webp" alt="" className="h-11 w-11 object-contain" />
-              </button>
-            </div>
+            <>
+              <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
+                <span>Mis estampitas</span>
+                <button
+                  type="button"
+                  onClick={() => { setBadgesOpen(true); closeMenu() }}
+                  aria-label="Abrir insignias"
+                  className="flex h-11 w-11 items-center justify-center transition hover:scale-105"
+                >
+                  <img src="/badges/badge_launcher.webp" alt="" className="h-11 w-11 object-contain" />
+                </button>
+              </div>
+
+              <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
+                <span>Tienda</span>
+                <button
+                  type="button"
+                  onClick={() => { setStoreOpen(true); closeMenu() }}
+                  aria-label="Abrir tienda"
+                  className="flex h-11 w-11 items-center justify-center transition hover:scale-105"
+                >
+                  <img src={storeButtonImage} alt="" className="h-11 w-11 object-contain" />
+                </button>
+              </div>
+            </>
           ) : (
             <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               <Link
@@ -174,6 +193,14 @@ export default function Navbar() {
       )}
 
       <BadgeModal isOpen={badgesOpen} onClose={() => setBadgesOpen(false)} />
+      <StoreModal
+        isOpen={storeOpen}
+        onClose={() => setStoreOpen(false)}
+        inventory={inventory}
+        refetchInventory={refetchInventory}
+        coins={coins}
+        refetchCoins={refetchCoins}
+      />
     </nav>
   )
 }

@@ -45,6 +45,11 @@ const ACTIVITY_LABELS: Record<string, string> = {
   lanterns: 'a los faroles',
   breathing: 'a respiración guiada',
   bubbles: 'a las burbujas',
+  challenge: 'al reto diario',
+  zen_garden: 'al jardín zen',
+  mandala: 'a los mandalas',
+  stones: 'a las piedras del lago',
+  pending: 'a tus pendientes',
 }
 
 export default function LanternsActivity() {
