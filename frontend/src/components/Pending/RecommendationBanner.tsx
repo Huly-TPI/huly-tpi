@@ -37,7 +37,7 @@ export default function RecommendationBanner({ taskTitles, onAccept, onReject }:
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/[0.42] p-4 backdrop-blur-[3px]"
     >
       <div className="w-[320px] rounded-lg bg-[#fff8e7] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
-        <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.07em] text-[rgba(92,61,30,0.5)]">
+        <p className="mb-1 text-[0.8rem] font-bold uppercase tracking-[0.07em] text-[rgba(92,61,30,0.8)]">
           Recomendación para hoy
         </p>
         <p className="mb-3 text-sm text-[#3b2510]">

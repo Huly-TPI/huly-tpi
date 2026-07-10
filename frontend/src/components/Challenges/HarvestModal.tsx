@@ -45,7 +45,7 @@ export default function HarvestModal({ plantNumber, onGoToOrchard }: HarvestModa
         <h2 className="text-[1.25rem] font-extrabold text-[#2D3748] mt-[0.9rem] mb-[0.35rem] leading-[1.3]">
           ¡Cosechaste la Planta #{plantNumber}!
         </h2>
-        <p className="text-[0.85rem] text-bosque m-0 mb-6 italic">
+        <p className="text-[0.85rem] font-semibold text-bosque m-0 mb-6 italic">
           Tu jardín sigue creciendo. ¡Seguí así!
         </p>
 

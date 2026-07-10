@@ -177,14 +177,14 @@ export default function Privacy() {
               <h1 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight text-violeta dark:text-violeta-claro flex items-center gap-2">
                 Centro de privacidad
               </h1>
-              <p className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
+              <p className="hidden sm:block text-[11px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
                 Políticas de bienestar emocional - Huly
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#A0AEC0] dark:text-gray-500">Versión 1.0.0</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider text-[#A0AEC0] dark:text-gray-500">Versión 1.0.0</span>
           </div>
         </div>
       </header>
@@ -194,7 +194,7 @@ export default function Privacy() {
           <div className="w-full">
             <div className="hidden lg:block px-2 py-3 mb-2">
               <h2 className="text-xs font-bold uppercase tracking-widest text-[#A0AEC0] dark:text-gray-500">Seleccionar documento</h2>
-              <p className="text-[11px] text-gray-400 dark:text-gray-400 mt-1">Navega por las políticas de privacidad de nuestro ecosistema.</p>
+              <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400 mt-1">Navega por las políticas de privacidad de nuestro ecosistema.</p>
             </div>
             
             <nav className="flex flex-row lg:flex-col gap-2 w-full">
@@ -224,7 +224,7 @@ export default function Privacy() {
             </nav>
           </div>
 
-          <div className="hidden lg:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/40 text-[11px] text-[#A0AEC0] dark:text-gray-500 px-2 text-center lg:text-left">
+          <div className="hidden lg:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/40 text-[12px] text-[#A0AEC0] dark:text-gray-500 px-2 text-center lg:text-left">
             Huly está comprometido con la transparencia y el software open source.
           </div>
         </aside>
@@ -233,7 +233,7 @@ export default function Privacy() {
           <article className="space-y-8 animate-fadeIn">
             <div className="border-b border-gray-100 dark:border-gray-800/40 pb-5">
               {activeDoc.badge && (
-                <span className="bg-[#D1CAEF]/40 dark:bg-[#2A233C]/50 text-violeta dark:text-violeta-claro text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="bg-[#D1CAEF]/40 dark:bg-[#2A233C]/50 text-violeta dark:text-violeta-claro text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
                   {activeDoc.badge}
                 </span>
               )}

@@ -26,7 +26,7 @@ export function RiskWordItem({ word, onDelete }: RiskWordItemProps) {
         "{word.word}"
       </span>
       <div className="flex shrink-0 items-center gap-2">
-        <span className={`w-[62px] rounded-full px-3 py-0.5 text-center text-[10px] font-bold uppercase tracking-wide ${s.badgeBg} ${s.badgeText}`}>
+        <span className={`w-[62px] rounded-full px-3 py-0.5 text-center text-[11px] font-bold uppercase tracking-wide ${s.badgeBg} ${s.badgeText}`}>
           {s.label}
         </span>
         <button

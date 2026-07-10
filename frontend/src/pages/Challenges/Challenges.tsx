@@ -155,7 +155,7 @@ export default function Challenges() {
             <p className="text-[0.78rem] font-bold text-bosque mt-[0.2rem] m-0 lg:text-[0.95rem]">{cyclePct}%</p>
           </div>
 
-          <p className="challenges-plant-hint text-[1rem] text-bold text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
+          <p className="challenges-plant-hint text-[0.82rem] font-semibold text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
             {PLANT_HINTS[plantStage]}
           </p>
 

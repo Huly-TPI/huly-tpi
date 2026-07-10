@@ -49,7 +49,7 @@ export default function DueDateField({ value, onChange }: DueDateFieldProps) {
 
   return (
     <div className="mt-2">
-      <label className="text-[0.65rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.5)]">
+      <label className="text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.8)]">
         Fecha límite
       </label>
       <div className="mt-1 rounded-lg border border-[rgba(92,61,30,0.25)] bg-[#fffdf5] p-2">
@@ -74,7 +74,7 @@ export default function DueDateField({ value, onChange }: DueDateFieldProps) {
           </button>
         </div>
 
-        <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[0.6rem] font-bold text-[rgba(92,61,30,0.5)]">
+        <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[0.7rem] font-bold text-[rgba(92,61,30,0.8)]">
           {WEEKDAY_LABELS.map(day => (
             <span key={day}>{day}</span>
           ))}
@@ -92,7 +92,7 @@ export default function DueDateField({ value, onChange }: DueDateFieldProps) {
                 type="button"
                 disabled={isPast}
                 onClick={() => onChange(toDateOnly(date))}
-                className={`aspect-square rounded-full text-[0.7rem] transition-colors ${
+                className={`aspect-square rounded-full text-[0.8rem] transition-colors ${
                   isSelected
                     ? 'bg-violeta font-bold text-white'
                     : isPast
@@ -110,7 +110,7 @@ export default function DueDateField({ value, onChange }: DueDateFieldProps) {
           <button
             type="button"
             onClick={() => onChange('')}
-            className="mt-2 w-full text-center text-[0.65rem] text-[#7a5c38] underline"
+            className="mt-2 w-full text-center text-[0.75rem] text-[#7a5c38] underline"
           >
             Quitar fecha
           </button>

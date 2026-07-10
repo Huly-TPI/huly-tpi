@@ -63,7 +63,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Tasa de retorno al jardín</h2>
               </div>
-              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
+              <p className="text-xs lg:text-[14px] font-medium text-gray-500 dark:text-gray-400 mb-2.5 lg:mb-3">
                 Mide cuántos usuarios deciden pausar su navegación e ir a relajarse al jardín terapéutico.
               </p>
             </div>
@@ -95,7 +95,7 @@ export default function AntiScrollPage() {
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center text-center">
                   <span className="text-xl font-black text-gray-800 dark:text-gray-100">{redirectRate.toFixed(1)}%</span>
-                  <span className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Retorno</span>
+                  <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Retorno</span>
                 </div>
               </div>
             </div>
@@ -103,11 +103,11 @@ export default function AntiScrollPage() {
             <div className="mt-2 border-t border-gray-50 dark:border-gray-855/30 pt-3">
               <div className="grid grid-cols-2 gap-2 text-center text-xs">
                 <div className="border-r border-gray-100 dark:border-gray-855/30">
-                  <span className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Regresan al jardín</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Regresan al jardín</span>
                   <span className="text-sm font-extrabold text-violeta dark:text-violeta-claro">{totalRedirects} clicks</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Ignoran o continúan</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Ignoran o continúan</span>
                   <span className="text-sm font-extrabold text-gray-500 dark:text-gray-400">{totalIgnore} clicks</span>
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Usuarios en la extensión</h2>
               </div>
-              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
+              <p className="text-xs lg:text-[14px] font-medium text-gray-500 dark:text-gray-400 mb-2.5 lg:mb-3">
                 Estado de adopción de la extensión y consentimientos de compartición de datos de bienestar.
               </p>
             </div>
@@ -133,7 +133,7 @@ export default function AntiScrollPage() {
                   <Monitor className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
-                  <span className="block text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Extensión activa ahora</span>
+                  <span className="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Extensión activa ahora</span>
                   <span className="text-lg font-black text-gray-800 dark:text-gray-100">
                     {dashboard?.activeExtensionUsersCount ?? 0} <span className="text-xs font-semibold text-gray-400 dark:text-gray-500">usuarios</span>
                   </span>
@@ -145,7 +145,7 @@ export default function AntiScrollPage() {
                   <Database className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
-                  <span className="block text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Comparten datos de navegación</span>
+                  <span className="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Comparten datos de navegación</span>
                   <span className="text-lg font-black text-gray-800 dark:text-gray-100">
                     {dashboard?.dataSharingConsentUsersCount ?? 0} <span className="text-xs font-semibold text-gray-400 dark:text-gray-500">usuarios</span>
                   </span>
@@ -154,7 +154,7 @@ export default function AntiScrollPage() {
             </div>
 
             <div className="mt-3 border-t border-gray-50 dark:border-gray-855/30 pt-3 text-center">
-              <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+              <span className="text-[12px] text-gray-400 dark:text-gray-500 font-medium">
                 Porcentaje de adopción de compartición de datos:{' '}
                 <span className="font-bold text-gray-700 dark:text-gray-200">
                   {dashboard?.totalUsersCount && dashboard.totalUsersCount > 0
@@ -175,7 +175,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Configuración de la extensión</h2>
               </div>
-              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
+              <p className="text-xs lg:text-[14px] font-medium text-gray-500 dark:text-gray-400 mb-2.5 lg:mb-3">
                 Personaliza el comportamiento global de la extensión anti-scroll.
               </p>
             </div>
@@ -209,7 +209,7 @@ export default function AntiScrollPage() {
                     className="w-full text-sm border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2 bg-gray-50 dark:bg-[#09111f] text-gray-700 dark:text-gray-200 focus:bg-white dark:focus:bg-[#172033] focus:outline-none focus:ring-2 focus:ring-violeta/30 focus:border-violeta dark:focus:border-violeta-claro transition duration-200"
                     required
                   />
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500">
                     Intervalo en minutos en el que se sugerirá una pausa al usuario.
                   </span>
                 </div>
@@ -226,7 +226,7 @@ export default function AntiScrollPage() {
                     className="w-full text-sm border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2 bg-gray-50 dark:bg-[#09111f] text-gray-700 dark:text-gray-200 focus:bg-white dark:focus:bg-[#172033] focus:outline-none focus:ring-2 focus:ring-violeta/30 focus:border-violeta dark:focus:border-violeta-claro transition duration-200 min-h-[120px] flex-1 resize-y font-normal leading-relaxed"
                     required
                   />
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500">
                     Mensaje que se mostrará en el modal de consentimiento de recopilación de estadísticas.
                   </span>
                 </div>
@@ -252,7 +252,7 @@ export default function AntiScrollPage() {
                 </div>
                 <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Páginas más consumidas</h2>
               </div>
-              <p className="text-xs lg:text-[14px] text-gray-400 dark:text-gray-500 mb-2.5 lg:mb-3">
+              <p className="text-xs lg:text-[14px] font-medium text-gray-500 dark:text-gray-400 mb-2.5 lg:mb-3">
                 Dominios en los que los usuarios con seguimiento autorizado pasan la mayor cantidad de tiempo scrolleando.
               </p>
             </div>
@@ -281,7 +281,7 @@ export default function AntiScrollPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <div className="flex justify-between text-[11px] text-gray-500 dark:text-gray-400 font-semibold">
+                        <div className="flex justify-between text-[12px] text-gray-500 dark:text-gray-400 font-semibold">
                           <span>Tiempo acumulado</span>
                           <span className="text-gray-800 dark:text-gray-200 font-bold">{formatConsumptionTime(app.totalActiveSeconds)}</span>
                         </div>

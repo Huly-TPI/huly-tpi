@@ -178,7 +178,7 @@ export function StoreProductForm({ product, onClose, onSubmit }: Props) {
           </label>
         </div>
         {isEdit && (
-          <p className="text-[11px] text-[#A0AEC0]">
+          <p className="text-[12px] text-[#A0AEC0]">
             Dejá las imágenes vacías para conservar las actuales.
           </p>
         )}
