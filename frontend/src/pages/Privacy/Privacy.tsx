@@ -157,7 +157,7 @@ const EXTENSION_POLICY: PolicyDocument = {
 const TERMS_POLICY: PolicyDocument = {
   id: 'terms' as const,
   title: 'Términos y condiciones de uso',
-  subtitle: 'Huly TPI',
+  subtitle: 'Huly',
   lastUpdated: '10 de julio de 2026',
   badge: 'Términos de servicio',
   intro: (
