@@ -41,7 +41,7 @@ const profileElements: SceneElementDefinition[] = [
     title: 'Espejo',
     imageAlt: 'Espejo del perfil',
     image: { light: mirrorImage },
-    placementClassName: 'left-[3%] bottom-[3.5%] z-[3] w-[38%] md:left-[11.5%] md:bottom-[9%] md:w-[20%] [clip-path:inset(0_0_0_10%)]',
+    placementClassName: 'left-[2%] bottom-[15%] z-[3] w-[52%] md:left-[11.5%] md:bottom-[9%] md:w-[20%] [clip-path:inset(0_0_0_10%)]',
     imageClassName: FULL_WIDTH,
     hotspotClassName: DEFAULT_HOTSPOT,
     clipPath: RECT_CLIP_PATH,

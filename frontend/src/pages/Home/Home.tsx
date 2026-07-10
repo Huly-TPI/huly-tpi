@@ -85,11 +85,11 @@ const cloudElements: SceneElementDefinition[] = [
   ),
   createCloudElement(
     "cloud-upper-left",
-    "left-[28%] top-[3.8%] z-10 w-[22%] md:left-[22%] md:top-[8.5%] md:w-[13.2%] min-[1400px]:top-[7.2%]",
+    "left-[45%] top-[21%] z-10 w-[22%] md:left-[22%] md:top-[8.5%] md:w-[13.2%] min-[1400px]:top-[7.2%]",
   ),
   createCloudElement(
     "cloud-center",
-    "left-[60%] top-[12%] z-10 w-[14.5%] md:left-[46.8%] md:top-[6.8%] md:w-[19.8%] min-[1400px]:top-[5.2%]",
+    "left-[46%] top-[8%] z-10 w-[14.5%] md:left-[46.8%] md:top-[6.8%] md:w-[19.8%] min-[1400px]:top-[5.2%]",
   ),
   createCloudElement(
     "cloud-bottom-left",
@@ -426,7 +426,7 @@ export default function Home() {
           type="button"
           onClick={() => setIsStoreOpen(true)}
           aria-label="Abrir tienda"
-          className="fixed bottom-24 right-4 z-[150] h-20 w-20 transition hover:scale-105 active:scale-95"
+          className="fixed bottom-24 right-4 z-[150] hidden h-20 w-20 transition hover:scale-105 active:scale-95 md:block"
         >
           <img
             src={storeButtonImage}
