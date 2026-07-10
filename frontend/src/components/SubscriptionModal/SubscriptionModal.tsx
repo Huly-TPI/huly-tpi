@@ -1,6 +1,7 @@
 import { useCallback, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import modalBg from '../../assets/suscription/modalSuscripcion.webp'
+import modalBgMobile from '../../assets/suscription/modalSuscripcionMobile.webp'
 import cardGreen from '../../assets/suscription/cardGreen.webp'
 import cardYellow from '../../assets/suscription/cardYellow.webp'
 import cardPurple from '../../assets/suscription/cardPurple.webp'
@@ -12,8 +13,9 @@ import { useMediaQuery } from '../../hooks/useMediaquery'
 import type { Plan } from '../../api/payment'
 
 const MOBILE_QUERY = '(max-width: 640px)'
-/* En mobile el asset ancho se estira a cuadrado para dar alto a las cards. */
-const MOBILE_ASPECT = '1 / 1'
+/* Proporción natural del asset mobile (1194 x 899): sin deformar y con la
+   solapa del título en su lugar. */
+const MOBILE_ASPECT = '1194 / 899'
 
 interface SubscriptionModalProps {
   isOpen: boolean
@@ -55,7 +57,7 @@ function FreeCard({ isCurrentPlan }: { isCurrentPlan: boolean }) {
     <div className="relative h-full w-full min-w-0 transition-transform duration-200 origin-center hover:scale-[1.015]" style={{ aspectRatio: '353/706' }}>
       <img src={cardGreen} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(0,80,0,0.16)]" draggable={false} />
 
-      <div className="absolute inset-x-[8%] top-[7%] bottom-[8%] flex flex-col items-center text-center overflow-hidden">
+      <div className="absolute inset-x-[8%] top-[7%] bottom-[8%] max-[640px]:inset-x-[5%] flex flex-col items-center text-center overflow-hidden">
         <h3 className="text-[13px] sm:text-[15px] lg:text-[18px] font-black text-[#1a4a1a] leading-none">Gratuito</h3>
         <div className="mt-3 max-[640px]:mt-2">
           <p className="font-black text-[16px] sm:text-[19px] lg:text-[24px] text-[#2a6a2a] leading-none">$0</p>
@@ -111,13 +113,13 @@ function PaidCard({
     <div className="relative h-full w-full min-w-0 transition-transform duration-200 origin-center hover:scale-[1.015]" style={{ aspectRatio: '353/706' }}>
       <img src={cardImage} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none drop-shadow-[0_3px_4px_rgba(91,60,24,0.16)]" draggable={false} />
 
-      <div className="absolute inset-x-[8%] top-[8%] bottom-[7%] flex flex-col items-center text-center overflow-hidden">
-        <h3 className={`text-[13px] sm:text-[15px] lg:text-[18px] font-black leading-none whitespace-nowrap ${textColor}`}>
+      <div className="absolute inset-x-[8%] top-[8%] bottom-[7%] max-[640px]:inset-x-[5%] flex flex-col items-center text-center overflow-hidden">
+        <h3 className={`text-[13px] sm:text-[15px] lg:text-[18px] font-black leading-none whitespace-nowrap max-[640px]:whitespace-normal max-[640px]:leading-tight ${textColor}`}>
           {displayName}
         </h3>
 
         <div className="mt-3 max-[640px]:mt-2">
-          <p className={`font-black text-[16px] sm:text-[19px] lg:text-[24px] leading-none ${textColor}`}>
+          <p className={`font-black text-[1px] sm:text-[19px] lg:text-[24px] leading-none ${textColor}`}>
             ${plan.price.toLocaleString('es-AR')}
             <span className="text-[10px] sm:text-[12px] lg:text-[14px] font-black"> ARS</span>
           </p>
@@ -190,8 +192,10 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
 
   const sortedPlans = [...plans].sort((a, b) => a.price - b.price)
   const many = 1 + sortedPlans.length > 3
-  const gapClass = many ? 'gap-1.5 sm:gap-2 lg:gap-3' : 'gap-2 sm:gap-3 lg:gap-6'
-  const cardClass = many ? 'flex-1 min-w-0 max-w-[30%] h-full' : 'w-[28%] shrink-0 h-full'
+  const gapClass = many ? 'gap-1 sm:gap-2 lg:gap-3' : 'gap-1.5 sm:gap-3 lg:gap-6'
+  const cardClass = many
+    ? 'flex-1 min-w-0 max-w-[30%] h-full max-[640px]:max-w-none'
+    : 'w-[28%] shrink-0 h-full max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:shrink max-[640px]:min-w-0'
 
   /* Contenido compartido por desktop y mobile. */
   const content: ReactNode = (
@@ -201,16 +205,16 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
       </button>
 
       <div className="text-center shrink-0">
-        <h2 className="text-[10px] sm:text-[20px] lg:text-[24px] font-black text-[#9b5718] leading-none">
+        <h2 className="text-[13px] sm:text-[20px] lg:text-[24px] font-black text-[#9b5718] leading-none">
           Planes de Suscripción
         </h2>
       </div>
 
-      <p className="shrink-0 text-center mt-[5%] max-[640px]:text-[12px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
+      <p className="shrink-0 text-center mt-[5%] max-[640px]:mt-[3%] text-[10px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
         Elegí el plan que mejor se adapte a vos
       </p>
 
-      <div className={`flex justify-center items-stretch mt-2 px-[1%] flex-1 min-h-0 lg:mt-4 ${gapClass}`}>
+      <div className={`flex justify-center items-stretch mt-2 px-[1%] max-[640px]:px-0 flex-1 min-h-0 lg:mt-4 ${gapClass}`}>
         {plansLoading ? (
           <div className="flex justify-center py-12">
             <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
@@ -253,12 +257,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
   )
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center p-2 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[400] flex items-center justify-center px-1 pt-16 pb-2 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       {isMobile ? (
         /*
-          Mobile -> mismo modalSuscripcion.webp, pero como fondo con aspect-ratio
-          cuadrado: el modal queda más alto que su proporción natural (ancha), así
-          las cards ganan altura y la lista de beneficios entra completa.
+          Mobile -> modalSuscripcionMobile en su proporción NATURAL (1194/899):
+          no se deforma, las cards quedan en tamaño normal (no enormes) y, al ser
+          aspecto fijo, el título cae dentro de la solapa. Ancho forzado por vw.
         */
         <div
           role="dialog"
@@ -266,12 +270,12 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
           aria-label="Planes de suscripción"
           onClick={e => e.stopPropagation()}
           style={{
-            backgroundImage: `url(${modalBg})`,
+            backgroundImage: `url(${modalBgMobile})`,
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
             aspectRatio: MOBILE_ASPECT,
           }}
-          className="relative z-10 w-full max-w-[440px] px-[8%] pt-[13%] pb-[9%] flex flex-col overflow-hidden"
+          className="relative z-10 w-[96vw] max-w-[560px] px-[5%] pt-[5%] pb-[5%] flex flex-col overflow-hidden"
         >
           {content}
         </div>
