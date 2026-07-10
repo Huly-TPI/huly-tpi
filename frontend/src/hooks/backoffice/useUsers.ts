@@ -203,7 +203,7 @@ export function useUsers() {
   const handleBack = () => {
     setSelectedWeek('current')
     setSelectedDay('all')
-    navigate('/backoffice/usuarios')
+    navigate('/backoffice/users')
   }
 
   return {

@@ -9,4 +9,5 @@ import java.util.List;
 public interface IProductJpaRepository extends JpaRepository<ProductEntity, Long> {
     List<ProductEntity> findByType(ProductType type);
     List<ProductEntity> findByTypeAndActive(ProductType type, boolean active);
+    List<ProductEntity> findByTypeOrderByIdAsc(ProductType type);
 }

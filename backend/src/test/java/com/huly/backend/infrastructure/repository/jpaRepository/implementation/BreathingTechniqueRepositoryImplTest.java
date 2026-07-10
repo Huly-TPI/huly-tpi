@@ -92,7 +92,7 @@ class BreathingTechniqueRepositoryImplTest {
 
     // --- arrange ---
     private void givenTechniques(BreathingTechniquesEntity... entities) {
-        when(jpaRepository.findAll()).thenReturn(List.of(entities));
+        when(jpaRepository.findAllByOrderByIdAsc()).thenReturn(List.of(entities));
     }
 
     private void givenSavedEntityReturns(BreathingTechniquesEntity entity) {
@@ -145,12 +145,12 @@ class BreathingTechniqueRepositoryImplTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getName()).isEqualTo("Diafragmática");
         assertThat(result.get(1).getName()).isEqualTo("Cuadrada");
-        verify(jpaRepository).findAll();
+        verify(jpaRepository).findAllByOrderByIdAsc();
     }
 
     private void thenEmpty(List<BreathingTechnique> result) {
         assertThat(result).isEmpty();
-        verify(jpaRepository).findAll();
+        verify(jpaRepository).findAllByOrderByIdAsc();
     }
 
     private void thenSavedMapped(BreathingTechnique result) {

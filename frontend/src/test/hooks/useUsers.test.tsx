@@ -128,7 +128,7 @@ describe('useUsers', () => {
 
   it('detecta el usuario seleccionado mediante params y carga estadísticas antiscroll reales', () => {
     setupGetUsersResolved(mockUsers)
-    setupHookWithParams(['/backoffice/usuarios/2'])
+    setupHookWithParams(['/backoffice/users/2'])
     return waitForLoadingFinished()
       .then(() => {
         verifySelectedUserName('John Doe')
@@ -144,7 +144,7 @@ describe('useUsers', () => {
 
   it('usa stats filtradas desde backend y arma la lista de dominios sin reescalar localmente', () => {
     setupGetUsersResolved(mockUsers)
-    setupHookWithParams(['/backoffice/usuarios/2'])
+    setupHookWithParams(['/backoffice/users/2'])
     return waitForLoadingFinished()
       .then(() => {
         callSetActiveTab('antiscroll')
@@ -188,7 +188,7 @@ describe('useUsers', () => {
 
   it('realiza lazy loading de estadísticas según la pestaña activa', () => {
     setupGetUsersResolved(mockUsers)
-    setupHookWithParams(['/backoffice/usuarios/2'])
+    setupHookWithParams(['/backoffice/users/2'])
     return waitForLoadingFinished()
       .then(() => {
         verifyGetUserActivitiesCalledWith(2, 'total')
@@ -226,7 +226,7 @@ describe('useUsers', () => {
 
   it('vuelve a consultar antiscroll al backend cuando cambia semana o día', () => {
     setupGetUsersResolved(mockUsers)
-    setupHookWithParams(['/backoffice/usuarios/2'])
+    setupHookWithParams(['/backoffice/users/2'])
     return waitForLoadingFinished()
       .then(() => {
         callSetActiveTab('antiscroll')
@@ -257,7 +257,7 @@ describe('useUsers', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter initialEntries={initialEntries}>
         <Routes>
-          <Route path="/backoffice/usuarios/:id" element={children} />
+          <Route path="/backoffice/users/:id" element={children} />
           <Route path="*" element={children} />
         </Routes>
       </MemoryRouter>
