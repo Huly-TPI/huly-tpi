@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import './EmotionalOnboarding.css'
 import registerBackground from '../../../assets/register/background.webp'
+import registerBackgroundNight from '../../../assets/register/background-night.webp'
 import hulyGreeting from '../../../assets/register/huly-greeting.webp'
 import type { Step1Option } from '../../../hooks/useEmotionalOnboarding'
+import { useTheme } from '../../../context/theme'
 
 const STEP_CONTENT: Record<1 | 2 | 3, { title: string; subtitle: string }> = {
   1: {
@@ -38,6 +40,8 @@ export default function EmotionalOnboarding({
   onSkip,
   submitting = false,
 }: Props) {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isSkipping, setIsSkipping] = useState(false)
 
@@ -62,7 +66,7 @@ export default function EmotionalOnboarding({
   return (
     <div
       className="eo-container"
-      style={{ backgroundImage: `url(${registerBackground})` }}
+      style={{ backgroundImage: `url(${isDark ? registerBackgroundNight : registerBackground})` }}
     >
       <div className="eo-overlay" />
 

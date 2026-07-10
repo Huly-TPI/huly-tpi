@@ -343,19 +343,19 @@ export default function LanternsActivity() {
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-          <p className="text-lg font-semibold text-[#8869AC] md:text-xl">Analizando tu pensamiento...</p>
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 dark:bg-black/45">
+          <p className="text-lg font-semibold text-[#8869AC] dark:text-slate-100 md:text-xl">Analizando tu pensamiento...</p>
         </div>
       )}
 
       {/* Modal de recomendación */}
       {recommendation && !loading && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-5 text-center shadow-xl sm:p-8">
-            <h2 className="mb-3 text-xl font-bold text-[#8869AC] md:text-2xl">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/[0.15] dark:bg-black/45">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-[#172033] dark:border dark:border-slate-800/50 p-5 text-center shadow-xl sm:p-8">
+            <h2 className="mb-3 text-xl font-bold text-[#8869AC] dark:text-slate-100 md:text-2xl">
               {recommendation.title}
             </h2>
-            <p className="mb-5 text-sm font-medium leading-relaxed text-gray-600 md:mb-6 md:text-base">
+            <p className="mb-5 text-sm font-medium leading-relaxed text-gray-600 dark:text-slate-400 md:mb-6 md:text-base">
               {recommendation.description}
             </p>
             <Button variant="primary" fullWidth onClick={handleNavigate}>

@@ -104,9 +104,9 @@ export default function PendingFormModal({
 
   return (
     <div className="fixed inset-0 bg-black/[0.42] flex items-center justify-center z-[1000] p-4 backdrop-blur-[3px]" role="dialog" aria-modal="true">
-      <div className="relative w-[320px] rounded-lg bg-[#fff8e7] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
+      <div className="relative w-[320px] rounded-lg border border-transparent bg-[#fff8e7] dark:bg-[#172033] dark:border-slate-800/50 p-6 shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
         <button
-          className="absolute top-2 right-3 bg-transparent border-0 cursor-pointer text-[0.85rem] text-[#7a5c38] opacity-60 hover:opacity-100"
+          className="absolute top-2 right-3 bg-transparent border-0 cursor-pointer text-[0.85rem] text-[#7a5c38] dark:text-slate-300 opacity-60 hover:opacity-100"
           onClick={onClose}
           aria-label="Cerrar"
         >
@@ -126,16 +126,16 @@ export default function PendingFormModal({
           />
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col">
-            <p className="text-[0.8rem] font-bold text-[rgba(92,61,30,0.8)] uppercase tracking-[0.07em] mb-3">
+            <p className="text-[0.8rem] font-bold text-[rgba(92,61,30,0.8)] dark:text-violeta-claro uppercase tracking-[0.07em] mb-3">
               {mode === 'create' ? 'Nueva tarea' : 'Editar tarea'}
             </p>
 
-            <label className="text-[0.75rem] font-bold uppercase text-[rgba(92,61,30,0.8)]" htmlFor="pending-title">
+            <label className="text-[0.75rem] font-bold uppercase text-[rgba(92,61,30,0.8)] dark:text-slate-400" htmlFor="pending-title">
               Título
             </label>
             <input
               id="pending-title"
-              className="mb-3 border-0 border-b border-b-[rgba(92,61,30,0.25)] bg-transparent px-0 py-1 text-base font-bold text-[#3b2510] outline-none"
+              className="mb-3 border-0 border-b border-b-[rgba(92,61,30,0.25)] dark:border-b-slate-700 bg-transparent px-0 py-1 text-base font-bold text-[#3b2510] dark:text-slate-100 outline-none"
               value={title}
               onChange={e => setTitle(e.target.value)}
               maxLength={120}
@@ -144,12 +144,12 @@ export default function PendingFormModal({
               placeholder="¿Qué necesitás hacer?"
             />
 
-            <label className="text-[0.75rem] font-bold uppercase text-[rgba(92,61,30,0.8)]" htmlFor="pending-description">
+            <label className="text-[0.75rem] font-bold uppercase text-[rgba(92,61,30,0.8)] dark:text-slate-400" htmlFor="pending-description">
               Descripción
             </label>
             <textarea
               id="pending-description"
-              className="mb-2 border-0 border-b border-b-[rgba(92,61,30,0.25)] bg-transparent px-0 py-1 text-[0.85rem] text-[#3b2510] outline-none resize-none"
+              className="mb-2 border-0 border-b border-b-[rgba(92,61,30,0.25)] dark:border-b-slate-700 bg-transparent px-0 py-1 text-[0.85rem] text-[#3b2510] dark:text-slate-100 outline-none resize-none"
               value={description}
               onChange={e => setDescription(e.target.value)}
               maxLength={1000}
