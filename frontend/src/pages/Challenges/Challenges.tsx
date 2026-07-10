@@ -193,6 +193,13 @@ export default function Challenges() {
           )}
           <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-[4rem] pl-[6rem] pr-[5rem] pb-[6rem] overflow-hidden min-h-0">
 
+
+            <div className="challenges-new-btn flex justify-end mb-[0.1rem]">
+              <Button variant="primary" size="sm" onClick={() => requireAuth(() => setModal({ mode: 'create' }))}>
+                + Nuevo reto
+              </Button>
+            </div>
+
             {loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
             {error && !loading && <InlineError message={error} className="mt-2" />}
 

@@ -49,7 +49,7 @@ export default function DateInput({
         aria-describedby={errorId}
         className={getInputClassName(
           hasError,
-          'pr-12 [&::-webkit-calendar-picker-indicator]:hidden',
+          'pr-12 min-w-0 max-w-full [&::-webkit-calendar-picker-indicator]:hidden',
         )}
       />
       <button
