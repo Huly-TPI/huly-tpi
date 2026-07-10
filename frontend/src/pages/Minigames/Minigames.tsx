@@ -96,7 +96,7 @@ const minigameElements: SceneElementDefinition[] = [
         title: 'Piedras del lago',
         imageAlt: 'Piedras a la orilla del lago',
         image: { light: stonesImage, dark: darkStonesImage },
-        placementClassName: 'left-[38%] top-[74%] z-30 w-[28%] md:left-[58%] md:top-[80%] md:w-[9%]',
+        placementClassName: 'left-[44%] top-[80%] z-30 w-[28%] md:left-[58%] md:top-[80%] md:w-[9%]',
         imageClassName: FULL_WIDTH,
         hotspotClassName: DEFAULT_HOTSPOT,
         clipPath: RECT_CLIP_PATH,
