@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Menu, X, User, Sparkles, ShieldCheck, LogOut } from 'lucide-react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, hasSessionFlag } from '../context/auth'
+import { useTheme } from '../context/theme'
 import { useSubscriptionModal } from '../context/subscriptionModal'
 import logo from '../assets/brand/monocromatico-menta-logo.png'
-import navbarBg from '../assets/navbbar.png'
 import ThemeToggle from './ThemeToggle/ThemeToggle'
 import BadgeModal from './Badges/BadgeModal'
 import { useMembership } from '../hooks/shop/useMembership'
@@ -25,33 +25,19 @@ const NAV_LINKS = [
   { to: '/challenges', label: 'Regar planta' },
 ] as const
 
-// El after: genera la barra blanca animada debajo del link activo
-function getDesktopLinkClass(isActive: boolean): string {
-  const base =
-    "text-sm font-medium md:text-base transition-colors after:content-[''] after:block after:h-0.5 after:rounded-full after:bg-white after:transition-all after:duration-200"
-  return isActive
-    ? `${base} text-white after:w-full`
-    : `${base} text-white/75 hover:text-white after:w-0`
-}
-
-function getMobileLinkClass(isActive: boolean): string {
-  return `block rounded-lg px-3 py-2.5 text-base font-medium transition-colors ${
-    isActive ? 'bg-white/15 text-white' : 'text-white hover:bg-white/10'
-  }`
-}
-
 export default function Navbar() {
   const { isAuthenticated, user, loading } = useAuth()
+  const { theme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
+  const isDark = theme === 'dark'
   const [badgesOpen, setBadgesOpen] = useState(false)
   const [storeOpen, setStoreOpen] = useState(false)
   const { inventory, refetch: refetchInventory } = useInventory()
   const { coins, refresh: refetchCoins } = useUserCoins()
 
   const navRef = useRef<HTMLElement>(null)
-
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    function handleClickOutside(e: MouseEvent) {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setMenuOpen(false)
       }
@@ -63,37 +49,31 @@ export default function Navbar() {
   const closeMenu = () => setMenuOpen(false)
 
   return (
-    <nav ref={navRef} className="relative z-[300] shrink-0 shadow-md">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-center"
-        style={{ backgroundImage: `url(${navbarBg})` }}
-      />
-
-      {menuOpen && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 top-16 bg-[#5B834F] md:hidden"
-        />
-      )}
-
+    <nav
+      ref={navRef}
+      className={`relative z-[300] shrink-0 shadow-md ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}
+    >
       {/* Barra principal */}
-      <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
+        {/* Logo desde assets */}
         <Link to="/" onClick={closeMenu} className="flex items-center">
-          <img src={logo} alt="Huly logo" className="h-8 w-auto object-contain" />
+          <img
+            src={logo}
+            alt="Huly logo"
+            className="h-8 w-auto object-contain"
+          />
         </Link>
 
-        {/* Links desktop */}
+        {/* Links — visible solo en desktop */}
         <div className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map(link => (
-            <NavLink
+            <Link
               key={link.to}
               to={link.to}
-              end={link.to === '/'}
-              className={({ isActive }) => getDesktopLinkClass(isActive)}
+              className="text-sm font-medium text-white transition-colors hover:text-violeta-claro md:text-base"
             >
               {link.label}
-            </NavLink>
+            </Link>
           ))}
         </div>
 
@@ -108,6 +88,7 @@ export default function Navbar() {
           <div className="hidden md:block">
             <ThemeToggle compact />
           </div>
+
           <button
             type="button"
             className="flex items-center justify-center rounded-lg p-2 text-white transition-colors hover:bg-white/10 md:hidden"
@@ -120,20 +101,18 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Menú mobile */}
       {menuOpen && (
         <div className={`absolute top-16 left-0 right-0 z-[300] border-t border-white/10 px-4 pb-4 shadow-lg md:hidden ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}>
           <ul className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map(link => (
               <li key={link.to}>
-                <NavLink
+                <Link
                   to={link.to}
-                  end={link.to === '/'}
                   onClick={closeMenu}
-                  className={({ isActive }) => getMobileLinkClass(isActive)}
+                  className="block rounded-lg px-3 py-2.5 text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
                 >
                   {link.label}
-                </NavLink>
+                </Link>
               </li>
             ))}
           </ul>
@@ -191,7 +170,6 @@ export default function Navbar() {
           )}
         </div>
       )}
-
       <BadgeModal isOpen={badgesOpen} onClose={() => setBadgesOpen(false)} />
       <StoreModal
         isOpen={storeOpen}
@@ -205,11 +183,16 @@ export default function Navbar() {
   )
 }
 
-interface UserMenuProps {
-  name: string
-}
+// function AuthSlotPlaceholder() {
+//   return (
+//     <div
+//       className="hidden h-9 w-36 animate-pulse rounded-full bg-white/10 md:block"
+//       aria-hidden="true"
+//     />
+//   )
+// }
 
-function UserMenu({ name }: UserMenuProps) {
+function UserMenu({ name }: { name: string }) {
   const [open, setOpen] = useState(false)
   const { subscriptionOpen, openSubscriptionModal, closeSubscriptionModal } = useSubscriptionModal()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -217,15 +200,14 @@ function UserMenu({ name }: UserMenuProps) {
   const { logout } = useAuth()
   const { membership, refresh: refreshMembership } = useMembership()
 
-  const subscriptionIcon =
-    !membership?.active
-      ? budIcon
-      : membership.planCode === 'PREMIUM'
-        ? crownIcon
-        : flowerpotIcon
+  const subscriptionIcon = !membership?.active
+    ? budIcon
+    : membership.planCode === 'PREMIUM'
+    ? crownIcon
+    : flowerpotIcon
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpen(false)
       }
@@ -262,48 +244,38 @@ function UserMenu({ name }: UserMenuProps) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-[#5a8a50]/20 bg-[#f9f5ef] py-1.5 shadow-[0_8px_24px_rgba(76,124,100,0.18)]"
+          className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-black/5 bg-white py-1 shadow-lg"
         >
           <Link
             to="/profile"
             role="menuitem"
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-[#3d5c3a] transition-colors hover:bg-[#4C7C64]/10"
+            className="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
             onClick={() => setOpen(false)}
           >
-            <User className="size-4 shrink-0 text-[#4C7C64]" strokeWidth={2} />
             Mi perfil
           </Link>
           <button
             type="button"
             role="menuitem"
-            onClick={() => {
-              setOpen(false)
-              openSubscriptionModal()
-            }}
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-[#3d5c3a] transition-colors hover:bg-[#4C7C64]/10"
+            onClick={() => { setOpen(false); openSubscriptionModal() }}
+            className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100"
           >
-            <Sparkles className="size-4 shrink-0 text-[#4C7C64]" strokeWidth={2} />
             Suscripciones
           </button>
           <Link
             to="/privacy"
             role="menuitem"
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-[#3d5c3a] transition-colors hover:bg-[#4C7C64]/10"
+            className="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
             onClick={() => setOpen(false)}
           >
-            <ShieldCheck className="size-4 shrink-0 text-[#4C7C64]" strokeWidth={2} />
             Centro de privacidad
           </Link>
-
-          <div className="mx-3 my-1 border-t border-[#5a8a50]/20" />
-
           <button
             type="button"
             role="menuitem"
             onClick={handleLogout}
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-red-500 transition-colors hover:bg-red-50"
+            className="block w-full px-4 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
           >
-            <LogOut className="size-4 shrink-0" strokeWidth={2} />
             Cerrar sesión
           </button>
         </div>
