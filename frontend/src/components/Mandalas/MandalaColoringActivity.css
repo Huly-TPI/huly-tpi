@@ -73,10 +73,11 @@
     height: calc(100dvh - 4rem);
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: safe center;
     gap: clamp(0.75rem, 2vh, 1.4rem);
     margin: 0 auto;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: clamp(3rem, 6vh, 4.5rem) clamp(1rem, 4vw, 2.5rem) 1.5rem;
 }
 
@@ -537,6 +538,15 @@ html.dark .mandala-painting-scene .theme-background {
     object-position: center 0%;
 }
 
+.mandala-gallery-back-btn {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    z-index: 50;
+    height: 5rem;
+    width: 5rem;
+}
+
 .mandala-easel-stage {
     position: absolute;
     z-index: 2;
@@ -757,6 +767,10 @@ html.dark .mandala-toolbar__tool-btn.is-active {
 .mandala-toolbar__tool-btn:hover .mandala-toolbar__tool-label {
     opacity: 1;
     transform: translateX(0);
+}
+
+.mandala-mobile-actions {
+    display: none;
 }
 
 /* Clear button floating next to canvas */
@@ -1037,19 +1051,55 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
         object-position: center center;
     }
 
+    .mandala-activity__scene-scroll {
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mandala-painting-scene {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: visible;
+        padding: 6.5rem 0 3rem;
+    }
+
+    .mandala-painting-scene .theme-background {
+        position: fixed;
+    }
+
+    .mandala-gallery-back-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        height: 4rem;
+        width: 4rem;
+    }
+
     .mandala-easel-stage {
-        width: min(142vw, calc(177.78dvh - 7.112rem));
+        position: relative;
+        order: 2;
         top: auto;
-        bottom: 0;
-        transform: translate(-50%, 0);
+        left: auto;
+        bottom: auto;
+        transform: none;
+        width: min(210vw, calc(230dvh - 4rem));
+        margin: 1rem 0 0;
+        flex-shrink: 0;
     }
 
     .mandala-palette-overlay {
-        top: 8.5rem;
-        left: 50%;
+        position: relative;
+        order: 1;
+        top: auto;
+        left: auto;
         right: auto;
         bottom: auto;
-        transform: translateX(-50%);
+        transform: none;
         height: auto;
         width: 92%;
         max-width: none;
@@ -1060,6 +1110,8 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
         box-shadow: none;
         padding: 0;
         display: block;
+        flex-shrink: 0;
+        margin: 0 auto 0.5rem;
     }
 
     .mandala-palette-overlay .mandala-toolbar {
@@ -1127,19 +1179,41 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
 
     .mandala-canvas-clear-btn,
     .mandala-canvas-download-btn {
-        width: 2.6rem;
-        height: 2.6rem;
-        left: 71.2%;
+        display: none;
     }
 
-    .mandala-canvas-download-btn {
-        top: 22.5%;
+    .mandala-mobile-actions {
+        display: flex;
+        order: 0;
+        justify-content: center;
+        gap: 0.75rem;
+        width: 92%;
+        max-width: 26rem;
+        margin: 0 auto 0.75rem;
+        flex-shrink: 0;
     }
 
-    .mandala-canvas-clear-btn svg,
-    .mandala-canvas-download-btn svg {
-        width: 1.2rem;
-        height: 1.2rem;
+    .mandala-mobile-actions__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        flex: 1;
+        min-height: 2.6rem;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.88);
+        color: #6c4d92;
+        font-size: 0.8rem;
+        font-weight: 800;
+        box-shadow: 0 6px 16px rgba(67, 44, 24, 0.12);
+        backdrop-filter: blur(10px);
+    }
+
+    html.dark .mandala-mobile-actions__btn {
+        background: rgba(23, 32, 51, 0.88);
+        border-color: rgba(209, 202, 239, 0.2);
+        color: #d1caef;
     }
 }
 
@@ -1171,7 +1245,7 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
     }
 
     .mandala-easel-stage {
-        width: min(166vw, calc(177.78dvh - 7.112rem));
+        width: min(230vw, calc(230dvh - 4rem));
     }
 
     .mandala-palette-overlay {
@@ -1192,20 +1266,4 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
         height: 2.8rem;
     }
 
-    .mandala-canvas-clear-btn,
-    .mandala-canvas-download-btn {
-        width: 2.2rem;
-        height: 2.2rem;
-        left: 71%;
-    }
-
-    .mandala-canvas-download-btn {
-        top: 22.5%;
-    }
-
-    .mandala-canvas-clear-btn svg,
-    .mandala-canvas-download-btn svg {
-        width: 1.1rem;
-        height: 1.1rem;
-    }
 }

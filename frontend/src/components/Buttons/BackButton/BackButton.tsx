@@ -23,7 +23,7 @@ export default function BackButton({ to, className = '', label = 'Volver', onBef
       <span aria-hidden="true" className="leading-none">
         ←
       </span>
-      <span>{label}</span>
+      <span className="hidden sm:inline">{label}</span>
     </button>
   )
 }
