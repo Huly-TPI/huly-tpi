@@ -182,7 +182,8 @@ html.dark .zen-sand__export-button:hover {
 
 @media (max-width: 640px) {
   .zen-sand {
-    width: min(100vw, 46rem);
+    width: 100%;
+    max-width: 46rem;
     min-height: auto;
     padding: 4.5rem 0 0.75rem;
   }
@@ -194,9 +195,10 @@ html.dark .zen-sand__export-button:hover {
   }
 
   .zen-sand__frame {
-    width: 124vw;
+    width: 124%;
     max-width: none;
-    transform: translateX(-8vw);
+    margin-left: -12%;
+    margin-right: -12%;
   }
 
   .zen-sand__clear-button,
