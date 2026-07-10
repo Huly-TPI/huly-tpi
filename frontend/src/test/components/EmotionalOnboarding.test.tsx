@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import EmotionalOnboarding from '../../components/Onboarding/EmotionalOnboarding/EmotionalOnboarding'
 import type { Step1Option } from '../../hooks/useEmotionalOnboarding'
 import { clickButton, verifyTextPresent } from '../testHelpers'
+import { ThemeProvider } from '../../context/theme'
 
 
 
@@ -99,35 +100,59 @@ describe('EmotionalOnboarding', () => {
     let user: any
 
     const renderStep = (step: 0 | 1 | 2 | 3) => {
-        render(<EmotionalOnboarding {...baseProps} step={step} />)
+        render(
+            <ThemeProvider>
+                <EmotionalOnboarding {...baseProps} step={step} />
+            </ThemeProvider>
+        )
     }
 
     const renderStepWithAdvanceSpy = (step: 0 | 1 | 2 | 3) => {
         user = userEvent.setup()
         onAdvanceSpy = vi.fn()
-        render(<EmotionalOnboarding {...baseProps} step={step} onAdvance={onAdvanceSpy} />)
+        render(
+            <ThemeProvider>
+                <EmotionalOnboarding {...baseProps} step={step} onAdvance={onAdvanceSpy} />
+            </ThemeProvider>
+        )
     }
 
     const renderStepWithSkipSpy = (step: 0 | 1 | 2 | 3) => {
         user = userEvent.setup()
         onSkipSpy = vi.fn()
-        render(<EmotionalOnboarding {...baseProps} step={step} onSkip={onSkipSpy} />)
+        render(
+            <ThemeProvider>
+                <EmotionalOnboarding {...baseProps} step={step} onSkip={onSkipSpy} />
+            </ThemeProvider>
+        )
     }
 
     const renderStepWithSelectOptionSpy = (step: 0 | 1 | 2 | 3) => {
         user = userEvent.setup()
         onSelectOptionSpy = vi.fn()
-        render(<EmotionalOnboarding {...baseProps} step={step} onSelectOption={onSelectOptionSpy} />)
+        render(
+            <ThemeProvider>
+                <EmotionalOnboarding {...baseProps} step={step} onSelectOption={onSelectOptionSpy} />
+            </ThemeProvider>
+        )
     }
 
     const renderStepWithPillOptions = (step: 0 | 1 | 2 | 3, pillOptions: string[]) => {
-        render(<EmotionalOnboarding {...baseProps} step={step} pillOptions={pillOptions} />)
+        render(
+            <ThemeProvider>
+                <EmotionalOnboarding {...baseProps} step={step} pillOptions={pillOptions} />
+            </ThemeProvider>
+        )
     }
 
     const renderStepWithPillOptionsAndSelectOptionSpy = (step: 0 | 1 | 2 | 3, pillOptions: string[]) => {
         user = userEvent.setup()
         onSelectOptionSpy = vi.fn()
-        render(<EmotionalOnboarding {...baseProps} step={step} pillOptions={pillOptions} onSelectOption={onSelectOptionSpy} />)
+        render(
+            <ThemeProvider>
+                <EmotionalOnboarding {...baseProps} step={step} pillOptions={pillOptions} onSelectOption={onSelectOptionSpy} />
+            </ThemeProvider>
+        )
     }
 
     const clickButtonWithText = (text: string) => {

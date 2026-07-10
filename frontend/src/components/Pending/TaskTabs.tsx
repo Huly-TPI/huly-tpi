@@ -18,7 +18,7 @@ const TABS: { key: TaskTabKey; icon: LucideIcon; label: string }[] = [
 
 export default function TaskTabs({ activeTab, onTabChange, hasValue }: TaskTabsProps) {
   return (
-    <div className="flex items-center gap-2 border-t border-[rgba(92,61,30,0.15)] pt-2 mt-2">
+    <div className="flex items-center gap-2 border-t border-[rgba(92,61,30,0.15)] dark:border-slate-800 pt-2 mt-2">
       {TABS.map(({ key, icon: Icon, label }) => {
         const isActive = activeTab === key
         return (
@@ -29,7 +29,7 @@ export default function TaskTabs({ activeTab, onTabChange, hasValue }: TaskTabsP
               aria-label={label}
               onClick={() => onTabChange(isActive ? null : key)}
               className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
-                isActive ? 'bg-violeta text-white' : 'bg-[rgba(92,61,30,0.08)] text-[#5c3d1e]'
+                isActive ? 'bg-violeta text-white' : 'bg-[rgba(92,61,30,0.08)] dark:bg-slate-800 text-[#5c3d1e] dark:text-slate-300'
               }`}
             >
               <Icon className="h-4 w-4" />
