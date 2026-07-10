@@ -180,6 +180,16 @@ const sceneElements = [...cloudElements, ...gardenElements];
 const cloudElementIds = cloudElements.map((element) => element.id);
 const homeOnboardingSteps = createHomeOnboardingSteps(cloudElementIds);
 
+function formatCoinsDisplay(coins: number): string {
+  if (coins >= 10_000_000) {
+    return `${Math.trunc(coins / 1_000_000)}M`;
+  }
+  if (coins >= 10_000) {
+    return `${Math.trunc(coins / 1_000)}k`;
+  }
+  return coins.toLocaleString("es-AR");
+}
+
 let rewardAutoOpenedForUserId: number | null = null;
 
 function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
@@ -509,7 +519,7 @@ export default function Home() {
               alt="Recompensas diarias"
               className="w-full h-auto scale-[0.97] origin-top"
             />
-            <span className="absolute bottom-[24%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523] whitespace-nowrap">
+            <span className="absolute bottom-[22%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523] whitespace-nowrap">
               Reclamar
             </span>
           </button>
@@ -525,8 +535,8 @@ export default function Home() {
               className="w-full h-auto"
             />
             {coins !== null && (
-              <span className="absolute bottom-[25%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523]">
-                {coins.toLocaleString("es-AR")}
+              <span className="absolute bottom-[22.5%] left-1/2 -translate-x-1/2 text-[13px] font-bold text-[#4E3523]">
+                {formatCoinsDisplay(coins)}
               </span>
             )}
           </button>

@@ -11,12 +11,14 @@ interface ToastItem {
 interface ToastContextType {
   showToast: (message: string, type?: ToastType, duration?: number) => void
   hideToast: (id: string) => void
+  setToastsRaised: (raised: boolean) => void
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined)
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [raised, setRaised] = useState(false)
 
   const hideToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
@@ -27,11 +29,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => [...prev, { id, message, type, duration }])
   }, [])
 
+  const setToastsRaised = useCallback((value: boolean) => {
+    setRaised(value)
+  }, [])
+
   return (
-    <ToastContext.Provider value={{ showToast, hideToast }}>
+    <ToastContext.Provider value={{ showToast, hideToast, setToastsRaised }}>
       {children}
       {/* Toast container for stacked notifications */}
-      <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3">
+      <div
+        className={`fixed right-5 z-[9999] flex flex-col gap-3 transition-[bottom] duration-300 ${
+          raised ? 'bottom-52' : 'bottom-5'
+        }`}
+      >
         {toasts.map((t) => (
           <Toast
             key={t.id}

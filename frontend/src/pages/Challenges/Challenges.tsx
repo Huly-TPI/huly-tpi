@@ -10,7 +10,6 @@ import Plant from '../../components/Challenges/Plant'
 import BoardItem from '../../components/Challenges/BoardItem'
 import PostitModal from '../../components/Challenges/PostitModal'
 import HarvestModal from '../../components/Challenges/HarvestModal'
-import Button from '../../components/Buttons/Button/Button'
 import BackButton from '../../components/Buttons/BackButton/BackButton'
 import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import dayBackground from '../../assets/shared/day-background.webp'
@@ -20,7 +19,6 @@ import stumpImg from '../../assets/challenges/stump.png'
 import nurseryImg from '../../assets/challenges/nursery.png'
 import './Challenges.css'
 import { useTheme } from '../../context/theme'
-import { useAuthGate } from '../../context/authGate'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 
@@ -46,9 +44,8 @@ type ModalState =
 export default function Challenges() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { requireAuth } = useAuthGate()
   const navigate = useNavigate()
-  const { showToast } = useToast()
+  const { showToast, setToastsRaised } = useToast()
   const [modal, setModal] = useState<ModalState>(null)
   const [isWatering, setIsWatering] = useState(false)
   const [harvestPlant, setHarvestPlant] = useState<number | null>(null)
@@ -65,7 +62,7 @@ export default function Challenges() {
   useEffect(() => {
     userPlantsApi.getCurrent()
       .then(setCurrentPlant)
-      .catch(() => {/* no plant yet, will be created on first complete */})
+      .catch(() => {/* no plant yet, will be created on first complete */ })
   }, [])
 
   const cycleProgress = currentPlant?.completedGoalsCount ?? 0
@@ -107,6 +104,7 @@ export default function Challenges() {
       if (!image) {
         showToast('📸 Tip: subí una foto como evidiencia la próxima vez y ganás más semillas', 'info')
       }
+      setToastsRaised(true)
       setCoinToast(coinsEarned)
       if (result.harvestTriggered) {
         setHarvestPlant(result.harvestedPlantNumber)
@@ -116,10 +114,11 @@ export default function Challenges() {
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al completar el reto', 'error')
     }
-  }, [completeGoal, triggerWatering, markConditionMet, saveSession, showToast])
+  }, [completeGoal, triggerWatering, markConditionMet, saveSession, showToast, setToastsRaised])
 
-  const hasPending  = (pendientes?.totalElements ?? 0) > 0
+  const hasPending = (pendientes?.totalElements ?? 0) > 0
   const hasCompleted = (completados?.totalElements ?? 0) > 0
+  const hasAnyGoal = hasPending || hasCompleted
 
   return (
     <div
@@ -156,7 +155,7 @@ export default function Challenges() {
             <p className="text-[0.78rem] font-bold text-bosque mt-[0.2rem] m-0 lg:text-[0.95rem]">{cyclePct}%</p>
           </div>
 
-          <p className="challenges-plant-hint text-[0.72rem] text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
+          <p className="challenges-plant-hint text-[1rem] text-bold text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
             {PLANT_HINTS[plantStage]}
           </p>
 
@@ -194,18 +193,18 @@ export default function Challenges() {
           )}
           <div className="board-inner relative z-10 flex-1 flex flex-col gap-[0.7rem] pt-[4rem] pl-[6rem] pr-[5rem] pb-[6rem] overflow-hidden min-h-0">
 
-
-            <div className="challenges-new-btn flex justify-end mb-[0.1rem]">
-              <Button variant="primary" size="sm" onClick={() => requireAuth(() => setModal({ mode: 'create' }))}>
-                + Nuevo reto
-              </Button>
-            </div>
-
             {loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
             {error && !loading && <InlineError message={error} className="mt-2" />}
 
             {!loading && !error && (
               <ul className="board-list list-none p-0 m-0 flex flex-col gap-[0.35rem] flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
+
+                {hasAnyGoal && (
+                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)] lg:text-[0.9rem]">
+                    Huly creó estos retos para vos. ¡Completalos y hacé florecer tu planta!
+                  </li>
+                )}
+
                 {hasPending ? (
                   pendientes!.content.map(goal => (
                     <li key={goal.id}>
@@ -217,11 +216,13 @@ export default function Challenges() {
                       />
                     </li>
                   ))
-                ) : (
-                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)] lg:text-[0.9rem]">
-                    Sembrá tus metas. ¡Creá un nuevo reto!
+                ) : !hasCompleted ? (
+                  <li className="list-none py-3 text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)]">
+                    <p className="m-0 mt-1 text-[0.82rem] italic leading-[1.4] lg:text-[0.9rem]">
+                      Aún no tenés retos. Hablá con Huly y va a crear unos personalizados para vos
+                    </p>
                   </li>
-                )}
+                ) : null}
 
                 {hasCompleted && (
                   <li
@@ -268,7 +269,7 @@ export default function Challenges() {
       {coinToast !== null && (
         <RewardToast
           coins={coinToast}
-          onClose={() => setCoinToast(null)}
+          onClose={() => { setCoinToast(null); setToastsRaised(false) }}
           message="¡Reto completado!"
         />
       )}

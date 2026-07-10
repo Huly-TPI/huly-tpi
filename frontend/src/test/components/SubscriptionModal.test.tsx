@@ -274,8 +274,10 @@ describe('SubscriptionModal', () => {
     mockUsePurchase.mockReturnValue({ buyingId: null, error, buy: mockBuy })
   }
 
+  const chooseButtonName = (name: string) => `Elegir ${name.replace(/^Plan\s+/i, '')}`
+
   const clickChooseButton = (name: string) => {
-    return user.click(screen.getByRole('button', { name: `Elegir ${name}` }))
+    return user.click(screen.getByRole('button', { name: chooseButtonName(name) }))
   }
 
   const clickCloseButton = () => {
@@ -307,11 +309,11 @@ describe('SubscriptionModal', () => {
   }
 
   const verifyChooseButtonVisible = (name: string) => {
-    expect(screen.getByRole('button', { name: `Elegir ${name}` })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: chooseButtonName(name) })).toBeInTheDocument()
   }
 
   const verifyChooseButtonNotVisible = (name: string) => {
-    expect(screen.queryByRole('button', { name: `Elegir ${name}` })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: chooseButtonName(name) })).not.toBeInTheDocument()
   }
 
   const verifySpinnerVisible = () => {
