@@ -1,0 +1,31 @@
+.pending-page__hint {
+  display: none;
+}
+
+@media (min-width: 641px) {
+  .pending-page__hint {
+    display: block;
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 0.35rem 1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    color: #0e3350;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+    user-select: none;
+    z-index: 40;
+  }
+}
+
+html.dark .pending-page__hint {
+  background: rgba(12, 28, 44, 0.5);
+  color: #cfe6f2;
+}
