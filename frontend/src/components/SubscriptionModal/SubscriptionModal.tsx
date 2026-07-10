@@ -13,9 +13,9 @@ import { useMediaQuery } from '../../hooks/useMediaquery'
 import type { Plan } from '../../api/payment'
 
 const MOBILE_QUERY = '(max-width: 640px)'
-/* Proporción natural del asset mobile (1194 x 899): sin deformar y con la
-   solapa del título en su lugar. */
-const MOBILE_ASPECT = '1194 / 899'
+/* Un poco más alto que el natural (1194/899) para que el contenido de las cards
+   entre completo, con tope de alto para que no se agranden de más. */
+const MOBILE_ASPECT = '10 / 9'
 
 interface SubscriptionModalProps {
   isOpen: boolean
@@ -99,9 +99,8 @@ function PaidCard({
   const isCurrentPlan = activeProductId === plan.id
   const buttonDisabled = disabled
   const isBasic = buttonTheme === 'yellow'
-
   const label = `Elegir ${displayName}`
-
+  const shortName = displayName.replace(/^Plan\s+/i, '')
   const textColor = isBasic ? 'text-[#8f541f]' : 'text-[#5d3a80]'
   const checkBg = isBasic ? 'bg-[#f5a623]' : 'bg-[#8b5a8e]'
 
@@ -115,11 +114,12 @@ function PaidCard({
 
       <div className="absolute inset-x-[8%] top-[8%] bottom-[7%] max-[640px]:inset-x-[5%] flex flex-col items-center text-center overflow-hidden">
         <h3 className={`text-[13px] sm:text-[15px] lg:text-[18px] font-black leading-none whitespace-nowrap max-[640px]:whitespace-normal max-[640px]:leading-tight ${textColor}`}>
-          {displayName}
+          <span className="max-[640px]:hidden">{displayName}</span>
+          <span className="hidden max-[640px]:inline">{shortName}</span>
         </h3>
 
         <div className="mt-3 max-[640px]:mt-2">
-          <p className={`font-black text-[1px] sm:text-[19px] lg:text-[24px] leading-none ${textColor}`}>
+          <p className={`font-black text-[16px] sm:text-[19px] lg:text-[24px] leading-none ${textColor}`}>
             ${plan.price.toLocaleString('es-AR')}
             <span className="text-[10px] sm:text-[12px] lg:text-[14px] font-black"> ARS</span>
           </p>
@@ -210,7 +210,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
         </h2>
       </div>
 
-      <p className="shrink-0 text-center mt-[5%] max-[640px]:mt-[3%] text-[10px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
+      <p className="shrink-0 text-center mt-[5%] max-[640px]:text-[10px] sm:text-[13px] lg:text-[15px] font-bold text-[#7b5c3c]">
         Elegí el plan que mejor se adapte a vos
       </p>
 
@@ -275,7 +275,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
             backgroundRepeat: 'no-repeat',
             aspectRatio: MOBILE_ASPECT,
           }}
-          className="relative z-10 w-[96vw] max-w-[560px] px-[5%] pt-[5%] pb-[5%] flex flex-col overflow-hidden"
+          className="relative z-10 w-[96vw] max-w-[560px] max-h-[440px] px-[5%] pt-[6%] pb-[5%] flex flex-col overflow-hidden"
         >
           {content}
         </div>
