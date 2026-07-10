@@ -57,6 +57,7 @@ export function usePendingRecommendation() {
     loading,
     hasUnrespondedRecommendation,
     recommendedTaskIds,
+    fetchRecommendation,
     accept,
     reject,
     requestOnDemand,

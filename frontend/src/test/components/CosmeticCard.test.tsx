@@ -4,7 +4,15 @@ import userEvent from '@testing-library/user-event'
 import { CosmeticCard } from '../../components/Shop/CosmeticCard'
 import { verifyTextPresent } from '../testHelpers'
 
+let mockTheme = 'light'
 
+vi.mock('../../context/theme', () => ({
+  useTheme: () => ({
+    theme: mockTheme,
+    setTheme: vi.fn(),
+    toggleTheme: vi.fn(),
+  }),
+}))
 
 describe('CosmeticCard', () => {
     let onBuyMock: any
@@ -13,6 +21,7 @@ describe('CosmeticCard', () => {
     let onUnequipMock: any
 
     beforeEach(() => {
+        mockTheme = 'light'
         onBuyMock = vi.fn()
         onBuyWithMoneyMock = vi.fn()
         onEquipMock = vi.fn()
@@ -65,6 +74,12 @@ describe('CosmeticCard', () => {
     it('usa la imagen subida cuando el item tiene imageUrlLight', () => {
         renderCard({ item: makeItem({ imageUrlLight: 'http://cdn/light-theme/u.webp' }) })
         verifyImageLightSource('http://cdn/light-theme/u.webp')
+    })
+
+    it('usa la imagen de dark mode cuando el tema es oscuro y tiene imageUrlDark', () => {
+        mockTheme = 'dark'
+        renderCard({ item: makeItem({ imageUrlLight: 'http://cdn/light-theme/u.webp', imageUrlDark: 'http://cdn/dark-theme/u.webp' }) })
+        verifyImageLightSource('http://cdn/dark-theme/u.webp')
     })
     const renderCard = (props: {
         item?: any

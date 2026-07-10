@@ -19,6 +19,7 @@ public class TaskBalanceRecommendationService {
 
     public static final double DAILY_CAPACITY_BUDGET = 1.6;
     private static final int MAX_HIGH_PER_DAY = 1;
+    private static final int DUE_SOON_HORIZON_DAYS = 3;
 
     public TaskBalanceRecommendationResult recommend(List<PendingTask> pendingTasks, double dailyCapacityBudget, LocalDate today) {
         if (pendingTasks == null || pendingTasks.size() < 2) {
@@ -27,11 +28,16 @@ public class TaskBalanceRecommendationService {
 
         List<PendingTask> eligibleTasks = capHighBucketByUrgency(pendingTasks, MAX_HIGH_PER_DAY, today);
 
+        Selection selection = new Selection(dailyCapacityBudget);
+
+        eligibleTasks.stream()
+                .filter(task -> isDueSoon(task.getDueDate(), today))
+                .forEach(selection::forceAdd);
+
         List<PendingTask> sortedAscending = eligibleTasks.stream()
+                .filter(task -> !selection.contains(task.getId()))
                 .sorted(TaskBalanceRecommendationService::compareTasks)
                 .toList();
-
-        Selection selection = new Selection(dailyCapacityBudget);
 
         sortedAscending.stream()
                 .filter(task -> task.getMentalLoadBucket() == MentalLoadBucket.LOW)
@@ -164,6 +170,14 @@ public class TaskBalanceRecommendationService {
             return -1;
         }
         return a.compareTo(b);
+    }
+
+    private static boolean isDueSoon(LocalDate dueDate, LocalDate today) {
+        if (dueDate == null || today == null) {
+            return false;
+        }
+        LocalDate horizon = today.plusDays(DUE_SOON_HORIZON_DAYS);
+        return !dueDate.isBefore(today) && !dueDate.isAfter(horizon);
     }
 
     private static double scoreOf(PendingTask task) {
