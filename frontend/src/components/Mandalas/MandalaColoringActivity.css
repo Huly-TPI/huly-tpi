@@ -1145,13 +1145,27 @@ html.dark .mandala-easel-drawing-area .mandala-canvas__status {
 
 @media (max-width: 520px) {
     .mandala-gallery {
-        padding-top: 3rem;
+        padding: 4rem 0.2rem 1rem;
     }
 
     .mandala-gallery__grid {
-        grid-template-columns: 1fr;
+        gap: 0.25rem;
     }
 
+    .mandala-card {
+        transform: scale(1.15);
+        transform-origin: center;
+    }
+
+    .mandala-card:hover {
+        transform: scale(1.15) translateY(-2px);
+    }
+
+    .mandala-card__badge {
+        min-height: 1.3rem;
+        padding: 0.1rem 0.4rem;
+        font-size: 0.55rem;
+    }
     .mandala-toolbar__group {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
