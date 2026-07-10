@@ -82,14 +82,14 @@ describe('BreathingAdminPage', () => {
   it('desactiva con el botón Eliminar', async () => {
     mockHook.techniques = [technique]
     render(<BreathingAdminPage />)
-    await userEvent.click(screen.getAllByRole('button', { name: 'Eliminar Diafragmática' })[0])
+    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Cambiar estado activo de Diafragmática' })[0])
     expect(mockHook.setActive).toHaveBeenCalledWith(1, false)
   })
 
   it('restaura una respiración inactiva', async () => {
     mockHook.techniques = [{ ...technique, active: false }]
     render(<BreathingAdminPage />)
-    await userEvent.click(screen.getAllByRole('button', { name: 'Restaurar Diafragmática' })[0])
+    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Cambiar estado activo de Diafragmática' })[0])
     expect(mockHook.setActive).toHaveBeenCalledWith(1, true)
   })
 

@@ -18,12 +18,16 @@ export function SectionCard({ children, className = '', bg = 'bg-white dark:bg-[
 interface CardHeaderProps {
   title: string
   action?: ReactNode
+  subtitle?: string
 }
 
-export function CardHeader({ title, action }: CardHeaderProps) {
+export function CardHeader({ title, action, subtitle }: CardHeaderProps) {
   return (
     <div className="mb-4 flex items-center justify-between gap-2">
-      <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200">{title}</h2>
+      <div>
+        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200">{title}</h2>
+        {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+      </div>
       {action}
     </div>
   )

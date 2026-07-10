@@ -137,7 +137,14 @@ public class ChatUseCase {
     private ChatContext loadChatContext(String message, String conversationId, Long userId) {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
-        List<RiskWord> riskWords = riskWordRepository.findAllActive();
+        
+        boolean riskDetectionEnabled = chatConfigRepository.findFirst()
+                .map(ChatConfig::getRiskDetectionEnabled)
+                .orElse(true);
+        List<RiskWord> riskWords = riskDetectionEnabled 
+                ? riskWordRepository.findAllActive() 
+                : List.of();
+                
         List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
         List<ChatPersonalizationContext.ChallengeHistoryEntry> challengeHistory = loadChallengeHistory(userId);
         ChatPersonalizationContext personalization = loadPersonalizationContext(userId, challengeHistory);

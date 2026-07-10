@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Check, Smartphone, Users } from 'lucide-react'
-import { getAntiScrollDashboard, AntiScrollDashboardResponse } from '../../api/admin'
+import { getAdminDashboard, AdminDashboardResponse } from '../../api/admin'
 import { WellbeingSection } from '../../components/backoffice/WellbeingSection'
 import { ActivitiesSection } from '../../components/backoffice/ActivitiesSection'
-import { SectionCard } from '../../components/backoffice/SectionCard'
+import KPICard from '../../components/backoffice/KPICard'
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<AntiScrollDashboardResponse | null>(null)
+  const [stats, setStats] = useState<AdminDashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getAntiScrollDashboard()
+    getAdminDashboard()
       .then((data) => setStats(data))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
@@ -22,7 +21,7 @@ export default function DashboardPage() {
         <div className="relative z-10">
           <h2 className="text-2xl font-extrabold md:text-3xl">¡Bienvenido al Panel de Control!</h2>
           <p className="mt-1 text-sm opacity-90">
-            Aquí tienes un resumen general del estado del sistema, bienestar de los usuarios y configuraciones clave.
+            Aquí tienes un resumen general del estado del sistema, bienestar de los usuarios and configuraciones clave.
           </p>
         </div>
         <div className="pointer-events-none absolute bottom-0 right-0 top-0 w-1/3 opacity-15">
@@ -31,48 +30,24 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <SectionCard className="border-l-4 border-l-violeta bg-white transition duration-200 hover:translate-y-[-2px] dark:bg-[#172033]">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violeta-claro/30 text-violeta">
-              <Users className="h-6 w-6" strokeWidth={2} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Usuarios Registrados</p>
-              <h3 className="mt-0.5 text-2xl font-extrabold text-gray-800 dark:text-gray-100">
-                {loading ? '...' : stats?.totalUsersCount ?? 0}
-              </h3>
-            </div>
-          </div>
-        </SectionCard>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <KPICard
+          title="usuarios registrados esta semana"
+          value={loading ? '...' : (stats?.usersRegisteredThisWeek ?? 0)}
+          type="violeta"
+        />
 
-        <SectionCard className="border-l-4 border-l-bosque bg-white transition duration-200 hover:translate-y-[-2px] dark:bg-[#172033]">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-menta/30 text-bosque">
-              <Smartphone className="h-6 w-6" strokeWidth={2} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Extensión Activa</p>
-              <h3 className="mt-0.5 text-2xl font-extrabold text-gray-800 dark:text-gray-100">
-                {loading ? '...' : stats?.activeExtensionUsersCount ?? 0}
-              </h3>
-            </div>
-          </div>
-        </SectionCard>
+        <KPICard
+          title="Sesiones de actividad esta semana"
+          value={loading ? '...' : (stats?.activitiesThisWeek ?? 0)}
+          type="emerald"
+        />
 
-        <SectionCard className="border-l-4 border-l-anaranjado bg-white transition duration-200 hover:translate-y-[-2px] dark:bg-[#172033]">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-anaranjado/20 text-anaranjado">
-              <Check className="h-6 w-6" strokeWidth={2} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Comparten Datos</p>
-              <h3 className="mt-0.5 text-2xl font-extrabold text-gray-800 dark:text-gray-100">
-                {loading ? '...' : stats?.dataSharingConsentUsersCount ?? 0}
-              </h3>
-            </div>
-          </div>
-        </SectionCard>
+        <KPICard
+          title="usuarios con extensión activa"
+          value={loading ? '...' : (stats?.activeExtensionUsersCount ?? 0)}
+          type="blue"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

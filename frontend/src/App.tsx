@@ -52,13 +52,13 @@ const App = () => {
               <Route index element={<DashboardPage />} />
               <Route path="chatbot" element={<ChatbotPage />} />
               <Route path="antiscroll" element={<AntiScrollPage />} />
-              <Route path="actividades" element={<ActivitiesPage />} />
-              <Route path="usuarios" element={<UsersPage />} />
-              <Route path="usuarios/:id" element={<UserDetailPage />} />
-              <Route path="productos" element={<ProductsPage />} />
-              <Route path="semillas" element={<SeedProductsPage />} />
-              <Route path="suscripciones" element={<PlansAdminPage />} />
-              <Route path="respiraciones" element={<BreathingAdminPage />} />
+              <Route path="activities" element={<ActivitiesPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="users/:id" element={<UserDetailPage />} />
+              <Route path="products" element={<ProductsPage />} />
+              <Route path="seeds" element={<SeedProductsPage />} />
+              <Route path="subscriptions" element={<PlansAdminPage />} />
+              <Route path="breathing" element={<BreathingAdminPage />} />
               <Route path="*" element={<BackofficeNotFound />} />
             </Route>
 

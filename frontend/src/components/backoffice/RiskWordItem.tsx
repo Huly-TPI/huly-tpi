@@ -9,7 +9,7 @@ const RISK_STYLE: Record<'HIGH' | 'MEDIUM' | 'LOW', {
 }> = {
   HIGH: { rowBg: 'bg-[#FEE2E2] dark:bg-red-950/20', badgeBg: 'bg-[#EF4444]', badgeText: 'text-white', label: 'CRÍTICO' },
   MEDIUM: { rowBg: 'bg-[#FFFBEB] dark:bg-amber-950/20', badgeBg: 'bg-[#F59E0B]', badgeText: 'text-white', label: 'ALTO' },
-  LOW: { rowBg: 'bg-white dark:bg-[#09111f]', badgeBg: 'bg-[#A0AEC0] dark:bg-gray-700', badgeText: 'text-white dark:text-gray-200', label: 'INFO' },
+  LOW: { rowBg: 'bg-gray-50 dark:bg-[#09111f]', badgeBg: 'bg-[#A0AEC0] dark:bg-gray-700', badgeText: 'text-white dark:text-gray-200', label: 'INFO' },
 }
 
 interface RiskWordItemProps {
