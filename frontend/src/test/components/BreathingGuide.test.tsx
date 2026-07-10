@@ -30,7 +30,9 @@ vi.mock('../../context/theme', () => ({
 }))
 
 vi.mock('../../components/Buttons/BackButton/BackButton', () => ({
-  default: () => null,
+  default: ({ label = 'Volver', onBeforeNavigate }: any) => (
+    <button onClick={() => onBeforeNavigate?.()}>{`← ${label}`}</button>
+  ),
 }))
 
 vi.mock('../../hooks/store/useInventory', () => ({
