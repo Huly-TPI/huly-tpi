@@ -20,11 +20,11 @@ function FlowNode({ icon, label, typeLabel, color }: FlowNodeProps) {
   const s = FLOW_NODE_STYLES[color]
   return (
     <div className={`flex min-w-[90px] max-w-[110px] flex-col items-center rounded-2xl border px-3 py-3 ${s.bg} ${s.border}`}>
-      <p className={`text-[9px] font-bold uppercase tracking-wider ${s.labelColor}`}>{typeLabel}</p>
+      <p className={`text-[11px] font-bold uppercase tracking-wider ${s.labelColor}`}>{typeLabel}</p>
       <div className="my-2 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm dark:border dark:border-gray-800 dark:bg-[#09111f] dark:shadow-none">
         {icon}
       </div>
-      <p className="text-center text-[10px] font-semibold leading-tight text-gray-600 dark:text-gray-300">{label}</p>
+      <p className="text-center text-[11px] font-semibold leading-tight text-gray-600 dark:text-gray-300">{label}</p>
     </div>
   )
 }
@@ -68,7 +68,7 @@ export function FlowBuilderSection() {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {['{{user_name}}', '{{last_mood}}', '{{time_of_day}}'].map(v => (
-            <span key={v} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[10px] font-mono text-gray-500 shadow-sm dark:border-gray-800 dark:bg-[#172033] dark:text-gray-400 dark:shadow-none">
+            <span key={v} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-mono text-gray-500 shadow-sm dark:border-gray-800 dark:bg-[#172033] dark:text-gray-400 dark:shadow-none">
               {v}
             </span>
           ))}

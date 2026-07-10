@@ -25,7 +25,7 @@ export default function GoalDetailPanel({ goal, onClose, onComplete, onEdit, onD
   return (
     <>
       {isCompleted && (
-        <span className="inline-block text-[0.7rem] font-bold text-bosque bg-bosque/[0.14] rounded-full px-[0.55rem] py-[0.12rem] mb-[0.45rem] tracking-[0.04em]">
+        <span className="inline-block text-[0.8rem] font-bold text-bosque bg-bosque/[0.14] rounded-full px-[0.55rem] py-[0.12rem] mb-[0.45rem] tracking-[0.04em]">
           ✓ Completado
         </span>
       )}
@@ -63,16 +63,16 @@ export default function GoalDetailPanel({ goal, onClose, onComplete, onEdit, onD
               setSelectedImage(file)
             }}
           />
-          <p className="text-[0.65rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.06em] m-0 mb-[0.35rem]">
+          <p className="text-[0.75rem] font-bold text-[rgba(92,61,30,0.8)] uppercase tracking-[0.06em] m-0 mb-[0.35rem]">
             Foto del logro (opcional)
           </p>
           <div className="flex items-center gap-[0.5rem] mb-[0.4rem]">
-            <span className="flex items-center gap-[0.2rem] text-[0.7rem] text-[#7a5c38]">
+            <span className="flex items-center gap-[0.2rem] text-[0.8rem] text-[#7a5c38]">
               Sin foto: <strong>{goal.coinsReward}</strong>
               <img src={seedIcon} alt="semillas" className="inline-block w-[0.85rem] h-[0.85rem] object-contain flex-shrink-0" />
             </span>
             <span className="text-[#c5a87a] text-[0.65rem]">·</span>
-            <span className="flex items-center gap-[0.2rem] text-[0.7rem] font-bold text-[#8a6c2a]">
+            <span className="flex items-center gap-[0.2rem] text-[0.8rem] font-bold text-[#8a6c2a]">
               Con foto: <strong>{goal.coinsRewardWithImage}</strong>
               <img src={seedIcon} alt="semillas" className="inline-block w-[0.85rem] h-[0.85rem] object-contain flex-shrink-0" />
             </span>
@@ -87,7 +87,7 @@ export default function GoalDetailPanel({ goal, onClose, onComplete, onEdit, onD
         </div>
       )}
       {completeError && (
-        <p className="text-[0.73rem] text-[#9b2c2c] mt-[0.4rem] mb-[0.1rem] bg-[rgba(229,62,62,0.08)] rounded p-[0.3rem_0.5rem] leading-[1.4]">
+        <p className="text-[0.83rem] text-[#9b2c2c] mt-[0.4rem] mb-[0.1rem] bg-[rgba(229,62,62,0.08)] rounded p-[0.3rem_0.5rem] leading-[1.4]">
           {completeError}
         </p>
       )}

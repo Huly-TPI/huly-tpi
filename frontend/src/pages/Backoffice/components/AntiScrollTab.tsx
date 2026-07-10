@@ -67,7 +67,7 @@ export function AntiScrollTab({
                   </div>
                   <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Tiempo scrolleando por día</h2>
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Haz clic en un día para filtrar el tiempo por dominio</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-4">Haz clic en un día para filtrar el tiempo por dominio</p>
 
                 <div className="space-y-2.5">
                   {DAYS.map((day) => {

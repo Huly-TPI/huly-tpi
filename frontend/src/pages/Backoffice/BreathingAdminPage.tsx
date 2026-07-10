@@ -121,7 +121,7 @@ export default function BreathingAdminPage() {
     {
       header: 'Estado',
       render: (t) => (
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${t.active ? 'bg-[#E9F1EA] text-[#4C7C64]' : 'bg-gray-200 text-gray-500'}`}>
+        <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${t.active ? 'bg-[#E9F1EA] text-[#4C7C64]' : 'bg-gray-200 text-gray-500'}`}>
           {t.active ? 'Activa' : 'Inactiva'}
         </span>
       ),
