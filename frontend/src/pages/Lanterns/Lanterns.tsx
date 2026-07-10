@@ -355,7 +355,7 @@ export default function LanternsActivity() {
             <h2 className="mb-3 text-xl font-bold text-[#8869AC] md:text-2xl">
               {recommendation.title}
             </h2>
-            <p className="mb-5 text-sm leading-relaxed text-gray-500 md:mb-6 md:text-base">
+            <p className="mb-5 text-sm font-medium leading-relaxed text-gray-600 md:mb-6 md:text-base">
               {recommendation.description}
             </p>
             <Button variant="primary" fullWidth onClick={handleNavigate}>

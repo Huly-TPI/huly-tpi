@@ -43,12 +43,12 @@ export default function PopularitySection({
                       {item.activityName}
                     </span>
                     {index === 0 && item.totalSessions > 0 && (
-                      <span className="rounded-md bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-widest text-teal-400 uppercase">
+                      <span className="rounded-md bg-teal-500/10 px-1.5 py-0.5 text-[11px] font-black tracking-widest text-teal-400 uppercase">
                         TOP
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 font-mono text-gray-400 text-[11px]">
+                  <div className="flex items-center gap-2 font-mono text-gray-400 text-[12px]">
                     <span>{item.totalSessions.toLocaleString('es-ES')}</span>
                     <span className="text-gray-505 font-normal">|</span>
                     <span className={theme.text}>{sharePercentage}%</span>

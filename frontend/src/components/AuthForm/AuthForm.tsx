@@ -115,7 +115,7 @@ export default function AuthForm({
       </h2>
 
       {subtitle && (
-        <p className="mb-5 text-center text-sm italic text-[#8c7b66]">
+        <p className="mb-5 text-center text-sm font-semibold italic text-[#6b5a45]">
           {subtitle}
         </p>
       )}

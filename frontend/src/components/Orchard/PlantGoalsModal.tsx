@@ -129,7 +129,7 @@ export default function PlantGoalsModal({ plant, onClose }: PlantGoalsModalProps
                 </div>
               </div>
               <div className="flex flex-col flex-1 min-h-0 px-5 py-4">
-                <p className="text-[0.7rem] uppercase tracking-wider text-gray-400 font-semibold mb-3 flex-shrink-0">
+                <p className="text-[0.8rem] uppercase tracking-wider text-gray-400 font-semibold mb-3 flex-shrink-0">
                   Retos completados · tocá uno para ver detalle
                 </p>
                 {goalList}
@@ -157,7 +157,7 @@ export default function PlantGoalsModal({ plant, onClose }: PlantGoalsModalProps
               </div>
 
               <div className="flex flex-col flex-1 min-w-0 py-5 px-5">
-                <p className="text-[0.7rem] uppercase tracking-wider text-gray-400 font-semibold mb-3">
+                <p className="text-[0.8rem] uppercase tracking-wider text-gray-400 font-semibold mb-3">
                   Retos completados · hacé click en uno para ver detalle
                 </p>
                 {goalList}

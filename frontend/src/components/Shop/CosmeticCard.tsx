@@ -45,7 +45,7 @@ export function CosmeticCard({ item, owned, equipped, busy, disabled, onBuy, onB
         </div>
       )}
       {item.premiumOnly && (
-        <span className="mt-0.5 inline-block rounded-full bg-[#8869AC]/15 px-2 py-0.5 text-[10px] lg:text-[11px] font-semibold text-[#8869AC] dark:bg-[#8869AC]/30 dark:text-violeta-claro">
+        <span className="mt-0.5 inline-block rounded-full bg-[#8869AC]/15 px-2 py-0.5 text-[11px] lg:text-[12px] font-semibold text-[#8869AC] dark:bg-[#8869AC]/30 dark:text-violeta-claro">
           Solo premium
         </span>
       )}

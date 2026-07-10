@@ -218,7 +218,7 @@ export default function StoreModal({
         >
           <div className="flex items-center justify-between gap-2 bg-[#4C7C64] px-4 py-3 text-white sm:px-5 sm:py-4 dark:bg-[#375847] dark:border-b dark:border-slate-800">
             <div className="min-w-0">
-              <p className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-70">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-70">
                 Decorá tu jardín
               </p>
               <h2 className="font-nunito text-xl font-black leading-tight sm:text-2xl">
@@ -284,7 +284,7 @@ export default function StoreModal({
                         />
                         <span className="truncate">{tab.label}</span>
                         <span
-                          className={`shrink-0 rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white/25 text-white" : "bg-white text-[#4C7C64] dark:bg-slate-700 dark:text-slate-200"}`}
+                          className={`shrink-0 rounded-full px-1.5 text-[12px] font-bold ${active ? "bg-white/25 text-white" : "bg-white text-[#4C7C64] dark:bg-slate-700 dark:text-slate-200"}`}
                         >
                           {count}
                         </span>

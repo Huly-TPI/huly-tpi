@@ -55,13 +55,13 @@ function PlanForm({ product, onClose, onSubmit }: {
         <h2 className="text-lg font-bold text-[#8869AC]">{isEdit ? `Editar plan (${product.planCode})` : 'Nuevo plan'}</h2>
 
         {isEdit ? (
-          <p className="text-sm text-[#A0AEC0]">Código del plan: <strong className="text-[#4A5568] dark:text-gray-300">{product.planCode}</strong></p>
+          <p className="text-sm font-medium text-[#8390A3]">Código del plan: <strong className="text-[#4A5568] dark:text-gray-300">{product.planCode}</strong></p>
         ) : (
           <label className={labelClass}>Código del plan
             <select value={planCode} onChange={e => setPlanCode(e.target.value)} className={inputClass}>
               {PLAN_CODES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <span className="text-[11px] font-normal text-[#A0AEC0]">Hereda los beneficios de ese plan (items premium, mandalas).</span>
+            <span className="text-[12px] font-normal text-[#A0AEC0]">Hereda los beneficios de ese plan (items premium, mandalas).</span>
           </label>
         )}
 
@@ -116,7 +116,7 @@ export default function PlansAdminPage() {
     {
       header: 'Estado',
       render: (p) => (
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.active ? 'bg-[#E9F1EA] text-[#4C7C64]' : 'bg-gray-200 text-gray-500'}`}>
+        <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${p.active ? 'bg-[#E9F1EA] text-[#4C7C64]' : 'bg-gray-200 text-gray-500'}`}>
           {p.active ? 'Activo' : 'Inactivo'}
         </span>
       ),

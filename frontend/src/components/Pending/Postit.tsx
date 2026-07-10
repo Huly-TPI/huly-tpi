@@ -98,7 +98,7 @@ export default function Postit({ task, isRecommended, onPickUp, onOpen, style, c
         {task.estimatedDuration && <Clock className="h-3.5 w-3.5" />}
         {task.category && <Tag className="h-3.5 w-3.5" />}
         {task.subtasks.length > 0 && (
-          <span className="flex items-center gap-0.5 text-[10px]">
+          <span className="flex items-center gap-0.5 text-[11px]">
             <ListChecks className="h-3.5 w-3.5" />
             {doneSubtasks}/{task.subtasks.length}
           </span>

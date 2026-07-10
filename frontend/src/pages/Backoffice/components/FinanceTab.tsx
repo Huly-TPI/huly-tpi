@@ -67,7 +67,7 @@ export function FinanceTab({
           <h2 className="text-base font-bold text-gray-700 dark:text-gray-200">Historial de Transacciones</h2>
         </div>
         {payments.length === 0 ? (
-          <div className="py-8 text-center text-xs text-gray-400 shrink-0">No se registran transacciones financieras para este usuario.</div>
+          <div className="py-8 text-center text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0">No se registran transacciones financieras para este usuario.</div>
         ) : (
           <div className="space-y-3 lg:overflow-y-auto lg:flex-grow pr-1">
             {payments.map((p) => {
@@ -77,7 +77,7 @@ export function FinanceTab({
                 <div key={p.id} className="bg-white dark:bg-[#172033] p-4 rounded-xl border border-gray-100 dark:border-gray-800/60 shadow-sm flex items-center justify-between gap-4 text-xs">
                   <div className="flex flex-col gap-1 truncate">
                     <span className="font-extrabold text-gray-750 dark:text-gray-200 truncate">{p.productName}</span>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-550 font-semibold truncate">
+                    <span className="text-[11px] text-gray-400 dark:text-gray-550 font-semibold truncate">
                       Ref: {p.externalReference} {p.mpPaymentId ? `| ID MP: ${p.mpPaymentId}` : ''}
                     </span>
                   </div>
@@ -85,7 +85,7 @@ export function FinanceTab({
                     <span className="font-black text-gray-800 dark:text-gray-200 text-sm">
                       ${p.productPrice.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                       isApproved
                         ? 'bg-green-100 dark:bg-green-955/30 text-green-800 dark:text-green-400'
                         : isPending

@@ -156,7 +156,7 @@ export default function Challenges() {
             <p className="text-[0.78rem] font-bold text-bosque mt-[0.2rem] m-0 lg:text-[0.95rem]">{cyclePct}%</p>
           </div>
 
-          <p className="challenges-plant-hint text-[0.72rem] text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
+          <p className="challenges-plant-hint text-[0.82rem] font-semibold text-bosque text-center max-w-[210px] m-0 italic leading-[1.4] pt-4 lg:text-[0.94rem]">
             {PLANT_HINTS[plantStage]}
           </p>
 
@@ -201,7 +201,7 @@ export default function Challenges() {
               </Button>
             </div>
 
-            {loading && <p className="text-[0.82rem] text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
+            {loading && <p className="text-[0.82rem] font-semibold text-anaranjado m-0 italic [text-shadow:0_1px_0_rgba(255,255,255,0.4)]">Cargando retos…</p>}
             {error && !loading && <InlineError message={error} className="mt-2" />}
 
             {!loading && !error && (
@@ -218,7 +218,7 @@ export default function Challenges() {
                     </li>
                   ))
                 ) : (
-                  <li className="text-[0.82rem] italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)] lg:text-[0.9rem]">
+                  <li className="text-[0.82rem] font-semibold italic list-none py-[0.2rem] text-[#7a5c38] [text-shadow:0_1px_0_rgba(255,255,255,0.35)] lg:text-[0.9rem]">
                     Sembrá tus metas. ¡Creá un nuevo reto!
                   </li>
                 )}

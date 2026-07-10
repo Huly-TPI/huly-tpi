@@ -94,10 +94,10 @@ export default function PostitModal({
 
         {(mode === 'create' || mode === 'edit') && (
           <form onSubmit={handleSubmit} className="flex flex-col">
-            <p className="text-[0.7rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.07em] m-0 mb-4">
+            <p className="text-[0.8rem] font-bold text-[rgba(92,61,30,0.8)] uppercase tracking-[0.07em] m-0 mb-4">
               {mode === 'create' ? 'Nuevo reto' : 'Editar reto'}
             </p>
-            <label className="text-[0.65rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.06em] block mb-[0.2rem]" htmlFor="postit-title">
+            <label className="text-[0.75rem] font-bold text-[rgba(92,61,30,0.8)] uppercase tracking-[0.06em] block mb-[0.2rem]" htmlFor="postit-title">
               Título
             </label>
             <input
@@ -111,7 +111,7 @@ export default function PostitModal({
               autoFocus
               placeholder="¿Qué querés lograr?"
             />
-            <label className="text-[0.65rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.06em] block mb-[0.2rem]" htmlFor="postit-desc">
+            <label className="text-[0.75rem] font-bold text-[rgba(92,61,30,0.8)] uppercase tracking-[0.06em] block mb-[0.2rem]" htmlFor="postit-desc">
               Descripción
             </label>
             <textarea
