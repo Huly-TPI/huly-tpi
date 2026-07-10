@@ -19,8 +19,10 @@ public class ReEngagementEmailScheduler {
     
     @Scheduled(cron = "0 0 23 * * *")
     public void sendReEngagementEmails() {
-        Instant cutoff = Instant.now().minus(3, ChronoUnit.DAYS);
-        userRepository.findUsersInactiveSince(cutoff).forEach(user -> { 
+        Instant now = Instant.now();
+        Instant start = now.minus(4, ChronoUnit.DAYS);
+        Instant end = now.minus(3, ChronoUnit.DAYS);
+        userRepository.findUsersInactiveBetween(start, end).forEach(user -> { 
             emailPort.sendReEngagement(user.getEmail(), user.getUnsubscribeToken());
         });
     }
