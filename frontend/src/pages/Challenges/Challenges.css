@@ -147,13 +147,13 @@
     flex-direction: column;
     height: 100dvh;
     position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
   }
 
   .plant-zone {
     position: relative;
     width: 100%;
+    height: 65vh;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
@@ -185,9 +185,6 @@
   }
 
   .plant-on-stump {
-    margin-top: 24vh;
-    transform: none;
-    margin-right: 0;
     position: relative;
     z-index: 0;
   }
@@ -196,9 +193,8 @@
     position: relative;
     width: 100%;
     flex: 0 0 auto;
-    height: 52vh;
+    height: calc(35vh + 8rem);
     margin-top: -8rem;
-    padding: 0 1rem 1rem;
     z-index: 1;
     display: flex;
     align-items: flex-start;
@@ -210,10 +206,6 @@
     max-width: 360px;
     height: 100%;
     background-image: url('../../assets/challenges/mobile/board-challenges.png');
-  }
-
-  .board-inner {
-    padding: 3rem 1.5rem 1rem;
   }
 
   .challenges-new-btn {
