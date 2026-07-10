@@ -14,6 +14,7 @@ import dayBackground from '../../assets/shared/day-background.webp'
 import nightBackground from '../../assets/shared/dark-background.webp'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import { ActivityType } from '../../api/activities'
+import './Pending.css'
 
 type ModalState = { mode: 'create' } | { mode: 'edit'; taskId: number } | null
 
@@ -144,6 +145,8 @@ export default function Pending() {
       {dragState.mode === 'following' && followingTask && (
         <PostitFollowLayer ref={followLayerRef} task={followingTask} x={dragState.x} y={dragState.y} />
       )}
+
+      <p className="pending-page__hint">Mantené presionado un pendiente para moverlo por el tablero</p>
 
       {modal && (
         <PendingFormModal

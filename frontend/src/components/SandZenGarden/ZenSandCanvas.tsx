@@ -182,6 +182,28 @@ export default function ZenSandCanvas({ onDraw }: ZenSandCanvasProps) {
 
   return (
     <section className="zen-sand" aria-labelledby="zen-sand-title">
+      <div className="zen-sand__mobile-actions">
+        <button
+          aria-label="Limpiar la arena"
+          className="zen-sand__mobile-actions__btn"
+          onClick={handleClear}
+          type="button"
+        >
+          <Trash2 aria-hidden="true" size={18} />
+          <span>Limpiar</span>
+        </button>
+
+        <button
+          aria-label="Guardar dibujo de arena"
+          className="zen-sand__mobile-actions__btn"
+          onClick={handleExport}
+          type="button"
+        >
+          <ImageDown aria-hidden="true" size={18} />
+          <span>Guardar</span>
+        </button>
+      </div>
+
       <div className="zen-sand__frame" ref={frameRef}>
         <canvas
           ref={canvasRef}
