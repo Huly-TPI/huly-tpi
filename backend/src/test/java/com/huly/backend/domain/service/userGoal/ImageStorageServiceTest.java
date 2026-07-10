@@ -1,167 +1,122 @@
 package com.huly.backend.domain.service.userGoal;
 
+import com.huly.backend.domain.port.FileStoragePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class ImageStorageServiceTest {
 
-    private static final String IMAGES_PREFIX = "/api/user-goals/images/";
+    private static final byte[] CONTENT = {1, 2, 3};
+    private static final String GOALS_PREFIX = "goals/";
+    private static final String RETURNED_URL = "https://bucket.example/goals/abc.jpg";
 
-    @TempDir
-    Path tempDir;
+    @Mock
+    private FileStoragePort fileStoragePort;
 
+    @InjectMocks
     private ImageStorageService service;
 
     @BeforeEach
     void setUp() {
-        service = new ImageStorageService();
-        ReflectionTestUtils.setField(service, "uploadsDir", tempDir.toString());
+        when(fileStoragePort.upload(any(), anyString(), any())).thenReturn(RETURNED_URL);
     }
 
     @Test
-    @DisplayName("Devuelve una URL con el prefijo correcto")
-    void saveShouldReturnUrlWithCorrectPrefix() throws Exception {
-        MultipartFile file = fileNamed("foto.jpg");
+    @DisplayName("Sube el contenido bajo la carpeta goals/ y devuelve la URL del bucket")
+    void saveShouldUploadUnderGoalsPrefixAndReturnBucketUrl() {
+        String result = save("image/jpeg");
 
-        String url = save(file);
-
-        thenUrlHasImagesPrefix(url);
+        thenReturnedUrlIs(result);
+        thenUploadedKeyStartsWith(GOALS_PREFIX);
     }
 
     @Test
-    @DisplayName("Conserva la extensión del archivo")
-    void saveShouldPreserveFileExtension() throws Exception {
-        MultipartFile file = fileNamed("foto.png");
+    @DisplayName("Mapea el content type png a su extensión")
+    void saveShouldMapPngContentTypeToExtension() {
+        save("image/png");
 
-        String url = save(file);
-
-        thenUrlEndsWith(url, ".png");
+        thenUploadedKeyEndsWith(".png");
     }
 
     @Test
-    @DisplayName("Escribe el archivo en el directorio de subidas")
-    void saveShouldWriteFileToUploadDir() throws Exception {
-        MultipartFile file = fileWritingBytes("foto.jpg");
+    @DisplayName("Mapea el content type jpeg a su extensión")
+    void saveShouldMapJpegContentTypeToExtension() {
+        save("image/jpeg");
 
-        String url = save(file);
-
-        thenFileExistsInUploadDir(url);
+        thenUploadedKeyEndsWith(".jpg");
     }
 
     @Test
-    @DisplayName("Lanza IllegalStateException cuando falla la transferencia")
-    void saveShouldThrowIllegalStateExceptionWhenTransferToFails() throws Exception {
-        MultipartFile file = fileFailingTransfer("foto.jpg");
+    @DisplayName("Mapea el content type gif a su extensión")
+    void saveShouldMapGifContentTypeToExtension() {
+        save("image/gif");
 
-        thenSaveThrowsIllegalState(file);
+        thenUploadedKeyEndsWith(".gif");
     }
 
     @Test
-    @DisplayName("Maneja nombres de archivo sin extensión")
-    void saveShouldHandleFilenameWithoutExtension() throws Exception {
-        MultipartFile file = fileNamed("foto");
+    @DisplayName("Mapea el content type webp a su extensión")
+    void saveShouldMapWebpContentTypeToExtension() {
+        save("image/webp");
 
-        String url = save(file);
-
-        thenUrlHasNoExtension(url);
+        thenUploadedKeyEndsWith(".webp");
     }
 
     @Test
-    @DisplayName("Maneja el nombre de archivo nulo")
-    void saveShouldHandleNullFilename() throws Exception {
-        MultipartFile file = fileNamed(null);
+    @DisplayName("No usa extensión cuando el content type es desconocido")
+    void saveShouldUseNoExtensionWhenContentTypeUnknown() {
+        save("application/octet-stream");
 
-        String url = save(file);
-
-        thenUrlHasNoExtension(url);
+        thenUploadedKeyHasNoExtension();
     }
 
     @Test
-    @DisplayName("Resuelve la ruta bajo el directorio de subidas")
-    void resolveShouldReturnPathUnderUploadsDir() {
-        Path resolved = resolve("photo.jpg");
+    @DisplayName("No usa extensión cuando el content type es nulo")
+    void saveShouldUseNoExtensionWhenContentTypeNull() {
+        save(null);
 
-        thenResolvedPathIsUnderUploadsDir(resolved, "photo.jpg");
-    }
-
-    // --- arrange ---
-    private MultipartFile fileNamed(String originalFilename) throws Exception {
-        MultipartFile file = mock(MultipartFile.class);
-        when(file.getOriginalFilename()).thenReturn(originalFilename);
-        doNothing().when(file).transferTo(any(Path.class));
-        return file;
-    }
-
-    private MultipartFile fileWritingBytes(String originalFilename) throws Exception {
-        MultipartFile file = mock(MultipartFile.class);
-        when(file.getOriginalFilename()).thenReturn(originalFilename);
-        doAnswer(invocation -> {
-            Path dest = invocation.getArgument(0);
-            Files.write(dest, new byte[]{1, 2, 3});
-            return null;
-        }).when(file).transferTo(any(Path.class));
-        return file;
-    }
-
-    private MultipartFile fileFailingTransfer(String originalFilename) throws Exception {
-        MultipartFile file = mock(MultipartFile.class);
-        when(file.getOriginalFilename()).thenReturn(originalFilename);
-        doThrow(new IOException("disk full")).when(file).transferTo(any(Path.class));
-        return file;
+        thenUploadedKeyHasNoExtension();
     }
 
     // --- act ---
-    private String save(MultipartFile file) {
-        return service.save(file);
-    }
-
-    private Path resolve(String filename) {
-        return service.resolve(filename);
+    private String save(String contentType) {
+        return service.save(CONTENT, contentType);
     }
 
     // --- assert ---
-    private void thenUrlHasImagesPrefix(String url) {
-        assertThat(url).startsWith(IMAGES_PREFIX);
+    private String capturedKey() {
+        ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
+        verify(fileStoragePort).upload(any(), key.capture(), any());
+        return key.getValue();
     }
 
-    private void thenUrlEndsWith(String url, String suffix) {
-        assertThat(url).endsWith(suffix);
+    private void thenReturnedUrlIs(String result) {
+        assertThat(result).isEqualTo(RETURNED_URL);
     }
 
-    private void thenUrlHasNoExtension(String url) {
-        assertThat(url).startsWith(IMAGES_PREFIX);
-        assertThat(url).doesNotContain(".");
+    private void thenUploadedKeyStartsWith(String prefix) {
+        assertThat(capturedKey()).startsWith(prefix);
     }
 
-    private void thenFileExistsInUploadDir(String url) {
-        String filename = url.substring(IMAGES_PREFIX.length());
-        assertThat(tempDir.resolve(filename)).exists();
+    private void thenUploadedKeyEndsWith(String suffix) {
+        assertThat(capturedKey()).endsWith(suffix);
     }
 
-    private void thenSaveThrowsIllegalState(MultipartFile file) {
-        assertThatThrownBy(() -> service.save(file))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("No se pudo guardar la imagen del reto");
-    }
-
-    private void thenResolvedPathIsUnderUploadsDir(Path resolved, String filename) {
-        assertThat(resolved).isEqualTo(tempDir.resolve(filename));
+    private void thenUploadedKeyHasNoExtension() {
+        String key = capturedKey();
+        assertThat(key.substring(GOALS_PREFIX.length())).doesNotContain(".");
     }
 }

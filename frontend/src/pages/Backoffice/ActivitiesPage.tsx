@@ -29,7 +29,7 @@ export default function ActivitiesPage() {
   } = useAdminActivities()
 
   return (
-    <div className="flex flex-col gap-6 text-gray-800 dark:text-gray-100 animate-fadeIn h-[calc(100vh-160px)] min-h-0">
+    <div className="flex flex-col gap-6 text-gray-800 dark:text-gray-100 animate-fadeIn md:h-[calc(100vh-160px)] md:min-h-0">
       <PageHeader 
         title="Actividades" 
         subtitle="Monitorea el rendimiento e interactividad de las actividades — ajusta sus disparadores VAD"
@@ -85,7 +85,7 @@ export default function ActivitiesPage() {
           <span className="text-gray-500 text-sm font-semibold animate-pulse">Cargando datos...</span>
         </div>
       ) : activeTab === 'metrics' ? (
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+        <div className="md:flex-1 md:min-h-0 md:overflow-y-auto pr-1">
           <ActivitiesMetricsTab
             kpis={kpis}
             popularity={popularity}

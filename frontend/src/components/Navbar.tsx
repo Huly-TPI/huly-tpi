@@ -12,6 +12,10 @@ import SubscriptionModal from './SubscriptionModal/SubscriptionModal'
 import budIcon from '../assets/suscription/budIcon.webp'
 import flowerpotIcon from '../assets/suscription/flowerpotIcon.webp'
 import crownIcon from '../assets/suscription/crownIcon.webp'
+import { useInventory } from '../hooks/store/useInventory'
+import { useUserCoins } from '../hooks/shop/useUserCoins'
+import StoreModal from './Shop/StoreModal'
+import storeButtonImage from '../assets/garden/store-button.webp'
 
 const NAV_LINKS = [
   { to: '/', label: 'Jardín' },
@@ -23,10 +27,22 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const { isAuthenticated, user, loading } = useAuth()
-  const { theme } = useTheme()
+  const { theme, toggleTheme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const isDark = theme === 'dark'
   const [badgesOpen, setBadgesOpen] = useState(false)
+  const [storeOpen, setStoreOpen] = useState(false)
+  const { inventory, refetch: refetchInventory } = useInventory()
+  const { coins, refresh: refetchCoins } = useUserCoins()
+  const { openSubscriptionModal } = useSubscriptionModal()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  const handleMobileLogout = async () => {
+    closeMenu()
+    await logout()
+    navigate('/login')
+  }
 
   const navRef = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -74,7 +90,7 @@ export default function Navbar() {
           {loading && hasSessionFlag() ? (
             <div className="h-9 w-24 animate-pulse rounded-full bg-white/10" aria-hidden="true" />
           ) : isAuthenticated && user ? (
-            <UserMenu name={user.name} />
+            <UserMenu name={user.name} onToggleMenu={() => setMenuOpen(prev => !prev)} />
           ) : (
             <AuthButtons />
           )}
@@ -95,7 +111,7 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className={`border-t border-white/10 px-4 pb-4 md:hidden ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}>
+        <div className={`absolute top-16 left-0 right-0 z-[300] border-t border-white/10 px-4 pb-4 shadow-lg md:hidden ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}>
           <ul className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map(link => (
               <li key={link.to}>
@@ -110,46 +126,135 @@ export default function Navbar() {
             ))}
           </ul>
 
-          <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
-            <span>Tema</span>
-            <ThemeToggle compact />
-          </div>
-
           {loading && hasSessionFlag() ? (
             <div className="mx-3 my-2 h-10 w-3/4 animate-pulse rounded-lg bg-white/10" aria-hidden="true" />
           ) : isAuthenticated ? (
-            <div className="-mx-4 mt-3 flex items-center justify-between border-t border-white/10 px-7 pt-3 text-base font-medium text-white">
-              <span>Mis estampitas</span>
+            <>
+              {/* OPCIONES DE CUENTA */}
+              <div className="-mx-4 mt-3 border-t border-white/10 pt-3">
+                <p className="px-7 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Mi Cuenta</p>
+                <ul className="flex flex-col gap-1">
+                  <li>
+                    <Link
+                      to="/profile"
+                      onClick={closeMenu}
+                      className="block rounded-lg px-7 py-2 text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
+                    >
+                      Mi perfil
+                    </Link>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => { openSubscriptionModal(); closeMenu() }}
+                      className="block w-full text-left rounded-lg px-7 py-2 text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
+                    >
+                      Suscripciones
+                    </button>
+                  </li>
+                  <li>
+                    <Link
+                      to="/privacy"
+                      onClick={closeMenu}
+                      className="block rounded-lg px-7 py-2 text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
+                    >
+                      Centro de privacidad
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* CONFIGURACIÓN Y HERRAMIENTAS */}
+              <div className="-mx-4 mt-3 border-t border-white/10 pt-3 flex flex-col">
+                <p className="px-7 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Ajustes y Herramientas</p>
+                
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="w-full flex items-center justify-between px-7 py-2.5 text-left text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
+                >
+                  <span>Tema</span>
+                  <div className="pointer-events-none">
+                    <ThemeToggle compact />
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setBadgesOpen(true); closeMenu() }}
+                  className="w-full flex items-center justify-between px-7 py-2.5 text-left text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
+                >
+                  <span>Mis estampitas</span>
+                  <div className="flex h-11 w-11 items-center justify-center transition hover:scale-105 pointer-events-none">
+                    <img src="/badges/badge_launcher.webp" alt="" className="h-11 w-11 object-contain" />
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setStoreOpen(true); closeMenu() }}
+                  className="w-full flex items-center justify-between px-7 py-2.5 text-left text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
+                >
+                  <span>Tienda</span>
+                  <div className="flex h-11 w-11 items-center justify-center transition hover:scale-105 pointer-events-none">
+                    <img src={storeButtonImage} alt="" className="h-11 w-11 object-contain" />
+                  </div>
+                </button>
+              </div>
+
+              {/* CERRAR SESIÓN */}
+              <div className="-mx-4 mt-3 border-t border-white/10 pt-3">
+                <button
+                  type="button"
+                  onClick={handleMobileLogout}
+                  className="block w-full text-left rounded-lg px-7 py-2.5 text-base font-medium text-red-300 transition-colors hover:bg-white/10 hover:text-red-200"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* TEMA (si no está autenticado) */}
               <button
                 type="button"
-                onClick={() => { setBadgesOpen(true); closeMenu() }}
-                aria-label="Abrir insignias"
-                className="flex h-11 w-11 items-center justify-center transition hover:scale-105"
+                onClick={toggleTheme}
+                className="w-full flex items-center justify-between px-7 py-2.5 text-left text-base font-medium text-white transition-colors hover:bg-white/10 hover:text-violeta-claro"
               >
-                <img src="/badges/badge_launcher.webp" alt="" className="h-11 w-11 object-contain" />
+                <span>Tema</span>
+                <div className="pointer-events-none">
+                  <ThemeToggle compact />
+                </div>
               </button>
-            </div>
-          ) : (
-            <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
-              <Link
-                to="/login"
-                onClick={closeMenu}
-                className="rounded-full border border-white/40 px-4 py-2.5 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
-              >
-                Iniciar sesión
-              </Link>
-              <Link
-                to="/register"
-                onClick={closeMenu}
-                className="rounded-full bg-white px-4 py-2.5 text-center text-base font-semibold text-bosque transition-all hover:brightness-95"
-              >
-                Registrarse
-              </Link>
-            </div>
+              <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
+                <Link
+                  to="/login"
+                  onClick={closeMenu}
+                  className="rounded-full border border-white/40 px-4 py-2.5 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={closeMenu}
+                  className="rounded-full bg-white px-4 py-2.5 text-center text-base font-semibold text-bosque transition-all hover:brightness-95"
+                >
+                  Registrarse
+                </Link>
+              </div>
+            </>
           )}
         </div>
       )}
       <BadgeModal isOpen={badgesOpen} onClose={() => setBadgesOpen(false)} />
+      <StoreModal
+        isOpen={storeOpen}
+        onClose={() => setStoreOpen(false)}
+        inventory={inventory}
+        refetchInventory={refetchInventory}
+        coins={coins}
+        refetchCoins={refetchCoins}
+      />
     </nav>
   )
 }
@@ -163,7 +268,7 @@ export default function Navbar() {
 //   )
 // }
 
-function UserMenu({ name }: { name: string }) {
+function UserMenu({ name, onToggleMenu }: { name: string; onToggleMenu?: () => void }) {
   const [open, setOpen] = useState(false)
   const { subscriptionOpen, openSubscriptionModal, closeSubscriptionModal } = useSubscriptionModal()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -193,11 +298,19 @@ function UserMenu({ name }: { name: string }) {
     navigate('/login')
   }
 
+  const handleClick = () => {
+    if (window.innerWidth < 768 && onToggleMenu) {
+      onToggleMenu()
+    } else {
+      setOpen(prev => !prev)
+    }
+  }
+
   return (
     <div ref={menuRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen(prev => !prev)}
+        onClick={handleClick}
         aria-haspopup="menu"
         aria-expanded={open}
         className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-bosque shadow-sm transition-all hover:brightness-95 active:translate-y-px"
@@ -215,7 +328,7 @@ function UserMenu({ name }: { name: string }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-black/5 bg-white py-1 shadow-lg"
+          className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-black/5 bg-white py-1 shadow-lg max-md:hidden"
         >
           <Link
             to="/profile"

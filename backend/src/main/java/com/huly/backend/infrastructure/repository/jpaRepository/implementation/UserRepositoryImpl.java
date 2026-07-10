@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserRepositoryImpl implements UserRepository {
 
     private final AppUserRepository jpaRepository;
