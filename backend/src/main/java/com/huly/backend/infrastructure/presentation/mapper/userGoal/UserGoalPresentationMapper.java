@@ -7,7 +7,6 @@ import com.huly.backend.domain.dto.userGoal.AddUserGoalResponse;
 import com.huly.backend.domain.dto.userGoal.CompleteUserGoalRequest;
 import com.huly.backend.domain.dto.userGoal.CompleteUserGoalResponse;
 import com.huly.backend.domain.dto.userGoal.DeleteUserGoalRequest;
-import com.huly.backend.domain.dto.userGoal.GetGoalImageRequest;
 import com.huly.backend.domain.dto.userGoal.GetUserGoalsRequest;
 import com.huly.backend.domain.dto.userGoal.GetUserGoalsResponse;
 import com.huly.backend.domain.dto.userGoal.UpdateUserGoalRequest;
@@ -59,10 +58,6 @@ public class UserGoalPresentationMapper {
 
     public CompleteUserGoalRequest toCompleteUserGoalRequest(Long id) {
         return new CompleteUserGoalRequest(id);
-    }
-
-    public GetGoalImageRequest toGetGoalImageRequest(String filename) {
-        return new GetGoalImageRequest(filename);
     }
 
     // ---- Domain response -> Web ----

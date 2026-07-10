@@ -15,7 +15,6 @@ import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
-import com.huly.backend.domain.useCase.userGoal.GetGoalImageUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
 import com.huly.backend.domain.useCase.userPlant.GetOrCreateCurrentPlantUseCase;
@@ -79,11 +78,6 @@ public class UserGoalUseCaseConfig {
         return new CompleteUserGoalUseCase(userGoalRepository, userPlantRepository,
                 getOrCreateCurrentPlantUseCase, coinService, imageStorageService, imageValidationPort,
                 completeUserGoalMapper);
-    }
-
-    @Bean
-    public GetGoalImageUseCase getGoalImageUseCase(ImageStorageService imageStorageService) {
-        return new GetGoalImageUseCase(imageStorageService);
     }
 
     @Bean

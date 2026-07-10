@@ -1,40 +1,32 @@
 package com.huly.backend.domain.service.userGoal;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.huly.backend.domain.port.FileStoragePort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ImageStorageService {
 
-    @Value("${app.uploads.goals-dir:uploads/goals}")
-    private String uploadsDir;
+    private final FileStoragePort fileStoragePort;
 
-    public String save(MultipartFile file) {
-        String extension = getExtension(file.getOriginalFilename());
-        String filename = UUID.randomUUID() + (extension.isEmpty() ? "" : "." + extension);
-        Path dir = Paths.get(uploadsDir);
-        try {
-            Files.createDirectories(dir);
-            file.transferTo(dir.resolve(filename));
-        } catch (IOException e) {
-            throw new IllegalStateException("No se pudo guardar la imagen del reto", e);
+    public String save(byte[] content, String contentType) {
+        String filename = UUID.randomUUID() + extensionFor(contentType);
+        return fileStoragePort.upload(content, "goals/" + filename, contentType);
+    }
+
+    private String extensionFor(String contentType) {
+        if (contentType == null) {
+            return "";
         }
-        return "/api/user-goals/images/" + filename;
-    }
-
-    public Path resolve(String filename) {
-        return Paths.get(uploadsDir).resolve(filename);
-    }
-
-    private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return "";
-        return filename.substring(filename.lastIndexOf('.') + 1);
+        return switch (contentType) {
+            case "image/png" -> ".png";
+            case "image/jpeg" -> ".jpg";
+            case "image/gif" -> ".gif";
+            case "image/webp" -> ".webp";
+            default -> "";
+        };
     }
 }
