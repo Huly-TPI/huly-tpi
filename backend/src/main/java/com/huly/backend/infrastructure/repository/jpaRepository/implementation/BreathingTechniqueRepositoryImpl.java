@@ -15,7 +15,7 @@ public class BreathingTechniqueRepositoryImpl implements BreathingTechniqueRepos
 
     @Override
     public List<BreathingTechnique> findAll() {
-        return jpaRepository.findAll().stream().map(this::toDomain).toList();
+        return jpaRepository.findAllByOrderByIdAsc().stream().map(this::toDomain).toList();
     }
 
     @Override

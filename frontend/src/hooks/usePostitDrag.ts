@@ -38,9 +38,14 @@ export function usePostitDrag(
     setDragState({ mode: 'idle' })
   }, [])
 
-  const pickUp = useCallback((taskId: number) => {
+  const pickUp = useCallback((taskId: number, origin?: { x: number; y: number }) => {
     document.body.style.touchAction = 'none'
-    setDragState({ mode: 'following', taskId, x: window.innerWidth / 2, y: window.innerHeight / 2 })
+    setDragState({
+      mode: 'following',
+      taskId,
+      x: origin?.x ?? window.innerWidth / 2,
+      y: origin?.y ?? window.innerHeight / 2,
+    })
   }, [])
 
   const cancel = useCallback(() => {
@@ -54,12 +59,21 @@ export function usePostitDrag(
       setDragState(prev => (prev.mode === 'following' ? { ...prev, x: event.clientX, y: event.clientY } : prev))
     }
 
-    const handleBoardPointerDown = (event: PointerEvent) => {
+    const handlePointerUp = (event: PointerEvent) => {
       const current = dragStateRef.current
       if (current.mode !== 'following') return
       const board = boardRef.current
       if (!board) return
       const rect = board.getBoundingClientRect()
+      const withinBoard =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom
+      if (!withinBoard) {
+        stopFollowing()
+        return
+      }
       const postitRect = followRef?.current?.getBoundingClientRect()
       const marginXPercent =
         postitRect && rect.width > 0 ? (postitRect.width / 2 / rect.width) * 100 + EDGE_SAFETY_BUFFER_PERCENT : MIN_PERCENT
@@ -78,13 +92,12 @@ export function usePostitDrag(
 
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('keydown', handleKeyDown)
-    const board = boardRef.current
-    board?.addEventListener('pointerdown', handleBoardPointerDown)
+    window.addEventListener('pointerup', handlePointerUp)
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('keydown', handleKeyDown)
-      board?.removeEventListener('pointerdown', handleBoardPointerDown)
+      window.removeEventListener('pointerup', handlePointerUp)
     }
   }, [dragState.mode, boardRef, followRef, onPlace, stopFollowing, cancel])
 

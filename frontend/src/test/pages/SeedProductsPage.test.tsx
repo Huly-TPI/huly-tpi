@@ -50,7 +50,7 @@ describe('SeedProductsPage', () => {
   it('actualiza el estado con el botón Desactivar', async () => {
     mockHook.products = [product]
     render(<SeedProductsPage />)
-    await userEvent.click(screen.getAllByRole('button', { name: 'Desactivar Pack Estándar' })[0])
+    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Cambiar estado activo de Pack Estándar' })[0])
     expect(mockHook.setActive).toHaveBeenCalledWith(1, false)
   })
 })

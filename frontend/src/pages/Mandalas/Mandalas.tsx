@@ -41,7 +41,7 @@ export default function Mandalas() {
     first,
     last,
     setPage,
-  } = useAvailableMandalas(6);
+  } = useAvailableMandalas(8);
 
   const handleCloseModal = () => {
     setModalOpen(false);

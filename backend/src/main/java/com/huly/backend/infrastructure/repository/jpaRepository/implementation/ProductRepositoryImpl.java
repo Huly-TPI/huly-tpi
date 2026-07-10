@@ -40,7 +40,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public List<Product> findByType(ProductType type) {
-        return jpaRepository.findByType(type)
+        return jpaRepository.findByTypeOrderByIdAsc(type)
                 .stream()
                 .map(this::toDomain)
                 .toList();

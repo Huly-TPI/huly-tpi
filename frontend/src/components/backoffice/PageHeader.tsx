@@ -29,12 +29,12 @@ export default function PageHeader({
               <ChevronLeft className="h-5 w-5" strokeWidth={2} />
             </button>
           )}
-          <h1 className="text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">
+          <h1 className="text-2xl sm:text-[30px] font-extrabold leading-tight text-violeta dark:text-violeta-claro">
             {title}
           </h1>
         </div>
         {subtitle && (
-          <p className="text-[16px] text-[#A0AEC0] dark:text-gray-400">
+          <p className="text-sm sm:text-[16px] text-[#A0AEC0] dark:text-gray-400">
             {subtitle}
           </p>
         )}

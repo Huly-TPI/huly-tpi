@@ -12,15 +12,15 @@ interface BotConfigSectionProps {
 }
 
 export function BotConfigSection({ config, loading, onSave }: BotConfigSectionProps) {
-  const [prompt, setPrompt] = useState(config?.system_prompt ?? '')
-  const [riskEnabled, setRiskEnabled] = useState(config?.risk_detection_enabled ?? true)
+  const [prompt, setPrompt] = useState(config?.systemPrompt ?? '')
+  const [riskEnabled, setRiskEnabled] = useState(config?.riskDetectionEnabled ?? true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     if (config) {
-      setPrompt(config.system_prompt)
-      setRiskEnabled(config.risk_detection_enabled)
+      setPrompt(config.systemPrompt)
+      setRiskEnabled(config.riskDetectionEnabled)
     }
   }, [config])
 
@@ -37,10 +37,10 @@ export function BotConfigSection({ config, loading, onSave }: BotConfigSectionPr
   }
 
   return (
-    <SectionCard>
+    <SectionCard className="h-full flex flex-col">
       <CardHeader title="Configuración del bot" />
       {loading ? (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 flex-1">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-1 flex-col gap-1.5">
               <Skeleton className="h-4 w-44" />
@@ -48,28 +48,27 @@ export function BotConfigSection({ config, loading, onSave }: BotConfigSectionPr
             </div>
             <Skeleton className="h-6 w-11 shrink-0 rounded-full" />
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 flex-1 min-h-0">
             <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-[120px] w-full rounded-xl" />
+            <Skeleton className="flex-1 w-full rounded-xl" />
           </div>
-          <Skeleton className="h-9 w-32 self-end rounded-xl" />
+          <Skeleton className="h-9 w-32 self-end rounded-xl shrink-0" />
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 flex-1">
           <Toggle
             enabled={riskEnabled}
             onChange={setRiskEnabled}
             label="Detección de riesgo activa"
             description="El bot evaluará frases de riesgo en cada mensaje"
           />
-          <div>
+          <div className="flex flex-col flex-1 min-h-0">
             <label className="mb-1.5 block text-xs font-semibold text-gray-500 dark:text-gray-400">Prompt del sistema</label>
             <textarea
-              rows={5}
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               placeholder="Eres Huly, un asistente de bienestar emocional..."
-              className="w-full resize-none rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-55 dark:bg-[#09111f] px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-violeta dark:focus:border-violeta-claro focus:bg-white dark:focus:bg-[#172033] focus:ring-1 focus:ring-violeta/20 transition-all"
+              className="w-full flex-1 resize-none rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-[#09111f] px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-violeta dark:focus:border-violeta-claro focus:bg-white dark:focus:bg-[#172033] focus:ring-1 focus:ring-violeta/20 transition-all min-h-0"
             />
           </div>
           <Button
@@ -79,7 +78,7 @@ export function BotConfigSection({ config, loading, onSave }: BotConfigSectionPr
             disabled={saving || !prompt.trim()}
             isLoading={saving}
             loadingLabel="Guardando..."
-            className="self-end"
+            className="self-end shrink-0"
           >
             {saved ? '✓ Guardado' : 'Guardar cambios'}
           </Button>

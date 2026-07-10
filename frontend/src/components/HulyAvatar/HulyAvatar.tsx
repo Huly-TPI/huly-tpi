@@ -6,7 +6,7 @@ import { AvatarShoes } from "./AvatarShoes";
 import { AVATAR_COLORS } from "./AvatarConstants";
 
 export type AvatarAnimation =
-  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale" | "walking";
+  "idle" | "wave" | "blow" | "inhale" | "hold" | "exhale" | "walking" | "stop-blow";
 
 export interface AvatarEquippedItem {
   assetKey: string;
@@ -224,7 +224,7 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           <stop id="stop84" stopColor={AVATAR_COLORS.skinBase2} offset="1" />
         </radialGradient>
       </defs>
-      <g className={animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : (animation === "walking" ? "anim-walk-arm-der" : ""))}>
+      <g className={animation === "stop-blow" ? "pose-error-arm-der" : (animation === "wave" ? "anim-wave-hand" : (pose === "sitting" ? "pose-sit-arm-der" : (animation === "walking" ? "anim-walk-arm-der" : "")))}>
         <g
           id="g101-5-2"
           transform="matrix(-.0010412 1 1 .0010412 -63.159 191.73)"
@@ -677,11 +677,13 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
             id="g36"
             className={`organic-transform ${animation === "wave"
               ? "anim-fade-out-mouth"
-              : animation === "blow" ||
-                animation === "exhale" ||
-                animation === "inhale"
-                ? "idle-pop-in-mouth"
-                : "idle-fade-out-mouth"
+              : animation === "stop-blow"
+                ? "error-fade-out-mouth"
+                : animation === "blow" ||
+                  animation === "exhale" ||
+                  animation === "inhale"
+                  ? "idle-pop-in-mouth"
+                  : "idle-fade-out-mouth"
               }`}
           >
             <path
@@ -696,11 +698,13 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
           </g>
           <g
             id="g61"
-            className={`organic-transform ${animation === "blow" ||
-              animation === "exhale" ||
-              animation === "inhale"
-              ? "idle-fade-out-mouth"
-              : "idle-pop-in-mouth"
+            className={`organic-transform ${animation === "stop-blow"
+              ? "error-pop-in-mouth"
+              : animation === "blow" ||
+                animation === "exhale" ||
+                animation === "inhale"
+                ? "idle-fade-out-mouth"
+                : "idle-pop-in-mouth"
               }`}
           >
             <ellipse
@@ -712,15 +716,17 @@ const HulyAvatar: React.FC<HulyAvatarProps> = ({
               fill={AVATAR_COLORS.tongue}
               fillOpacity=".60392"
             />
-            <path
-              id="mejilla-cachete"
-              d="m262.33 313.6s3.3302-0.8432 6.538-5.2235c1.1711-1.5992 2.3756-7.92 1.7629-9.9859-0.69012-2.3271-2.4652-5.642-6.5914-7.2455"
-              fill="none"
-              stroke={AVATAR_COLORS.skinShadow4}
-              strokeLinecap="square"
-              strokeLinejoin="bevel"
-              strokeWidth="2.7155"
-            />
+            {animation !== "stop-blow" && (
+              <path
+                id="mejilla-cachete"
+                d="m262.33 313.6s3.3302-0.8432 6.538-5.2235c1.1711-1.5992 2.3756-7.92 1.7629-9.9859-0.69012-2.3271-2.4652-5.642-6.5914-7.2455"
+                fill="none"
+                stroke={AVATAR_COLORS.skinShadow4}
+                strokeLinecap="square"
+                strokeLinejoin="bevel"
+                strokeWidth="2.7155"
+              />
+            )}
             <g
               id="g74"
               fill="none"

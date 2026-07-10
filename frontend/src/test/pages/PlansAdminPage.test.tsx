@@ -52,7 +52,7 @@ describe('PlansAdminPage', () => {
     it('modifica el estado con Desactivar', async () => {
         mockHook.products = [plan]
         render(<PlansAdminPage />)
-        await userEvent.click(screen.getAllByRole('button', { name: 'Desactivar Premium' })[0])
+        await userEvent.click(screen.getAllByRole('checkbox', { name: 'Cambiar estado activo de Premium' })[0])
         expect(mockHook.setActive).toHaveBeenCalledWith(1, false)
     })
 
