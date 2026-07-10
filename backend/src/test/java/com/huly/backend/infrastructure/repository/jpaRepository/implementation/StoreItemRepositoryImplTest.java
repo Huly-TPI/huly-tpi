@@ -79,7 +79,7 @@ class StoreItemRepositoryImplTest {
 
     // --- arrange ---
     private void givenAllItems(StoreItemEntity entity) {
-        when(storeItemJpaRepository.findAllByOrderByIdAsc()).thenReturn(List.of(entity));
+        when(storeItemJpaRepository.findAllByOrderByPriceCoinsAscPriceAsc()).thenReturn(List.of(entity));
     }
 
     private void givenItemById(Long id, StoreItemEntity entity) {
