@@ -95,7 +95,7 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className={`border-t border-white/10 px-4 pb-4 md:hidden ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}>
+        <div className={`absolute top-16 left-0 right-0 z-[300] border-t border-white/10 px-4 pb-4 shadow-lg md:hidden ${isDark ? 'bg-[#375847]' : 'bg-bosque'}`}>
           <ul className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map(link => (
               <li key={link.to}>
