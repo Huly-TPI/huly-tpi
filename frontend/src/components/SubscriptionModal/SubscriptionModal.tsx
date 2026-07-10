@@ -9,7 +9,7 @@ import { usePlans } from '../../hooks/shop/usePlans'
 import { useMembership } from '../../hooks/shop/useMembership'
 import { usePurchase } from '../../hooks/shop/usePurchase'
 import { useRefreshOnReturn } from '../../hooks/shop/useRefreshOnReturn'
-import { useMediaQuery } from '../../hooks/useMediaquery'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import type { Plan } from '../../api/payment'
 
 const MOBILE_QUERY = '(max-width: 640px)'
