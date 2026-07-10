@@ -65,6 +65,7 @@ const App = () => {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/privacy/:tab" element={<Privacy />} />
           <Route path="/minigames" element={<Minigames />} />
           <Route path="/diary" element={<Diary />} />
           <Route path="/onboarding" element={<Onboarding />} />
