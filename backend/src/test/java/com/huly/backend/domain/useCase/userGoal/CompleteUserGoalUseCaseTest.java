@@ -43,7 +43,7 @@ class CompleteUserGoalUseCaseTest {
     private static final Long USER_ID = 10L;
     private static final Long PLANT_ID = 1L;
     private static final Long MISSING_ID = 99L;
-    private static final String IMAGE_URL = "/api/user-goals/images/photo.jpg";
+    private static final String IMAGE_URL = "https://bucket.example/goals/photo.jpg";
 
     @Mock
     private UserGoalRepository userGoalRepository;
@@ -360,7 +360,7 @@ class CompleteUserGoalUseCaseTest {
         stubReadableBytes(image);
         when(imageValidationPort.validate(any(), any(), any(), any()))
                 .thenReturn(new ImageValidationResult(true, "La imagen es válida"));
-        when(imageStorageService.save(image)).thenReturn(returnedUrl);
+        when(imageStorageService.save(any(), any())).thenReturn(returnedUrl);
         return image;
     }
 
@@ -531,6 +531,6 @@ class CompleteUserGoalUseCaseTest {
     }
 
     private void thenImageWasNotStored() {
-        verify(imageStorageService, never()).save(any());
+        verify(imageStorageService, never()).save(any(), any());
     }
 }

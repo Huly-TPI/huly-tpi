@@ -329,9 +329,8 @@ El access token se envía en los endpoints protegidos como `Authorization: Beare
 | `POST` | `/api/user-goals` | Crea un reto | Bearer |
 | `GET` | `/api/user-goals/me` | Lista los retos (completados y pendientes) | Bearer |
 | `PUT` | `/api/user-goals/{id}` | Edita un reto | Bearer |
-| `PATCH` | `/api/user-goals/{id}/complete` | Completa un reto (imagen opcional, multipart) | Bearer |
+| `PATCH` | `/api/user-goals/{id}/complete` | Completa un reto (imagen opcional, multipart; se sube al bucket y devuelve la URL pública) | Bearer |
 | `DELETE` | `/api/user-goals/{id}` | Elimina un reto | Bearer |
-| `GET` | `/api/user-goals/images/{filename}` | Descarga la imagen de un reto | Bearer |
 
 ### Risk Words — `/api/risk-words`
 

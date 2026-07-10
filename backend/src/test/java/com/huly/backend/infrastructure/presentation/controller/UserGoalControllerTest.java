@@ -21,7 +21,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -33,9 +32,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -49,9 +45,6 @@ class UserGoalControllerTest {
 
     private static final Long USER_ID = 10L;
 
-    @TempDir
-    Path tempDir;
-
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -63,7 +56,6 @@ class UserGoalControllerTest {
     private UpdateUserGoalUseCase updateUserGoalUseCase;
     private CompleteUserGoalUseCase completeUserGoalUseCase;
     private AcceptChallengeUseCase acceptChallengeUseCase;
-    private GetGoalImageUseCase getGoalImageUseCase;
 
     @BeforeEach
     void setUp() {
@@ -73,12 +65,11 @@ class UserGoalControllerTest {
         updateUserGoalUseCase = mock(UpdateUserGoalUseCase.class);
         completeUserGoalUseCase = mock(CompleteUserGoalUseCase.class);
         acceptChallengeUseCase = mock(AcceptChallengeUseCase.class);
-        getGoalImageUseCase = mock(GetGoalImageUseCase.class);
 
         UserGoalController controller = new UserGoalController(acceptChallengeUseCase,
                 addUserGoalUseCase, getUserGoalsByUserUseCase,
                 deleteUserGoalUseCase, updateUserGoalUseCase, completeUserGoalUseCase,
-                getGoalImageUseCase, new UserGoalPresentationMapper());
+                new UserGoalPresentationMapper());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
@@ -217,56 +208,6 @@ class UserGoalControllerTest {
         thenCompleteWasCalledWith(42L);
     }
 
-    @Test
-    @DisplayName("Devuelve 404 al pedir una imagen que no existe")
-    void getImageShouldReturn404WhenFileDoesNotExist() throws Exception {
-        givenMissingImage("missing.jpg");
-
-        ResultActions result = performGetImage("missing.jpg");
-
-        thenNotFound(result);
-    }
-
-    @Test
-    @DisplayName("Devuelve 200 con contenido de imagen JPEG cuando el archivo existe")
-    void getImageShouldReturn200WithImageContentWhenFileExists() throws Exception {
-        givenStoredImage("photo.jpg");
-
-        ResultActions result = performGetImage("photo.jpg");
-
-        thenOkWithContentType(result, MediaType.IMAGE_JPEG);
-    }
-
-    @Test
-    @DisplayName("Devuelve 200 con content-type PNG cuando el nombre es .png")
-    void getImageShouldReturn200WithPngContentTypeWhenFilenameIsPng() throws Exception {
-        givenStoredImage("photo.png");
-
-        ResultActions result = performGetImage("photo.png");
-
-        thenOkWithContentType(result, MediaType.IMAGE_PNG);
-    }
-
-    @Test
-    @DisplayName("Devuelve 200 con content-type GIF cuando el nombre es .gif")
-    void getImageShouldReturn200WithGifContentTypeWhenFilenameIsGif() throws Exception {
-        givenStoredImage("anim.gif");
-
-        ResultActions result = performGetImage("anim.gif");
-
-        thenOkWithContentType(result, MediaType.IMAGE_GIF);
-    }
-
-    @Test
-    @DisplayName("Devuelve 200 con content-type JPEG cuando el nombre no tiene extensión")
-    void getImageShouldReturn200WithJpegContentTypeWhenFilenameHasNoExtension() throws Exception {
-        givenStoredImage("noextension");
-
-        ResultActions result = performGetImage("noextension");
-
-        thenOkWithContentType(result, MediaType.IMAGE_JPEG);
-    }
-
     // --- arrange ---
     private void authenticateAs(String username) {
         UserDetails userDetails = new User(username, "", Collections.emptyList());
@@ -331,18 +272,6 @@ class UserGoalControllerTest {
                 .thenReturn(completeResponse(id));
     }
 
-    private void givenMissingImage(String filename) {
-        when(getGoalImageUseCase.execute(argThat(r -> r != null && filename.equals(r.filename()))))
-                .thenReturn(Path.of("nonexistent-xyz-dir", filename));
-    }
-
-    private void givenStoredImage(String filename) throws IOException {
-        Path imageFile = tempDir.resolve(filename);
-        Files.write(imageFile, new byte[]{1, 2, 3});
-        when(getGoalImageUseCase.execute(argThat(r -> r != null && filename.equals(r.filename()))))
-                .thenReturn(imageFile);
-    }
-
     private UserGoalItem goalItem(Long id, String title, String status) {
         return new UserGoalItem(id, USER_ID, title, "D", status, Instant.now(), 1L, null, 10, 25);
     }
@@ -393,10 +322,6 @@ class UserGoalControllerTest {
 
     private ResultActions performComplete(long id) throws Exception {
         return mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user-goals/" + id + "/complete"));
-    }
-
-    private ResultActions performGetImage(String filename) throws Exception {
-        return mockMvc.perform(get("/api/user-goals/images/" + filename));
     }
 
     // --- assert ---
@@ -462,11 +387,6 @@ class UserGoalControllerTest {
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.goal.id").value(id))
                 .andExpect(jsonPath("$.goal.status").value("COMPLETED"));
-    }
-
-    private void thenOkWithContentType(ResultActions result, MediaType mediaType) throws Exception {
-        result.andExpect(status().isOk())
-                .andExpect(content().contentType(mediaType));
     }
 
     private void thenDeleteWasCalledWith(long id) throws Exception {
