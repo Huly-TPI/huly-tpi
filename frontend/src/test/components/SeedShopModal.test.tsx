@@ -175,11 +175,6 @@ describe('SeedShopModal', () => {
         expectAllSeedsBadgesToBeVisible()
       })
 
-      it('muestra la descripción de cada producto', () => {
-        renderDefault()
-        expectAllDescriptionsToBeVisible()
-      })
-
       it('muestra el precio en ARS de cada producto', () => {
         renderDefault()
         verifyPricesInARS()
@@ -454,10 +449,6 @@ describe('SeedShopModal', () => {
 
     function expectAllSeedsBadgesToBeVisible() {
       PRODUCTS.forEach(p => expect(getSeedsBadge(p.coinsAmount)).toBeInTheDocument())
-    }
-
-    function expectAllDescriptionsToBeVisible() {
-      PRODUCTS.forEach(p => verifyTextPresent(p.description))
     }
 
     function expectLoadingSpinnerToBeVisible() {

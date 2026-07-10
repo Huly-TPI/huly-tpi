@@ -90,12 +90,6 @@ function SeedCard({ product, buying, disabled, featured = false, image, onBuy }:
           </span>
         </div>
 
-        {/* Descripción (oculta en mobile para que el modal entre sin scroll) */}
-        {/* Descripción (oculta en mobile) */}
-        <p className="mt-1 max-[640px]:hidden text-[7px] sm:text-[9px] text-[#7b5c3c] leading-snug line-clamp-2 px-1">
-          {product.description}
-        </p>
-
         {/* Separador */}
         <div className={`mt-auto mb-1 max-[640px]:mt-0 w-[60%] h-px bg-gradient-to-r from-transparent to-transparent ${featured ? 'via-[#9b6b9e]/40' : 'via-[#c9a96e]/40'}`} />
 
