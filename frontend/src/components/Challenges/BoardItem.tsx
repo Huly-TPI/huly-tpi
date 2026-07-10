@@ -10,7 +10,7 @@ export interface BoardItemProps {
   darkMode?: boolean
 }
 
-export default function BoardItem({ goal, onSelect, onComplete, darkMode = false }: BoardItemProps) {
+export default function BoardItem({ goal, onSelect, onComplete }: BoardItemProps) {
   const [completing, setCompleting] = useState(false)
   const isCompleted = goal.status === 'COMPLETED'
 
