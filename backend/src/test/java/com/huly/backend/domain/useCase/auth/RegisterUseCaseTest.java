@@ -141,7 +141,7 @@ class RegisterUseCaseTest {
     private void thenRegisterThrowsDuplicate() {
         assertThatThrownBy(() -> registerUseCase.execute(EXISTING_EMAIL, RAW_PASSWORD, NAME, BIRTH_DATE))
                 .isInstanceOf(DuplicateResourceException.class)
-                .hasMessageContaining("Email already in use");
+                .hasMessageContaining("el email esta en uso");
     }
 
     private void thenPasswordEncoded() {

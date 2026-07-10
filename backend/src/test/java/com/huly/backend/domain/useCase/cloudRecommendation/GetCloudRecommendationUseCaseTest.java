@@ -4,6 +4,7 @@ import com.huly.backend.domain.dto.cloudRecommendation.GetCloudRecommendationReq
 import com.huly.backend.domain.dto.cloudRecommendation.GetCloudRecommendationResponse;
 import com.huly.backend.domain.mapper.cloudRecommendation.GetCloudRecommendationMapper;
 import com.huly.backend.domain.model.chat.EmotionalAnalysisResult;
+import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendation;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationItem;
 import com.huly.backend.domain.model.emotionalRecommendation.EmotionalRecommendationResult;
 import com.huly.backend.domain.model.enums.ActivityType;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
@@ -133,6 +135,102 @@ class GetCloudRecommendationUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recomienda el reto diario cuando la mejor actividad es CHALLENGE")
+    void executeShouldRecommendChallengeWhenTopActivityIsChallenge() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.CHALLENGE);
+
+        GetCloudRecommendationResponse result = recommend();
+
+        thenRecommendationIs(result, "challenge", "/challenges");
+    }
+
+    @Test
+    @DisplayName("Recomienda el jardín zen cuando la mejor actividad es ZEN_GARDEN")
+    void executeShouldRecommendZenGardenWhenTopActivityIsZenGarden() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.ZEN_GARDEN);
+
+        GetCloudRecommendationResponse result = recommend();
+
+        thenRecommendationIs(result, "zen_garden", "/zen-sand-garden");
+    }
+
+    @Test
+    @DisplayName("Recomienda mandalas cuando la mejor actividad es MANDALA")
+    void executeShouldRecommendMandalaWhenTopActivityIsMandala() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.MANDALA);
+
+        GetCloudRecommendationResponse result = recommend();
+
+        thenRecommendationIs(result, "mandala", "/mandalas");
+    }
+
+    @Test
+    @DisplayName("Recomienda piedras del lago cuando la mejor actividad es STONES")
+    void executeShouldRecommendStonesWhenTopActivityIsStones() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.STONES);
+
+        GetCloudRecommendationResponse result = recommend();
+
+        thenRecommendationIs(result, "stones", "/stones");
+    }
+
+    @Test
+    @DisplayName("Recomienda pendientes cuando la mejor actividad es PENDING")
+    void executeShouldRecommendPendingWhenTopActivityIsPending() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.PENDING);
+
+        GetCloudRecommendationResponse result = recommend();
+
+        thenRecommendationIs(result, "pending", "/pending");
+    }
+
+    @Test
+    @DisplayName("Recomienda el diario cuando la actividad mejor puntuada no tiene tipo")
+    void executeShouldRecommendDiaryWhenTopActivityTypeIsNull() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(null);
+
+        GetCloudRecommendationResponse result = recommend();
+
+        thenRecommendationIs(result, "diary", "/diary");
+    }
+
+    @Test
     @DisplayName("Usa el fallback cuando el ranking no devuelve recomendaciones")
     void executeShouldUseFallbackWhenNoRecommendations() {
         givenPromptTemplate();
@@ -228,6 +326,38 @@ class GetCloudRecommendationUseCaseTest {
         thenRecommendationIs(result, "diary", "/diary");
     }
 
+    @Test
+    @DisplayName("Usa el mensaje crudo del usuario como objetivo cuando el análisis no aporta uno")
+    void executeShouldUseRawMessageAsGoalWhenAnalysisGoalIsMissing() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysisWithGoal(null);
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.DIARY);
+
+        recommend();
+
+        thenQueryGoalIs(String.join("\n", THOUGHTS));
+    }
+
+    @Test
+    @DisplayName("Combina el objetivo del análisis con el mensaje crudo del usuario cuando el análisis aporta uno")
+    void executeShouldCombineAnalysisGoalWithRawMessageWhenGoalIsPresent() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysisWithGoal("aliviar tristeza y sentirse acompañado");
+        givenActivities();
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.DIARY);
+
+        recommend();
+
+        thenQueryGoalIs("aliviar tristeza y sentirse acompañado " + String.join("\n", THOUGHTS));
+    }
+
     // --- arrange ---
 
     private GetCloudRecommendationUseCase buildUseCase(Resource prompt) {
@@ -278,6 +408,22 @@ class GetCloudRecommendationUseCaseTest {
     private void givenResolvedAnalysis() {
         when(recommendationPolicy.resolve(any(), any(), any(), anyBoolean()))
                 .thenReturn(EmotionalAnalysisResult.neutral());
+    }
+
+    private void givenResolvedAnalysisWithGoal(String userGoal) {
+        EmotionalAnalysisResult neutral = EmotionalAnalysisResult.neutral();
+        EmotionalAnalysisResult withGoal = new EmotionalAnalysisResult(
+                neutral.shouldRecommend(),
+                neutral.detectedEmotion(),
+                neutral.confidence(),
+                neutral.valence(),
+                neutral.arousal(),
+                neutral.dominance(),
+                neutral.intensity(),
+                userGoal,
+                neutral.shortReason()
+        );
+        when(recommendationPolicy.resolve(any(), any(), any(), anyBoolean())).thenReturn(withGoal);
     }
 
     private void givenActivities() {
@@ -338,5 +484,11 @@ class GetCloudRecommendationUseCaseTest {
 
     private void thenUserHistoryNotFetched() {
         verify(emotionalEventRepository, never()).findRecentRecommendationHistoryByUserId(anyLong(), anyInt());
+    }
+
+    private void thenQueryGoalIs(String expectedGoal) {
+        ArgumentCaptor<EmotionalRecommendation> captor = ArgumentCaptor.forClass(EmotionalRecommendation.class);
+        verify(recommendationService).recommend(captor.capture(), any(), any());
+        assertThat(captor.getValue().userGoal()).isEqualTo(expectedGoal);
     }
 }

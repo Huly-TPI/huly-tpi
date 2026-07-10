@@ -6,6 +6,7 @@ export type SceneTheme = 'light' | 'dark'
 
 type SceneElementProps = SceneElementDefinition & {
   theme?: SceneTheme
+  children?: React.ReactNode
 }
 
 export default function SceneElement({
@@ -22,6 +23,7 @@ export default function SceneElement({
   theme = 'light',
   to,
   onClick,
+  children,
 }: SceneElementProps) {
   const sharedClassName = [
     'absolute',
@@ -47,6 +49,7 @@ export default function SceneElement({
         alt={imageAlt}
         className={`scene-element__image scene-element__shadow pointer-events-none select-none transition duration-200 ${imageVariantClassName} ${imageClassName}`}
       />
+      {children}
 
       <div
         aria-hidden="true"

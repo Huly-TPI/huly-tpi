@@ -230,7 +230,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
 
   return (
     <div
-      className="absolute w-[25%] md:w-[15%] h-[25%] pointer-events-none"
+      className="absolute w-[30%] md:w-[15%] aspect-square pointer-events-none"
       style={{
         left: `${pos.x}%`,
         top: `${pos.y}%`,
@@ -246,7 +246,7 @@ function HomeWanderingAvatar({ equippedItems }: { equippedItems: any }) {
         }}
       >
         {/* Shadow (doesn't bob) */}
-        <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/25 blur-[6px]" />
+        <div className="absolute bottom-[-5%] left-1/2 w-[60%] h-[10%] -translate-x-1/2 rounded-[100%] bg-black/40 blur-[6px]" />
 
         {/* Avatar (bobs only when walking) */}
         <div className={isWalking ? "walking-avatar-bob relative z-10 w-full h-full" : "relative z-10 w-full h-full"}>

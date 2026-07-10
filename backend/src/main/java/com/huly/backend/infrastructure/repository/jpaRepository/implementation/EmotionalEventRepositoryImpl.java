@@ -91,6 +91,13 @@ public class EmotionalEventRepositoryImpl implements EmotionalEventRepository {
                 .toList();
     }
 
+    @Override
+    public List<EmotionalEvent> findAll() {
+        return emotionalEventJpaRepository.findAll().stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private EmotionalEventEntity toEntity(EmotionalEvent event) {
         return EmotionalEventEntity.builder()
                 .id(event.getId())

@@ -154,6 +154,12 @@ public class UserDetailDomainRepositoryImpl implements UserDetailDomainRepositor
         userDetailRepository.save(userDetail);
     }
 
+    @Override
+    public Optional<java.time.Instant> findUserCreatedAt(Long userId) {
+        return userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(userId)
+                .map(UserDetailEntity::getCreatedAt);
+    }
+
     private AudioSettings toAudioSettings(UserDetailEntity userDetail) {
         AudioSettings defaults = AudioSettings.defaults();
         return new AudioSettings(

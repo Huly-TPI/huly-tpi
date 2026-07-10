@@ -103,6 +103,12 @@ export interface UserFinancialsResponse {
   totalEarnings: number
 }
 
+export interface AdminDashboardResponse {
+  activeExtensionUsersCount: number
+  usersRegisteredThisWeek?: number
+  activitiesThisWeek?: number
+}
+
 export interface AntiScrollDashboardResponse {
   totalModalsShown: number
   totalRedirects: number
@@ -117,8 +123,12 @@ export const getUsers = async (search?: string): Promise<UserResponse[]> => {
   return api.get<UserResponse[]>(url)
 }
 
+export const getAdminDashboard = async (): Promise<AdminDashboardResponse> => {
+  return api.get<AdminDashboardResponse>('/admin/dashboard')
+}
+
 export const getAntiScrollDashboard = async (): Promise<AntiScrollDashboardResponse> => {
-  return api.get<AntiScrollDashboardResponse>('/admin/users/antiscroll/dashboard')
+  return api.get<AntiScrollDashboardResponse>('/admin/antiscroll/dashboard')
 }
 
 export interface AntiScrollConfigResponse {
@@ -127,11 +137,11 @@ export interface AntiScrollConfigResponse {
 }
 
 export const getAntiScrollConfig = async (): Promise<AntiScrollConfigResponse> => {
-  return api.get<AntiScrollConfigResponse>('/admin/users/antiscroll/config')
+  return api.get<AntiScrollConfigResponse>('/admin/antiscroll/config')
 }
 
 export const saveAntiScrollConfig = async (config: AntiScrollConfigResponse): Promise<void> => {
-  return api.post<void>('/admin/users/antiscroll/config', config)
+  return api.post<void>('/admin/antiscroll/config', config)
 }
 
 export const getUserActivities = async (userId: number, timeframe?: Timeframe): Promise<UserActivitiesResponse> => {

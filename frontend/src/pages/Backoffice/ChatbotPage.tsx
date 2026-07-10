@@ -2,12 +2,9 @@ import { useRiskWords } from '../../hooks/backoffice/useRiskWords'
 import { useBotConfig } from '../../hooks/backoffice/useBotConfig'
 import { Toast } from '../../components/backoffice/Toast'
 import { EmotionalCategoriesSection } from '../../components/backoffice/EmotionalCategoriesSection'
-import { FlowBuilderSection } from '../../components/backoffice/FlowBuilderSection'
 import { BotConfigSection } from '../../components/backoffice/BotConfigSection'
 import { RiskDetectionSection } from '../../components/backoffice/RiskDetectionSection'
-import { ActivitiesSection } from '../../components/backoffice/ActivitiesSection'
 import { WellbeingSection } from '../../components/backoffice/WellbeingSection'
-import { TrainingLogsSection } from '../../components/backoffice/TrainingLogsSection'
 import PageHeader from '../../components/backoffice/PageHeader'
 
 export default function ChatbotPage() {
@@ -20,20 +17,22 @@ export default function ChatbotPage() {
     <div className="flex flex-col gap-6 animate-fadeIn">
       <PageHeader 
         title="Chatbot" 
-        subtitle="Configuración emocional, automatización terapéutica y monitoreo inteligente"
+        subtitle="Configuración emocional y monitoreo inteligente"
       />
 
-      <EmotionalCategoriesSection />
+      {/* Fila 1: Configuración ' Emociones */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <BotConfigSection
+          config={botConfig.config}
+          loading={botConfig.loading}
+          onSave={botConfig.handleSave}
+        />
+        <EmotionalCategoriesSection />
+      </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[3fr_1fr]">
-        <div className="flex flex-col gap-4">
-          <FlowBuilderSection />
-          <BotConfigSection
-            config={botConfig.config}
-            loading={botConfig.loading}
-            onSave={botConfig.handleSave}
-          />
-        </div>
+      {/* Fila 2: Evolución ' Detección de riesgo */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <WellbeingSection />
         <RiskDetectionSection
           words={risk.words}
           loading={risk.loading}
@@ -47,13 +46,6 @@ export default function ChatbotPage() {
           onPageSizeChange={risk.handlePageSizeChange}
         />
       </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <ActivitiesSection />
-        <WellbeingSection />
-      </div>
-
-      <TrainingLogsSection />
 
       {toastError && <Toast message={toastError} onClose={clearToast} />}
     </div>

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { Sparkles, Wind } from 'lucide-react'
+import { render } from '@testing-library/react'
 
 vi.mock('../../hooks/backoffice/useActivities', () => ({
   useActivities: vi.fn(),
@@ -14,38 +13,32 @@ const mockedUseActivities = vi.mocked(useActivities)
 
 describe('ActivitiesSection', () => {
   it('muestra skeletons de carga cuando loading es true', () => {
-    setupUseActivities({ activities: [], loading: true })
+    setupUseActivities({ popularity: [], loading: true })
     renderActivitiesSection()
     verifySkeletonsCountGreaterThanOrEqual(4)
   })
 
-  it('renderiza las ActivityCards cuando los datos están cargados', () => {
+  it('renderiza la popularidad cuando los datos están cargados', () => {
     setupUseActivities({
-      activities: [
-        { Icon: Sparkles, name: 'Reventar burbujas', pct: 75, barColor: 'bg-violeta', iconBg: 'bg-violet-100', iconColor: 'text-violeta' },
-        { Icon: Wind, name: 'Respiraciones guiadas', pct: 50, barColor: 'bg-teal-400', iconBg: 'bg-teal-100', iconColor: 'text-teal-500' },
+      popularity: [
+        { activityType: 'BUBBLE', activityName: 'Reventar burbujas', totalSessions: 75 },
+        { activityType: 'BREATHING', activityName: 'Respiraciones guiadas', totalSessions: 25 },
       ],
       loading: false,
     })
     renderActivitiesSection()
-    verifyActivityNamesAndPercentages(['Reventar burbujas', 'Respiraciones guiadas'], ['75%', '50%'])
+    verifyActivityNamesAndSessions(['Reventar burbujas', 'Respiraciones guiadas'], ['75', '25'])
   })
 
   it('muestra el título de la sección', () => {
-    setupUseActivities({ activities: [], loading: false })
+    setupUseActivities({ popularity: [], loading: false })
     renderActivitiesSection()
     verifySectionTitle()
   })
 
-  it('muestra el botón "Editar todo"', () => {
-    setupUseActivities({ activities: [], loading: false })
-    renderActivitiesSection()
-    verifyEditButtonIsPresent()
-  })
-
   /* helpers */
 
-  const setupUseActivities = (data: { activities: any[]; loading: boolean }) => {
+  const setupUseActivities = (data: { popularity: any[]; loading: boolean }) => {
     mockedUseActivities.mockReturnValue(data)
   }
 
@@ -58,16 +51,12 @@ describe('ActivitiesSection', () => {
     expect(skeletons.length).toBeGreaterThanOrEqual(minCount)
   }
 
-  const verifyActivityNamesAndPercentages = (names: string[], percentages: string[]) => {
+  const verifyActivityNamesAndSessions = (names: string[], sessions: string[]) => {
     names.forEach(name => verifyTextPresent(name))
-    percentages.forEach(pct => verifyTextPresent(pct))
+    sessions.forEach(sess => verifyTextPresent(sess))
   }
 
   const verifySectionTitle = () => {
-    verifyTextPresent('Biblioteca de Actividades')
-  }
-
-  const verifyEditButtonIsPresent = () => {
-    expect(screen.getByRole('button', { name: 'Editar todo' })).toBeInTheDocument()
+    verifyTextPresent('Popularidad por Sesiones')
   }
 })
