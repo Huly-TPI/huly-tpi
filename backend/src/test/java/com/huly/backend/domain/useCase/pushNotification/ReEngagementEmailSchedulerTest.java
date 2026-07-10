@@ -31,8 +31,8 @@ class ReEngagementEmailSchedulerTest {
     @InjectMocks
     private ReEngagementEmailScheduler reEngagementEmailScheduler;
 
-    private Instant cutoffLowerBound;
-    private Instant cutoffUpperBound;
+    private Instant nowLowerBound;
+    private Instant nowUpperBound;
 
     @Test
     @DisplayName("Envía un email de re-enganche a cada usuario inactivo")
@@ -58,14 +58,14 @@ class ReEngagementEmailSchedulerTest {
     }
 
     @Test
-    @DisplayName("Consulta con un corte de 3 días atrás")
-    void sendReEngagementEmailsShouldPassCutoffOfThreeDaysAgo() {
+    @DisplayName("Consulta con un corte de 3 y 4 días atrás")
+    void sendReEngagementEmailsShouldPassCutoffRangeOfThreeAndFourDaysAgo() {
         // --- arrange ---
         givenNoInactiveUsers();
         // --- act ---
         sendReEngagementEmails();
         // --- assert ---
-        thenCutoffIsThreeDaysAgo();
+        thenCutoffIsBetweenThreeAndFourDaysAgo();
     }
 
     // --- arrange ---
@@ -78,22 +78,22 @@ class ReEngagementEmailSchedulerTest {
     }
 
     private void givenTwoInactiveUsers() {
-        when(userRepository.findUsersInactiveSince(any(Instant.class)))
+        when(userRepository.findUsersInactiveBetween(any(Instant.class), any(Instant.class)))
                 .thenReturn(List.of(
                         inactiveUser(1L, "user1@huly", "tok-1"),
                         inactiveUser(2L, "user2@huly", "tok-2")));
     }
 
     private void givenNoInactiveUsers() {
-        when(userRepository.findUsersInactiveSince(any(Instant.class))).thenReturn(List.of());
+        when(userRepository.findUsersInactiveBetween(any(Instant.class), any(Instant.class))).thenReturn(List.of());
     }
 
     // --- act ---
 
     private void sendReEngagementEmails() {
-        cutoffLowerBound = Instant.now().minus(3, ChronoUnit.DAYS);
+        nowLowerBound = Instant.now();
         reEngagementEmailScheduler.sendReEngagementEmails();
-        cutoffUpperBound = Instant.now().minus(3, ChronoUnit.DAYS);
+        nowUpperBound = Instant.now();
     }
 
     // --- assert ---
@@ -106,8 +106,9 @@ class ReEngagementEmailSchedulerTest {
         verify(emailPort, never()).sendReEngagement(any(), any());
     }
 
-    private void thenCutoffIsThreeDaysAgo() {
-        verify(userRepository).findUsersInactiveSince(argThat(
-                cutoff -> !cutoff.isBefore(cutoffLowerBound) && !cutoff.isAfter(cutoffUpperBound)));
+    private void thenCutoffIsBetweenThreeAndFourDaysAgo() {
+        verify(userRepository).findUsersInactiveBetween(
+                argThat(start -> !start.isBefore(nowLowerBound.minus(4, ChronoUnit.DAYS)) && !start.isAfter(nowUpperBound.minus(4, ChronoUnit.DAYS))),
+                argThat(end -> !end.isBefore(nowLowerBound.minus(3, ChronoUnit.DAYS)) && !end.isAfter(nowUpperBound.minus(3, ChronoUnit.DAYS))));
     }
 }
