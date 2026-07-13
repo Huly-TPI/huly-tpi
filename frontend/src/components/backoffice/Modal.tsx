@@ -8,6 +8,7 @@ interface ModalProps {
   subtitle?: string
   children: React.ReactNode
   maxWidthClass?: string // p.ej. "max-w-2xl", "max-w-lg"
+  hideDivider?: boolean
 }
 
 export default function Modal({
@@ -17,6 +18,7 @@ export default function Modal({
   subtitle,
   children,
   maxWidthClass = 'max-w-md',
+  hideDivider = false,
 }: ModalProps) {
   useEffect(() => {
     if (isOpen) {
@@ -41,7 +43,7 @@ export default function Modal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       {/* Overlay - Cierre al presionar fuera */}
       <div 
         className="absolute inset-0 cursor-default" 
@@ -76,7 +78,7 @@ export default function Modal({
           </button>
         </div>
 
-        <hr className="border-gray-100 dark:border-gray-800/60" />
+        {!hideDivider && <hr className="border-gray-100 dark:border-gray-800/60" />}
 
         {/* Contenido */}
         <div className="flex-1">
