@@ -52,6 +52,7 @@ export default function ActivityConfigModal({
       onClose={onClose}
       title="Configurar Actividad"
       maxWidthClass="max-w-xl"
+      hideDivider={true}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
         {/* Header Icon + Name */}
