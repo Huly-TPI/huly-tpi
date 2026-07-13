@@ -7,7 +7,7 @@ import galleryImage from "../../assets/mandalas/galery.webp";
 import mandalaEasel from "../../assets/mandalas/mi_atril.webp";
 import { useActivitySessionTracker } from "../../hooks/useActivitySessionTracker";
 import { useMandalaProgress } from "../../hooks/useMandalaProgress";
-import { downloadImageBlob } from "../../utils/downloadImage";
+import { downloadImageBlob } from "../../hooks/downloadImage";
 import ThemeBackground from "../ThemeBackground/ThemeBackground";
 import MandalaCanvas, { type MandalaCanvasHandle } from "./MandalaCanvas";
 import MandalaToolbar from "./MandalaToolbar";
