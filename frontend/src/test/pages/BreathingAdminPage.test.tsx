@@ -25,77 +25,161 @@ const technique: T = { id: 1, name: 'Diafragmática', description: 'd', inhaleSe
 describe('BreathingAdminPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockHook.techniques = []
-    mockHook.loading = false
-    mockHook.error = null
+    setupTechniques([])
+    setupLoading(false)
+    setupError(null)
   })
 
   it('muestra el estado de carga', () => {
-    mockHook.loading = true
-    render(<BreathingAdminPage />)
-    expect(screen.getByText('Cargando...')).toBeInTheDocument()
+    setupLoading(true)
+    renderPage()
+    verifyLoadingShown()
   })
 
   it('muestra el vacío cuando no hay respiraciones', () => {
-    render(<BreathingAdminPage />)
-    expect(screen.getByText('Todavía no hay respiraciones.')).toBeInTheDocument()
+    renderPage()
+    verifyEmptyStateShown()
   })
 
   it('lista las respiraciones', () => {
-    mockHook.techniques = [technique]
-    render(<BreathingAdminPage />)
-    expect(screen.getAllByText('Diafragmática')[0]).toBeInTheDocument()
+    setupTechniques([technique])
+    renderPage()
+    verifyTechniqueNameShown('Diafragmática')
   })
 
   it('abre el formulario al tocar "Nueva respiración"', async () => {
-    render(<BreathingAdminPage />)
-    await userEvent.click(screen.getByRole('button', { name: /Nueva respiración/ }))
-    expect(screen.getByText('Inhalar (s)')).toBeInTheDocument()
+    renderPage()
+    await clickNewBreathing()
+    verifyFormOpened()
   })
 
   it('abre el formulario de edición precargado', async () => {
-    mockHook.techniques = [technique]
-    render(<BreathingAdminPage />)
-    await userEvent.click(screen.getAllByRole('button', { name: 'Editar Diafragmática' })[0])
-    expect(screen.getByText('Editar respiración')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Diafragmática')).toBeInTheDocument()
+    setupTechniques([technique])
+    renderPage()
+    await clickEditBreathing('Diafragmática')
+    verifyEditFormOpenedWith('Diafragmática')
   })
 
   it('crea una respiración al completar y enviar', async () => {
-    mockHook.create.mockResolvedValue(true)
-    render(<BreathingAdminPage />)
-    await userEvent.click(screen.getByRole('button', { name: /Nueva respiración/ }))
-    await userEvent.type(screen.getByLabelText('Nombre'), 'Cuadrada')
-    await userEvent.click(screen.getByRole('button', { name: 'Crear' }))
-    expect(mockHook.create).toHaveBeenCalledOnce()
+    setupCreateResolved(true)
+    renderPage()
+    await clickNewBreathing()
+    await typeName('Cuadrada')
+    await clickCreateButton()
+    verifyCreateCalled()
   })
 
   it('edita una respiración al guardar', async () => {
-    mockHook.techniques = [technique]
-    mockHook.update.mockResolvedValue(true)
-    render(<BreathingAdminPage />)
-    await userEvent.click(screen.getAllByRole('button', { name: 'Editar Diafragmática' })[0])
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
-    expect(mockHook.update).toHaveBeenCalledWith(1, expect.objectContaining({ name: 'Diafragmática' }))
+    setupTechniques([technique])
+    setupUpdateResolved(true)
+    renderPage()
+    await clickEditBreathing('Diafragmática')
+    await clickSaveButton()
+    verifyUpdateCalledWith(1, { name: 'Diafragmática' })
   })
 
   it('desactiva con el botón Eliminar', async () => {
-    mockHook.techniques = [technique]
-    render(<BreathingAdminPage />)
-    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Cambiar estado activo de Diafragmática' })[0])
-    expect(mockHook.setActive).toHaveBeenCalledWith(1, false)
+    setupTechniques([technique])
+    renderPage()
+    await clickActiveToggle('Diafragmática')
+    verifySetActiveCalledWith(1, false)
   })
 
   it('restaura una respiración inactiva', async () => {
-    mockHook.techniques = [{ ...technique, active: false }]
-    render(<BreathingAdminPage />)
-    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Cambiar estado activo de Diafragmática' })[0])
-    expect(mockHook.setActive).toHaveBeenCalledWith(1, true)
+    setupTechniques([{ ...technique, active: false }])
+    renderPage()
+    await clickActiveToggle('Diafragmática')
+    verifySetActiveCalledWith(1, true)
   })
 
   it('muestra el error en un toast', () => {
-    mockHook.error = 'Ups'
-    render(<BreathingAdminPage />)
-    expect(screen.getByText('Ups')).toBeInTheDocument()
+    setupError('Ups')
+    renderPage()
+    verifyToastErrorShown('Ups')
   })
+
+  const renderPage = () => {
+    render(<BreathingAdminPage />)
+  }
+
+  const setupLoading = (loading: boolean) => {
+    mockHook.loading = loading
+  }
+
+  const setupTechniques = (techniques: T[]) => {
+    mockHook.techniques = techniques
+  }
+
+  const setupError = (error: string | null) => {
+    mockHook.error = error
+  }
+
+  const setupCreateResolved = (val: any) => {
+    mockHook.create.mockResolvedValue(val)
+  }
+
+  const setupUpdateResolved = (val: any) => {
+    mockHook.update.mockResolvedValue(val)
+  }
+
+  const verifyLoadingShown = () => {
+    expect(screen.getByText('Cargando...')).toBeInTheDocument()
+  }
+
+  const verifyEmptyStateShown = () => {
+    expect(screen.getByText('Todavía no hay respiraciones.')).toBeInTheDocument()
+  }
+
+  const verifyTechniqueNameShown = (name: string) => {
+    expect(screen.getAllByText(name)[0]).toBeInTheDocument()
+  }
+
+  const clickNewBreathing = async () => {
+    await userEvent.click(screen.getByRole('button', { name: /Nueva respiración/ }))
+  }
+
+  const verifyFormOpened = () => {
+    expect(screen.getByText('Inhalar (s)')).toBeInTheDocument()
+  }
+
+  const clickEditBreathing = async (name: string) => {
+    await userEvent.click(screen.getAllByRole('button', { name: `Editar ${name}` })[0])
+  }
+
+  const verifyEditFormOpenedWith = (name: string) => {
+    expect(screen.getByText('Editar respiración')).toBeInTheDocument()
+    expect(screen.getByDisplayValue(name)).toBeInTheDocument()
+  }
+
+  const typeName = async (name: string) => {
+    await userEvent.type(screen.getByLabelText('Nombre'), name)
+  }
+
+  const clickCreateButton = async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Crear' }))
+  }
+
+  const clickSaveButton = async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+  }
+
+  const clickActiveToggle = async (name: string) => {
+    await userEvent.click(screen.getAllByRole('checkbox', { name: `Cambiar estado activo de ${name}` })[0])
+  }
+
+  const verifyCreateCalled = () => {
+    expect(mockHook.create).toHaveBeenCalledOnce()
+  }
+
+  const verifyUpdateCalledWith = (id: number, expected: any) => {
+    expect(mockHook.update).toHaveBeenCalledWith(id, expect.objectContaining(expected))
+  }
+
+  const verifySetActiveCalledWith = (id: number, active: boolean) => {
+    expect(mockHook.setActive).toHaveBeenCalledWith(id, active)
+  }
+
+  const verifyToastErrorShown = (msg: string) => {
+    expect(screen.getByText(msg)).toBeInTheDocument()
+  }
 })

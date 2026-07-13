@@ -63,16 +63,20 @@ vi.mock('../../hooks/useActivitySessionTracker', () => ({
 
 describe('Pending Page', () => {
     it('renderiza la bandeja de entrada y el tablero de pendientes', () => {
-        renderPending()
-        expect(screen.getByText('+ Nueva tarea')).toBeInTheDocument()
-        expect(screen.getByLabelText('Tablero de pendientes')).toBeInTheDocument()
+        renderPage()
+        verifyInboxAndBoardRendered()
     })
 
-    const renderPending = () => {
+    const renderPage = () => {
         render(
             <MemoryRouter>
                 <Pending />
             </MemoryRouter>
         )
+    }
+
+    const verifyInboxAndBoardRendered = () => {
+        expect(screen.getByText('+ Nueva tarea')).toBeInTheDocument()
+        expect(screen.getByLabelText('Tablero de pendientes')).toBeInTheDocument()
     }
 })
