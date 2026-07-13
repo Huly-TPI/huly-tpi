@@ -25,32 +25,64 @@ const product: P = { id: 1, name: 'Pack Estándar', description: 'd', price: 199
 describe('SeedProductsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockHook.products = []
+    setupProducts([])
     mockHook.loading = false
     mockHook.error = null
   })
 
   it('muestra el vacío cuando no hay paquetes', () => {
-    render(<SeedProductsPage />)
-    expect(screen.getByText('Todavía no hay paquetes.')).toBeInTheDocument()
+    renderPage()
+    verifyEmptyStateShown()
   })
 
   it('lista los paquetes', () => {
-    mockHook.products = [product]
-    render(<SeedProductsPage />)
-    expect(screen.getAllByText('Pack Estándar')[0]).toBeInTheDocument()
+    setupProducts([product])
+    renderPage()
+    verifyProductNameShown('Pack Estándar')
   })
 
   it('abre el formulario al tocar "Nuevo paquete"', async () => {
-    render(<SeedProductsPage />)
-    await userEvent.click(screen.getByRole('button', { name: /Nuevo paquete/ }))
-    expect(screen.getByText('Precio ($)')).toBeInTheDocument()
+    renderPage()
+    await clickNewProduct()
+    verifyNewProductFormOpened()
   })
 
   it('actualiza el estado con el botón Desactivar', async () => {
-    mockHook.products = [product]
-    render(<SeedProductsPage />)
-    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Cambiar estado activo de Pack Estándar' })[0])
-    expect(mockHook.setActive).toHaveBeenCalledWith(1, false)
+    setupProducts([product])
+    renderPage()
+    await clickActiveToggle('Pack Estándar')
+    verifySetActiveCalledWith(1, false)
   })
+
+  const renderPage = () => {
+    render(<SeedProductsPage />)
+  }
+
+  const setupProducts = (products: P[]) => {
+    mockHook.products = products
+  }
+
+  const verifyEmptyStateShown = () => {
+    expect(screen.getByText('Todavía no hay paquetes.')).toBeInTheDocument()
+  }
+
+  const verifyProductNameShown = (name: string) => {
+    expect(screen.getAllByText(name)[0]).toBeInTheDocument()
+  }
+
+  const clickNewProduct = async () => {
+    await userEvent.click(screen.getByRole('button', { name: /Nuevo paquete/ }))
+  }
+
+  const verifyNewProductFormOpened = () => {
+    expect(screen.getByText('Precio ($)')).toBeInTheDocument()
+  }
+
+  const clickActiveToggle = async (name: string) => {
+    await userEvent.click(screen.getAllByRole('checkbox', { name: `Cambiar estado activo de ${name}` })[0])
+  }
+
+  const verifySetActiveCalledWith = (id: number, active: boolean) => {
+    expect(mockHook.setActive).toHaveBeenCalledWith(id, active)
+  }
 })

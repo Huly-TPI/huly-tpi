@@ -21,102 +21,179 @@ const technique = { id: 1, name: 'Diafragmática', description: 'd', inhaleSecon
 describe('useAdminBreathing', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        list.mockResolvedValue([technique])
+        setupListSuccess([technique])
     })
 
     it('carga las respiraciones al cargar', async () => {
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        expect(result.current.techniques).toHaveLength(1)
-        expect(list).toHaveBeenCalledOnce()
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        verifyTechniques(result, [technique])
+        verifyListCalledOnce()
     })
 
     it('setea error si falla la carga', async () => {
-        list.mockRejectedValueOnce(new Error('x'))
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        expect(result.current.error).toBe('No se pudieron cargar las respiraciones')
+        setupListFailure(new Error('x'))
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        verifyError(result, 'No se pudieron cargar las respiraciones')
     })
 
     it('create llama a la api y devuelve true', async () => {
-        create.mockResolvedValue(undefined)
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        let ok: boolean | undefined
-        await act(async () => { ok = await result.current.create({} as never) })
-        expect(create).toHaveBeenCalledOnce()
+        setupCreateSuccess()
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        const ok = await callCreate(result, {} as never)
+        verifyCreateCalledOnce()
         expect(ok).toBe(true)
     })
 
     it('create devuelve false y setea error si falla', async () => {
-        create.mockRejectedValue(new Error('boom'))
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        let ok: boolean | undefined
-        await act(async () => { ok = await result.current.create({} as never) })
+        setupCreateFailure(new Error('boom'))
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        const ok = await callCreate(result, {} as never)
         expect(ok).toBe(false)
-        expect(result.current.error).toBe('boom')
+        verifyError(result, 'boom')
     })
 
     it('update llama a la api y devuelve true', async () => {
-        update.mockResolvedValue(undefined)
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        let ok: boolean | undefined
-        await act(async () => { ok = await result.current.update(1, {} as never) })
-        expect(update).toHaveBeenCalledWith(1, {})
+        setupUpdateSuccess()
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        const ok = await callUpdate(result, 1, {} as never)
+        verifyUpdateCalledWith(1, {})
         expect(ok).toBe(true)
     })
 
     it('update devuelve false y setea error si falla', async () => {
-        update.mockRejectedValue(new Error('boom'))
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        let ok: boolean | undefined
-        await act(async () => { ok = await result.current.update(1, {} as never) })
+        setupUpdateFailure(new Error('boom'))
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        const ok = await callUpdate(result, 1, {} as never)
         expect(ok).toBe(false)
-        expect(result.current.error).toBe('boom')
+        verifyError(result, 'boom')
     })
 
     it('setActive llama a la api con el id y estado', async () => {
-        setActive.mockResolvedValue(undefined)
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        await act(async () => { await result.current.setActive(1, false) })
-        expect(setActive).toHaveBeenCalledWith(1, false)
+        setupSetActiveSuccess()
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        await callSetActive(result, 1, false)
+        verifySetActiveCalledWith(1, false)
     })
 
     it('setActive devuelve false y setea error si falla', async () => {
-        setActive.mockRejectedValue(new Error('nope'))
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        let ok: boolean | undefined
-        await act(async () => { ok = await result.current.setActive(1, false) })
+        setupSetActiveFailure(new Error('nope'))
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        const ok = await callSetActive(result, 1, false)
         expect(ok).toBe(false)
-        expect(result.current.error).toBe('nope')
+        verifyError(result, 'nope')
     })
 
     it('usa mensaje por defecto si el error de create no es Error', async () => {
-        create.mockRejectedValue('x')
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        await act(async () => { await result.current.create({} as never) })
-        expect(result.current.error).toBe('No se pudo crear la respiración')
+        setupCreateFailure('x')
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        await callCreate(result, {} as never)
+        verifyError(result, 'No se pudo crear la respiración')
     })
 
     it('usa mensaje por defecto si el error de update no es Error', async () => {
-        update.mockRejectedValue('x')
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        await act(async () => { await result.current.update(1, {} as never) })
-        expect(result.current.error).toBe('No se pudo editar la respiración')
+        setupUpdateFailure('x')
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        await callUpdate(result, 1, {} as never)
+        verifyError(result, 'No se pudo editar la respiración')
     })
 
     it('usa mensaje por defecto si el error de setActive no es Error', async () => {
-        setActive.mockRejectedValue('x')
-        const { result } = renderHook(() => useAdminBreathing())
-        await waitFor(() => expect(result.current.loading).toBe(false))
-        await act(async () => { await result.current.setActive(1, false) })
-        expect(result.current.error).toBe('No se pudo cambiar el estado')
+        setupSetActiveFailure('x')
+        const { result } = renderAdminBreathing()
+        await verifyLoadingFinished(result)
+        await callSetActive(result, 1, false)
+        verifyError(result, 'No se pudo cambiar el estado')
     })
+
+    const renderAdminBreathing = () => {
+        return renderHook(() => useAdminBreathing())
+    }
+
+    const setupListSuccess = (val: any) => {
+        list.mockResolvedValue(val)
+    }
+
+    const setupListFailure = (err: any) => {
+        list.mockRejectedValueOnce(err)
+    }
+
+    const setupCreateSuccess = () => {
+        create.mockResolvedValue(undefined)
+    }
+
+    const setupCreateFailure = (err: any) => {
+        create.mockRejectedValue(err)
+    }
+
+    const setupUpdateSuccess = () => {
+        update.mockResolvedValue(undefined)
+    }
+
+    const setupUpdateFailure = (err: any) => {
+        update.mockRejectedValue(err)
+    }
+
+    const setupSetActiveSuccess = () => {
+        setActive.mockResolvedValue(undefined)
+    }
+
+    const setupSetActiveFailure = (err: any) => {
+        setActive.mockRejectedValue(err)
+    }
+
+    const verifyLoadingFinished = async (result: any) => {
+        await waitFor(() => expect(result.current.loading).toBe(false))
+    }
+
+    const verifyTechniques = (result: any, expected: any[]) => {
+        expect(result.current.techniques).toEqual(expected)
+    }
+
+    const verifyListCalledOnce = () => {
+        expect(list).toHaveBeenCalledOnce()
+    }
+
+    const verifyError = (result: any, expectedError: string | null) => {
+        expect(result.current.error).toBe(expectedError)
+    }
+
+    const callCreate = async (result: any, d: any) => {
+        let ok: boolean | undefined
+        await act(async () => { ok = await result.current.create(d) })
+        return ok
+    }
+
+    const callUpdate = async (result: any, id: number, d: any) => {
+        let ok: boolean | undefined
+        await act(async () => { ok = await result.current.update(id, d) })
+        return ok
+    }
+
+    const callSetActive = async (result: any, id: number, active: boolean) => {
+        let ok: boolean | undefined
+        await act(async () => { ok = await result.current.setActive(id, active) })
+        return ok
+    }
+
+    const verifyCreateCalledOnce = () => {
+        expect(create).toHaveBeenCalledOnce()
+    }
+
+    const verifyUpdateCalledWith = (id: number, d: any) => {
+        expect(update).toHaveBeenCalledWith(id, d)
+    }
+
+    const verifySetActiveCalledWith = (id: number, active: boolean) => {
+        expect(setActive).toHaveBeenCalledWith(id, active)
+    }
 })
