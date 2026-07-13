@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { preloadImages } from '../utils/preloadImages'
-import { criticalImageUrls } from '../utils/criticalImageUrls'
-import { restImageUrls } from '../utils/localImageUrls'
+import { preloadImages } from './preloadImages'
+import { criticalImageUrls } from '../config/criticalImageUrls'
+import { restImageUrls } from '../config/localImageUrls'
 
 export function usePreloadImages(): void {
   useEffect(() => {

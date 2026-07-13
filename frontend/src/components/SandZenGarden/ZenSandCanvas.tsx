@@ -6,7 +6,7 @@ import {
 } from 'react'
 import { ImageDown, Trash2 } from 'lucide-react'
 import { useSandAudio } from '../../hooks/useSandAudio'
-import { canvasToPngBlob, downloadImageBlob } from '../../utils/downloadImage'
+import { canvasToPngBlob, downloadImageBlob } from '../../hooks/downloadImage'
 import {
   drawLatestGroove,
   getCanvasPoint,

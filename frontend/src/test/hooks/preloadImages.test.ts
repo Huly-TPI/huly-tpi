@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { preloadImages } from '../../utils/preloadImages'
+import { preloadImages } from '../../hooks/preloadImages'
 
 describe('preloadImages', () => {
   it('carga todas las urls y las devuelve en loaded', () => {
