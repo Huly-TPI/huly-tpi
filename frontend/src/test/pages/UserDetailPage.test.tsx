@@ -65,6 +65,12 @@ describe('UserDetailPage', () => {
     verifyAntiScrollStatsVisible()
   })
 
+  it('muestra el selector de días e indicador de sin estadísticas cuando no hay datos en Antiscroll', () => {
+    setupHookWithAntiScrollTabNoData(mockUser)
+    renderUserDetailPage()
+    verifyAntiScrollNoStatsButDaysVisible()
+  })
+
   /* helpers */
 
   const renderUserDetailPage = () => {
@@ -209,6 +215,41 @@ describe('UserDetailPage', () => {
     } as any)
   }
 
+  const setupHookWithAntiScrollTabNoData = (user: any) => {
+    mockedUseUsers.mockReturnValue({
+      selectedUser: user,
+      activeTab: 'antiscroll',
+      setActiveTab: vi.fn(),
+      antiscrollLoading: false,
+      antiscrollError: null,
+      antiscrollStats: {
+        antiScrollEnabled: true,
+        dataSharingConsent: true,
+        mostUsedApp: null,
+        mostUsedAppActiveSeconds: 0,
+        totalScrollTimeSeconds: 0,
+        dailyScrollTimeSeconds: {
+          current_0: 0,
+          current_1: 0,
+        },
+        topApps: [],
+      },
+      DAYS: [
+        { key: '0', label: 'Lunes' },
+        { key: '1', label: 'Martes' },
+      ],
+      selectedWeek: 'current',
+      setSelectedWeek: vi.fn(),
+      selectedDay: 'all',
+      setSelectedDay: vi.fn(),
+      getDailyTime: () => 0,
+      domainList: [],
+      maxDomainTime: 1,
+      filteredTotalTime: 0,
+      hasUsageData: false,
+    } as any)
+  }
+
   const verifyLoadingSpinnerVisible = () => {
     verifyTextPresent('Cargando información del usuario...')
   }
@@ -254,5 +295,13 @@ describe('UserDetailPage', () => {
     verifyTextPresent('Tiempo en cada dominio')
     verifyTextPresent('instagram.com')
     verifyTextPresent('1 h')
+  }
+
+  const verifyAntiScrollNoStatsButDaysVisible = () => {
+    verifyTextPresent('Tiempo scrolleando por día')
+    verifyTextPresent('Lunes')
+    verifyTextPresent('Martes')
+    verifyTextPresent('Tiempo en cada dominio')
+    verifyTextPresent('Sin estadísticas de uso')
   }
 })
