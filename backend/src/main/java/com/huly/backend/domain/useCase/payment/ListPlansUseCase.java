@@ -13,6 +13,6 @@ public class ListPlansUseCase {
     private final ProductRepository productRepository;
 
     public List<Product> execute() {
-        return productRepository.findByType(ProductType.PLAN);
+        return productRepository.findByTypeAndActive(ProductType.PLAN, true);
     }
 }

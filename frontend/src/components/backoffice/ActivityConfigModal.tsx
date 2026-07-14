@@ -52,6 +52,7 @@ export default function ActivityConfigModal({
       onClose={onClose}
       title="Configurar Actividad"
       maxWidthClass="max-w-xl"
+      hideDivider={true}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
         {/* Header Icon + Name */}
@@ -61,7 +62,7 @@ export default function ActivityConfigModal({
           </div>
           <div>
             <h4 className="font-bold text-gray-800 dark:text-gray-100">{activitySpanish}</h4>
-            <span className="text-[10px] font-bold text-violeta dark:text-violeta-claro uppercase tracking-widest">{localConfig.type}</span>
+            <span className="text-[11px] font-bold text-violeta dark:text-violeta-claro uppercase tracking-widest">{localConfig.type}</span>
           </div>
         </div>
 
@@ -112,7 +113,7 @@ export default function ActivityConfigModal({
         {/* 6 Slider VAD Activation panel */}
         <div className="flex flex-col gap-3 rounded-2xl bg-gray-50/50 p-4 dark:bg-gray-900/20 border border-gray-100 dark:border-gray-800/40">
           <h4 className="font-bold text-gray-700 dark:text-gray-200 text-xs uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-            <Smile className="h-4 w-4 text-violeta" /> Límites de Activación VAD <span className="text-[10px] lowercase text-gray-450 font-normal">(-1.0 a +1.0)</span>
+            <Smile className="h-4 w-4 text-violeta" /> Límites de Activación VAD <span className="text-[11px] lowercase text-gray-450 font-normal">(-1.0 a +1.0)</span>
           </h4>
           
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -217,7 +218,7 @@ export default function ActivityConfigModal({
         {/* 3 Slider VAD Expected Effects panel */}
         <div className="flex flex-col gap-3 rounded-2xl bg-gray-50/50 p-4 dark:bg-gray-900/20 border border-gray-100 dark:border-gray-800/40">
           <h4 className="font-bold text-gray-700 dark:text-gray-200 text-xs uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-            <Star className="h-4 w-4 text-violeta" /> Efectos Esperados VAD <span className="text-[10px] lowercase text-gray-450 font-normal">(deltas de cambio)</span>
+            <Star className="h-4 w-4 text-violeta" /> Efectos Esperados VAD <span className="text-[11px] lowercase text-gray-450 font-normal">(deltas de cambio)</span>
           </h4>
           
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

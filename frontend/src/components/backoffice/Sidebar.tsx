@@ -10,6 +10,8 @@ import {
   Wind,
   X,
   ShoppingBag,
+  Coins, 
+  CreditCard
 } from 'lucide-react'
 import colorLogo from '../../assets/brand/color-logo.webp'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
@@ -34,7 +36,7 @@ const NAV_ITEMS = [
     icon: <Bot className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
   {
-    to: '/backoffice/respiraciones',
+    to: '/backoffice/breathing',
     label: 'Respiraciones',
     end: false,
     icon: <Wind className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
@@ -46,22 +48,34 @@ const NAV_ITEMS = [
     icon: <Smartphone className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
   {
-    to: '/backoffice/actividades',
+    to: '/backoffice/activities',
     label: 'Actividades',
     end: false,
     icon: <CirclePlay className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
   {
-    to: '/backoffice/usuarios',
+    to: '/backoffice/users',
     label: 'Usuarios',
     end: false,
     icon: <User className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
   {
-    to: '/backoffice/productos',
+    to: '/backoffice/products',
     label: 'Productos',
     end: false,
     icon: <ShoppingBag className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
+  },
+  {
+    to: '/backoffice/seeds',
+    label: 'Semillas',
+    end: false,
+    icon: <Coins className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
+  },
+  {
+    to: '/backoffice/subscriptions',
+    label: 'Suscripciones',
+    end: false,
+    icon: <CreditCard className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />,
   },
 ]
 
@@ -90,7 +104,7 @@ export default function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
             </div>
             <div className="min-w-0">
               <img src={colorLogo} alt="Huly" className="h-9 w-auto object-contain object-left" />
-              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
+              <p className="mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
                 Bienestar emocional
               </p>
             </div>

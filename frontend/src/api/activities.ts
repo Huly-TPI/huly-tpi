@@ -8,6 +8,8 @@ export enum ActivityType {
   CHALLENGE = 'CHALLENGE',
   ZEN_GARDEN = 'ZEN_GARDEN',
   MANDALA = 'MANDALA',
+  STONES = 'STONES',
+  PENDING = 'PENDING',
 }
 
 export interface RegisterActivitySessionRequest {

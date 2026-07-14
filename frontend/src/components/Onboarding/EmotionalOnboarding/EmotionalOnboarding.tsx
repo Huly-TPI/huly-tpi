@@ -1,7 +1,10 @@
+import { useState, useEffect } from 'react'
 import './EmotionalOnboarding.css'
 import registerBackground from '../../../assets/register/background.webp'
+import registerBackgroundNight from '../../../assets/register/background-night.webp'
 import hulyGreeting from '../../../assets/register/huly-greeting.webp'
 import type { Step1Option } from '../../../hooks/useEmotionalOnboarding'
+import { useTheme } from '../../../context/theme'
 
 const STEP_CONTENT: Record<1 | 2 | 3, { title: string; subtitle: string }> = {
   1: {
@@ -37,12 +40,33 @@ export default function EmotionalOnboarding({
   onSkip,
   submitting = false,
 }: Props) {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [isSkipping, setIsSkipping] = useState(false)
 
+  useEffect(() => {
+    setSelectedOption(null)
+  }, [step])
+
+  const handleSelectOption = (option: string) => {
+    setSelectedOption(option)
+    onSelectOption(option)
+  }
+
+  const handleSkip = async () => {
+    setIsSkipping(true)
+    try {
+      await onSkip()
+    } finally {
+      setIsSkipping(false)
+    }
+  }
 
   return (
     <div
       className="eo-container"
-      style={{ backgroundImage: `url(${registerBackground})` }}
+      style={{ backgroundImage: `url(${isDark ? registerBackgroundNight : registerBackground})` }}
     >
       <div className="eo-overlay" />
 
@@ -58,11 +82,11 @@ export default function EmotionalOnboarding({
               <br />
               Antes de entrar al jardín, te hago unas preguntas cortitas para conocerte mejor y personalizar tu experiencia.
             </p>
-            <button className="eo-btn-primary" onClick={onAdvance}>
+             <button className="eo-btn-primary" onClick={onAdvance} disabled={submitting || isSkipping}>
               Empezar
             </button>
-            <button className="eo-btn-skip-link" onClick={onSkip} disabled={submitting}>
-              Saltar por ahora
+            <button className="eo-btn-skip-link" onClick={handleSkip} disabled={submitting || isSkipping}>
+              {isSkipping ? 'Saltar por ahora...' : 'Saltar por ahora'}
             </button>
           </div>
         </div>
@@ -77,8 +101,8 @@ export default function EmotionalOnboarding({
                 style={{ width: `${(step / 3) * 100}%` }}
               />
             </div>
-            <button className="eo-btn-skip-top" onClick={onSkip} disabled={submitting}>
-              Saltar
+            <button className="eo-btn-skip-top" onClick={handleSkip} disabled={submitting || isSkipping}>
+              {isSkipping ? 'Saltar...' : 'Saltar'}
             </button>
           </div>
 
@@ -91,34 +115,41 @@ export default function EmotionalOnboarding({
 
           {step === 1 && (
             <div className="eo-cards-grid">
-              {step1Options.map(opt => (
-                <button
-                  key={opt.title}
-                  className="eo-card-option"
-                  onClick={() => onSelectOption(opt.title)}
-                  disabled={submitting}
-                >
-                  <opt.Icon className="eo-card-option__icon" />
-                  <span className="eo-card-option__title">{opt.title}</span>
-                  <span className="eo-card-option__subtitle">{opt.subtitle}</span>
-                  
-                </button>
-              ))}
+              {step1Options.map(opt => {
+                const isSelected = selectedOption === opt.title
+                return (
+                  <button
+                    key={opt.title}
+                    className={`eo-card-option ${isSelected && submitting ? 'eo-card-option--loading' : ''}`}
+                    onClick={() => handleSelectOption(opt.title)}
+                    disabled={submitting || isSkipping}
+                  >
+                    <opt.Icon className="eo-card-option__icon" />
+                    <span className="eo-card-option__title">
+                      {isSelected && submitting ? 'Cargando...' : opt.title}
+                    </span>
+                    <span className="eo-card-option__subtitle">{opt.subtitle}</span>
+                  </button>
+                )
+              })}
             </div>
           )}
 
           {(step === 2 || step === 3) && (
             <div className="eo-pills">
-              {pillOptions.map(opt => (
-                <button
-                  key={opt}
-                  className="eo-pill"
-                  onClick={() => onSelectOption(opt)}
-                  disabled={submitting}
-                >
-                  {opt}
-                </button>
-              ))}
+              {pillOptions.map(opt => {
+                const isSelected = selectedOption === opt
+                return (
+                  <button
+                    key={opt}
+                    className={`eo-pill ${isSelected && submitting ? 'eo-pill--loading' : ''}`}
+                    onClick={() => handleSelectOption(opt)}
+                    disabled={submitting || isSkipping}
+                  >
+                    {isSelected && submitting ? 'Cargando...' : opt}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>

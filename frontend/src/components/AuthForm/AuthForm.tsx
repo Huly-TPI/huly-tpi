@@ -115,14 +115,14 @@ export default function AuthForm({
       </h2>
 
       {subtitle && (
-        <p className="mb-5 text-center text-sm italic text-[#8c7b66]">
+        <p className="mb-5 text-center text-sm font-semibold italic text-[#6b5a45]">
           {subtitle}
         </p>
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
         {fields.map((field, index) => (
-          <div key={field.name} className="flex flex-col gap-1">
+          <div key={field.name} className="flex flex-col gap-1 min-w-0">
             <label htmlFor={`field-${field.name}`} className="sr-only">
               {field.placeholder}
             </label>
@@ -131,7 +131,7 @@ export default function AuthForm({
               <p
                 id={`error-${field.name}`}
                 role="alert"
-                className="ml-2 flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400"
+                className="ml-2 max-sm:hidden flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-600 dark:bg-red-400 shrink-0" />
                 {errors[field.name]}
@@ -145,11 +145,11 @@ export default function AuthForm({
         )}
 
         {successMessage && (
-        <p className="mt-3 text-center text-sm font-semibold text-[#4C7C64]">
-          {successMessage}
-        </p>
+          <p className="mt-3 text-center text-sm font-semibold text-[#4C7C64]">
+            {successMessage}
+          </p>
         )}
-        
+
         {onTermsChange !== undefined && (
           <label className="mt-1 flex items-center gap-2 cursor-pointer select-none">
             <input
@@ -162,7 +162,7 @@ export default function AuthForm({
             <span className="text-xs text-[#8c7b66]">
               Acepto los{' '}
               <a
-                href="/terminos"
+                href="/privacy/terms"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-bold text-[#4C7C64] hover:underline"
@@ -199,7 +199,7 @@ export default function AuthForm({
 
       {switchText && switchLabel && onSwitchMode && (
         <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66]">
-          {switchText}{' '}
+          <span className="hidden sm:inline">{switchText} </span>
           <button
             type="button"
             onClick={onSwitchMode}

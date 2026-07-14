@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AuthForm from '../AuthForm/AuthForm'
 import { changePassword } from '../../api/auth'
+import { ApiError } from '../../api/apiError'
 
 interface ChangePasswordModalProps {
   onClose: () => void
@@ -43,7 +44,7 @@ export default function ChangePasswordModal({ onClose }: ChangePasswordModalProp
       setSuccessMessage('¡Contraseña actualizada con éxito!')
       setValues(INITIAL_VALUES)
     } catch (err: unknown) {
-      const status = (err as { response?: { status?: number } })?.response?.status
+      const status = err instanceof ApiError ? err.status : undefined
       if (status === 401 || status === 400) {
         setApiError('La contraseña actual es incorrecta.')
       } else {

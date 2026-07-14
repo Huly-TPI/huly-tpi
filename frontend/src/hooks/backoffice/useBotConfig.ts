@@ -24,8 +24,9 @@ export function useBotConfig() {
     try {
       const res = await chatbotApi.updateBotConfig({ riskDetectionEnabled, systemPrompt })
       setConfig(res)
-    } catch {
+    } catch (err) {
       setError('No se pudo guardar la configuración')
+      throw err
     }
   }, [])
 

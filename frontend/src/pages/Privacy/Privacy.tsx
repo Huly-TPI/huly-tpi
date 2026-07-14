@@ -1,8 +1,7 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, AppWindow, Globe, Mail, Lock, Eye, Database, Shield } from 'lucide-react'
 
-type TabType = 'general' | 'extension'
+type TabType = 'general' | 'extension' | 'terms'
 
 interface PolicySection {
   title: string
@@ -24,7 +23,7 @@ interface PolicyDocument {
 const GENERAL_POLICY: PolicyDocument = {
   id: 'general' as const,
   title: 'Política de privacidad general',
-  subtitle: 'Huly TPI',
+  subtitle: 'Huly',
   lastUpdated: '13 de junio de 2026',
   badge: undefined,
   intro: (
@@ -155,11 +154,70 @@ const EXTENSION_POLICY: PolicyDocument = {
   ],
 }
 
+const TERMS_POLICY: PolicyDocument = {
+  id: 'terms' as const,
+  title: 'Términos y condiciones de uso',
+  subtitle: 'Huly',
+  lastUpdated: '10 de julio de 2026',
+  badge: 'Términos de servicio',
+  intro: (
+    <>
+      Al usar el ecosistema de <strong>Huly</strong>, estás aceptando estos términos y condiciones. Por favor, leelos con atención antes de arrancar tu experiencia en la plataforma.
+    </>
+  ),
+  sections: [
+    {
+      title: '1. Registro y uso de cuenta',
+      icon: AppWindow,
+      content: (
+        <p className="leading-relaxed">
+          Para usar las funciones de Huly, tenés que registrarte con datos reales y actualizados, y tener por lo menos 13 años. Sos el único responsable de cuidar tu contraseña y de todo lo que pase en tu cuenta.
+        </p>
+      ),
+    },
+    {
+      title: '2. Economía virtual y tienda',
+      icon: Database,
+      content: (
+        <p className="leading-relaxed">
+          Las monedas del juego y los productos del jardín virtual (como semillas y decoraciones) se consiguen jugando dentro de la plataforma y no tienen ningún valor monetario en el mundo real. No las vas a poder cambiar por plata de verdad ni transferirlas a otros usuarios.
+        </p>
+      ),
+    },
+    {
+      title: '3. Descargo de responsabilidad (Bienestar vs. Terapia)',
+      icon: Shield,
+      highlight: true,
+      content: (
+        <p className="text-sm leading-relaxed text-[#4A5568] dark:text-gray-300">
+          <strong>Huly no da terapia médica ni asesoramiento psicológico profesional.</strong> Las herramientas de la plataforma (diarios de emociones, el chatbot, los ejercicios de respiración y las pausas digitales) están pensadas solo para acompañarte en tu bienestar y mindfulness. Si estás pasando por una crisis o necesitás atención de salud mental, te recomendamos que consultes con un profesional de la salud matriculado.
+        </p>
+      ),
+    },
+    {
+      title: '4. Modificaciones y cancelación',
+      icon: Lock,
+      content: (
+        <p className="leading-relaxed">
+          Nos guardamos el derecho de modificar estos términos o suspender el servicio si lo consideramos necesario. También podés pedir la eliminación definitiva de tu cuenta y de todos tus datos en cualquier momento desde tu perfil o contactándote con soporte.
+        </p>
+      ),
+    },
+  ],
+}
+
+
 export default function Privacy() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<TabType>('general')
+  const { tab } = useParams<{ tab: string }>()
 
-  const activeDoc = activeTab === 'general' ? GENERAL_POLICY : EXTENSION_POLICY
+  const activeTab: TabType = (tab === 'extension' || tab === 'terms') ? tab : 'general'
+
+  const activeDoc = activeTab === 'general' 
+    ? GENERAL_POLICY 
+    : activeTab === 'extension' 
+      ? EXTENSION_POLICY 
+      : TERMS_POLICY
 
   return (
     <div className="h-full w-full overflow-hidden flex flex-col bg-[#EDF2ED] dark:bg-[#09111f] text-[#4A5568] dark:text-gray-300 font-sans transition-colors duration-200">
@@ -177,14 +235,14 @@ export default function Privacy() {
               <h1 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight text-violeta dark:text-violeta-claro flex items-center gap-2">
                 Centro de privacidad
               </h1>
-              <p className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
+              <p className="hidden sm:block text-[11px] font-bold uppercase tracking-[0.14em] text-[#A0AEC0] dark:text-gray-500">
                 Políticas de bienestar emocional - Huly
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#A0AEC0] dark:text-gray-500">Versión 1.0.0</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider text-[#A0AEC0] dark:text-gray-500">Versión 1.0.0</span>
           </div>
         </div>
       </header>
@@ -194,12 +252,12 @@ export default function Privacy() {
           <div className="w-full">
             <div className="hidden lg:block px-2 py-3 mb-2">
               <h2 className="text-xs font-bold uppercase tracking-widest text-[#A0AEC0] dark:text-gray-500">Seleccionar documento</h2>
-              <p className="text-[11px] text-gray-400 dark:text-gray-400 mt-1">Navega por las políticas de privacidad de nuestro ecosistema.</p>
+              <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400 mt-1">Navega por las políticas de privacidad de nuestro ecosistema.</p>
             </div>
             
             <nav className="flex flex-row lg:flex-col gap-2 w-full">
               <button
-                onClick={() => setActiveTab('general')}
+                onClick={() => navigate('/privacy')}
                 className={`flex flex-1 lg:w-full items-center justify-center lg:justify-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
                   activeTab === 'general'
                     ? 'bg-violeta dark:bg-violeta-claro text-white dark:text-[#09111f] shadow-sm'
@@ -211,7 +269,7 @@ export default function Privacy() {
               </button>
               
               <button
-                onClick={() => setActiveTab('extension')}
+                onClick={() => navigate('/privacy/extension')}
                 className={`flex flex-1 lg:w-full items-center justify-center lg:justify-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
                   activeTab === 'extension'
                     ? 'bg-violeta dark:bg-violeta-claro text-white dark:text-[#09111f] shadow-sm'
@@ -221,10 +279,22 @@ export default function Privacy() {
                 <Globe className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'extension' ? 'text-white dark:text-[#09111f]' : 'text-[#A0AEC0] dark:text-gray-500'}`} />
                 <span className="text-xs sm:text-sm">Extensión Chrome</span>
               </button>
+
+              <button
+                onClick={() => navigate('/privacy/terms')}
+                className={`flex flex-1 lg:w-full items-center justify-center lg:justify-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                  activeTab === 'terms'
+                    ? 'bg-violeta dark:bg-violeta-claro text-white dark:text-[#09111f] shadow-sm'
+                    : 'text-[#4A5568] dark:text-gray-300 hover:bg-[#D1CAEF]/30 dark:hover:bg-[#2A233C]/50 hover:text-violeta dark:hover:text-violeta-claro'
+                }`}
+              >
+                <Shield className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'terms' ? 'text-white dark:text-[#09111f]' : 'text-[#A0AEC0] dark:text-gray-500'}`} />
+                <span className="text-xs sm:text-sm">Términos de servicio</span>
+              </button>
             </nav>
           </div>
 
-          <div className="hidden lg:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/40 text-[11px] text-[#A0AEC0] dark:text-gray-500 px-2 text-center lg:text-left">
+          <div className="hidden lg:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/40 text-[12px] text-[#A0AEC0] dark:text-gray-500 px-2 text-center lg:text-left">
             Huly está comprometido con la transparencia y el software open source.
           </div>
         </aside>
@@ -233,7 +303,7 @@ export default function Privacy() {
           <article className="space-y-8 animate-fadeIn">
             <div className="border-b border-gray-100 dark:border-gray-800/40 pb-5">
               {activeDoc.badge && (
-                <span className="bg-[#D1CAEF]/40 dark:bg-[#2A233C]/50 text-violeta dark:text-violeta-claro text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="bg-[#D1CAEF]/40 dark:bg-[#2A233C]/50 text-violeta dark:text-violeta-claro text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
                   {activeDoc.badge}
                 </span>
               )}

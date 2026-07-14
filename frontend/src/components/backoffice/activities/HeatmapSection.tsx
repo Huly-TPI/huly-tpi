@@ -33,7 +33,7 @@ export default function HeatmapSection({
 
       <div className="flex flex-col gap-3.5 mt-2">
         {/* X-Axis headers */}
-        <div className="grid grid-cols-7 gap-1 items-center pl-24">
+        <div className="grid grid-cols-9 gap-1 items-center pl-24">
           {Object.keys(activityIcons).map((actKey) => {
             const Icon = activityIcons[actKey]
             const theme = activityThemes[actKey] || { bg: 'bg-gray-100 text-gray-500' }
@@ -51,7 +51,7 @@ export default function HeatmapSection({
         <div className="flex flex-col gap-3">
           {HEATMAP_EMOTIONS.map((emotionLabel) => {
             return (
-              <div key={emotionLabel} className="grid grid-cols-7 gap-1 items-center relative pl-24">
+              <div key={emotionLabel} className="grid grid-cols-9 gap-1 items-center relative pl-24">
                 <div className="absolute left-0 w-24 text-xs font-bold text-gray-450 dark:text-gray-400 truncate">
                   {emotionLabel}
                 </div>
@@ -78,7 +78,7 @@ export default function HeatmapSection({
                       >
                         {/* Interactive tooltip */}
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/cell:flex flex-col items-center z-20">
-                          <div className="rounded-xl bg-gray-900 text-white text-[10px] p-2.5 font-semibold whitespace-nowrap shadow-xl border border-gray-800 flex flex-col gap-1 text-center">
+                          <div className="rounded-xl bg-gray-900 text-white text-[11px] p-2.5 font-semibold whitespace-nowrap shadow-xl border border-gray-800 flex flex-col gap-1 text-center">
                             <span className="font-extrabold text-gray-300">{emotionLabel}</span>
                             <span>{count} recomendaciones</span>
                             {count > 0 && (
@@ -97,7 +97,7 @@ export default function HeatmapSection({
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 justify-end mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+      <div className="flex items-center gap-1.5 justify-end mt-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
         <span>Pocas sugerencias</span>
         <div className="flex gap-1 items-center px-1">
           <span className="h-2 w-2 rounded-full bg-violeta-claro opacity-15"></span>

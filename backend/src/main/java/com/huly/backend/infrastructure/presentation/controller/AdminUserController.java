@@ -1,11 +1,7 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.huly.backend.domain.model.enums.Timeframe;
-import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigRequest;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesUseCase;
 import com.huly.backend.domain.useCase.admin.userAiDiagnostics.GetUserAiDiagnosticsRequest;
@@ -14,9 +10,6 @@ import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollSta
 import com.huly.backend.domain.useCase.admin.userAntiScroll.GetUserAntiScrollStatsUseCase;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsRequest;
 import com.huly.backend.domain.useCase.admin.userFinancials.GetUserFinancialsUseCase;
-import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest;
-import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigResponse;
-import com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollDashboardResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.BackofficeUserResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.UserActivitiesResponse;
 import com.huly.backend.infrastructure.presentation.dto.admin.UserAiDiagnosticsResponse;
@@ -36,9 +29,6 @@ import java.util.List;
 public class AdminUserController {
 
     private final ListBackofficeUsersUseCase listBackofficeUsersUseCase;
-    private final GetAntiScrollDashboardUseCase getAntiScrollDashboardUseCase;
-    private final GetAntiScrollGlobalConfigUseCase getAntiScrollGlobalConfigUseCase;
-    private final UpdateAntiScrollGlobalConfigUseCase updateAntiScrollGlobalConfigUseCase;
     private final GetUserActivitiesUseCase getUserActivitiesUseCase;
     private final GetUserAiDiagnosticsUseCase getUserAiDiagnosticsUseCase;
     private final GetUserFinancialsUseCase getUserFinancialsUseCase;
@@ -83,23 +73,4 @@ public class AdminUserController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/antiscroll/dashboard")
-    public ResponseEntity<AntiScrollDashboardResponse> getDashboardStats() {
-        return ResponseEntity.ok(adminPresentationMapper.toAntiScrollDashboardResponse(getAntiScrollDashboardUseCase.execute()));
-    }
-
-    @GetMapping("/antiscroll/config")
-    public ResponseEntity<AntiScrollConfigResponse> getAntiScrollConfig() {
-        var result = getAntiScrollGlobalConfigUseCase.execute();
-        return ResponseEntity.ok(adminPresentationMapper.toAntiScrollConfigResponse(result));
-    }
-
-    @PostMapping("/antiscroll/config")
-    public ResponseEntity<Void> updateAntiScrollConfig(@Valid @RequestBody AntiScrollConfigRequest request) {
-        updateAntiScrollGlobalConfigUseCase.execute(new UpdateAntiScrollGlobalConfigRequest(
-                request.getDefaultPauseIntervalMinutes(),
-                request.getTermsAndConditions()
-        ));
-        return ResponseEntity.ok().build();
-    }
 }

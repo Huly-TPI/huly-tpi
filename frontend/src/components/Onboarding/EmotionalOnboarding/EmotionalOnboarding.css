@@ -27,6 +27,7 @@
 
 .eo-bubble {
     background: white;
+    border: 1px solid transparent;
     border-radius: 1.5rem;
     padding: 2rem 1.75rem 1.75rem;
     text-align: center;
@@ -81,6 +82,7 @@
     width: 100%;
     max-width: 420px;
     background: white;
+    border: 1px solid transparent;
     border-radius: 1.5rem;
     padding: 1.75rem 1.75rem 2rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
@@ -119,7 +121,8 @@
 
 .eo-subtitle {
     font-size: 0.85rem;
-    color: #6B6B6B;
+    font-weight: 500;
+    color: #595959;
     text-align: center;
     margin-bottom: 1.5rem;
     line-height: 1.4;
@@ -170,8 +173,9 @@
 }
 
 .eo-card-option__subtitle {
-    font-size: 0.7rem;
-    color: #6B6B6B;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #595959;
     line-height: 1.2;
 }
 
@@ -262,4 +266,115 @@
 .eo-btn-skip-top:hover {
     border-color: #4C7C64;
     color: #4C7C64;
+}
+
+.eo-pill:disabled,
+.eo-card-option:disabled,
+.eo-btn-primary:disabled,
+.eo-btn-skip-link:disabled,
+.eo-btn-skip-top:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.eo-pill--loading {
+    background: #E9F1EA !important;
+    border-color: #4C7C64 !important;
+    color: #4C7C64 !important;
+}
+
+.eo-card-option--loading {
+    background: #E9F1EA !important;
+    border-color: #4C7C64 !important;
+}
+
+/* ===== DARK MODE OVERRIDES ===== */
+
+html.dark .eo-overlay {
+    background: rgba(8, 18, 34, 0.35);
+}
+
+html.dark .eo-bubble,
+html.dark .eo-card {
+    background: #172033;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .eo-bubble__text {
+    color: #a8d8a8;
+}
+
+html.dark .eo-progress {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .eo-progress__bar {
+    background: #a8d8a8;
+}
+
+html.dark .eo-title {
+    color: #f1f5f9;
+}
+
+html.dark .eo-subtitle {
+    color: #94a3b8;
+}
+
+html.dark .eo-card-option {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: #1e293b;
+}
+
+html.dark .eo-card-option:hover {
+    border-color: #4C7C64;
+    background: rgba(168, 216, 168, 0.12);
+}
+
+html.dark .eo-card-option__icon {
+    color: #a8d8a8;
+}
+
+html.dark .eo-card-option__title {
+    color: #f1f5f9;
+}
+
+html.dark .eo-card-option__subtitle {
+    color: #94a3b8;
+}
+
+html.dark .eo-pill {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+html.dark .eo-pill:hover {
+    border-color: #4C7C64;
+    background: rgba(168, 216, 168, 0.12);
+    color: #a8d8a8;
+}
+
+html.dark .eo-btn-skip-link {
+    color: #94a3b8;
+}
+
+html.dark .eo-btn-skip-link:hover {
+    color: #f1f5f9;
+}
+
+html.dark .eo-btn-skip-top {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+}
+
+html.dark .eo-btn-skip-top:hover {
+    border-color: #a8d8a8;
+    color: #a8d8a8;
+}
+
+html.dark .eo-pill--loading,
+html.dark .eo-card-option--loading {
+    background: rgba(168, 216, 168, 0.12) !important;
+    border-color: #a8d8a8 !important;
 }

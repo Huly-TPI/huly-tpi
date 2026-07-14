@@ -77,7 +77,7 @@ describe('usePostitDrag', () => {
     verifyOnPlaceNotCalled()
   })
 
-  it('un pointerdown en el tablero mientras sigue al puntero llama a onPlace y vuelve a idle', () => {
+  it('un pointerup dentro del tablero mientras sigue al puntero llama a onPlace y vuelve a idle', () => {
     const boardEl = attachBoardElement()
     const boardRef = createRef<HTMLDivElement>()
     // @ts-expect-error asignación manual para test
@@ -85,12 +85,36 @@ describe('usePostitDrag', () => {
     setupHook(boardRef)
 
     callPickUp(7)
-    dispatchBoardPointerDown(boardEl, 100, 50)
+    dispatchWindowPointerUp(100, 50)
 
     verifyOnPlaceCalledWith(7, 50, 50)
     verifyDragMode('idle')
 
     document.body.removeChild(boardEl)
+  })
+
+  it('un pointerup fuera del tablero cancela sin llamar a onPlace', () => {
+    const boardEl = attachBoardElement()
+    const boardRef = createRef<HTMLDivElement>()
+    // @ts-expect-error asignación manual para test
+    boardRef.current = boardEl
+    setupHook(boardRef)
+
+    callPickUp(7)
+    dispatchWindowPointerUp(-50, -50)
+
+    verifyOnPlaceNotCalled()
+    verifyDragMode('idle')
+
+    document.body.removeChild(boardEl)
+  })
+
+  it('pickUp con origin inicializa dragState.x/y en ese origin en vez del centro de pantalla', () => {
+    setupHook(createRef<HTMLDivElement>())
+
+    callPickUp(1, { x: 30, y: 40 })
+
+    verifyDragPosition(30, 40)
   })
 
   it('Escape cancela el modo following', () => {
@@ -117,18 +141,24 @@ describe('usePostitDrag', () => {
     return boardEl
   }
 
-  const callPickUp = (taskId: number) => {
-    act(() => rendered.result.current.pickUp(taskId))
+  const callPickUp = (taskId: number, origin?: { x: number; y: number }) => {
+    act(() => rendered.result.current.pickUp(taskId, origin))
   }
 
   const callCancel = () => {
     act(() => rendered.result.current.cancel())
   }
 
-  const dispatchBoardPointerDown = (boardEl: HTMLDivElement, clientX: number, clientY: number) => {
+  const dispatchWindowPointerUp = (clientX: number, clientY: number) => {
     act(() => {
-      boardEl.dispatchEvent(new MouseEvent('pointerdown', { clientX, clientY, bubbles: true }))
+      window.dispatchEvent(new MouseEvent('pointerup', { clientX, clientY, bubbles: true }))
     })
+  }
+
+  const verifyDragPosition = (x: number, y: number) => {
+    const state = rendered.result.current.dragState
+    expect(state.mode === 'following' && state.x).toBe(x)
+    expect(state.mode === 'following' && state.y).toBe(y)
   }
 
   const dispatchEscapeKey = () => {

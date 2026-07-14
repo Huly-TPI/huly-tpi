@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserRepositoryImpl implements UserRepository {
 
     private final AppUserRepository jpaRepository;
@@ -105,8 +106,8 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public List<AppUser> findUsersInactiveSince(Instant since) {
-        return jpaRepository.findByLastLoginAtBefore(since).stream()
+    public List<AppUser> findUsersInactiveBetween(Instant start, Instant end) {
+        return jpaRepository.findByLastLoginAtBetween(start, end).stream()
                 .map(this::toDomain)
                 .toList();
     }

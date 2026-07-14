@@ -9,7 +9,7 @@ import { verifyTextPresent, verifyTextNotPresent, clearAllMocks } from '../testH
 
 vi.mock('../../api/admin', () => ({
   getUsers: vi.fn(),
-  getAntiScrollDashboard: vi.fn(),
+  getAdminDashboard: vi.fn(),
   getUserActivities: vi.fn(),
   getUserAiDiagnostics: vi.fn(),
   getUserFinancials: vi.fn(),
@@ -195,10 +195,10 @@ describe('UsersPage', () => {
   const renderUsersWithRoutes = () => {
     user = userEvent.setup()
     render(
-      <MemoryRouter initialEntries={['/backoffice/usuarios']}>
+      <MemoryRouter initialEntries={['/backoffice/users']}>
         <Routes>
-          <Route path="/backoffice/usuarios" element={<UsersPage />} />
-          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
+          <Route path="/backoffice/users" element={<UsersPage />} />
+          <Route path="/backoffice/users/:id" element={<UserDetailPage />} />
         </Routes>
       </MemoryRouter>
     )
@@ -207,9 +207,9 @@ describe('UsersPage', () => {
   const renderUserDetailPageOnly = (userId: number) => {
     user = userEvent.setup()
     render(
-      <MemoryRouter initialEntries={[`/backoffice/usuarios/${userId}`]}>
+      <MemoryRouter initialEntries={[`/backoffice/users/${userId}`]}>
         <Routes>
-          <Route path="/backoffice/usuarios/:id" element={<UserDetailPage />} />
+          <Route path="/backoffice/users/:id" element={<UserDetailPage />} />
         </Routes>
       </MemoryRouter>
     )

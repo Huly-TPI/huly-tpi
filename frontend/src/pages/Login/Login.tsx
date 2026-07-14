@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/apiError'
 import { useAuth } from '../../context/auth'
@@ -40,7 +40,13 @@ const RESET_RULES = {
 
 export default function Login() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, isAuthenticated, loading: authLoading, user } = useAuth()
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate(user?.onBoardingCompleted === false ? '/onboarding' : '/', { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate, user])
 
   const [step, setStep] = useState<Step>('login')
   const [loading, setLoading] = useState(false)
@@ -119,6 +125,10 @@ export default function Login() {
       )
       setLoading(false)
     }
+  }
+
+  if (authLoading || isAuthenticated) {
+    return null
   }
 
   if (step === 'forgot') {

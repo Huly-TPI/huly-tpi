@@ -58,25 +58,26 @@ public class GetUserAiDiagnosticsUseCase {
                 .map(style -> style.displayName())
                 .orElse("Neutro");
 
-        List<EmotionalEventResponse> recommendationEvents = emotionalEventRepository.findRecommendationEventsByUserId(userId).stream()
-                .map(this::toEmotionalEventResponse)
-                .toList();
+        List<EmotionalEvent> recommendationEvents = emotionalEventRepository.findRecommendationEventsByUserId(userId);
+        List<EmotionalEvent> fullHistory = emotionalEventRepository.findByUserId(userId);
 
         int acceptedCount = 0;
         Set<String> acceptedActivities = new LinkedHashSet<>();
         Set<String> ignoredActivities = new LinkedHashSet<>();
-        for (EmotionalEventResponse event : recommendationEvents) {
-            if ("ACCEPTED".equals(event.recommendationDecision())) {
+        for (EmotionalEvent event : recommendationEvents) {
+            boolean chatbotAccepted = event.getRecommendationDecision() == com.huly.backend.domain.model.enums.RecommendationDecision.ACCEPTED;
+            int i = fullHistory.indexOf(event);
+            boolean wasUnhelpful = chatbotAccepted && event.isUnhelpful(i, fullHistory);
+
+            if (chatbotAccepted && !wasUnhelpful)
                 acceptedCount++;
-            }
 
-            if (event.generatedRecommendation() == null || event.generatedRecommendation().isBlank()) {
+            if (event.getGeneratedRecommendation() == null || event.getGeneratedRecommendation().isBlank())
                 continue;
-            }
 
-            String simplifiedRecommendationName = simplifyRecommendationName(event.generatedRecommendation());
+            String simplifiedRecommendationName = simplifyRecommendationName(event.getGeneratedRecommendation());
 
-            if ("ACCEPTED".equals(event.recommendationDecision())) {
+            if (chatbotAccepted && !wasUnhelpful) {
                 acceptedActivities.add(simplifiedRecommendationName);
             } else {
                 ignoredActivities.add(simplifiedRecommendationName);
@@ -257,25 +258,27 @@ public class GetUserAiDiagnosticsUseCase {
 
     private String simplifyRecommendationName(String name) {
         String normalizedName = name.toLowerCase();
-        if (normalizedName.contains("respiracion") || normalizedName.contains("respiración") || normalizedName.contains("breathing")) {
+        if (normalizedName.contains("respiracion") || normalizedName.contains("respiración") || normalizedName.contains("breathing"))
             return "Respiración Guiada";
-        }
 
-        if (normalizedName.contains("diario") || normalizedName.contains("journal")) {
+        if (normalizedName.contains("diario") || normalizedName.contains("journal"))
             return "Diario Emocional";
-        }
 
-        if (normalizedName.contains("nube") || normalizedName.contains("cloud")) {
+        if (normalizedName.contains("nube") || normalizedName.contains("cloud"))
             return "Nubes de Pensamiento";
-        }
 
-        if (normalizedName.contains("burbuja") || normalizedName.contains("bubble")) {
+        if (normalizedName.contains("burbuja") || normalizedName.contains("bubble"))
             return "Reventar Burbujas";
-        }
 
-        if (normalizedName.contains("reto") || normalizedName.contains("challenge")) {
+        if (normalizedName.contains("reto") || normalizedName.contains("challenge"))
             return "Retos Diarios";
-        }
+
+        if (normalizedName.contains("piedra") || normalizedName.contains("stone"))
+            return "Piedras del Lago";
+
+        if (normalizedName.contains("pendiente") || normalizedName.contains("pending"))
+            return "Pendientes";
+
 
         return name;
     }

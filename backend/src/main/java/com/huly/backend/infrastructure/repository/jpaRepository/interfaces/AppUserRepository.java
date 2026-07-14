@@ -31,8 +31,8 @@ public interface AppUserRepository extends JpaRepository<AppUserEntity, Long> {
     @Query("UPDATE AppUserEntity u SET u.lastLoginAt = :now WHERE u.id = :userId")
     void updateLastLogin(@Param("userId") Long userId, @Param("now") Instant now);
 
-    @Query("SELECT u FROM AppUserEntity u WHERE u.lastLoginAt IS NOT NULL AND u.lastLoginAt < :since AND u.reengagementEmailsEnabled = true")
-    List<AppUserEntity> findByLastLoginAtBefore(@Param("since") Instant since);
+    @Query("SELECT u FROM AppUserEntity u WHERE u.lastLoginAt IS NOT NULL AND u.lastLoginAt >= :start AND u.lastLoginAt < :end AND u.reengagementEmailsEnabled = true")
+    List<AppUserEntity> findByLastLoginAtBetween(@Param("start") Instant start, @Param("end") Instant end);
 
     Optional<AppUserEntity> findByUnsubscribeToken(UUID unsubscribeToken);
 

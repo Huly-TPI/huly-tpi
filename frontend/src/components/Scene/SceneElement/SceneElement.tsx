@@ -6,6 +6,9 @@ export type SceneTheme = 'light' | 'dark'
 
 type SceneElementProps = SceneElementDefinition & {
   theme?: SceneTheme
+  children?: React.ReactNode
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 export default function SceneElement({
@@ -22,6 +25,9 @@ export default function SceneElement({
   theme = 'light',
   to,
   onClick,
+  children,
+  onMouseEnter,
+  onMouseLeave,
 }: SceneElementProps) {
   const sharedClassName = [
     'absolute',
@@ -41,12 +47,17 @@ export default function SceneElement({
   const imageSrc = theme === 'dark' && image.dark ? image.dark : image.light
 
   return (
-    <div className={`group scene-element absolute hover:z-[120] focus-within:z-[120] ${placementClassName}`}>
+    <div 
+      className={`group scene-element absolute ${placementClassName}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       <img
         src={imageSrc}
         alt={imageAlt}
         className={`scene-element__image scene-element__shadow pointer-events-none select-none transition duration-200 ${imageVariantClassName} ${imageClassName}`}
       />
+      {children}
 
       <div
         aria-hidden="true"

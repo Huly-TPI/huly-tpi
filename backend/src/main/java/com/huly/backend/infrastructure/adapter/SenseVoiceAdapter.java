@@ -1,11 +1,13 @@
 package com.huly.backend.infrastructure.adapter;
 
 import com.huly.backend.domain.port.AudioTranscriptionPort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -16,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+@Slf4j
 @Component
 public class SenseVoiceAdapter implements AudioTranscriptionPort {
 
@@ -26,12 +29,30 @@ public class SenseVoiceAdapter implements AudioTranscriptionPort {
     private String senseVoiceUrl;
 
     private final RestTemplate restTemplate;
+    private final RestTemplate healthRestTemplate;
 
     public SenseVoiceAdapter() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(10_000);
         factory.setReadTimeout(120_000);
         this.restTemplate = new RestTemplate(factory);
+
+        // Cliente aparte para el keep-alive: timeout corto para no bloquear el hilo del scheduler.
+        SimpleClientHttpRequestFactory healthFactory = new SimpleClientHttpRequestFactory();
+        healthFactory.setConnectTimeout(5_000);
+        healthFactory.setReadTimeout(15_000);
+        this.healthRestTemplate = new RestTemplate(healthFactory);
+    }
+
+    @Override
+    public boolean ping() {
+        try {
+            ResponseEntity<String> response = healthRestTemplate.getForEntity(senseVoiceUrl + "/health", String.class);
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            log.warn("SenseVoice /health no respondió: {}", e.getMessage());
+            return false;
+        }
     }
 
     @Override

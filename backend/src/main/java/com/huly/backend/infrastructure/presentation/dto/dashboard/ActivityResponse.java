@@ -8,5 +8,6 @@ package com.huly.backend.infrastructure.presentation.dto.dashboard;
  */
 public record ActivityResponse(
         String name,
+        String type,
         int pct
 ) {}

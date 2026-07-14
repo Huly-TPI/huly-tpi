@@ -1,0 +1,580 @@
+.anim-wave-hand {
+  transform-origin: 263px 343.7px;
+  animation: wave-hand 6s ease-in-out infinite;
+}
+
+@keyframes wave-hand {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  12.5% {
+    transform: rotate(-10deg);
+  }
+
+  25% {
+    transform: rotate(10deg);
+  }
+
+  37.5% {
+    transform: rotate(-10deg);
+  }
+
+  50% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Organic Transforms */
+.organic-transform {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* Happy Eyes (Ojo Cerrado Alegre) */
+.anim-happy-eyes {
+  animation: happy-eyes-in 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite both;
+}
+
+.idle-happy-eyes {
+  transform: scale(0.8);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes happy-eyes-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  5%,
+  45% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Normal Eyes */
+.anim-normal-eyes {
+  animation: normal-eyes-out 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite both;
+}
+
+.idle-normal-eyes {
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes normal-eyes-out {
+  0% {
+    opacity: 1;
+  }
+
+  5%,
+  45% {
+    opacity: 0;
+  }
+
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Mouth Pop In (Happy Mouth) */
+.anim-pop-in-mouth {
+  animation: pop-in-mouth 6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s infinite both;
+}
+
+.idle-pop-in-mouth {
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s;
+}
+
+@keyframes pop-in-mouth {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  5%,
+  45% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+/* Mouth Fade Out (Normal Mouth) */
+.anim-fade-out-mouth {
+  animation: fade-out-mouth 6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s infinite both;
+}
+
+.idle-fade-out-mouth {
+  transform: scale(1);
+  opacity: 1;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s;
+}
+
+@keyframes fade-out-mouth {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  5%,
+  45% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  50%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Head Bob */
+.anim-head-bob {
+  transform-origin: 256px 330px;
+  animation: head-bob 6s ease-in-out infinite both;
+}
+
+.idle-head-bob {
+  transform-origin: 256px 330px;
+  transform: rotate(0deg);
+  transition: transform 0.6s ease-in-out;
+}
+
+@keyframes head-bob {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  10%,
+  40% {
+    transform: rotate(3deg);
+  }
+
+  50%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Eyebrows */
+.anim-ceja-izq {
+  animation: ceja-izq-up 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite both;
+}
+
+.idle-ceja-izq {
+  transform: translateY(0) rotate(0deg);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ceja-izq-up {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  5%,
+  45% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+
+  50%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.anim-ceja-der {
+  animation: ceja-der-up 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite both;
+}
+
+.idle-ceja-der {
+  transform: translateY(0) rotate(0deg);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ceja-der-up {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  5%,
+  45% {
+    transform: translateY(-4px) rotate(-5deg);
+  }
+
+  50%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* Viento Soplado */
+.anim-viento-soplado {
+  animation: viento-soplado-anim 1.5s ease-out infinite;
+}
+
+@keyframes viento-soplado-anim {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+}
+
+.hidden-wind {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+/* Sitting Pose */
+/* Sitting Pose */
+/* Sitting Pose */
+/* Sitting Pose */
+.pose-sit-leg-der {
+  transform-origin: 274px 430px;
+  /* Right Hip */
+  transform: translate(-42px, 14px) rotate(-90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-calf-der {
+  transform-origin: 272px 451px;
+  /* Right Knee */
+  transform: rotate(90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-leg-izq {
+  transform-origin: 221px 421px;
+  /* Left Hip */
+  transform: translate(-52px, 5px) rotate(-90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-calf-izq {
+  transform-origin: 213px 444px;
+  /* Left Knee */
+  transform: rotate(90deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+/* Mirror Right Arm (Horizontal and Vertical) */
+.pose-sit-arm-der {
+  transform-origin: 263px 343.7px;
+  transform: rotate(100deg) scale(1, -1);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-torso {
+  transform-origin: 244px 407px;
+  /* Base of the torso (waist) */
+  transform: rotate(10deg) translate(-20px, 10px);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-sit-head {
+  transform-origin: 207px 296px;
+  /* Base of the neck */
+  transform: rotate(15deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+.pose-guided-breathing-arm-izq {
+  transform-origin: 151.6px 326.3px;
+  /* Upper arm anchor */
+  transform: translate(34.507px, -0.33232px) rotate(45deg);
+  transition: transform 0.4s ease-in-out;
+}
+
+/* Walking Animations */
+.anim-walk-arm-der {
+  transform-origin: 263px 343.7px;
+  animation: walk-swing 0.5s infinite alternate ease-in-out;
+}
+
+.anim-walk-arm-izq-wrap {
+  transform-origin: 186.1px 325.9px;
+  animation: walk-swing-reverse 0.5s infinite alternate ease-in-out;
+}
+
+.anim-walk-leg-der {
+  transform-origin: 274px 430px;
+  animation: walk-swing-reverse 0.5s infinite alternate ease-in-out;
+}
+
+.anim-walk-calf-der {
+  transform-origin: 272px 451px;
+  animation: walk-knee-reverse 0.5s infinite alternate ease-in-out;
+}
+
+.anim-walk-leg-izq {
+  transform-origin: 221px 421px;
+  animation: walk-swing 0.5s infinite alternate ease-in-out;
+}
+
+.anim-walk-calf-izq {
+  transform-origin: 213px 444px;
+  animation: walk-knee 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes walk-swing {
+  0% {
+    transform: rotate(-15deg);
+  }
+
+  100% {
+    transform: rotate(15deg);
+  }
+}
+
+@keyframes walk-swing-reverse {
+  0% {
+    transform: rotate(15deg);
+  }
+
+  100% {
+    transform: rotate(-15deg);
+  }
+}
+
+@keyframes walk-knee {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(35deg);
+  }
+}
+
+@keyframes walk-knee-reverse {
+  0% {
+    transform: rotate(35deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.pose-error-arm-der {
+  transform-origin: 263px 343.7px;
+  transform: rotate(80deg);
+  transition: transform cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.error-pop-in-mouth {
+  transform: scale(1);
+  opacity: 1;
+  transition: all cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s;
+}
+
+.error-fade-out-mouth {
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Look Around Animation */
+.anim-look-around {
+  transform-origin: 207px 296px; /* Neck base */
+  animation: look-around 4s ease-in-out infinite;
+}
+
+@keyframes look-around {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-15deg);
+  }
+  30% {
+    transform: rotate(-15deg);
+  }
+  45% {
+    transform: rotate(15deg);
+  }
+  60% {
+    transform: rotate(15deg);
+  }
+  75% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Jump Animation */
+.anim-jump-wrap {
+  animation: jump-bounce 1.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes jump-bounce {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  20% {
+    transform: translateY(0) scaleY(0.9); /* Squat before jump */
+  }
+  40% {
+    transform: translateY(-40px) scaleY(1.05); /* Up in the air */
+  }
+  60% {
+    transform: translateY(0) scaleY(0.95); /* Landing squash */
+  }
+  80% {
+    transform: translateY(0) scaleY(1); /* Recover */
+  }
+}
+/* ==============================================
+   Complex Animations (Stretch)
+   ============================================== */
+.anim-stretch-arm-der {
+  transform-origin: 263px 343.7px;
+  animation: stretch-arm-der 6s ease-in-out infinite;
+}
+
+.anim-stretch-arm-izq {
+  transform-origin: 186.1px 325.9px;
+  animation: stretch-arm-izq 6s ease-in-out infinite;
+}
+
+.anim-stretch-head {
+  transform-origin: 207px 296px;
+  animation: stretch-head 6s ease-in-out infinite;
+}
+
+.anim-stretch-torso {
+  transform-origin: 244px 407px;
+  animation: stretch-torso 6s ease-in-out infinite;
+}
+
+@keyframes stretch-arm-der {
+  0%, 10%, 90%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(-130deg); } /* Brazo derecho arriba */
+}
+
+@keyframes stretch-arm-izq {
+  0%, 10%, 90%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(130deg); } /* Brazo izquierdo arriba */
+}
+
+@keyframes stretch-head {
+  0%, 10%, 90%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(-15deg); } /* Cabeza hacia atras */
+}
+
+@keyframes stretch-torso {
+  0%, 10%, 90%, 100% { transform: scaleY(1) translateY(0); }
+  30%, 70% { transform: scaleY(1.03) translateY(-8px); } /* Toma aire */
+}
+
+/* ==============================================
+   Complex Animations (Dance)
+   ============================================== */
+.anim-dance-wrap {
+  transform-origin: bottom center;
+  animation: dance-bounce 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-torso {
+  transform-origin: 244px 407px;
+  animation: dance-torso 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-arm-der {
+  transform-origin: 263px 343.7px;
+  animation: dance-arm-der 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-arm-izq {
+  transform-origin: 186.1px 325.9px;
+  animation: dance-arm-izq 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-leg-der {
+  transform-origin: 274px 430px;
+  animation: dance-leg-der 0.8s ease-in-out infinite alternate;
+}
+
+.anim-dance-leg-izq {
+  transform-origin: 221px 421px;
+  animation: dance-leg-izq 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes dance-bounce {
+  0% { transform: translateY(0) scaleY(0.95); }
+  100% { transform: translateY(-15px) scaleY(1.02); }
+}
+
+@keyframes dance-torso {
+  0% { transform: rotate(-5deg); }
+  100% { transform: rotate(5deg); }
+}
+
+@keyframes dance-arm-der {
+  0% { transform: rotate(-40deg); }
+  100% { transform: rotate(40deg); }
+}
+
+@keyframes dance-arm-izq {
+  0% { transform: rotate(40deg); }
+  100% { transform: rotate(-40deg); }
+}
+
+@keyframes dance-leg-der {
+  0% { transform: rotate(-10deg); }
+  100% { transform: rotate(20deg); }
+}
+
+@keyframes dance-leg-izq {
+  0% { transform: rotate(20deg); }
+  100% { transform: rotate(-10deg); }
+}
+
+/* Blink Eyes */
+.anim-blink-eyes {
+  animation: blink-eyes 0.2s ease-in-out;
+}
+
+@keyframes blink-eyes {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.1);
+  }
+}

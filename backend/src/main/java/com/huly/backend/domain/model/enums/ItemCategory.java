@@ -4,5 +4,9 @@ public enum ItemCategory {
     HOUSE,
     NOTEBOOK,
     TREE,
-    MANDALA
+    MANDALA,
+    SHIRT,
+    PANTS,
+    SHOES,
+    HAT
 }

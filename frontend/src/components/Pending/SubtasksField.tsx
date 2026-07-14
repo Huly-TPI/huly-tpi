@@ -29,7 +29,7 @@ export default function SubtasksField({ items, onAdd, onToggle, onDelete, readOn
     <div className="mt-2">
       {!readOnly && (
         <>
-          <label className="text-[0.65rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.5)]">
+          <label className="text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[rgba(92,61,30,0.8)] dark:text-slate-400">
             Subtareas
           </label>
           <div className="mt-1 flex gap-1">
@@ -44,7 +44,7 @@ export default function SubtasksField({ items, onAdd, onToggle, onDelete, readOn
               }}
               placeholder="Agregar subtarea"
               aria-label="Nueva subtarea"
-              className="flex-1 rounded border border-[rgba(92,61,30,0.25)] bg-transparent px-2 py-1 text-xs text-[#3b2510]"
+              className="flex-1 rounded border border-[rgba(92,61,30,0.25)] dark:border-slate-700 bg-transparent px-2 py-1 text-xs text-[#3b2510] dark:text-slate-200"
             />
             <button
               type="button"
@@ -59,7 +59,7 @@ export default function SubtasksField({ items, onAdd, onToggle, onDelete, readOn
       )}
       <ul className="mt-2 flex flex-col gap-1">
         {items.map(item => (
-          <li key={item.id} className="flex items-center gap-2 text-xs text-[#3b2510]">
+          <li key={item.id} className="flex items-center gap-2 text-xs text-[#3b2510] dark:text-slate-200">
             <input
               type="checkbox"
               checked={item.done}
@@ -68,9 +68,9 @@ export default function SubtasksField({ items, onAdd, onToggle, onDelete, readOn
               aria-label={`Marcar ${item.text}`}
               className="accent-bosque"
             />
-            <span className={`flex-1 ${item.done ? 'line-through text-[#7a5c38]' : ''}`}>{item.text}</span>
+            <span className={`flex-1 ${item.done ? 'line-through text-[#7a5c38] dark:text-slate-500' : ''}`}>{item.text}</span>
             {!readOnly && (
-              <button type="button" onClick={() => onDelete(item.id)} aria-label={`Eliminar ${item.text}`}>
+              <button type="button" onClick={() => onDelete(item.id)} aria-label={`Eliminar ${item.text}`} className="dark:text-slate-400 dark:hover:text-slate-200">
                 <X className="h-3 w-3" />
               </button>
             )}

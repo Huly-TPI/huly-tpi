@@ -3,12 +3,6 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
-vi.mock('../../context/authGate', () => ({
-  useAuthGate: () => ({
-    requireAuth: (action: () => void) => action(),
-  }),
-}))
-
 const mockStartSession = vi.fn()
 const mockMarkConditionMet = vi.fn()
 const mockStopSession = vi.fn()
@@ -21,6 +15,13 @@ vi.mock('../../hooks/useActivitySessionTracker', () => ({
     stopSession: mockStopSession,
     saveSession: mockSaveSession,
   })),
+}))
+
+const mockPlayPop = vi.fn()
+vi.mock('../../hooks/useBubbleAudio', () => ({
+  useBubbleAudio: () => ({
+    playPop: mockPlayPop,
+  }),
 }))
 
 import BubblesActivity from '../../components/Bubbles/BubblesActivity.tsx'
@@ -76,6 +77,14 @@ describe('BubblesActivity component', () => {
       .then(() => verifyMarkConditionMetNotCalled())
       .then(() => clickFirstBubble())
       .then(() => verifyMarkConditionMetCalled())
+  })
+
+  it('reproduce el sonido de burbuja al interactuar con una burbuja', () => {
+    renderActivityComponent()
+    return clickComenzar()
+      .then(() => expect(mockPlayPop).not.toHaveBeenCalled())
+      .then(() => clickFirstBubble())
+      .then(() => expect(mockPlayPop).toHaveBeenCalledOnce())
   })
 
   it('usa los valores retornados por el hook mockeado', () => {

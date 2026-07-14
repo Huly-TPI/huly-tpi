@@ -17,7 +17,7 @@ public interface UserRepository {
     void addCoins(Long userId, int amount);
     int getCoins(Long userId);
     void updateLastLogin(Long userId);
-    List<AppUser> findUsersInactiveSince(Instant since);
+    List<AppUser> findUsersInactiveBetween(Instant start, Instant end);
     int debitCoins(Long userId, int amount);
     List<AppUser> findAllNonAdmins();
     Optional<AppUser> findByUnsubscribeToken(String unsubscribeToken);

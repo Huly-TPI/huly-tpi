@@ -15,7 +15,7 @@ import {
   type CanvasPoint,
   type MandalaAnalysis,
 } from '../components/Mandalas/mandalaCanvasUtils'
-import { canvasToPngBlob } from '../utils/downloadImage'
+import { canvasToPngBlob } from './downloadImage'
 
 type PainterStatus = 'loading' | 'ready' | 'error'
 

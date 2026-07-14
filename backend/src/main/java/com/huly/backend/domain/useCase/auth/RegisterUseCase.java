@@ -24,7 +24,7 @@ public class RegisterUseCase {
     public AuthTokens execute(String email, String rawPassword, String name, LocalDate birthDate) {
 
         if (userRepository.existsByEmail(email)) {
-            throw new DuplicateResourceException("Email already in use");
+            throw new DuplicateResourceException("el email esta en uso");
         }
 
         userRepository.save(AppUser.builder()

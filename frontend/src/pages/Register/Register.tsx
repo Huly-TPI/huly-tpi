@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { register } from '../../api/auth'
 import { useAuth } from '../../context/auth'
@@ -13,22 +13,22 @@ const REGISTER_NAME_PATTERN = /^(?=(?:.*\p{L}){3,})[\p{L}]+(?:\s+[\p{L}]+)*$/u
 
 export const minAge = (min: number, message?: string): ValidationRule =>
   (value) => {
-    if (!value) 
+    if (!value)
       return undefined
-    
+
     const birth = new Date(value)
     const today = new Date()
     let age = today.getFullYear() - birth.getFullYear()
     const monthDiff = today.getMonth() - birth.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) 
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate()))
       age -= 1
-    
-    if (age >= min) 
+
+    if (age >= min)
       return undefined
-    
-    if (message) 
+
+    if (message)
       return message
-    
+
     return `Debés tener al menos ${min} años`
   }
 
@@ -37,9 +37,9 @@ export const validRegisterName = (
 ): ValidationRule =>
   (value) => {
     const normalizedValue = value.trim()
-    if (REGISTER_NAME_PATTERN.test(normalizedValue)) 
+    if (REGISTER_NAME_PATTERN.test(normalizedValue))
       return undefined
-    
+
     return message
   }
 
@@ -69,7 +69,14 @@ const VALIDATION_RULES = {
 
 export default function Register() {
   const navigate = useNavigate()
-  const { loginWithToken } = useAuth()
+  const { loginWithToken, isAuthenticated, loading: authLoading, user } = useAuth()
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate(user?.onBoardingCompleted === false ? '/onboarding' : '/', { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate, user])
+
   const { values, errors, handleChange, validateAll, setFieldErrors, getSanitizedValues } = useForm(
     INITIAL_VALUES,
     VALIDATION_RULES,
@@ -106,6 +113,10 @@ export default function Register() {
       }
       setLoading(false)
     }
+  }
+
+  if (authLoading || isAuthenticated) {
+    return null
   }
 
   return (

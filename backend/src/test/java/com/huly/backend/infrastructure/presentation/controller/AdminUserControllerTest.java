@@ -1,18 +1,12 @@
 package com.huly.backend.infrastructure.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huly.backend.domain.model.admin.AntiScrollDashboardStats;
 import com.huly.backend.domain.model.admin.BackofficeUserSummary;
 import com.huly.backend.domain.model.admin.TopAppStats;
 import com.huly.backend.domain.model.enums.Timeframe;
 import com.huly.backend.domain.model.enums.UserRole;
 import com.huly.backend.domain.model.enums.UserStatus;
-import com.huly.backend.domain.useCase.admin.GetAntiScrollDashboardUseCase;
 import com.huly.backend.domain.useCase.admin.ListBackofficeUsersUseCase;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigResponse;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.GetAntiScrollGlobalConfigUseCase;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigRequest;
-import com.huly.backend.domain.useCase.admin.antiScrollConfig.UpdateAntiScrollGlobalConfigUseCase;
 import com.huly.backend.domain.useCase.admin.userActivities.ActivitySessionResponse;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesRequest;
 import com.huly.backend.domain.useCase.admin.userActivities.GetUserActivitiesResponse;
@@ -44,13 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class AdminUserControllerTest {
 
-    private static final String DEFAULT_TERMS = "El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!";
-
     private MockMvc mockMvc;
     private ListBackofficeUsersUseCase listBackofficeUsersUseCase;
-    private GetAntiScrollDashboardUseCase getAntiScrollDashboardUseCase;
-    private GetAntiScrollGlobalConfigUseCase getAntiScrollGlobalConfigUseCase;
-    private UpdateAntiScrollGlobalConfigUseCase updateAntiScrollGlobalConfigUseCase;
     private GetUserActivitiesUseCase getUserActivitiesUseCase;
     private GetUserAiDiagnosticsUseCase getUserAiDiagnosticsUseCase;
     private GetUserFinancialsUseCase getUserFinancialsUseCase;
@@ -60,24 +49,13 @@ class AdminUserControllerTest {
     @BeforeEach
     void setUp() {
         listBackofficeUsersUseCase = mock(ListBackofficeUsersUseCase.class);
-        getAntiScrollDashboardUseCase = mock(GetAntiScrollDashboardUseCase.class);
-        getAntiScrollGlobalConfigUseCase = mock(GetAntiScrollGlobalConfigUseCase.class);
-        updateAntiScrollGlobalConfigUseCase = mock(UpdateAntiScrollGlobalConfigUseCase.class);
         getUserActivitiesUseCase = mock(GetUserActivitiesUseCase.class);
         getUserAiDiagnosticsUseCase = mock(GetUserAiDiagnosticsUseCase.class);
         getUserFinancialsUseCase = mock(GetUserFinancialsUseCase.class);
         getUserAntiScrollStatsUseCase = mock(GetUserAntiScrollStatsUseCase.class);
 
-        when(getAntiScrollGlobalConfigUseCase.execute()).thenReturn(new GetAntiScrollGlobalConfigResponse(
-                20,
-                "El modo anti-scroll es simplemente una herramienta para acompañarte cuando sientas que necesitás frenar un poco. No hay reglas estrictas ni metas que cumplir. Activalo cuando quieras priorizar tu concentración o desconectar del ruido, y apagalo cuando tengas ganas de explorar libremente. ¡Cero presiones, el ritmo lo marcás vos!"
-        ));
-
         AdminUserController controller = new AdminUserController(
                 listBackofficeUsersUseCase,
-                getAntiScrollDashboardUseCase,
-                getAntiScrollGlobalConfigUseCase,
-                updateAntiScrollGlobalConfigUseCase,
                 getUserActivitiesUseCase,
                 getUserAiDiagnosticsUseCase,
                 getUserFinancialsUseCase,
@@ -112,26 +90,6 @@ class AdminUserControllerTest {
     }
 
     @Test
-    @DisplayName("Devuelve 200 con las estadísticas del dashboard")
-    void getDashboardStatsShouldReturnStats() throws Exception {
-        givenDashboardStats();
-
-        ResultActions result = performGetDashboard();
-
-        thenOkWithDashboardStats(result);
-    }
-
-    @Test
-    @DisplayName("Devuelve 200 con la configuración global")
-    void getAntiScrollGlobalConfigShouldReturnConfig() throws Exception {
-        givenGlobalConfig(25, "terminos de prueba");
-
-        ResultActions result = performGetConfig();
-
-        thenOkWithConfig(result, 25, "terminos de prueba");
-    }
-
-    @Test
     @DisplayName("Devuelve 200 manejando valores nulos del usuario")
     void getBackofficeUsersShouldHandleNulls() throws Exception {
         givenBackofficeUsers(userSummaryWithNulls());
@@ -139,36 +97,6 @@ class AdminUserControllerTest {
         ResultActions result = performGetUsers();
 
         thenOkWithUserHandlingNulls(result);
-    }
-
-    @Test
-    @DisplayName("Devuelve 200 con la configuración global por defecto")
-    void getAntiScrollGlobalConfigShouldReturnDefaultConfig() throws Exception {
-        ResultActions result = performGetConfig();
-
-        thenOkWithConfig(result, 20, DEFAULT_TERMS);
-    }
-
-    @Test
-    @DisplayName("Guarda la configuración global anti-scroll")
-    void updateAntiScrollGlobalConfigShouldSaveConfig() throws Exception {
-        String body = antiScrollConfigRequestJson(15, "nuevos terminos");
-
-        ResultActions result = performUpdateConfig(body);
-
-        thenOk(result);
-        thenConfigUpdatedWith(15, "nuevos terminos");
-    }
-
-    @Test
-    @DisplayName("Delega el request de configuración tal cual")
-    void updateAntiScrollGlobalConfigShouldDelegateRequestAsIs() throws Exception {
-        String body = antiScrollConfigRequestJson(15, "nuevos terminos");
-
-        ResultActions result = performUpdateConfig(body);
-
-        thenOk(result);
-        thenConfigUpdatedWith(15, "nuevos terminos");
     }
 
     @Test
@@ -239,22 +167,7 @@ class AdminUserControllerTest {
         when(listBackofficeUsersUseCase.execute(search)).thenReturn(List.of());
     }
 
-    private void givenDashboardStats() {
-        AntiScrollDashboardStats stats = AntiScrollDashboardStats.builder()
-                .totalModalsShown(100)
-                .totalRedirects(40)
-                .totalUsersCount(50)
-                .activeExtensionUsersCount(30)
-                .dataSharingConsentUsersCount(20)
-                .topUsedApps(List.of(new TopAppStats("instagram.com", 3600)))
-                .build();
-        when(getAntiScrollDashboardUseCase.execute()).thenReturn(stats);
-    }
 
-    private void givenGlobalConfig(int minutes, String terms) {
-        when(getAntiScrollGlobalConfigUseCase.execute())
-                .thenReturn(new GetAntiScrollGlobalConfigResponse(minutes, terms));
-    }
 
     private void givenUserActivities(GetUserActivitiesResponse result) {
         when(getUserActivitiesUseCase.execute(any())).thenReturn(result);
@@ -357,10 +270,7 @@ class AdminUserControllerTest {
         return new GetUserActivitiesResponse(java.util.List.of(), 5L, null, null, null, java.util.Map.of());
     }
 
-    private String antiScrollConfigRequestJson(int minutes, String terms) throws Exception {
-        return objectMapper.writeValueAsString(
-                new com.huly.backend.infrastructure.presentation.dto.admin.AntiScrollConfigRequest(minutes, terms));
-    }
+
 
     // --- act ---
     private ResultActions performGetUsers() throws Exception {
@@ -371,19 +281,7 @@ class AdminUserControllerTest {
         return mockMvc.perform(get("/api/admin/users").param("search", search));
     }
 
-    private ResultActions performGetDashboard() throws Exception {
-        return mockMvc.perform(get("/api/admin/users/antiscroll/dashboard"));
-    }
 
-    private ResultActions performGetConfig() throws Exception {
-        return mockMvc.perform(get("/api/admin/users/antiscroll/config"));
-    }
-
-    private ResultActions performUpdateConfig(String body) throws Exception {
-        return mockMvc.perform(post("/api/admin/users/antiscroll/config")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
-    }
 
     private ResultActions performGetUserActivities() throws Exception {
         return mockMvc.perform(get("/api/admin/users/2/statistics/activities"));
@@ -442,29 +340,8 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$[0].topApps").isEmpty());
     }
 
-    private void thenOkWithDashboardStats(ResultActions result) throws Exception {
-        result.andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalModalsShown").value(100))
-                .andExpect(jsonPath("$.totalRedirects").value(40))
-                .andExpect(jsonPath("$.totalUsersCount").value(50))
-                .andExpect(jsonPath("$.activeExtensionUsersCount").value(30))
-                .andExpect(jsonPath("$.dataSharingConsentUsersCount").value(20))
-                .andExpect(jsonPath("$.topUsedApps[0].domain").value("instagram.com"))
-                .andExpect(jsonPath("$.topUsedApps[0].totalActiveSeconds").value(3600));
-    }
-
-    private void thenOkWithConfig(ResultActions result, int minutes, String terms) throws Exception {
-        result.andExpect(status().isOk())
-                .andExpect(jsonPath("$.defaultPauseIntervalMinutes").value(minutes))
-                .andExpect(jsonPath("$.termsAndConditions").value(terms));
-    }
-
     private void thenUsersSearchedWith(String search) {
         verify(listBackofficeUsersUseCase).execute(search);
-    }
-
-    private void thenConfigUpdatedWith(int minutes, String terms) {
-        verify(updateAntiScrollGlobalConfigUseCase).execute(new UpdateAntiScrollGlobalConfigRequest(minutes, terms));
     }
 
     private void thenUserActivitiesQueriedForWeek() {

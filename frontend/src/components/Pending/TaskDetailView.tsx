@@ -33,29 +33,29 @@ export default function TaskDetailView({ task, onEdit, onClose, onDelete, onComp
 
   return (
     <div className="flex flex-col">
-      <p className="text-[0.7rem] font-bold text-[rgba(92,61,30,0.5)] uppercase tracking-[0.07em] mb-3">Tarea</p>
+      <p className="text-[0.8rem] font-bold text-[rgba(92,61,30,0.8)] dark:text-violeta-claro uppercase tracking-[0.07em] mb-3">Tarea</p>
 
-      <p className="mb-1 text-base font-bold text-[#3b2510]">{task.title}</p>
+      <p className="mb-1 text-base font-bold text-[#3b2510] dark:text-slate-100">{task.title}</p>
 
-      {task.description && <p className="mb-2 text-[0.85rem] text-[#5c3d1e]">{task.description}</p>}
+      {task.description && <p className="mb-2 text-[0.85rem] text-[#5c3d1e] dark:text-slate-300">{task.description}</p>}
 
       {task.dueDate && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-[#3b2510]">
-          <Calendar className="h-4 w-4 text-[#7a5c38]" aria-hidden="true" />
+        <div className="mt-2 flex items-center gap-2 text-sm text-[#3b2510] dark:text-slate-200">
+          <Calendar className="h-4 w-4 text-[#7a5c38] dark:text-slate-400" aria-hidden="true" />
           <span>{formatDueDate(task.dueDate)}</span>
         </div>
       )}
 
       {durationLabel && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-[#3b2510]">
-          <Clock className="h-4 w-4 text-[#7a5c38]" aria-hidden="true" />
+        <div className="mt-2 flex items-center gap-2 text-sm text-[#3b2510] dark:text-slate-200">
+          <Clock className="h-4 w-4 text-[#7a5c38] dark:text-slate-400" aria-hidden="true" />
           <span>{durationLabel}</span>
         </div>
       )}
 
       {categoryLabel && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-[#3b2510]">
-          <Tag className="h-4 w-4 text-[#7a5c38]" aria-hidden="true" />
+        <div className="mt-2 flex items-center gap-2 text-sm text-[#3b2510] dark:text-slate-200">
+          <Tag className="h-4 w-4 text-[#7a5c38] dark:text-slate-400" aria-hidden="true" />
           <span>{categoryLabel}</span>
         </div>
       )}
@@ -72,7 +72,7 @@ export default function TaskDetailView({ task, onEdit, onClose, onDelete, onComp
 
       {confirmingDelete ? (
         <div className="mt-4 flex flex-col gap-2">
-          <p className="text-center text-[0.8rem] text-[#3b2510]">¿Eliminar esta tarea?</p>
+          <p className="text-center text-[0.8rem] text-[#3b2510] dark:text-slate-100">¿Eliminar esta tarea?</p>
           <Button variant="alert" size="sm" fullWidth onClick={onDelete}>
             Sí, eliminar
           </Button>

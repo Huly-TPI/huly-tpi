@@ -5,18 +5,27 @@ import { useTheme } from '../../context/theme'
 import { completeProfileTutorial } from '../../api/onboarding'
 import HomeOnboarding from '../../components/Onboarding/HomeOnboarding/HomeOnboarding'
 import SceneElement from '../../components/Scene/SceneElement/SceneElement'
+import ThemeBackground from '../../components/ThemeBackground/ThemeBackground'
 import AntiScrollConsentModal from '../../components/AntiScrollConsentModal'
 import AccountSettingsModal from '../../components/Profile/AccountSettingsModal'
 import AudioSettingsModal from '../../components/Profile/AudioSettingsModal'
 import ChangePasswordModal from '../../components/Profile/ChangePasswordModal'
 import type { SceneElementDefinition } from '../../components/Scene/types'
 import { useSceneOnboarding } from '../../hooks/useSceneOnboarding'
+import dayBackgroundImage from '../../assets/profile/light-theme/background/day-background.webp'
+import dayMobileBackgroundImage from '../../assets/profile/light-theme/background/mobile/day-background.webp'
+import nightBackgroundImage from '../../assets/profile/dark-theme/background/night-background.png'
+import nightMobileBackgroundImage from '../../assets/profile/dark-theme/background/mobile/night-background.png'
 import chestImage from '../../assets/profile/light-theme/chest.webp'
 import clockImage from '../../assets/profile/light-theme/clock.webp'
-import mirrorImage from '../../assets/profile/light-theme/mirror.webp'
+import mirrorImage from '../../assets/profile/light-theme/mirror-new.png'
 import musicImage from '../../assets/profile/light-theme/music.webp'
 import windowImage from '../../assets/profile/light-theme/window.webp'
+import nightWindowImage from '../../assets/profile/dark-theme/night-window.png'
 import notificationImage from '../../assets/profile/light-theme/notification.webp'
+import HulyAvatar from '../../components/HulyAvatar/HulyAvatar'
+import { getEquippedAvatarItems } from '../../components/HulyAvatar/avatarEquip'
+import { useInventory } from '../../hooks/store/useInventory'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { profileOnboardingSteps } from './profileOnboardingSteps'
 import NotificationSettingsModal from '../../components/Profile/NotificationSettingsModal'
@@ -32,7 +41,7 @@ const profileElements: SceneElementDefinition[] = [
     title: 'Espejo',
     imageAlt: 'Espejo del perfil',
     image: { light: mirrorImage },
-    placementClassName: 'left-[3%] bottom-[3.5%] z-[3] w-[38%] md:left-[11.5%] md:bottom-[9%] md:w-[20%]',
+    placementClassName: 'left-[2%] bottom-[15%] z-[3] w-[52%] md:left-[11.5%] md:bottom-[9%] md:w-[20%] [clip-path:inset(0_0_0_10%)]',
     imageClassName: FULL_WIDTH,
     hotspotClassName: DEFAULT_HOTSPOT,
     clipPath: RECT_CLIP_PATH,
@@ -42,7 +51,7 @@ const profileElements: SceneElementDefinition[] = [
     id: 'window',
     title: 'Volver al jardin',
     imageAlt: 'Ventana hacia el jardin',
-    image: { light: windowImage },
+    image: { light: windowImage, dark: nightWindowImage },
     placementClassName: 'left-[23%] top-[14%] z-[2] w-[50%] md:left-[42%] md:top-[16.5%] md:w-[20.8%]',
     imageClassName: FULL_WIDTH,
     hotspotClassName: DEFAULT_HOTSPOT,
@@ -94,6 +103,8 @@ function getFirstName(name: string): string {
 
 export default function Profile() {
   const { user, loading, refreshUser } = useAuth()
+  const { inventory } = useInventory()
+  const equippedItems = getEquippedAvatarItems(inventory)
   const { theme } = useTheme()
   const { isSubscribed, isLoading: pushLoading, isSupported, subscribe, unsubscribe, notificationHour, updateHour } = usePushNotifications()
   const [showAntiScrollModal, setShowAntiScrollModal] = useState(false)
@@ -192,8 +203,28 @@ export default function Profile() {
     <main className="profile-page" aria-label="Perfil de usuario">
       <div className="profile-scene-scroll" aria-label="Habitacion de perfil">
         <section className="profile-scene">
+          <ThemeBackground
+            lightSrc={dayBackgroundImage}
+            darkSrc={nightBackgroundImage}
+            lightAlt="Habitacion de perfil de dia"
+            darkAlt="Habitacion de perfil de noche"
+            lightMobileSrc={dayMobileBackgroundImage}
+            darkMobileSrc={nightMobileBackgroundImage}
+          />
+
           {renderedElements.map(element => (
-            <SceneElement key={element.id} theme={theme} {...element} />
+            <SceneElement key={element.id} theme={theme} {...element}>
+              {element.id === 'mirror' && (
+                <div
+                  className="absolute top-[18%] left-[25%] w-[50%] h-[72%] overflow-hidden pointer-events-none [&_*]:!animate-none flex items-end justify-center"
+                  style={{ borderRadius: '50% 50% 45% 45%' }}
+                >
+                  <div className="w-[180%] translate-y-[-50%] translate-x-[15%]">
+                    <HulyAvatar equippedItems={equippedItems} />
+                  </div>
+                </div>
+              )}
+            </SceneElement>
           ))}
 
           <div className="profile-welcome" aria-label={`Bienvenido ${getFirstName(user.name)}`}>

@@ -37,7 +37,7 @@ export default function OrchardPlantCard({ plant, onClick }: OrchardPlantCardPro
             <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
               Creciendo
             </span>
-            <span className="text-[0.7rem] text-gray-500 mt-0.5">
+            <span className="text-[0.8rem] text-gray-500 mt-0.5">
               {plant.completedGoalsCount} / {plant.requiredGoals} retos
             </span>
           </>

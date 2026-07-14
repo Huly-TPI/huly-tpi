@@ -10,7 +10,7 @@ const MOVE_CANCEL_THRESHOLD_PX = 10
 export interface PostitProps {
   task: PendingTaskResponse
   isRecommended: boolean
-  onPickUp: () => void
+  onPickUp: (origin: { x: number; y: number }) => void
   onOpen: () => void
   style?: React.CSSProperties
   className?: string
@@ -33,7 +33,9 @@ export default function Postit({ task, isRecommended, onPickUp, onOpen, style, c
     longPressFired.current = false
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true
-      onPickUp()
+      if (pressOrigin.current) {
+        onPickUp(pressOrigin.current)
+      }
     }, LONG_PRESS_MS)
   }
 
@@ -96,7 +98,7 @@ export default function Postit({ task, isRecommended, onPickUp, onOpen, style, c
         {task.estimatedDuration && <Clock className="h-3.5 w-3.5" />}
         {task.category && <Tag className="h-3.5 w-3.5" />}
         {task.subtasks.length > 0 && (
-          <span className="flex items-center gap-0.5 text-[10px]">
+          <span className="flex items-center gap-0.5 text-[11px]">
             <ListChecks className="h-3.5 w-3.5" />
             {doneSubtasks}/{task.subtasks.length}
           </span>

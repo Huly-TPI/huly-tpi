@@ -41,7 +41,7 @@ export default function ImpactSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9">
         {configs.map((config) => {
           const Icon = activityIcons[config.type] || CirclePlay
           const theme = activityThemes[config.type] || { bg: 'bg-gray-100 text-gray-500', text: 'text-gray-500' }
@@ -69,7 +69,7 @@ export default function ImpactSection({
                 <Icon className="h-[18px] w-[18px]" />
               </div>
 
-              <span className="text-[11px] font-extrabold tracking-tight text-gray-700 dark:text-gray-300 leading-tight line-clamp-1">
+              <span className="text-[12px] font-extrabold tracking-tight text-gray-700 dark:text-gray-300 leading-tight line-clamp-1">
                 {config.title}
               </span>
 
@@ -87,7 +87,7 @@ export default function ImpactSection({
                 <span>{formatDelta(realArousalChange)} A</span>
               </div>
 
-              <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider ${
                 isCalmante
                   ? 'bg-blue-500/10 text-blue-400'
                   : 'bg-orange-500/10 text-orange-400'

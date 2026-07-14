@@ -13,6 +13,6 @@ public class ListProductsUseCase {
 
     /** Solo packs de monedas; los planes se listan aparte (ListPlansUseCase). */
     public List<Product> execute() {
-        return productRepository.findByType(ProductType.COIN_PACK);
+        return productRepository.findByTypeAndActive(ProductType.COIN_PACK, true);
     }
 }

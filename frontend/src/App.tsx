@@ -12,7 +12,10 @@ import UsersPage from './pages/Backoffice/UsersPage'
 import UserDetailPage from './pages/Backoffice/UserDetailPage'
 import ActivitiesPage from './pages/Backoffice/ActivitiesPage'
 import BackofficeNotFound from './pages/Backoffice/BackofficeNotFound'
+import SeedProductsPage from './pages/Backoffice/SeedProductsPage'
 import ProductsPage from './pages/Backoffice/ProductsPage'
+import PlansAdminPage from './pages/Backoffice/PlansAdminPage'
+import BreathingAdminPage from './pages/Backoffice/BreathingAdminPage'
 import Breathing from './pages/Breathing/Breathing'
 import BubblesActivity from './pages/BubblesActivity/BubblesActivity'
 import Challenges from './pages/Challenges/Challenges'
@@ -25,6 +28,7 @@ import NotFound from './pages/NotFound/NotFound.tsx'
 import Onboarding from './pages/Onboarding/Onboarding'
 import Register from './pages/Register/Register'
 import SandZenGarden from './pages/SandZenGarden/SandZenGarden.tsx'
+import Stones from './pages/Stones/Stones'
 import Shop from './pages/Shop/Shop'
 import Profile from './pages/Profile/Profile'
 import Orchard from './pages/Orchard/Orchard.tsx'
@@ -48,17 +52,20 @@ const App = () => {
               <Route index element={<DashboardPage />} />
               <Route path="chatbot" element={<ChatbotPage />} />
               <Route path="antiscroll" element={<AntiScrollPage />} />
-              <Route path="actividades" element={<ActivitiesPage />} />
-              <Route path="usuarios" element={<UsersPage />} />
-              <Route path="usuarios/:id" element={<UserDetailPage />} />
-              <Route path="productos" element={<ProductsPage />} />
+              <Route path="activities" element={<ActivitiesPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="users/:id" element={<UserDetailPage />} />
+              <Route path="products" element={<ProductsPage />} />
+              <Route path="seeds" element={<SeedProductsPage />} />
+              <Route path="subscriptions" element={<PlansAdminPage />} />
+              <Route path="breathing" element={<BreathingAdminPage />} />
               <Route path="*" element={<BackofficeNotFound />} />
             </Route>
-
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/privacy/:tab" element={<Privacy />} />
           <Route path="/minigames" element={<Minigames />} />
           <Route path="/diary" element={<Diary />} />
           <Route path="/onboarding" element={<Onboarding />} />
@@ -73,6 +80,7 @@ const App = () => {
           <Route path="/bubbles" element={<BubblesActivity />} />
           <Route path="/mandalas" element={<Mandalas />} />
           <Route path="/zen-sand-garden" element={<SandZenGarden />} />
+          <Route path="/stones" element={<Stones />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Route>

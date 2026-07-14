@@ -5,6 +5,7 @@ import com.huly.backend.domain.model.enums.ThemePreference;
 import com.huly.backend.domain.model.user.AudioSettings;
 import com.huly.backend.domain.model.user.UserAccountSettings;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -33,4 +34,7 @@ public interface UserDetailDomainRepository {
 
     /** Registra la actividad de hoy (resetea la brecha de inactividad). */
     void updateLastLoginDate(Long userId, LocalDate date);
+
+    /** Obtiene la fecha de creación del detalle del usuario (fecha de registro). */
+    Optional<Instant> findUserCreatedAt(Long userId);
 }

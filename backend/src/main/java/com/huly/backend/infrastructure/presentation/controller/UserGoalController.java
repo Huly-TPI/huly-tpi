@@ -9,7 +9,6 @@ import com.huly.backend.domain.useCase.userGoal.AcceptChallengeUseCase;
 import com.huly.backend.domain.useCase.userGoal.AddUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.CompleteUserGoalUseCase;
 import com.huly.backend.domain.useCase.userGoal.DeleteUserGoalUseCase;
-import com.huly.backend.domain.useCase.userGoal.GetGoalImageUseCase;
 import com.huly.backend.domain.useCase.userGoal.GetUserGoalsByUserUseCase;
 import com.huly.backend.domain.useCase.userGoal.UpdateUserGoalUseCase;
 import com.huly.backend.infrastructure.presentation.dto.userGoal.AcceptChallengeRequest;
@@ -23,8 +22,6 @@ import com.huly.backend.infrastructure.presentation.mapper.userGoal.UserGoalPres
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +29,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.nio.file.Path;
 
 @Slf4j
 @RestController
@@ -47,7 +42,6 @@ public class UserGoalController {
     private final DeleteUserGoalUseCase deleteUserGoalUseCase;
     private final UpdateUserGoalUseCase updateUserGoalUseCase;
     private final CompleteUserGoalUseCase completeUserGoalUseCase;
-    private final GetGoalImageUseCase getGoalImageUseCase;
     private final UserGoalPresentationMapper mapper;
 
     @PostMapping("/accept")
@@ -102,22 +96,6 @@ public class UserGoalController {
         CompleteUserGoalResponse response =
                 completeUserGoalUseCase.execute(mapper.toCompleteUserGoalRequest(id), image);
         return ResponseEntity.ok(mapper.toGoalCompleteResponse(response));
-    }
-
-    @GetMapping("/images/{filename:.+}")
-    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
-        Path path = getGoalImageUseCase.execute(mapper.toGetGoalImageRequest(filename));
-        Resource resource = new FileSystemResource(path);
-        if (!resource.exists()) {
-            return ResponseEntity.notFound().build();
-        }
-        String ext = filename.contains(".") ? filename.substring(filename.lastIndexOf('.') + 1).toLowerCase() : "";
-        MediaType mediaType = switch (ext) {
-            case "png" -> MediaType.IMAGE_PNG;
-            case "gif" -> MediaType.IMAGE_GIF;
-            default -> MediaType.IMAGE_JPEG;
-        };
-        return ResponseEntity.ok().contentType(mediaType).body(resource);
     }
 
     private Long getUserId(UserDetails principal) {

@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { X, CheckIcon, Lock } from 'lucide-react'
 import modalBg from '../../assets/rewards/modal.webp'
+import modalBgMobile from '../../assets/rewards/modalMobile.webp'
 import cardBg from '../../assets/rewards/cardSeed.webp'
 import giftIcon from '../../assets/rewards/gift.webp'
 import brote from '../../assets/rewards/brote.webp'
@@ -10,6 +11,8 @@ import { RewardToast } from '../Shop/RewardToast'
 
 
 const MAX_STREAK_DAYS = 7
+const MOBILE_QUERY = '(max-width: 640px)'
+const MOBILE_ASPECT = '1024 / 1536'
 
 const DEFAULT_REWARDS: DailyRewardDay[] = [
   { dayNumber: 1, coins: 10 },
@@ -35,6 +38,22 @@ interface RewardCardProps {
   isToday: boolean
   claiming: boolean
   onClaim: () => void
+}
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
+  )
+
+  useEffect(() => {
+    const mql = window.matchMedia(query)
+    const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches)
+    setMatches(mql.matches)
+    mql.addEventListener('change', handleChange)
+    return () => mql.removeEventListener('change', handleChange)
+  }, [query])
+
+  return matches
 }
 
 function getCardStatus(
@@ -118,6 +137,7 @@ const TOAST_DURATION_MS = 3500
 export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModalProps) {
   const { status, loading, claiming, error, claim } = useDailyRewards()
   const [toastCoins, setToastCoins] = useState<number | null>(null)
+  const isMobile = useMediaQuery(MOBILE_QUERY)
 
   const dismissToast = useCallback(() => setToastCoins(null), [])
 
@@ -142,123 +162,151 @@ export default function RewardsModal({ isOpen, onClose, onClaimed }: RewardsModa
 
   const nextRewardCoins = findCoinsForDay(rewards, currentDay)
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Recompensas diarias"
-        className="relative z-10 w-full max-w-[700px] max-[640px]:max-w-[370px]"
-        onClick={e => e.stopPropagation()}
+  /* Contenido compartido por desktop y mobile. */
+  const content: ReactNode = (
+    <>
+      <button
+        onClick={onClose}
+        aria-label="Cerrar recompensas"
+        className="absolute top-[4%] right-[4%] max-[640px]:top-[15%] max-[640px]:right-[8%] w-8 h-8 max-[640px]:w-7 max-[640px]:h-7 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20"
       >
-        <img
-          src={modalBg}
-          alt=""
-          aria-hidden="true"
-          className="w-full h-auto max-[640px]:h-[610px] max-[640px]:object-fill select-none pointer-events-none block"
-          draggable={false}
-        />
+        <X className="w-5 h-5 max-[640px]:w-4 max-[640px]:h-4" />
+      </button>
 
-        <div className="absolute inset-0 px-[8%] pt-[20%] pb-[7%] max-[640px]:px-[10%] max-[640px]:pt-[28%] max-[640px]:pb-[8%]">
-          <button
-            onClick={onClose}
-            aria-label="Cerrar recompensas"
-            className="absolute top-[4%] right-[4%] w-8 h-8 max-[640px]:w-7 max-[640px]:h-7 flex items-center justify-center rounded-full bg-[#a06f9e] hover:bg-[#875a86] text-white shadow-md transition z-20"
-          >
-            <X className="w-5 h-5 max-[640px]:w-4 max-[640px]:h-4" />
-          </button>
+      {/* Regalo apoyado sobre la solapa superior */}
+      <img
+        src={giftIcon}
+        alt=""
+        aria-hidden="true"
+        className="absolute top-[7.5%] max-[640px]:top-[6%] left-1/2 -translate-x-1/2 w-16 h-16 sm:w-20 sm:h-20 max-[640px]:w-14 max-[640px]:h-14 object-contain pointer-events-none select-none z-10"
+        draggable={false}
+      />
 
-          <div className="text-center">
+      {/* Encabezado */}
+      <div className="text-center">
+        <h2 className="text-[22px] sm:text-[27px] font-black text-[#9b5718] leading-none">
+          ¡Cosecha diaria!
+        </h2>
+
+        <p className="mt-1 text-[11px] sm:text-[13px] font-bold text-[#7b5c3c]">
+          Iniciá sesión todos los días y obtené más semillas
+        </p>
+
+        <div className="mx-auto mt-2 w-fit rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
+          <div className="flex items-center justify-center">
             <img
-              src={giftIcon}
+              src={brote}
               alt=""
               aria-hidden="true"
-              className="absolute top-[7.5%] max-[640px]:top-[6%] left-1/2 -translate-x-1/2 w-18 h-18 sm:w-20 sm:h-20 max-[640px]:w-16 max-[640px]:h-16 object-contain pointer-events-none select-none z-10"
+              className="w-7 h-7 max-[640px]:w-5 max-[640px]:h-5 object-contain pointer-events-none select-none shrink-0"
               draggable={false}
             />
-
-            <h2 className="text-[22px] sm:text-[27px] max-[640px]:text-[22px] font-black text-[#9b5718] leading-none">
-              ¡Cosecha diaria!
-            </h2>
-
-            <p className="mt-1 text-[11px] sm:text-[13px] max-[640px]:text-[10px] font-bold text-[#7b5c3c]">
-              Iniciá sesión todos los días y obtené más semillas
-            </p>
-
-            <div className="mx-auto mt-2 w-fit rounded-full bg-[#f3d7a6]/90 border border-[#b98a54] px-3 max-[640px]:px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_4px_rgba(91,60,24,0.12)]">
-              <div className="flex items-center justify-center">
-                <img
-                  src={brote}
-                  alt=""
-                  aria-hidden="true"
-                  className="w-8 h-8 sm:w-7 sm:h-7 max-[640px]:w-5 max-[640px]:h-5 object-contain pointer-events-none select-none shrink-0"
-                  draggable={false}
-                />
-                <span className="text-[11px] sm:text-[12px] max-[640px]:text-[10px] font-black text-[#68451f] leading-none">
-                  Racha actual:{' '}
-                  <span className="text-[#4d8a2d]">
-                    {completedDays} {completedDays === 1 ? 'día' : 'días'}
-                  </span>
-                </span>
-              </div>
-            </div>
+            <span className="text-[11px] sm:text-[12px] max-[640px]:text-[10px] font-black text-[#68451f] leading-none">
+              Racha actual:{' '}
+              <span className="text-[#4d8a2d]">
+                {completedDays} {completedDays === 1 ? 'día' : 'días'}
+              </span>
+            </span>
           </div>
-
-          <div className="grid grid-cols-7 max-[640px]:grid-cols-4 gap-x-0 max-[640px]:gap-x-2 max-[640px]:gap-y-2 mt-4 max-[640px]:mt-3">
-            {loading ? (
-              <div className="col-span-7 max-[640px]:col-span-4 flex justify-center py-12">
-                <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (
-              rewards.map(day => {
-                const cardStatus = getCardStatus(
-                  day.dayNumber,
-                  completedDays,
-                  status?.nextDay,
-                  canClaimToday,
-                )
-
-                return (
-                  <RewardCard
-                    key={day.dayNumber}
-                    day={day}
-                    cardStatus={cardStatus}
-                    isToday={day.dayNumber === currentDay}
-                    claiming={claiming}
-                    onClaim={handleClaim}
-                  />
-                )
-              })
-            )}
-          </div>
-
-          {!loading && status && (
-            <div className="mt-2 sm:mt-3 max-[640px]:mt-3 mx-auto w-fit rounded-2xl px-5 max-[640px]:px-2 py-2 text-center">
-              <p className="text-[14px] max-[640px]:text-[12px] font-black text-[#6b4a2a] leading-none">
-                Te esperan{' '}
-                <span className="text-[#4d8a2d]">
-                  {nextRewardCoins} semillas
-                </span>{' '}
-                {canClaimToday ? 'hoy' : 'mañana'}
-              </p>
-              <p className="text-[11px] max-[640px]:text-[9px] text-[#7b5c3c] font-bold mt-1">
-                {canClaimToday
-                  ? '¡Recolectalas para hacer crecer tu jardín!'
-                  : '¡Volvé cada día para hacer crecer tu jardín!'}
-              </p>
-            </div>
-          )}
-
-          {error && (
-            <p className="absolute bottom-[3%] left-0 right-0 text-red-600 text-[10px] text-center px-4 font-bold">
-              {error}
-            </p>
-          )}
         </div>
       </div>
+
+      {/* Grilla de recompensas */}
+      <div className="grid grid-cols-7 max-[640px]:grid-cols-4 gap-x-0 max-[640px]:gap-x-2 gap-y-0 max-[640px]:gap-y-2 mt-4">
+        {loading ? (
+          <div className="col-span-7 max-[640px]:col-span-4 flex justify-center py-12">
+            <div className="w-7 h-7 border-4 border-[#8B6914] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          rewards.map(day => {
+            const cardStatus = getCardStatus(
+              day.dayNumber,
+              completedDays,
+              status?.nextDay,
+              canClaimToday,
+            )
+
+            return (
+              <RewardCard
+                key={day.dayNumber}
+                day={day}
+                cardStatus={cardStatus}
+                isToday={day.dayNumber === currentDay}
+                claiming={claiming}
+                onClaim={handleClaim}
+              />
+            )
+          })
+        )}
+      </div>
+
+      {/* Pie */}
+      {!loading && status && (
+        <div className="mt-3 mx-auto w-fit rounded-2xl px-5 max-[640px]:px-2 py-2 text-center">
+          <p className="text-[14px] max-[640px]:text-[12px] font-black text-[#6b4a2a] leading-none">
+            Te esperan{' '}
+            <span className="text-[#4d8a2d]">
+              {nextRewardCoins} semillas
+            </span>{' '}
+            {canClaimToday ? 'hoy' : 'mañana'}
+          </p>
+          <p className="text-[11px] max-[640px]:text-[9px] text-[#7b5c3c] font-bold mt-1">
+            {canClaimToday
+              ? '¡Recolectalas para hacer crecer tu jardín!'
+              : '¡Volvé cada día para hacer crecer tu jardín!'}
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <p className="mt-2 text-red-600 text-[10px] text-center px-4 font-bold">
+          {error}
+        </p>
+      )}
+    </>
+  )
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {isMobile ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Recompensas diarias"
+          onClick={e => e.stopPropagation()}
+          style={{
+            backgroundImage: `url(${modalBgMobile})`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: MOBILE_ASPECT,
+          }}
+          className="relative z-10 w-full max-w-[360px] px-[14%] pt-[37%] pb-[18%]"
+        >
+          {content}
+        </div>
+      ) : (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Recompensas diarias"
+          onClick={e => e.stopPropagation()}
+          className="relative z-10 w-full max-w-[700px]"
+        >
+          <img
+            src={modalBg}
+            alt=""
+            aria-hidden="true"
+            className="block w-full h-auto select-none pointer-events-none"
+            draggable={false}
+          />
+          <div className="absolute inset-0 px-[8%] pt-[20%] pb-[7%]">
+            {content}
+          </div>
+        </div>
+      )}
 
       {toastCoins !== null && (
         <RewardToast coins={toastCoins} onClose={dismissToast} />

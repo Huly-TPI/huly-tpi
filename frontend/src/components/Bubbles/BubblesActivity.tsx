@@ -6,9 +6,10 @@ import bgImage from '../../assets/bubbles/background/bubbles-minigame-background
 import fishImage from '../../assets/bubbles/bubble-minigame-fish.webp'
 import Button from '../Buttons/Button/Button'
 import BackButton from '../Buttons/BackButton/BackButton'
-import { useAuthGate } from '../../context/authGate'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import { ActivityType } from '../../api/activities'
+import { useBubbleAudio } from '../../hooks/useBubbleAudio'
+
 
 const BUBBLE_COLORS = [
   'rgba(144, 210, 170, 0.55)',
@@ -44,7 +45,7 @@ const BubblesActivity = () => {
   const [poppingIds, setPoppingIds] = useState<Set<string>>(new Set())
   const [poppingPositions, setPoppingPositions] = useState<Map<string, { x: number; y: number }>>(new Map())
   const nextIdRef = useRef(INITIAL_BUBBLES.length)
-  const { requireAuth } = useAuthGate()
+  const { playPop } = useBubbleAudio()
 
   const { startSession, markConditionMet, saveSession } = useActivitySessionTracker(ActivityType.BUBBLE, {
     autoStart: false
@@ -52,6 +53,7 @@ const BubblesActivity = () => {
 
   const handleBubbleClick = (bubble: BubbleType, position: { x: number; y: number }) => {
     if (poppingIds.has(bubble.id)) return
+    playPop()
     markConditionMet()
     setPoppingPositions(prev => new Map(prev).set(bubble.id, position))
     setPoppingIds(prev => new Set([...prev, bubble.id]))
@@ -79,17 +81,17 @@ const BubblesActivity = () => {
     return (
       <div className="bubbles-activity">
         <div className="bubbles-scene">
-          <img src={bgImage} className="absolute inset-0 w-full h-full object-cover object-bottom" alt="" draggable={false} />
-          <div className="flex items-center justify-center w-full h-full">
-            <div className="bg-white backdrop-blur-sm rounded-2xl p-10 shadow-md w-[480px] max-w-[90vw] text-center">
-              <h2 className="text-3xl font-bold text-gray-800 mb-3">Burbujas de colores</h2>
-              <p className="text-base text-gray-500 mb-8 leading-relaxed">
+          <img src={bgImage} className="bubbles-scene-bg absolute inset-0 w-full h-full object-cover object-bottom" alt="" draggable={false} />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/[0.15] dark:bg-black/45">
+            <div className="bg-white dark:bg-[#172033]/90 dark:border dark:border-slate-800/50 backdrop-blur-sm rounded-2xl p-10 shadow-md w-[480px] max-w-[90vw] text-center">
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-3">Burbujas de colores</h2>
+              <p className="text-base text-gray-500 dark:text-slate-400 mb-8 leading-relaxed">
                 Explorá cómo te sentís. Tocá las burbujas que van apareciendo y hacelas explotar.
               </p>
-              <Button variant="primary" fullWidth onClick={() => requireAuth(() => {
+              <Button variant="primary" fullWidth onClick={() => {
                 setStarted(true)
                 startSession()
-              })}>
+              }}>
                 Comenzar
               </Button>
             </div>
@@ -102,7 +104,7 @@ const BubblesActivity = () => {
   return (
     <div className="bubbles-activity">
       <div className="bubbles-scene" data-testid="bubbles-container">
-        <img src={bgImage} className="absolute inset-0 w-full h-full object-cover object-bottom" alt="" draggable={false} />
+        <img src={bgImage} className="bubbles-scene-bg absolute inset-0 w-full h-full object-cover object-bottom" alt="" draggable={false} />
         <img
           src={fishImage}
           className="absolute fish"

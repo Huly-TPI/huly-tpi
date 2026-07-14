@@ -183,6 +183,16 @@ class EmotionalEventRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("Mapea todos los eventos")
+    void findAllShouldReturnMappedList() {
+        when(emotionalEventJpaRepository.findAll()).thenReturn(List.of(entity()));
+
+        List<EmotionalEvent> result = repository.findAll();
+
+        thenSingleEventMappedById(result);
+    }
+
+    @Test
     @DisplayName("Delega en todos los eventos de recomendación cuando el inicio es nulo")
     void findAllRecommendationEventsAfterShouldDelegateWhenStartIsNull() {
         givenAllRecommendationEvents(List.of(entity()));

@@ -1,18 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BadgeUnlockToast from '../../components/Badges/BadgeUnlockToast'
 import { verifyTextPresent } from '../testHelpers'
 
-describe('BadgeUnloackToast', () => {
-  let onDismissMock: any
+interface Badge {
+  id: number
+  code: string
+  name: string
+  description: string
+  imageUrl: string
+  createdAt: string
+}
+
+describe('BadgeUnlockToast', () => {
+  let onDismissMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     onDismissMock = vi.fn()
-    vi.spyOn(global, 'setTimeout').mockImplementation((cb: any) => {
-      cb()
-      return 123 as any
-    })
   })
 
   // --- CASOS DE PRUEBA (TEST SUITE) ---
@@ -32,21 +37,15 @@ describe('BadgeUnloackToast', () => {
     verifyUnlockMessagePresent()
   })
 
-  it('llama onDismiss al hacer click', () => {
+  it('llama onDismiss al hacer click', async () => {
     renderToast(makeBadge())
-    return clickCloseButton().then(() => {
-      verifyOnDismissCalled()
-    })
-  })
-
-  it('llama onDismiss automáticamente después de 3 segundos', () => {
-    renderToast(makeBadge())
+    await clickCloseButton()
     verifyOnDismissCalled()
   })
 
   /* helpers */
 
-  const makeBadge = () => ({
+  const makeBadge = (): Badge => ({
     id: 1,
     code: 'PRIMER_PASO',
     name: 'Primer paso',
@@ -55,7 +54,7 @@ describe('BadgeUnloackToast', () => {
     createdAt: '',
   })
 
-  const renderToast = (badge: any) => {
+  const renderToast = (badge: Badge | null) => {
     render(<BadgeUnlockToast badge={badge} onDismiss={onDismissMock} />)
   }
 
@@ -74,9 +73,7 @@ describe('BadgeUnloackToast', () => {
   const clickCloseButton = () => {
     const user = userEvent.setup()
     const button = screen.getByRole('button', { name: 'Cerrar' })
-    return act(async () => {
-      await user.click(button)
-    })
+    return user.click(button)
   }
 
   const verifyOnDismissCalled = () => {

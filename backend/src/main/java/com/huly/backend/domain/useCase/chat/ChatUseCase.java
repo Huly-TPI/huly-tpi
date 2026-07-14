@@ -12,6 +12,7 @@ import com.huly.backend.domain.port.ChatMemoryPort;
 import com.huly.backend.domain.port.LLMChatPort;
 import com.huly.backend.domain.repository.chat.ChatConfigRepository;
 import com.huly.backend.domain.repository.chat.ChatConversationPreferenceRepository;
+import com.huly.backend.domain.repository.chat.ChatMessageRepository;
 import com.huly.backend.domain.repository.chatBotConfig.RiskWordRepository;
 import com.huly.backend.domain.repository.user.UserRepository;
 import com.huly.backend.domain.service.chat.ChatEmotionalRecommendationService;
@@ -24,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * Caso de uso principal del chatbot. Resuelve primero un posible cambio de preferencia
@@ -46,6 +51,7 @@ public class ChatUseCase {
     private final ChatConversationPreferenceRepository chatConversationPreferenceRepository;
     private final ChatPreferenceHandlingService chatPreferenceHandlingService;
     private final ChatMapper mapper;
+    private final ChatMessageRepository chatMessageRepository;
 
     // Punto de entrada del chat: atiende cambios de preferencia y, si sigue, procesa el mensaje.
     public ChatReplyResponse execute(ChatMessageRequest request) {
@@ -131,10 +137,51 @@ public class ChatUseCase {
     private ChatContext loadChatContext(String message, String conversationId, Long userId) {
         String basePrompt = basePrompt();
         List<VectorMemory> memories = userVectorMemoryService.findRelevantUserMemories(userId, message);
-        List<RiskWord> riskWords = riskWordRepository.findAllActive();
+        
+        boolean riskDetectionEnabled = chatConfigRepository.findFirst()
+                .map(ChatConfig::getRiskDetectionEnabled)
+                .orElse(true);
+        List<RiskWord> riskWords = riskDetectionEnabled 
+                ? riskWordRepository.findAllActive() 
+                : List.of();
+                
         List<ConversationMessage> history = chatMemoryPort.getHistory(conversationId, userId);
-        ChatPersonalizationContext personalization = loadPersonalizationContext(userId);
+        List<ChatPersonalizationContext.ChallengeHistoryEntry> challengeHistory = loadChallengeHistory(userId);
+        ChatPersonalizationContext personalization = loadPersonalizationContext(userId, challengeHistory);
         return new ChatContext(basePrompt, null, riskWords, memories, history, personalization);
+    }
+
+    private List<ChatPersonalizationContext.ChallengeHistoryEntry> loadChallengeHistory(Long userId) {
+        List<ConversationMessage> recentChallenges = chatMessageRepository.findRecentChallengesByUserId(userId, 50);
+
+        return recentChallenges.stream()
+                .filter(this::hasValidChallenge)
+                .collect(Collectors.groupingBy(this::normalizeChallengeTitle))
+                .values().stream()
+                .map(this::toChallengeHistoryEntry)
+                .toList();
+    }
+
+    private boolean hasValidChallenge(ConversationMessage msg) {
+        return msg != null && msg.generatedChallenge() != null && msg.generatedChallenge().title() != null;
+    }
+
+    private String normalizeChallengeTitle(ConversationMessage msg) {
+        return msg.generatedChallenge().title().trim().toLowerCase();
+    }
+
+    private ChatPersonalizationContext.ChallengeHistoryEntry toChallengeHistoryEntry(List<ConversationMessage> messages) {
+        String originalTitle = messages.get(0).generatedChallenge().title().trim();
+
+        long accepted = messages.stream()
+                .filter(msg -> "ACCEPTED".equalsIgnoreCase(msg.challengeDecision()))
+                .count();
+
+        long rejected = messages.stream()
+                .filter(msg -> "REJECTED".equalsIgnoreCase(msg.challengeDecision()))
+                .count();
+
+        return new ChatPersonalizationContext.ChallengeHistoryEntry(originalTitle, (int) accepted, (int) rejected);
     }
 
     // Arma el system prompt enriquecido que se le envía al LLM.
@@ -152,13 +199,13 @@ public class ChatUseCase {
     }
 
     // Trae el nombre registrado y las preferencias de conversación del usuario.
-    private ChatPersonalizationContext loadPersonalizationContext(Long userId) {
+    private ChatPersonalizationContext loadPersonalizationContext(Long userId, List<ChatPersonalizationContext.ChallengeHistoryEntry> challengeHistory) {
         String registeredName = userRepository.findById(userId)
                 .map(AppUser::getName)
                 .orElse(null);
         ChatConversationPreference preference =
                 chatConversationPreferenceRepository.findByUserId(userId).orElse(null);
-        return ChatPersonalizationContext.from(registeredName, preference);
+        return ChatPersonalizationContext.from(registeredName, preference, challengeHistory);
     }
 
     // Prompt base configurado (cadena vacía si no hay configuración).

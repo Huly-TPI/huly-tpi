@@ -282,21 +282,21 @@ class UserRepositoryImplTest {
 
     @Test
     @DisplayName("Mapea los dominios inactivos con nombre y fecha de nacimiento")
-    void findUsersInactiveSinceShouldReturnMappedDomainsWithNameAndBirth() {
+    void findUsersInactiveBetweenShouldReturnMappedDomainsWithNameAndBirth() {
         givenInactiveUsers(appUserEntity(7L, "inactive@huly.com",
                 List.of(detail("Test", LocalDate.of(2000, 1, 1)))));
 
-        List<AppUser> result = findUsersInactiveSince(SINCE);
+        List<AppUser> result = findUsersInactiveBetween(SINCE.minusSeconds(3600), SINCE);
 
         thenInactiveUserMatches(result, 7L, "inactive@huly.com", "Test", LocalDate.of(2000, 1, 1));
     }
 
     @Test
     @DisplayName("Mapea nombre y fecha de nacimiento como nulos cuando el detalle no tiene valores")
-    void findUsersInactiveSinceShouldMapNameAndBirthAsNullWhenUserDetailsHaveNoValues() {
+    void findUsersInactiveBetweenShouldMapNameAndBirthAsNullWhenUserDetailsHaveNoValues() {
         givenInactiveUsers(appUserEntity(8L, "sindatos@huly.com", List.of(detail(null, null))));
 
-        List<AppUser> result = findUsersInactiveSince(SINCE);
+        List<AppUser> result = findUsersInactiveBetween(SINCE.minusSeconds(3600), SINCE);
 
         thenInactiveUserHasNullNameAndBirth(result);
     }
@@ -374,7 +374,7 @@ class UserRepositoryImplTest {
     }
 
     private void givenInactiveUsers(AppUserEntity... entities) {
-        when(jpaRepository.findByLastLoginAtBefore(any(Instant.class))).thenReturn(List.of(entities));
+        when(jpaRepository.findByLastLoginAtBetween(any(Instant.class), any(Instant.class))).thenReturn(List.of(entities));
     }
 
     private void givenDebitCoins(Long userId, int amount, int rows) {
@@ -454,8 +454,8 @@ class UserRepositoryImplTest {
         userRepository.updateLastLogin(userId);
     }
 
-    private List<AppUser> findUsersInactiveSince(Instant since) {
-        return userRepository.findUsersInactiveSince(since);
+    private List<AppUser> findUsersInactiveBetween(Instant start, Instant end) {
+        return userRepository.findUsersInactiveBetween(start, end);
     }
 
     private Optional<AppUser> findByUnsubscribeToken(String token) {

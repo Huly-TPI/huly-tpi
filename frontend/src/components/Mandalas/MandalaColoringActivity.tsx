@@ -7,7 +7,7 @@ import galleryImage from "../../assets/mandalas/galery.webp";
 import mandalaEasel from "../../assets/mandalas/mi_atril.webp";
 import { useActivitySessionTracker } from "../../hooks/useActivitySessionTracker";
 import { useMandalaProgress } from "../../hooks/useMandalaProgress";
-import { downloadImageBlob } from "../../utils/downloadImage";
+import { downloadImageBlob } from "../../hooks/downloadImage";
 import ThemeBackground from "../ThemeBackground/ThemeBackground";
 import MandalaCanvas, { type MandalaCanvasHandle } from "./MandalaCanvas";
 import MandalaToolbar from "./MandalaToolbar";
@@ -118,7 +118,7 @@ export default function MandalaColoringActivity({
 
           <button
             aria-label="Ir a galeria"
-            className="fixed top-20 right-4 z-50 h-20 w-20 transition hover:scale-105 active:scale-95"
+            className="mandala-gallery-back-btn z-50 transition hover:scale-105 active:scale-95"
             onClick={handleBackToGallery}
             type="button"
           >
@@ -170,6 +170,28 @@ export default function MandalaColoringActivity({
               type="button"
             >
               <ImageDown aria-hidden="true" size={28} />
+            </button>
+          </div>
+
+          <div className="mandala-mobile-actions">
+            <button
+              aria-label="Limpiar dibujo del mandala"
+              className="mandala-mobile-actions__btn"
+              onClick={() => void handleClear()}
+              type="button"
+            >
+              <RotateCcw aria-hidden="true" size={18} />
+              <span>Limpiar</span>
+            </button>
+
+            <button
+              aria-label="Guardar mandala pintada"
+              className="mandala-mobile-actions__btn"
+              onClick={handleExport}
+              type="button"
+            >
+              <ImageDown aria-hidden="true" size={18} />
+              <span>Guardar</span>
             </button>
           </div>
 

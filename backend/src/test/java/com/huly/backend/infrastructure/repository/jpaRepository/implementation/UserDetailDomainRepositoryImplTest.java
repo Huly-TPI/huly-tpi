@@ -365,6 +365,29 @@ class UserDetailDomainRepositoryImplTest {
         thenUpdateLastLoginDateThrowsNotFound();
     }
 
+    @Test
+    @DisplayName("Devuelve la fecha de creación cuando existe el detalle del usuario")
+    void findUserCreatedAtShouldReturnDateWhenUserDetailExists() {
+        java.time.Instant now = java.time.Instant.now();
+        UserDetailEntity entity = UserDetailEntity.builder().id(USER_ID).createdAt(now).build();
+        givenUserDetailFound(entity);
+
+        Optional<java.time.Instant> result = userDetailDomainRepository.findUserCreatedAt(USER_ID);
+
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(now);
+    }
+
+    @Test
+    @DisplayName("Devuelve vacío al buscar la fecha de creación cuando no existe el detalle del usuario")
+    void findUserCreatedAtShouldReturnEmptyWhenUserDetailNotFound() {
+        givenUserDetailNotFound();
+
+        Optional<java.time.Instant> result = userDetailDomainRepository.findUserCreatedAt(USER_ID);
+
+        assertThat(result).isEmpty();
+    }
+
     // --- arrange ---
     private void givenUserDetailFound(UserDetailEntity entity) {
         when(userDetailRepository.findFirstByAppUser_IdOrderByCreatedAtDesc(USER_ID))
