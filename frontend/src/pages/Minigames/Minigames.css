@@ -22,7 +22,7 @@
   top: 28%;
   right: -8%;
   z-index: 15;
-  width: min(46vw, 18rem);
+  width: 25.4vw;
 }
 
 .minigames-home-return__image {
@@ -77,7 +77,7 @@
   .minigames-home-return {
     top: 11%;
     right: -6%;
-    width: min(30vw, 22rem);
+    width: 16.5vw;
   }
 
   .minigames-home-return__image {
@@ -111,7 +111,7 @@
   .minigames-home-return {
     top: 8%;
     right: -4%;
-    width: min(26vw, 24rem);
+    width: 17.3vw;
   }
 
   .minigames-home-return__image {
