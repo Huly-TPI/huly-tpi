@@ -15,7 +15,7 @@ export default function BadgeModal({ isOpen, onClose }: BadgeModalProps) {
     const progress = badges.length ? (earned / badges.length) * 100 : 0
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] p-4 backdrop-blur-sm">
             <div
                 className="relative flex w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl sm:max-w-lg md:max-w-xl"
                 style={{ boxShadow: '0 32px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(136,105,172,0.2)' }}

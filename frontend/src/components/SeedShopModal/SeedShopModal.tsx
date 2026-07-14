@@ -225,7 +225,7 @@ export default function SeedShopModal({ isOpen, onClose }: SeedShopModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-3 pt-16 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto p-3 pt-16 sm:p-4 sm:pt-16 bg-[var(--overlay-strong)] backdrop-blur-sm"
       onClick={onClose}
     >
       {isMobile ? (

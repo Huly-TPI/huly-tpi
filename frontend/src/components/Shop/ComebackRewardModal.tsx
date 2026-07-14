@@ -56,7 +56,7 @@ export default function ComebackRewardModal({ onClaimed }: ComebackRewardModalPr
   return (
     <>
       {showDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-strong)] p-4">
+        <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] p-4 backdrop-blur-sm">
           <button
             type="button"
             aria-label="Cerrar"
