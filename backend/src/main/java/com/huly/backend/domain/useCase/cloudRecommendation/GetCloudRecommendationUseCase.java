@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class GetCloudRecommendationUseCase {
@@ -72,9 +73,13 @@ public class GetCloudRecommendationUseCase {
             log.info("cloud_recommendation_query userId={} userGoal='{}' valence={} arousal={} dominance={} intensity={}",
                     userId, query.userGoal(), query.vad().valence(), query.vad().arousal(),
                     query.vad().dominance(), query.intensity());
+            List<Activity> filteredActivities = activities().stream()
+                    .filter(activity -> activity.getType() != ActivityType.LANTERN)
+                    .collect(Collectors.toList());
+
             EmotionalRecommendationResult result = recommendationService.recommend(
                     query,
-                    activities(),
+                    filteredActivities,
                     userHistory(userId)
             );
             if (result.recommendations().isEmpty()) {
