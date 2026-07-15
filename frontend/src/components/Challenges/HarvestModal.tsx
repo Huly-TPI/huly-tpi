@@ -16,7 +16,7 @@ export interface HarvestModalProps {
 
 export default function HarvestModal({ plantNumber, onGoToOrchard }: HarvestModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/[0.42] flex items-center justify-center z-[1000] p-4 backdrop-blur-[3px]" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
       <div className="harvest-modal bg-white rounded-3xl p-[2rem_1.75rem_1.75rem] w-full max-w-[320px] text-center shadow-[0_24px_64px_rgba(0,0,0,0.28)]">
 
         <div className="flex flex-col items-center">

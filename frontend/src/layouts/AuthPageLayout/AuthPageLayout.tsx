@@ -37,7 +37,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
         />
 
         <div
-          className="relative w-full min-w-0 max-w-[calc(100%-2rem)] sm:max-w-md"
+          className="relative w-full min-w-0 max-w-[calc(100%-2rem)] sm:max-w-md [@media(max-width:1400px)]:sm:max-w-[410px] [@media(max-height:850px)]:sm:max-w-[410px]"
           style={{
             backgroundImage: `url(${frame})`,
             backgroundSize: '100% 100%',
@@ -45,7 +45,7 @@ export default function AuthPageLayout({ children, reversed = false, characterIm
             height: cardHeight,
           }}
         >
-          <div className="h-full overflow-y-auto overflow-x-hidden px-10 pt-4 pb-8 md:px-14 md:py-10">
+          <div className="h-full overflow-y-auto overflow-x-hidden px-10 pt-4 pb-8 md:px-14 md:py-10 [@media(max-width:1400px)]:!pb-11 [@media(max-height:850px)]:!pb-11 [@media(max-width:1400px)]:!pt-6 [@media(max-height:850px)]:!pt-6">
             {children}
           </div>
         </div>

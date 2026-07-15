@@ -8,7 +8,7 @@ export default function BadgeLauncher() {
     const location = useLocation()
     const [isOpen, setIsOpen] = useState(false)
     const [isHomeOnboardingActive, setIsHomeOnboardingActive] = useState(document.body.getAttribute('data-home-onboarding-active') === 'true')
-    const isEmotionalOnboardingRoute = location.pathname === '/onboarding'
+    const isHome = location.pathname === '/'
 
     useEffect(() => {
         const syncHomeOnboardingState = () => {
@@ -21,7 +21,7 @@ export default function BadgeLauncher() {
         }
     }, [])
 
-    if (!isAuthenticated || isEmotionalOnboardingRoute || isHomeOnboardingActive) return null
+    if (!isAuthenticated || !isHome || isHomeOnboardingActive) return null
 
     return (<>
         <button

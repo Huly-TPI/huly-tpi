@@ -603,6 +603,29 @@ html.dark .mandala-painting-scene .theme-background {
     overflow: hidden;
 }
 
+@media (min-width: 769px) and (max-height: 768px) {
+    .mandala-palette-overlay {
+        top: 53.5%;
+        height: 82%;
+        padding: 1.5rem 0;
+    }
+
+    .mandala-palette-overlay .mandala-toolbar__group {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.5rem !important;
+        justify-items: center !important;
+        padding: 0.5rem 0.25rem !important;
+        width: 100% !important;
+        max-width: 6.2rem !important;
+    }
+
+    .mandala-palette-overlay .mandala-toolbar__swatch {
+        width: 2.2rem !important;
+        height: 2.2rem !important;
+    }
+}
+
 .mandala-palette-overlay .mandala-toolbar {
     background: transparent;
     border: none;

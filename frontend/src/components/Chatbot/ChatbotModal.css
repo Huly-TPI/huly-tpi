@@ -1,0 +1,7 @@
+@media (min-width: 1024px) and (max-height: 768px) {
+  .chatbot-character-img {
+    width: 220px !important;
+    bottom: 50px !important;
+    transform: translateX(15.5px) !important;
+  }
+}

@@ -110,17 +110,17 @@ export default function AuthForm({
 
   return (
     <div className="w-full font-nunito">
-      <h2 className={`mt-8 mb-2 text-center text-2xl md:text-3xl font-bold ${titleClassName ?? 'text-[#4C7C64]'}`}>
+      <h2 className={`mt-8 mb-2 text-center text-2xl md:text-3xl font-bold [@media(max-width:1400px)]:!mt-4 [@media(max-height:850px)]:!mt-4 [@media(max-width:1400px)]:!mb-1 [@media(max-height:850px)]:!mb-1 [@media(max-width:1400px)]:!text-2xl [@media(max-height:850px)]:!text-2xl ${titleClassName ?? 'text-[#4C7C64]'}`}>
         {title}
       </h2>
 
       {subtitle && (
-        <p className="mb-5 text-center text-sm font-semibold italic text-[#6b5a45]">
+        <p className="mb-5 text-center text-sm font-semibold italic text-[#6b5a45] [@media(max-width:1400px)]:!mb-3 [@media(max-height:850px)]:!mb-3">
           {subtitle}
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3 [@media(max-width:1400px)]:!gap-2 [@media(max-height:850px)]:!gap-2" noValidate>
         {fields.map((field, index) => (
           <div key={field.name} className="flex flex-col gap-1 min-w-0">
             <label htmlFor={`field-${field.name}`} className="sr-only">
@@ -180,7 +180,7 @@ export default function AuthForm({
           disabled={loading || (onTermsChange !== undefined && !termsAccepted)}
           isLoading={loading}
           loadingLabel={loadingLabel}
-          className="mt-2"
+          className="mt-2 [@media(max-width:1400px)]:!mt-1 [@media(max-height:850px)]:!mt-1"
         >
           {submitLabel}
         </Button>
@@ -189,7 +189,7 @@ export default function AuthForm({
           <button
             type="button"
             onClick={onForgotPassword}
-            className="mt-1 w-full text-center text-sm text-[#8c7b66] hover:text-[#4C7C64] hover:underline focus-visible:outline-none focus-visible:underline underline-offset-4 transition-colors"
+            className="mt-1 w-full text-center text-sm text-[#8c7b66] hover:text-[#4C7C64] hover:underline focus-visible:outline-none focus-visible:underline underline-offset-4 transition-colors [@media(max-width:1400px)]:!mt-0 [@media(max-height:850px)]:!mt-0"
           >
             ¿Olvidaste tu contraseña?
           </button>
@@ -198,7 +198,7 @@ export default function AuthForm({
 
 
       {switchText && switchLabel && onSwitchMode && (
-        <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66]">
+        <p className="mt-4 mb-4 text-center text-sm text-[#8c7b66] [@media(max-width:1400px)]:!mt-3 [@media(max-height:850px)]:!mt-3 [@media(max-width:1400px)]:!mb-2 [@media(max-height:850px)]:!mb-2">
           <span className="hidden sm:inline">{switchText} </span>
           <button
             type="button"

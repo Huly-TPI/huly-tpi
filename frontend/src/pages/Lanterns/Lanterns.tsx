@@ -14,6 +14,7 @@ import { lanternsApi } from '../../api/lanterns'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import Button from '../../components/Buttons/Button/Button'
+import BackButton from '../../components/Buttons/BackButton/BackButton'
 import './Lanterns.css'
 
 interface Lantern {
@@ -175,17 +176,11 @@ export default function LanternsActivity() {
       className={`lanterns-page relative flex h-full flex-col overflow-hidden ${isDark ? 'lanterns-page--dark' : ''}`}
       style={{ backgroundImage: `url(${isDark ? darkBackground : background})` }}
     >
+      <BackButton to="/" onBeforeNavigate={saveSession} />
+
       {/* Header */}
       <div className="relative z-10 flex flex-col gap-2 px-4 pt-12 pb-2 md:gap-2 md:p-8">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex w-fit items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-[#4C7C64] backdrop-blur-sm transition-colors hover:bg-white/90 md:px-4 md:py-1.5 md:text-sm"
-        >
-          ← Volver
-        </button>
-
-        <header className="lantern-header text-center md:text-left">
+        <header className="lantern-header text-center md:text-left md:pl-24">
           <h1 className="lantern-title">Farolitos que vuelan</h1>
           <p className="lantern-subtitle">
             Escribe tus pensamientos y déjalos ir al cielo.

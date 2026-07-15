@@ -8,7 +8,7 @@ interface DiaryConsentModalProps {
 
 export default function DiaryConsentModal({ onAccept, onReject }: DiaryConsentModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-strong)] backdrop-blur-sm px-4">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] backdrop-blur-sm px-4">
       <div className="bg-[var(--surface-primary)] text-[var(--text-primary)] rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
         <img src={colorLogo} alt="Huly" className="h-8 object-contain mx-auto mb-4" />
         <h2 className="text-xl font-bold text-[#8869AC] mb-3">

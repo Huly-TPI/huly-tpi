@@ -256,7 +256,7 @@ export default function StoreModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] p-4 backdrop-blur-sm">
       <button
         type="button"
         aria-label="Cerrar tienda"
