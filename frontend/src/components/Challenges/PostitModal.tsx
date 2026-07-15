@@ -69,7 +69,7 @@ export default function PostitModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/[0.42] flex items-center justify-center z-[1000] p-4 backdrop-blur-[3px]" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
       <div
         className="postit-modal relative w-[300px] min-h-[200px] [background-size:100%_100%] bg-no-repeat pt-8 px-8 pb-[5rem] drop-shadow-[0_8px_24px_rgba(0,0,0,0.28)]"
         style={{ backgroundImage: `url(${challengeDetailBg})` }}

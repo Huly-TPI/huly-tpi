@@ -247,6 +247,37 @@ class GetCloudRecommendationUseCaseTest {
     }
 
     @Test
+    @DisplayName("Excluye linternas (ActivityType.LANTERN) de las actividades evaluadas")
+    void executeShouldExcludeLanternsFromActivitiesPassedToRecommendationService() {
+        givenPromptTemplate();
+        givenBuiltPrompt();
+        givenAnalysis();
+        givenResolvedAnalysis();
+
+        com.huly.backend.domain.model.activity.Activity breathing = com.huly.backend.domain.model.activity.Activity.builder()
+                .id(1L)
+                .type(ActivityType.BREATHING)
+                .build();
+        com.huly.backend.domain.model.activity.Activity lantern = com.huly.backend.domain.model.activity.Activity.builder()
+                .id(2L)
+                .type(ActivityType.LANTERN)
+                .build();
+        when(activityRepository.findAll()).thenReturn(List.of(breathing, lantern));
+
+        givenUserHistory();
+        givenTopRecommendation(ActivityType.BREATHING);
+
+        recommend();
+
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(recommendationService).recommend(any(), captor.capture(), any());
+
+        List capturedActivities = captor.getValue();
+        assertThat(capturedActivities).contains(breathing);
+        assertThat(capturedActivities).doesNotContain(lantern);
+    }
+
+    @Test
     @DisplayName("Usa el fallback cuando falla el proceso de recomendación")
     void executeShouldUseFallbackWhenRecommendationFails() {
         givenPromptTemplate();

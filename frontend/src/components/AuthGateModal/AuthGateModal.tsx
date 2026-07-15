@@ -34,17 +34,12 @@ export default function AuthGateModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center pt-24 sm:pt-4"
+      className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] px-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-gate-title"
+      onClick={onClose}
     >
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-md"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
       <div
         className="
           relative
@@ -55,6 +50,7 @@ export default function AuthGateModal({
           pb-12
           font-nunito
         "
+        onClick={e => e.stopPropagation()}
         style={{
           backgroundImage: `url(${cardFrame})`,
           backgroundSize: '100% 100%',

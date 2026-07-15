@@ -255,7 +255,7 @@ export default function SubscriptionModal({ isOpen, onClose, onRefreshMembership
   )
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center px-1 pt-16 pb-2 sm:p-4 sm:pt-16 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-hidden px-4 pt-16 pb-2 sm:pt-16 bg-[var(--overlay-strong)] backdrop-blur-sm" onClick={onClose}>
       {isMobile ? (
         <div
           role="dialog"

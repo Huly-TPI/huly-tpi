@@ -103,7 +103,7 @@ export default function PendingFormModal({
       : draftSubtasks.map((text, index) => ({ id: index, text, done: false }))
 
   return (
-    <div className="fixed inset-0 bg-black/[0.42] flex items-center justify-center z-[1000] p-4 backdrop-blur-[3px]" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
       <div className="relative w-[320px] rounded-lg border border-transparent bg-[#fff8e7] dark:bg-[#172033] dark:border-slate-800/50 p-6 shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
         <button
           className="absolute top-2 right-3 bg-transparent border-0 cursor-pointer text-[0.85rem] text-[#7a5c38] dark:text-slate-300 opacity-60 hover:opacity-100"
