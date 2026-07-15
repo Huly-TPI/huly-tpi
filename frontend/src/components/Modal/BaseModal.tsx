@@ -26,7 +26,7 @@ export default function BaseModal({ isOpen, title, onClose, children, outsideCon
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-[var(--overlay-strong)] p-3 md:items-center md:p-4">
+    <div className="fixed inset-0 z-[400] flex items-end justify-center overflow-y-auto bg-[var(--overlay-strong)] p-3 backdrop-blur-sm md:items-center md:p-4">
       <button
         type="button"
         aria-label="Cerrar modal"

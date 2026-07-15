@@ -85,7 +85,7 @@ export default function PlantGoalsModal({ plant, onClose }: PlantGoalsModalProps
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/[0.42] flex items-center justify-center z-[1000] p-4 backdrop-blur-[3px]"
+        className="fixed inset-0 z-[400] flex items-center justify-center overflow-y-auto bg-[var(--overlay-strong)] p-4 backdrop-blur-sm"
         role="dialog"
         aria-modal="true"
         aria-label={`Retos de la Planta #${plant.plantNumber}`}
