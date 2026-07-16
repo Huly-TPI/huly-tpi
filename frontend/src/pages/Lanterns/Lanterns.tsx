@@ -8,9 +8,6 @@ import darkLanternImage from '../../assets/lanterns/dark-theme/lantern-dark.webp
 import paperImage from '../../assets/lanterns/paper.webp'
 
 import { useTheme } from '../../context/theme'
-import { useAuthGate } from '../../context/authGate'
-import { api } from '../../api/client'
-import { lanternsApi } from '../../api/lanterns'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
 import Button from '../../components/Buttons/Button/Button'
@@ -57,7 +54,6 @@ export default function LanternsActivity() {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { requireAuth } = useAuthGate()
 
   const { startSession, markConditionMet, saveSession, stopSession } = useActivitySessionTracker(
     ActivityType.LANTERN,
@@ -74,13 +70,14 @@ export default function LanternsActivity() {
   const currentLanternImage = isDark ? darkLanternImage : lanternImage
 
   useEffect(() => {
-    lanternsApi.list()
-      .then(thoughts => {
-        const mapped = thoughts.slice(0, MAX_LANTERNS)
-        setLanterns(mapped)
-        setSelectedIndex(0)
-      })
-      .catch(() => {})
+    // Para la tesis, iniciamos con pensamientos de muestra de forma instantánea
+    const defaultThoughts: Lantern[] = [
+      { id: 1, text: 'Tengo miedo de que el proyector de la defensa falle', workedOn: false },
+      { id: 2, text: '¿Llegaremos a responder todas las preguntas del jurado?', workedOn: false },
+      { id: 3, text: 'Me duele la espalda de estar tantas horas programando', workedOn: false }
+    ]
+    setLanterns(defaultThoughts)
+    setSelectedIndex(0)
   }, [])
 
   const selectedLantern = lanterns[selectedIndex] ?? null
@@ -96,20 +93,19 @@ export default function LanternsActivity() {
   const handleRelease = useCallback(() => {
     const trimmed = inputText.trim()
     if (!trimmed || lanterns.length >= MAX_LANTERNS) return
-    requireAuth(async () => {
-      setInputText('')
-      try {
-        const created = await lanternsApi.create(trimmed)
-        setAnimatingId(created.id)
-        setLanterns(prev => [created, ...prev].slice(0, MAX_LANTERNS))
-        setSelectedIndex(0)
-        markConditionMet()
-        setTimeout(() => setAnimatingId(null), 800)
-      } catch {
-        setInputText(trimmed)
-      }
-    })
-  }, [inputText, lanterns.length, requireAuth, markConditionMet])
+    
+    setInputText('')
+    const created: Lantern = {
+      id: Math.floor(Math.random() * 100000),
+      text: trimmed,
+      workedOn: false
+    }
+    setAnimatingId(created.id)
+    setLanterns(prev => [created, ...prev].slice(0, MAX_LANTERNS))
+    setSelectedIndex(0)
+    markConditionMet()
+    setTimeout(() => setAnimatingId(null), 800)
+  }, [inputText, lanterns.length, markConditionMet])
 
   const removeLantern = useCallback((idToRemove: number) => {
     setLanterns(prev => prev.filter(l => l.id !== idToRemove))
@@ -125,7 +121,6 @@ export default function LanternsActivity() {
     const id = selectedLantern.id
     removeLantern(id)
     markConditionMet()
-    lanternsApi.updateStatus(id, 'CANCELLED').catch(() => {})
   }, [selectedLantern, removeLantern, markConditionMet])
 
   const handleCompletar = useCallback(() => {
@@ -136,17 +131,25 @@ export default function LanternsActivity() {
     void saveSession()
     stopSession()
     startSession()
-    lanternsApi.updateStatus(id, 'COMPLETED').catch(() => {})
   }, [selectedLantern, removeLantern, markConditionMet, saveSession, stopSession, startSession])
 
   const handleTrabajar = useCallback(async () => {
     if (!selectedLantern) return
     setLoading(true)
     try {
-      const rec = await api.post<RecommendationResponse>('/clouds/recommendation', { thoughts: [selectedLantern.text] })
+      // Simular retraso de procesamiento para la demo de tesis (0.5s)
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      const rec: RecommendationResponse = {
+        activity_type: 'breathing',
+        action_id: '1',
+        title: 'Sesión de Respiración Guiada',
+        description: 'Basado en tu farolito, notamos cierta sobrecarga de pensamientos. Te recomendamos hacer una pausa y realizar un ejercicio de respiración guiada para volver al presente.',
+        redirect_url: '/guided-breathing',
+      }
+
       setRecommendation(rec)
       if (!selectedLantern.workedOn) {
-        lanternsApi.markWorkedOn(selectedLantern.id).catch(() => {})
         setLanterns(prev => prev.map(l => l.id === selectedLantern.id ? { ...l, workedOn: true } : l))
       }
     } catch (error) {

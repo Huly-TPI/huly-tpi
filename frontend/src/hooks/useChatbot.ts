@@ -177,6 +177,36 @@ export function useChatbot() {
     const loadHistory = async () => {
       setIsLoadingHistory(true)
 
+      // Intentar cargar primero los mensajes mockeados locales si existen
+      const mockStorageKey = `hulyMockMessages:${conversationId}`
+      const storedMock = localStorage.getItem(mockStorageKey)
+      if (storedMock) {
+        try {
+          const parsed = JSON.parse(storedMock) as ChatbotMessage[]
+          const restoredMessages = await Promise.all(
+            parsed.map(async (msg) => {
+              if (msg.role === 'user' && 'audioKey' in msg && msg.audioKey) {
+                const cacheKey = `${conversationId}:${msg.audioKey}`
+                const blob = await getAudioBlob(cacheKey).catch(() => null)
+                if (blob) {
+                  return {
+                    ...msg,
+                    audioBlob: blob,
+                    audioUrl: URL.createObjectURL(blob),
+                  }
+                }
+              }
+              return msg
+            })
+          )
+          setMessages(restoredMessages)
+          setIsLoadingHistory(false)
+          return
+        } catch {
+          // Si falla, continuamos con el flujo normal
+        }
+      }
+
       const userKey = user?.id ?? 'guest'
       const today = getTodayDateString()
 
@@ -238,6 +268,26 @@ export function useChatbot() {
     void loadHistory()
   }, [conversationId])
 
+  // Sincronizar mensajes en localStorage para mantenerlos al refrescar
+  useEffect(() => {
+    const mockStorageKey = `hulyMockMessages:${conversationId}`
+    if (messages.length > 0) {
+      const serializable = messages.map(msg => {
+        if (msg.role === 'user' && 'audioKey' in msg) {
+          return {
+            role: 'user',
+            content: msg.content,
+            audioKey: msg.audioKey,
+          }
+        }
+        return msg
+      })
+      localStorage.setItem(mockStorageKey, JSON.stringify(serializable))
+    } else {
+      localStorage.removeItem(mockStorageKey)
+    }
+  }, [messages, conversationId])
+
   const loadOlderHistory = async () => {
     if (isLoadingHistory || isLoadingOlderHistory || !hasMoreHistoryRef.current) return
 
@@ -277,46 +327,120 @@ export function useChatbot() {
     if (sendingRef.current) return
     sendingRef.current = true
 
+    // Contamos los mensajes del usuario PREVIOS a este mensaje actual
+    const userMessagesCount = messages.filter(m => m.role === 'user').length
+
     shouldAutoScrollRef.current = true
     setMessages(prev => [...prev, { role: 'user', content: text }])
     setIsSending(true)
     setError('')
 
     try {
-      const response = await chatApi.sendMessage({
-        message: text,
-        conversationId,
-      })
+      // Si estamos en el onboarding (primeros 2 mensajes del usuario), dejamos el flujo normal
+      if (userMessagesCount < 2) {
+        try {
+          const response = await chatApi.sendMessage({
+            message: text,
+            conversationId,
+          })
 
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: response.huly_reply,
-          detected_emotion: response.detected_emotion,
-          intensity: response.intensity,
-          suggested_action: response.suggested_action,
-          generated_challenge: response.generated_challenge,
-        },
-      ])
-      shouldAutoScrollRef.current = true
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: response.huly_reply,
+              detected_emotion: response.detected_emotion,
+              intensity: response.intensity,
+              suggested_action: response.suggested_action,
+              generated_challenge: response.generated_challenge,
+            },
+          ])
+          shouldAutoScrollRef.current = true
 
-      if (response.remaining_messages === 0) {
-        const limitMsg =
-          response.limit_message ??
-          'Alcanzaste el límite diario de mensajes. Suscribite a un plan para seguir usando el chat.'
-        localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
-        localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, limitMsg)
-        setError(limitMsg)
+          if (response.remaining_messages === 0) {
+            const limitMsg =
+              response.limit_message ??
+              'Alcanzaste el límite diario de mensajes. Suscribite a un plan para seguir usando el chat.'
+            localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
+            localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, limitMsg)
+            setError(limitMsg)
+          }
+        } catch (requestError) {
+          // Fallback mockeado elegante si el backend no está corriendo en la tesis
+          await new Promise(resolve => setTimeout(resolve, 2500))
+          let reply = ""
+          if (userMessagesCount === 0) {
+            reply = `¡Perfecto! A partir de ahora te llamaré así. ¿Con qué tono te gustaría que nos comuniquemos? Podés elegir un tono empático, formal, o informal y cercano.`
+          } else {
+            reply = `¡Entendido! Configuré mi tono de voz para hablarte de esa manera. ¿Cómo te sentís hoy? Contame qué tenés en mente.`
+          }
+
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: reply,
+              detected_emotion: 'neutral',
+              intensity: 1,
+              suggested_action: null,
+              generated_challenge: null,
+            },
+          ])
+          shouldAutoScrollRef.current = true
+        }
+      } else {
+        // A partir de la 3ra respuesta (userMessagesCount >= 2), disparamos el reto de tesis
+        await new Promise(resolve => setTimeout(resolve, 3500))
+
+        let response;
+        const lowerText = text.toLowerCase().trim();
+
+        if (lowerText === 'acepto este reto') {
+          response = {
+            huly_reply: "¡Excelente decisión! Me alegra mucho que te hayas sumado al reto. Espero de corazón que este minuto de pausa los ayude a relajarse y liberar tensiones pre-tesis. ¡Muchos éxitos en la defensa de tesis, lo van a hacer fantástico! 🎓🚀",
+            detected_emotion: "alegría",
+            intensity: 3,
+            suggested_action: null,
+            generated_challenge: null,
+          }
+        } else if (lowerText === 'rechazo este reto por ahora') {
+          response = {
+            huly_reply: "No hay problema, lo entiendo perfectamente. A veces el mejor relax es simplemente seguir nuestro propio ritmo. Lo importante es que hagan lo que los haga sentir cómodos hoy. ¡Muchos éxitos en la presentación de la tesis, van a brillar! 💪🌟",
+            detected_emotion: "neutral",
+            intensity: 1,
+            suggested_action: null,
+            generated_challenge: null,
+          }
+        } else {
+          // Mensaje inicial del reto (3ra respuesta en adelante)
+          response = {
+            huly_reply: "¡Hola chicos! Primero que nada, ¡felicitaciones por llegar a la gran instancia de la presentación de tesis! Es un logro inmenso. Sé que todo el equipo ha puesto muchísimo esfuerzo y es súper comprensible que ahora quieran relajarse y liberar tensiones antes de exponer.\n\nPara ayudarlos a bajar un cambio y desconectar un ratito, les propongo un pequeño reto de relajación. ¿Se animan a aceptarlo?",
+            detected_emotion: "ansiedad",
+            intensity: 3,
+            suggested_action: null,
+            generated_challenge: {
+              title: "Enfoque",
+              description: "Pensá en el objetivo de esta presentación: mostrar todo el trabajo que realizaron durante la carrera."
+            },
+          }
+        }
+
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: response.huly_reply,
+            detected_emotion: response.detected_emotion,
+            intensity: response.intensity,
+            suggested_action: response.suggested_action,
+            generated_challenge: response.generated_challenge,
+          },
+        ])
+        shouldAutoScrollRef.current = true
       }
     } catch (requestError) {
       if (requestError instanceof Error) {
-        const errorMsg = requestError.message
-        if (errorMsg.includes('Alcanzaste el límite diario')) {
-          localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
-          localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, errorMsg)
-        }
-        setError(errorMsg)
+        setError(requestError.message)
       }
     } finally {
       sendingRef.current = false
@@ -357,7 +481,24 @@ export function useChatbot() {
     audioAbortRef.current = controller
 
     try {
-      const response = await chatApi.sendAudioMessage(blob, conversationId, controller.signal)
+      // Simular retraso de procesamiento y transcripción para la demo de tesis
+      await new Promise(resolve => setTimeout(resolve, 3500))
+
+      const response = {
+        huly_reply: "Entiendo perfectamente lo que me decís por audio. Con la tesis encima, es normal sentir que la cabeza nos va a mil por hora con tantas cosas que nos restan por hacer. Para ordenarse y aliviar esa carga mental, lo mejor es poner todo por escrito.\n\nTe sugiero que listes todas las tareas pendientes que te quedan en el tablero para liberar espacio mental y organizarte paso a paso. ¿Qué te parece?",
+        detected_emotion: "abrumado",
+        intensity: 4,
+        suggested_action: {
+          type: "PENDING",
+          action_id: "99999",
+          title: "Organizar pendientes",
+          description: "Visualizá y listá las tareas pendientes de tu tesis en el tablero para sacarte el peso de encima.",
+          action_url: "/pending",
+          emotional_event_id: 99999
+        },
+        generated_challenge: null,
+      }
+
       setMessages(prev => [
         ...prev,
         {
@@ -370,39 +511,9 @@ export function useChatbot() {
         },
       ])
       shouldAutoScrollRef.current = true
-
-      const userKey = user?.id ?? 'guest'
-      if (response.remaining_messages === 0) {
-        const limitMsg =
-          response.limit_message ??
-          'Alcanzaste el límite diario de mensajes. Suscribite a un plan para seguir usando el chat.'
-        localStorage.setItem(`huly:chat-limit-date:${userKey}`, getTodayDateString())
-        localStorage.setItem(`huly:chat-limit-message:${userKey}`, limitMsg)
-        setError(limitMsg)
-      }
-      if (response.remaining_audio_messages === 0) {
-        const audioMsg =
-          response.audio_limit_message ??
-          'Alcanzaste el límite de audios diarios de tu plan. Volvé a intentarlo mañana.'
-        localStorage.setItem(`huly:audio-limit-date:${userKey}`, getTodayDateString())
-        localStorage.setItem(`huly:audio-limit-message:${userKey}`, audioMsg)
-        setAudioLimitMessage(audioMsg)
-      }
     } catch (requestError) {
       if (requestError instanceof Error && requestError.name !== 'AbortError') {
-        const errorMsg = requestError.message
-        const userKey = user?.id ?? 'guest'
-        if (errorMsg.includes('Alcanzaste el límite diario')) {
-          localStorage.setItem(`huly:chat-limit-date:${userKey}`, getTodayDateString())
-          localStorage.setItem(`huly:chat-limit-message:${userKey}`, errorMsg)
-        }
-        if (errorMsg.includes('límite de') && errorMsg.includes('audios')) {
-          localStorage.setItem(`huly:audio-limit-date:${userKey}`, getTodayDateString())
-          localStorage.setItem(`huly:audio-limit-message:${userKey}`, errorMsg)
-          setAudioLimitMessage(errorMsg)
-        } else {
-          setError(errorMsg)
-        }
+        setError(requestError.message)
       }
     } finally {
       audioAbortRef.current = null
@@ -444,14 +555,35 @@ export function useChatbot() {
     const selectedMessage = messages[index]
     if (!selectedMessage || selectedMessage.role !== 'assistant' || !selectedMessage.generated_challenge) return
 
+    const { title, description } = selectedMessage.generated_challenge
+
+    if (title === "Pausa Anti-Tesis de 1 Minuto") {
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return { ...message, challengeDecision: decision }
+        }),
+      )
+
+      if (decision === 'accepted') {
+        window.dispatchEvent(new Event('huly-challenge-accepted'))
+      }
+
+      const challengeResponseText =
+        decision === 'accepted'
+          ? 'Acepto este reto'
+          : 'Rechazo este reto por ahora'
+
+      await sendChatMessage(challengeResponseText)
+      return
+    }
+
     setMessages(prev =>
       prev.map((message, currentIndex) => {
         if (currentIndex !== index || message.role !== 'assistant') return message
         return { ...message, challengeDecision: decision }
       }),
     )
-
-    const { title, description } = selectedMessage.generated_challenge
 
     if (decision === 'accepted') {
       try {
@@ -495,6 +627,22 @@ export function useChatbot() {
           return {
             ...message,
             suggestedActionDecisionError: 'No se recibió emotional_event_id para guardar la decisión.',
+          }
+        }),
+      )
+      return
+    }
+
+    if (emotionalEventId === 99999) {
+      // Mock exitoso para la demo de tesis
+      setMessages(prev =>
+        prev.map((message, currentIndex) => {
+          if (currentIndex !== index || message.role !== 'assistant') return message
+          return {
+            ...message,
+            suggestedActionDecision: decision,
+            suggestedActionDecisionLoading: false,
+            suggestedActionDecisionError: undefined,
           }
         }),
       )
