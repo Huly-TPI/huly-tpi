@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useChatbot } from '../../hooks/useChatbot'
 import { chatApi } from '../../api/chat'
-import { emotionalEventsApi } from '../../api/emotionalEvents'
 import { saveAudioBlob } from '../../hooks/useAudioCache'
 
 // --- SIMULACIONES GLOBALES (MOCKS) ---
@@ -30,14 +29,17 @@ vi.mock('../../context/auth', () => ({
 
 vi.mock('../../api/emotionalEvents', () => ({
   emotionalEventsApi: {
-    updateDecision: vi.fn(),
+    updateDecision: vi.fn().mockResolvedValue({}),
   },
 }))
 
-const mockedSendMessage = vi.mocked(chatApi.sendMessage)
+vi.mock('../../api/userGoals', () => ({
+  userGoalsApi: {
+    acceptChallenge: vi.fn().mockResolvedValue({}),
+  },
+}))
+
 const mockedGetHistory = vi.mocked(chatApi.getHistory)
-const mockedSendAudioMessage = vi.mocked(chatApi.sendAudioMessage)
-const mockedUpdateDecision = vi.mocked(emotionalEventsApi.updateDecision)
 const mockedSaveAudioBlob = vi.mocked(saveAudioBlob)
 
 vi.mock('../../api/auth', () => ({
@@ -97,116 +99,100 @@ describe('useChatbot', () => {
       })
   })
 
-  it('sendMessage agrega los mensajes del usuario y del asistente', () => {
+  it('sendMessage agrega los mensajes del usuario y la respuesta del asistente (onboarding 1 y 2)', () => {
     setupHistoryResponse(getMockEmptyHistoryResponse())
-    setupSendMessageResolved({
-      huly_reply: 'respuesta',
-      detected_emotion: null,
-      intensity: null,
-      suggested_action: null,
-      generated_challenge: null,
-      metadata: null,
-    })
     setupHook()
     return waitForHistoryLoadingFinished()
       .then(() => {
-        updateInput('mensaje de prueba')
+        updateInput('mensaje 1')
         return callSendMessage()
       })
       .then(() => {
-        verifySendMessageCalled()
         verifyMessages([
-          { role: 'user', content: 'mensaje de prueba' },
+          { role: 'user', content: 'mensaje 1' },
           {
             role: 'assistant',
-            content: 'respuesta',
-            detected_emotion: null,
-            intensity: null,
+            content: '¡Hola! ¿Cómo te sentís hoy? Contame qué tenés en mente o qué te preocupa.',
+            detected_emotion: 'neutral',
+            intensity: 1,
             suggested_action: null,
             generated_challenge: null,
           },
         ])
+        updateInput('mensaje 2')
+        return callSendMessage()
+      })
+      .then(() => {
+        expect(rendered.result.current.messages[3]).toMatchObject({
+          role: 'assistant',
+          content: 'Entiendo. Estoy acá para acompañarte. ¿Querés hablar más sobre eso o preferís que hagamos algún ejercicio?',
+        })
       })
   })
 
-  it('decideChallenge marca la decisión y envía un mensaje de seguimiento', () => {
+  it('sendMessage agrega la propuesta del reto del mundial a partir de la tercera interacción', () => {
     setupHistoryResponse(getMockEmptyHistoryResponse())
-    setupSendMessageMultipleResponses(
-      {
-        huly_reply: 'te propongo un reto',
-        suggested_action: null,
-        generated_challenge: { title: 'Reto 1', description: 'Desc' },
-      },
-      {
-        huly_reply: 'gracias por responder',
-        suggested_action: null,
-        generated_challenge: null,
-      }
-    )
     setupHook()
     return waitForHistoryLoadingFinished()
       .then(() => {
-        updateInput('hola')
+        updateInput('mensaje 1')
         return callSendMessage()
       })
-      .then(() => callDecideChallenge(1, 'rejected'))
       .then(() => {
-        verifySendMessageNthCallWith(2, {
-          message: 'Rechazo este reto por ahora',
-          conversationId: expect.any(String),
+        updateInput('mensaje 2')
+        return callSendMessage()
+      })
+      .then(() => {
+        updateInput('estamos nerviosos por el partido de mañana')
+        return callSendMessage()
+      })
+      .then(() => {
+        expect(rendered.result.current.messages[5]).toMatchObject({
+          role: 'assistant',
+          content: '¡Es súper normal! La final del Mundial 2026 entre Argentina y España va a ser tremenda. 🏆 Para bajar la ansiedad y concentrar la mente, les propongo un reto rápido de respiración. ¿Se animan?',
+          generated_challenge: {
+            title: 'Foco Mundialista',
+            description: 'Enfócate en la pasión del juego y visualizá el partido de mañana con alegría y tranquilidad.',
+          },
         })
-        verifyMessageAtIndexMatches(1, {
+      })
+  })
+
+  it('decideChallenge marca la decisión del reto del mundial', () => {
+    setupHistoryResponse(getMockEmptyHistoryResponse())
+    setupHook()
+    return waitForHistoryLoadingFinished()
+      .then(() => {
+        updateInput('mensaje 1')
+        return callSendMessage()
+      })
+      .then(() => {
+        updateInput('mensaje 2')
+        return callSendMessage()
+      })
+      .then(() => {
+        updateInput('estamos nerviosos')
+        return callSendMessage()
+      })
+      .then(() => callDecideChallenge(5, 'rejected'))
+      .then(() => {
+        expect(rendered.result.current.messages[5]).toMatchObject({
           role: 'assistant',
           challengeDecision: 'rejected',
         })
-      })
-  })
-
-  it('decideSuggestedAction rechazado guarda la decisión', () => {
-    setupHistoryResponse(getMockEmptyHistoryResponse())
-    setupSendMessageResolved({
-      huly_reply: 'actividad',
-      suggested_action: {
-        type: 'INTERNAL',
-        action_id: 'GUIDED_BREATHING',
-        title: 'Resp',
-        description: 'Desc',
-        action_url: '/activities',
-        emotional_event_id: 15,
-      },
-      generated_challenge: null,
-    })
-    setupUpdateDecisionResolved()
-    setupHook()
-    return waitForHistoryLoadingFinished()
-      .then(() => {
-        updateInput('hola')
-        return callSendMessage()
-      })
-      .then(() => callDecideSuggestedAction(1, 'rejected'))
-      .then(() => {
-        verifySendMessageCalledTimes(1)
-        verifyUpdateDecisionCalledWith(15, {
-          decision: 'IGNORED',
-          chosenActivityId: null,
+        expect(rendered.result.current.messages[6]).toMatchObject({
+          role: 'user',
+          content: 'Rechazo este reto por ahora',
         })
-        verifyMessageAtIndexMatches(1, {
+        expect(rendered.result.current.messages[7]).toMatchObject({
           role: 'assistant',
-          suggestedActionDecision: 'rejected',
+          content: '¡Entendido! A veces lo mejor es vivir los nervios a su manera. ¡Disfruten del partido! ⚽',
         })
       })
   })
 
-  it('sendAudioMessage agrega el mensaje de audio del usuario y la respuesta del asistente', () => {
+  it('sendAudioMessage agrega el mensaje de audio y la sugerencia de pendientes', () => {
     setupHistoryResponse(getMockEmptyHistoryResponse())
-    setupSendAudioMessageResolved({
-      huly_reply: 'entendí tu mensaje de voz',
-      detected_emotion: 'neutral',
-      intensity: 3,
-      suggested_action: null,
-      generated_challenge: null,
-      metadata: null,
-    })
     setupHook()
     return waitForHistoryLoadingFinished().then(() => {
       return callSendAudioMessage(getMockAudioBlob()).then(() => {
@@ -217,7 +203,13 @@ describe('useChatbot', () => {
         })
         verifyMessageAtIndexMatches(1, {
           role: 'assistant',
-          content: 'entendí tu mensaje de voz',
+          content: 'Entiendo perfectamente. Hay mucho por organizar y hacer de ahora en adelante. Para ordenar tus ideas y liberar espacio mental, te sugiero listar todo en el tablero de pendientes y avanzar paso a paso. ¿Te parece?',
+          suggested_action: {
+            type: 'PENDING',
+            action_id: '99999',
+            title: 'Organizar pendientes',
+            action_url: '/pending',
+          },
         })
       })
     })
@@ -225,31 +217,11 @@ describe('useChatbot', () => {
 
   it('sendAudioMessage guarda el blob en cache y rastrea la clave de audio en localStorage', () => {
     setupHistoryResponse(getMockEmptyHistoryResponse())
-    setupSendAudioMessageResolved({
-      huly_reply: 'ok',
-      detected_emotion: null,
-      intensity: null,
-      suggested_action: null,
-      generated_challenge: null,
-      metadata: null,
-    })
     setupHook()
     return waitForHistoryLoadingFinished().then(() => {
       return callSendAudioMessage(getMockAudioBlob()).then(() => {
         verifySaveAudioBlobCalledWithBlob(getMockAudioBlob())
         verifyAudioKeysTrackedInLocalStorage()
-      })
-    })
-  })
-
-  it('sendAudioMessage maneja el error de API sin romperse', () => {
-    setupHistoryResponse(getMockEmptyHistoryResponse())
-    setupSendAudioMessageRejected('red caída')
-    setupHook()
-    return waitForHistoryLoadingFinished().then(() => {
-      return callSendAudioMessage(getMockAudioBlob()).then(() => {
-        verifyIsSending(false)
-        verifyError('red caída')
       })
     })
   })
@@ -268,6 +240,7 @@ describe('useChatbot', () => {
         verifyMessages([])
       })
   })
+
   const setupHook = () => {
     rendered = renderHook(() => useChatbot())
   }
@@ -294,26 +267,6 @@ describe('useChatbot', () => {
 
   const setupHistoryMultipleResponses = (val0: any, val1: any) => {
     mockedGetHistory.mockResolvedValueOnce(val0 as never).mockResolvedValueOnce(val1 as never)
-  }
-
-  const setupSendMessageResolved = (val: any) => {
-    mockedSendMessage.mockResolvedValueOnce(val as never)
-  }
-
-  const setupSendMessageMultipleResponses = (val0: any, val1: any) => {
-    mockedSendMessage.mockResolvedValueOnce(val0 as never).mockResolvedValueOnce(val1 as never)
-  }
-
-  const setupSendAudioMessageResolved = (val: any) => {
-    mockedSendAudioMessage.mockResolvedValueOnce(val as never)
-  }
-
-  const setupSendAudioMessageRejected = (msg: string) => {
-    mockedSendAudioMessage.mockRejectedValueOnce(new Error(msg))
-  }
-
-  const setupUpdateDecisionResolved = () => {
-    mockedUpdateDecision.mockResolvedValueOnce({} as never)
   }
 
   const getMockAudioBlob = () => {
@@ -435,12 +388,6 @@ describe('useChatbot', () => {
     })
   }
 
-  const callDecideSuggestedAction = async (index: number, decision: 'accepted' | 'rejected') => {
-    await act(async () => {
-      await rendered.result.current.decideSuggestedAction(index, decision)
-    })
-  }
-
   const callSendAudioMessage = async (blob: Blob) => {
     await act(async () => {
       await rendered.result.current.sendAudioMessage(blob)
@@ -513,22 +460,6 @@ describe('useChatbot', () => {
     expect(rendered.result.current.error).toBe(expected)
   }
 
-  const verifySendMessageCalled = () => {
-    expect(mockedSendMessage).toHaveBeenCalled()
-  }
-
-  const verifySendMessageCalledTimes = (times: number) => {
-    expect(mockedSendMessage).toHaveBeenCalledTimes(times)
-  }
-
-  const verifySendMessageNthCallWith = (n: number, expectedArgs: any) => {
-    expect(mockedSendMessage).toHaveBeenNthCalledWith(n, expectedArgs)
-  }
-
-  const verifyUpdateDecisionCalledWith = (id: number, decisionObj: any) => {
-    expect(mockedUpdateDecision).toHaveBeenCalledWith(id, decisionObj)
-  }
-
   const verifySaveAudioBlobCalledWithBlob = (blob: Blob) => {
     expect(mockedSaveAudioBlob).toHaveBeenCalledWith(expect.stringContaining(':'), blob)
   }
@@ -538,15 +469,6 @@ describe('useChatbot', () => {
     expect(storedKeys).toBeDefined()
   }
 
-  const verifyIsSending = (expected: boolean) => {
-    expect(rendered.result.current.isSending).toBe(expected)
-  }
-
-  const verifyNewConversationIdInLocalStorageNotEqual = (oldId: string) => {
-    const newConvId = localStorage.getItem('hulyChatConversationId:1')
-    expect(newConvId).not.toBe(oldId)
-    expect(newConvId).not.toBeNull()
-  }
   const clearLocalStorage = () => {
     localStorage.clear()
   }
@@ -554,5 +476,11 @@ describe('useChatbot', () => {
   const mockUrlObjectMethods = () => {
     global.URL.createObjectURL = vi.fn().mockReturnValue('blob:fake-url')
     global.URL.revokeObjectURL = vi.fn()
+  }
+
+  const verifyNewConversationIdInLocalStorageNotEqual = (oldId: string) => {
+    const newConvId = localStorage.getItem('hulyChatConversationId:1')
+    expect(newConvId).not.toBe(oldId)
+    expect(newConvId).not.toBeNull()
   }
 })

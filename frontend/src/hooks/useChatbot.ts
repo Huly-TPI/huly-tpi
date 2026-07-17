@@ -123,7 +123,7 @@ export function useChatbot() {
   const [messages, setMessages] = useState<ChatbotMessage[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isLoadingOlderHistory, setIsLoadingOlderHistory] = useState(false)
   const [error, setError] = useState('')
   const [audioLimitMessage, setAudioLimitMessage] = useState('')
@@ -283,10 +283,10 @@ export function useChatbot() {
         return msg
       })
       localStorage.setItem(mockStorageKey, JSON.stringify(serializable))
-    } else {
+    } else if (!isLoadingHistory) {
       localStorage.removeItem(mockStorageKey)
     }
-  }, [messages, conversationId])
+  }, [messages, conversationId, isLoadingHistory])
 
   const loadOlderHistory = async () => {
     if (isLoadingHistory || isLoadingOlderHistory || !hasMoreHistoryRef.current) return
@@ -336,68 +336,31 @@ export function useChatbot() {
     setError('')
 
     try {
-      // Si estamos en el onboarding (primeros 2 mensajes del usuario), dejamos el flujo normal
-      if (userMessagesCount < 2) {
-        try {
-          const response = await chatApi.sendMessage({
-            message: text,
-            conversationId,
-          })
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-          setMessages(prev => [
-            ...prev,
-            {
-              role: 'assistant',
-              content: response.huly_reply,
-              detected_emotion: response.detected_emotion,
-              intensity: response.intensity,
-              suggested_action: response.suggested_action,
-              generated_challenge: response.generated_challenge,
-            },
-          ])
-          shouldAutoScrollRef.current = true
+      const lowerText = text.toLowerCase().trim()
+      let response
 
-          if (response.remaining_messages === 0) {
-            const limitMsg =
-              response.limit_message ??
-              'Alcanzaste el límite diario de mensajes. Suscribite a un plan para seguir usando el chat.'
-            localStorage.setItem(`huly:chat-limit-date:${user?.id ?? 'guest'}`, getTodayDateString())
-            localStorage.setItem(`huly:chat-limit-message:${user?.id ?? 'guest'}`, limitMsg)
-            setError(limitMsg)
-          }
-        } catch (requestError) {
-          // Fallback mockeado elegante si el backend no está corriendo en la tesis
-          await new Promise(resolve => setTimeout(resolve, 2500))
-          let reply = ""
-          if (userMessagesCount === 0) {
-            reply = `¡Perfecto! A partir de ahora te llamaré así. ¿Con qué tono te gustaría que nos comuniquemos? Podés elegir un tono empático, formal, o informal y cercano.`
-          } else {
-            reply = `¡Entendido! Configuré mi tono de voz para hablarte de esa manera. ¿Cómo te sentís hoy? Contame qué tenés en mente.`
-          }
-
-          setMessages(prev => [
-            ...prev,
-            {
-              role: 'assistant',
-              content: reply,
-              detected_emotion: 'neutral',
-              intensity: 1,
-              suggested_action: null,
-              generated_challenge: null,
-            },
-          ])
-          shouldAutoScrollRef.current = true
+      if (userMessagesCount === 0) {
+        response = {
+          huly_reply: "¡Hola! ¿Cómo te sentís hoy? Contame qué tenés en mente o qué te preocupa.",
+          detected_emotion: 'neutral',
+          intensity: 1,
+          suggested_action: null,
+          generated_challenge: null,
+        }
+      } else if (userMessagesCount === 1) {
+        response = {
+          huly_reply: "Entiendo. Estoy acá para acompañarte. ¿Querés hablar más sobre eso o preferís que hagamos algún ejercicio?",
+          detected_emotion: 'neutral',
+          intensity: 1,
+          suggested_action: null,
+          generated_challenge: null,
         }
       } else {
-        // A partir de la 3ra respuesta (userMessagesCount >= 2), disparamos el reto de tesis
-        await new Promise(resolve => setTimeout(resolve, 3500))
-
-        let response;
-        const lowerText = text.toLowerCase().trim();
-
         if (lowerText === 'acepto este reto') {
           response = {
-            huly_reply: "¡Excelente decisión! Me alegra mucho que te hayas sumado al reto. Espero de corazón que este minuto de pausa los ayude a relajarse y liberar tensiones pre-tesis. ¡Muchos éxitos en la defensa de tesis, lo van a hacer fantástico! 🎓🚀",
+            huly_reply: "¡Excelente! A respirar hondo y a alentar con todo. ¡Vamos que se puede! ",
             detected_emotion: "alegría",
             intensity: 3,
             suggested_action: null,
@@ -405,39 +368,38 @@ export function useChatbot() {
           }
         } else if (lowerText === 'rechazo este reto por ahora') {
           response = {
-            huly_reply: "No hay problema, lo entiendo perfectamente. A veces el mejor relax es simplemente seguir nuestro propio ritmo. Lo importante es que hagan lo que los haga sentir cómodos hoy. ¡Muchos éxitos en la presentación de la tesis, van a brillar! 💪🌟",
+            huly_reply: "¡Entendido! A veces lo mejor es vivir los nervios a su manera. ¡Disfruten del partido! ⚽",
             detected_emotion: "neutral",
             intensity: 1,
             suggested_action: null,
             generated_challenge: null,
           }
         } else {
-          // Mensaje inicial del reto (3ra respuesta en adelante)
           response = {
-            huly_reply: "¡Hola chicos! Primero que nada, ¡felicitaciones por llegar a la gran instancia de la presentación de tesis! Es un logro inmenso. Sé que todo el equipo ha puesto muchísimo esfuerzo y es súper comprensible que ahora quieran relajarse y liberar tensiones antes de exponer.\n\nPara ayudarlos a bajar un cambio y desconectar un ratito, les propongo un pequeño reto de relajación. ¿Se animan a aceptarlo?",
+            huly_reply: "¡Es súper normal! La final del Mundial 2026 entre Argentina y España va a ser tremenda. 🏆 Para bajar la ansiedad y concentrar la mente, les propongo un reto rápido de respiración. ¿Se animan?",
             detected_emotion: "ansiedad",
             intensity: 3,
             suggested_action: null,
             generated_challenge: {
-              title: "Enfoque",
-              description: "Pensá en el objetivo de esta presentación: mostrar todo el trabajo que realizaron durante la carrera."
+              title: "Foco Mundialista",
+              description: "Enfócate en la pasión del juego y visualizá el partido de mañana con alegría y tranquilidad."
             },
           }
         }
-
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: response.huly_reply,
-            detected_emotion: response.detected_emotion,
-            intensity: response.intensity,
-            suggested_action: response.suggested_action,
-            generated_challenge: response.generated_challenge,
-          },
-        ])
-        shouldAutoScrollRef.current = true
       }
+
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: response.huly_reply,
+          detected_emotion: response.detected_emotion,
+          intensity: response.intensity,
+          suggested_action: response.suggested_action,
+          generated_challenge: response.generated_challenge,
+        },
+      ])
+      shouldAutoScrollRef.current = true
     } catch (requestError) {
       if (requestError instanceof Error) {
         setError(requestError.message)
@@ -481,20 +443,19 @@ export function useChatbot() {
     audioAbortRef.current = controller
 
     try {
-      // Simular retraso de procesamiento y transcripción para la demo de tesis
-      await new Promise(resolve => setTimeout(resolve, 3500))
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       const response = {
-        huly_reply: "Entiendo perfectamente lo que me decís por audio. Con la tesis encima, es normal sentir que la cabeza nos va a mil por hora con tantas cosas que nos restan por hacer. Para ordenarse y aliviar esa carga mental, lo mejor es poner todo por escrito.\n\nTe sugiero que listes todas las tareas pendientes que te quedan en el tablero para liberar espacio mental y organizarte paso a paso. ¿Qué te parece?",
-        detected_emotion: "abrumado",
-        intensity: 4,
+        huly_reply: "Entiendo perfectamente. Hay mucho por organizar y hacer de ahora en adelante. Para ordenar tus ideas y liberar espacio mental, te sugiero listar todo en el tablero de pendientes y avanzar paso a paso. ¿Te parece?",
+        detected_emotion: "neutral",
+        intensity: 2,
         suggested_action: {
           type: "PENDING",
           action_id: "99999",
           title: "Organizar pendientes",
-          description: "Visualizá y listá las tareas pendientes de tu tesis en el tablero para sacarte el peso de encima.",
+          description: "Visualizá y listá las tareas pendientes de ahora en más en el tablero para organizarte paso a paso.",
           action_url: "/pending",
-          emotional_event_id: 99999
+          emotional_event_id: 99999,
         },
         generated_challenge: null,
       }
