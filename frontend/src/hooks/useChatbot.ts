@@ -336,7 +336,7 @@ export function useChatbot() {
     setError('')
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 1500))
 
       const lowerText = text.toLowerCase().trim()
       let response
@@ -443,7 +443,7 @@ export function useChatbot() {
     audioAbortRef.current = controller
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 2500))
 
       const response = {
         huly_reply: "Entiendo perfectamente. Hay mucho por organizar y hacer de ahora en adelante. Para ordenar tus ideas y liberar espacio mental, te sugiero listar todo en el tablero de pendientes y avanzar paso a paso. ¿Te parece?",
