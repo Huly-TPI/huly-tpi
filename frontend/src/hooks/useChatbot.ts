@@ -167,11 +167,11 @@ export function useChatbot() {
       return
     }
 
-    if (shouldAutoScrollRef.current && container) {
+    if ((shouldAutoScrollRef.current || error || audioLimitMessage) && container) {
       container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
       shouldAutoScrollRef.current = false
     }
-  }, [messages])
+  }, [messages, error, audioLimitMessage])
 
   useEffect(() => {
     const loadHistory = async () => {
