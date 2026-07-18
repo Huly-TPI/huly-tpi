@@ -11,7 +11,7 @@ export function useProducts() {
   useEffect(() => {
     if (authLoading) return
     getProducts()
-      .then(setProducts)
+      .then((p) => setProducts([...p].sort((a, b) => a.price - b.price)))
       .catch(() => setError('No se pudieron cargar los productos.'))
       .finally(() => setLoading(false))
   }, [authLoading])
