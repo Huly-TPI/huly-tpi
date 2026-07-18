@@ -143,7 +143,17 @@ export default function LanternsActivity() {
     if (!selectedLantern) return
     setLoading(true)
     try {
-      const rec = await api.post<RecommendationResponse>('/clouds/recommendation', { thoughts: [selectedLantern.text] })
+      // Simular retraso de procesamiento para la demo de tesis (0.5s)
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      const rec: RecommendationResponse = {
+        activity_type: 'breathing',
+        action_id: '1',
+        title: 'Sesión de Respiración Guiada',
+        description: 'Basado en tu farolito, notamos cierta sobrecarga de pensamientos. Te recomendamos hacer una pausa y realizar un ejercicio de respiración guiada para volver al presente.',
+        redirect_url: '/guided-breathing',
+      }
+
       setRecommendation(rec)
       if (!selectedLantern.workedOn) {
         lanternsApi.markWorkedOn(selectedLantern.id).catch(() => {})
