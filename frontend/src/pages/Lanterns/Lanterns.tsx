@@ -9,7 +9,6 @@ import paperImage from '../../assets/lanterns/paper.webp'
 
 import { useTheme } from '../../context/theme'
 import { useAuthGate } from '../../context/authGate'
-import { api } from '../../api/client'
 import { lanternsApi } from '../../api/lanterns'
 import { ActivityType } from '../../api/activities'
 import { useActivitySessionTracker } from '../../hooks/useActivitySessionTracker'
